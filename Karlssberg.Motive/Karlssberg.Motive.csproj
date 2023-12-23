@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>12</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Update="CausesVisitor.cs">
+        <DependentUpon>IBooleanResultVisitor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="VisitorAction.cs">
+        <DependentUpon>IBooleanResultVisitor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="BooleanResult.cs">
+        <DependentUpon>Specification.cs</DependentUpon>
+      </Compile>
+      <Compile Update="BooleanResultExtensions.cs">
+        <DependentUpon>BooleanResultBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="BooleanResultWithModel.cs">
+        <DependentUpon>BooleanResultBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SpecificationExtensions.cs">
+        <DependentUpon>SpecificationBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="DefaultBooleanResultVisitor.cs">
+        <DependentUpon>IBooleanResultVisitor.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+</Project>
