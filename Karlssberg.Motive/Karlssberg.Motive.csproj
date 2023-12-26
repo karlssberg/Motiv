@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>12</LangVersion>
+        <Authors>Daniel Karlsson</Authors>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <InternalsVisibleTo Include="$(AssemblyName).Tests" />
+      <Compile Update="GenericMetadataSpecification.cs">
+        <DependentUpon>Specification.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="Humanizer" Version="2.14.1" />
+    </ItemGroup>
+
+</Project>
