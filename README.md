@@ -1,6 +1,6 @@
 ﻿# Motive
 
-Motive is a solution that vastly simplifies the process of understanding the causes of decisions in an applications.  It has many similarities to validation libraries, but its purpose goes beyond merely guarding against invalid state (although it can be used like this). Instead, it provides a framework to provide custom explanations/metadata about why a decision was made, or not.
+Motive figures out why your logic failed (or succeeded) so you don't have to.  What's more, it allows you to attach metadata to your logical propositions so you can do things provide multi-lingual explanations, or even associate custom state. It has many similarities to validation libraries, but its purpose goes beyond merely guarding against invalid state (although it can be used like this). Instead, it provides a framework to provide custom explanations/metadata about why a decision was reached - or not.
 
 What's more, since Motive is an implementation of the specification pattern it lends itself as a tool to encapsulate domain logic (or even non-domain logic)- in a way that is reusable and thoroughly testable.
 
