@@ -1,46 +1,29 @@
-﻿using static Karlssberg.Motive.VisitorAction;
+﻿namespace Karlssberg.Motive.Any;
 
-namespace Karlssberg.Motive.Any;
-
-public sealed record AnyBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
+public sealed class AnyBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 {
-    public AnyBooleanResult(Func<bool, IEnumerable<TMetadata>> metadataFactory,
+    internal AnyBooleanResult(
+        Func<bool, IEnumerable<TMetadata>> metadataFactory,
         IEnumerable<BooleanResultBase<TMetadata>> operandResults)
-    {;
+    {
         var operandResultsArray = Throw.IfNull(operandResults, nameof(operandResults)).ToArray();
         var isSatisfied = operandResultsArray.Any(result => result.IsSatisfied);
         var metadata = metadataFactory(isSatisfied);
-        
+
         IsSatisfied = isSatisfied;
-        Metadata = metadata;
+        SubstituteMetadata = metadata;
         OperandResults = operandResultsArray;
+        DeterminativeOperandResults = operandResultsArray.Where(result => result.IsSatisfied == isSatisfied);
     }
 
-    public IEnumerable<TMetadata> Metadata { get; }
-
+    public IEnumerable<TMetadata> SubstituteMetadata { get; }
     public IEnumerable<BooleanResultBase<TMetadata>> OperandResults { get; }
+    
+    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperandResults { get; }
 
     public override bool IsSatisfied { get; }
 
-    public override void Accept<TVisitor>(TVisitor visitor)
-    {
-        var visitorResult = visitor.Visit(this);
-        if (visitorResult == SkipOperands)
-            return;
-        
-        OperandResults
-            .Where(result => result.IsSatisfied == IsSatisfied  || visitorResult == VisitAllOperands)
-            .Accept(visitor);
-    }
-    
     public override string Description => $"ANY:{IsSatisfied}({string.Join(", ", OperandResults)})";
-    public override string ToString() => Description;
-
-    public void Deconstruct(
-        out IEnumerable<TMetadata> Metadata,
-        out IEnumerable<BooleanResultBase<TMetadata>> OperandResults)
-    {
-        Metadata = this.Metadata;
-        OperandResults = this.OperandResults;
-    }
+    public override IEnumerable<string> Reasons => 
+        DeterminativeOperandResults.SelectMany(r => r.Reasons);
 }

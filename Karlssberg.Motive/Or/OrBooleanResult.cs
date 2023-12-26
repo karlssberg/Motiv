@@ -1,29 +1,27 @@
-﻿using static Karlssberg.Motive.VisitorAction;
+﻿namespace Karlssberg.Motive.Or;
 
-namespace Karlssberg.Motive.Or;
-
-public sealed record OrBooleanResult<TMetadata>(
-    BooleanResultBase<TMetadata> LeftOperandResult,
-    BooleanResultBase<TMetadata> RightOperandResult) : BooleanResultBase<TMetadata>
+public sealed class OrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 {
-    public BooleanResultBase<TMetadata> LeftOperandResult { get; } = LeftOperandResult;
-    public BooleanResultBase<TMetadata> RightOperandResult { get; } = RightOperandResult;
-
-    public override bool IsSatisfied { get; } = LeftOperandResult.IsSatisfied || RightOperandResult.IsSatisfied;
-
-    public override void Accept<TVisitor>(TVisitor visitor)
+    internal OrBooleanResult(
+        BooleanResultBase<TMetadata> leftOperandResult,
+        BooleanResultBase<TMetadata> rightOperandResult)
     {
-        var visitorResult = visitor.Visit(this);
-        if (visitorResult == SkipOperands)
-            return;
-        
-        if (LeftOperandResult.IsSatisfied == IsSatisfied || visitorResult == VisitAllOperands) 
-            LeftOperandResult.Accept(visitor);
-        
-        if (RightOperandResult.IsSatisfied == IsSatisfied || visitorResult == VisitAllOperands) 
-            RightOperandResult.Accept(visitor);
+        LeftOperandResult = leftOperandResult;
+        RightOperandResult = rightOperandResult;
+        IsSatisfied = leftOperandResult.IsSatisfied || rightOperandResult.IsSatisfied;
+        OperandResults = [leftOperandResult, rightOperandResult];
+        DeterminativeOperandResults = OperandResults.Where(r => r.IsSatisfied == IsSatisfied);
     }
+
+    public BooleanResultBase<TMetadata> LeftOperandResult { get; }
+    public BooleanResultBase<TMetadata> RightOperandResult { get; }
+    public IEnumerable<BooleanResultBase<TMetadata>> OperandResults { get; }
     
+    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperandResults { get; }
+
+    public override bool IsSatisfied { get; }
+
     public override string Description => $"({LeftOperandResult}) OR:{IsSatisfied} ({RightOperandResult})";
-    public override string ToString() => Description;
+    public override IEnumerable<string> Reasons =>
+        DeterminativeOperandResults.SelectMany(r => r.Reasons);
 }

@@ -2,12 +2,18 @@
 
 namespace Karlssberg.Motive.And;
 
-public sealed class AndSpecification<TModel, TMetadata>(
-    SpecificationBase<TModel, TMetadata> leftOperand,
-    SpecificationBase<TModel, TMetadata> rightOperand) : SpecificationBase<TModel, TMetadata>
+internal class AndSpecification<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
 {
-    public SpecificationBase<TModel, TMetadata> LeftOperand { get; } = Throw.IfNull(leftOperand, nameof(leftOperand));
-    public SpecificationBase<TModel, TMetadata> RightOperand { get; } = Throw.IfNull(rightOperand, nameof(rightOperand));
+    internal AndSpecification(
+        SpecificationBase<TModel, TMetadata> leftOperand,
+        SpecificationBase<TModel, TMetadata> rightOperand)
+    {
+        LeftOperand = Throw.IfNull(leftOperand, nameof(leftOperand));
+        RightOperand = Throw.IfNull(rightOperand, nameof(rightOperand));
+    }
+
+    public SpecificationBase<TModel, TMetadata> LeftOperand { get; }
+    public SpecificationBase<TModel, TMetadata> RightOperand { get; }
 
     public override string Description => $"({LeftOperand}) AND ({RightOperand})";
 
@@ -17,12 +23,12 @@ public sealed class AndSpecification<TModel, TMetadata>(
             this,
             LeftOperand,
             () => LeftOperand.Evaluate(model));
-            
+
         var rightResult = WrapThrownExceptions(
             this,
             RightOperand,
             () => RightOperand.Evaluate(model));
-        
+
         return leftResult.And(rightResult);
     }
 }

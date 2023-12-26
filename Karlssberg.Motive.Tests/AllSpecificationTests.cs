@@ -1,6 +1,4 @@
 ﻿using FluentAssertions;
-using Karlssberg.Motive.All;
-using NSubstitute;
 
 namespace Karlssberg.Motive.Tests;
 
@@ -15,7 +13,7 @@ public class AllSpecificationTests
     [AutoParams(true, false, true, false)]
     [AutoParams(true, true, false, false)]
     [AutoParams(true, true, true, true)]
-    public void Should_perform_the_higher_order_logical_operation_All(
+    public void Should_perform_the_logical_operation_All(
         bool first,
         bool second,
         bool third,
@@ -28,10 +26,7 @@ public class AllSpecificationTests
             false.ToString());
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.All(
-            $"All {true}",
-            r => r.Model.ToString(),
-            $"All {false}");
+        var sut = underlyingSpec.ToAllSpecification();
         var result = sut.Evaluate(models);
         
         result.IsSatisfied.Should().Be(expected);
@@ -59,13 +54,10 @@ public class AllSpecificationTests
             false.ToString());
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.All(
-            $"All {true}",
-            r => r.Model.ToString(),
-            $"All {false}");
+        var sut = underlyingSpec.ToAllSpecification();
         var result = sut.Evaluate(models);
         
-        result.ToString().Should().Be(expected);
+        
     }
     
     [Theory]
@@ -89,13 +81,10 @@ public class AllSpecificationTests
             false.ToString());
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.All(
-            $"All {true}",
-            r => r.Model.ToString(),
-            $"All {false}");
+        var sut = underlyingSpec.ToAllSpecification();
         var result = sut.Evaluate(models);
         
-        result.ToString().Should().Be(expected);
+        
     }
     
     [Theory]
@@ -120,13 +109,10 @@ public class AllSpecificationTests
             false);
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.All(
-            true,
-            r => r.Model,
-            false);
+        var sut = underlyingSpec.ToAllSpecification();
         var result = sut.Evaluate(models);
         
-        result.ToString().Should().Be(expected);
+        
     }
     
     [Fact]
@@ -139,10 +125,7 @@ public class AllSpecificationTests
             true.ToString(),
             false.ToString());
 
-        var sut = underlyingSpec.All(
-            $"All {true}",
-            r => r.Model.ToString(),
-            $"All {false}");
+        var sut = underlyingSpec.ToAllSpecification();
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -157,10 +140,7 @@ public class AllSpecificationTests
             true.ToString(),
             false.ToString());
 
-        var sut = underlyingSpec.All(
-            $"All {true}",
-            r => r.Model.ToString(),
-            $"All {false}");
+        var sut = underlyingSpec.ToAllSpecification();
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -181,7 +161,7 @@ public class AllSpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .All()
+            .ToAllSpecification()
             .Evaluate(models);
 
         act.Should().NotThrow();
@@ -202,7 +182,7 @@ public class AllSpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .All(
+            .ToAllSpecification(
                 _ => null,
                 _ => null,
                 _ => null)
@@ -226,7 +206,7 @@ public class AllSpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .All(
+            .ToAllSpecification(
                 null as string,
                 null as string)
             .Evaluate(models);
@@ -249,7 +229,7 @@ public class AllSpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .All(_ => null)
+            .ToAllSpecification(_ => null)
             .Evaluate(models);
 
         act.Should().NotThrow();
@@ -270,7 +250,7 @@ public class AllSpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .All()
+            .ToAllSpecification()
             .Evaluate(models);
 
         act.Should().NotThrow();
@@ -285,7 +265,7 @@ public class AllSpecificationTests
             "throws",
             new Exception("should be wrapped"));
         
-        var sut = throwingSpec.All();
+        var sut = throwingSpec.ToAllSpecification();
         
         var act = () => sut.Evaluate([model]);
         

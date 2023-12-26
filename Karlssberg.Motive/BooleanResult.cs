@@ -1,8 +1,8 @@
 ﻿namespace Karlssberg.Motive;
 
-public record BooleanResult<TMetadata> : BooleanResultBase<TMetadata>
+public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IBooleanResult<TMetadata>
 {
-    public BooleanResult(bool isSatisfied, TMetadata metadata, string description)
+    internal BooleanResult(bool isSatisfied, TMetadata metadata, string description)
     {
         Throw.IfNull(description, nameof(description));
         
@@ -21,19 +21,11 @@ public record BooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     
     public override string Description { get; }
 
-    public override void Accept<TVisitor>(TVisitor visitor)
+    public override IEnumerable<string> Reasons
     {
-        visitor.Visit(this);
-    }
-
-    public override string ToString() => Description;
-}
-
-public sealed record BooleanResult(bool IsSatisfied, string Metadata) : BooleanResult<string>(IsSatisfied, Metadata, Metadata)
-{
-    public override string ToString() => Metadata;
-    public override void Accept<TVisitor>(TVisitor visitor)
-    {
-        visitor.Visit(this);
+        get
+        {
+            yield return Description;
+        }
     }
 }

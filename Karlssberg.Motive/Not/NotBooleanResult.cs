@@ -1,20 +1,17 @@
 ﻿namespace Karlssberg.Motive.Not;
 
-public sealed record NotBooleanResult<TMetadata>(BooleanResultBase<TMetadata> OperandResult) : BooleanResultBase<TMetadata>
+public sealed class NotBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 {
-    public BooleanResultBase<TMetadata> OperandResult { get; } = Throw.IfNull(OperandResult, nameof(OperandResult));
-
-    public override bool IsSatisfied { get; } = !OperandResult.IsSatisfied;
-
-    public override void Accept<TVisitor>(TVisitor visitor)
+    internal NotBooleanResult(BooleanResultBase<TMetadata> operandResult)
     {
-        var acton = visitor.Visit(this);
-        if (acton == VisitorAction.SkipOperands)
-            return;
-        
-        OperandResult.Accept(visitor);
+        OperandResult = Throw.IfNull(operandResult, nameof(operandResult));
+        IsSatisfied = !operandResult.IsSatisfied;
     }
-    
+
+    public BooleanResultBase<TMetadata> OperandResult { get; }
+
+    public override bool IsSatisfied { get; }
+
     public override string Description => $"NOT:{IsSatisfied}({OperandResult})";
-    public override string ToString() => Description;
+    public override IEnumerable<string> Reasons => OperandResult.Reasons;
 }

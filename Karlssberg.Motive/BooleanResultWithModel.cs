@@ -1,19 +1,20 @@
 ﻿namespace Karlssberg.Motive;
 
-public sealed record BooleanResultWithModel<TModel, TMetadata>(
-    TModel Model,
-    BooleanResultBase<TMetadata> UnderlyingResult) : BooleanResultBase<TMetadata>
+public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBase<TMetadata>
 {
-    public TModel Model { get; } = Model ?? throw new ArgumentNullException(nameof(Model));
+    internal BooleanResultWithModel(
+        TModel model,
+        BooleanResultBase<TMetadata> underlyingResult)
+    {
+        Model = model ?? throw new ArgumentNullException(nameof(model));
+        UnderlyingResult = underlyingResult ?? throw new ArgumentNullException(nameof(underlyingResult));
+    }
 
-    public BooleanResultBase<TMetadata> UnderlyingResult { get; } = UnderlyingResult ?? throw new ArgumentNullException(nameof(UnderlyingResult));
+    public TModel Model { get; }
+
+    public BooleanResultBase<TMetadata> UnderlyingResult { get; }
 
     public override bool IsSatisfied => UnderlyingResult.IsSatisfied;
     public override string Description => UnderlyingResult.Description;
-    public override string ToString() => Description;
-
-    public override void Accept<TVisitor>(TVisitor visitor)
-    {
-        UnderlyingResult.Accept(visitor);
-    }
+    public override IEnumerable<string> Reasons => UnderlyingResult.Reasons;
 }

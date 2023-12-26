@@ -1,6 +1,4 @@
 ﻿using FluentAssertions;
-using Karlssberg.Motive.Any;
-using NSubstitute;
 
 namespace Karlssberg.Motive.Tests;
 
@@ -15,7 +13,7 @@ public class AnySpecificationTests
     [AutoParams(true, false, true, true)]
     [AutoParams(true, true, false, true)]
     [AutoParams(true, true, true, true)]
-    public void Should_perform_the_higher_order_logical_operation_Any(
+    public void Should_perform_the_logical_operation_Any(
         bool first,
         bool second,
         bool third,
@@ -28,10 +26,7 @@ public class AnySpecificationTests
             false.ToString());
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.Any(
-            $"All {true}",
-            r => r.Model.ToString(),
-            $"All {false}");
+        var sut = underlyingSpec.ToAnySpecification();
         var result = sut.Evaluate(models);
         
         result.IsSatisfied.Should().Be(expected);
@@ -59,14 +54,11 @@ public class AnySpecificationTests
             false);
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.Any(
-            true,
-            r => r.Model,
-            false);
+        var sut = underlyingSpec.ToAnySpecification();
         var result = sut.Evaluate(models);
         
         result.Description.Should().Be(expected);
-        result.ToString().Should().Be(expected);
+        
     }
     
     [Theory]
@@ -91,14 +83,11 @@ public class AnySpecificationTests
             false.ToString());
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.Any(
-            $"All {true}",
-            r => r.Model.ToString(),
-            $"All {false}");
+        var sut = underlyingSpec.ToAnySpecification();
         var result = sut.Evaluate(models);
         
         result.Description.Should().Be(expected);
-        result.ToString().Should().Be(expected);
+        
     }
     
     [Theory]
@@ -122,14 +111,11 @@ public class AnySpecificationTests
             false.ToString());
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.Any(
-            $"All {true}",
-            r => r.Model.ToString(),
-            $"All {false}");
+        var sut = underlyingSpec.ToAnySpecification();
         var result = sut.Evaluate(models);
         
         result.Description.Should().Be(expected);
-        result.ToString().Should().Be(expected);
+        
     }
     
     [Theory]
@@ -145,7 +131,7 @@ public class AnySpecificationTests
                 m => m is null, 
                 trueMetadata, 
                 falseMetadata)
-            .Any();
+            .ToAnySpecification();
         
         var act = () =>  spec.Evaluate(models);
 
@@ -167,7 +153,7 @@ public class AnySpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .Any(
+            .ToAnySpecification(
                 _ => null,
                 _ => null,
                 _ => null)
@@ -191,7 +177,7 @@ public class AnySpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .Any(
+            .ToAnySpecification(
                 null as string,
                 null as string)
             .Evaluate(models);
@@ -214,7 +200,7 @@ public class AnySpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .Any(_ => null)
+            .ToAnySpecification(_ => null)
             .Evaluate(models);
 
         act.Should().NotThrow();
@@ -235,7 +221,7 @@ public class AnySpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .Any()
+            .ToAnySpecification()
             .Evaluate(models);
 
         act.Should().NotThrow();
@@ -250,7 +236,7 @@ public class AnySpecificationTests
             "should always throw",
             new Exception("should be wrapped"));
         
-        var sut = throwingSpec.Any();
+        var sut = throwingSpec.ToAnySpecification();
         
         var act = () => sut.Evaluate([model]);
         

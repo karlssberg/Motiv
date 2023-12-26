@@ -1,9 +1,8 @@
 ﻿using FluentAssertions;
-using Karlssberg.Motive.All;
 
 namespace Karlssberg.Motive.Tests;
 
-public class ChangeModelSpecificationTests
+public class ChangeModelTypeSpecificationTests
 {
     
     [Theory]
@@ -49,7 +48,7 @@ public class ChangeModelSpecificationTests
             ch => $"'{ch}' is not a letter");
         
         var isAllLetters = isLetter
-            .All()
+            .ToAllSpecification()
             .ChangeModel<string>(m => m.ToCharArray());
         
         var act = isAllLetters.Evaluate(model);
@@ -66,16 +65,16 @@ public class ChangeModelSpecificationTests
         var isLetter = new Specification<char>(
             "is a letter",
             char.IsLetter, 
-            ch => $"'{ch}' is a letter", 
+            ch => $"'{ch}' is a letter",
             ch => $"'{ch}' is not a letter");
         
         var isAllLetters = isLetter
-            .All()
+            .ToAllSpecification()
             .ChangeModel<string>(m => m.ToCharArray());
         
         var act = isAllLetters.Evaluate(model);
         
-        act.Causes.Should().BeEquivalentTo(expected);
+        act.GetInsights().Should().BeEquivalentTo(expected);
     }
     
     [Theory]

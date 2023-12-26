@@ -1,23 +1,30 @@
 ﻿namespace Karlssberg.Motive.XOr;
 
-public sealed record XOrBooleanResult<TMetadata>(
-    BooleanResultBase<TMetadata> LeftOperandResult,
-    BooleanResultBase<TMetadata> RightOperandResult) : BooleanResultBase<TMetadata>
+public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 {
-    public override bool IsSatisfied { get; } = LeftOperandResult.IsSatisfied ^ RightOperandResult.IsSatisfied;
-    public BooleanResultBase<TMetadata> LeftOperandResult { get; } = LeftOperandResult ?? throw new ArgumentNullException(nameof(LeftOperandResult));
-    public BooleanResultBase<TMetadata> RightOperandResult { get; } = RightOperandResult ?? throw new ArgumentNullException(nameof(RightOperandResult));
-
-    public override void Accept<TVisitor>(TVisitor visitor)
+    internal XOrBooleanResult(
+        BooleanResultBase<TMetadata> leftOperandResult,
+        BooleanResultBase<TMetadata> rightOperandResult)
     {
-        var action = visitor.Visit(this);
-        if (action == VisitorAction.SkipOperands)
-            return;
-        
-        LeftOperandResult.Accept(visitor);
-        RightOperandResult.Accept(visitor);
+        IsSatisfied = leftOperandResult.IsSatisfied ^ rightOperandResult.IsSatisfied;
+        LeftOperandResult = leftOperandResult ?? throw new ArgumentNullException(nameof(leftOperandResult));
+        RightOperandResult = rightOperandResult ?? throw new ArgumentNullException(nameof(rightOperandResult));
     }
-    
+
+    public override bool IsSatisfied { get; }
+    public BooleanResultBase<TMetadata> LeftOperandResult { get; }
+    public BooleanResultBase<TMetadata> RightOperandResult { get; }
+
+    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperandResults
+    {
+        get
+        {
+            yield return LeftOperandResult;
+            yield return RightOperandResult;
+        }
+    }
+
     public override string Description => $"({LeftOperandResult}) XOR:{IsSatisfied} ({RightOperandResult})";
-    public override string ToString() => Description;
+    public override IEnumerable<string> Reasons =>
+        DeterminativeOperandResults.SelectMany(r => r.Reasons);
 }

@@ -1,114 +1,287 @@
-﻿namespace Karlssberg.Motive;
+﻿using Karlssberg.Motive.ChangeMetadataType;
 
-public sealed class Specification<TModel, TMetadata>(
-    string description,
-    Func<TModel, bool> predicate, 
-    Func<TModel, TMetadata> whenTrue, 
-    Func<TModel, TMetadata> whenFalse) : SpecificationBase<TModel, TMetadata>
+namespace Karlssberg.Motive;
+
+public class Specification<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
 {
+    private readonly SpecificationBase<TModel, TMetadata> _specification;
+
+    #region PredicateConstructors
     public Specification(
         string description,
         Func<TModel, bool> predicate, 
         TMetadata whenTrue, 
-        TMetadata whenFalse) : this(description, predicate, _ => whenTrue, _ => whenFalse)
+        TMetadata whenFalse)
     {
+        _specification = new GenericMetadataSpecification<TModel, TMetadata>(
+            description,
+            predicate,
+            whenTrue,
+            whenFalse);
     }
     
     public Specification(
         string description,
         Func<TModel, bool> predicate, 
         Func<TModel, TMetadata> whenTrue, 
-        TMetadata whenFalse) : this(description, predicate, whenTrue, _ => whenFalse)
+        TMetadata whenFalse)
     {
+        _specification = new GenericMetadataSpecification<TModel, TMetadata>(
+            description,
+            predicate,
+            whenTrue,
+            whenFalse);
     }
     
     public Specification(
         string description,
         Func<TModel, bool> predicate, 
         TMetadata whenTrue, 
-        Func<TModel, TMetadata> whenFalse) : this(description, predicate, _ => whenTrue, whenFalse)
+        Func<TModel, TMetadata> whenFalse)
     {
+        _specification = new GenericMetadataSpecification<TModel, TMetadata>(
+            description,
+            predicate,
+            whenTrue,
+            whenFalse);
     }
     
-    private readonly Func<TModel, TMetadata> _whenTrue = Throw.IfNull(whenTrue, nameof(whenTrue));
-    private readonly Func<TModel, TMetadata> _whenFalse = Throw.IfNull(whenFalse, nameof(whenFalse));
-    private readonly Func<TModel, bool> _predicate = Throw.IfNull(predicate, nameof(predicate));
+    #endregion
+    #region SpecificationConstructors
+    public Specification(
+        SpecificationBase<TModel, TMetadata> specification, 
+        TMetadata whenTrue, 
+        TMetadata whenFalse)
+    {
+        Throw.IfNull(specification, nameof(specification));
+        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+    }
     
-    public override string Description { get; } = Throw.IfNullOrWhitespace(description, nameof(description));
-
-    public override BooleanResultBase<TMetadata> Evaluate(TModel model) =>
-        SpecificationException.WrapThrownExceptions(
-            this,
-            () =>
-            {
-                var isSatisfied = _predicate(model);
-                var cause = isSatisfied
-                    ? _whenTrue(model)
-                    : _whenFalse(model);
-
-                return new BooleanResult<TMetadata>(isSatisfied, cause, description);
-            });
+    public Specification(
+        SpecificationBase<TModel, TMetadata> specification, 
+        Func<TModel, TMetadata> whenTrue, 
+        TMetadata whenFalse)
+    {
+        Throw.IfNull(specification, nameof(specification));
+        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+    }
+    
+    public Specification(
+        SpecificationBase<TModel, TMetadata> specification, 
+        TMetadata whenTrue, 
+        Func<TModel, TMetadata> whenFalse)
+    {
+        Throw.IfNull(specification, nameof(specification));
+        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+    }
+    public Specification(SpecificationBase<TModel, TMetadata> specification)
+    {
+        Throw.IfNull(specification, nameof(specification));
+        _specification = specification;
+    }
+    #endregion
+    #region SpecificationFactoryConstructors
+    public Specification(
+        Func<SpecificationBase<TModel, TMetadata>> specificationFactory, 
+        TMetadata whenTrue, 
+        TMetadata whenFalse)
+    {
+        Throw.IfNull(specificationFactory, nameof(specificationFactory));
+        var specification = specificationFactory();
+        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
+        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+    }
+    
+    public Specification(
+        Func<SpecificationBase<TModel, TMetadata>> specificationFactory, 
+        Func<TModel, TMetadata> whenTrue, 
+        TMetadata whenFalse)
+    {
+        Throw.IfNull(specificationFactory, nameof(specificationFactory));
+        var specification = specificationFactory();
+        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
+        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+    }
+    
+    public Specification(
+        Func<SpecificationBase<TModel, TMetadata>> specificationFactory, 
+        TMetadata whenTrue, 
+        Func<TModel, TMetadata> whenFalse)
+    {
+        Throw.IfNull(specificationFactory, nameof(specificationFactory));
+        var specification = specificationFactory();
+        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
+        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+    }
+    
+    public Specification(Func<SpecificationBase<TModel, TMetadata>> specificationFactory)
+    {
+        Throw.IfNull(specificationFactory, nameof(specificationFactory));
+        var specification = specificationFactory();
+        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
+        _specification = specification;
+    }
+    #endregion
+    #region BasicSpecificationConstructors
+    public Specification(
+        SpecificationBase<TModel, string> specification, 
+        TMetadata whenTrue, 
+        TMetadata whenFalse)
+    {
+        Throw.IfNull(specification, nameof(specification));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(specification, _ => whenTrue, _ => whenFalse);
+    }
+    
+    public Specification(
+        SpecificationBase<TModel, string> specification, 
+        Func<TModel, TMetadata> whenTrue, 
+        TMetadata whenFalse)
+    {
+        Throw.IfNull(specification, nameof(specification));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(specification, whenTrue, _ => whenFalse);
+    }
+    
+    public Specification(
+        SpecificationBase<TModel, string> specification, 
+        TMetadata whenTrue, 
+        Func<TModel, TMetadata> whenFalse)
+    {
+        Throw.IfNull(specification, nameof(specification));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(specification, _ => whenTrue, whenFalse);
+    }
+    #endregion
+    public override string Description => _specification.Description;
+    public override BooleanResultBase<TMetadata> Evaluate(TModel model) => _specification.Evaluate(model);
 }
 
-public sealed class Specification<TModel>(
-    string description,
-    Func<TModel, bool> predicate,
-    Func<TModel, string> trueBecause,
-    Func<TModel, string> falseBecause) : SpecificationBase<TModel, string>
+public class Specification<TModel> : SpecificationBase<TModel, string>
 {
-    public Specification(
-        string description,
-        Func<TModel, bool> predicate, 
-        string trueBecause, 
-        string falseBecause) : this(description, predicate, _ => trueBecause, _ => falseBecause)
-    {
-        Throw.IfNullOrWhitespace(trueBecause, nameof(trueBecause));
-        Throw.IfNullOrWhitespace(falseBecause, nameof(falseBecause));
-    }
-    
+    private readonly SpecificationBase<TModel, string> _specification;
+    public override string Description => _specification.Description;
+    public override BooleanResultBase<string> Evaluate(TModel model) => _specification.Evaluate(model);
+        #region PredicateConstructors
     public Specification(
         Func<TModel, bool> predicate, 
-        string trueBecause, 
-        string falseBecause) : this(trueBecause, predicate, _ => trueBecause, _ => falseBecause)
+        string whenTrue, 
+        string whenFalse)
     {
-        Throw.IfNullOrWhitespace(trueBecause, nameof(trueBecause));
-        Throw.IfNullOrWhitespace(falseBecause, nameof(falseBecause));
+        _specification = new BasicSpecification<TModel>(
+            predicate,
+            whenTrue,
+            whenFalse);
     }
     
     public Specification(
         string description,
         Func<TModel, bool> predicate, 
-        Func<TModel, string> trueBecause, 
-        string falseBecause) : this(description, predicate, trueBecause, _ => falseBecause)
+        Func<TModel, string> whenTrue, 
+        string whenFalse)
     {
-        Throw.IfNullOrWhitespace(falseBecause, nameof(falseBecause));
+        _specification = new BasicSpecification<TModel>(
+            description,
+            predicate,
+            whenTrue,
+            whenFalse);
     }
     
     public Specification(
         Func<TModel, bool> predicate, 
-        string trueBecause, 
-        Func<TModel, string> falseBecause) : this(trueBecause, predicate, _ => trueBecause, falseBecause)
+        string whenTrue, 
+        Func<TModel, string> whenFalse)
     {
-        Throw.IfNullOrWhitespace(trueBecause, nameof(trueBecause));
+        _specification = new BasicSpecification<TModel>(
+            predicate,
+            whenTrue,
+            whenFalse);
     }
     
-    private readonly Func<TModel, bool> _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
-    private readonly Func<TModel, string> _trueBecause = trueBecause ?? throw new ArgumentNullException(nameof(trueBecause));
-    private readonly Func<TModel, string> _falseBecause = falseBecause ?? throw new ArgumentNullException(nameof(falseBecause));
-
-    public override BooleanResultBase<string> Evaluate(TModel model) =>
-        SpecificationException.WrapThrownExceptions(
-            this,
-            () =>
-            {
-                _predicate(model);
-                var isSatisfied = _predicate(model);
-                var because = isSatisfied 
-                    ? _trueBecause(model) 
-                    : _falseBecause(model);
-                
-                return new BooleanResult(isSatisfied, because);
-            });
-
-    public override string Description => description;
+    public Specification(
+        string description,
+        Func<TModel, bool> predicate, 
+        Func<TModel, string> whenTrue, 
+        Func<TModel, string> whenFalse)
+    {
+        _specification = new BasicSpecification<TModel>(
+            description,
+            predicate,
+            whenTrue,
+            whenFalse);
+    }
+    #endregion
+    #region SpecificationConstructors
+    public Specification(
+        SpecificationBase<TModel, string> specification,
+        string whenTrue, 
+        string whenFalse)
+    {
+        Throw.IfNull(specification, nameof(specification));
+        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+    }
+    
+    public Specification(
+        SpecificationBase<TModel, string> specification, 
+        Func<TModel, string> whenTrue, 
+        string whenFalse)
+    {
+        Throw.IfNull(specification, nameof(specification));
+        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+    }
+    
+    public Specification(
+        SpecificationBase<TModel, string> specification, 
+        string whenTrue, 
+        Func<TModel, string> whenFalse)
+    {
+        Throw.IfNull(specification, nameof(specification));
+        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+    }
+    public Specification(SpecificationBase<TModel, string> specification)
+    {
+        Throw.IfNull(specification, nameof(specification));
+        _specification = specification;
+    }
+    
+    #endregion
+    #region SpecificationFactoryConstructors
+    public Specification(
+        Func<SpecificationBase<TModel, string>> specificationFactory, 
+        string whenTrue, 
+        string whenFalse)
+    {
+        Throw.IfNull(specificationFactory, nameof(specificationFactory));
+        var specification = specificationFactory();
+        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
+        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+    }
+    
+    public Specification(
+        Func<SpecificationBase<TModel, string>> specificationFactory, 
+        Func<TModel, string> whenTrue, 
+        string whenFalse)
+    {
+        Throw.IfNull(specificationFactory, nameof(specificationFactory));
+        var specification = specificationFactory();
+        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
+        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+    }
+    
+    public Specification(
+        Func<SpecificationBase<TModel, string>> specificationFactory, 
+        string whenTrue, 
+        Func<TModel, string> whenFalse)
+    {
+        Throw.IfNull(specificationFactory, nameof(specificationFactory));
+        var specification = specificationFactory();
+        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
+        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+    }
+    
+    public Specification(Func<SpecificationBase<TModel, string>> specificationFactory)
+    {
+        Throw.IfNull(specificationFactory, nameof(specificationFactory));
+        var specification = specificationFactory();
+        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
+        _specification = specification;
+    }
+    #endregion
 }

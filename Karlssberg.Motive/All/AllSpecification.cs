@@ -2,14 +2,27 @@
 
 namespace Karlssberg.Motive.All;
 
-public sealed class AllSpecification<TModel, TMetadata>(
-    SpecificationBase<TModel, TMetadata> underlyingSpecification,
-    Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactory)
+internal sealed class AllSpecification<TModel, TMetadata>
     : SpecificationBase<IEnumerable<TModel>, TMetadata>
 {
-    internal AllSpecification(SpecificationBase<TModel, TMetadata> specification) : this(specification, SelectCauses)
+    private readonly Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> _metadataFactory;
+
+    internal AllSpecification(
+        SpecificationBase<TModel, TMetadata> underlyingSpecification,
+        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactory)
+    {
+        UnderlyingSpecification = underlyingSpecification;
+        Description = $"ALL({underlyingSpecification})";
+        _metadataFactory = metadataFactory;
+    }
+    
+    internal AllSpecification(SpecificationBase<TModel, TMetadata> specification) 
+        : this(
+            specification, 
+            (_, _) => Enumerable.Empty<TMetadata>())
     {
     }
+
     
     internal AllSpecification(
         SpecificationBase<TModel, TMetadata> underlyingSpecification,
@@ -21,23 +34,23 @@ public sealed class AllSpecification<TModel, TMetadata>(
     internal AllSpecification(
         SpecificationBase<TModel, TMetadata> underlyingSpecification,
         Func<IEnumerable<TModel>, TMetadata> whenAllTrue,
-        Func<BooleanResultWithModel<TModel,TMetadata>, TMetadata> whenFalse) 
-        : this(underlyingSpecification, CreateMetadataFactory(whenAllTrue, whenFalse))
+        Func<BooleanResultWithModel<TModel,TMetadata>, TMetadata> whenAnyFalse) 
+        : this(underlyingSpecification, CreateMetadataFactory(whenAllTrue, whenAnyFalse))
     {
     } 
     
     internal AllSpecification(
         SpecificationBase<TModel, TMetadata> underlyingSpecification,
         Func<IEnumerable<TModel>, TMetadata> whenAllTrue,
-        Func<BooleanResultWithModel<TModel,TMetadata>, TMetadata> whenFalse,
+        Func<BooleanResultWithModel<TModel,TMetadata>, TMetadata> whenAnyFalse,
         Func<IEnumerable<TModel>, TMetadata> whenAllFalse) 
-        : this(underlyingSpecification, CreateMetadataFactory(whenAllTrue, whenFalse, whenAllFalse))
+        : this(underlyingSpecification, CreateMetadataFactory(whenAllTrue, whenAnyFalse, whenAllFalse))
     {
     }
 
-    public SpecificationBase<TModel, TMetadata> UnderlyingSpecification { get; } = Throw.IfNull(underlyingSpecification, nameof(underlyingSpecification));
+    public SpecificationBase<TModel, TMetadata> UnderlyingSpecification { get; } 
 
-    public override string Description { get; } = $"ALL({underlyingSpecification})";
+    public override string Description { get; }
 
     public override BooleanResultBase<TMetadata> Evaluate(IEnumerable<TModel> models) 
     {
@@ -48,15 +61,15 @@ public sealed class AllSpecification<TModel, TMetadata>(
                     UnderlyingSpecification,
                     () =>
                     {
-                        var result1 = UnderlyingSpecification.Evaluate(model);
-                        return new BooleanResultWithModel<TModel, TMetadata>(model, result1);
+                        var underlyingResult = UnderlyingSpecification.Evaluate(model);
+                        return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
                     }))
             .ToList();
 
         return new AllBooleanResult<TMetadata>(ResolveMetadata, results.Select(result => result.UnderlyingResult));
 
         IEnumerable<TMetadata> ResolveMetadata(bool isSatisfied) =>
-            metadataFactory(isSatisfied, results);
+            _metadataFactory(isSatisfied, results);
     }
 
     private static Func<bool,IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> CreateMetadataFactory(
@@ -92,12 +105,8 @@ public sealed class AllSpecification<TModel, TMetadata>(
             ? [whenAllTrue(results.Select(result => result.Model))]
             : results
                 .Where(result => !result.IsSatisfied)
-                .SelectMany(result => result.Causes);
+                .SelectMany(result => result.GetInsights());
     }
 
-    private static IEnumerable<TMetadata> SelectCauses(bool isSatisfied, IEnumerable<BooleanResultWithModel<TModel, TMetadata>> results) =>
-        results
-            .Where(result => result.IsSatisfied == isSatisfied)
-            .SelectMany(result => result.Causes);
 
 }

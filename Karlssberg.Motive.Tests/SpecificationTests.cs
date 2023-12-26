@@ -18,8 +18,8 @@ public class SpecificationTests
         var result = sut.Evaluate(model);
 
         result.IsSatisfied.Should().Be(model);
-        result.Causes.Should().HaveCount(1);
-        result.Causes.Should().AllBe(model.ToString());
+        result.GetInsights().Should().HaveCount(1);
+        result.GetInsights().Should().AllBe(model.ToString());
     }
     
     [Fact]
@@ -34,8 +34,8 @@ public class SpecificationTests
         var result = sut.Evaluate(null);
 
         result.IsSatisfied.Should().Be(true);
-        result.Causes.Should().HaveCount(1);
-        result.Causes.Should().AllBe(true.ToString());
+        result.GetInsights().Should().HaveCount(1);
+        result.GetInsights().Should().AllBe(true.ToString());
     }
     
     [Theory]
@@ -51,8 +51,8 @@ public class SpecificationTests
         var result = sut.Evaluate(model);
 
         result.IsSatisfied.Should().Be(model);
-        result.Causes.Should().HaveCount(1);
-        result.Causes.Should().AllBe(model.ToString());
+        result.GetInsights().Should().HaveCount(1);
+        result.GetInsights().Should().AllBe(model.ToString());
     }
     
     [Fact]
@@ -66,15 +66,15 @@ public class SpecificationTests
         var result = sut.Evaluate(null);
 
         result.IsSatisfied.Should().Be(true);
-        result.Causes.Should().HaveCount(1);
-        result.Causes.Should().AllBe(true.ToString());
+        result.GetInsights().Should().HaveCount(1);
+        result.GetInsights().Should().AllBe(true.ToString());
     }
     
     [Fact]
     public void Should_throw_if_null_predicate_is_supplied()
     {
         var act = () =>  new Specification<string?>(
-            null!, 
+            null! as Func<string?, bool>, 
             true.ToString(), 
             false.ToString());
 

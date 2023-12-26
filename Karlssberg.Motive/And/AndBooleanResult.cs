@@ -1,29 +1,28 @@
-﻿using static Karlssberg.Motive.VisitorAction;
+﻿namespace Karlssberg.Motive.And;
 
-namespace Karlssberg.Motive.And;
-
-public sealed record AndBooleanResult<TMetadata>(
-    BooleanResultBase<TMetadata> LeftOperandResult, 
-    BooleanResultBase<TMetadata> RightOperandResult) : BooleanResultBase<TMetadata>
+public sealed class AndBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 {
-    public BooleanResultBase<TMetadata> LeftOperandResult { get; } = Throw.IfNull(LeftOperandResult, nameof(LeftOperandResult));
-    public BooleanResultBase<TMetadata> RightOperandResult { get; } = Throw.IfNull(RightOperandResult, nameof(RightOperandResult));
-
-    public override bool IsSatisfied { get; } = LeftOperandResult.IsSatisfied && RightOperandResult.IsSatisfied;
-
-    public override void Accept<TVisitor>(TVisitor visitor)
+    internal AndBooleanResult(
+        BooleanResultBase<TMetadata> leftOperandResult,
+        BooleanResultBase<TMetadata> rightOperandResult)
     {
-        var visitorResult = visitor.Visit(this);
-        if (visitorResult == SkipOperands)
-            return;
-         
-        if (LeftOperandResult.IsSatisfied == IsSatisfied || visitorResult == VisitAllOperands) 
-            LeftOperandResult.Accept(visitor);
+        LeftOperandResult = Throw.IfNull(leftOperandResult, nameof(leftOperandResult));
+        RightOperandResult = Throw.IfNull(rightOperandResult, nameof(rightOperandResult));
         
-        if (RightOperandResult.IsSatisfied == IsSatisfied || visitorResult == VisitAllOperands) 
-            RightOperandResult.Accept(visitor);
+        IsSatisfied = leftOperandResult.IsSatisfied && rightOperandResult.IsSatisfied;
+        OperandResults = [leftOperandResult, rightOperandResult];
+        DeterminativeOperandResults = OperandResults
+            .Where(r => r.IsSatisfied == IsSatisfied);
     }
-    
+
+    public BooleanResultBase<TMetadata>[] OperandResults { get; }
+    public BooleanResultBase<TMetadata> LeftOperandResult { get; }
+    public BooleanResultBase<TMetadata> RightOperandResult { get; }
+    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperandResults { get; }
+
+    public override bool IsSatisfied { get; }
+
     public override string Description => $"({LeftOperandResult}) AND:{IsSatisfied} ({RightOperandResult})";
-    public override string ToString() => Description;
+    public override IEnumerable<string> Reasons =>
+        DeterminativeOperandResults.SelectMany(r => r.Reasons);
 }

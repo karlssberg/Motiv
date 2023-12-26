@@ -4,20 +4,20 @@ namespace Karlssberg.Motive;
 
 public static class AllSpecificationExtensions
 {
-    public static SpecificationBase<IEnumerable<TModel>, TMetadata> All<TModel, TMetadata>(
+    public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAllSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification)
     {
         return new AllSpecification<TModel, TMetadata>(specification);
     }
     
-    public static SpecificationBase<IEnumerable<TModel>, TMetadata> All<TModel, TMetadata>(
+    public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAllSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactory)
     {
         return new AllSpecification<TModel, TMetadata>(specification, metadataFactory);
     }
     
-    public static SpecificationBase<IEnumerable<TModel>, TMetadata> All<TModel, TMetadata>(
+    public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAllSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         TMetadata whenAllTrue)
     {
@@ -26,7 +26,7 @@ public static class AllSpecificationExtensions
             _ => whenAllTrue);
     }
     
-    public static SpecificationBase<IEnumerable<TModel>, TMetadata> All<TModel, TMetadata>(
+    public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAllSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         Func<IEnumerable<TModel>, TMetadata> whenAllTrue)
     {
@@ -35,7 +35,7 @@ public static class AllSpecificationExtensions
             whenAllTrue);
     }
 
-    public static SpecificationBase<IEnumerable<TModel>, TMetadata> All<TModel, TMetadata>(
+    public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAllSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         TMetadata whenAllTrue,
         TMetadata whenAnyFalse)
@@ -46,7 +46,7 @@ public static class AllSpecificationExtensions
             _ => whenAnyFalse);
     }
     
-    public static SpecificationBase<IEnumerable<TModel>, TMetadata> All<TModel, TMetadata>(
+    public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAllSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         TMetadata whenAllTrue,
         Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenAnyFalse)
@@ -57,7 +57,7 @@ public static class AllSpecificationExtensions
             whenAnyFalse);
     }
     
-    public static SpecificationBase<IEnumerable<TModel>, TMetadata> All<TModel, TMetadata>(
+    public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAllSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         Func<IEnumerable<TModel>, TMetadata> whenAllTrue,
         TMetadata whenAnyFalse)
@@ -68,7 +68,7 @@ public static class AllSpecificationExtensions
             _ => whenAnyFalse);
     }
     
-    public static SpecificationBase<IEnumerable<TModel>, TMetadata> All<TModel, TMetadata>(
+    public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAllSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         Func<IEnumerable<TModel>, TMetadata> whenAllTrue,
         Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenAnyFalse)
@@ -79,7 +79,7 @@ public static class AllSpecificationExtensions
             whenAnyFalse);
     }
     
-    public static SpecificationBase<IEnumerable<TModel>, TMetadata> All<TModel, TMetadata>(
+    public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAllSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         TMetadata whenAllTrue,
         TMetadata whenSomeFalse,
@@ -92,7 +92,7 @@ public static class AllSpecificationExtensions
             _ => whenAllFalse);
     }
     
-    public static SpecificationBase<IEnumerable<TModel>, TMetadata> All<TModel, TMetadata>(
+    public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAllSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         TMetadata whenAllTrue,
         Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenSomeFalse,
@@ -105,7 +105,7 @@ public static class AllSpecificationExtensions
             _ => whenAllFalse);
     }
     
-    public static SpecificationBase<IEnumerable<TModel>, TMetadata> All<TModel, TMetadata>(
+    public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAllSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         Func<IEnumerable<TModel>, TMetadata> whenAllTrue,
         Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenSomeFalse,

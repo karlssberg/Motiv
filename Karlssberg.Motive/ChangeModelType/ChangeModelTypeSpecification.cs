@@ -1,13 +1,15 @@
 ﻿using static Karlssberg.Motive.SpecificationException;
 
-namespace Karlssberg.Motive;
+namespace Karlssberg.Motive.ChangeModelType;
 
-public sealed class ChangeModelSpecification<TParentModel, TModel, TMetadata>(
+public sealed class ChangeModelTypeSpecification<TParentModel, TModel, TMetadata>(
     SpecificationBase<TModel, TMetadata> specification,
     Func<TParentModel, TModel> modelSelector) : SpecificationBase<TParentModel, TMetadata>
 {
-    private readonly SpecificationBase<TModel, TMetadata> _specification = Throw.IfNull(specification, nameof(specification));
     private readonly Func<TParentModel, TModel> _modelSelector = Throw.IfNull(modelSelector, nameof(modelSelector));
+    private readonly SpecificationBase<TModel, TMetadata> _specification = Throw.IfNull(specification, nameof(specification));
+
+    public override string Description => _specification.Description;
 
     public override BooleanResultBase<TMetadata> Evaluate(TParentModel model)
     {
@@ -15,8 +17,6 @@ public sealed class ChangeModelSpecification<TParentModel, TModel, TMetadata>(
             _specification,
             () => _specification.Evaluate(_modelSelector(model)));
     }
-
-    public override string Description => _specification.Description;
 
     public override string ToString() => _specification.ToString();
 }

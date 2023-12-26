@@ -25,7 +25,7 @@ public class NotSpecificationTests
         var result = sut.Evaluate(model);
         
         result.IsSatisfied.Should().Be(expected);
-        result.Causes.Should().AllBeEquivalentTo(operand);
+        result.GetInsights().Should().AllBeEquivalentTo(operand);
     }
     
     [Theory]
@@ -47,7 +47,7 @@ public class NotSpecificationTests
         var result = sut.Evaluate(model);
         
         result.Description.Should().Be(expected);
-        result.ToString().Should().Be(expected);
+        
     }
     
     [Theory]
@@ -69,7 +69,7 @@ public class NotSpecificationTests
         var result = sut.Evaluate(model);
         
         result.Description.Should().Be(expected);
-        result.ToString().Should().Be(expected);
+        
     }
     
     [Theory]
@@ -90,7 +90,7 @@ public class NotSpecificationTests
         var result = sut.Evaluate(model);
         
         result.Description.Should().Be(expected);
-        result.ToString().Should().Be(expected);
+        
     }
     
     [Theory]
@@ -119,12 +119,12 @@ public class NotSpecificationTests
     [Theory]
     [AutoParams]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception(
-        [Frozen] SpecificationBase<object, string> throwingSpec,
         string model)
     {
-        throwingSpec
-            .Evaluate(default!)
-            .ReturnsForAnyArgs(_ => throw new Exception("should be wrapped"));
+        var throwingSpec = new ThrowingSpecification<object, string>(
+            "should always throw",
+            new Exception("should be wrapped"));
+        
         var sut = !throwingSpec;
         
         var act = () => sut.Evaluate(model);
