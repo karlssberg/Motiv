@@ -9,7 +9,7 @@ If so then look no further, because Motive will help make these problems disappe
 This library deals with vexing issues from working with logic. Such as...
 
 - **Not knowing why your application did that** After releasing an application and getting feedback from users it can be difficult trying figure out the specific reasons _why_ an unexpected decision was arrived at, especially when there are numerous parameters involved.  The more complex the overall logical expression, the more error-prone the solution is to supplement it with metadata/additional-functionality in order to answer this question.
-- **Spaghetti Logic**  When faced with the _logical expression from hell_ it can be challenging to understand what bits of the logic played a pivotal role in producing the final result, sure you can inspect the values but this is onerous, error-prone and slows you down.
+- **Spaghetti Logic**  When faced with the _logical expression from hell_ it can be challenging to understand what bits of the logic played a pivotal role in producing the final result.  Sure you can inspect the values but this is onerous, error-prone and slows you down.
 - **Blackbox Logic** If you have gone down the laudable path of decomposing your logic into bite-sized chunks then you are faced with a new conundrum, which is comprehending what your logic is actually doing when revisiting it.  Logic can be just as easily decomposed as easily as it can be composed, and this can lead to _gotchas_ in your logic that are hard to stumble upon.  This exacerbates the first problem _Not knowing why your application did that_.
 
 ## Solution
