@@ -6,6 +6,14 @@ public class SubstituteMetadataBooleanResult<TMetadata> : BooleanResultBase<TMet
     {
         UnderlyingBooleanResult = underlyingBooleanResult;
         SubstituteMetadata = substituteMetadata;
+        
+        var description = substituteMetadata switch
+        {
+            string reason => reason,
+            _ => underlyingBooleanResult.Description
+        };
+        Description = description;
+        Reasons = [description];
     }
 
     public TMetadata SubstituteMetadata { get; }
@@ -14,7 +22,7 @@ public class SubstituteMetadataBooleanResult<TMetadata> : BooleanResultBase<TMet
     
     public override bool IsSatisfied => UnderlyingBooleanResult.IsSatisfied;
     
-    public override string Description => UnderlyingBooleanResult.Description;
+    public override string Description { get; } 
     
-    public override IEnumerable<string> Reasons => UnderlyingBooleanResult.Reasons;
+    public override IEnumerable<string> Reasons { get; }
 }
