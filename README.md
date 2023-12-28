@@ -1,6 +1,6 @@
-﻿# Motive - turn your if-statements into why-statements.
+# Motive - turn your if-statements into why-statements.
 
-Are you fed up with debugging Boolean expressions and want to quickly find out what went wrong? Do you need to tell others what went wrong? Does it all look like Spagghetti?
+Are you fed up with debugging Boolean expressions and want to quickly find out what went wrong? Do you need to tell others what went wrong? Does it all look like Spaghetti?
 
 If so then look no further, because Motive will help make these problems disappear.
 
@@ -8,20 +8,20 @@ If so then look no further, because Motive will help make these problems disappe
 
 This library deals with vexing issues from working with logic. Such as...
 
-- **Not knowing why your application did that** After releasing an application and getting feedback from users it can be difficult trying figure out the specific reasons _why_ an unexpected decision was arrived at, especially when there are numerous parameters involved.  The more complex the overall logical expression, the more error-prone the solution is to suppliment it with metadata/additional-functionality.
-- **Spaghetti Logic**  When faced with the _logical expresson from hell_ it can be challenging to understand what bits of the logic played a pivital role in producing the final result, sure you can inspect the values but this is onerous, error-prone and slows you down.
-- **Blackbox Logic** If you have gone down the laudable path of decomposing your logic into bitesized chunks then you are faced with a new conundrum, which is comprehending what your logic is actually doing when revisiting it.  Logic can be just as easily decomposed as easily as it can be composed, and this can lead to _gotchas_ in your logic that are hard to stumble upon.  This exacerbates the first problem _Not knowing why your application did that_.
+- **Not knowing why your application did that** After releasing an application and getting feedback from users it can be difficult trying figure out the specific reasons _why_ an unexpected decision was arrived at, especially when there are numerous parameters involved.  The more complex the overall logical expression, the more error-prone the solution is to supplement it with metadata/additional-functionality.
+- **Spaghetti Logic**  When faced with the _logical expression from hell_ it can be challenging to understand what bits of the logic played a pivotal role in producing the final result, sure you can inspect the values but this is onerous, error-prone and slows you down.
+- **Blackbox Logic** If you have gone down the laudable path of decomposing your logic into bite-sized chunks then you are faced with a new conundrum, which is comprehending what your logic is actually doing when revisiting it.  Logic can be just as easily decomposed as easily as it can be composed, and this can lead to _gotchas_ in your logic that are hard to stumble upon.  This exacerbates the first problem _Not knowing why your application did that_.
 
 ## Solution
 
-Motive addresses these challenges by extending the [Specification Pattern](https://en.wikipedia.org/wiki/Specification_pattern) so it can embed metadata along with logical statements.  By following the same rules that govern traditional logical operators, the metadata is filtered and aggregated with metadata from adjacent logcal statements to form a list of metadata representing the underlying causes.  You can think of it as a library that helps you suppliment validation-like metadata to your regular/vanilla if-statements.
+Motive addresses these challenges by extending the [Specification Pattern](https://en.wikipedia.org/wiki/Specification_pattern) so it can embed metadata along with logical statements.  By following the same rules that govern traditional logical operators, the metadata is filtered and aggregated with metadata from adjacent logcal statements to form a list of metadata representing the underlying causes.  You can think of it as a library that helps you supplement validation-like metadata to your regular/vanilla if-statements.
 
 ## Benefits
 
-1. **Decomposing Logic**: In any non-trival application there is a high chance that you will find a need to re-use logic in various places.  This often means wrapping it in a function and moving it somewhere else.  Motive provides a framework for doing this and and the means to recombine them afterwards.
-2. **Metadata association**: Associate metadata for both `true` and `false` outcomes.  By default the metadata is a string - so that human readable explanations of the logic can be defined alongside the actual logical expression.  However, this doesn't have to be a string and can in fact be any type, which means that it can be used to support mult-lingual explanations, or even be used to conditionally select stateful objects.
-3. **Metadata accumulation**: With complex logical expressions different underlying logic may (or may not) be responsible producing the final result.  This means that in order to be useful, the metadata needs to be selectively filtered so that only the metadata from logic that contributed to the final result is accumulated, or to be more technical: only the metadata from _determinative operands_ are accumulated.  For instance, with an _or_ operation, if one of the operands produces a `false` result and the other a _true_ result then only the operand that returned a `true` result will have its metadata accumulated and the other operand's metadata will be igonored.  
-4. **Enhanced Debugging Experience**: This libarary has been designed to supercharge the developer arounding Boolean logic.  Speicifcations, whether composed of other Specifications or not, override the `ToString()` method so that it provides a human readable representation of its the logic tree.  Furthermore, the generated result also accumulates a human-readable list of reasons why the result was either `true` or `false`.  This is primarily for debugging and troubleshooting purposes, but it could also be surfaced to users if so desired.
+1. **Decomposing Logic**: In any non-trivial application there is a high chance that you will find a need to re-use logic in various places.  This often means wrapping it in a function and moving it somewhere else.  Motive provides a framework for doing this and and the means to recombine them afterwards.
+2. **Metadata association**: Associate metadata for both `true` and `false` outcomes.  By default the metadata is a string - so that human readable explanations of the logic can be defined alongside the actual logical expression.  However, this doesn't have to be a string and can in fact be any type, which means that it can be used to support multi-lingual explanations, or even be used to conditionally select stateful objects.
+3. **Metadata accumulation**: With complex logical expressions different underlying logic may (or may not) be responsible producing the final result.  This means that in order to be useful, the metadata needs to be selectively filtered so that only the metadata from logic that contributed to the final result is accumulated, or to be more technical: only the metadata from _determinative operands_ are accumulated.  For instance, with an _or_ operation, if one of the operands produces a `false` result and the other a _true_ result then only the operand that returned a `true` result will have its metadata accumulated and the other operand's metadata will be ignored.
+4. **Enhanced Debugging Experience**: This library has been designed to supercharge the developer around Boolean logic.  Specifications, whether composed of other Specifications or not, override the `ToString()` method so that it provides a human readable representation of its the logic tree.  Furthermore, the generated result also accumulates a human-readable list of reasons why the result was either `true` or `false`.  This is primarily for debugging and troubleshooting purposes, but it could also be surfaced to users if so desired.
 
 Effectively, Motive can replace many validation libraries, offering an enriched validation experience by providing a layer of abstraction that unifies the decision-making process and the validation process.
 
@@ -42,7 +42,7 @@ This section provides instructions on how to build and run the Motive project us
    ```bash
    dotnet build
    ```
-   
+
 ####Running Tests
 
 **Run Unit Tests** To execute tests within the solution run the following command:
