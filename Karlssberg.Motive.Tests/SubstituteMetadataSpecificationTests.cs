@@ -9,6 +9,7 @@ public class SubstituteMetadataSpecificationTests
     [Theory]
     public void Should_replace_the_metadata_with_new_metadata(bool isSatisfied, string expectedA, string expectedB, string expectedC, string expectedD)
     {
+        IEnumerable<string> expectation = [expectedA, expectedB, expectedC, expectedD];
         var underlying = new Spec<string, string>(
             "original",
             _ => isSatisfied,
@@ -21,7 +22,8 @@ public class SubstituteMetadataSpecificationTests
             | underlying.SubstituteMetadata(model => $"true after + {model} - D", model => $"false after + {model} - D");
 
         var act = sut.Evaluate("model");
-        
-        act.Reasons.Should().BeEquivalentTo([expectedA, expectedB, expectedC, expectedD]);
+
+        act.Reasons.Should().BeEquivalentTo(expectation);
+        act.GetInsights().Should().BeEquivalentTo(expectation);
     }
 }
