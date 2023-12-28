@@ -14,7 +14,7 @@ public class NotSpecificationTests
         bool expected,
         object model)
     {
-        var spec = new Specification<object, bool>(
+        var spec = new Spec<object, bool>(
             $"is {operand}",
             _ => operand,
             true,
@@ -36,7 +36,7 @@ public class NotSpecificationTests
         string expected,
         object model)
     {
-        var spec = new Specification<object, bool>(
+        var spec = new Spec<object, bool>(
             "underlying",
             _ => operand,
             true,
@@ -58,7 +58,7 @@ public class NotSpecificationTests
         string expected,
         object model)
     {
-        var spec = new Specification<object, string>(
+        var spec = new Spec<object, string>(
             "underlying",
             _ => operand,
             true.ToString(),
@@ -80,7 +80,7 @@ public class NotSpecificationTests
         string expected,
         object model)
     {
-        var spec = new Specification<object>(
+        var spec = new Spec<object>(
             _ => operand,
             true.ToString(),
             false.ToString());
@@ -101,7 +101,7 @@ public class NotSpecificationTests
         string? falseMetadata,
         string? model)
     {
-        var spec = new Specification<string?, string?>(
+        var spec = new Spec<string?, string?>(
             "is null",
             m => m is null,
             trueMetadata,

@@ -10,7 +10,7 @@ public class ChangeModelTypeSpecificationTests
     [AutoParams(default(string), true)]
     public void Should_change_the_model(string? model, bool expected)
     {
-        var isEmpty = new Specification<object?>(o => o is null, "is null", "is not null");
+        var isEmpty = new Spec<object?>(o => o is null, "is null", "is not null");
         var sut = isEmpty.ChangeModel<string?>();
             
         var act = sut.Evaluate(model);
@@ -26,7 +26,7 @@ public class ChangeModelTypeSpecificationTests
     [AutoParams(typeof(object), false)]
     public void Should_change_the_model_using_a_model_selector_function(object model, bool expected)
     {
-        var isValueType = new Specification<Type>(t => t.IsValueType, "is value-type", "is not value-type");
+        var isValueType = new Spec<Type>(t => t.IsValueType, "is value-type", "is not value-type");
         var sut = isValueType.ChangeModel<object>(m => m.GetType());
         
         var act = sut.Evaluate(model);
@@ -41,7 +41,7 @@ public class ChangeModelTypeSpecificationTests
     public void Should_logically_resolve_parent_specification(string model, bool expected)
     {          
         
-        var isLetter = new Specification<char>(
+        var isLetter = new Spec<char>(
             "is a letter",
             char.IsLetter, 
             ch => $"'{ch}' is a letter", 
@@ -62,7 +62,7 @@ public class ChangeModelTypeSpecificationTests
     [AutoParams("ok", "'o' is a letter", "'k' is a letter")]
     public void Should_identify_non_letters(string model, params string[] expected)
     {          
-        var isLetter = new Specification<char>(
+        var isLetter = new Spec<char>(
             "is a letter",
             char.IsLetter, 
             ch => $"'{ch}' is a letter",
@@ -85,7 +85,7 @@ public class ChangeModelTypeSpecificationTests
         string? falseMetadata,
         string? model)
     {
-        var spec = new Specification<object?, string?>(
+        var spec = new Spec<object?, string?>(
             "is null",
             m => m is null,
             trueMetadata,
@@ -110,7 +110,7 @@ public class ChangeModelTypeSpecificationTests
         string? falseMetadata,
         object? model)
     {
-        var spec = new Specification<string?, string?>(
+        var spec = new Spec<string?, string?>(
             "is null",
             m => m is null,
             trueMetadata,

@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motive.Poker;
 
-public class IsHandTwoPair() : Specification<Hand, HandRank>(
+public class IsHandTwoPair() : Spec<Hand, HandRank>(
     new HasNPairs(2),
     TwoPair,
     HighCard);

@@ -2,14 +2,14 @@ using FluentAssertions;
 
 namespace Karlssberg.Motive.Tests;
 
-public class SpecificationTests
+public class SpecTests
 {
     [Theory]
     [AutoParams(true)]
     [AutoParams(false)]
     public void Should_return_a_result_that_satisfies_the_predicate(bool model)
     {
-        var sut = new Specification<bool, string>(
+        var sut = new Spec<bool, string>(
             "returns model value",
             m => m, 
             true.ToString(), 
@@ -25,7 +25,7 @@ public class SpecificationTests
     [Fact]
     public void Should_handle_null_model_without_throwing()
     {
-        var sut = new Specification<string?, string>(
+        var sut = new Spec<string?, string>(
             "is null",
             m => m is null, 
             true.ToString(), 
@@ -43,7 +43,7 @@ public class SpecificationTests
     [AutoParams(false)]
     public void Should_return_a_result_that_satisfies_the_predicate_when_using_textual_specification(bool model)
     {
-        var sut = new Specification<bool>(
+        var sut = new Spec<bool>(
             m => m, 
             true.ToString(), 
             false.ToString());
@@ -58,7 +58,7 @@ public class SpecificationTests
     [Fact]
     public void Should_handle_null_model_without_throwing_when_using_textual_specification()
     {
-        var sut = new Specification<string?>(
+        var sut = new Spec<string?>(
             m => m is null, 
             true.ToString(), 
             false.ToString());
@@ -73,7 +73,7 @@ public class SpecificationTests
     [Fact]
     public void Should_throw_if_null_predicate_is_supplied()
     {
-        var act = () =>  new Specification<string?>(
+        var act = () =>  new Spec<string?>(
             null! as Func<string?, bool>, 
             true.ToString(), 
             false.ToString());
@@ -86,7 +86,7 @@ public class SpecificationTests
     [AutoParams(null, "false")]
     public void Should_not_throw_if_null_metadata_supplied(string? trueMetadata, string? falseMetadata)
     {
-        var act = () =>  new Specification<string?, string?>(
+        var act = () =>  new Spec<string?, string?>(
             "is null",
             m => m is null, 
             trueMetadata, 
@@ -104,7 +104,7 @@ public class SpecificationTests
     [AutoParams(" ", "hello world")]
     public void Should_throw_if_invalid_reasons_are_supplied(string? trueBecause, string? falseBecause)
     {
-        var act = () =>  new Specification<string?>(
+        var act = () =>  new Spec<string?>(
             m => m is null, 
             trueBecause, 
             falseBecause);
@@ -115,7 +115,7 @@ public class SpecificationTests
     [Fact]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception_when_using_text_metadata()
     {
-        var act = () =>  new Specification<string?>(
+        var act = () =>  new Spec<string?>(
             _ => throw new Exception("should be wrapped"), 
             true.ToString(), 
             false.ToString())
@@ -129,7 +129,7 @@ public class SpecificationTests
     [Fact]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception()
     {
-        var spec = new Specification<string?, object>(
+        var spec = new Spec<string?, object>(
             "should throw",
             _ => throw new Exception("should be wrapped"),
             true.ToString(),

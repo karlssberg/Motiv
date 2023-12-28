@@ -22,7 +22,6 @@ internal sealed class AllSpecification<TModel, TMetadata>
             (_, _) => Enumerable.Empty<TMetadata>())
     {
     }
-
     
     internal AllSpecification(
         SpecificationBase<TModel, TMetadata> underlyingSpecification,

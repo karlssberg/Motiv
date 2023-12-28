@@ -18,14 +18,15 @@ public static class EnumerableExtensions
     
     public static IEnumerable<T> ElseIfEmpty<T>(this IEnumerable<T> source, IEnumerable<T> other)
     {
-        var isEmpty = true;
+        var hasItems = false;
         foreach (var item in source)
         {
             yield return item;
-            isEmpty = false;
+            hasItems = true;
         }
 
-        if (!isEmpty) yield break;
+        if (hasItems)
+            yield break;
         
         foreach (var item in other)
             yield return item;

@@ -28,7 +28,7 @@ public class AtLeastSpecificationTests
         bool fourth,
         bool expected)
     {
-        var underlyingSpec = new Specification<bool, string>(
+        var underlyingSpec = new Spec<bool, string>(
             "returns the model",
             m => m,
             true.ToString(),
@@ -65,7 +65,7 @@ public class AtLeastSpecificationTests
         bool fourth,
         bool expected)
     {
-        var underlyingSpec = new Specification<bool, string>(
+        var underlyingSpec = new Spec<bool, string>(
             "returns the model",
             m => m,
             true.ToString(),
@@ -102,7 +102,7 @@ public class AtLeastSpecificationTests
         bool fourth,
         bool expected)
     {
-        var underlyingSpec = new Specification<bool, string>(
+        var underlyingSpec = new Spec<bool, string>(
             "returns the model",
             m => m,
             true.ToString(),
@@ -139,7 +139,7 @@ public class AtLeastSpecificationTests
         bool fourth,
         bool expected)
     {
-        var underlyingSpec = new Specification<bool, string>(
+        var underlyingSpec = new Spec<bool, string>(
             "returns the model",
             m => m,
             true.ToString(),
@@ -167,7 +167,7 @@ public class AtLeastSpecificationTests
         bool third,
         string expected)
     {
-        var underlyingSpec = new Specification<bool, string>(
+        var underlyingSpec = new Spec<bool, string>(
             "returns the model",
             m => m,
             true.ToString(),
@@ -195,7 +195,7 @@ public class AtLeastSpecificationTests
         bool third,
         string expected)
     {
-        var underlyingSpec = new Specification<bool>(
+        var underlyingSpec = new Spec<bool>(
             m => m,
             true.ToString(),
             false.ToString());
@@ -222,7 +222,7 @@ public class AtLeastSpecificationTests
         bool third,
         string expected)
     {
-        var underlyingSpec = new Specification<bool, bool>(
+        var underlyingSpec = new Spec<bool, bool>(
             "model",
             m => m,
             true,
@@ -239,7 +239,7 @@ public class AtLeastSpecificationTests
     public void Should_provide_a_description_of_the_specification()
     {
         const string expected = "AT_LEAST[1](underlying spec description)";
-        var underlyingSpec = new Specification<bool, object>(
+        var underlyingSpec = new Spec<bool, object>(
             "underlying spec description",
             m => m,
             true.ToString(),
@@ -255,7 +255,7 @@ public class AtLeastSpecificationTests
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
         const string expected = "AT_LEAST[1](True)";
-        var underlyingSpec = new Specification<bool>(
+        var underlyingSpec = new Spec<bool>(
             m => m,
             true.ToString(),
             false.ToString());
@@ -274,7 +274,7 @@ public class AtLeastSpecificationTests
         string? falseMetadata,
         IEnumerable<string> models)
     {
-        var spec = new Specification<string?, string?>(
+        var spec = new Spec<string?, string?>(
             "is null",
             m => m is null,
             trueMetadata,
@@ -295,7 +295,7 @@ public class AtLeastSpecificationTests
         string? falseMetadata,
         IEnumerable<string> models)
     {
-        var spec = new Specification<string?, string?>(
+        var spec = new Spec<string?, string?>(
             "is null",
             m => m is null,
             trueMetadata,
@@ -318,7 +318,7 @@ public class AtLeastSpecificationTests
         string? falseMetadata,
         IEnumerable<string> models)
     {
-        var spec = new Specification<string?, string?>(
+        var spec = new Spec<string?, string?>(
             "is null",
             m => m is null,
             trueMetadata,
@@ -339,7 +339,7 @@ public class AtLeastSpecificationTests
         string? falseMetadata,
         IEnumerable<string> models)
     {
-        var spec = new Specification<string?, string?>(
+        var spec = new Spec<string?, string?>(
             "is null",
             m => m is null,
             trueMetadata,

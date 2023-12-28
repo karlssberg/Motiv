@@ -19,7 +19,7 @@ public class AnySpecificationTests
         bool third,
         bool expected)
     {
-        var underlyingSpec = new Specification<bool, string>(
+        var underlyingSpec = new Spec<bool, string>(
             "returns the model",
             m => m,
             true.ToString(),
@@ -47,7 +47,7 @@ public class AnySpecificationTests
         bool third,
         string expected)
     {
-        var underlyingSpec = new Specification<bool, bool>(
+        var underlyingSpec = new Spec<bool, bool>(
             "model",
             m => m,
             true,
@@ -76,7 +76,7 @@ public class AnySpecificationTests
         bool third,
         string expected)
     {
-        var underlyingSpec = new Specification<bool, string>(
+        var underlyingSpec = new Spec<bool, string>(
             "returns the model",
             m => m,
             true.ToString(),
@@ -105,7 +105,7 @@ public class AnySpecificationTests
         bool third,
         string expected)
     {
-        var underlyingSpec = new Specification<bool>(
+        var underlyingSpec = new Spec<bool>(
             m => m,
             true.ToString(),
             false.ToString());
@@ -126,7 +126,7 @@ public class AnySpecificationTests
         string? falseMetadata,
         IEnumerable<string> models)
     {
-        var spec = new Specification<string?, string?>(
+        var spec = new Spec<string?, string?>(
                 "is null",
                 m => m is null, 
                 trueMetadata, 
@@ -146,7 +146,7 @@ public class AnySpecificationTests
         string? falseMetadata,
         IEnumerable<string> models)
     {
-        var spec = new Specification<string?, string?>(
+        var spec = new Spec<string?, string?>(
             "is null",
             m => m is null,
             trueMetadata,
@@ -170,7 +170,7 @@ public class AnySpecificationTests
         string? falseMetadata,
         IEnumerable<string> models)
     {
-        var spec = new Specification<string?, string?>(
+        var spec = new Spec<string?, string?>(
             "is null",
             m => m is null,
             trueMetadata,
@@ -193,7 +193,7 @@ public class AnySpecificationTests
         string? falseMetadata,
         IEnumerable<string> models)
     {
-        var spec = new Specification<string?, string?>(
+        var spec = new Spec<string?, string?>(
             "is null",
             m => m is null,
             trueMetadata,
@@ -214,7 +214,7 @@ public class AnySpecificationTests
         string? falseMetadata,
         IEnumerable<string> models)
     {
-        var spec = new Specification<string?, string?>(
+        var spec = new Spec<string?, string?>(
             "is null",
             m => m is null,
             trueMetadata,

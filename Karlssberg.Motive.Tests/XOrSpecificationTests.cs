@@ -16,12 +16,12 @@ public class XOrSpecificationTests
         bool expected,
         object model)
     {
-        var left = new Specification<object, bool>(
+        var left = new Spec<object, bool>(
             "left",
             _ => leftResult,
             true,
             false);
-        var right = new Specification<object, bool>(
+        var right = new Spec<object, bool>(
             "right",
             _ => rightResult,
             true,
@@ -48,12 +48,12 @@ public class XOrSpecificationTests
         string expected,
         object model)
     {
-        var left = new Specification<object, bool>(
+        var left = new Spec<object, bool>(
             "left",
             _ => leftResult,
             true,
             false);
-        var right = new Specification<object, bool>(
+        var right = new Spec<object, bool>(
             "right",
             _ => rightResult,
             true,
@@ -78,12 +78,12 @@ public class XOrSpecificationTests
         string expected,
         object model)
     {
-        var left = new Specification<object, string>(
+        var left = new Spec<object, string>(
             "left",
             _ => leftResult,
             true.ToString(),
             false.ToString());
-        var right = new Specification<object, string>(
+        var right = new Spec<object, string>(
             "right",
             _ => rightResult,
             true.ToString(),
@@ -108,11 +108,11 @@ public class XOrSpecificationTests
         string expected,
         object model)
     {
-        var left = new Specification<object>(
+        var left = new Spec<object>(
             _ => leftResult,
             true.ToString(),
             false.ToString());
-        var right = new Specification<object>(
+        var right = new Spec<object>(
             _ => rightResult,
             true.ToString(),
             false.ToString());
@@ -132,12 +132,12 @@ public class XOrSpecificationTests
     [AutoParams(false, false)]
     public void Should_provide_a_description_of_the_specification(bool leftResult, bool rightResult)
     {
-        var left = new Specification<object, bool>(
+        var left = new Spec<object, bool>(
             $"left",
             _ => leftResult,
             true,
             false);
-        var right = new Specification<object, bool>(
+        var right = new Spec<object, bool>(
             $"right",
             _ => rightResult,
             true,
@@ -157,11 +157,11 @@ public class XOrSpecificationTests
     [AutoParams(false, false)]
     public void Should_provide_a_description_of_the_specification_when_using_convenience_specification(bool leftResult, bool rightResult)
     {
-        var left = new Specification<object>(
+        var left = new Spec<object>(
             _ => leftResult,
             true.ToString(),
             false.ToString());
-        var right = new Specification<object>(
+        var right = new Spec<object>(
             _ => rightResult,
             true.ToString(),
             false.ToString());
@@ -181,7 +181,7 @@ public class XOrSpecificationTests
         string? falseMetadata,
         string? model)
     {
-        var spec = new Specification<string?, string?>(
+        var spec = new Spec<string?, string?>(
             "is null",
             m => m is null,
             trueMetadata,
@@ -202,7 +202,7 @@ public class XOrSpecificationTests
     public void Should_wrap_thrown_exceptions_in_a_specification_exception(
         string model)
     {
-        var normalSpec = new Specification<object>(
+        var normalSpec = new Spec<object>(
             m => true,
             "true",
             "false");

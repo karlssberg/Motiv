@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motive.Poker;
 
-public class IsWinningHand() : Specification<Hand, HandRank>(
+public class IsWinningHand() : Spec<Hand, HandRank>(
     new IsHandPair() 
       | new IsHandTwoPair() 
       | new IsHandThreeOfAKind() 
