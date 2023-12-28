@@ -2,20 +2,10 @@
 
 namespace Karlssberg.Motive.All;
 
-internal sealed class AllSpecification<TModel, TMetadata>
-    : SpecificationBase<IEnumerable<TModel>, TMetadata>
+internal sealed class AllSpecification<TModel, TMetadata>(
+    SpecificationBase<TModel, TMetadata> underlyingSpecification,
+    Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactory) : SpecificationBase<IEnumerable<TModel>, TMetadata>
 {
-    private readonly Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> _metadataFactory;
-
-    internal AllSpecification(
-        SpecificationBase<TModel, TMetadata> underlyingSpecification,
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactory)
-    {
-        UnderlyingSpecification = underlyingSpecification;
-        Description = $"ALL({underlyingSpecification})";
-        _metadataFactory = metadataFactory;
-    }
-    
     internal AllSpecification(SpecificationBase<TModel, TMetadata> specification) 
         : this(
             specification, 
@@ -47,9 +37,9 @@ internal sealed class AllSpecification<TModel, TMetadata>
     {
     }
 
-    public SpecificationBase<TModel, TMetadata> UnderlyingSpecification { get; } 
+    public SpecificationBase<TModel, TMetadata> UnderlyingSpecification { get; } = Throw.IfNull(underlyingSpecification, nameof(underlyingSpecification));
 
-    public override string Description { get; }
+    public override string Description => $"All({underlyingSpecification})";
 
     public override BooleanResultBase<TMetadata> Evaluate(IEnumerable<TModel> models) 
     {
@@ -68,7 +58,7 @@ internal sealed class AllSpecification<TModel, TMetadata>
         return new AllBooleanResult<TMetadata>(ResolveMetadata, results.Select(result => result.UnderlyingResult));
 
         IEnumerable<TMetadata> ResolveMetadata(bool isSatisfied) =>
-            _metadataFactory(isSatisfied, results);
+            metadataFactory(isSatisfied, results);
     }
 
     private static Func<bool,IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> CreateMetadataFactory(
@@ -106,6 +96,4 @@ internal sealed class AllSpecification<TModel, TMetadata>
                 .Where(result => !result.IsSatisfied)
                 .SelectMany(result => result.GetInsights());
     }
-
-
 }

@@ -5,7 +5,7 @@ internal class ChangeMetadataTypeSpecification<TModel, TMetadata, TOtherMetadata
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse) : SpecificationBase<TModel, TMetadata>
 {
-    public SpecificationBase<TModel, TOtherMetadata> UnderlyingSpecification { get; } = underlyingSpecification;
+    public SpecificationBase<TModel, TOtherMetadata> UnderlyingSpecification => underlyingSpecification;
     public override string Description => underlyingSpecification.Description;
 
     public override BooleanResultBase<TMetadata> Evaluate(TModel model)

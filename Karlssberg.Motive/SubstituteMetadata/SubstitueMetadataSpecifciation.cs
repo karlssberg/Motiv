@@ -5,7 +5,7 @@ internal class SubstituteMetadataSpecification<TModel, TMetadata>(
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse) : SpecificationBase<TModel, TMetadata>
 {
-    public SpecificationBase<TModel, TMetadata> UnderlyingSpecification { get; } = underlyingSpecification;
+    public SpecificationBase<TModel, TMetadata> UnderlyingSpecification => underlyingSpecification;
     public override string Description => underlyingSpecification.Description;
 
     public override BooleanResultBase<TMetadata> Evaluate(TModel model)

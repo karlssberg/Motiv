@@ -1,16 +1,10 @@
 ﻿namespace Karlssberg.Motive.ChangeMetadataType;
 
-internal class ChangeMetadataTypeBooleanResult<TMetadata, TOtherMetadata>
+internal class ChangeMetadataTypeBooleanResult<TMetadata, TOtherMetadata>(BooleanResultBase<TOtherMetadata> booleanResult, TMetadata metadata)
     : BooleanResultBase<TMetadata>, IChangeMetadataTypeBooleanResult<TMetadata>
 {
-    internal ChangeMetadataTypeBooleanResult(BooleanResultBase<TOtherMetadata> booleanResult, TMetadata metadata)
-    {
-        UnderlyingBooleanResult = booleanResult;
-        Metadata = metadata;
-    }
-
-    public BooleanResultBase<TOtherMetadata> UnderlyingBooleanResult { get; }
-    public TMetadata Metadata { get; }
+    public BooleanResultBase<TOtherMetadata> UnderlyingBooleanResult => booleanResult;
+    public TMetadata Metadata => metadata;
     public override bool IsSatisfied => UnderlyingBooleanResult.IsSatisfied;
     public override string Description => UnderlyingBooleanResult.Description;
     public override IEnumerable<string> Reasons => UnderlyingBooleanResult.Reasons;
