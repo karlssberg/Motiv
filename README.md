@@ -1,4 +1,4 @@
-# Motive - turn your if-statements into why-statements.
+# Motive - turn your if-statements into why-statements
 
 Are you fed up with debugging Boolean expressions and want to quickly find out what went wrong? Do you need to tell others what went wrong? Does it all look like Spaghetti?
 
