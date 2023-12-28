@@ -133,7 +133,7 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
 
     #endregion
 
-    #region BasicSpecificationConstructors
+    #region StringMetadataSpecificationConstructors
 
     public Spec(
         SpecificationBase<TModel, string> specification,
