@@ -2,7 +2,7 @@
 
 public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IBooleanResult<TMetadata>
 {
-    internal BooleanResult(bool isSatisfied, TMetadata metadata, string description)
+    public BooleanResult(bool isSatisfied, TMetadata metadata, string description)
     {
         Throw.IfNull(description, nameof(description));
         
