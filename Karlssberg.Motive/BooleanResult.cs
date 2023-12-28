@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motive;
 
-public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IBooleanResult<TMetadata>
+public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 {
     public BooleanResult(bool isSatisfied, TMetadata metadata, string description)
     {
