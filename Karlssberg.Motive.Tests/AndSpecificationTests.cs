@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Karlssberg.Motive.And;
-using NSubstitute;
 
 namespace Karlssberg.Motive.Tests;
 

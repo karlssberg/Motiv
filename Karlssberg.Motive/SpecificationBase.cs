@@ -1,5 +1,4 @@
 ﻿using Karlssberg.Motive.And;
-using Karlssberg.Motive.ChangeMetadataType;
 using Karlssberg.Motive.ChangeModelType;
 using Karlssberg.Motive.Not;
 using Karlssberg.Motive.Or;

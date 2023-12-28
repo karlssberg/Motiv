@@ -1,6 +1,4 @@
 ﻿using FluentAssertions;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace Karlssberg.Motive.Tests;
 

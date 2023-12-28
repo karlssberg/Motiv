@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using NSubstitute;
 
 namespace Karlssberg.Motive.Tests;
 

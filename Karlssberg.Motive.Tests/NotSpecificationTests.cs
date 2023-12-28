@@ -1,6 +1,4 @@
-﻿using AutoFixture.Xunit2;
-using FluentAssertions;
-using NSubstitute;
+﻿using FluentAssertions;
 
 namespace Karlssberg.Motive.Tests;
 
