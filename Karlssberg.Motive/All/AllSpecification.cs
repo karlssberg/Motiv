@@ -39,9 +39,9 @@ internal sealed class AllSpecification<TModel, TMetadata>(
 
     public SpecificationBase<TModel, TMetadata> UnderlyingSpecification { get; } = Throw.IfNull(underlyingSpecification, nameof(underlyingSpecification));
 
-    public override string Description => $"All({underlyingSpecification})";
+    public override string Description => $"ALL({underlyingSpecification})";
 
-    public override BooleanResultBase<TMetadata> Evaluate(IEnumerable<TModel> models) 
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models) 
     {
         var results = models
             .Select(model => 
@@ -50,7 +50,7 @@ internal sealed class AllSpecification<TModel, TMetadata>(
                     UnderlyingSpecification,
                     () =>
                     {
-                        var underlyingResult = UnderlyingSpecification.Evaluate(model);
+                        var underlyingResult = UnderlyingSpecification.IsSatisfiedBy(model);
                         return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
                     }))
             .ToList();
