@@ -48,4 +48,13 @@ public abstract class BooleanResultBase<TMetadata>
     public static BooleanResultBase<TMetadata> operator !(
         BooleanResultBase<TMetadata> result) =>
         result.Not();
+    
+    public static bool operator true(BooleanResultBase<TMetadata> result) => 
+        result.IsSatisfied;
+
+    public static bool operator false(BooleanResultBase<TMetadata> result) =>
+        !result.IsSatisfied;
+    
+    public static explicit operator bool(BooleanResultBase<TMetadata> result) =>
+        result.IsSatisfied;
 }
