@@ -11,12 +11,12 @@ using Karlssberg.Motive.XOr;
 
 namespace Karlssberg.Motive;
 
-public class InsightsVisitor
+public class InsightsVisitor<TMetadata>
 {
-    protected IEnumerable<TMetadata> Visit<TMetadata>(IEnumerable<BooleanResultBase<TMetadata>> booleanResultBases) =>
+    protected IEnumerable<TMetadata> Visit(IEnumerable<BooleanResultBase<TMetadata>> booleanResultBases) =>
         booleanResultBases.SelectMany(Visit);
 
-    public IEnumerable<TMetadata> Visit<TMetadata>(BooleanResultBase<TMetadata> booleanResultBase)
+    public IEnumerable<TMetadata> Visit(BooleanResultBase<TMetadata> booleanResultBase)
     {
         return booleanResultBase switch
         {
@@ -35,38 +35,38 @@ public class InsightsVisitor
         };
     }
 
-    protected virtual IEnumerable<TMetadata> Visit<TMetadata>(AllBooleanResult<TMetadata> allBooleanResult) =>
+    protected virtual IEnumerable<TMetadata> Visit(AllBooleanResult<TMetadata> allBooleanResult) =>
         allBooleanResult.SubstituteMetadata.ElseIfEmpty(Visit(allBooleanResult.DeterminativeOperandResults));
 
-    protected virtual IEnumerable<TMetadata> Visit<TMetadata>(AndBooleanResult<TMetadata> andBooleanResult) =>
+    protected virtual IEnumerable<TMetadata> Visit(AndBooleanResult<TMetadata> andBooleanResult) =>
         Visit(andBooleanResult.DeterminativeOperandResults);
 
-    protected virtual IEnumerable<TMetadata> Visit<TMetadata>(AnyBooleanResult<TMetadata> anyBooleanResult) =>
+    protected virtual IEnumerable<TMetadata> Visit(AnyBooleanResult<TMetadata> anyBooleanResult) =>
         anyBooleanResult.SubstituteMetadata.ElseIfEmpty(Visit(anyBooleanResult.DeterminativeOperandResults));
 
-    protected virtual IEnumerable<TMetadata> Visit<TMetadata>(AtLeastBooleanResult<TMetadata> atLeastBooleanResult) =>
+    protected virtual IEnumerable<TMetadata> Visit(AtLeastBooleanResult<TMetadata> atLeastBooleanResult) =>
         atLeastBooleanResult.SubstituteMetadata
             .ElseIfEmpty(Visit(atLeastBooleanResult.DeterminativeOperandResults));
 
-    protected virtual IEnumerable<TMetadata> Visit<TMetadata>(AtMostBooleanResult<TMetadata> atMostBooleanResult) =>
+    protected virtual IEnumerable<TMetadata> Visit(AtMostBooleanResult<TMetadata> atMostBooleanResult) =>
         atMostBooleanResult.SubstituteMetadata
             .ElseIfEmpty(Visit(atMostBooleanResult.DeterminativeOperandResults));
 
-    protected virtual IEnumerable<TMetadata> Visit<TMetadata>(BooleanResult<TMetadata> booleanResult) =>
+    protected virtual IEnumerable<TMetadata> Visit(BooleanResult<TMetadata> booleanResult) =>
         [booleanResult.Metadata];
 
-    protected virtual IEnumerable<TMetadata> Visit<TMetadata>(IChangeMetadataTypeBooleanResult<TMetadata> changeMetadataTypeBooleanResult) =>
+    protected virtual IEnumerable<TMetadata> Visit(IChangeMetadataTypeBooleanResult<TMetadata> changeMetadataTypeBooleanResult) =>
         [changeMetadataTypeBooleanResult.Metadata];
 
-    protected virtual IEnumerable<TMetadata> Visit<TMetadata>(NotBooleanResult<TMetadata> notBooleanResult) =>
+    protected virtual IEnumerable<TMetadata> Visit(NotBooleanResult<TMetadata> notBooleanResult) =>
         Visit(notBooleanResult.OperandResult);
 
-    protected virtual IEnumerable<TMetadata> Visit<TMetadata>(OrBooleanResult<TMetadata> orBooleanResult) =>
+    protected virtual IEnumerable<TMetadata> Visit(OrBooleanResult<TMetadata> orBooleanResult) =>
         Visit(orBooleanResult.DeterminativeOperandResults);
 
-    protected virtual IEnumerable<TMetadata> Visit<TMetadata>(SubstituteMetadataBooleanResult<TMetadata> substituteMetadataBooleanResult) =>
+    protected virtual IEnumerable<TMetadata> Visit(SubstituteMetadataBooleanResult<TMetadata> substituteMetadataBooleanResult) =>
         [substituteMetadataBooleanResult.SubstituteMetadata];
 
-    protected virtual IEnumerable<TMetadata> Visit<TMetadata>(XOrBooleanResult<TMetadata> xOrBooleanResult) =>
+    protected virtual IEnumerable<TMetadata> Visit(XOrBooleanResult<TMetadata> xOrBooleanResult) =>
         Visit(xOrBooleanResult.DeterminativeOperandResults);
 }
