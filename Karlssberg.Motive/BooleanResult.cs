@@ -2,10 +2,13 @@
 
 public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 {
+    private readonly string _description;
+
     public BooleanResult(bool isSatisfied, TMetadata metadata, string description)
     {
         Throw.IfNull(description, nameof(description));
         
+        _description = description;
         Metadata = metadata;
         IsSatisfied = isSatisfied;
     }
@@ -17,7 +20,7 @@ public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     public override string Description => Metadata switch
     {
         string reason => reason,
-        _ => $"{Metadata}:{IsSatisfied}"
+        _ => $"{_description}:{IsSatisfied}"
     };
 
     public override IEnumerable<string> Reasons
