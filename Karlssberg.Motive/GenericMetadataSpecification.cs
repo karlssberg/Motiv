@@ -52,7 +52,7 @@ internal sealed class GenericMetadataSpecification<TModel, TMetadata>(
 
     public override string Description => Throw.IfNullOrWhitespace(description, nameof(description));
 
-    public override BooleanResultBase<TMetadata> Evaluate(TModel model) =>
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) =>
         SpecificationException.WrapThrownExceptions(
             this,
             () =>

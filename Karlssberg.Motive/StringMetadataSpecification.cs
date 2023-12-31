@@ -69,7 +69,7 @@ internal class StringMetadataSpecification<TModel>(
 
     public override string Description => description;
 
-    public override BooleanResultBase<string> Evaluate(TModel model) =>
+    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
         SpecificationException.WrapThrownExceptions(
             this,
             () =>

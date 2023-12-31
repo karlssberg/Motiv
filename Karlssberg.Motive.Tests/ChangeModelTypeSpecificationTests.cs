@@ -13,7 +13,7 @@ public class ChangeModelTypeSpecificationTests
         var isEmpty = new Spec<object?>(o => o is null, "is null", "is not null");
         var sut = isEmpty.ChangeModel<string?>();
             
-        var act = sut.Evaluate(model);
+        var act = sut.IsSatisfiedBy(model);
         
         act.IsSatisfied.Should().Be(expected);
     }
@@ -29,7 +29,7 @@ public class ChangeModelTypeSpecificationTests
         var isValueType = new Spec<Type>(t => t.IsValueType, "is value-type", "is not value-type");
         var sut = isValueType.ChangeModel<object>(m => m.GetType());
         
-        var act = sut.Evaluate(model);
+        var act = sut.IsSatisfiedBy(model);
         
         act.IsSatisfied.Should().Be(expected);
     }
@@ -51,7 +51,7 @@ public class ChangeModelTypeSpecificationTests
             .ToAllSpecification()
             .ChangeModel<string>(m => m.ToCharArray());
         
-        var act = isAllLetters.Evaluate(model);
+        var act = isAllLetters.IsSatisfiedBy(model);
         
         act.IsSatisfied.Should().Be(expected);
     }
@@ -72,7 +72,7 @@ public class ChangeModelTypeSpecificationTests
             .ToAllSpecification()
             .ChangeModel<string>(m => m.ToCharArray());
         
-        var act = isAllLetters.Evaluate(model);
+        var act = isAllLetters.IsSatisfiedBy(model);
         
         act.GetInsights().Should().BeEquivalentTo(expected);
     }
@@ -95,7 +95,7 @@ public class ChangeModelTypeSpecificationTests
         var act = () =>
         {
             var sut = spec.ChangeModel<string?>();
-            sut.Evaluate(model);
+            sut.IsSatisfiedBy(model);
         };
 
         act.Should().NotThrow();
@@ -120,7 +120,7 @@ public class ChangeModelTypeSpecificationTests
         var act = () =>
         {
             var sut = spec.ChangeModel<object?>(obj => obj?.ToString());
-            sut.Evaluate(model);
+            sut.IsSatisfiedBy(model);
         };
 
         act.Should().NotThrow();

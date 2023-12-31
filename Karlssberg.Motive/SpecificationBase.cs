@@ -33,18 +33,7 @@ public abstract class SpecificationBase<TModel, TMetadata>
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    public abstract BooleanResultBase<TMetadata> Evaluate(TModel model);
-
-    /// <summary>
-    ///     Evaluates the specification against the model and returns a Boolean result.
-    /// </summary>
-    /// <param name="model">
-    ///     The model to evaluate the specification against.
-    /// </param>
-    /// <returns>
-    ///     The Boolean result of the specification.
-    /// </returns>
-    public bool IsSatisfiedBy(TModel model) => Evaluate(model).IsSatisfied;
+    public abstract BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model);
 
     /// <summary>
     ///     Combines this specification with another specification using the logical AND operator.

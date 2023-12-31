@@ -12,17 +12,17 @@ internal sealed class OrSpecification<TModel, TMetadata>(
 
     public override string Description => $"({LeftOperand}) OR ({RightOperand})";
 
-    public override BooleanResultBase<TMetadata> Evaluate(TModel model)
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
         var leftResult = WrapThrownExceptions(
             this,
             LeftOperand,
-            () => LeftOperand.Evaluate(model));
+            () => LeftOperand.IsSatisfiedBy(model));
 
         var rightResult = WrapThrownExceptions(
             this,
             RightOperand,
-            () => RightOperand.Evaluate(model));
+            () => RightOperand.IsSatisfiedBy(model));
 
         return leftResult.Or(rightResult);
     }

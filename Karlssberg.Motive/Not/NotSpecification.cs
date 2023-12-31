@@ -8,9 +8,9 @@ internal sealed class NotSpecification<TModel, TMetadata>(SpecificationBase<TMod
 
     public override string Description => $"!({Operand})";
 
-    public override BooleanResultBase<TMetadata> Evaluate(TModel model) =>
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) =>
         WrapThrownExceptions(
             this,
             Operand,
-            () => Operand.Evaluate(model).Not());
+            () => Operand.IsSatisfiedBy(model).Not());
 }

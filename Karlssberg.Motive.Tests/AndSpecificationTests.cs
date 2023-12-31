@@ -29,7 +29,7 @@ public class AndSpecificationTests
         
         var sut = left & right;
 
-        var result = sut.Evaluate(model);
+        var result = sut.IsSatisfiedBy(model);
 
         result.IsSatisfied.Should().Be(expected);
         result.GetInsights().Should().AllBeEquivalentTo(expected);
@@ -59,7 +59,7 @@ public class AndSpecificationTests
         
         var sut = left & right;
 
-        var result = sut.Evaluate(model);
+        var result = sut.IsSatisfiedBy(model);
 
         
     }
@@ -88,7 +88,7 @@ public class AndSpecificationTests
         
         var sut = left & right;
 
-        var result = sut.Evaluate(model);
+        var result = sut.IsSatisfiedBy(model);
 
         
     }
@@ -115,7 +115,7 @@ public class AndSpecificationTests
         
         var sut = left & right;
 
-        var result = sut.Evaluate(model);
+        var result = sut.IsSatisfiedBy(model);
         
         result.Description.Should().Be(expected);
         
@@ -187,7 +187,7 @@ public class AndSpecificationTests
         var act = () =>
         {
             var sut = spec & spec;
-            sut.Evaluate(model);
+            sut.IsSatisfiedBy(model);
         };
 
         act.Should().NotThrow();
@@ -208,7 +208,7 @@ public class AndSpecificationTests
         
         var sut = throwingSpec & normalSpec;
         
-        var act = () => sut.Evaluate(model);
+        var act = () => sut.IsSatisfiedBy(model);
         
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains(throwingSpec.Description));
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains(sut.Description));

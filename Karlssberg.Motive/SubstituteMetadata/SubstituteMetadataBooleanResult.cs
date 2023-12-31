@@ -19,9 +19,9 @@ public class SubstituteMetadataBooleanResult<TMetadata> : BooleanResultBase<TMet
     public TMetadata SubstituteMetadata { get; }
 
     public BooleanResultBase<TMetadata> UnderlyingBooleanResult { get; }
-    
+
     public override bool IsSatisfied => UnderlyingBooleanResult.IsSatisfied;
-    
+
     public override string Description { get; } 
     
     public override IEnumerable<string> Reasons { get; }

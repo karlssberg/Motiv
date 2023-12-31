@@ -42,7 +42,7 @@ internal sealed class AnySpecification<TModel, TMetadata>(
 
     public override string Description => $"ANY({underlyingSpecification})";
 
-    public override BooleanResultBase<TMetadata> Evaluate(IEnumerable<TModel> models)
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
         var results = models
             .Select(
@@ -52,12 +52,12 @@ internal sealed class AnySpecification<TModel, TMetadata>(
                         UnderlyingSpecification,
                         () =>
                         {
-                            var underlyingResult = UnderlyingSpecification.Evaluate(model);
+                            var underlyingResult = UnderlyingSpecification.IsSatisfiedBy(model);
                             return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
                         }))
             .ToList();
 
-        return new AnyBooleanResult<TMetadata>(ResolveMetadata, results.Select(result => result.UnderlyingResult));
+        return new AnyBooleanResult<TMetadata>(ResolveMetadata, results);
 
         IEnumerable<TMetadata> ResolveMetadata(bool isSatisfied)
         {

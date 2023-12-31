@@ -36,7 +36,7 @@ public class AtMostSpecificationTests
         bool[] models = [first, second, third, fourth];
 
         var sut = underlyingSpec.ToAtMostSpecification(0);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
     }
@@ -73,7 +73,7 @@ public class AtMostSpecificationTests
         bool[] models = [first, second, third, fourth];
 
         var sut = underlyingSpec.ToAtMostSpecification(1);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
     }
@@ -110,7 +110,7 @@ public class AtMostSpecificationTests
         bool[] models = [first, second, third, fourth];
 
         var sut = underlyingSpec.ToAtMostSpecification(2);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
     }
@@ -147,7 +147,7 @@ public class AtMostSpecificationTests
         bool[] models = [first, second, third, fourth];
 
         var sut = underlyingSpec.ToAtMostSpecification(models.Length);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
     }
@@ -175,7 +175,7 @@ public class AtMostSpecificationTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAtMostSpecification(1);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         
     }
@@ -202,7 +202,7 @@ public class AtMostSpecificationTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAtMostSpecification(1);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         
     }
@@ -230,7 +230,7 @@ public class AtMostSpecificationTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAtMostSpecification(1);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         
     }
@@ -282,7 +282,7 @@ public class AtMostSpecificationTests
         
         var act = () => spec
             .ToAtMostSpecification(1)
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -305,7 +305,7 @@ public class AtMostSpecificationTests
             .ToAtMostSpecification(1,
                 null as string,
                 null as string)
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -326,7 +326,7 @@ public class AtMostSpecificationTests
         
         var act = () => spec
             .ToAtMostSpecification(1, _ => null)
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -347,7 +347,7 @@ public class AtMostSpecificationTests
         
         var act = () => spec
             .ToAtMostSpecification(1)
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -363,7 +363,7 @@ public class AtMostSpecificationTests
         
         var sut = throwingSpec.ToAtMostSpecification(1);
         
-        var act = () => sut.Evaluate([model]);
+        var act = () => sut.IsSatisfiedBy([model]);
         
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains(sut.Description));
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains("AtMostSpecification<Object, String>"));

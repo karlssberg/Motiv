@@ -11,11 +11,11 @@ public sealed class ChangeModelTypeSpecification<TParentModel, TModel, TMetadata
 
     public override string Description => _specification.Description;
 
-    public override BooleanResultBase<TMetadata> Evaluate(TParentModel model)
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TParentModel model)
     {
         return WrapThrownExceptions(
             _specification,
-            () => _specification.Evaluate(_modelSelector(model)));
+            () => _specification.IsSatisfiedBy(_modelSelector(model)));
     }
 
     public override string ToString() => _specification.ToString();

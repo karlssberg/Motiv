@@ -36,7 +36,7 @@ public class AtLeastSpecificationTests
         bool[] models = [first, second, third, fourth];
 
         var sut = underlyingSpec.ToAtLeastSpecification(0);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
     }
@@ -73,7 +73,7 @@ public class AtLeastSpecificationTests
         bool[] models = [first, second, third, fourth];
 
         var sut = underlyingSpec.ToAtLeastSpecification(1);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
     }
@@ -110,7 +110,7 @@ public class AtLeastSpecificationTests
         bool[] models = [first, second, third, fourth];
 
         var sut = underlyingSpec.ToAtLeastSpecification(2);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
     }
@@ -147,7 +147,7 @@ public class AtLeastSpecificationTests
         bool[] models = [first, second, third, fourth];
 
         var sut = underlyingSpec.ToAtLeastSpecification(models.Length);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
                   result.IsSatisfied.Should().Be(expected);
     }
@@ -175,7 +175,7 @@ public class AtLeastSpecificationTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAtLeastSpecification(1);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         
     }
@@ -202,7 +202,7 @@ public class AtLeastSpecificationTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAtLeastSpecification(1);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         
     }
@@ -230,7 +230,7 @@ public class AtLeastSpecificationTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAtLeastSpecification(1);
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         
     }
@@ -282,7 +282,7 @@ public class AtLeastSpecificationTests
         
         var act = () => spec
             .ToAtLeastSpecification(1)
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -305,7 +305,7 @@ public class AtLeastSpecificationTests
             .ToAtLeastSpecification(1,
                 null as string,
                 null as string)
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -326,7 +326,7 @@ public class AtLeastSpecificationTests
         
         var act = () => spec
             .ToAtLeastSpecification(1, _ => null)
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -347,7 +347,7 @@ public class AtLeastSpecificationTests
         
         var act = () => spec
             .ToAtLeastSpecification(1)
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -363,7 +363,7 @@ public class AtLeastSpecificationTests
         
         var sut = throwingSpec.ToAtLeastSpecification(1);
         
-        var act = () => sut.Evaluate([model]);
+        var act = () => sut.IsSatisfiedBy([model]);
         
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains(sut.Description));
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains("AtLeastSpecification<Object, String>"));

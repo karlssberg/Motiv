@@ -15,7 +15,7 @@ public class SpecTests
             true.ToString(), 
             false.ToString());
 
-        var result = sut.Evaluate(model);
+        var result = sut.IsSatisfiedBy(model);
 
         result.IsSatisfied.Should().Be(model);
         result.GetInsights().Should().HaveCount(1);
@@ -31,9 +31,9 @@ public class SpecTests
             true.ToString(), 
             false.ToString());
 
-        var result = sut.Evaluate(null);
+        var result = sut.IsSatisfiedBy(null);
 
-        result.IsSatisfied.Should().Be(true);
+        result.IsSatisfied.Should().BeTrue();
         result.GetInsights().Should().HaveCount(1);
         result.GetInsights().Should().AllBe(true.ToString());
     }
@@ -48,7 +48,7 @@ public class SpecTests
             true.ToString(), 
             false.ToString());
 
-        var result = sut.Evaluate(model);
+        var result = sut.IsSatisfiedBy(model);
 
         result.IsSatisfied.Should().Be(model);
         result.GetInsights().Should().HaveCount(1);
@@ -63,7 +63,7 @@ public class SpecTests
             true.ToString(), 
             false.ToString());
 
-        var result = sut.Evaluate(null);
+        var result = sut.IsSatisfiedBy(null);
 
         result.IsSatisfied.Should().Be(true);
         result.GetInsights().Should().HaveCount(1);
@@ -119,7 +119,7 @@ public class SpecTests
             _ => throw new Exception("should be wrapped"), 
             true.ToString(), 
             false.ToString())
-            .Evaluate(null);
+            .IsSatisfiedBy(null);
 
         act.Should().Throw<SpecificationException>().WithInnerExceptionExactly<Exception>();
         act.Should().Throw<SpecificationException>().WithMessage("*should be wrapped*");
@@ -135,7 +135,7 @@ public class SpecTests
             true.ToString(),
             false.ToString());
         
-        var act = () => spec.Evaluate(null);
+        var act = () => spec.IsSatisfiedBy(null);
 
         act.Should().Throw<SpecificationException>().WithInnerExceptionExactly<Exception>();
         act.Should().Throw<SpecificationException>().WithMessage("*should be wrapped*");

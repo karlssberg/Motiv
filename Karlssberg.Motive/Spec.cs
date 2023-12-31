@@ -6,7 +6,7 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
 {
     private readonly SpecificationBase<TModel, TMetadata> _specification;
     public override string Description => _specification.Description;
-    public override BooleanResultBase<TMetadata> Evaluate(TModel model) => _specification.Evaluate(model);
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => _specification.IsSatisfiedBy(model);
 
     #region PredicateConstructors
 
@@ -169,7 +169,7 @@ public class Spec<TModel> : SpecificationBase<TModel, string>
 {
     private readonly SpecificationBase<TModel, string> _specification;
     public override string Description => _specification.Description;
-    public override BooleanResultBase<string> Evaluate(TModel model) => _specification.Evaluate(model);
+    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) => _specification.IsSatisfiedBy(model);
 
     #region PredicateConstructors
 

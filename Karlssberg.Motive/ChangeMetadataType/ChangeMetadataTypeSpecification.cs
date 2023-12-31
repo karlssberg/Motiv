@@ -8,9 +8,9 @@ internal class ChangeMetadataTypeSpecification<TModel, TMetadata, TOtherMetadata
     public SpecificationBase<TModel, TOtherMetadata> UnderlyingSpecification => underlyingSpecification;
     public override string Description => underlyingSpecification.Description;
 
-    public override BooleanResultBase<TMetadata> Evaluate(TModel model)
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var booleanResult = UnderlyingSpecification.Evaluate(model);
+        var booleanResult = UnderlyingSpecification.IsSatisfiedBy(model);
         var metadata = booleanResult.IsSatisfied
             ? whenTrue(model)
             : whenFalse(model);

@@ -28,7 +28,7 @@ public class SpecificationException : Exception
     private static string GetCaller<TModel, TMetadata>(SpecificationBase<TModel, TMetadata> specification)
     {
         var specificationTypeName = ConvertToPrettyTypeName(specification);
-        const string methodName = nameof(SpecificationBase<object, object>.Evaluate);
+        const string methodName = nameof(SpecificationBase<object, object>.IsSatisfiedBy);
         
         return $"{specificationTypeName}.{methodName}()";
     }

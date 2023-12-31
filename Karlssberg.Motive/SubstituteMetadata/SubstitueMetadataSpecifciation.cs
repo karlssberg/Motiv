@@ -8,9 +8,9 @@ internal class SubstituteMetadataSpecification<TModel, TMetadata>(
     public SpecificationBase<TModel, TMetadata> UnderlyingSpecification => underlyingSpecification;
     public override string Description => underlyingSpecification.Description;
 
-    public override BooleanResultBase<TMetadata> Evaluate(TModel model)
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var booleanResult = UnderlyingSpecification.Evaluate(model);
+        var booleanResult = UnderlyingSpecification.IsSatisfiedBy(model);
         return booleanResult.IsSatisfied
             ? new SubstituteMetadataBooleanResult<TMetadata>(booleanResult, whenTrue(model))
             : new SubstituteMetadataBooleanResult<TMetadata>(booleanResult, whenFalse(model));

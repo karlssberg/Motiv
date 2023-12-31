@@ -27,7 +27,7 @@ public class HandTests
         
         var sut = new IsHandStraight();
         
-        var act = sut.Evaluate(hand);
+        var act = sut.IsSatisfiedBy(hand);
             
         act.IsSatisfied.Should().BeTrue();
         act.GetInsights().Max().Should().Be(HandRank.Straight);
@@ -53,8 +53,8 @@ public class HandTests
         var sut = new IsHandStraight();
         
         var act = sut.IsSatisfiedBy(hand);
-            
-        act.Should().BeFalse();
+
+        act.IsSatisfied.Should().BeFalse();
     }
     
     [Theory]
@@ -76,7 +76,7 @@ public class HandTests
         
         var sut = new IsHandFlush();
         
-        var act = sut.Evaluate(hand);
+        var act = sut.IsSatisfiedBy(hand);
             
         act.IsSatisfied.Should().BeTrue();
         act.GetInsights().Max().Should().Be(HandRank.Flush);
@@ -102,7 +102,7 @@ public class HandTests
         
         var sut = new IsHandStraightFlush();
         
-        var act = sut.Evaluate(hand);
+        var act = sut.IsSatisfiedBy(hand);
         
         act.IsSatisfied.Should().BeTrue();
         act.GetInsights().Max().Should().Be(HandRank.StraightFlush);

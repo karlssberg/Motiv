@@ -12,6 +12,7 @@ public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     }
 
     public override bool IsSatisfied { get; }
+
     public BooleanResultBase<TMetadata> LeftOperandResult { get; }
     public BooleanResultBase<TMetadata> RightOperandResult { get; }
 

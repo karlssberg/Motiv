@@ -21,7 +21,7 @@ public class SubstituteMetadataSpecificationTests
             | underlying.SubstituteMetadata("true after - C", model => $"false after + {model} - C")
             | underlying.SubstituteMetadata(model => $"true after + {model} - D", model => $"false after + {model} - D");
 
-        var act = sut.Evaluate("model");
+        var act = sut.IsSatisfiedBy("model");
 
         act.Reasons.Should().BeEquivalentTo(expectation);
         act.GetInsights().Should().BeEquivalentTo(expectation);

@@ -27,7 +27,7 @@ public class AllSpecificationTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAllSpecification();
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
     }
@@ -55,7 +55,7 @@ public class AllSpecificationTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAllSpecification();
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         
     }
@@ -82,7 +82,7 @@ public class AllSpecificationTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAllSpecification();
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         
     }
@@ -110,7 +110,7 @@ public class AllSpecificationTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAllSpecification();
-        var result = sut.Evaluate(models);
+        var result = sut.IsSatisfiedBy(models);
         
         
     }
@@ -162,7 +162,7 @@ public class AllSpecificationTests
         
         var act = () => spec
             .ToAllSpecification()
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -186,7 +186,7 @@ public class AllSpecificationTests
                 _ => null,
                 _ => null,
                 _ => null)
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -209,7 +209,7 @@ public class AllSpecificationTests
             .ToAllSpecification(
                 null as string,
                 null as string)
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -230,7 +230,7 @@ public class AllSpecificationTests
         
         var act = () => spec
             .ToAllSpecification(_ => null)
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -251,7 +251,7 @@ public class AllSpecificationTests
         
         var act = () => spec
             .ToAllSpecification()
-            .Evaluate(models);
+            .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
     }
@@ -267,7 +267,7 @@ public class AllSpecificationTests
         
         var sut = throwingSpec.ToAllSpecification();
         
-        var act = () => sut.Evaluate([model]);
+        var act = () => sut.IsSatisfiedBy([model]);
         
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains(sut.Description));
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains("AllSpecification<Object, String>"));

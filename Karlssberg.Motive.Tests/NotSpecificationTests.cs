@@ -20,7 +20,7 @@ public class NotSpecificationTests
         
         var sut = !spec;
 
-        var result = sut.Evaluate(model);
+        var result = sut.IsSatisfiedBy(model);
         
         result.IsSatisfied.Should().Be(expected);
         result.GetInsights().Should().AllBeEquivalentTo(operand);
@@ -42,7 +42,7 @@ public class NotSpecificationTests
         
         var sut = !spec;
 
-        var result = sut.Evaluate(model);
+        var result = sut.IsSatisfiedBy(model);
         
         result.Description.Should().Be(expected);
         
@@ -64,7 +64,7 @@ public class NotSpecificationTests
         
         var sut = !spec;
 
-        var result = sut.Evaluate(model);
+        var result = sut.IsSatisfiedBy(model);
         
         result.Description.Should().Be(expected);
         
@@ -85,7 +85,7 @@ public class NotSpecificationTests
         
         var sut = !spec;
 
-        var result = sut.Evaluate(model);
+        var result = sut.IsSatisfiedBy(model);
         
         result.Description.Should().Be(expected);
         
@@ -108,7 +108,7 @@ public class NotSpecificationTests
         var act = () =>
         {
             var sut = !spec;
-            sut.Evaluate(model);
+            sut.IsSatisfiedBy(model);
         };
 
         act.Should().NotThrow();
@@ -125,7 +125,7 @@ public class NotSpecificationTests
         
         var sut = !throwingSpec;
         
-        var act = () => sut.Evaluate(model);
+        var act = () => sut.IsSatisfiedBy(model);
         
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains(throwingSpec.Description));
         act.Should().Throw<SpecificationException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));

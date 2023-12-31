@@ -6,14 +6,14 @@ public static class EnumerableExtensions
         this IEnumerable<TModel> source, 
         SpecificationBase<TModel, TMetadata> specification)
     {
-        return specification.ToAnySpecification().Evaluate(source);
+        return specification.ToAnySpecification().IsSatisfiedBy(source);
     }
     
     public static BooleanResultBase<TMetadata> All<TModel, TMetadata>(
         this IEnumerable<TModel> source, 
         SpecificationBase<TModel, TMetadata> specification)
     {
-        return specification.ToAnySpecification().Evaluate(source);
+        return specification.ToAnySpecification().IsSatisfiedBy(source);
     }
     
     public static IEnumerable<T> ElseIfEmpty<T>(this IEnumerable<T> source, IEnumerable<T> other)
