@@ -2,11 +2,12 @@
 
 public sealed class AnyBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 {
+    
     internal AnyBooleanResult(
         Func<bool, IEnumerable<TMetadata>> metadataFactory,
         IEnumerable<BooleanResultBase<TMetadata>> operandResults)
     {
-        var operandResultsArray = Throw.IfNull(operandResults, nameof(operandResults)).ToArray();
+        var operandResultsArray = operandResults.ThrowIfNull(nameof(operandResults)).ToArray();
         var isSatisfied = operandResultsArray.Any(result => result.IsSatisfied);
         var metadata = metadataFactory(isSatisfied);
 
@@ -23,7 +24,7 @@ public sealed class AnyBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 
     public override bool IsSatisfied { get; }
 
-    public override string Description => $"ANY:{IsSatisfied}({string.Join(", ", OperandResults)})";
+    public override string Description => $"ANY:{IsSatisfiedDisplayText}({string.Join(", ", OperandResults)})";
     public override IEnumerable<string> Reasons => 
         DeterminativeOperandResults.SelectMany(r => r.Reasons);
 }

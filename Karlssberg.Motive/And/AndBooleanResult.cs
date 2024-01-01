@@ -6,8 +6,8 @@ public sealed class AndBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
         BooleanResultBase<TMetadata> leftOperandResult,
         BooleanResultBase<TMetadata> rightOperandResult)
     {
-        LeftOperandResult = Throw.IfNull(leftOperandResult, nameof(leftOperandResult));
-        RightOperandResult = Throw.IfNull(rightOperandResult, nameof(rightOperandResult));
+        LeftOperandResult = leftOperandResult.ThrowIfNull(nameof(leftOperandResult));
+        RightOperandResult = rightOperandResult.ThrowIfNull(nameof(rightOperandResult));
         
         IsSatisfied = leftOperandResult.IsSatisfied && rightOperandResult.IsSatisfied;
         OperandResults = [leftOperandResult, rightOperandResult];
@@ -22,7 +22,7 @@ public sealed class AndBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 
     public override bool IsSatisfied { get; }
 
-    public override string Description => $"({LeftOperandResult}) AND:{IsSatisfied} ({RightOperandResult})";
+    public override string Description => $"({LeftOperandResult}) AND:{IsSatisfiedDisplayText} ({RightOperandResult})";
     public override IEnumerable<string> Reasons =>
         DeterminativeOperandResults.SelectMany(r => r.Reasons);
 }

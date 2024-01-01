@@ -7,7 +7,7 @@ public sealed class AtLeastBooleanResult<TMetadata> : BooleanResultBase<TMetadat
         Func<bool, IEnumerable<TMetadata>> metadataFactory,
         IEnumerable<BooleanResultBase<TMetadata>> operandResults)
     {
-        var operandResultsArray = Throw.IfNull(operandResults, nameof(operandResults)).ToArray();
+        var operandResultsArray = operandResults.ThrowIfNull(nameof(operandResults)).ToArray();
         var isSatisfied = operandResultsArray.Count(result => result.IsSatisfied) >= minimum;
         var metadata = metadataFactory(isSatisfied);
 
@@ -28,7 +28,7 @@ public sealed class AtLeastBooleanResult<TMetadata> : BooleanResultBase<TMetadat
 
     public override bool IsSatisfied { get; }
 
-    public override string Description => $"AT_LEAST[{Minimum}]:{IsSatisfied}({string.Join(", ", OperandResults)})";
+    public override string Description => $"AT_LEAST[{Minimum}]:{IsSatisfiedDisplayText}({string.Join(", ", OperandResults)})";
     public override IEnumerable<string> Reasons => 
         DeterminativeOperandResults.SelectMany(r => r.Reasons);
 }

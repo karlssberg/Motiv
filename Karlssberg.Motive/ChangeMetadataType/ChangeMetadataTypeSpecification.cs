@@ -5,12 +5,11 @@ internal class ChangeMetadataTypeSpecification<TModel, TMetadata, TOtherMetadata
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse) : SpecificationBase<TModel, TMetadata>
 {
-    public SpecificationBase<TModel, TOtherMetadata> UnderlyingSpecification => underlyingSpecification;
     public override string Description => underlyingSpecification.Description;
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var booleanResult = UnderlyingSpecification.IsSatisfiedBy(model);
+        var booleanResult = underlyingSpecification.IsSatisfiedBy(model);
         var metadata = booleanResult.IsSatisfied
             ? whenTrue(model)
             : whenFalse(model);

@@ -7,5 +7,6 @@ internal class ChangeMetadataTypeBooleanResult<TMetadata, TOtherMetadata>(Boolea
     public TMetadata Metadata => metadata;
     public override bool IsSatisfied => UnderlyingBooleanResult.IsSatisfied;
     public override string Description => UnderlyingBooleanResult.Description;
+    public Type OriginalMetadataType => typeof(TOtherMetadata);
     public override IEnumerable<string> Reasons => UnderlyingBooleanResult.Reasons;
 }

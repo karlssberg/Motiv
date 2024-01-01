@@ -21,7 +21,7 @@ public sealed class OrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 
     public override bool IsSatisfied { get; }
 
-    public override string Description => $"({LeftOperandResult}) OR:{IsSatisfied} ({RightOperandResult})";
+    public override string Description => $"({LeftOperandResult}) OR:{IsSatisfiedDisplayText} ({RightOperandResult})";
     public override IEnumerable<string> Reasons =>
         DeterminativeOperandResults.SelectMany(r => r.Reasons);
 }

@@ -30,21 +30,19 @@ internal sealed class AtLeastSpecification<TModel, TMetadata>(
     {
     }
 
-    public SpecificationBase<TModel, TMetadata> UnderlyingSpecification { get; } = Throw.IfNull(underlyingSpecification, nameof(underlyingSpecification));
-
-    public override string Description => $"AT_LEAST[{minimum}]({underlyingSpecification})";
+    public override string Description => $"AT_LEAST_{minimum}({underlyingSpecification})";
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
         var results = models
             .Select(
                 model =>
-                    WrapThrownExceptions(
+                    WrapException.IfIsSatisfiedByInvocationFails(
                         this,
-                        UnderlyingSpecification,
+                        underlyingSpecification,
                         () =>
                         {
-                            var underlyingResult = UnderlyingSpecification.IsSatisfiedBy(model);
+                            var underlyingResult = underlyingSpecification.IsSatisfiedBy(model);
                             return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
                         }))
             .ToList();

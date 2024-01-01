@@ -9,7 +9,7 @@ internal sealed class AnySpecification<TModel, TMetadata>(
 {
     internal AnySpecification(SpecificationBase<TModel, TMetadata> specification)
         : this(
-            specification, 
+            specification,
             (_, _) => Enumerable.Empty<TMetadata>())
     {
     }
@@ -38,31 +38,23 @@ internal sealed class AnySpecification<TModel, TMetadata>(
     {
     }
 
-    public SpecificationBase<TModel, TMetadata> UnderlyingSpecification { get; } = Throw.IfNull(underlyingSpecification, nameof(underlyingSpecification));
-
     public override string Description => $"ANY({underlyingSpecification})";
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
-        var results = models
-            .Select(
-                model =>
-                    WrapThrownExceptions(
-                        this,
-                        UnderlyingSpecification,
-                        () =>
-                        {
-                            var underlyingResult = UnderlyingSpecification.IsSatisfiedBy(model);
-                            return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
-                        }))
+        var resultsWithModel = models
+            .Select(model =>
+                WrapException.IfIsSatisfiedByInvocationFails(this, underlyingSpecification,
+                    () =>
+                    {
+                        var underlyingResult = underlyingSpecification.IsSatisfiedBy(model);
+                        return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
+                    }))
             .ToList();
 
-        return new AnyBooleanResult<TMetadata>(ResolveMetadata, results);
-
-        IEnumerable<TMetadata> ResolveMetadata(bool isSatisfied)
-        {
-            return metadataFactory(isSatisfied, results);
-        }
+        return new AnyBooleanResult<TMetadata>(
+            isSatisfied => metadataFactory(isSatisfied, resultsWithModel), 
+            resultsWithModel.Select(result => result.UnderlyingResult));
     }
 
     private static Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> CreateMetadataFactory(

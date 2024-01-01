@@ -25,7 +25,7 @@ public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
         }
     }
 
-    public override string Description => $"({LeftOperandResult}) XOR:{IsSatisfied} ({RightOperandResult})";
+    public override string Description => $"({LeftOperandResult}) XOR:{IsSatisfiedDisplayText} ({RightOperandResult})";
     public override IEnumerable<string> Reasons =>
         DeterminativeOperandResults.SelectMany(r => r.Reasons);
 }

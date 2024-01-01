@@ -37,10 +37,10 @@ public class XOrSpecificationTests
     }
     
     [Theory]
-    [AutoParams(true, true, "(left:True) XOR:False (right:True)")]
-    [AutoParams(true, false, "(left:True) XOR:True (right:False)")]
-    [AutoParams(false, true, "(left:False) XOR:True (right:True)")]
-    [AutoParams(false, false, "(left:False) XOR:False (right:False)")]
+    [AutoParams(true, true, "(left:true) XOR:false (right:true)")]
+    [AutoParams(true, false, "(left:true) XOR:true (right:false)")]
+    [AutoParams(false, true, "(left:false) XOR:true (right:true)")]
+    [AutoParams(false, false, "(left:false) XOR:false (right:false)")]
     public void Should_serialize_the_result_of_the_xor_operation(
         bool leftResult,
         bool rightResult,
@@ -63,14 +63,13 @@ public class XOrSpecificationTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.Should().Be(expected);
-        
     }
     
     [Theory]
-    [AutoParams(true, true, "(True) XOR:False (True)")]
-    [AutoParams(true, false, "(True) XOR:True (False)")]
-    [AutoParams(false, true, "(False) XOR:True (True)")]
-    [AutoParams(false, false, "(False) XOR:False (False)")]
+    [AutoParams(true, true, "(True) XOR:false (True)")]
+    [AutoParams(true, false, "(True) XOR:true (False)")]
+    [AutoParams(false, true, "(False) XOR:true (True)")]
+    [AutoParams(false, false, "(False) XOR:false (False)")]
     public void Should_serialize_the_result_of_the_xor_operation_when_metadata_is_a_string(
         bool leftResult,
         bool rightResult,
@@ -93,14 +92,13 @@ public class XOrSpecificationTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.Should().Be(expected);
-        
     }
     
     [Theory]
-    [AutoParams(true, true, "(True) XOR:False (True)")]
-    [AutoParams(true, false, "(True) XOR:True (False)")]
-    [AutoParams(false, true, "(False) XOR:True (True)")]
-    [AutoParams(false, false, "(False) XOR:False (False)")]
+    [AutoParams(true, true, "(True) XOR:false (True)")]
+    [AutoParams(true, false, "(True) XOR:true (False)")]
+    [AutoParams(false, true, "(False) XOR:true (True)")]
+    [AutoParams(false, false, "(False) XOR:false (False)")]
     public void Should_serialize_the_result_of_the_xor_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool leftResult,
         bool rightResult,
@@ -121,7 +119,6 @@ public class XOrSpecificationTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.Should().Be(expected);
-        
     }
     
     [Theory]
@@ -141,7 +138,7 @@ public class XOrSpecificationTests
             _ => rightResult,
             true,
             false);
-        var expected = $"({left.Description}) XOR ({right.Description})";
+        var expected = $"({left.Description}) ^ ({right.Description})";
         
         var sut = left ^ right;
 
@@ -164,7 +161,7 @@ public class XOrSpecificationTests
             _ => rightResult,
             true.ToString(),
             false.ToString());
-        var expected = $"({left.Description}) XOR ({right.Description})";
+        var expected = $"({left.Description}) ^ ({right.Description})";
         
         var sut = left ^ right;
 

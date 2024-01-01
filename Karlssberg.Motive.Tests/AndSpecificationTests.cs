@@ -65,10 +65,10 @@ public class AndSpecificationTests
     }
     
     [Theory]
-    [AutoParams(true, true, "(True) AND:True (True)")]
-    [AutoParams(true, false, "(True) AND:False (False)")]
-    [AutoParams(false, true, "(False) AND:False (True)")]
-    [AutoParams(false, false, "(False) AND:False (False)")]
+    [AutoParams(true, true, "(True) AND:true (True)")]
+    [AutoParams(true, false, "(True) AND:false (False)")]
+    [AutoParams(false, true, "(False) AND:false (True)")]
+    [AutoParams(false, false, "(False) AND:false (False)")]
     public void Should_serialize_the_result_of_the_and_operation_when_metadata_is_a_string(
         bool leftResult,
         bool rightResult,
@@ -94,10 +94,10 @@ public class AndSpecificationTests
     }
     
     [Theory]
-    [AutoParams(true, true, "(True) AND:True (True)")]
-    [AutoParams(true, false, "(True) AND:False (False)")]
-    [AutoParams(false, true, "(False) AND:False (True)")]
-    [AutoParams(false, false, "(False) AND:False (False)")]
+    [AutoParams(true, true, "(True) AND:true (True)")]
+    [AutoParams(true, false, "(True) AND:false (False)")]
+    [AutoParams(false, true, "(False) AND:false (True)")]
+    [AutoParams(false, false, "(False) AND:false (False)")]
     public void Should_serialize_the_result_of_the_and_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool leftResult,
         bool rightResult,
@@ -138,7 +138,7 @@ public class AndSpecificationTests
             _ => rightResult,
             true,
             false);
-        var expected = $"({left.Description}) AND ({right.Description})";
+        var expected = $"({left.Description}) & ({right.Description})";
         
         var sut = left & right;
 
@@ -161,7 +161,7 @@ public class AndSpecificationTests
             _ => rightResult,
             true.ToString(),
             false.ToString());
-        var expected = $"({left.Description}) AND ({right.Description})";
+        var expected = $"({left.Description}) & ({right.Description})";
         
         var sut = left & right;
 

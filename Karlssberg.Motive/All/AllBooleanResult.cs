@@ -6,9 +6,9 @@ public sealed class AllBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
         Func<bool, IEnumerable<TMetadata>> metadataFactory,
         IEnumerable<BooleanResultBase<TMetadata>> operandResults)
     {
-        Throw.IfNull(operandResults, nameof(operandResults));
-
-        OperandResults = operandResults.ToArray();
+        OperandResults = operandResults
+            .ThrowIfNull(nameof(operandResults))
+            .ToArray();
         var isSatisfied = OperandResults.All(result => result.IsSatisfied);
         var metadata = metadataFactory(isSatisfied);
 
@@ -25,7 +25,7 @@ public sealed class AllBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 
     public override bool IsSatisfied { get; }
 
-    public override string Description => $"ALL:{IsSatisfied}({string.Join(", ", OperandResults)})";
+    public override string Description => $"ALL:{IsSatisfiedDisplayText}({string.Join(", ", OperandResults)})";
     public override IEnumerable<string> Reasons => 
         DeterminativeOperandResults.SelectMany(r => r.Reasons);
 }

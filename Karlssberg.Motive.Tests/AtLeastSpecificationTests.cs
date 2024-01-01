@@ -238,7 +238,7 @@ public class AtLeastSpecificationTests
     [Fact]
     public void Should_provide_a_description_of_the_specification()
     {
-        const string expected = "AT_LEAST[1](underlying spec description)";
+        const string expected = "AT_LEAST_1(underlying spec description)";
         var underlyingSpec = new Spec<bool, object>(
             "underlying spec description",
             m => m,
@@ -254,7 +254,7 @@ public class AtLeastSpecificationTests
     [Fact]
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
-        const string expected = "AT_LEAST[1](True)";
+        const string expected = "AT_LEAST_1(True)";
         var underlyingSpec = new Spec<bool>(
             m => m,
             true.ToString(),

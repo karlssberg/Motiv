@@ -7,7 +7,7 @@ public sealed class AtMostBooleanResult<TMetadata> : BooleanResultBase<TMetadata
         Func<bool, IEnumerable<TMetadata>> metadataFactory,
         IEnumerable<BooleanResultBase<TMetadata>> operandResults)
     {
-        var operandResultsArray = Throw.IfNull(operandResults, nameof(operandResults)).ToArray();
+        var operandResultsArray = operandResults.ThrowIfNull(nameof(operandResults)).ToArray();
         var isSatisfied = operandResultsArray.Count(result => result.IsSatisfied) <= maximum;
         var metadata = metadataFactory(isSatisfied);
 
@@ -28,7 +28,7 @@ public sealed class AtMostBooleanResult<TMetadata> : BooleanResultBase<TMetadata
 
     public override bool IsSatisfied { get; }
 
-    public override string Description => $"AT_MOST[{Maximum}]:{IsSatisfied}({string.Join(", ", OperandResults)})";
+    public override string Description => $"AT_MOST[{Maximum}]:{IsSatisfiedDisplayText}({string.Join(", ", OperandResults)})";
     
     public override IEnumerable<string> Reasons => 
         DeterminativeOperandResults.SelectMany(r => r.Reasons);

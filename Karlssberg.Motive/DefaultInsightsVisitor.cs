@@ -11,7 +11,7 @@ using Karlssberg.Motive.XOr;
 
 namespace Karlssberg.Motive;
 
-public class InsightsVisitor<TMetadata>
+public class DefaultInsightsVisitor<TMetadata>
 {
     protected IEnumerable<TMetadata> Visit(IEnumerable<BooleanResultBase<TMetadata>> booleanResultBases) =>
         booleanResultBases.SelectMany(Visit);

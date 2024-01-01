@@ -33,14 +33,14 @@ public class AnySpecificationTests
     }
     
     [Theory]
-    [AutoParams(false, false, false, "ANY:False(model:False, model:False, model:False)")]
-    [AutoParams(false, false, true, "ANY:True(model:False, model:False, model:True)")]
-    [AutoParams(false, true, false, "ANY:True(model:False, model:True, model:False)")]
-    [AutoParams(false, true, true, "ANY:True(model:False, model:True, model:True)")]
-    [AutoParams(true, false, false, "ANY:True(model:True, model:False, model:False)")]
-    [AutoParams(true, false, true, "ANY:True(model:True, model:False, model:True)")]
-    [AutoParams(true, true, false, "ANY:True(model:True, model:True, model:False)")]
-    [AutoParams(true, true, true, "ANY:True(model:True, model:True, model:True)")]
+    [AutoParams(false, false, false, "ANY:false(model:false, model:false, model:false)")]
+    [AutoParams(false, false, true, "ANY:true(model:false, model:false, model:true)")]
+    [AutoParams(false, true, false, "ANY:true(model:false, model:true, model:false)")]
+    [AutoParams(false, true, true, "ANY:true(model:false, model:true, model:true)")]
+    [AutoParams(true, false, false, "ANY:true(model:true, model:false, model:false)")]
+    [AutoParams(true, false, true, "ANY:true(model:true, model:false, model:true)")]
+    [AutoParams(true, true, false, "ANY:true(model:true, model:true, model:false)")]
+    [AutoParams(true, true, true, "ANY:true(model:true, model:true, model:true)")]
     public void Should_serialize_the_result_of_the_any_operation(
         bool first,
         bool second,
@@ -62,14 +62,14 @@ public class AnySpecificationTests
     }
     
     [Theory]
-    [AutoParams(false, false, false, "ANY:False(False, False, False)")]
-    [AutoParams(false, false, true, "ANY:True(False, False, True)")]
-    [AutoParams(false, true, false, "ANY:True(False, True, False)")]
-    [AutoParams(false, true, true, "ANY:True(False, True, True)")]
-    [AutoParams(true, false, false, "ANY:True(True, False, False)")]
-    [AutoParams(true, false, true, "ANY:True(True, False, True)")]
-    [AutoParams(true, true, false, "ANY:True(True, True, False)")]
-    [AutoParams(true, true, true, "ANY:True(True, True, True)")]
+    [AutoParams(false, false, false, "ANY:false(False, False, False)")]
+    [AutoParams(false, false, true, "ANY:true(False, False, True)")]
+    [AutoParams(false, true, false, "ANY:true(False, True, False)")]
+    [AutoParams(false, true, true, "ANY:true(False, True, True)")]
+    [AutoParams(true, false, false, "ANY:true(True, False, False)")]
+    [AutoParams(true, false, true, "ANY:true(True, False, True)")]
+    [AutoParams(true, true, false, "ANY:true(True, True, False)")]
+    [AutoParams(true, true, true, "ANY:true(True, True, True)")]
     public void Should_serialize_the_result_of_the_any_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -91,14 +91,14 @@ public class AnySpecificationTests
     }
     
     [Theory]
-    [AutoParams(false, false, false, "ANY:False(False, False, False)")]
-    [AutoParams(false, false, true, "ANY:True(False, False, True)")]
-    [AutoParams(false, true, false, "ANY:True(False, True, False)")]
-    [AutoParams(false, true, true, "ANY:True(False, True, True)")]
-    [AutoParams(true, false, false, "ANY:True(True, False, False)")]
-    [AutoParams(true, false, true, "ANY:True(True, False, True)")]
-    [AutoParams(true, true, false, "ANY:True(True, True, False)")]
-    [AutoParams(true, true, true, "ANY:True(True, True, True)")]
+    [AutoParams(false, false, false, "ANY:false(False, False, False)")]
+    [AutoParams(false, false, true, "ANY:true(False, False, True)")]
+    [AutoParams(false, true, false, "ANY:true(False, True, False)")]
+    [AutoParams(false, true, true, "ANY:true(False, True, True)")]
+    [AutoParams(true, false, false, "ANY:true(True, False, False)")]
+    [AutoParams(true, false, true, "ANY:true(True, False, True)")]
+    [AutoParams(true, true, false, "ANY:true(True, True, False)")]
+    [AutoParams(true, true, true, "ANY:true(True, True, True)")]
     public void Should_serialize_the_result_of_the_any_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
         bool second,

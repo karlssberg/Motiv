@@ -4,7 +4,7 @@ public sealed class NotBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 {
     internal NotBooleanResult(BooleanResultBase<TMetadata> operandResult)
     {
-        OperandResult = Throw.IfNull(operandResult, nameof(operandResult));
+        OperandResult = operandResult.ThrowIfNull(nameof(operandResult));
         IsSatisfied = !operandResult.IsSatisfied;
     }
 
@@ -12,6 +12,6 @@ public sealed class NotBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 
     public override bool IsSatisfied { get; }
 
-    public override string Description => $"NOT:{IsSatisfied}({OperandResult})";
+    public override string Description => $"NOT:{IsSatisfiedDisplayText}({OperandResult})";
     public override IEnumerable<string> Reasons => OperandResult.Reasons;
 }

@@ -58,7 +58,7 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
         TMetadata whenTrue,
         TMetadata whenFalse)
     {
-        Throw.IfNull(specification, nameof(specification));
+        specification.ThrowIfNull(nameof(specification));
         _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
     }
 
@@ -67,7 +67,7 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
         Func<TModel, TMetadata> whenTrue,
         TMetadata whenFalse)
     {
-        Throw.IfNull(specification, nameof(specification));
+        specification.ThrowIfNull(nameof(specification));
         _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
     }
 
@@ -76,13 +76,13 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
         TMetadata whenTrue,
         Func<TModel, TMetadata> whenFalse)
     {
-        Throw.IfNull(specification, nameof(specification));
+        specification.ThrowIfNull(nameof(specification));
         _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
     }
 
     public Spec(SpecificationBase<TModel, TMetadata> specification)
     {
-        Throw.IfNull(specification, nameof(specification));
+        specification.ThrowIfNull(nameof(specification));
         _specification = specification;
     }
 
@@ -95,9 +95,9 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
         TMetadata whenTrue,
         TMetadata whenFalse)
     {
-        Throw.IfNull(specificationFactory, nameof(specificationFactory));
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
         var specification = specificationFactory();
-        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
         _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
     }
 
@@ -106,9 +106,9 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
         Func<TModel, TMetadata> whenTrue,
         TMetadata whenFalse)
     {
-        Throw.IfNull(specificationFactory, nameof(specificationFactory));
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
         var specification = specificationFactory();
-        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
         _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
     }
 
@@ -117,17 +117,17 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
         TMetadata whenTrue,
         Func<TModel, TMetadata> whenFalse)
     {
-        Throw.IfNull(specificationFactory, nameof(specificationFactory));
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
         var specification = specificationFactory();
-        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
         _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
     }
 
     public Spec(Func<SpecificationBase<TModel, TMetadata>> specificationFactory)
     {
-        Throw.IfNull(specificationFactory, nameof(specificationFactory));
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
         var specification = specificationFactory();
-        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
         _specification = specification;
     }
 
@@ -140,7 +140,7 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
         TMetadata whenTrue,
         TMetadata whenFalse)
     {
-        Throw.IfNull(specification, nameof(specification));
+        specification.ThrowIfNull(nameof(specification));
         _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(specification, _ => whenTrue, _ => whenFalse);
     }
 
@@ -149,7 +149,7 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
         Func<TModel, TMetadata> whenTrue,
         TMetadata whenFalse)
     {
-        Throw.IfNull(specification, nameof(specification));
+        specification.ThrowIfNull(nameof(specification));
         _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(specification, whenTrue, _ => whenFalse);
     }
 
@@ -158,7 +158,7 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
         TMetadata whenTrue,
         Func<TModel, TMetadata> whenFalse)
     {
-        Throw.IfNull(specification, nameof(specification));
+        specification.ThrowIfNull(nameof(specification));
         _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(specification, _ => whenTrue, whenFalse);
     }
 
@@ -230,8 +230,9 @@ public class Spec<TModel> : SpecificationBase<TModel, string>
         string whenTrue,
         string whenFalse)
     {
-        Throw.IfNull(specification, nameof(specification));
-        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+        _specification = specification
+            .ThrowIfNull(nameof(specification))
+            .SubstituteMetadata(whenTrue, whenFalse);
     }
 
     public Spec(
@@ -239,8 +240,9 @@ public class Spec<TModel> : SpecificationBase<TModel, string>
         Func<TModel, string> whenTrue,
         string whenFalse)
     {
-        Throw.IfNull(specification, nameof(specification));
-        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+        _specification = specification
+            .ThrowIfNull(nameof(specification))
+            .SubstituteMetadata(whenTrue, whenFalse);
     }
 
     public Spec(
@@ -248,14 +250,14 @@ public class Spec<TModel> : SpecificationBase<TModel, string>
         string whenTrue,
         Func<TModel, string> whenFalse)
     {
-        Throw.IfNull(specification, nameof(specification));
-        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+        _specification = specification
+            .ThrowIfNull(nameof(specification))
+            .SubstituteMetadata(whenTrue, whenFalse);
     }
 
     public Spec(SpecificationBase<TModel, string> specification)
     {
-        Throw.IfNull(specification, nameof(specification));
-        _specification = specification;
+        _specification = specification.ThrowIfNull(nameof(specification));
     }
 
     #endregion
@@ -267,10 +269,10 @@ public class Spec<TModel> : SpecificationBase<TModel, string>
         string whenTrue,
         string whenFalse)
     {
-        Throw.IfNull(specificationFactory, nameof(specificationFactory));
-        var specification = specificationFactory();
-        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
-        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        _specification = specificationFactory()
+            .ThrowIfFactoryOutputIsNull(nameof(specificationFactory))
+            .SubstituteMetadata(whenTrue, whenFalse);
     }
 
     public Spec(
@@ -278,10 +280,10 @@ public class Spec<TModel> : SpecificationBase<TModel, string>
         Func<TModel, string> whenTrue,
         string whenFalse)
     {
-        Throw.IfNull(specificationFactory, nameof(specificationFactory));
-        var specification = specificationFactory();
-        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
-        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        _specification = specificationFactory()
+            .ThrowIfFactoryOutputIsNull(nameof(specificationFactory))
+            .SubstituteMetadata(whenTrue, whenFalse);
     }
 
     public Spec(
@@ -289,18 +291,17 @@ public class Spec<TModel> : SpecificationBase<TModel, string>
         string whenTrue,
         Func<TModel, string> whenFalse)
     {
-        Throw.IfNull(specificationFactory, nameof(specificationFactory));
-        var specification = specificationFactory();
-        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
-        _specification = specification.SubstituteMetadata(whenTrue, whenFalse);
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        _specification = specificationFactory()
+            .ThrowIfFactoryOutputIsNull(nameof(specificationFactory))
+            .SubstituteMetadata(whenTrue, whenFalse);
     }
 
     public Spec(Func<SpecificationBase<TModel, string>> specificationFactory)
     {
-        Throw.IfNull(specificationFactory, nameof(specificationFactory));
-        var specification = specificationFactory();
-        Throw.IfFactoryOutputIsNull(specification, nameof(specificationFactory));
-        _specification = specification;
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        _specification = specificationFactory()
+            .ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
     }
 
     #endregion

@@ -27,8 +27,8 @@ public class NotSpecificationTests
     }
     
     [Theory]
-    [AutoParams(true, "NOT:False(underlying:True)")]
-    [AutoParams(false, "NOT:True(underlying:False)")]
+    [AutoParams(true, "NOT:false(underlying:true)")]
+    [AutoParams(false, "NOT:true(underlying:false)")]
     public void  Should_serialize_the_result_of_the_not_operation(
         bool operand,
         string expected,
@@ -49,8 +49,8 @@ public class NotSpecificationTests
     }
     
     [Theory]
-    [AutoParams(true, "NOT:False(True)")]
-    [AutoParams(false, "NOT:True(False)")]
+    [AutoParams(true, "NOT:false(True)")]
+    [AutoParams(false, "NOT:true(False)")]
     public void  Should_serialize_the_result_of_the_not_operation_when_metadata_is_a_string(
         bool operand,
         string expected,
@@ -71,8 +71,8 @@ public class NotSpecificationTests
     }
     
     [Theory]
-    [AutoParams(true, "NOT:False(True)")]
-    [AutoParams(false, "NOT:True(False)")]
+    [AutoParams(true, "NOT:false(True)")]
+    [AutoParams(false, "NOT:true(False)")]
     public void  Should_serialize_the_result_of_the_not_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool operand,
         string expected,

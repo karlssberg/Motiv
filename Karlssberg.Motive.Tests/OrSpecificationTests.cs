@@ -35,10 +35,10 @@ public class OrSpecificationTests
     }
     
     [Theory]
-    [AutoParams(true, true, "(left:True) OR:True (right:True)")]
-    [AutoParams(true, false, "(left:True) OR:True (right:False)")]
-    [AutoParams(false, true, "(left:False) OR:True (right:True)")]
-    [AutoParams(false, false, "(left:False) OR:False (right:False)")]
+    [AutoParams(true, true, "(left:true) OR:true (right:true)")]
+    [AutoParams(true, false, "(left:true) OR:true (right:false)")]
+    [AutoParams(false, true, "(left:false) OR:true (right:true)")]
+    [AutoParams(false, false, "(left:false) OR:false (right:false)")]
     public void Should_serialize_the_result_of_the_or_operation(
         bool leftResult,
         bool rightResult,
@@ -64,11 +64,12 @@ public class OrSpecificationTests
         
     }
     
+    
     [Theory]
-    [AutoParams(true, true, "(True) OR:True (True)")]
-    [AutoParams(true, false, "(True) OR:True (False)")]
-    [AutoParams(false, true, "(False) OR:True (True)")]
-    [AutoParams(false, false, "(False) OR:False (False)")]
+    [AutoParams(true, true, "(True) OR:true (True)")]
+    [AutoParams(true, false, "(True) OR:true (False)")]
+    [AutoParams(false, true, "(False) OR:true (True)")]
+    [AutoParams(false, false, "(False) OR:false (False)")]
     public void Should_serialize_the_result_of_the_or_operation_when_metadata_is_a_string(
         bool leftResult,
         bool rightResult,
@@ -95,10 +96,10 @@ public class OrSpecificationTests
     }
     
     [Theory]
-    [AutoParams(true, true, "(True) OR:True (True)")]
-    [AutoParams(true, false, "(True) OR:True (False)")]
-    [AutoParams(false, true, "(False) OR:True (True)")]
-    [AutoParams(false, false, "(False) OR:False (False)")]
+    [AutoParams(true, true, "(True) OR:true (True)")]
+    [AutoParams(true, false, "(True) OR:true (False)")]
+    [AutoParams(false, true, "(False) OR:true (True)")]
+    [AutoParams(false, false, "(False) OR:false (False)")]
     public void Should_serialize_the_result_of_the_or_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool leftResult,
         bool rightResult,
@@ -139,7 +140,7 @@ public class OrSpecificationTests
             _ => rightResult,
             true,
             false);
-        var expected = $"({left.Description}) OR ({right.Description})";
+        var expected = $"({left.Description}) | ({right.Description})";
         
         var sut = left | right;
 
@@ -162,7 +163,7 @@ public class OrSpecificationTests
             _ => rightResult,
             true.ToString(),
             false.ToString());
-        var expected = $"({left.Description}) OR ({right.Description})";
+        var expected = $"({left.Description}) | ({right.Description})";
         
         var sut = left | right;
 

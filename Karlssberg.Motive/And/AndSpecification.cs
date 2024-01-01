@@ -6,22 +6,19 @@ internal class AndSpecification<TModel, TMetadata>(
     SpecificationBase<TModel, TMetadata> leftOperand,
     SpecificationBase<TModel, TMetadata> rightOperand) : SpecificationBase<TModel, TMetadata>
 {
-    public SpecificationBase<TModel, TMetadata> LeftOperand { get; } = Throw.IfNull(leftOperand, nameof(leftOperand));
-    public SpecificationBase<TModel, TMetadata> RightOperand { get; } = Throw.IfNull(rightOperand, nameof(rightOperand));
-
-    public override string Description => $"({LeftOperand}) AND ({RightOperand})";
+    public override string Description => $"({leftOperand}) & ({rightOperand})";
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var leftResult = WrapThrownExceptions(
+        var leftResult = WrapException.IfIsSatisfiedByInvocationFails(
             this,
-            LeftOperand,
-            () => LeftOperand.IsSatisfiedBy(model));
+            leftOperand,
+            () => leftOperand.IsSatisfiedBy(model));
 
-        var rightResult = WrapThrownExceptions(
+        var rightResult = WrapException.IfIsSatisfiedByInvocationFails(
             this,
-            RightOperand,
-            () => RightOperand.IsSatisfiedBy(model));
+            rightOperand,
+            () => rightOperand.IsSatisfiedBy(model));
 
         return leftResult.And(rightResult);
     }
