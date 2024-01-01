@@ -7,20 +7,20 @@ public static class AtLeastSpecificationExtensions
     public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAtLeastSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         int min) =>
-        new AtLeastSpecification<TModel, TMetadata>(min, specification);
+        new AtLeastNSatisfiedSpecification<TModel, TMetadata>(min, specification);
 
     public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAtLeastSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         int min,
         Func<IEnumerable<TModel>, TMetadata> whenMinimumReached) =>
-        new AtLeastSpecification<TModel, TMetadata>(min, specification, whenMinimumReached);
+        new AtLeastNSatisfiedSpecification<TModel, TMetadata>(min, specification, whenMinimumReached);
 
     public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAtLeastSpecification<TModel, TMetadata>(
         this SpecificationBase<TModel, TMetadata> specification,
         int min,
         TMetadata whenMinimumReached)
     {
-        return new AtLeastSpecification<TModel, TMetadata>(min, specification, _ => whenMinimumReached);
+        return new AtLeastNSatisfiedSpecification<TModel, TMetadata>(min, specification, _ => whenMinimumReached);
     }
 
     public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAtLeastSpecification<TModel, TMetadata>(
@@ -28,7 +28,7 @@ public static class AtLeastSpecificationExtensions
         int min,
         Func<IEnumerable<TModel>, TMetadata> whenMinimumReached,
         Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenBlowMinimum) =>
-        new AtLeastSpecification<TModel, TMetadata>(
+        new AtLeastNSatisfiedSpecification<TModel, TMetadata>(
             min,
             specification,
             whenMinimumReached,
@@ -40,7 +40,7 @@ public static class AtLeastSpecificationExtensions
         TMetadata whenMinimumReached,
         Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenBlowMinimum)
     {
-        return new AtLeastSpecification<TModel, TMetadata>(
+        return new AtLeastNSatisfiedSpecification<TModel, TMetadata>(
             min,
             specification,
             _ => whenMinimumReached,
@@ -53,7 +53,7 @@ public static class AtLeastSpecificationExtensions
         Func<IEnumerable<TModel>, TMetadata> whenMinimumReached,
         TMetadata whenBlowMinimum)
     {
-        return new AtLeastSpecification<TModel, TMetadata>(
+        return new AtLeastNSatisfiedSpecification<TModel, TMetadata>(
             min,
             specification,
             whenMinimumReached,
@@ -66,7 +66,7 @@ public static class AtLeastSpecificationExtensions
         TMetadata whenMinimumReached,
         TMetadata whenBlowMinimum)
     {
-        return new AtLeastSpecification<TModel, TMetadata>(
+        return new AtLeastNSatisfiedSpecification<TModel, TMetadata>(
             min,
             specification,
             _ => whenMinimumReached,

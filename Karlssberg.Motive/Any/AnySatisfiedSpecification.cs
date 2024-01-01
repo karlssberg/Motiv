@@ -2,26 +2,26 @@
 
 namespace Karlssberg.Motive.Any;
 
-internal sealed class AnySpecification<TModel, TMetadata>(
+internal sealed class AnySatisfiedSpecification<TModel, TMetadata>(
     SpecificationBase<TModel, TMetadata> underlyingSpecification,
     Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactory)
     : SpecificationBase<IEnumerable<TModel>, TMetadata>
 {
-    internal AnySpecification(SpecificationBase<TModel, TMetadata> specification)
+    internal AnySatisfiedSpecification(SpecificationBase<TModel, TMetadata> specification)
         : this(
             specification,
             (_, _) => Enumerable.Empty<TMetadata>())
     {
     }
 
-    internal AnySpecification(
+    internal AnySatisfiedSpecification(
         SpecificationBase<TModel, TMetadata> underlyingSpecification,
         Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenAnyTrue)
         : this(underlyingSpecification, CreateMetadataFactory(whenAnyTrue))
     {
     }
 
-    internal AnySpecification(
+    internal AnySatisfiedSpecification(
         SpecificationBase<TModel, TMetadata> underlyingSpecification,
         Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenAnyTrue,
         Func<IEnumerable<TModel>, TMetadata> whenAllFalse)
@@ -29,7 +29,7 @@ internal sealed class AnySpecification<TModel, TMetadata>(
     {
     }
 
-    internal AnySpecification(
+    internal AnySatisfiedSpecification(
         SpecificationBase<TModel, TMetadata> underlyingSpecification,
         Func<IEnumerable<TModel>, TMetadata> whenAllTrue,
         Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenSomeTrue,
@@ -52,7 +52,7 @@ internal sealed class AnySpecification<TModel, TMetadata>(
                     }))
             .ToList();
 
-        return new AnyBooleanResult<TMetadata>(
+        return new AnySatisfiedBooleanResult<TMetadata>(
             isSatisfied => metadataFactory(isSatisfied, resultsWithModel), 
             resultsWithModel.Select(result => result.UnderlyingResult));
     }

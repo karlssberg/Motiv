@@ -8,7 +8,7 @@ public static class AtMostSpecificationExtensions
         this SpecificationBase<TModel, TMetadata> specification,
         int max)
     {
-        return new AtMostSpecification<TModel, TMetadata>(max, specification);
+        return new AtMostNSatisfiedSpecification<TModel, TMetadata>(max, specification);
     }
     
     public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAtMostSpecification<TModel, TMetadata>(
@@ -16,7 +16,7 @@ public static class AtMostSpecificationExtensions
         int max,
         Func<IEnumerable<TModel>, TMetadata> whenWithinLimit)
     {
-        return new AtMostSpecification<TModel, TMetadata>(max, specification, whenWithinLimit);
+        return new AtMostNSatisfiedSpecification<TModel, TMetadata>(max, specification, whenWithinLimit);
     }
     
     public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAtMostSpecification<TModel, TMetadata>(
@@ -24,7 +24,7 @@ public static class AtMostSpecificationExtensions
         int max,
         TMetadata whenWithinLimit)
     {
-        return new AtMostSpecification<TModel, TMetadata>(max, specification, _ => whenWithinLimit);
+        return new AtMostNSatisfiedSpecification<TModel, TMetadata>(max, specification, _ => whenWithinLimit);
     }
     
     public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAtMostSpecification<TModel, TMetadata>(
@@ -33,7 +33,7 @@ public static class AtMostSpecificationExtensions
         Func<IEnumerable<TModel>, TMetadata> whenWithinLimit,
         Func<BooleanResultWithModel<TModel,TMetadata>, TMetadata> whenMaximumExceeded)
     {
-        return new AtMostSpecification<TModel, TMetadata>(max, specification, whenWithinLimit, whenMaximumExceeded);
+        return new AtMostNSatisfiedSpecification<TModel, TMetadata>(max, specification, whenWithinLimit, whenMaximumExceeded);
     }
     
     public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAtMostSpecification<TModel, TMetadata>(
@@ -42,7 +42,7 @@ public static class AtMostSpecificationExtensions
         TMetadata whenWithinLimit,
         Func<BooleanResultWithModel<TModel,TMetadata>, TMetadata> whenMaximumExceeded)
     {
-        return new AtMostSpecification<TModel, TMetadata>(max, specification, _ => whenWithinLimit, whenMaximumExceeded);
+        return new AtMostNSatisfiedSpecification<TModel, TMetadata>(max, specification, _ => whenWithinLimit, whenMaximumExceeded);
     }
     
     public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAtMostSpecification<TModel, TMetadata>(
@@ -51,7 +51,7 @@ public static class AtMostSpecificationExtensions
         Func<IEnumerable<TModel>, TMetadata> whenWithinLimit,
         TMetadata whenMaximumExceeded)
     {
-        return new AtMostSpecification<TModel, TMetadata>(max, specification, whenWithinLimit, _ => whenMaximumExceeded);
+        return new AtMostNSatisfiedSpecification<TModel, TMetadata>(max, specification, whenWithinLimit, _ => whenMaximumExceeded);
     }
     
     public static SpecificationBase<IEnumerable<TModel>, TMetadata> ToAtMostSpecification<TModel, TMetadata>(
@@ -60,6 +60,6 @@ public static class AtMostSpecificationExtensions
         TMetadata whenWithinLimit,
         TMetadata whenMaximumExceeded)
     {
-        return new AtMostSpecification<TModel, TMetadata>(max, specification, _ => whenWithinLimit, _ => whenMaximumExceeded);
+        return new AtMostNSatisfiedSpecification<TModel, TMetadata>(max, specification, _ => whenWithinLimit, _ => whenMaximumExceeded);
     } 
 }

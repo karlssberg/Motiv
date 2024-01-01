@@ -1,36 +1,36 @@
 ﻿using static Karlssberg.Motive.SpecificationException;
 
-namespace Karlssberg.Motive.AtLeast;
+namespace Karlssberg.Motive.AtMost;
 
-internal sealed class AtLeastSpecification<TModel, TMetadata>(
-    int minimum,
+internal sealed class AtMostNSatisfiedSpecification<TModel, TMetadata>(
+    int maximum,
     SpecificationBase<TModel, TMetadata> underlyingSpecification,
     Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactory)
     : SpecificationBase<IEnumerable<TModel>, TMetadata>
 {
-    internal AtLeastSpecification(int minimum, SpecificationBase<TModel, TMetadata> specification)
-        : this(minimum, specification, SelectCauses)
+    internal AtMostNSatisfiedSpecification(int maximum, SpecificationBase<TModel, TMetadata> specification)
+        : this(maximum, specification, SelectCauses)
     {
     }
 
-    internal AtLeastSpecification(
-        int minimum,
+    internal AtMostNSatisfiedSpecification(
+        int maximum,
         SpecificationBase<TModel, TMetadata> underlyingSpecification,
         Func<IEnumerable<TModel>, TMetadata> whenTrue)
-        : this(minimum, underlyingSpecification, CreateMetadataFactory(whenTrue))
+        : this(maximum, underlyingSpecification, CreateMetadataFactory(whenTrue))
     {
     }
 
-    internal AtLeastSpecification(
-        int minimum,
+    internal AtMostNSatisfiedSpecification(
+        int maximum,
         SpecificationBase<TModel, TMetadata> underlyingSpecification,
         Func<IEnumerable<TModel>, TMetadata> whenTrue,
-        Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenMinimumExceeded)
-        : this(minimum, underlyingSpecification, CreateMetadataFactory(whenTrue, whenMinimumExceeded))
+        Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenMaximumExceeded)
+        : this(maximum, underlyingSpecification, CreateMetadataFactory(whenTrue, whenMaximumExceeded))
     {
     }
 
-    public override string Description => $"AT_LEAST_{minimum}({underlyingSpecification})";
+    public override string Description => $"AT_MOST_{maximum}({underlyingSpecification})";
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
@@ -47,7 +47,7 @@ internal sealed class AtLeastSpecification<TModel, TMetadata>(
                         }))
             .ToList();
 
-        return new AtLeastBooleanResult<TMetadata>(minimum, ResolveMetadata, results.Select(result => result.UnderlyingResult));
+        return new AtMostNSatisfiedBooleanResult<TMetadata>(maximum, ResolveMetadata, results.Select(result => result.UnderlyingResult));
 
         IEnumerable<TMetadata> ResolveMetadata(bool isSatisfied)
         {

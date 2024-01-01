@@ -1,25 +1,25 @@
 ﻿namespace Karlssberg.Motive.All;
 
-internal sealed class AllSpecification<TModel, TMetadata>(
+internal sealed class AllSatisfiedSpecification<TModel, TMetadata>(
     SpecificationBase<TModel, TMetadata> underlyingSpecification,
     Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactory)
     : SpecificationBase<IEnumerable<TModel>, TMetadata>
 {
-    internal AllSpecification(SpecificationBase<TModel, TMetadata> specification)
+    internal AllSatisfiedSpecification(SpecificationBase<TModel, TMetadata> specification)
         : this(
             specification,
             (_, _) => Enumerable.Empty<TMetadata>())
     {
     }
 
-    internal AllSpecification(
+    internal AllSatisfiedSpecification(
         SpecificationBase<TModel, TMetadata> underlyingSpecification,
         Func<IEnumerable<TModel>, TMetadata> whenAllTrue)
         : this(underlyingSpecification, CreateMetadataFactory(whenAllTrue))
     {
     }
 
-    internal AllSpecification(
+    internal AllSatisfiedSpecification(
         SpecificationBase<TModel, TMetadata> underlyingSpecification,
         Func<IEnumerable<TModel>, TMetadata> whenAllTrue,
         Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenAnyFalse)
@@ -27,7 +27,7 @@ internal sealed class AllSpecification<TModel, TMetadata>(
     {
     }
 
-    internal AllSpecification(
+    internal AllSatisfiedSpecification(
         SpecificationBase<TModel, TMetadata> underlyingSpecification,
         Func<IEnumerable<TModel>, TMetadata> whenAllTrue,
         Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenAnyFalse,
@@ -50,7 +50,7 @@ internal sealed class AllSpecification<TModel, TMetadata>(
                     }))
             .ToList();
 
-        return new AllBooleanResult<TMetadata>(
+        return new AllSatisfiedBooleanResult<TMetadata>(
             isSatisfied => metadataFactory(isSatisfied, resultsWithModel), 
             resultsWithModel.Select(result => result.UnderlyingResult));
     }

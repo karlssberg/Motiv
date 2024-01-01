@@ -48,7 +48,7 @@ public class ChangeModelTypeSpecificationTests
             ch => $"'{ch}' is not a letter");
         
         var isAllLetters = isLetter
-            .ToAllSpecification()
+            .ToAllSatisfiedSpec()
             .ChangeModel<string>(m => m.ToCharArray());
         
         var act = isAllLetters.IsSatisfiedBy(model);
@@ -69,7 +69,7 @@ public class ChangeModelTypeSpecificationTests
             ch => $"'{ch}' is not a letter");
         
         var isAllLetters = isLetter
-            .ToAllSpecification()
+            .ToAllSatisfiedSpec()
             .ChangeModel<string>(m => m.ToCharArray());
         
         var act = isAllLetters.IsSatisfiedBy(model);

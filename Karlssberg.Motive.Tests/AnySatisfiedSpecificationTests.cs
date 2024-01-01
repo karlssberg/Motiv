@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motive.Tests;
 
-public class AnySpecificationTests
+public class AnySatisfiedSpecificationTests
 {
     [Theory]
     [AutoParams(false, false, false, false)]
@@ -26,7 +26,7 @@ public class AnySpecificationTests
             false.ToString());
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAnySpecification();
+        var sut = underlyingSpec.ToAnySatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
@@ -54,7 +54,7 @@ public class AnySpecificationTests
             false);
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAnySpecification();
+        var sut = underlyingSpec.ToAnySatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
         
         result.Description.Should().Be(expected);
@@ -83,7 +83,7 @@ public class AnySpecificationTests
             false.ToString());
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAnySpecification();
+        var sut = underlyingSpec.ToAnySatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
         
         result.Description.Should().Be(expected);
@@ -111,7 +111,7 @@ public class AnySpecificationTests
             false.ToString());
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAnySpecification();
+        var sut = underlyingSpec.ToAnySatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
         
         result.Description.Should().Be(expected);
@@ -131,7 +131,7 @@ public class AnySpecificationTests
                 m => m is null, 
                 trueMetadata, 
                 falseMetadata)
-            .ToAnySpecification();
+            .ToAnySatisfiedSpec();
         
         var act = () =>  spec.IsSatisfiedBy(models);
 
@@ -153,7 +153,7 @@ public class AnySpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .ToAnySpecification(
+            .ToAnySatisfiedSpec(
                 _ => null,
                 _ => null,
                 _ => null)
@@ -177,7 +177,7 @@ public class AnySpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .ToAnySpecification(
+            .ToAnySatisfiedSpec(
                 null as string,
                 null as string)
             .IsSatisfiedBy(models);
@@ -200,7 +200,7 @@ public class AnySpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .ToAnySpecification(_ => null)
+            .ToAnySatisfiedSpec(_ => null)
             .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
@@ -221,7 +221,7 @@ public class AnySpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .ToAnySpecification()
+            .ToAnySatisfiedSpec()
             .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
@@ -236,12 +236,12 @@ public class AnySpecificationTests
             "should always throw",
             new Exception("should be wrapped"));
         
-        var sut = throwingSpec.ToAnySpecification();
+        var sut = throwingSpec.ToAnySatisfiedSpec();
         
         var act = () => sut.IsSatisfiedBy([model]);
         
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains(sut.Description));
-        act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains("AnySpecification<Object, String>"));
+        act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains("AnySatisfiedSpecification<Object, String>"));
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains("ThrowingSpecification<Object, String>"));
         act.Should().Throw<SpecificationException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }

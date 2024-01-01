@@ -20,11 +20,11 @@ public class DefaultInsightsVisitor<TMetadata>
     {
         return booleanResultBase switch
         {
-            AllBooleanResult<TMetadata> allBooleanResult => Visit(allBooleanResult),
+            AllSatisfiedBooleanResult<TMetadata> allBooleanResult => Visit(allBooleanResult),
             AndBooleanResult<TMetadata> andBooleanResult => Visit(andBooleanResult),
-            AnyBooleanResult<TMetadata> anyBooleanResult => Visit(anyBooleanResult),
-            AtLeastBooleanResult<TMetadata> atLeastBooleanResult => Visit(atLeastBooleanResult),
-            AtMostBooleanResult<TMetadata> atMostBooleanResult => Visit(atMostBooleanResult),
+            AnySatisfiedBooleanResult<TMetadata> anyBooleanResult => Visit(anyBooleanResult),
+            AtLeastNSatisfiedBooleanResult<TMetadata> atLeastBooleanResult => Visit(atLeastBooleanResult),
+            AtMostNSatisfiedBooleanResult<TMetadata> atMostBooleanResult => Visit(atMostBooleanResult),
             BooleanResult<TMetadata> booleanResult => Visit(booleanResult),
             IChangeMetadataTypeBooleanResult<TMetadata> changeMetadataTypeBooleanResult => Visit(changeMetadataTypeBooleanResult),
             NotBooleanResult<TMetadata> notBooleanResult => Visit(notBooleanResult),
@@ -35,22 +35,22 @@ public class DefaultInsightsVisitor<TMetadata>
         };
     }
 
-    protected virtual IEnumerable<TMetadata> Visit(AllBooleanResult<TMetadata> allBooleanResult) =>
-        allBooleanResult.SubstituteMetadata.ElseIfEmpty(Visit(allBooleanResult.DeterminativeOperandResults));
+    protected virtual IEnumerable<TMetadata> Visit(AllSatisfiedBooleanResult<TMetadata> allSatisfiedBooleanResult) =>
+        allSatisfiedBooleanResult.SubstituteMetadata.ElseIfEmpty(Visit(allSatisfiedBooleanResult.DeterminativeOperandResults));
 
     protected virtual IEnumerable<TMetadata> Visit(AndBooleanResult<TMetadata> andBooleanResult) =>
         Visit(andBooleanResult.DeterminativeOperandResults);
 
-    protected virtual IEnumerable<TMetadata> Visit(AnyBooleanResult<TMetadata> anyBooleanResult) =>
-        anyBooleanResult.SubstituteMetadata.ElseIfEmpty(Visit(anyBooleanResult.DeterminativeOperandResults));
+    protected virtual IEnumerable<TMetadata> Visit(AnySatisfiedBooleanResult<TMetadata> anySatisfiedBooleanResult) =>
+        anySatisfiedBooleanResult.SubstituteMetadata.ElseIfEmpty(Visit(anySatisfiedBooleanResult.DeterminativeOperandResults));
 
-    protected virtual IEnumerable<TMetadata> Visit(AtLeastBooleanResult<TMetadata> atLeastBooleanResult) =>
-        atLeastBooleanResult.SubstituteMetadata
-            .ElseIfEmpty(Visit(atLeastBooleanResult.DeterminativeOperandResults));
+    protected virtual IEnumerable<TMetadata> Visit(AtLeastNSatisfiedBooleanResult<TMetadata> atLeastNSatisfiedBooleanResult) =>
+        atLeastNSatisfiedBooleanResult.SubstituteMetadata
+            .ElseIfEmpty(Visit(atLeastNSatisfiedBooleanResult.DeterminativeOperandResults));
 
-    protected virtual IEnumerable<TMetadata> Visit(AtMostBooleanResult<TMetadata> atMostBooleanResult) =>
-        atMostBooleanResult.SubstituteMetadata
-            .ElseIfEmpty(Visit(atMostBooleanResult.DeterminativeOperandResults));
+    protected virtual IEnumerable<TMetadata> Visit(AtMostNSatisfiedBooleanResult<TMetadata> atMostNSatisfiedBooleanResult) =>
+        atMostNSatisfiedBooleanResult.SubstituteMetadata
+            .ElseIfEmpty(Visit(atMostNSatisfiedBooleanResult.DeterminativeOperandResults));
 
     protected virtual IEnumerable<TMetadata> Visit(BooleanResult<TMetadata> booleanResult) =>
         [booleanResult.Metadata];

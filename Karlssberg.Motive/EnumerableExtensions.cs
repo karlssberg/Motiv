@@ -6,15 +6,32 @@ public static class EnumerableExtensions
         this IEnumerable<TModel> source, 
         SpecificationBase<TModel, TMetadata> specification)
     {
-        return specification.ToAnySpecification().IsSatisfiedBy(source);
+        return specification.ToAnySatisfiedSpec().IsSatisfiedBy(source);
     }
     
     public static BooleanResultBase<TMetadata> All<TModel, TMetadata>(
         this IEnumerable<TModel> source, 
         SpecificationBase<TModel, TMetadata> specification)
     {
-        return specification.ToAnySpecification().IsSatisfiedBy(source);
+        return specification.ToAnySatisfiedSpec().IsSatisfiedBy(source);
     }
+    
+    public static SpecificationBase<TModel, TMetadata> ToAllSpecification<TModel, TMetadata>(
+        this IEnumerable<SpecificationBase<TModel, TMetadata>> specifications)
+    {
+        return specifications.Aggregate(
+            (leftSpec, rightSpec) => 
+                leftSpec & rightSpec);
+    }
+    
+    public static SpecificationBase<TModel, TMetadata> ToAnySpecification<TModel, TMetadata>(
+        this IEnumerable<SpecificationBase<TModel, TMetadata>> specifications)
+    {
+        return specifications.Aggregate(
+            (leftSpec, rightSpec) => 
+                leftSpec | rightSpec);
+    }
+    
     
     public static IEnumerable<T> ElseIfEmpty<T>(this IEnumerable<T> source, IEnumerable<T> other)
     {

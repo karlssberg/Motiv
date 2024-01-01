@@ -1,6 +1,4 @@
-﻿using static Karlssberg.Motive.SpecificationException;
-
-namespace Karlssberg.Motive.XOr;
+﻿namespace Karlssberg.Motive.XOr;
 
 internal sealed class XOrSpecification<TModel, TMetadata>(
     SpecificationBase<TModel, TMetadata> leftOperand,

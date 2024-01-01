@@ -16,16 +16,13 @@ public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     public BooleanResultBase<TMetadata> LeftOperandResult { get; }
     public BooleanResultBase<TMetadata> RightOperandResult { get; }
 
-    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperandResults
-    {
-        get
-        {
-            yield return LeftOperandResult;
-            yield return RightOperandResult;
-        }
-    }
+
+    public BooleanResultBase<TMetadata>[] OperandResults => [LeftOperandResult, RightOperandResult];
+
+    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperandResults => OperandResults;
 
     public override string Description => $"({LeftOperandResult}) XOR:{IsSatisfiedDisplayText} ({RightOperandResult})";
+
     public override IEnumerable<string> Reasons =>
         DeterminativeOperandResults.SelectMany(r => r.Reasons);
 }

@@ -88,6 +88,48 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
 
     #endregion
 
+    #region SpecificationConstructorsWithDescription
+
+    public Spec(
+        string description,
+        SpecificationBase<TModel, TMetadata> specification,
+        TMetadata whenTrue,
+        TMetadata whenFalse)
+    {
+        specification.ThrowIfNull(nameof(specification));
+        _specification = specification.SubstituteMetadata(description, whenTrue, whenFalse);
+    }
+
+    public Spec(
+        string description,
+        SpecificationBase<TModel, TMetadata> specification,
+        Func<TModel, TMetadata> whenTrue,
+        TMetadata whenFalse)
+    {
+        specification.ThrowIfNull(nameof(specification));
+        _specification = specification.SubstituteMetadata(description, whenTrue, whenFalse);
+    }
+
+    public Spec(
+        string description,
+        SpecificationBase<TModel, TMetadata> specification,
+        TMetadata whenTrue,
+        Func<TModel, TMetadata> whenFalse)
+    {
+        specification.ThrowIfNull(nameof(specification));
+        _specification = specification.SubstituteMetadata(description, whenTrue, whenFalse);
+    }
+
+    public Spec(
+        string description,
+        SpecificationBase<TModel, TMetadata> specification)
+    {
+        specification.ThrowIfNull(nameof(specification));
+        _specification = new ChangeDescriptionSpecification<TModel, TMetadata>(description, specification);
+    }
+
+    #endregion
+
     #region SpecificationFactoryConstructors
 
     public Spec(
@@ -133,6 +175,57 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
 
     #endregion
 
+    #region SpecificationFactoryConstructorsDescription
+
+    public Spec(
+        string description,
+        Func<SpecificationBase<TModel, TMetadata>> specificationFactory,
+        TMetadata whenTrue,
+        TMetadata whenFalse)
+    {
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        var specification = specificationFactory();
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
+        _specification = specification.SubstituteMetadata(description, whenTrue, whenFalse);
+    }
+
+    public Spec(
+        string description,
+        Func<SpecificationBase<TModel, TMetadata>> specificationFactory,
+        Func<TModel, TMetadata> whenTrue,
+        TMetadata whenFalse)
+    {
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        var specification = specificationFactory();
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
+        _specification = specification.SubstituteMetadata(description, whenTrue, whenFalse);
+    }
+
+    public Spec(
+        string description,
+        Func<SpecificationBase<TModel, TMetadata>> specificationFactory,
+        TMetadata whenTrue,
+        Func<TModel, TMetadata> whenFalse)
+    {
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        var specification = specificationFactory();
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
+        _specification = specification.SubstituteMetadata(description, whenTrue, whenFalse);
+    }
+
+    public Spec(
+        string description,
+        Func<SpecificationBase<TModel, TMetadata>> specificationFactory)
+    {
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        var specification = specificationFactory();
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
+        _specification = new ChangeDescriptionSpecification<TModel, TMetadata>(description, specification);
+    }
+
+    #endregion
+
+
     #region StringMetadataSpecificationConstructors
 
     public Spec(
@@ -160,6 +253,165 @@ public class Spec<TModel, TMetadata> : SpecificationBase<TModel, TMetadata>
     {
         specification.ThrowIfNull(nameof(specification));
         _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(specification, _ => whenTrue, whenFalse);
+    }
+
+    public Spec(
+        SpecificationBase<TModel, string> specification,
+        Func<TModel, TMetadata> whenTrue,
+        Func<TModel, TMetadata> whenFalse)
+    {
+        specification.ThrowIfNull(nameof(specification));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(specification, whenTrue, whenFalse);
+    }
+
+    #endregion
+
+    #region StringMetadataSpecificationConstructorsWithDescription
+
+    public Spec(
+        string description,
+        SpecificationBase<TModel, string> specification,
+        TMetadata whenTrue,
+        TMetadata whenFalse)
+    {
+        specification.ThrowIfNull(nameof(specification));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(
+            description,
+            specification,
+            _ => whenTrue,
+            _ => whenFalse);
+    }
+
+    public Spec(
+        string description,
+        SpecificationBase<TModel, string> specification,
+        Func<TModel, TMetadata> whenTrue,
+        TMetadata whenFalse)
+    {
+        specification.ThrowIfNull(nameof(specification));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(
+            description,
+            specification,
+            whenTrue,
+            _ => whenFalse);
+    }
+
+    public Spec(
+        string description,
+        SpecificationBase<TModel, string> specification,
+        TMetadata whenTrue,
+        Func<TModel, TMetadata> whenFalse)
+    {
+        specification.ThrowIfNull(nameof(specification));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(
+            description,
+            specification,
+            _ => whenTrue,
+            whenFalse);
+    }
+
+
+    public Spec(
+        string description,
+        SpecificationBase<TModel, string> specification,
+        Func<TModel, TMetadata> whenTrue,
+        Func<TModel, TMetadata> whenFalse)
+    {
+        specification.ThrowIfNull(nameof(specification));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(
+            description,
+            specification,
+            whenTrue,
+            whenFalse);
+    }
+
+    #endregion
+
+    #region StringMetadataSpecificationFactoryConstructors
+
+    public Spec(
+        Func<SpecificationBase<TModel, string>> specificationFactory,
+        TMetadata whenTrue,
+        TMetadata whenFalse)
+    {
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        var specification = specificationFactory();
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(specification, _ => whenTrue, _ => whenFalse);
+    }
+
+    public Spec(
+        Func<SpecificationBase<TModel, string>> specificationFactory,
+        Func<TModel, TMetadata> whenTrue,
+        TMetadata whenFalse)
+    {
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        var specification = specificationFactory();
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(specification, whenTrue, _ => whenFalse);
+    }
+
+    public Spec(
+        Func<SpecificationBase<TModel, string>> specificationFactory,
+        TMetadata whenTrue,
+        Func<TModel, TMetadata> whenFalse)
+    {
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        var specification = specificationFactory();
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(specification, _ => whenTrue, whenFalse);
+    }
+
+    #endregion
+
+    #region StringMetadataSpecificationFactoryConstructorsWithDescription
+
+    public Spec(
+        string description,
+        Func<SpecificationBase<TModel, string>> specificationFactory,
+        TMetadata whenTrue,
+        TMetadata whenFalse)
+    {
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        var specification = specificationFactory();
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(
+            description,
+            specification,
+            _ => whenTrue,
+            _ => whenFalse);
+    }
+
+    public Spec(
+        string description,
+        Func<SpecificationBase<TModel, string>> specificationFactory,
+        Func<TModel, TMetadata> whenTrue,
+        TMetadata whenFalse)
+    {
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        var specification = specificationFactory();
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(
+            description,
+            specification,
+            whenTrue,
+            _ => whenFalse);
+    }
+
+    public Spec(
+        string description,
+        Func<SpecificationBase<TModel, string>> specificationFactory,
+        TMetadata whenTrue,
+        Func<TModel, TMetadata> whenFalse)
+    {
+        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        var specification = specificationFactory();
+        specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
+        _specification = new ChangeMetadataTypeSpecification<TModel, TMetadata, string>(
+            description,
+            specification,
+            _ => whenTrue,
+            whenFalse);
     }
 
     #endregion

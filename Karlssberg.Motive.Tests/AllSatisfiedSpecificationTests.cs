@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motive.Tests;
 
-public class AllSpecificationTests
+public class AllSatisfiedSpecificationTests
 {
     [Theory]
     [AutoParams(false, false, false, false)]
@@ -26,7 +26,7 @@ public class AllSpecificationTests
             false.ToString());
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAllSpecification();
+        var sut = underlyingSpec.ToAllSatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
@@ -54,7 +54,7 @@ public class AllSpecificationTests
             false.ToString());
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAllSpecification();
+        var sut = underlyingSpec.ToAllSatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
         
         
@@ -81,7 +81,7 @@ public class AllSpecificationTests
             false.ToString());
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAllSpecification();
+        var sut = underlyingSpec.ToAllSatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
         
         
@@ -109,7 +109,7 @@ public class AllSpecificationTests
             false);
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAllSpecification();
+        var sut = underlyingSpec.ToAllSatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
         
         
@@ -125,7 +125,7 @@ public class AllSpecificationTests
             true.ToString(),
             false.ToString());
 
-        var sut = underlyingSpec.ToAllSpecification();
+        var sut = underlyingSpec.ToAllSatisfiedSpec();
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -140,7 +140,7 @@ public class AllSpecificationTests
             true.ToString(),
             false.ToString());
 
-        var sut = underlyingSpec.ToAllSpecification();
+        var sut = underlyingSpec.ToAllSatisfiedSpec();
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -161,7 +161,7 @@ public class AllSpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .ToAllSpecification()
+            .ToAllSatisfiedSpec()
             .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
@@ -182,7 +182,7 @@ public class AllSpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .ToAllSpecification(
+            .ToAllSatisfiedSpec(
                 _ => null,
                 _ => null,
                 _ => null)
@@ -206,7 +206,7 @@ public class AllSpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .ToAllSpecification(
+            .ToAllSatisfiedSpec(
                 null as string,
                 null as string)
             .IsSatisfiedBy(models);
@@ -229,7 +229,7 @@ public class AllSpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .ToAllSpecification(_ => null)
+            .ToAllSatisfiedSpec(_ => null)
             .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
@@ -250,7 +250,7 @@ public class AllSpecificationTests
             falseMetadata);
         
         var act = () => spec
-            .ToAllSpecification()
+            .ToAllSatisfiedSpec()
             .IsSatisfiedBy(models);
 
         act.Should().NotThrow();
@@ -265,12 +265,12 @@ public class AllSpecificationTests
             "throws",
             new Exception("should be wrapped"));
         
-        var sut = throwingSpec.ToAllSpecification();
+        var sut = throwingSpec.ToAllSatisfiedSpec();
         
         var act = () => sut.IsSatisfiedBy([model]);
         
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains(sut.Description));
-        act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains("AllSpecification<Object, String>"));
+        act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains("AllSatisfiedSpecification<Object, String>"));
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains("ThrowingSpecification<Object, String>"));
         act.Should().Throw<SpecificationException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }

@@ -16,6 +16,9 @@
       <Compile Update="StringMetadataSpecification.cs">
         <DependentUpon>Spec.cs</DependentUpon>
       </Compile>
+      <Compile Update="ChangeDescriptionSpecification.cs">
+        <DependentUpon>Spec.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
     
     <ItemGroup>

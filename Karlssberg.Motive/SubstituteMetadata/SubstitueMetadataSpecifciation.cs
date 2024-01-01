@@ -1,11 +1,23 @@
 ﻿namespace Karlssberg.Motive.SubstituteMetadata;
 
 internal class SubstituteMetadataSpecification<TModel, TMetadata>(
+    string description,
     SpecificationBase<TModel, TMetadata> underlyingSpecification,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse) : SpecificationBase<TModel, TMetadata>
 {
-    public override string Description => underlyingSpecification.Description;
+    internal SubstituteMetadataSpecification(
+        SpecificationBase<TModel, TMetadata> underlyingSpecification,
+        Func<TModel, TMetadata> whenTrue,
+        Func<TModel, TMetadata> whenFalse) : this(
+            underlyingSpecification.Description,
+            underlyingSpecification,
+            whenTrue,
+            whenFalse)
+    {
+    }
+    
+    public override string Description => description;
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
