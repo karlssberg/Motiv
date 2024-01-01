@@ -2,6 +2,6 @@
 
 public class IsHandFlushSpec() : Spec<Hand, HandRank>(
     "Is a Flush hand",
-    hand => hand.Suits.Distinct().Count() == 1,
+    new HasNCardsWithTheSameSuitSpec(5),
     HandRank.Flush,
     HandRank.HighCard);
