@@ -10,4 +10,8 @@
       <ProjectReference Include="..\..\Karlssberg.Motive\Karlssberg.Motive.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Humanizer.Core" Version="2.14.1" />
+    </ItemGroup>
+
 </Project>

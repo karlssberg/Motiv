@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motive.Poker;
 
-public class HasNPairs(int pairCount) : Spec<Hand>(
+public class HasNPairsSpec(int pairCount) : Spec<Hand>(
     hand => hand.Ranks.GroupBy(r => r).Count(IsAPair) == pairCount,
     $"Has {pairCount} {PluralizePair(pairCount)}",
     $"Does not have {pairCount} {PluralizePair(pairCount)}")

@@ -17,7 +17,7 @@ public record Hand
         : this(ParseCards(handPattern))
     {
     }
-    
+
     public IEnumerable<Rank> Ranks => Cards.Select(c => c.Rank);
 
     public IEnumerable<Suit> Suits => Cards.Select(c => c.Suit);
@@ -37,4 +37,5 @@ public record Hand
             .Select(code => new Card(code))
             .ToList();
         
+    public override string ToString() => string.Join(' ', Cards);
 }

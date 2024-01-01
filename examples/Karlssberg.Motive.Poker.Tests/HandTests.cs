@@ -1,4 +1,6 @@
 using FluentAssertions;
+using Karlssberg.Motive.Poker.HandRanks;
+using Karlssberg.Motive.Poker.StraightHands;
 using static Karlssberg.Motive.Poker.Tests.HandRanks;
 
 namespace Karlssberg.Motive.Poker.Tests;
@@ -25,7 +27,7 @@ public class HandTests
         
         var hand = new Hand(cards);
         
-        var sut = new IsHandStraight();
+        var sut = new IsHandStraightSpec();
         
         var act = sut.IsSatisfiedBy(hand);
             
@@ -50,7 +52,7 @@ public class HandTests
         
         var hand = new Hand(cards);
         
-        var sut = new IsHandStraight();
+        var sut = new IsHandStraightSpec();
         
         var act = sut.IsSatisfiedBy(hand);
 
@@ -74,7 +76,7 @@ public class HandTests
         
         var hand = new Hand(cards); 
         
-        var sut = new IsHandFlush();
+        var sut = new IsHandFlushSpec();
         
         var act = sut.IsSatisfiedBy(hand);
             
@@ -100,11 +102,31 @@ public class HandTests
             .Select(rank => new Card(rank, flushSuit))
             .ToList()); 
         
-        var sut = new IsHandStraightFlush();
+        var sut = new IsHandStraightFlushSpec();
         
         var act = sut.IsSatisfiedBy(hand);
         
         act.IsSatisfied.Should().BeTrue();
         act.GetInsights().Max().Should().Be(HandRank.StraightFlush);
+    }
+    
+    [Theory]
+    [AutoParams]
+    public void Should_evaluate_a_royal_flush(Suit flushSuit)
+    {
+        var hand = new Hand(new List<Card>
+        {
+            new("A", flushSuit),
+            new("K", flushSuit),
+            new("Q", flushSuit),
+            new("J", flushSuit),
+            new("10", flushSuit)
+        });
+        var sut = new IsHandRoyalFlushSpec();
+        
+        var act = sut.IsSatisfiedBy(hand);
+        
+        act.IsSatisfied.Should().BeTrue();
+        act.GetInsights().Max().Should().Be(HandRank.RoyalFlush);
     }
 }

@@ -18,38 +18,14 @@ public record Card(Rank Rank, Suit Suit)
         : this(ResolveRank(cardName[..^1]), ResolveSuit(cardName[^1]))
     {
     }
+    
+    public override string ToString() => $"{ResolveRankDisplayName}{Suit.ToString()[0]}";
+    
+    public string ResolveRankDisplayName(Rank rank) => rank.GetDescription();
 
-    public static Rank ResolveRank(string rankAbbreviation)
-    {
-        var rank = rankAbbreviation switch
-        {
-            "2" => Two,
-            "3" => Three,
-            "4" => Four,
-            "5" => Five,
-            "6" => Six,
-            "7" => Seven,
-            "8" => Eight,
-            "9" => Nine,
-            "10" => Ten,
-            "J" => Jack,
-            "Q" => Queen,
-            "K" => King,
-            "A" => Ace,
-            _ => throw new ArgumentException($"Invalid rank: {rankAbbreviation}")
-        };
-        return rank;
-    }
+    public static Rank ResolveRank(string rankAbbreviation) => 
+        rankAbbreviation.GetEnumFromDescription<Rank>();
 
-    public static Suit ResolveSuit(char code)
-    {
-        return code switch
-        {
-            'C' => Clubs,
-            'D' => Diamonds,
-            'H' => Hearts,
-            'S' => Spades,
-            _ => throw new ArgumentException($"Invalid suit: {code}")
-        };
-    }
+    public static Suit ResolveSuit(char code) => 
+        code.ToString().GetEnumFromDescription<Suit>();
 }
