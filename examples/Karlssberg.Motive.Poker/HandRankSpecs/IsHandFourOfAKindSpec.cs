@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motive.Poker.HandRanks;
+﻿namespace Karlssberg.Motive.Poker.HandRankSpecs;
 
 public class IsHandFourOfAKindSpec() : Spec<Hand, HandRank>(
     "Is a Four of a Kind hand",

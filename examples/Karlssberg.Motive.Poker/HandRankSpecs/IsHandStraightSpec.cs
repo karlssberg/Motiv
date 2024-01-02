@@ -1,6 +1,6 @@
 ﻿using Karlssberg.Motive.Poker.StraightHands;
 
-namespace Karlssberg.Motive.Poker.HandRanks;
+namespace Karlssberg.Motive.Poker.HandRankSpecs;
 
 public class IsHandStraightSpec() : Spec<Hand, HandRank>(
     "Is a Straight hand",

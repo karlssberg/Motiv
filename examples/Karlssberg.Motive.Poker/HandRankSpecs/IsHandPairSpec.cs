@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motive.Poker.HandRanks;
+﻿namespace Karlssberg.Motive.Poker.HandRankSpecs;
 
 public class IsHandPairSpec() : Spec<Hand, HandRank>(
     "Is a Pair hand",

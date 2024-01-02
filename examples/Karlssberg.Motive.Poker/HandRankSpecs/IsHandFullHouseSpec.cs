@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motive.Poker.HandRanks;
+﻿namespace Karlssberg.Motive.Poker.HandRankSpecs;
 
 public class IsHandFullHouseSpec() : Spec<Hand, HandRank>(
     "Is a Full House hand",

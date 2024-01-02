@@ -1,6 +1,6 @@
 ﻿using Karlssberg.Motive.Poker.StraightHands;
 
-namespace Karlssberg.Motive.Poker.HandRanks;
+namespace Karlssberg.Motive.Poker.HandRankSpecs;
 
 public class IsHandRoyalFlushSpec() : Spec<Hand, HandRank>(
     "Is Royal Flush",

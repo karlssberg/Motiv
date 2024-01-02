@@ -1,6 +1,6 @@
 ﻿using static Karlssberg.Motive.Poker.HandRank;
 
-namespace Karlssberg.Motive.Poker.HandRanks;
+namespace Karlssberg.Motive.Poker.HandRankSpecs;
 
 public class IsHandTwoPairSpec() : Spec<Hand, HandRank>(
     "Is a Two Pair hand",
