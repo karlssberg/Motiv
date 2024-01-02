@@ -1,4 +1,4 @@
-﻿using Karlssberg.Motive.Poker.HandRanks;
+﻿using Karlssberg.Motive.Poker.HandRankSpecs;
 using Karlssberg.Motive.Poker.StraightHands;
 
 namespace Karlssberg.Motive.Poker;
