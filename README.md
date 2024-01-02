@@ -1,8 +1,8 @@
-# Motive - turn your if-statements into _why_-statements
+# Motiv - turn your if-statements into _why_-statements
 
 Are you fed up with debugging Boolean expressions and want to quickly find out what went wrong? Do you need to tell others what went wrong? Does it all look like Spaghetti?
 
-If so then look no further, because Motive will help make these problems disappear.
+If so then look no further, because Motiv will help make these problems disappear.
 
 ## Problem Statement
 
@@ -14,21 +14,21 @@ This library deals with vexing issues from working with logic. Such as...
 
 ## Solution
 
-Motive addresses these challenges by extending the [Specification Pattern](https://en.wikipedia.org/wiki/Specification_pattern) so it can embed metadata along with logical statements.  By following the same rules that govern traditional logical operators, the metadata is filtered and aggregated with metadata from adjacent logcal statements to form a list of metadata representing the underlying causes.  You can think of it as a library that helps you supplement validation-like metadata to your regular/vanilla if-statements.
+Motiv addresses these challenges by extending the [Specification Pattern](https://en.wikipedia.org/wiki/Specification_pattern) so it can embed metadata along with logical statements.  By following the same rules that govern traditional logical operators, the metadata is filtered and aggregated with metadata from adjacent logcal statements to form a list of metadata representing the underlying causes.  You can think of it as a library that helps you supplement validation-like metadata to your regular/vanilla if-statements.
 
 ## Benefits
 
-1. **Decomposing Logic**: In any non-trivial application there is a high chance that you will find a need to re-use logic in various places.  This often means wrapping it in a function and moving it somewhere else.  Motive provides a framework for doing this and and the means to recombine them afterwards.
+1. **Decomposing Logic**: In any non-trivial application there is a high chance that you will find a need to re-use logic in various places.  This often means wrapping it in a function and moving it somewhere else.  Motiv provides a framework for doing this and and the means to recombine them afterwards.
 2. **Metadata association**: Associate metadata for both `true` and `false` outcomes.  By default the metadata is a string - so that human readable explanations of the logic can be defined alongside the actual logical expression.  However, this doesn't have to be a string and can in fact be any type, which means that it can be used to support multi-lingual explanations, or even be used to conditionally select stateful objects.
 3. **Metadata accumulation**: With complex logical expressions different underlying logic may (or may not) be responsible producing the final result.  This means that in order to be useful, the metadata needs to be selectively filtered so that only the metadata from logic that contributed to the final result is accumulated, or to be more technical: only the metadata from _determinative operands_ are accumulated.  For instance, with an _or_ operation, if one of the operands produces a `false` result and the other a _true_ result then only the operand that returned a `true` result will have its metadata accumulated and the other operand's metadata will be ignored.
 4. **Enhanced Debugging Experience**: This library has been designed to supercharge the developer around Boolean logic.  Specifications, whether composed of other Specifications or not, override the `ToString()` method so that it provides a human readable representation of its the logic tree.  Furthermore, the generated result also accumulates a human-readable list of reasons why the result was either `true` or `false`.  This is primarily for debugging and troubleshooting purposes, but it could also be surfaced to users if so desired.
 5. **Simplified Testing**: By extracting your logical expressions into separate classes you make it much easier to thoroughly test all the possible combinations that the parameters can be in.  It also means the type from which the expressions were extracted now has potentially mock-able dependencies, which should make testing code-paths simpler.
 
-Effectively, Motive can replace many validation libraries, offering an enriched validation experience by providing a layer of abstraction that unifies the decision-making process and the validation process.
+Effectively, Motiv can replace many validation libraries, offering an enriched validation experience by providing a layer of abstraction that unifies the decision-making process and the validation process.
 
 ## Getting Started with CLI
 
-This section provides instructions on how to build and run the Motive project using the .NET Core CLI, which is a powerful and flexible way to work with .NET projects.
+This section provides instructions on how to build and run the Motiv project using the .NET Core CLI, which is a powerful and flexible way to work with .NET projects.
 
 #### Prerequisites
 
@@ -37,7 +37,7 @@ This section provides instructions on how to build and run the Motive project us
 
 #### Building the Project
 
-1. **Open Terminal or Command Prompt**: Navigate to the directory where you cloned the Motive repository.
+1. **Open Terminal or Command Prompt**: Navigate to the directory where you cloned the Motiv repository.
 2. **Navigate to the Project Directory**: If the solution file (`.sln`) is not in the root, navigate to the directory containing the solution file.
 3. **Build the Solution**: Run the following command to build the solution:
    ```bash
@@ -53,7 +53,7 @@ dotnet test
 
 ## Contribution
 
-Your contributions to Motive are greatly appreciated:
+Your contributions to Motiv are greatly appreciated:
 
 **Branching Strategy**:
 
