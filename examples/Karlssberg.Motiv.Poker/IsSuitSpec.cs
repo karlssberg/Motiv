@@ -1,6 +1,7 @@
 ﻿namespace Karlssberg.Motiv.Poker;
 
 public class IsSuitSpec(Suit suit) : Spec<Card>(
-    card => card.Suit == suit,
-    $"Is {suit}",
-    $"Is Not {suit}");
+    Spec.Build<Card>(card => card.Suit == suit)
+        .YieldWhenTrue($"Is {suit}")
+        .YieldWhenFalse($"Is Not {suit}")
+        .CreateSpec());

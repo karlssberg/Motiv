@@ -10,62 +10,6 @@ internal class StringMetadataSpecification<TModel>(
     private readonly Func<TModel, string> _trueBecause = trueBecause.ThrowIfNull(nameof(trueBecause));
     private readonly Func<TModel, string> _falseBecause = falseBecause.ThrowIfNull(nameof(falseBecause));
 
-    internal StringMetadataSpecification(
-        string description,
-        Func<TModel, bool> predicate,
-        string trueBecause,
-        string falseBecause)
-        : this(
-            description,
-            predicate,
-            _ => trueBecause,
-            _ => falseBecause)
-    {
-        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
-        falseBecause.ThrowIfNullOrWhitespace(nameof(falseBecause));
-    }
-
-    internal StringMetadataSpecification(
-        Func<TModel, bool> predicate,
-        string trueBecause,
-        string falseBecause)
-        : this(
-            trueBecause,
-            predicate,
-            _ => trueBecause,
-            _ => falseBecause)
-    {
-        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
-        falseBecause.ThrowIfNullOrWhitespace(nameof(falseBecause));
-    }
-
-    internal StringMetadataSpecification(
-        string description,
-        Func<TModel, bool> predicate,
-        Func<TModel, string> trueBecause,
-        string falseBecause)
-        : this(
-            description,
-            predicate,
-            trueBecause,
-            _ => falseBecause)
-    {
-        falseBecause.ThrowIfNullOrWhitespace(nameof(falseBecause));
-    }
-
-    internal StringMetadataSpecification(
-        Func<TModel, bool> predicate,
-        string trueBecause,
-        Func<TModel, string> falseBecause)
-        : this(
-            trueBecause,
-            predicate,
-            _ => trueBecause,
-            falseBecause)
-    {
-        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
-    }
-
     public override string Description => description;
 
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>

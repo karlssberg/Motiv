@@ -1,6 +1,7 @@
 ﻿namespace Karlssberg.Motiv.Poker.StraightHands;
 
 public class IsEightHighStraightSpec() : Spec<Hand>(
-    new DoesHandContainSpecifiedRanksSpec([Rank.Eight, Rank.Seven, Rank.Six, Rank.Five, Rank.Four]),
-    "Is Eight High Straight",
-    "Is Not Eight High Straight");
+    new DoesHandContainSpecifiedRanksSpec([Rank.Eight, Rank.Seven, Rank.Six, Rank.Five, Rank.Four])
+        .YieldWhenTrue("is Eight High Straight")
+        .YieldWhenFalse("is Not Eight High Straight")
+        .CreateSpec());

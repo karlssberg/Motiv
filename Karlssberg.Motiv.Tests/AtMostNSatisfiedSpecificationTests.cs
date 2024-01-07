@@ -28,14 +28,15 @@ public class AtMostNSatisfiedSpecificationTests
         bool fourth,
         bool expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("returns the model");
+        
         bool[] models = [first, second, third, fourth];
 
-        var sut = underlyingSpec.ToAtMostSpecification(0);
+        var sut = underlyingSpec.ToAtMostNSatisfiedSpec(0);
         var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
@@ -65,14 +66,15 @@ public class AtMostNSatisfiedSpecificationTests
         bool fourth,
         bool expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("returns the model");
+        
         bool[] models = [first, second, third, fourth];
 
-        var sut = underlyingSpec.ToAtMostSpecification(1);
+        var sut = underlyingSpec.ToAtMostNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
@@ -102,14 +104,15 @@ public class AtMostNSatisfiedSpecificationTests
         bool fourth,
         bool expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("returns the model");
+        
         bool[] models = [first, second, third, fourth];
 
-        var sut = underlyingSpec.ToAtMostSpecification(2);
+        var sut = underlyingSpec.ToAtMostNSatisfiedSpec(2);
         var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
@@ -139,14 +142,15 @@ public class AtMostNSatisfiedSpecificationTests
         bool fourth,
         bool expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("returns the model");
+        
         bool[] models = [first, second, third, fourth];
 
-        var sut = underlyingSpec.ToAtMostSpecification(models.Length);
+        var sut = underlyingSpec.ToAtMostNSatisfiedSpec(models.Length);
         var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
@@ -167,14 +171,15 @@ public class AtMostNSatisfiedSpecificationTests
         bool third,
         string expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("returns the model");
+        
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAtMostSpecification(1);
+        var sut = underlyingSpec.ToAtMostNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
         
         
@@ -195,13 +200,15 @@ public class AtMostNSatisfiedSpecificationTests
         bool third,
         string expected)
     {
-        var underlyingSpec = new Spec<bool>(
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+        
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAtMostSpecification(1);
+        var sut = underlyingSpec.ToAtMostNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
         
         
@@ -222,14 +229,15 @@ public class AtMostNSatisfiedSpecificationTests
         bool third,
         string expected)
     {
-        var underlyingSpec = new Spec<bool, bool>(
-            "model",
-            m => m,
-            true,
-            false);
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec("model");
+        
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAtMostSpecification(1);
+        var sut = underlyingSpec.ToAtMostNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
         
         
@@ -239,13 +247,13 @@ public class AtMostNSatisfiedSpecificationTests
     public void Should_provide_a_description_of_the_specification()
     {
         const string expected = "AT_MOST_1(underlying spec description)";
-        var underlyingSpec = new Spec<bool, object>(
-            "underlying spec description",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("underlying spec description");
 
-        var sut = underlyingSpec.ToAtMostSpecification(1);
+        var sut = underlyingSpec.ToAtMostNSatisfiedSpec(1);
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -255,101 +263,16 @@ public class AtMostNSatisfiedSpecificationTests
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
         const string expected = "AT_MOST_1(True)";
-        var underlyingSpec = new Spec<bool>(
-            m => m,
-            true.ToString(),
-            false.ToString());
-
-        var sut = underlyingSpec.ToAtMostSpecification(1);
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+        
+        var sut = underlyingSpec.ToAtMostNSatisfiedSpec(1);
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAtMostSpecification(1)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_with_binary_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAtMostSpecification(1,
-                null as string,
-                null as string)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_with_unary_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAtMostSpecification(1, _ => null)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_without_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAtMostSpecification(1)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
     }
     
     [Theory]
@@ -361,7 +284,7 @@ public class AtMostNSatisfiedSpecificationTests
             "throws",
             new Exception("should be wrapped"));
         
-        var sut = throwingSpec.ToAtMostSpecification(1);
+        var sut = throwingSpec.ToAtMostNSatisfiedSpec(1);
         
         var act = () => sut.IsSatisfiedBy([model]);
         

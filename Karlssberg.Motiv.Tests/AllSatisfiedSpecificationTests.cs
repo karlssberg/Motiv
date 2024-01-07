@@ -19,241 +19,137 @@ public class AllSatisfiedSpecificationTests
         bool third,
         bool expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAllSatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
-        
+
         result.IsSatisfied.Should().Be(expected);
     }
-    
+
     [Theory]
-    [AutoParams(false, false, false, "ALL:False(False, False, False)")]
-    [AutoParams(false, false, true, "ALL:False(False, False, True)")]
-    [AutoParams(false, true, false, "ALL:False(False, True, False)")]
-    [AutoParams(false, true, true, "ALL:False(False, True, True)")]
-    [AutoParams(true, false, false, "ALL:False(True, False, False)")]
-    [AutoParams(true, false, true, "ALL:False(True, False, True)")]
-    [AutoParams(true, true, false, "ALL:False(True, True, False)")]
-    [AutoParams(true, true, true, "ALL:True(True, True, True)")]
+    [AutoParams(false, false, false, "ALL:false(false, false, false)")]
+    [AutoParams(false, false, true, "ALL:false(false, false, true)")]
+    [AutoParams(false, true, false, "ALL:false(false, true, false)")]
+    [AutoParams(false, true, true, "ALL:false(false, true, true)")]
+    [AutoParams(true, false, false, "ALL:false(true, false, false)")]
+    [AutoParams(true, false, true, "ALL:false(true, false, true)")]
+    [AutoParams(true, true, false, "ALL:false(true, true, false)")]
+    [AutoParams(true, true, true, "ALL:true(true, true, true)")]
     public void Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string(
         bool first,
         bool second,
         bool third,
         string expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString().ToLowerInvariant())
+            .YieldWhenFalse(false.ToString().ToLowerInvariant())
+            .CreateSpec();;
+
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAllSatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
-        
-        
+
+        result.Description.Should().Be(expected);
     }
-    
+
     [Theory]
-    [AutoParams(false, false, false, "ALL:False(False, False, False)")]
-    [AutoParams(false, false, true, "ALL:False(False, False, True)")]
-    [AutoParams(false, true, false, "ALL:False(False, True, False)")]
-    [AutoParams(false, true, true, "ALL:False(False, True, True)")]
-    [AutoParams(true, false, false, "ALL:False(True, False, False)")]
-    [AutoParams(true, false, true, "ALL:False(True, False, True)")]
-    [AutoParams(true, true, false, "ALL:False(True, True, False)")]
-    [AutoParams(true, true, true, "ALL:True(True, True, True)")]
+    [AutoParams(false, false, false, "ALL:false(false, false, false)")]
+    [AutoParams(false, false, true, "ALL:false(false, false, true)")]
+    [AutoParams(false, true, false, "ALL:false(false, true, false)")]
+    [AutoParams(false, true, true, "ALL:false(false, true, true)")]
+    [AutoParams(true, false, false, "ALL:false(true, false, false)")]
+    [AutoParams(true, false, true, "ALL:false(true, false, true)")]
+    [AutoParams(true, true, false, "ALL:false(true, true, false)")]
+    [AutoParams(true, true, true, "ALL:true(true, true, true)")]
     public void Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
         bool second,
         bool third,
         string expected)
     {
-        var underlyingSpec = new Spec<bool>(
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString().ToLowerInvariant())
+            .YieldWhenFalse(false.ToString().ToLowerInvariant())
+            .CreateSpec();;
+
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAllSatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
-        
-        
+
+        result.Description.Should().Be(expected);
     }
-    
+
     [Theory]
-    [AutoParams(false, false, false, "ALL:False(model:False, model:False, model:False)")]
-    [AutoParams(false, false, true, "ALL:False(model:False, model:False, model:True)")]
-    [AutoParams(false, true, false, "ALL:False(model:False, model:True, model:False)")]
-    [AutoParams(false, true, true, "ALL:False(model:False, model:True, model:True)")]
-    [AutoParams(true, false, false, "ALL:False(model:True, model:False, model:False)")]
-    [AutoParams(true, false, true, "ALL:False(model:True, model:False, model:True)")]
-    [AutoParams(true, true, false, "ALL:False(model:True, model:True, model:False)")]
-    [AutoParams(true, true, true, "ALL:True(model:True, model:True, model:True)")]
+    [AutoParams(false, false, false, "ALL:false(model:false, model:false, model:false)")]
+    [AutoParams(false, false, true, "ALL:false(model:false, model:false, model:true)")]
+    [AutoParams(false, true, false, "ALL:false(model:false, model:true, model:false)")]
+    [AutoParams(false, true, true, "ALL:false(model:false, model:true, model:true)")]
+    [AutoParams(true, false, false, "ALL:false(model:true, model:false, model:false)")]
+    [AutoParams(true, false, true, "ALL:false(model:true, model:false, model:true)")]
+    [AutoParams(true, true, false, "ALL:false(model:true, model:true, model:false)")]
+    [AutoParams(true, true, true, "ALL:true(model:true, model:true, model:true)")]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
         bool second,
         bool third,
         string expected)
     {
-        var underlyingSpec = new Spec<bool, bool>(
-            "model",
-            m => m,
-            true,
-            false);
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec("model");
+
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAllSatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
-        
-        
+
+        result.Description.Should().Be(expected);
     }
-    
+
     [Fact]
     public void Should_provide_a_description_of_the_specification()
     {
         const string expected = "ALL(underlying spec description)";
-        var underlyingSpec = new Spec<bool, object>(
-            "underlying spec description",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("underlying spec description");
 
         var sut = underlyingSpec.ToAllSatisfiedSpec();
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
-    
+
     [Fact]
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
         const string expected = "ALL(True)";
-        var underlyingSpec = new Spec<bool>(
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
 
         var sut = underlyingSpec.ToAllSatisfiedSpec();
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAllSatisfiedSpec()
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_with_ternary_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAllSatisfiedSpec(
-                _ => null,
-                _ => null,
-                _ => null)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_with_binary_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAllSatisfiedSpec(
-                null as string,
-                null as string)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_with_unary_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAllSatisfiedSpec(_ => null)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_without_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAllSatisfiedSpec()
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
     }
     
     [Theory]
@@ -264,11 +160,11 @@ public class AllSatisfiedSpecificationTests
         var throwingSpec = new ThrowingSpecification<object, string>(
             "throws",
             new Exception("should be wrapped"));
-        
+
         var sut = throwingSpec.ToAllSatisfiedSpec();
-        
+
         var act = () => sut.IsSatisfiedBy([model]);
-        
+
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains(sut.Description));
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains("AllSatisfiedSpecification<Object, String>"));
         act.Should().Throw<SpecificationException>().Where(ex => ex.Message.Contains("ThrowingSpecification<Object, String>"));

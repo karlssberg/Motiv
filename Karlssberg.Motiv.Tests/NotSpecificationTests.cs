@@ -12,11 +12,11 @@ public class NotSpecificationTests
         bool expected,
         object model)
     {
-        var spec = new Spec<object, bool>(
-            $"is {operand}",
-            _ => operand,
-            true,
-            false);
+        var spec = Spec
+            .Build<object>(m => operand)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec($"is {operand}");
         
         var sut = !spec;
 
@@ -34,11 +34,11 @@ public class NotSpecificationTests
         string expected,
         object model)
     {
-        var spec = new Spec<object, bool>(
-            "underlying",
-            _ => operand,
-            true,
-            false);
+        var spec = Spec
+            .Build<object>(m => operand)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec("underlying");
         
         var sut = !spec;
 
@@ -56,11 +56,11 @@ public class NotSpecificationTests
         string expected,
         object model)
     {
-        var spec = new Spec<object, string>(
-            "underlying",
-            _ => operand,
-            true.ToString(),
-            false.ToString());
+        var spec = Spec
+            .Build<object>(m => operand)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
         
         var sut = !spec;
 
@@ -78,10 +78,11 @@ public class NotSpecificationTests
         string expected,
         object model)
     {
-        var spec = new Spec<object>(
-            _ => operand,
-            true.ToString(),
-            false.ToString());
+        var spec = Spec
+            .Build<object>(m => operand)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
         
         var sut = !spec;
 
@@ -89,29 +90,6 @@ public class NotSpecificationTests
         
         result.Description.Should().Be(expected);
         
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied(
-        string? trueMetadata, 
-        string? falseMetadata,
-        string? model)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () =>
-        {
-            var sut = !spec;
-            sut.IsSatisfiedBy(model);
-        };
-
-        act.Should().NotThrow();
     }
     
     [Theory]

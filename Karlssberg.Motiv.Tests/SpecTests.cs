@@ -9,11 +9,11 @@ public class SpecTests
     [AutoParams(false)]
     public void Should_return_a_result_that_satisfies_the_predicate(bool model)
     {
-        var sut = new Spec<bool, string>(
-            "returns model value",
-            m => m, 
-            true.ToString(), 
-            false.ToString());
+        var sut = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("returns model value");
 
         var result = sut.IsSatisfiedBy(model);
 
@@ -25,11 +25,11 @@ public class SpecTests
     [Fact]
     public void Should_handle_null_model_without_throwing()
     {
-        var sut = new Spec<string?, string>(
-            "is null",
-            m => m is null, 
-            true.ToString(), 
-            false.ToString());
+        var sut = Spec
+            .Build<string?>(m => m is null)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("is null");
 
         var result = sut.IsSatisfiedBy(null);
 
@@ -43,10 +43,11 @@ public class SpecTests
     [AutoParams(false)]
     public void Should_return_a_result_that_satisfies_the_predicate_when_using_textual_specification(bool model)
     {
-        var sut = new Spec<bool>(
-            m => m, 
-            true.ToString(), 
-            false.ToString());
+        var sut = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
 
         var result = sut.IsSatisfiedBy(model);
 
@@ -58,10 +59,11 @@ public class SpecTests
     [Fact]
     public void Should_handle_null_model_without_throwing_when_using_textual_specification()
     {
-        var sut = new Spec<string?>(
-            m => m is null, 
-            true.ToString(), 
-            false.ToString());
+        var sut = Spec
+            .Build<string?>(m => m is null)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
 
         var result = sut.IsSatisfiedBy(null);
 
@@ -73,10 +75,11 @@ public class SpecTests
     [Fact]
     public void Should_throw_if_null_predicate_is_supplied()
     {
-        var act = () =>  new Spec<string?>(
-            null! as Func<string?, bool>, 
-            true.ToString(), 
-            false.ToString());
+        var act = () => Spec
+            .Build<string?>(null!)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
 
         act.Should().Throw<ArgumentNullException>();
     }
@@ -84,30 +87,27 @@ public class SpecTests
     [Theory]
     [AutoParams("true",  null)]
     [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied(string? trueMetadata, string? falseMetadata)
+    public void Should_throw_if_null_metadata_supplied(string? trueMetadata, string? falseMetadata)
     {
-        var act = () =>  new Spec<string?, string?>(
-            "is null",
-            m => m is null, 
-            trueMetadata, 
-            falseMetadata);
-
-        act.Should().NotThrow();
+        var act = () => Spec
+            .Build<string?>(m => m is null)
+            .YieldWhenTrue(trueMetadata!)
+            .YieldWhenFalse(falseMetadata!)
+            .CreateSpec("is null");
+        
+        act.Should().Throw<ArgumentException>();
     }
     
     [Theory]
     [AutoParams("hello world", null)]
-    [AutoParams("hello world", "")]
-    [AutoParams("hello world", " ")]
     [AutoParams(null, "hello world")]
-    [AutoParams("", "hello world")]
-    [AutoParams(" ", "hello world")]
     public void Should_throw_if_invalid_reasons_are_supplied(string? trueBecause, string? falseBecause)
     {
-        var act = () =>  new Spec<string?>(
-            m => m is null, 
-            trueBecause, 
-            falseBecause);
+        var act = () => Spec
+            .Build<string?>(m => m is null)
+            .YieldWhenTrue(trueBecause!)
+            .YieldWhenFalse(falseBecause!)
+            .CreateSpec();
 
         act.Should().Throw<ArgumentException>();
     }
@@ -115,10 +115,11 @@ public class SpecTests
     [Fact]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception_when_using_text_metadata()
     {
-        var act = () =>  new Spec<string?>(
-            _ => throw new Exception("should be wrapped"), 
-            true.ToString(), 
-            false.ToString())
+        var act = () => Spec
+            .Build<string?>(_ => throw new Exception("should be wrapped"))
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec()
             .IsSatisfiedBy(null);
 
         act.Should().Throw<SpecificationException>().WithInnerExceptionExactly<Exception>();
@@ -129,12 +130,12 @@ public class SpecTests
     [Fact]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception()
     {
-        var spec = new Spec<string?, object>(
-            "should throw",
-            _ => throw new Exception("should be wrapped"),
-            true.ToString(),
-            false.ToString());
-        
+        var spec = Spec
+            .Build<string?>(_ => throw new Exception("should be wrapped"))
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("should throw");
+            
         var act = () => spec.IsSatisfiedBy(null);
 
         act.Should().Throw<SpecificationException>().WithInnerExceptionExactly<Exception>();

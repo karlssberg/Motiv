@@ -15,16 +15,17 @@ public class XOrSpecificationTests
         bool expected,
         object model)
     {
-        var left = new Spec<object, bool>(
-            "left",
-            _ => leftResult,
-            true,
-            false);
-        var right = new Spec<object, bool>(
-            "right",
-            _ => rightResult,
-            true,
-            false);
+        var left = Spec
+            .Build<object>(m => leftResult)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec("left");
+        
+        var right = Spec
+            .Build<object>(m => rightResult)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec("right");
         
         var sut = left ^ right;
 
@@ -47,16 +48,17 @@ public class XOrSpecificationTests
         string expected,
         object model)
     {
-        var left = new Spec<object, bool>(
-            "left",
-            _ => leftResult,
-            true,
-            false);
-        var right = new Spec<object, bool>(
-            "right",
-            _ => rightResult,
-            true,
-            false);
+        var left = Spec
+            .Build<object>(m => leftResult)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec("left");
+        
+        var right = Spec
+            .Build<object>(m => rightResult)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec("right");
         
         var sut = left ^ right;
 
@@ -76,16 +78,17 @@ public class XOrSpecificationTests
         string expected,
         object model)
     {
-        var left = new Spec<object, string>(
-            "left",
-            _ => leftResult,
-            true.ToString(),
-            false.ToString());
-        var right = new Spec<object, string>(
-            "right",
-            _ => rightResult,
-            true.ToString(),
-            false.ToString());
+        var left = Spec
+            .Build<object>(m => leftResult)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+            
+        var right = Spec
+            .Build<object>(m => rightResult)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
         
         var sut = left ^ right;
 
@@ -105,14 +108,17 @@ public class XOrSpecificationTests
         string expected,
         object model)
     {
-        var left = new Spec<object>(
-            _ => leftResult,
-            true.ToString(),
-            false.ToString());
-        var right = new Spec<object>(
-            _ => rightResult,
-            true.ToString(),
-            false.ToString());
+        var left = Spec
+            .Build<object>(m => leftResult)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+            
+        var right = Spec
+            .Build<object>(m => rightResult)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
         
         var sut = left ^ right;
 
@@ -128,16 +134,18 @@ public class XOrSpecificationTests
     [AutoParams(false, false)]
     public void Should_provide_a_description_of_the_specification(bool leftResult, bool rightResult)
     {
-        var left = new Spec<object, bool>(
-            $"left",
-            _ => leftResult,
-            true,
-            false);
-        var right = new Spec<object, bool>(
-            $"right",
-            _ => rightResult,
-            true,
-            false);
+        var left = Spec
+            .Build<object>(m => leftResult)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec("left");
+        
+        var right = Spec
+            .Build<object>(m => rightResult)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec("right");
+        
         var expected = $"({left.Description}) ^ ({right.Description})";
         
         var sut = left ^ right;
@@ -153,14 +161,18 @@ public class XOrSpecificationTests
     [AutoParams(false, false)]
     public void Should_provide_a_description_of_the_specification_when_using_convenience_specification(bool leftResult, bool rightResult)
     {
-        var left = new Spec<object>(
-            _ => leftResult,
-            true.ToString(),
-            false.ToString());
-        var right = new Spec<object>(
-            _ => rightResult,
-            true.ToString(),
-            false.ToString());
+        var left = Spec
+            .Build<object>(m => leftResult)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+            
+        var right = Spec
+            .Build<object>(m => rightResult)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+        
         var expected = $"({left.Description}) ^ ({right.Description})";
         
         var sut = left ^ right;
@@ -170,41 +182,20 @@ public class XOrSpecificationTests
     }
     
     [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied(
-        string? trueMetadata, 
-        string? falseMetadata,
-        string? model)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        
-        var act = () =>
-        {
-            var sut = spec ^ spec;
-            sut.IsSatisfiedBy(model);
-        };
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
     [AutoParams]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception(
         string model)
-    {
-        var normalSpec = new Spec<object>(
-            m => true,
-            "true",
-            "false");
+    { 
+        var normalSpec = Spec
+            .Build<object>(m => true)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+        
         var throwingSpec = new ThrowingSpecification<object, string>(
             "should always throw",
             new Exception("should be wrapped"));
+        
         var sut = throwingSpec ^ normalSpec;
         
         var act = () => sut.IsSatisfiedBy(model);

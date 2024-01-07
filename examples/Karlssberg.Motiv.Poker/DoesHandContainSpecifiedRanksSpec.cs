@@ -3,10 +3,15 @@
 namespace Karlssberg.Motiv.Poker;
 
 public class DoesHandContainSpecifiedRanksSpec(ICollection<Rank> ranks) : Spec<Hand>(
-    new Spec<Card>(
-        card => ranks.Contains(card.Rank),
-        $"Is one of {ranks.Humanize()}",
-        $"Is not one of {ranks.Humanize()}")
-    .ToAllSatisfiedSpec()
-    .ChangeModel<Hand>(hand => hand.Cards));
-         
+    () =>
+    {
+        var underlyingSpec = Spec
+            .Build<Card>(card => ranks.Contains(card.Rank))
+            .YieldWhenTrue($"Is one of {ranks.Humanize()}")
+            .YieldWhenFalse($"Is not one of {ranks.Humanize()}")
+            .CreateSpec();
+            
+        return underlyingSpec
+            .ToAllSatisfiedSpec()
+            .ChangeModel<Hand>(hand => hand.Cards);
+    });  

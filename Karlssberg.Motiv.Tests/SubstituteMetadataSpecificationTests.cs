@@ -10,12 +10,12 @@ public class SubstituteMetadataSpecificationTests
     public void Should_replace_the_metadata_with_new_metadata(bool isSatisfied, string expectedA, string expectedB, string expectedC, string expectedD)
     {
         IEnumerable<string> expectation = [expectedA, expectedB, expectedC, expectedD];
-        var underlying = new Spec<string, string>(
-            "original",
-            _ => isSatisfied,
-            "true before",
-            "false before");
-
+        var underlying = Spec
+            .Build<string>(m => isSatisfied)
+            .YieldWhenTrue("true before")
+            .YieldWhenFalse("false before")
+            .CreateSpec();
+        
         var sut = underlying.SubstituteMetadata("true after - A", "false after - A")
             | underlying.SubstituteMetadata(model => $"true after + {model} - B", "false after - B")
             | underlying.SubstituteMetadata("true after - C", model => $"false after + {model} - C")

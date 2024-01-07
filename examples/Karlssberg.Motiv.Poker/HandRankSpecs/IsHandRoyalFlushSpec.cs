@@ -2,8 +2,19 @@
 
 namespace Karlssberg.Motiv.Poker.HandRankSpecs;
 
-public class IsHandRoyalFlushSpec() : Spec<Hand, HandRank>(
-    "Is Royal Flush",
-    new IsHandFlushSpec() & new IsAceHighStraightBroadwaySpec().ChangeMetadata(HandRank.Straight, HandRank.HighCard),
-    HandRank.RoyalFlush,
-    HandRank.HighCard);
+public class IsHandRoyalFlushSpec() : Spec<Hand, HandRank>(() =>
+{
+    var isFlush = new IsHandFlushSpec();
+    
+    var isAceHighStraight = new IsAceHighStraightBroadwaySpec()
+        .YieldWhenTrue(HandRank.Straight)
+        .YieldWhenFalse(HandRank.HighCard)
+        .CreateSpec("is Ace High Straight");
+    
+    var isRoyalFlush = isFlush & isAceHighStraight;
+    
+    return isRoyalFlush
+            .YieldWhenTrue(HandRank.RoyalFlush)
+            .YieldWhenFalse(HandRank.HighCard)
+            .CreateSpec("is Royal Flush");
+});

@@ -28,14 +28,15 @@ public class AtLeastNSatisfiedSpecificationTests
         bool fourth,
         bool expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("returns the model");
+            
         bool[] models = [first, second, third, fourth];
 
-        var sut = underlyingSpec.ToAtLeastSpecification(0);
+        var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(0);
         var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
@@ -65,14 +66,15 @@ public class AtLeastNSatisfiedSpecificationTests
         bool fourth,
         bool expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("returns the model");
+        
         bool[] models = [first, second, third, fourth];
 
-        var sut = underlyingSpec.ToAtLeastSpecification(1);
+        var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
@@ -102,14 +104,15 @@ public class AtLeastNSatisfiedSpecificationTests
         bool fourth,
         bool expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("returns the model");
+        
         bool[] models = [first, second, third, fourth];
 
-        var sut = underlyingSpec.ToAtLeastSpecification(2);
+        var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(2);
         var result = sut.IsSatisfiedBy(models);
         
         result.IsSatisfied.Should().Be(expected);
@@ -139,113 +142,118 @@ public class AtLeastNSatisfiedSpecificationTests
         bool fourth,
         bool expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("returns the model");
+        
         bool[] models = [first, second, third, fourth];
 
-        var sut = underlyingSpec.ToAtLeastSpecification(models.Length);
+        var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(models.Length);
         var result = sut.IsSatisfiedBy(models);
         
                   result.IsSatisfied.Should().Be(expected);
     }
     
     [Theory]
-    [AutoParams(false, false, false, "AT_LEAST[1]:False(False, False, False)")]
-    [AutoParams(false, false, true, "AT_LEAST[1]:True(False, False, True)")]
-    [AutoParams(false, true, false, "AT_LEAST[1]:True(False, True, False)")]
-    [AutoParams(false, true, true, "AT_LEAST[1]:True(False, True, True)")]
-    [AutoParams(true, false, false, "AT_LEAST[1]:True(True, False, False)")]
-    [AutoParams(true, false, true, "AT_LEAST[1]:True(True, False, True)")]
-    [AutoParams(true, true, false, "AT_LEAST[1]:True(True, True, False)")]
-    [AutoParams(true, true, true, "AT_LEAST[1]:True(True, True, True)")]
+    [AutoParams(false, false, false, "AT_LEAST_1:False(False, False, False)")]
+    [AutoParams(false, false, true, "AT_LEAST_1:True(False, False, True)")]
+    [AutoParams(false, true, false, "AT_LEAST_1:True(False, True, False)")]
+    [AutoParams(false, true, true, "AT_LEAST_1:True(False, True, True)")]
+    [AutoParams(true, false, false, "AT_LEAST_1:True(True, False, False)")]
+    [AutoParams(true, false, true, "AT_LEAST_1:True(True, False, True)")]
+    [AutoParams(true, true, false, "AT_LEAST_1:True(True, True, False)")]
+    [AutoParams(true, true, true, "AT_LEAST_1:True(True, True, True)")]
     public void Should_serialize_the_result_of_the_at_least_of_1_operation_when_metadata_is_a_string(
         bool first,
         bool second,
         bool third,
         string expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("returns the model");
+        
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAtLeastSpecification(1);
+        var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
         
         
     }
     
     [Theory]
-    [AutoParams(false, false, false, "AT_LEAST[1]:False(False, False, False)")]
-    [AutoParams(false, false, true, "AT_LEAST[1]:True(False, False, True)")]
-    [AutoParams(false, true, false, "AT_LEAST[1]:True(False, True, False)")]
-    [AutoParams(false, true, true, "AT_LEAST[1]:True(False, True, True)")]
-    [AutoParams(true, false, false, "AT_LEAST[1]:True(True, False, False)")]
-    [AutoParams(true, false, true, "AT_LEAST[1]:True(True, False, True)")]
-    [AutoParams(true, true, false, "AT_LEAST[1]:True(True, True, False)")]
-    [AutoParams(true, true, true, "AT_LEAST[1]:True(True, True, True)")]
+    [AutoParams(false, false, false, "AT_LEAST_1:false(false, false, false)")]
+    [AutoParams(false, false, true, "AT_LEAST_1:true(false, false, true)")]
+    [AutoParams(false, true, false, "AT_LEAST_1:true(false, true, false)")]
+    [AutoParams(false, true, true, "AT_LEAST_1:true(false, true, true)")]
+    [AutoParams(true, false, false, "AT_LEAST_1:true(true, false, false)")]
+    [AutoParams(true, false, true, "AT_LEAST_1:true(true, false, true)")]
+    [AutoParams(true, true, false, "AT_LEAST_1:true(true, true, false)")]
+    [AutoParams(true, true, true, "AT_LEAST_1:true(true, true, true)")]
     public void Should_serialize_the_result_of_the_at_least_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
         bool second,
         bool third,
         string expected)
     {
-        var underlyingSpec = new Spec<bool>(
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString().ToLowerInvariant())
+            .YieldWhenFalse(false.ToString().ToLowerInvariant())
+            .CreateSpec();
+        
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAtLeastSpecification(1);
+        var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
         
-        
+        result.Description.Should().Be(expected);
     }
     
     [Theory]
-    [AutoParams(false, false, false, "AT_LEAST[1]:False(model:False, model:False, model:False)")]
-    [AutoParams(false, false, true, "AT_LEAST[1]:True(model:False, model:False, model:True)")]
-    [AutoParams(false, true, false, "AT_LEAST[1]:True(model:False, model:True, model:False)")]
-    [AutoParams(false, true, true, "AT_LEAST[1]:True(model:False, model:True, model:True)")]
-    [AutoParams(true, false, false, "AT_LEAST[1]:True(model:True, model:False, model:False)")]
-    [AutoParams(true, false, true, "AT_LEAST[1]:True(model:True, model:False, model:True)")]
-    [AutoParams(true, true, false, "AT_LEAST[1]:True(model:True, model:True, model:False)")]
-    [AutoParams(true, true, true, "AT_LEAST[1]:True(model:True, model:True, model:True)")]
+    [AutoParams(false, false, false, "AT_LEAST_1:false(model:false, model:false, model:false)")]
+    [AutoParams(false, false, true, "AT_LEAST_1:true(model:false, model:false, model:true)")]
+    [AutoParams(false, true, false, "AT_LEAST_1:true(model:false, model:true, model:false)")]
+    [AutoParams(false, true, true, "AT_LEAST_1:true(model:false, model:true, model:true)")]
+    [AutoParams(true, false, false, "AT_LEAST_1:true(model:true, model:false, model:false)")]
+    [AutoParams(true, false, true, "AT_LEAST_1:true(model:true, model:false, model:true)")]
+    [AutoParams(true, true, false, "AT_LEAST_1:true(model:true, model:true, model:false)")]
+    [AutoParams(true, true, true, "AT_LEAST_1:true(model:true, model:true, model:true)")]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
         bool second,
         bool third,
         string expected)
     {
-        var underlyingSpec = new Spec<bool, bool>(
-            "model",
-            m => m,
-            true,
-            false);
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec("model");
+        
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAtLeastSpecification(1);
+        var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
         
-        
+        result.Description.Should().Be(expected);
     }
     
     [Fact]
     public void Should_provide_a_description_of_the_specification()
     {
         const string expected = "AT_LEAST_1(underlying spec description)";
-        var underlyingSpec = new Spec<bool, object>(
-            "underlying spec description",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("underlying spec description");
 
-        var sut = underlyingSpec.ToAtLeastSpecification(1);
+        var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(1);
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -255,101 +263,16 @@ public class AtLeastNSatisfiedSpecificationTests
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
         const string expected = "AT_LEAST_1(True)";
-        var underlyingSpec = new Spec<bool>(
-            m => m,
-            true.ToString(),
-            false.ToString());
-
-        var sut = underlyingSpec.ToAtLeastSpecification(1);
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+            
+        var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(1);
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAtLeastSpecification(1)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_with_binary_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAtLeastSpecification(1,
-                null as string,
-                null as string)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_with_unary_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAtLeastSpecification(1, _ => null)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_without_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAtLeastSpecification(1)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
     }
     
     [Theory]
@@ -361,7 +284,7 @@ public class AtLeastNSatisfiedSpecificationTests
             "throws",
             new Exception("should be wrapped"));
         
-        var sut = throwingSpec.ToAtLeastSpecification(1);
+        var sut = throwingSpec.ToAtLeastNSatisfiedSpec(1);
         
         var act = () => sut.IsSatisfiedBy([model]);
         

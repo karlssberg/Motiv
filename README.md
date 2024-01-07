@@ -4,6 +4,23 @@ Are you fed up with debugging Boolean expressions and want to quickly find out w
 
 If so then look no further, because Motiv will help make these problems disappear.
 
+## Usage
+
+The following example is a basic demonstration of how to use Motiv.  It shows how to create a `Spec` and then use it to determine if a number (3 in this case) is negative or not.
+```csharp
+var isNegative = new Spec<int>(
+    n => n < 0,
+    "the number is negative",
+    "the number is not negative");
+
+BooleanResultBase<string> booleanResult = isNegative.IsSatisfiedBy(3);
+
+Console.WriteLine(booleanResult.IsSatisfied); // output is: true
+Console.WriteLine(string.Join(", ", booleanResult.Reasons)); // output is: the number is negative
+```
+
+  
+
 ## Problem Statement
 
 This library deals with vexing issues from working with logic. Such as...

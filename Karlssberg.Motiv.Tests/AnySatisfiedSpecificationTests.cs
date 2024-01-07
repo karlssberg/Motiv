@@ -19,11 +19,12 @@ public class AnySatisfiedSpecificationTests
         bool third,
         bool expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+        
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAnySatisfiedSpec();
@@ -47,18 +48,18 @@ public class AnySatisfiedSpecificationTests
         bool third,
         string expected)
     {
-        var underlyingSpec = new Spec<bool, bool>(
-            "model",
-            m => m,
-            true,
-            false);
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec("model");
+        
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAnySatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
         
         result.Description.Should().Be(expected);
-        
     }
     
     [Theory]
@@ -76,18 +77,18 @@ public class AnySatisfiedSpecificationTests
         bool third,
         string expected)
     {
-        var underlyingSpec = new Spec<bool, string>(
-            "returns the model",
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec("returns the model");
+            
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAnySatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
         
         result.Description.Should().Be(expected);
-        
     }
     
     [Theory]
@@ -105,126 +106,18 @@ public class AnySatisfiedSpecificationTests
         bool third,
         string expected)
     {
-        var underlyingSpec = new Spec<bool>(
-            m => m,
-            true.ToString(),
-            false.ToString());
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+        
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAnySatisfiedSpec();
         var result = sut.IsSatisfiedBy(models);
         
         result.Description.Should().Be(expected);
-        
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-                "is null",
-                m => m is null, 
-                trueMetadata, 
-                falseMetadata)
-            .ToAnySatisfiedSpec();
-        
-        var act = () =>  spec.IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_with_ternary_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAnySatisfiedSpec(
-                _ => null,
-                _ => null,
-                _ => null)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_with_binary_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAnySatisfiedSpec(
-                null as string,
-                null as string)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_with_unary_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAnySatisfiedSpec(_ => null)
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
-    }
-    
-    [Theory]
-    [AutoParams("true",  null)]
-    [AutoParams(null, "false")]
-    public void Should_not_throw_if_null_metadata_supplied_without_parameters(
-        string? trueMetadata, 
-        string? falseMetadata,
-        IEnumerable<string> models)
-    {
-        var spec = new Spec<string?, string?>(
-            "is null",
-            m => m is null,
-            trueMetadata,
-            falseMetadata);
-        
-        var act = () => spec
-            .ToAnySatisfiedSpec()
-            .IsSatisfiedBy(models);
-
-        act.Should().NotThrow();
     }
     
     [Theory]

@@ -1,5 +1,11 @@
 ﻿namespace Karlssberg.Motiv;
 
+/// <summary>
+/// Represents a predicate that when evaluated returns a boolean result with associated metadata and description of the underlying specification that were responsible for the result.
+/// </summary>
+/// <typeparam name="T">The type of the input parameter.</typeparam>
+/// <typeparam name="TResult">The type of the return value.</typeparam>
+/// <returns>The return value.</returns>
 internal sealed class GenericMetadataSpecification<TModel, TMetadata>(
     string description,
     Func<TModel, bool> predicate,
@@ -10,47 +16,16 @@ internal sealed class GenericMetadataSpecification<TModel, TMetadata>(
     private readonly Func<TModel, TMetadata> _whenTrue = whenTrue.ThrowIfNull(nameof(whenTrue));
     private readonly Func<TModel, TMetadata> _whenFalse = whenFalse.ThrowIfNull(nameof(whenFalse));
 
-    internal GenericMetadataSpecification(
-        string description,
-        Func<TModel, bool> predicate,
-        TMetadata whenTrue,
-        TMetadata whenFalse)
-        : this(
-            description,
-            predicate,
-            _ => whenTrue,
-            _ => whenFalse)
-    {
-    }
-
-    internal GenericMetadataSpecification(
-        string description,
-        Func<TModel, bool> predicate,
-        Func<TModel, TMetadata> whenTrue,
-        TMetadata whenFalse)
-        : this(
-            description,
-            predicate,
-            whenTrue,
-            _ => whenFalse)
-    {
-    }
-
-    internal GenericMetadataSpecification(
-        string description,
-        Func<TModel, bool> predicate,
-        TMetadata whenTrue,
-        Func<TModel, TMetadata> whenFalse)
-        : this(
-            description,
-            predicate,
-            _ => whenTrue,
-            whenFalse)
-    {
-    }
-
+    /// <summary>
+    /// Gets or sets the description of the specification.
+    /// </summary>
     public override string Description => description.ThrowIfNullOrWhitespace(nameof(description));
 
+    /// <summary>
+    /// Determines if the specified model satisfies the specification.
+    /// </summary>
+    /// <param name="model">The model to be evaluated.</param>
+    /// <returns>A BooleanResultBase object containing the result of the evaluation.</returns>
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
         return WrapException.IfIsSatisfiedByInvocationFails(this,
@@ -68,19 +43,19 @@ internal sealed class GenericMetadataSpecification<TModel, TMetadata>(
 
     private bool InvokePredicate(TModel model) =>
         WrapException.IfCallbackInvocationFails(
-            this, 
+            this,
             () => _predicate(model),
             nameof(predicate));
 
     private TMetadata InvokeWhenTrue(TModel model) =>
         WrapException.IfCallbackInvocationFails(
-            this, 
-            () => _whenTrue(model), 
+            this,
+            () => _whenTrue(model),
             nameof(whenTrue));
 
     private TMetadata InvokeWhenFalse(TModel model) =>
         WrapException.IfCallbackInvocationFails(
-            this, 
-            () => _whenFalse(model), 
+            this,
+            () => _whenFalse(model),
             nameof(whenFalse));
 }
