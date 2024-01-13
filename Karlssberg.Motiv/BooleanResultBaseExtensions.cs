@@ -8,9 +8,9 @@ public static class BooleanResultBaseExtensions
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
     /// <param name="booleanResultBase">The <see cref="BooleanResultBase{TMetadata}"/> instance.</param>
     /// <returns>An <see cref="IEnumerable{TMetadata}"/> containing the insights.</returns>
-    public static IEnumerable<TMetadata> GetInsights<TMetadata>(this BooleanResultBase<TMetadata> booleanResultBase) =>
+    public static IEnumerable<TMetadata> GetMetadata<TMetadata>(this BooleanResultBase<TMetadata> booleanResultBase) =>
         booleanResultBase
-            .GetInsights(new DefaultInsightsVisitor<TMetadata>())
+            .GetInsights(new DefaultMetadataVisitor<TMetadata>())
             .Distinct();
 
     /// <summary>
@@ -24,6 +24,6 @@ public static class BooleanResultBaseExtensions
     public static IEnumerable<TMetadata> GetInsights<TMetadata, TVisitor>(
         this BooleanResultBase<TMetadata> booleanResultBase,
         TVisitor visitor)
-        where TVisitor : DefaultInsightsVisitor<TMetadata> =>
+        where TVisitor : DefaultMetadataVisitor<TMetadata> =>
         visitor.Visit(booleanResultBase);
 }

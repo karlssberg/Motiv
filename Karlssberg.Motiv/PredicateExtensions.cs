@@ -1,4 +1,5 @@
-﻿using Karlssberg.Motiv.Builder;
+﻿using Karlssberg.Motiv.SpecBuilder;
+using Karlssberg.Motiv.SpecBuilder.Phase1;
 
 namespace Karlssberg.Motiv;
 

@@ -18,8 +18,8 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.IsSatisfied.Should().Be(model);
-        result.GetInsights().Should().HaveCount(1);
-        result.GetInsights().Should().AllBe(model.ToString());
+        result.GetMetadata().Should().HaveCount(1);
+        result.GetMetadata().Should().AllBe(model.ToString());
     }
     
     [Fact]
@@ -34,8 +34,8 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(null);
 
         result.IsSatisfied.Should().BeTrue();
-        result.GetInsights().Should().HaveCount(1);
-        result.GetInsights().Should().AllBe(true.ToString());
+        result.GetMetadata().Should().HaveCount(1);
+        result.GetMetadata().Should().AllBe(true.ToString());
     }
     
     [Theory]
@@ -52,8 +52,8 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.IsSatisfied.Should().Be(model);
-        result.GetInsights().Should().HaveCount(1);
-        result.GetInsights().Should().AllBe(model.ToString());
+        result.GetMetadata().Should().HaveCount(1);
+        result.GetMetadata().Should().AllBe(model.ToString());
     }
     
     [Fact]
@@ -68,8 +68,8 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(null);
 
         result.IsSatisfied.Should().Be(true);
-        result.GetInsights().Should().HaveCount(1);
-        result.GetInsights().Should().AllBe(true.ToString());
+        result.GetMetadata().Should().HaveCount(1);
+        result.GetMetadata().Should().AllBe(true.ToString());
     }
     
     [Fact]
@@ -122,9 +122,9 @@ public class SpecTests
             .CreateSpec()
             .IsSatisfiedBy(null);
 
-        act.Should().Throw<SpecificationException>().WithInnerExceptionExactly<Exception>();
-        act.Should().Throw<SpecificationException>().WithMessage("*should be wrapped*");
-        act.Should().Throw<SpecificationException>().WithMessage($"*{true}*");
+        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>();
+        act.Should().Throw<SpecException>().WithMessage("*should be wrapped*");
+        act.Should().Throw<SpecException>().WithMessage($"*{true}*");
     }
     
     [Fact]
@@ -138,8 +138,8 @@ public class SpecTests
             
         var act = () => spec.IsSatisfiedBy(null);
 
-        act.Should().Throw<SpecificationException>().WithInnerExceptionExactly<Exception>();
-        act.Should().Throw<SpecificationException>().WithMessage("*should be wrapped*");
-        act.Should().Throw<SpecificationException>().WithMessage("*should throw*");
+        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>();
+        act.Should().Throw<SpecException>().WithMessage("*should be wrapped*");
+        act.Should().Throw<SpecException>().WithMessage("*should throw*");
     }
 }

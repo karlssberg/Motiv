@@ -4,7 +4,7 @@
 /// Represents a boolean result that is satisfied if at least a specified number of operand results are satisfied.
 /// </summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
-public sealed class AtLeastNSatisfiedBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
+public sealed class AtLeastNSatisfiedBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IAtLeastNSatisfiedBooleanResult<TMetadata>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AtLeastNSatisfiedBooleanResult{TMetadata}"/> class.
@@ -17,11 +17,11 @@ public sealed class AtLeastNSatisfiedBooleanResult<TMetadata> : BooleanResultBas
         Func<bool, IEnumerable<TMetadata>> metadataFactory,
         IEnumerable<BooleanResultBase<TMetadata>> operandResults)
     {
-        OperandResults = operandResults
+        UnderlyingResults = operandResults
             .ThrowIfNull(nameof(operandResults))
             .ToArray();
 
-        var isSatisfied = OperandResults.Count(result => result.IsSatisfied) >= minimum;
+        var isSatisfied = UnderlyingResults.Count(result => result.IsSatisfied) >= minimum;
 
         Minimum = minimum;
         IsSatisfied = isSatisfied;
@@ -36,12 +36,12 @@ public sealed class AtLeastNSatisfiedBooleanResult<TMetadata> : BooleanResultBas
     /// <summary>
     /// Gets the collection of operand results.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> OperandResults { get; }
+    public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
 
     /// <summary>
     /// Gets the collection of determinative operand results that have the same satisfaction status as the overall result.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperandResults => OperandResults
+    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => UnderlyingResults
         .Where(result => result.IsSatisfied == IsSatisfied);
 
     /// <summary>
@@ -57,11 +57,10 @@ public sealed class AtLeastNSatisfiedBooleanResult<TMetadata> : BooleanResultBas
     /// <summary>
     /// Gets the description of the boolean result.
     /// </summary>
-    public override string Description => $"AT_LEAST_{Minimum}:{IsSatisfiedDisplayText}({string.Join(", ", OperandResults)})";
+    public override string Description => $"AT_LEAST_{Minimum}:{IsSatisfiedDisplayText}({string.Join(", ", UnderlyingResults)})";
 
     /// <summary>
     /// Gets the reasons associated with the boolean result.
     /// </summary>
-    public override IEnumerable<string> Reasons =>
-        DeterminativeOperandResults.SelectMany(r => r.Reasons);
+    public override IEnumerable<string> GatherReasons() => DeterminativeResults.SelectMany(r => r.GatherReasons());
 }

@@ -32,9 +32,15 @@ public abstract class BooleanResultBase<TMetadata>
     public abstract string Description { get; }
 
     /// <summary>
-    /// Gets the specific underlying reasons why the condition is satisfied or not.
+    /// Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the result at this
+    /// stage to avoid excessive deduplication during intermediate steps.  Deduplication is performed during the call to <see cref="Reasons"/>.
     /// </summary>
-    public abstract IEnumerable<string> Reasons { get; }
+    public abstract IEnumerable<string> GatherReasons();
+
+    /// <summary>
+    /// Gets the unique specific underlying reasons why the condition is satisfied or not.
+    /// </summary>
+    public IEnumerable<string> Reasons => GatherReasons().Distinct();
 
 
     /// <summary>
@@ -47,7 +53,7 @@ public abstract class BooleanResultBase<TMetadata>
     /// Returns an enumerator that iterates through the collection of insights.
     /// </summary>
     /// <returns>An enumerator that can be used to iterate through the collection of insights.</returns>
-    public IEnumerator<TMetadata> GetEnumerator() => this.GetInsights().GetEnumerator();
+    public IEnumerator<TMetadata> GetEnumerator() => this.GetMetadata().GetEnumerator();
 
 
     /// <summary>
@@ -104,7 +110,7 @@ public abstract class BooleanResultBase<TMetadata>
     /// Returns a human readable description of the tree of conditions that make up this result.
     /// </summary>
     /// <returns>A string that describes the tree of conditions that make up this result.</returns>
-    public override string ToString() => Reasons.Humanize();
+    public override string ToString() => GatherReasons().Humanize();
 
     /// <summary>
     /// Overloads the bitwise AND operator to perform a logical AND operation on two BooleanResultBase instances.

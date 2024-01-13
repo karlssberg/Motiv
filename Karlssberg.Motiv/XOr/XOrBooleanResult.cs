@@ -4,7 +4,7 @@
 /// Represents the result of a logical XOR (exclusive OR) operation.
 /// </summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the result.</typeparam>
-public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
+public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IBinaryBooleanResult<TMetadata>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="XOrBooleanResult{TMetadata}"/> class.
@@ -38,12 +38,12 @@ public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     /// <summary>
     /// Gets an array containing the left and right operand results.
     /// </summary>
-    public BooleanResultBase<TMetadata>[] OperandResults => new[] { LeftOperandResult, RightOperandResult };
+    public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => [LeftOperandResult, RightOperandResult];
 
     /// <summary>
     /// Gets the determinative operand results.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperandResults => OperandResults;
+    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => UnderlyingResults;
 
     /// <summary>
     /// Gets the description of the XOR operation.
@@ -53,6 +53,5 @@ public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     /// <summary>
     /// Gets the reasons for the XOR operation result.
     /// </summary>
-    public override IEnumerable<string> Reasons =>
-        DeterminativeOperandResults.SelectMany(r => r.Reasons);
+    public override IEnumerable<string> GatherReasons() => DeterminativeResults.SelectMany(r => r.GatherReasons());
 }

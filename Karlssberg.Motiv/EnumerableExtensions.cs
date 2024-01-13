@@ -11,13 +11,13 @@ public static class EnumerableExtensions
     /// <typeparam name="TModel">The type of the elements in the collection.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
     /// <param name="source">The collection to check.</param>
-    /// <param name="specification">The specification to apply.</param>
+    /// <param name="spec">The specification to apply.</param>
     /// <returns>A BooleanResultBase indicating whether any element satisfies the specification.</returns>
     public static BooleanResultBase<TMetadata> Any<TModel, TMetadata>(
         this IEnumerable<TModel> source,
-        SpecificationBase<TModel, TMetadata> specification)
+        SpecBase<TModel, TMetadata> spec)
     {
-        return specification.ToAnySatisfiedSpec().IsSatisfiedBy(source);
+        return spec.ToAnySatisfiedSpec().IsSatisfiedBy(source);
     }
 
     /// <summary>
@@ -26,13 +26,13 @@ public static class EnumerableExtensions
     /// <typeparam name="TModel">The type of the elements in the collection.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
     /// <param name="source">The collection to check.</param>
-    /// <param name="specification">The specification to apply.</param>
+    /// <param name="spec">The specification to apply.</param>
     /// <returns>A BooleanResultBase indicating whether all elements satisfy the specification.</returns>
     public static BooleanResultBase<TMetadata> All<TModel, TMetadata>(
         this IEnumerable<TModel> source,
-        SpecificationBase<TModel, TMetadata> specification)
+        SpecBase<TModel, TMetadata> spec)
     {
-        return specification.ToAnySatisfiedSpec().IsSatisfiedBy(source);
+        return spec.ToAnySatisfiedSpec().IsSatisfiedBy(source);
     }
 
     /// <summary>
@@ -42,8 +42,8 @@ public static class EnumerableExtensions
     /// <typeparam name="TMetadata">The type of the metadata associated with the specifications.</typeparam>
     /// <param name="specifications">The specifications to combine.</param>
     /// <returns>A SpecificationBase that requires all of the input specifications to be satisfied.</returns>
-    public static SpecificationBase<TModel, TMetadata> ToAllSatisfiedSpec<TModel, TMetadata>(
-        this IEnumerable<SpecificationBase<TModel, TMetadata>> specifications)
+    public static SpecBase<TModel, TMetadata> ToAllSatisfiedSpec<TModel, TMetadata>(
+        this IEnumerable<SpecBase<TModel, TMetadata>> specifications)
     {
         return specifications.Aggregate(
             (leftSpec, rightSpec) =>
@@ -57,8 +57,8 @@ public static class EnumerableExtensions
     /// <typeparam name="TMetadata">The type of the metadata associated with the specifications.</typeparam>
     /// <param name="specifications">The specifications to combine.</param>
     /// <returns>A SpecificationBase that requires any of the input specifications to be satisfied.</returns>
-    public static SpecificationBase<TModel, TMetadata> ToAnySatisfiedSpec<TModel, TMetadata>(
-        this IEnumerable<SpecificationBase<TModel, TMetadata>> specifications)
+    public static SpecBase<TModel, TMetadata> ToAnySatisfiedSpec<TModel, TMetadata>(
+        this IEnumerable<SpecBase<TModel, TMetadata>> specifications)
     {
         return specifications.Aggregate(
             (leftSpec, rightSpec) =>

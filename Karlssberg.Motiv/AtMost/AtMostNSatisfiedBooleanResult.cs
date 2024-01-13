@@ -1,10 +1,10 @@
-﻿using Karlssberg.Motiv;
+﻿namespace Karlssberg.Motiv.AtMost;
 
 /// <summary>
 /// Represents the result of an "at most" boolean operation with a maximum number of satisfied operands.
 /// </summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
-public sealed class AtMostNSatisfiedBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
+public sealed class AtMostNSatisfiedBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IAtMostNSatisfiedBooleanResult<TMetadata>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AtMostNSatisfiedBooleanResult{TMetadata}"/> class.
@@ -17,11 +17,11 @@ public sealed class AtMostNSatisfiedBooleanResult<TMetadata> : BooleanResultBase
         Func<bool, IEnumerable<TMetadata>> metadataFactory,
         IEnumerable<BooleanResultBase<TMetadata>> operandResults)
     {
-        OperandResults = operandResults
+        UnderlyingResults = operandResults
             .ThrowIfNull(nameof(operandResults))
             .ToArray();
 
-        var isSatisfied = OperandResults.Count(result => result.IsSatisfied) <= maximum;
+        var isSatisfied = UnderlyingResults.Count(result => result.IsSatisfied) <= maximum;
 
         Maximum = maximum;
         IsSatisfied = isSatisfied;
@@ -36,12 +36,12 @@ public sealed class AtMostNSatisfiedBooleanResult<TMetadata> : BooleanResultBase
     /// <summary>
     /// Gets the collection of operand results.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> OperandResults { get; }
+    public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
 
     /// <summary>
     /// Gets the collection of determinative operand results that have the same satisfaction status as the overall result.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperandResults => OperandResults
+    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => UnderlyingResults
         .Where(result => result.IsSatisfied == IsSatisfied);
 
     /// <summary>
@@ -57,11 +57,10 @@ public sealed class AtMostNSatisfiedBooleanResult<TMetadata> : BooleanResultBase
     /// <summary>
     /// Gets the description of the boolean result.
     /// </summary>
-    public override string Description => $"AT_MOST_{Maximum}:{IsSatisfiedDisplayText}({string.Join(", ", OperandResults)})";
+    public override string Description => $"AT_MOST_{Maximum}:{IsSatisfiedDisplayText}({string.Join(", ", UnderlyingResults)})";
 
     /// <summary>
     /// Gets the reasons for the boolean result.
     /// </summary>
-    public override IEnumerable<string> Reasons =>
-        DeterminativeOperandResults.SelectMany(r => r.Reasons);
+    public override IEnumerable<string> GatherReasons() => DeterminativeResults.SelectMany(r => r.GatherReasons());
 }

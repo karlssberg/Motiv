@@ -4,7 +4,7 @@
 /// Represents a boolean result that is the logical OR of two operand results.
 /// </summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
-public sealed class OrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
+public sealed class OrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IBinaryBooleanResult<TMetadata>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="OrBooleanResult{TMetadata}"/> class.
@@ -33,12 +33,12 @@ public sealed class OrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     /// <summary>
     /// Gets an array containing the left and right operand results.
     /// </summary>
-    public BooleanResultBase<TMetadata>[] OperandResults => new[] { LeftOperandResult, RightOperandResult };
+    public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => [LeftOperandResult, RightOperandResult];
 
     /// <summary>
     /// Gets the determinative operand results, which are the operand results that have the same satisfaction status as the overall result.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperandResults => OperandResults
+    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => UnderlyingResults
         .Where(r => r.IsSatisfied == IsSatisfied);
 
     /// <inheritdoc/>
@@ -48,6 +48,5 @@ public sealed class OrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     public override string Description => $"({LeftOperandResult}) OR:{IsSatisfiedDisplayText} ({RightOperandResult})";
 
     /// <inheritdoc/>
-    public override IEnumerable<string> Reasons =>
-        DeterminativeOperandResults.SelectMany(r => r.Reasons);
+    public override IEnumerable<string> GatherReasons() => DeterminativeResults.SelectMany(r => r.GatherReasons());
 }

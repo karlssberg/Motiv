@@ -45,11 +45,8 @@ public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     /// <summary>
     /// Gets the reasons for the result.
     /// </summary>
-    public override IEnumerable<string> Reasons
+    public override IEnumerable<string> GatherReasons()
     {
-        get
-        {
-            yield return Description;
-        }
+        yield return Description;
     }
 }

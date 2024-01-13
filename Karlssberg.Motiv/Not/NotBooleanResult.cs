@@ -34,5 +34,5 @@ public sealed class NotBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     /// <summary>
     /// Gets the reasons associated with the operand result.
     /// </summary>
-    public override IEnumerable<string> Reasons => OperandResult.Reasons;
+    public override IEnumerable<string> GatherReasons() => OperandResult.GatherReasons();
 }

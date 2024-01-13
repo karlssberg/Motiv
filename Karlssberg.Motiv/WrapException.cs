@@ -2,16 +2,16 @@
 
 namespace Karlssberg.Motiv;
 
-public static class WrapException
+internal static class WrapException
 {
     internal static  TResult IfIsSatisfiedByInvocationFails<TModel, TMetadata, TResult>(
-        SpecificationBase<TModel, TMetadata> specification,
+        SpecBase<TModel, TMetadata> spec,
         Func<TResult> func) =>
-        IfIsSatisfiedByInvocationFails<TModel, object?, TMetadata, TResult>(specification, null, func);
+        IfIsSatisfiedByInvocationFails<TModel, object?, TMetadata, TResult>(spec, null, func);
 
     internal static TResult IfIsSatisfiedByInvocationFails<TModel, TModelUnderlying, TMetadata, TResult>(
-        SpecificationBase<TModel, TMetadata> specification, 
-        SpecificationBase<TModelUnderlying, TMetadata>? underlyingSpecification,
+        SpecBase<TModel, TMetadata> spec, 
+        SpecBase<TModelUnderlying, TMetadata>? underlyingSpecification,
         Func<TResult> func)
     {
         try
@@ -20,7 +20,7 @@ public static class WrapException
         }
         catch (Exception ex)
         {
-            if (ex is SpecificationException
+            if (ex is SpecException
                 or OutOfMemoryException
                 or StackOverflowException
                 or AccessViolationException
@@ -32,13 +32,13 @@ public static class WrapException
                 throw;
             }
 
-            var message = GetErrorMessageForIsSatisfiedByCall(specification, underlyingSpecification, ex);
-            throw new SpecificationException(message, ex);
+            var message = GetErrorMessageForIsSatisfiedByCall(spec, underlyingSpecification, ex);
+            throw new SpecException(message, ex);
         }
     }
 
     internal static TResult IfCallbackInvocationFails<TModel, TMetadata, TResult>(
-        SpecificationBase<TModel, TMetadata> specification,
+        SpecBase<TModel, TMetadata> spec,
         Func<TResult> callback,
         string callbackName)
     {
@@ -48,7 +48,7 @@ public static class WrapException
         }
         catch (Exception ex)
         {
-            if (ex is SpecificationException
+            if (ex is SpecException
                 or OutOfMemoryException
                 or StackOverflowException
                 or AccessViolationException
@@ -60,14 +60,14 @@ public static class WrapException
                 throw;
             }
             
-            var message = CreateErrorMessageForFailedCallbackInvocation(specification, callbackName, ex);
-            throw new SpecificationException(message, ex);
+            var message = CreateErrorMessageForFailedCallbackInvocation(spec, callbackName, ex);
+            throw new SpecException(message, ex);
         }
     }
 
-    private static string ConvertToPrettyTypeName<TModel, TMetadata>(SpecificationBase<TModel, TMetadata> specification) 
+    private static string ConvertToPrettyTypeName<TModel, TMetadata>(SpecBase<TModel, TMetadata> spec) 
     {
-        var specificationType = specification.GetType();
+        var specificationType = spec.GetType();
         var genericArgs = specificationType.GetGenericArguments();
         
         var nameParts = specificationType.Name.Split('`');
@@ -83,14 +83,14 @@ public static class WrapException
     }
 
     private static string GetErrorMessageForIsSatisfiedByCall<TModel, TModelUnderlying, TMetadata>(
-        SpecificationBase<TModel, TMetadata> specification,
-        SpecificationBase<TModelUnderlying, TMetadata>? underlyingSpecification,
+        SpecBase<TModel, TMetadata> spec,
+        SpecBase<TModelUnderlying, TMetadata>? underlyingSpecification,
         Exception ex)
     {
         const string vowels = "AEIOU";
         var exceptionTypeName = ex.GetType().Name;
         var article = vowels.Contains(exceptionTypeName[0]) ? "An" : "A";
-        var descriptionPhrase = GetDescriptionPhrase(specification, underlyingSpecification);
+        var descriptionPhrase = GetDescriptionPhrase(spec, underlyingSpecification);
             
         var message =  string.IsNullOrWhiteSpace(ex.Message)
             ? $"{article} '{exceptionTypeName}' was thrown while evaluating the specification {descriptionPhrase}."
@@ -99,24 +99,26 @@ public static class WrapException
     }
 
     private static string GetDescriptionPhrase<TModel, TModelUnderlying, TMetadata>(
-        SpecificationBase<TModel, TMetadata> specification, 
-        SpecificationBase<TModelUnderlying, TMetadata>? underlyingSpecification)
+        SpecBase<TModel, TMetadata> spec, 
+        SpecBase<TModelUnderlying, TMetadata>? underlyingSpecification)
     {
-        return underlyingSpecification == null
-            ? DescribeType(specification) 
-            : $"{DescribeType(underlyingSpecification)} encapsulated by the specification {DescribeType(specification)}";
+        return underlyingSpecification switch
+        {
+            null => DescribeType(spec),
+            _ => $"{DescribeType(underlyingSpecification)} encapsulated by the specification {DescribeType(spec)}"
+        };
     }
 
-    private static string DescribeType<TModel, TMetadata>(SpecificationBase<TModel, TMetadata> spec) =>
+    private static string DescribeType<TModel, TMetadata>(SpecBase<TModel, TMetadata> spec) =>
         $"{ConvertToPrettyTypeName(spec)} ({spec.Description})";
 
-    private static string CreateErrorMessageForFailedCallbackInvocation<TModel, TMetadata>(SpecificationBase<TModel, TMetadata> specification, string callerName, Exception ex)
+    private static string CreateErrorMessageForFailedCallbackInvocation<TModel, TMetadata>(SpecBase<TModel, TMetadata> spec, string callerName, Exception ex)
     {
             
         const string vowels = "AEIOU";
         var exceptionTypeName = ex.GetType().Name;
         var article = vowels.Contains(exceptionTypeName[0]) ? "An" : "A";
-        var typeDescription = DescribeType(specification);
+        var typeDescription = DescribeType(spec);
             
         return  string.IsNullOrWhiteSpace(ex.Message)
             ? $"{article} '{exceptionTypeName}' was thrown while evaluating the '{callerName}' parameter of the specification {typeDescription}."
