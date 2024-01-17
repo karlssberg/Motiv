@@ -1,9 +1,9 @@
 ﻿using Karlssberg.Motiv.All;
-using Karlssberg.Motiv.CollectionBuilder;
+using Karlssberg.Motiv.HigherOrderSpecBuilder;
 
 namespace Karlssberg.Motiv;
 
-public static class AllSpecExtensions
+public static class AllSatisfiedSpecExtensions
 {
     /// <summary>
     ///     Returns a specification that is a transformation of the <paramref name="spec" /> into one that is
@@ -23,7 +23,7 @@ public static class AllSpecExtensions
     /// </returns>
     public static AllSatisfiedSpec<TModel, TMetadata> ToAllSatisfiedSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec) =>
-        new(spec);
+        new(spec, DefaultMetadataFactory.GetFactory<TModel, TMetadata>());
 
     /// <summary>
     ///     Commences the building of a specification that is a transformation of the <paramref name="spec" />
@@ -43,8 +43,8 @@ public static class AllSpecExtensions
     ///     <paramref name="spec" />. Whether the specification is satisfied or not satisfied, the metadata is the
     ///     aggregate of the underlying results
     /// </returns>
-    public static IYieldTrueMetadata<TModel, TMetadata> BuildAllSatisfiedSpec<TModel, TMetadata>(
+    public static IYieldTrueMetadata<TModel, TMetadata, TMetadata> BuildAllSatisfiedSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec) =>
-        new AllSatisfiedSpecBuilder<TModel, TMetadata>(spec);
+        new AllSatisfiedSpecBuilder<TModel, TMetadata, TMetadata>(spec);
     
 }

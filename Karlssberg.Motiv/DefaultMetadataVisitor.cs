@@ -39,7 +39,7 @@ public class DefaultMetadataVisitor<TMetadata>
             IAtLeastNSatisfiedBooleanResult<TMetadata> atLeastBooleanResult => Visit(atLeastBooleanResult),
             AtMostNSatisfiedBooleanResult<TMetadata> atMostBooleanResult => Visit(atMostBooleanResult),
             BooleanResult<TMetadata> booleanResult => Visit(booleanResult),
-            IChangeMetadataTypeBooleanResult<TMetadata> changeMetadataTypeBooleanResult => Visit(changeMetadataTypeBooleanResult),
+            IChangeMetadataBooleanResult<TMetadata> changeMetadataTypeBooleanResult => Visit(changeMetadataTypeBooleanResult),
             NotBooleanResult<TMetadata> notBooleanResult => Visit(notBooleanResult),
             OrBooleanResult<TMetadata> orBooleanResult => Visit(orBooleanResult),
             XOrBooleanResult<TMetadata> xOrBooleanResult => Visit(xOrBooleanResult),
@@ -105,8 +105,8 @@ public class DefaultMetadataVisitor<TMetadata>
     protected virtual IEnumerable<TMetadata> Visit(BooleanResult<TMetadata> booleanResult) =>
         [booleanResult.Metadata];
 
-    protected virtual IEnumerable<TMetadata> Visit(IChangeMetadataTypeBooleanResult<TMetadata> changeMetadataTypeBooleanResult) =>
-        [changeMetadataTypeBooleanResult.Metadata];
+    protected virtual IEnumerable<TMetadata> Visit(IChangeMetadataBooleanResult<TMetadata> changeMetadataBooleanResult) =>
+        [changeMetadataBooleanResult.Metadata];
 
     /// <summary>
     /// Visits a <see cref="NotBooleanResult{TMetadata}"/> and returns the visited metadata.

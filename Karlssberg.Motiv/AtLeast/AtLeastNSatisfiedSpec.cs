@@ -1,6 +1,4 @@
-﻿using static Karlssberg.Motiv.SpecException;
-
-namespace Karlssberg.Motiv.AtLeast;
+﻿namespace Karlssberg.Motiv.AtLeast;
 
 internal sealed class AtLeastNSatisfiedSpec<TModel, TMetadata>(
     int minimum,

@@ -1,57 +1,23 @@
-﻿using Karlssberg.Motiv.CollectionBuilder;
+﻿using Karlssberg.Motiv.HigherOrderSpecBuilder;
+using Karlssberg.Motiv.IgnoreUnderlyingMetadata;
 
 namespace Karlssberg.Motiv.All;
 
-internal class AllSatisfiedSpecBuilder<TModel, TMetadata>(SpecBase<TModel, TMetadata> underlyingSpec) : 
-    ICollectionSpecBuilder<TModel, TMetadata>
+internal class AllSatisfiedSpecBuilder<TModel, TMetadata, TUnderlyingMetadata>(
+    SpecBase<TModel, TUnderlyingMetadata> underlyingSpec) 
+    : HigherOrderSpecBuilderBase<TModel, TMetadata, TUnderlyingMetadata>
 {
-    private Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>>? _yieldWhenAny;
-    private Func<IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>>? _yieldWhenAllTrue;
-    private Func<IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>>? _yieldWhenAllFalse;
-
-    IYieldMetadata<TModel, TMetadata> IYieldTrueMetadata<TModel, TMetadata>.YieldWhenAllTrue(
-        Func<IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> yieldWhenAllTrue)
-    {
-        _yieldWhenAllTrue = yieldWhenAllTrue;
-        return this;
-    }
-
-    IYieldFalseMetadata<TModel, TMetadata> IYieldMetadata<TModel, TMetadata>.YieldWhenAny(
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> yieldWhenAny)
-    {
-        _yieldWhenAny = yieldWhenAny;
-        return this;
-    }
-
-    public ISpecFactory<TModel, TMetadata> YieldWhenAllFalse(
-        Func<IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> yieldWhenAllFalse)
-    {
-        _yieldWhenAllFalse = yieldWhenAllFalse;
-        return this;
-    }
+    public override SpecBase<IEnumerable<TModel>, TMetadata> CreateSpec() =>
+        new AllSatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata>(underlyingSpec, YieldMetadata);
+    public override SpecBase<IEnumerable<TModel>, TMetadata> CreateSpec(string description) => 
+        new AllSatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata>(underlyingSpec, YieldMetadata, description);
+    public override IYieldFalseMetadata<TModel, TAltMetadata, TMetadata> YieldWhenAnyTrue<TAltMetadata>(
+        Func<IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TAltMetadata>> metadata) =>
+        new AllSatisfiedSpecBuilder<TModel, TAltMetadata, TMetadata>(
+            underlyingSpec.IgnoreUnderlyingMetadata<TModel, TMetadata, TUnderlyingMetadata>());
     
-    SpecBase<IEnumerable<TModel>, TMetadata> ISpecFactory<TModel, TMetadata>.CreateSpec()
-    {
-        return new AllSatisfiedSpec<TModel, TMetadata>(underlyingSpec,
-            (allSatisfied, results) =>
-            {
-                var resultList = results.ToList();
-
-                return allSatisfied switch
-                {
-                    true when _yieldWhenAllTrue is not null => 
-                        _yieldWhenAllTrue(resultList),
-                    
-                    false when _yieldWhenAllFalse is not null && NoneSatisfied() => 
-                        _yieldWhenAllFalse(resultList),
-                    
-                    _ when _yieldWhenAny is not null => 
-                        _yieldWhenAny.Invoke(allSatisfied, resultList),
-                    
-                    _ => []
-                };
-
-                bool NoneSatisfied() => resultList.All(result => !result.IsSatisfied);
-            });
-    }
+    public override IYieldFalseMetadata<TModel, TAltMetadata, TMetadata> YieldWhenAnything<TAltMetadata>
+        (Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TAltMetadata>> metadata) => 
+        new AllSatisfiedSpecBuilder<TModel, TAltMetadata, TMetadata>(
+            underlyingSpec.IgnoreUnderlyingMetadata<TModel, TMetadata, TUnderlyingMetadata>());
 }

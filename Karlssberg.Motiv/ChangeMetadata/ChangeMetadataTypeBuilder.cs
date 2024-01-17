@@ -13,7 +13,7 @@ public class ChangeMetadataTypeBuilder<TModel, TMetadata, TUnderlyingMetadata>(
     private Func<TModel, TMetadata>? _whenFalse;
 
     public SpecBase<TModel, TMetadata> CreateSpec(string description) =>
-        new ChangeMetadataTypeSpec<TModel, TMetadata, TUnderlyingMetadata>(
+        new ChangeMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
             description.ThrowIfNullOrWhitespace(nameof(description)),
             spec,
             whenTrue,

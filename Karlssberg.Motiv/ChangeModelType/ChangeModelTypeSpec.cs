@@ -1,6 +1,4 @@
-﻿using static Karlssberg.Motiv.SpecException;
-
-namespace Karlssberg.Motiv.ChangeModelType;
+﻿namespace Karlssberg.Motiv.ChangeModelType;
 
 public sealed class ChangeModelTypeSpec<TParentModel, TModel, TMetadata>(
     SpecBase<TModel, TMetadata> spec,

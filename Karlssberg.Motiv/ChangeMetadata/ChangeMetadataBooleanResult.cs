@@ -5,8 +5,8 @@
 /// </summary>
 /// <typeparam name="TMetadata">The type of the new metadata.</typeparam>
 /// <typeparam name="TOtherMetadata">The type of the original metadata.</typeparam>
-internal class ChangeMetadataTypeBooleanResult<TMetadata, TOtherMetadata>(BooleanResultBase<TOtherMetadata> booleanResult, TMetadata metadata)
-    : BooleanResultBase<TMetadata>, IChangeMetadataTypeBooleanResult<TMetadata>
+internal class ChangeMetadataBooleanResult<TMetadata, TOtherMetadata>(BooleanResultBase<TOtherMetadata> booleanResult, TMetadata metadata)
+    : BooleanResultBase<TMetadata>, IChangeMetadataBooleanResult<TMetadata>
 {
     /// <summary>
     /// Gets the underlying boolean result.

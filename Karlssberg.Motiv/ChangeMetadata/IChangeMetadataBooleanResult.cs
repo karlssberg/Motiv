@@ -4,7 +4,7 @@
 /// Represents the result of changing the metadata type to a boolean value.
 /// </summary>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-public interface IChangeMetadataTypeBooleanResult<out TMetadata>
+public interface IChangeMetadataBooleanResult<out TMetadata>
 {
     /// <summary>
     /// Gets the metadata after the type change.

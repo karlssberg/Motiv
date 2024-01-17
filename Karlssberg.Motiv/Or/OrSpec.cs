@@ -1,6 +1,4 @@
-﻿using static Karlssberg.Motiv.SpecException;
-
-namespace Karlssberg.Motiv.Or;
+﻿namespace Karlssberg.Motiv.Or;
 
 internal sealed class OrSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> leftOperand,

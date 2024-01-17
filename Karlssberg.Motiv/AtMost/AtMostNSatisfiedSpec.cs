@@ -1,6 +1,4 @@
-﻿using static Karlssberg.Motiv.SpecException;
-
-namespace Karlssberg.Motiv.AtMost;
+﻿namespace Karlssberg.Motiv.AtMost;
 
 internal sealed class AtMostNSatisfiedSpec<TModel, TMetadata>(
     int maximum,

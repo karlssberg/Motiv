@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Karlssberg.Motiv.Poker.HandRankSpecs;
-using Karlssberg.Motiv.Poker.StraightHands;
 using static Karlssberg.Motiv.Poker.Tests.HandRanks;
 
 namespace Karlssberg.Motiv.Poker.Tests;

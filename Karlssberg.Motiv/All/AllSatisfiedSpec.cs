@@ -1,20 +1,23 @@
 ﻿namespace Karlssberg.Motiv.All;
 
-public sealed class AllSatisfiedSpec<TModel, TMetadata> :
+public class AllSatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata> :
     SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    private readonly Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> _metadataFactory;
-    private readonly SpecBase<TModel, TMetadata> _underlyingSpec;
+    private readonly Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>> _metadataFactory;
+    private readonly SpecBase<TModel, TUnderlyingMetadata> _underlyingSpec;
+    private readonly string? _description;
 
     internal AllSatisfiedSpec(
-        SpecBase<TModel, TMetadata> underlyingSpec,
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>>? metadataFactory = null)
+        SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
+        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>> metadataFactory,
+        string? description = null)
     {
         _underlyingSpec = underlyingSpec;
-        _metadataFactory = metadataFactory ?? CreateDefaultMetadataFactory();
+        _metadataFactory = metadataFactory;
+        _description = description;
     }
 
-    public override string Description => $"ALL({_underlyingSpec})";
+    public override string Description => _description ?? $"ALL({_underlyingSpec})";
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
@@ -24,24 +27,25 @@ public sealed class AllSatisfiedSpec<TModel, TMetadata> :
                 () =>
                 {
                     var underlyingResult = _underlyingSpec.IsSatisfiedBy(model);
-                    return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
+                    return new BooleanResultWithModel<TModel, TUnderlyingMetadata>(model, underlyingResult);
                 }))
             .ToList();
 
-        return new AllSatisfiedBooleanResult<TModel, TMetadata>(
+        return new AllSatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied => _metadataFactory(isSatisfied, resultsWithModel),
             resultsWithModel);
     }
 
 
-    private static Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> CreateDefaultMetadataFactory()
+    
+}
+
+public class AllSatisfiedSpec<TModel, TMetadata> : AllSatisfiedSpec<TModel, TMetadata, TMetadata>
+{
+    internal AllSatisfiedSpec(
+        SpecBase<TModel, TMetadata> underlyingSpec, 
+        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactory) 
+        : base(underlyingSpec, metadataFactory)
     {
-        return (isSatisfied, results) => isSatisfied switch
-        {
-            true => results.SelectMany(result => result.GetMetadata()),
-            false => results
-                .Where(result => !result.IsSatisfied)
-                .SelectMany(result => result.GetMetadata())
-        };
     }
 }

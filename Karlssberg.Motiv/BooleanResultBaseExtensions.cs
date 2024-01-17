@@ -12,6 +12,7 @@ public static class BooleanResultBaseExtensions
         booleanResultBase
             .GetInsights(new DefaultMetadataVisitor<TMetadata>())
             .Distinct();
+    
 
     /// <summary>
     /// Retrieves the insights from a <see cref="BooleanResultBase{TMetadata}"/> using a custom insights visitor.

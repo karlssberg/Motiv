@@ -1,6 +1,4 @@
-﻿using static Karlssberg.Motiv.SpecException;
-
-namespace Karlssberg.Motiv.And;
+﻿namespace Karlssberg.Motiv.And;
 
 internal class AndSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> leftOperand,

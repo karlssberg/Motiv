@@ -1,6 +1,4 @@
-﻿using static Karlssberg.Motiv.SpecException;
-
-namespace Karlssberg.Motiv.Not;
+﻿namespace Karlssberg.Motiv.Not;
 
 internal sealed class NotSpec<TModel, TMetadata>(SpecBase<TModel, TMetadata> operand) : SpecBase<TModel, TMetadata>
 {

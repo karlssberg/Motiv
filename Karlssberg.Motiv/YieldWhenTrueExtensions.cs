@@ -1,10 +1,9 @@
 ﻿using Karlssberg.Motiv.ChangeMetadata;
-using Karlssberg.Motiv.SpecBuilder;
 using Karlssberg.Motiv.SpecBuilder.Phase2;
 
 namespace Karlssberg.Motiv;
 
-public static class ChangeMetadataTypeExtensions
+public static class YieldWhenTrueExtensions
 {
     public static IRequireFalseMetadata<TModel, TNewMetadata> YieldWhenTrue<TModel, TMetadata, TNewMetadata>(
         this SpecBase<TModel, TMetadata> spec,

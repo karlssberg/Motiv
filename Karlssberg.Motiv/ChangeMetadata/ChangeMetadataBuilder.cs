@@ -15,13 +15,13 @@ public class ChangeMetadataBuilder<TModel, TUnderlyingMetadata>(
     private Func<TModel, string>? _falseBecause;
     private Func<TModel, string>? _trueBecause;
     public SpecBase<TModel, string> CreateSpec(string description) =>
-        new ChangeMetadataTypeSpec<TModel, string, TUnderlyingMetadata>(
+        new ChangeMetadataSpec<TModel, string, TUnderlyingMetadata>(
             description.ThrowIfNullOrWhitespace(nameof(description)),
             spec,
             _trueBecause ?? throw new InvalidOperationException("Must specify a true metadata"),
             _falseBecause ?? throw new InvalidOperationException("Must specify a false metadata"));
     public SpecBase<TModel, string> CreateSpec() =>
-        new ChangeMetadataTypeSpec<TModel, string, TUnderlyingMetadata>(
+        new ChangeMetadataSpec<TModel, string, TUnderlyingMetadata>(
             _candidateDescription ?? spec.Description,
             spec,
             _trueBecause ?? throw new InvalidOperationException("Must specify a true metadata"),

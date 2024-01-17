@@ -29,7 +29,7 @@ public class AllSatisfiedSpecTests
 
         var sut = underlyingSpec
             .BuildAllSatisfiedSpec()
-            .YieldWhenAny((allSatisfied, results) =>
+            .YieldWhenAnything((allSatisfied, results) =>
                 $"{results.Count(r => r.IsSatisfied == allSatisfied)} are {allSatisfied.ToString().ToLowerInvariant()}")
             .CreateSpec();
         
@@ -137,7 +137,7 @@ public class AllSatisfiedSpecTests
 
         var sut = underlyingSpec
             .BuildAllSatisfiedSpec()
-            .YieldWhenAnyTrue("any true")
+            .YieldWhenAllTrue("any true")
             .YieldWhenAnyFalse("any false")
             .CreateSpec();
         
@@ -157,8 +157,8 @@ public class AllSatisfiedSpecTests
 
         var sut = underlyingSpec
             .BuildAllSatisfiedSpec()
-            .YieldWhenAnyTrue("true")
-            .YieldWhenAnyFalse("false")
+            .YieldWhenAnyTrue(true)
+            .YieldWhenAllFalse(false)
             .CreateSpec();
             
         sut.Description.Should().Be(expected);
@@ -176,14 +176,14 @@ public class AllSatisfiedSpecTests
 
         var sut = throwingSpec
             .BuildAllSatisfiedSpec()
-            .YieldWhenAnyTrue(result => $"{result.Model} is true")
-            .YieldWhenAnyFalse(result => $"{result.Model} is false")
+            .YieldWhenAnyTrue(results => $"{results.Count()} true")
+            .YieldWhenAnyFalse(results => $"{results.Count()} false")
             .CreateSpec();
 
         var act = () => sut.IsSatisfiedBy([model]);
 
         act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains(sut.Description));
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("AllSatisfiedSpec<Object, String>"));
+        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("AllSatisfiedSpec<Object, String, String>"));
         act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }

@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.ChangeMetadata;
 
-internal class ChangeMetadataTypeSpec<TModel, TMetadata, TUnderlyingMetadata>(
+internal class ChangeMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
     string description,
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
     Func<TModel, TMetadata> whenTrue,
@@ -23,6 +23,6 @@ internal class ChangeMetadataTypeSpec<TModel, TMetadata, TUnderlyingMetadata>(
             ? whenTrue(model)
             : whenFalse(model);
 
-        return new ChangeMetadataTypeBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadata);
+        return new ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadata);
     }
 }

@@ -7,11 +7,11 @@ internal static class WrapException
     internal static  TResult IfIsSatisfiedByInvocationFails<TModel, TMetadata, TResult>(
         SpecBase<TModel, TMetadata> spec,
         Func<TResult> func) =>
-        IfIsSatisfiedByInvocationFails<TModel, object?, TMetadata, TResult>(spec, null, func);
-
-    internal static TResult IfIsSatisfiedByInvocationFails<TModel, TModelUnderlying, TMetadata, TResult>(
+        IfIsSatisfiedByInvocationFails<TModel, object?, TMetadata, object?, TResult>(spec, null, func);
+    
+    internal static TResult IfIsSatisfiedByInvocationFails<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata, TResult>(
         SpecBase<TModel, TMetadata> spec, 
-        SpecBase<TModelUnderlying, TMetadata>? underlyingSpecification,
+        SpecBase<TUnderlyingModel, TUnderlyingMetadata> underlyingSpecification,
         Func<TResult> func)
     {
         try
@@ -74,17 +74,14 @@ internal static class WrapException
         
         var truncatedName = nameParts.First();
         
-        return genericArgs.Length switch
-        {
-            1 => $"{truncatedName}<{genericArgs.First().Name}>",
-            2 => $"{truncatedName}<{genericArgs.First().Name}, {genericArgs.Last().Name}>",
-            _ => specificationType.Name
-        };
+        var serializedGenericArgs = string.Join(", ", genericArgs.Select(arg => arg.Name));
+        
+        return $"{truncatedName}<{serializedGenericArgs}>";
     }
 
-    private static string GetErrorMessageForIsSatisfiedByCall<TModel, TModelUnderlying, TMetadata>(
+    private static string GetErrorMessageForIsSatisfiedByCall<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata>(
         SpecBase<TModel, TMetadata> spec,
-        SpecBase<TModelUnderlying, TMetadata>? underlyingSpecification,
+        SpecBase<TUnderlyingModel, TUnderlyingMetadata>? underlyingSpecification,
         Exception ex)
     {
         const string vowels = "AEIOU";
@@ -98,9 +95,9 @@ internal static class WrapException
         return message;
     }
 
-    private static string GetDescriptionPhrase<TModel, TModelUnderlying, TMetadata>(
+    private static string GetDescriptionPhrase<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata>(
         SpecBase<TModel, TMetadata> spec, 
-        SpecBase<TModelUnderlying, TMetadata>? underlyingSpecification)
+        SpecBase<TUnderlyingModel, TUnderlyingMetadata>? underlyingSpecification)
     {
         return underlyingSpecification switch
         {
@@ -112,7 +109,10 @@ internal static class WrapException
     private static string DescribeType<TModel, TMetadata>(SpecBase<TModel, TMetadata> spec) =>
         $"{ConvertToPrettyTypeName(spec)} ({spec.Description})";
 
-    private static string CreateErrorMessageForFailedCallbackInvocation<TModel, TMetadata>(SpecBase<TModel, TMetadata> spec, string callerName, Exception ex)
+    private static string CreateErrorMessageForFailedCallbackInvocation<TModel, TMetadata>(
+        SpecBase<TModel, TMetadata> spec, 
+        string callerName, 
+        Exception ex)
     {
             
         const string vowels = "AEIOU";

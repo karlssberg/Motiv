@@ -1,7 +1,4 @@
-﻿using static Karlssberg.Motiv.Poker.Rank;
-using static Karlssberg.Motiv.Poker.Suit;
-
-namespace Karlssberg.Motiv.Poker;
+﻿namespace Karlssberg.Motiv.Poker;
 
 public record Card(Rank Rank, Suit Suit)
 {
