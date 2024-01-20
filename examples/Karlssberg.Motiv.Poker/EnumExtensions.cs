@@ -14,7 +14,7 @@ public static class EnumExtensions
 
         return attribute?.Description ?? value.ToString();
     }
-    
+
     public static T GetEnumFromDescription<T>(this string description) where T : Enum
     {
         var enumValues =

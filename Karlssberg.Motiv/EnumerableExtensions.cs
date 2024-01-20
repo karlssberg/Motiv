@@ -1,13 +1,9 @@
 ﻿namespace Karlssberg.Motiv;
 
-/// <summary>
-/// Provides extension methods for working with enumerable collections.
-/// </summary>
+/// <summary>Provides extension methods for working with enumerable collections.</summary>
 public static class EnumerableExtensions
 {
-    /// <summary>
-    /// Determines whether any element in the collection satisfies the specified specification.
-    /// </summary>
+    /// <summary>Determines whether any element in the collection satisfies the specified specification.</summary>
     /// <typeparam name="TModel">The type of the elements in the collection.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
     /// <param name="source">The collection to check.</param>
@@ -15,14 +11,10 @@ public static class EnumerableExtensions
     /// <returns>A BooleanResultBase indicating whether any element satisfies the specification.</returns>
     public static BooleanResultBase<TMetadata> Any<TModel, TMetadata>(
         this IEnumerable<TModel> source,
-        SpecBase<TModel, TMetadata> spec)
-    {
-        return spec.ToAnySatisfiedSpec().IsSatisfiedBy(source);
-    }
+        SpecBase<TModel, TMetadata> spec) =>
+        spec.ToAnySatisfiedSpec().IsSatisfiedBy(source);
 
-    /// <summary>
-    /// Determines whether all elements in the collection satisfy the specified specification.
-    /// </summary>
+    /// <summary>Determines whether all elements in the collection satisfy the specified specification.</summary>
     /// <typeparam name="TModel">The type of the elements in the collection.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
     /// <param name="source">The collection to check.</param>
@@ -30,14 +22,10 @@ public static class EnumerableExtensions
     /// <returns>A BooleanResultBase indicating whether all elements satisfy the specification.</returns>
     public static BooleanResultBase<TMetadata> All<TModel, TMetadata>(
         this IEnumerable<TModel> source,
-        SpecBase<TModel, TMetadata> spec)
-    {
-        return spec.ToAnySatisfiedSpec().IsSatisfiedBy(source);
-    }
+        SpecBase<TModel, TMetadata> spec) =>
+        spec.ToAnySatisfiedSpec().IsSatisfiedBy(source);
 
-    /// <summary>
-    /// Combines multiple specifications into a single specification that requires all of them to be satisfied.
-    /// </summary>
+    /// <summary>Combines multiple specifications into a single specification that requires all of them to be satisfied.</summary>
     /// <typeparam name="TModel">The type of the elements in the collection.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata associated with the specifications.</typeparam>
     /// <param name="specifications">The specifications to combine.</param>
@@ -50,9 +38,7 @@ public static class EnumerableExtensions
                 leftSpec & rightSpec);
     }
 
-    /// <summary>
-    /// Combines multiple specifications into a single specification that requires any of them to be satisfied.
-    /// </summary>
+    /// <summary>Combines multiple specifications into a single specification that requires any of them to be satisfied.</summary>
     /// <typeparam name="TModel">The type of the elements in the collection.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata associated with the specifications.</typeparam>
     /// <param name="specifications">The specifications to combine.</param>
@@ -65,9 +51,7 @@ public static class EnumerableExtensions
                 leftSpec | rightSpec);
     }
 
-    /// <summary>
-    /// Returns the source collection if it is not empty; otherwise, returns the specified alternative collection.
-    /// </summary>
+    /// <summary>Returns the source collection if it is not empty; otherwise, returns the specified alternative collection.</summary>
     /// <typeparam name="T">The type of the elements in the collections.</typeparam>
     /// <param name="source">The source collection.</param>
     /// <param name="other">The alternative collection.</param>

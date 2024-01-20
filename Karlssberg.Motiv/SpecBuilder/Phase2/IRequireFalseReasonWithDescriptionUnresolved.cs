@@ -18,7 +18,7 @@ public interface IRequireFalseReasonWhenDescriptionUnresolved<TModel>
     /// </param>
     /// <returns>A specification base.</returns>
     IRequireActivationWithDescription<TModel, string> YieldWhenFalse(Func<TModel, string> falseBecause);
-    
+
     /// <summary>Supply a function that when executed generates a human readable explanation for when the condition is false.</summary>
     /// <param name="falseBecause">
     ///     The function that evaluates the model and returns a human readable explanation of why the

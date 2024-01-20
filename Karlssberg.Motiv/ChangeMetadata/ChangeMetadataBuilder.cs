@@ -76,7 +76,7 @@ public class ChangeMetadataBuilder<TModel, TUnderlyingMetadata>(
         return this;
     }
 
-    public IRequireFalseReasonWhenDescriptionUnresolved<TModel> YieldWhenTrue(Func<string> trueBecause) 
+    public IRequireFalseReasonWhenDescriptionUnresolved<TModel> YieldWhenTrue(Func<string> trueBecause)
     {
         trueBecause.ThrowIfNull(nameof(trueBecause));
         _trueBecause = _ => trueBecause();

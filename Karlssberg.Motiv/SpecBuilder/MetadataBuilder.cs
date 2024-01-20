@@ -12,37 +12,37 @@ internal class MetadataBuilder<TModel, TMetadata, TReturnType>(TReturnType retur
         WhenTrue = whenTrue.ThrowIfNull(nameof(whenTrue));
         return returnValue;
     }
-    
-    internal TReturnType SetTrueMetadata(Func< TMetadata> whenTrue)
-    { 
+
+    internal TReturnType SetTrueMetadata(Func<TMetadata> whenTrue)
+    {
         whenTrue.ThrowIfNull(nameof(whenTrue));
         WhenTrue = _ => whenTrue();
         return returnValue;
     }
-    
+
     internal TReturnType SetTrueMetadata(TMetadata whenTrue)
     {
         if (whenTrue is string trueBecause)
             CandidateDescription = trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
-        
+
         WhenTrue = _ => whenTrue;
-        
+
         return returnValue;
     }
-    
+
     internal TReturnType SetFalseMetadata(Func<TModel, TMetadata> whenFalse)
     {
         WhenFalse = whenFalse.ThrowIfNull(nameof(whenFalse));
         return returnValue;
     }
-    
+
     internal TReturnType SetFalseMetadata(Func<TMetadata> whenFalse)
     {
         whenFalse.ThrowIfNull(nameof(whenFalse));
         WhenFalse = _ => whenFalse();
         return returnValue;
     }
-    
+
     internal TReturnType SetFalseMetadata(TMetadata whenFalse)
     {
         WhenFalse = _ => whenFalse;

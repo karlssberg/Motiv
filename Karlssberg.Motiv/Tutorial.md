@@ -1,7 +1,10 @@
-﻿
-## Creating a composite specification
+﻿## Creating a composite specification
 
-A composite specification is a specification that is composed of other specifications. The composite specification can be created by using the `&` operator, which is the logical AND operator. The `&` operator is overloaded for the `Spec<T>` class. The `&` operator returns a new `Spec<T>` instance that represents the logical AND of the two specifications.
+A composite specification is a specification that is composed of other specifications. The composite specification can
+be created by using the `&` operator, which is the logical AND operator. The `&` operator is overloaded for
+the `Spec<T>` class. The `&` operator returns a new `Spec<T>` instance that represents the logical AND of the two
+specifications.
+
 ```csharp
         var isPositive = new Spec<int>(
             n => n > 0,

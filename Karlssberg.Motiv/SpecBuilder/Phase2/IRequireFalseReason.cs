@@ -10,8 +10,8 @@ public interface IRequireFalseReason<TModel>
     /// <param name="falseBecause">The metadata associated with the condition.</param>
     /// <returns>The specification with the specified metadata.</returns>
     IRequireActivationWithOrWithoutDescription<TModel> YieldWhenFalse(string falseBecause);
-    
-    
+
+
     /// <summary>Supply a function that when executed generates a human readable explanation for when the condition is false.</summary>
     /// <param name="falseBecause">
     ///     The function that evaluates the model and returns a human readable explanation of why the
@@ -19,7 +19,7 @@ public interface IRequireFalseReason<TModel>
     /// </param>
     /// <returns>A specification base.</returns>
     IRequireActivationWithOrWithoutDescription<TModel> YieldWhenFalse(Func<TModel, string> falseBecause);
-    
+
     /// <summary>Supply a function that when executed generates a human readable explanation for when the condition is false.</summary>
     /// <param name="falseBecause">
     ///     The function that evaluates the model and returns a human readable explanation of why the

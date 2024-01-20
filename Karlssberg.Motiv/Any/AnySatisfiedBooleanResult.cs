@@ -5,13 +5,16 @@
 /// <typeparam name="TModel">The type of the model used to evaluate each underlying operand. </typeparam>
 public sealed class AnySatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata> : BooleanResultBase<TMetadata>, IAnySatisfiedBooleanResult<TMetadata>
 {
+    private readonly string? _specDescription;
     /// <summary>Initializes a new instance of the <see cref="AnySatisfiedBooleanResult{TMetadata}" /> class.</summary>
     /// <param name="metadataFactory">A function that creates metadata based on the boolean result.</param>
     /// <param name="operandResults">The operand results to evaluate.</param>
     internal AnySatisfiedBooleanResult(
         Func<bool, IEnumerable<TMetadata>> metadataFactory,
-        IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> operandResults)
+        IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> operandResults,
+        string? specDescription = null)
     {
+        _specDescription = specDescription;
         UnderlyingResults = operandResults
             .ThrowIfNull(nameof(operandResults))
             .ToArray();
@@ -50,7 +53,9 @@ public sealed class AnySatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMeta
     public override bool IsSatisfied { get; }
 
     /// <inheritdoc />
-    public override string Description => $"ANY:{IsSatisfiedDisplayText}({string.Join(", ", UnderlyingResults)})";
+    public override string Description => _specDescription is null
+        ? $"ANY:{IsSatisfiedDisplayText}({string.Join(", ", UnderlyingResults.Distinct())})"
+        : $"ANY<{_specDescription}>:{IsSatisfiedDisplayText}({string.Join(", ", UnderlyingResults.Distinct())})";
 
     /// <inheritdoc />
     public override IEnumerable<string> GatherReasons() => DeterminativeOperandResults.SelectMany(r => r.GatherReasons());

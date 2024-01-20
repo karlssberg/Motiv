@@ -8,10 +8,8 @@ internal class AutoParamsAttribute(params object?[] values) : InlineAutoDataAttr
 {
     private class CustomizedAutoDataAttribute() : AutoDataAttribute(CreateFixture)
     {
-        private static IFixture CreateFixture()
-        {
-            return new Fixture()
+        private static IFixture CreateFixture() =>
+            new Fixture()
                 .Customize(new AutoNSubstituteCustomization { ConfigureMembers = true, GenerateDelegates = true });
-        }
     }
 }

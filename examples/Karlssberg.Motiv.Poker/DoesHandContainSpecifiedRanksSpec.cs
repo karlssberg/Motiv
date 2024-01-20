@@ -10,8 +10,8 @@ public class DoesHandContainSpecifiedRanksSpec(ICollection<Rank> ranks) : Spec<H
             .YieldWhenTrue($"Is one of {ranks.Humanize()}")
             .YieldWhenFalse($"Is not one of {ranks.Humanize()}")
             .CreateSpec();
-            
+
         return underlyingSpec
             .ToAllSatisfiedSpec()
             .ChangeModel<Hand>(hand => hand.Cards);
-    });  
+    });

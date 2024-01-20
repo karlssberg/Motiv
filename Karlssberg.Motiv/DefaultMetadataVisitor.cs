@@ -10,25 +10,25 @@ using Karlssberg.Motiv.XOr;
 
 namespace Karlssberg.Motiv;
 
-/// <summary>
-/// Represents a default implementation of the insights visitor for a specific metadata type.
-/// </summary>
+/// <summary>Represents a default implementation of the insights visitor for a specific metadata type.</summary>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 public class DefaultMetadataVisitor<TMetadata>
 {
     /// <summary>
-    /// Visits a collection of <see cref="BooleanResultBase{TMetadata}"/> objects and returns a collection of <typeparamref name="TMetadata"/>.
+    ///     Visits a collection of <see cref="BooleanResultBase{TMetadata}" /> objects and returns a collection of
+    ///     <typeparamref name="TMetadata" />.
     /// </summary>
-    /// <param name="booleanResultBases">The collection of <see cref="BooleanResultBase{TMetadata}"/> objects to visit.</param>
-    /// <returns>A collection of <typeparamref name="TMetadata"/>.</returns>
+    /// <param name="booleanResultBases">The collection of <see cref="BooleanResultBase{TMetadata}" /> objects to visit.</param>
+    /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
     private IEnumerable<TMetadata> Visit(IEnumerable<BooleanResultBase<TMetadata>> booleanResultBases) =>
         booleanResultBases.SelectMany(Visit);
 
     /// <summary>
-    /// Visits a <see cref="BooleanResultBase{TMetadata}"/> and returns a collection of <typeparamref name="TMetadata"/>.
+    ///     Visits a <see cref="BooleanResultBase{TMetadata}" /> and returns a collection of
+    ///     <typeparamref name="TMetadata" />.
     /// </summary>
     /// <param name="booleanResultBase">The boolean result to visit.</param>
-    /// <returns>A collection of <typeparamref name="TMetadata"/>.</returns>
+    /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
     public IEnumerable<TMetadata> Visit(BooleanResultBase<TMetadata> booleanResultBase)
     {
         return booleanResultBase switch
@@ -45,61 +45,61 @@ public class DefaultMetadataVisitor<TMetadata>
             XOrBooleanResult<TMetadata> xOrBooleanResult => Visit(xOrBooleanResult),
             IBinaryBooleanResult<TMetadata> compositeBooleanResult => Visit(compositeBooleanResult),
             ICompositeBooleanResult<TMetadata> compositeBooleanResult => Visit(compositeBooleanResult),
-            _ => Enumerable.Empty<TMetadata>() 
+            _ => Enumerable.Empty<TMetadata>()
         };
     }
-    
-    protected virtual IEnumerable<TMetadata> Visit(ICompositeBooleanResult<TMetadata> compositeBooleanResult) => 
+
+    protected virtual IEnumerable<TMetadata> Visit(ICompositeBooleanResult<TMetadata> compositeBooleanResult) =>
         Visit(compositeBooleanResult.DeterminativeResults);
 
-    protected virtual IEnumerable<TMetadata> Visit(IBinaryBooleanResult<TMetadata> binaryBooleanResult) => 
+    protected virtual IEnumerable<TMetadata> Visit(IBinaryBooleanResult<TMetadata> binaryBooleanResult) =>
         Visit(binaryBooleanResult.DeterminativeResults);
 
-    /// <summary>
-    /// Visits an <see cref="AllSatisfiedBooleanResult{TMetadata}"/> and returns a collection of metadata.
-    /// </summary>
-    /// <param name="allSatisfiedBooleanResult">The <see cref="AllSatisfiedBooleanResult{TMetadata}"/> to visit.</param>
+    /// <summary>Visits an <see cref="AllSatisfiedBooleanResult{TMetadata}" /> and returns a collection of metadata.</summary>
+    /// <param name="allSatisfiedBooleanResult">The <see cref="AllSatisfiedBooleanResult{TMetadata}" /> to visit.</param>
     /// <returns>A collection of metadata.</returns>
     protected virtual IEnumerable<TMetadata> Visit(IAllSatisfiedBooleanResult<TMetadata> allSatisfiedBooleanResult) =>
         allSatisfiedBooleanResult.SubstituteMetadata.IfEmptyThen(Visit(allSatisfiedBooleanResult.DeterminativeResults));
 
     /// <summary>
-    /// Visits an <see cref="AndBooleanResult{TMetadata}"/> and returns a collection of <typeparamref name="TMetadata"/>.
+    ///     Visits an <see cref="AndBooleanResult{TMetadata}" /> and returns a collection of
+    ///     <typeparamref name="TMetadata" />.
     /// </summary>
-    /// <param name="andBooleanResult">The <see cref="AndBooleanResult{TMetadata}"/> to visit.</param>
-    /// <returns>A collection of <typeparamref name="TMetadata"/>.</returns>
+    /// <param name="andBooleanResult">The <see cref="AndBooleanResult{TMetadata}" /> to visit.</param>
+    /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
     protected virtual IEnumerable<TMetadata> Visit(AndBooleanResult<TMetadata> andBooleanResult) =>
         Visit(andBooleanResult.DeterminativeResults);
 
     /// <summary>
-    /// Visits an instance of <see cref="AnySatisfiedBooleanResult{TMetadata}"/> and returns a collection of <typeparamref name="TMetadata"/>.
+    ///     Visits an instance of <see cref="AnySatisfiedBooleanResult{TMetadata}" /> and returns a collection of
+    ///     <typeparamref name="TMetadata" />.
     /// </summary>
-    /// <param name="anySatisfiedBooleanResult">The instance of <see cref="AnySatisfiedBooleanResult{TMetadata}"/> to visit.</param>
-    /// <returns>A collection of <typeparamref name="TMetadata"/>.</returns>
+    /// <param name="anySatisfiedBooleanResult">The instance of <see cref="AnySatisfiedBooleanResult{TMetadata}" /> to visit.</param>
+    /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
     protected virtual IEnumerable<TMetadata> Visit(IAnySatisfiedBooleanResult<TMetadata> anySatisfiedBooleanResult) =>
         anySatisfiedBooleanResult.SubstituteMetadata.IfEmptyThen(Visit(anySatisfiedBooleanResult.DeterminativeResults));
 
     /// <summary>
-    /// Visits an <see cref="AtLeastNSatisfiedBooleanResult{TMetadata}"/> and returns a collection of <typeparamref name="TMetadata"/>.
+    ///     Visits an <see cref="AtLeastNSatisfiedBooleanResult{TMetadata}" /> and returns a collection of
+    ///     <typeparamref name="TMetadata" />.
     /// </summary>
-    /// <param name="atLeastNSatisfiedBooleanResult">The <see cref="AtLeastNSatisfiedBooleanResult{TMetadata}"/> to visit.</param>
-    /// <returns>A collection of <typeparamref name="TMetadata"/>.</returns>
+    /// <param name="atLeastNSatisfiedBooleanResult">The <see cref="AtLeastNSatisfiedBooleanResult{TMetadata}" /> to visit.</param>
+    /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
     protected virtual IEnumerable<TMetadata> Visit(IAtLeastNSatisfiedBooleanResult<TMetadata> atLeastNSatisfiedBooleanResult) =>
         atLeastNSatisfiedBooleanResult.SubstituteMetadata
             .IfEmptyThen(Visit(atLeastNSatisfiedBooleanResult.DeterminativeResults));
 
     /// <summary>
-    /// Visits an <see cref="AtMostNSatisfiedBooleanResult{TMetadata}"/> and returns a collection of <typeparamref name="TMetadata"/>.
+    ///     Visits an <see cref="AtMostNSatisfiedBooleanResult{TMetadata}" /> and returns a collection of
+    ///     <typeparamref name="TMetadata" />.
     /// </summary>
-    /// <param name="atMostNSatisfiedBooleanResult">The <see cref="AtMostNSatisfiedBooleanResult{TMetadata}"/> to visit.</param>
-    /// <returns>A collection of <typeparamref name="TMetadata"/>.</returns>
+    /// <param name="atMostNSatisfiedBooleanResult">The <see cref="AtMostNSatisfiedBooleanResult{TMetadata}" /> to visit.</param>
+    /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
     protected virtual IEnumerable<TMetadata> Visit(AtMostNSatisfiedBooleanResult<TMetadata> atMostNSatisfiedBooleanResult) =>
         atMostNSatisfiedBooleanResult.SubstituteMetadata
             .IfEmptyThen(Visit(atMostNSatisfiedBooleanResult.DeterminativeResults));
 
-    /// <summary>
-    /// Visits a BooleanResult and returns a collection of metadata.
-    /// </summary>
+    /// <summary>Visits a BooleanResult and returns a collection of metadata.</summary>
     /// <param name="booleanResult">The BooleanResult to visit.</param>
     /// <returns>A collection of metadata.</returns>
     protected virtual IEnumerable<TMetadata> Visit(BooleanResult<TMetadata> booleanResult) =>
@@ -108,25 +108,22 @@ public class DefaultMetadataVisitor<TMetadata>
     protected virtual IEnumerable<TMetadata> Visit(IChangeMetadataBooleanResult<TMetadata> changeMetadataBooleanResult) =>
         [changeMetadataBooleanResult.Metadata];
 
-    /// <summary>
-    /// Visits a <see cref="NotBooleanResult{TMetadata}"/> and returns the visited metadata.
-    /// </summary>
-    /// <param name="notBooleanResult">The <see cref="NotBooleanResult{TMetadata}"/> to visit.</param>
+    /// <summary>Visits a <see cref="NotBooleanResult{TMetadata}" /> and returns the visited metadata.</summary>
+    /// <param name="notBooleanResult">The <see cref="NotBooleanResult{TMetadata}" /> to visit.</param>
     /// <returns>The visited metadata.</returns>
     protected virtual IEnumerable<TMetadata> Visit(NotBooleanResult<TMetadata> notBooleanResult) =>
         Visit(notBooleanResult.OperandResult);
 
     /// <summary>
-    /// Visits an <see cref="OrBooleanResult{TMetadata}"/> and returns a collection of <typeparamref name="TMetadata"/>.
+    ///     Visits an <see cref="OrBooleanResult{TMetadata}" /> and returns a collection of
+    ///     <typeparamref name="TMetadata" />.
     /// </summary>
-    /// <param name="orBooleanResult">The <see cref="OrBooleanResult{TMetadata}"/> to visit.</param>
-    /// <returns>A collection of <typeparamref name="TMetadata"/>.</returns>
+    /// <param name="orBooleanResult">The <see cref="OrBooleanResult{TMetadata}" /> to visit.</param>
+    /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
     protected virtual IEnumerable<TMetadata> Visit(OrBooleanResult<TMetadata> orBooleanResult) =>
         Visit(orBooleanResult.DeterminativeResults);
 
-    /// <summary>
-    /// Visits an XOrBooleanResult and returns a collection of metadata.
-    /// </summary>
+    /// <summary>Visits an XOrBooleanResult and returns a collection of metadata.</summary>
     /// <param name="xOrBooleanResult">The XOrBooleanResult to visit.</param>
     /// <returns>A collection of metadata.</returns>
     protected virtual IEnumerable<TMetadata> Visit(XOrBooleanResult<TMetadata> xOrBooleanResult) =>

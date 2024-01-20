@@ -36,6 +36,6 @@ public record Hand
             .Split(ParseSeparators, RemoveEmptyEntries | TrimEntries)
             .Select(code => new Card(code))
             .ToList();
-        
+
     public override string ToString() => string.Join(' ', Cards);
 }

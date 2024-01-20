@@ -5,4 +5,3 @@ public class IsAceHighStraightBroadwaySpec() : Spec<Hand>(
         .YieldWhenTrue("Is Ace High Straight Broadway")
         .YieldWhenFalse("Is Not Ace High Straight Broadway")
         .CreateSpec());
-        

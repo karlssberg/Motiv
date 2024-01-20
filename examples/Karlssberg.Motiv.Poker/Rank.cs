@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace Karlssberg.Motiv.Poker; 
+namespace Karlssberg.Motiv.Poker;
 
 public enum Rank
 {

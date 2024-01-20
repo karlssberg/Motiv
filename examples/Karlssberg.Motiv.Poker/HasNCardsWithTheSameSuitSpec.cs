@@ -5,4 +5,3 @@ public class HasNCardsWithTheSameSuitSpec(int sameSuitCount) : Spec<Hand>(
         .YieldWhenTrue(hand => $"has {sameSuitCount} cards in the {hand.Suits.First()} suit")
         .YieldWhenFalse($"does not have {sameSuitCount} cards with the same suit")
         .CreateSpec($"has {sameSuitCount} cards with the same suit"));
-    

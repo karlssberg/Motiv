@@ -6,9 +6,9 @@ internal class StringMetadataSpec<TModel>(
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause) : SpecBase<TModel, string>
 {
+    private readonly Func<TModel, string> _falseBecause = falseBecause.ThrowIfNull(nameof(falseBecause));
     private readonly Func<TModel, bool> _predicate = predicate.ThrowIfNull(nameof(predicate));
     private readonly Func<TModel, string> _trueBecause = trueBecause.ThrowIfNull(nameof(trueBecause));
-    private readonly Func<TModel, string> _falseBecause = falseBecause.ThrowIfNull(nameof(falseBecause));
 
     public override string Description => description;
 
@@ -27,20 +27,20 @@ internal class StringMetadataSpec<TModel>(
             });
 
     private bool InvokePredicate(TModel model) =>
-        WrapException.IfCallbackInvocationFails(
-            this, 
-            () => _predicate(model), 
+        WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
+            this,
+            () => _predicate(model),
             nameof(predicate));
 
     private string InvokeTrueBecauseFunction(TModel model) =>
-        WrapException.IfCallbackInvocationFails(
-            this, 
-            () => _trueBecause(model), 
+        WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
+            this,
+            () => _trueBecause(model),
             nameof(trueBecause));
 
     private string InvokeFalseBecauseFunction(TModel model) =>
-        WrapException.IfCallbackInvocationFails(
-            this, 
-            () => _falseBecause(model), 
+        WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
+            this,
+            () => _falseBecause(model),
             nameof(falseBecause));
 }

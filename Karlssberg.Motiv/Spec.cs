@@ -11,15 +11,6 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
 {
     private readonly SpecBase<TModel, TMetadata> _spec;
 
-    /// <summary>Gets the description of the specification.</summary>
-    public override string Description => _spec.Description;
-
-    /// <summary>Determines whether the specified model satisfies the specification.</summary>
-    /// <param name="model">The model to be checked.</param>
-    /// <returns>A Boolean result indicating whether the model satisfies the specification.</returns>
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => _spec.IsSatisfiedBy(model);
-    protected static IRequireTrueReason<TAltModel> Build<TAltModel>(Func<TAltModel, bool> predicate) => Spec.Build(predicate);
-    
     internal Spec(
         string description,
         Func<TModel, bool> predicate,
@@ -47,6 +38,15 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
         specification.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
         _spec = specification;
     }
+
+    /// <summary>Gets the description of the specification.</summary>
+    public override string Description => _spec.Description;
+
+    /// <summary>Determines whether the specified model satisfies the specification.</summary>
+    /// <param name="model">The model to be checked.</param>
+    /// <returns>A Boolean result indicating whether the model satisfies the specification.</returns>
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => _spec.IsSatisfiedBy(model);
+    protected static IRequireTrueReason<TAltModel> Build<TAltModel>(Func<TAltModel, bool> predicate) => Spec.Build(predicate);
 }
 
 /// <summary>Represents a specification that defines a condition for a model of type <typeparamref name="TModel" />.</summary>
@@ -54,8 +54,6 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
 public class Spec<TModel> : SpecBase<TModel, string>
 {
     private readonly SpecBase<TModel, string> _spec;
-    public override string Description => _spec.Description;
-    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) => _spec.IsSatisfiedBy(model);
 
     internal Spec(
         string description,
@@ -81,11 +79,13 @@ public class Spec<TModel> : SpecBase<TModel, string>
         _spec = specificationFactory()
             .ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
     }
+    public override string Description => _spec.Description;
+    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) => _spec.IsSatisfiedBy(model);
 }
 
 public static class Spec
 {
     public static IRequireTrueReasonOrMetadata<TModel> Build<TModel>(Func<TModel, bool> predicate) => new SpecBuilder<TModel>(predicate);
-    
+
     public static IRequireTrueMetadata<TModel> Build<TModel, TMetadata>(SpecBase<TModel, TMetadata> spec) => new ChangeMetadataBuilder<TModel, TMetadata>(spec);
 }

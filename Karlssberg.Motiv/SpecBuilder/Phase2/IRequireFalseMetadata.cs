@@ -13,16 +13,12 @@ public interface IRequireFalseMetadata<TModel, TMetadata>
     IRequireActivationWithDescription<TModel, TMetadata> YieldWhenFalse(TMetadata whenFalse);
 
     /// <summary>Supply a function that when executed generates a human readable explanation for when the condition is false.</summary>
-    /// <param name="whenFalse">
-    ///     The function that evaluates the model and returns new metadata when the result is false.
-    /// </param>
+    /// <param name="whenFalse">The function that evaluates the model and returns new metadata when the result is false.</param>
     /// <returns>A specification base.</returns>
     IRequireActivationWithDescription<TModel, TMetadata> YieldWhenFalse(Func<TModel, TMetadata> whenFalse);
-    
+
     /// <summary>Supply a function that when executed generates a human readable explanation for when the condition is false.</summary>
-    /// <param name="whenFalse">
-    ///     The function that evaluates the model and returns new metadata when the result is false.
-    /// </param>
+    /// <param name="whenFalse">The function that evaluates the model and returns new metadata when the result is false.</param>
     /// <returns>A specification base.</returns>
     IRequireActivationWithDescription<TModel, TMetadata> YieldWhenFalse(Func<TMetadata> whenFalse);
 }

@@ -7,14 +7,14 @@ public static class ChangeToReasonExtension
 {
     public static IRequireFalseReason<TModel> YieldWhenTrue<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
-        string trueBecause) => 
+        string trueBecause) =>
         new ChangeMetadataBuilder<TModel, TMetadata>(spec).YieldWhenTrue(trueBecause);
     public static IRequireFalseReasonWhenDescriptionUnresolved<TModel> YieldWhenTrue<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
-        Func<string> trueBecause) => 
+        Func<string> trueBecause) =>
         new ChangeMetadataBuilder<TModel, TMetadata>(spec).YieldWhenTrue(trueBecause);
     public static IRequireFalseReasonWhenDescriptionUnresolved<TModel> YieldWhenTrue<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
-        Func<TModel, string> trueBecause) => 
+        Func<TModel, string> trueBecause) =>
         new ChangeMetadataBuilder<TModel, TMetadata>(spec).YieldWhenTrue(trueBecause);
 }

@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.HigherOrderSpecBuilder;
+﻿namespace Karlssberg.Motiv.HigherOrderSpecBuilder.YieldWhenFalse.Metadata;
 
 public interface IYieldAllFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> : IHigherOrderSpecFactory<TModel, TMetadata>
 {

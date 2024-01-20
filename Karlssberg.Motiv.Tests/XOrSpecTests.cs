@@ -20,13 +20,13 @@ public class XOrSpecTests
             .YieldWhenTrue(true)
             .YieldWhenFalse(false)
             .CreateSpec("left");
-        
+
         var right = Spec
             .Build<object>(m => rightResult)
             .YieldWhenTrue(true)
             .YieldWhenFalse(false)
             .CreateSpec("right");
-        
+
         var sut = left ^ right;
 
         var result = sut.IsSatisfiedBy(model);
@@ -36,7 +36,7 @@ public class XOrSpecTests
         result.GetMetadata().Should().Contain(leftResult);
         result.GetMetadata().Should().Contain(rightResult);
     }
-    
+
     [Theory]
     [AutoParams(true, true, "(left:true) XOR:false (right:true)")]
     [AutoParams(true, false, "(left:true) XOR:true (right:false)")]
@@ -53,20 +53,20 @@ public class XOrSpecTests
             .YieldWhenTrue(true)
             .YieldWhenFalse(false)
             .CreateSpec("left");
-        
+
         var right = Spec
             .Build<object>(m => rightResult)
             .YieldWhenTrue(true)
             .YieldWhenFalse(false)
             .CreateSpec("right");
-        
+
         var sut = left ^ right;
 
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams(true, true, "(True) XOR:false (True)")]
     [AutoParams(true, false, "(True) XOR:true (False)")]
@@ -83,20 +83,20 @@ public class XOrSpecTests
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec();
-            
+
         var right = Spec
             .Build<object>(m => rightResult)
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec();
-        
+
         var sut = left ^ right;
 
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams(true, true, "(True) XOR:false (True)")]
     [AutoParams(true, false, "(True) XOR:true (False)")]
@@ -113,20 +113,20 @@ public class XOrSpecTests
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec();
-            
+
         var right = Spec
             .Build<object>(m => rightResult)
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec();
-        
+
         var sut = left ^ right;
 
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams(true, true)]
     [AutoParams(true, false)]
@@ -139,21 +139,21 @@ public class XOrSpecTests
             .YieldWhenTrue(true)
             .YieldWhenFalse(false)
             .CreateSpec("left");
-        
+
         var right = Spec
             .Build<object>(m => rightResult)
             .YieldWhenTrue(true)
             .YieldWhenFalse(false)
             .CreateSpec("right");
-        
+
         var expected = $"({left.Description}) ^ ({right.Description})";
-        
+
         var sut = left ^ right;
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams(true, true)]
     [AutoParams(true, false)]
@@ -166,40 +166,40 @@ public class XOrSpecTests
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec();
-            
+
         var right = Spec
             .Build<object>(m => rightResult)
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec();
-        
+
         var expected = $"({left.Description}) ^ ({right.Description})";
-        
+
         var sut = left ^ right;
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception(
         string model)
-    { 
+    {
         var normalSpec = Spec
             .Build<object>(m => true)
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec();
-        
+
         var throwingSpec = new ThrowingSpec<object, string>(
             "should always throw",
             new Exception("should be wrapped"));
-        
+
         var sut = throwingSpec ^ normalSpec;
-        
+
         var act = () => sut.IsSatisfiedBy(model);
-        
+
         act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains(throwingSpec.Description));
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }

@@ -23,17 +23,17 @@ public class HandTests
             .Split(", ")
             .Select(rank => new Card(rank, Suit.Clubs.ToString()[0]))
             .ToList();
-        
+
         var hand = new Hand(cards);
-        
+
         var sut = new IsHandStraightSpec();
-        
+
         var act = sut.IsSatisfiedBy(hand);
-            
+
         act.IsSatisfied.Should().BeTrue();
         act.GetMetadata().Max().Should().Be(HandRank.Straight);
     }
-    
+
     [Theory]
     [AutoParams("A, K, Q, J, 9")]
     [AutoParams("K, Q, J, 10, 8")]
@@ -41,23 +41,23 @@ public class HandTests
     [AutoParams("J, 10, 9, 8, 6")]
     [AutoParams("10, 9, 8, 7, 5")]
     [AutoParams("9, 8, 7, 6, 4")]
-    [AutoParams("8, 7, 6, 5, 3")]  
+    [AutoParams("8, 7, 6, 5, 3")]
     public void Should_not_evaluate_a_straight(string straightRanks)
     {
         var cards = straightRanks
             .Split(", ")
             .Select(rank => new Card(rank, Suit.Clubs.ToString()[0]))
             .ToList();
-        
+
         var hand = new Hand(cards);
-        
+
         var sut = new IsHandStraightSpec();
-        
+
         var act = sut.IsSatisfiedBy(hand);
 
         act.IsSatisfied.Should().BeFalse();
     }
-    
+
     [Theory]
     [AutoParams("A, K, Q, 10, 4")]
     [AutoParams("K, Q, J, 10, 2")]
@@ -72,22 +72,22 @@ public class HandTests
             .Split(", ")
             .Select(rank => new Card(rank, flushSuit))
             .ToList();
-        
-        var hand = new Hand(cards); 
-        
+
+        var hand = new Hand(cards);
+
         var sut = new IsHandFlushSpec();
-        
+
         var act = sut.IsSatisfiedBy(hand);
-            
+
         act.IsSatisfied.Should().BeTrue();
         act.GetMetadata().Max().Should().Be(HandRank.Flush);
     }
-    
+
     [Theory]
     [AutoParams(AceHighStraightBroadway)]
     [AutoParams(KingHighStraight)]
     [AutoParams(QueenHighStraight)]
-    [AutoParams(JackHighStraight)] 
+    [AutoParams(JackHighStraight)]
     [AutoParams(TenHighStraight)]
     [AutoParams(NineHighStraight)]
     [AutoParams(EightHighStraight)]
@@ -99,16 +99,16 @@ public class HandTests
         var hand = new Hand(handRanks
             .Split(", ")
             .Select(rank => new Card(rank, flushSuit))
-            .ToList()); 
-        
+            .ToList());
+
         var sut = new IsHandStraightFlushSpec();
-        
+
         var act = sut.IsSatisfiedBy(hand);
-        
+
         act.IsSatisfied.Should().BeTrue();
         act.GetMetadata().Max().Should().Be(HandRank.StraightFlush);
     }
-    
+
     [Theory]
     [AutoParams]
     public void Should_evaluate_a_royal_flush(Suit flushSuit)
@@ -122,9 +122,9 @@ public class HandTests
             new("10", flushSuit)
         });
         var sut = new IsHandRoyalFlushSpec();
-        
+
         var act = sut.IsSatisfiedBy(hand);
-        
+
         act.IsSatisfied.Should().BeTrue();
         act.GetMetadata().Max().Should().Be(HandRank.RoyalFlush);
     }

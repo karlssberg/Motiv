@@ -4,7 +4,6 @@ namespace Karlssberg.Motiv.Tests;
 
 public class ChangeModelTypeSpecTests
 {
-    
     [Theory]
     [AutoParams("hello", false)]
     [AutoParams(default(string), true)]
@@ -15,14 +14,14 @@ public class ChangeModelTypeSpecTests
             .YieldWhenTrue("is null")
             .YieldWhenFalse("is not null")
             .CreateSpec();
-            
+
         var sut = isEmpty.ChangeModel<string?>();
-            
+
         var act = sut.IsSatisfiedBy(model);
-        
+
         act.IsSatisfied.Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams("hello", false)]
     [AutoParams(1, true)]
@@ -36,14 +35,14 @@ public class ChangeModelTypeSpecTests
             .YieldWhenTrue("is value-type")
             .YieldWhenFalse("is not value-type")
             .CreateSpec();
-            
+
         var sut = isValueType.ChangeModel<object>(m => m.GetType());
-        
+
         var act = sut.IsSatisfiedBy(model);
-        
+
         act.IsSatisfied.Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams("hello", true)]
     [AutoParams("world", true)]
@@ -55,34 +54,34 @@ public class ChangeModelTypeSpecTests
             .YieldWhenTrue(ch => $"'{ch}' is a letter")
             .YieldWhenFalse(ch => $"'{ch}' is not a letter")
             .CreateSpec("is a letter");
-        
+
         var isAllLetters = isLetter
             .ToAllSatisfiedSpec()
             .ChangeModel<string>(m => m.ToCharArray());
-        
+
         var act = isAllLetters.IsSatisfiedBy(model);
-        
+
         act.IsSatisfied.Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams("#hello", "'#' is not a letter")]
     [AutoParams("!world!", "'!' is not a letter")]
     [AutoParams("ok", "'o' is a letter", "'k' is a letter")]
     public void Should_identify_non_letters(string model, params string[] expected)
-    {          
+    {
         var isLetter = Spec
             .Build<char>(char.IsLetter)
             .YieldWhenTrue(ch => $"'{ch}' is a letter")
             .YieldWhenFalse(ch => $"'{ch}' is not a letter")
             .CreateSpec("is a letter");
-        
+
         var isAllLetters = isLetter
             .ToAllSatisfiedSpec()
             .ChangeModel<string>(m => m.ToCharArray());
-        
+
         var act = isAllLetters.IsSatisfiedBy(model);
-        
+
         act.GetMetadata().Should().BeEquivalentTo(expected);
     }
 }

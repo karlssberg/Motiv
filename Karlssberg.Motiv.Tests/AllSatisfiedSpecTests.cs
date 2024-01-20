@@ -29,10 +29,10 @@ public class AllSatisfiedSpecTests
 
         var sut = underlyingSpec
             .BuildAllSatisfiedSpec()
-            .YieldWhenAnything((allSatisfied, results) =>
+            .Yield((allSatisfied, results) =>
                 $"{results.Count(r => r.IsSatisfied == allSatisfied)} are {allSatisfied.ToString().ToLowerInvariant()}")
-            .CreateSpec();
-        
+            .CreateSpec("all satisfied");
+
         var result = sut.IsSatisfiedBy(models);
 
         result.IsSatisfied.Should().Be(expected);
@@ -57,7 +57,8 @@ public class AllSatisfiedSpecTests
             .Build<bool>(m => m)
             .YieldWhenTrue(true.ToString().ToLowerInvariant())
             .YieldWhenFalse(false.ToString().ToLowerInvariant())
-            .CreateSpec();;
+            .CreateSpec();
+        ;
 
         bool[] models = [first, second, third];
 
@@ -86,7 +87,8 @@ public class AllSatisfiedSpecTests
             .Build<bool>(m => m)
             .YieldWhenTrue(true.ToString().ToLowerInvariant())
             .YieldWhenFalse(false.ToString().ToLowerInvariant())
-            .CreateSpec();;
+            .CreateSpec();
+        ;
 
         bool[] models = [first, second, third];
 
@@ -140,11 +142,30 @@ public class AllSatisfiedSpecTests
             .YieldWhenAllTrue("any true")
             .YieldWhenAnyFalse("any false")
             .CreateSpec();
-        
+
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
+    [Fact]
+    public void Should_provide_a_high_level_description_of_the_specification_when_metadata_is_a_string()
+    {
+        const string expected = "ALL<high-level description>(True)";
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+
+        var sut = underlyingSpec
+            .BuildAllSatisfiedSpec()
+            .YieldWhenAnyTrue(true)
+            .YieldWhenAllFalse(false)
+            .CreateSpec("high-level description");
+
+        sut.Description.Should().Be(expected);
+        sut.ToString().Should().Be(expected);
+    }
     [Fact]
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
@@ -160,11 +181,11 @@ public class AllSatisfiedSpecTests
             .YieldWhenAnyTrue(true)
             .YieldWhenAllFalse(false)
             .CreateSpec();
-            
+
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception(
@@ -178,12 +199,11 @@ public class AllSatisfiedSpecTests
             .BuildAllSatisfiedSpec()
             .YieldWhenAnyTrue(results => $"{results.Count()} true")
             .YieldWhenAnyFalse(results => $"{results.Count()} false")
-            .CreateSpec();
+            .CreateSpec("all satisfied");
 
         var act = () => sut.IsSatisfiedBy([model]);
 
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains(sut.Description));
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("AllSatisfiedSpec<Object, String, String>"));
+        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains(throwingSpec.Description));
         act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }

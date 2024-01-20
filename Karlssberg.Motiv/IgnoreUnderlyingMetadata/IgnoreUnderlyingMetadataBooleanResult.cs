@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.IgnoreUnderlyingMetadata;
 
-internal class IgnoreUnderlyingMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(BooleanResultBase<TUnderlyingMetadata> underlyingBooleanResult) 
+internal class IgnoreUnderlyingMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(BooleanResultBase<TUnderlyingMetadata> underlyingBooleanResult)
     : BooleanResultBase<TMetadata>
 {
     public override bool IsSatisfied => underlyingBooleanResult.IsSatisfied;

@@ -1,25 +1,26 @@
-﻿namespace Karlssberg.Motiv.HigherOrderSpecBuilder;
+﻿using Karlssberg.Motiv.HigherOrderSpecBuilder.YieldWhenFalse.Metadata;
+using Karlssberg.Motiv.HigherOrderSpecBuilder.YieldWhenTrue.Metadata;
 
-internal abstract class HigherOrderSpecBuilderBase<TModel, TMetadata, TUnderlyingMetadata> : IHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata>
+namespace Karlssberg.Motiv.HigherOrderSpecBuilder;
+
+internal abstract class HigherOrderMetadataSpecBuilderBase<TModel, TMetadata, TUnderlyingMetadata> :
+    IHigherOrderMetadataSpecBuilder<TModel, TMetadata, TUnderlyingMetadata>
 {
-    private Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>? _yieldWhenAllTrue;
+    private Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>? _yield;
     private Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>? _yieldWhenAllFalse;
-    private Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>? _yieldWhenAnything;
+    private Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>? _yieldWhenAllTrue;
     private Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>? _yieldWhenAnyFalse;
     private Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>? _yieldWhenAnyTrue;
-    public IYieldAnyMetadata<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAllTrue(
+
+    public IYieldAnyTrueMetadataOrFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAllTrue(
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>> metadata)
     {
         _yieldWhenAllTrue = metadata;
         return this;
     }
-
-    public IYieldFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAnything(
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>> metadata)
-    {
-        _yieldWhenAnything = metadata;
-        return this;
-    }
+    
+    public abstract IYieldFalseMetadata<TModel, TAltMetadata, TMetadata> YieldWhenAllTrue<TAltMetadata>(
+        Func<IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TAltMetadata>> metadata);
 
     public IYieldFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAnyTrue(
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>> metadata)
@@ -34,6 +35,7 @@ internal abstract class HigherOrderSpecBuilderBase<TModel, TMetadata, TUnderlyin
         _yieldWhenAllFalse = metadata;
         return this;
     }
+
     public IYieldAllFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAnyFalse(
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>> metadata)
     {
@@ -41,10 +43,24 @@ internal abstract class HigherOrderSpecBuilderBase<TModel, TMetadata, TUnderlyin
         return this;
     }
 
+    public abstract SpecBase<IEnumerable<TModel>, TMetadata> CreateSpec(string description);
     public abstract SpecBase<IEnumerable<TModel>, TMetadata> CreateSpec();
 
-    public abstract SpecBase<IEnumerable<TModel>, TMetadata> CreateSpec(string description);
-    
+    public abstract IYieldFalseMetadata<TModel, TAltMetadata, TMetadata> YieldWhenAnyTrue<TAltMetadata>(
+        Func<IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TAltMetadata>> metadata);
+
+    public abstract IHigherOrderSpecFactory<TModel, TAltMetadata> Yield<TAltMetadata>(
+        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TAltMetadata>> metadata);
+
+
+    public IHigherOrderSpecFactory<TModel, TMetadata> Yield(
+        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>> metadata)
+    {
+        _yield = metadata;
+        return this;
+    }
+
+
     protected IEnumerable<TMetadata> YieldMetadata(bool isSatisfied, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> results)
     {
         var resultArray = results.ToArray();
@@ -57,22 +73,24 @@ internal abstract class HigherOrderSpecBuilderBase<TModel, TMetadata, TUnderlyin
                 _yieldWhenAllFalse(resultArray),
 
             true when _yieldWhenAnyTrue is not null =>
-                _yieldWhenAnyTrue(resultArray),
+                _yieldWhenAnyTrue(resultArray.Where(result => result.IsSatisfied)),
             false when _yieldWhenAnyFalse is not null =>
-                _yieldWhenAnyFalse(resultArray),
+                _yieldWhenAnyFalse(resultArray.Where(result => !result.IsSatisfied)),
 
-            _ when _yieldWhenAnything is not null =>
-                _yieldWhenAnything(isSatisfied, resultArray),
+            _ when _yield is not null =>
+                _yield(isSatisfied, resultArray),
 
             _ => []
         };
 
-        bool AllSatisfied() => resultArray.All(result => result.IsSatisfied);
+        bool AllSatisfied()
+        {
+            return resultArray.All(result => result.IsSatisfied);
+        }
 
-        bool NoneSatisfied() => resultArray.All(result => !result.IsSatisfied);
+        bool NoneSatisfied()
+        {
+            return resultArray.All(result => !result.IsSatisfied);
+        }
     }
-    public abstract IYieldFalseMetadata<TModel, TAltMetadata, TMetadata> YieldWhenAnyTrue<TAltMetadata>(
-        Func<IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TAltMetadata>> metadata);
-    public abstract IYieldFalseMetadata<TModel, TAltMetadata, TMetadata> YieldWhenAnything<TAltMetadata>(
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TAltMetadata>> metadata);
 }

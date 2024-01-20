@@ -14,7 +14,7 @@ internal class SpecBuilder<TModel> :
     IRequireActivationWithOrWithoutDescription<TModel>
 {
     private readonly MetadataBuilder<TModel, string, SpecBuilder<TModel>> _because;
-    
+
     private readonly Func<TModel, bool> _predicate;
     /// <summary>Represents a builder for creating specifications based on a predicate.</summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
@@ -41,30 +41,30 @@ internal class SpecBuilder<TModel> :
             _because.WhenTrue ?? throw new InvalidOperationException("Must specify a true metadata"),
             _because.WhenFalse ?? throw new InvalidOperationException("Must specify a false metadata"));
 
-    IRequireActivationWithDescription<TModel, string> IRequireFalseMetadata<TModel, string>.YieldWhenFalse(string falseBecause) => 
+    IRequireActivationWithDescription<TModel, string> IRequireFalseMetadata<TModel, string>.YieldWhenFalse(string falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNullOrWhitespace(nameof(falseBecause)));
-    
+
     IRequireActivationWithDescription<TModel, string> IRequireFalseMetadata<TModel, string>.YieldWhenFalse(Func<TModel, string> falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNull(nameof(falseBecause)));
 
-    IRequireActivationWithDescription<TModel, string> IRequireFalseMetadata<TModel, string>.YieldWhenFalse(Func<string> falseBecause) => 
+    IRequireActivationWithDescription<TModel, string> IRequireFalseMetadata<TModel, string>.YieldWhenFalse(Func<string> falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNull(nameof(falseBecause)));
 
-    public IRequireActivationWithOrWithoutDescription<TModel> YieldWhenFalse(string falseBecause) => 
+    public IRequireActivationWithOrWithoutDescription<TModel> YieldWhenFalse(string falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNullOrWhitespace(nameof(falseBecause)));
-    
-    public IRequireActivationWithOrWithoutDescription<TModel> YieldWhenFalse(Func<TModel, string> falseBecause) => 
+
+    public IRequireActivationWithOrWithoutDescription<TModel> YieldWhenFalse(Func<TModel, string> falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNull(nameof(falseBecause)));
-    
-    IRequireActivationWithOrWithoutDescription<TModel> IRequireFalseReason<TModel>.YieldWhenFalse(Func<string> falseBecause) => 
+
+    IRequireActivationWithOrWithoutDescription<TModel> IRequireFalseReason<TModel>.YieldWhenFalse(Func<string> falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNull(nameof(falseBecause)));
-    
+
     IRequireActivationWithDescription<TModel, string> IRequireFalseReasonWhenDescriptionUnresolved<TModel>.YieldWhenFalse(Func<TModel, string> falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNull(nameof(falseBecause)));
-    
+
     public IRequireActivationWithDescription<TModel, string> YieldWhenFalse(Func<string> falseBecause) =>
         new SpecBuilder<TModel, string>(_predicate, _because.WhenTrue!).YieldWhenFalse(falseBecause);
-    
+
     IRequireActivationWithDescription<TModel, string> IRequireFalseReasonWhenDescriptionUnresolved<TModel>.YieldWhenFalse(string falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNullOrWhitespace(nameof(falseBecause)));
 
@@ -74,7 +74,7 @@ internal class SpecBuilder<TModel> :
         return new SpecBuilder<TModel, TMetadata>(_predicate, _ => whenTrue);
     }
 
-    public IRequireFalseMetadata<TModel, TMetadata> YieldWhenTrue<TMetadata>(Func<TModel, TMetadata> whenTrue) => 
+    public IRequireFalseMetadata<TModel, TMetadata> YieldWhenTrue<TMetadata>(Func<TModel, TMetadata> whenTrue) =>
         new SpecBuilder<TModel, TMetadata>(_predicate, whenTrue.ThrowIfNull(nameof(whenTrue)));
 
     public IRequireFalseMetadata<TModel, TMetadata> YieldWhenTrue<TMetadata>(Func<TMetadata> whenTrue)
@@ -86,10 +86,10 @@ internal class SpecBuilder<TModel> :
     public IRequireFalseReasonWhenDescriptionUnresolved<TModel> YieldWhenTrue(Func<TModel, string> trueBecause) =>
         _because.SetTrueMetadata(trueBecause.ThrowIfNull(nameof(trueBecause)));
 
-    public IRequireFalseReasonWhenDescriptionUnresolved<TModel> YieldWhenTrue(Func<string> trueBecause) => 
+    public IRequireFalseReasonWhenDescriptionUnresolved<TModel> YieldWhenTrue(Func<string> trueBecause) =>
         _because.SetTrueMetadata(trueBecause.ThrowIfNull(nameof(trueBecause)));
 
-    public IRequireFalseReason<TModel> YieldWhenTrue(string trueBecause) => 
+    public IRequireFalseReason<TModel> YieldWhenTrue(string trueBecause) =>
         _because.SetTrueMetadata(trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause)));
 }
 
@@ -97,9 +97,9 @@ internal class SpecBuilder<TModel, TMetadata> :
     IRequireFalseMetadata<TModel, TMetadata>,
     IRequireActivationWithDescription<TModel, TMetadata>
 {
-    private readonly Func<TModel, bool> _predicate;
     private readonly MetadataBuilder<TModel, TMetadata, SpecBuilder<TModel, TMetadata>> _metadataBuilder;
-    
+    private readonly Func<TModel, bool> _predicate;
+
     internal SpecBuilder(Func<TModel, bool> predicate, Func<TModel, TMetadata> whenTrue)
     {
         _predicate = predicate;
@@ -115,7 +115,7 @@ internal class SpecBuilder<TModel, TMetadata> :
 
     public IRequireActivationWithDescription<TModel, TMetadata> YieldWhenFalse(TMetadata whenFalse) =>
         _metadataBuilder.SetFalseMetadata(whenFalse.ThrowIfNull(nameof(whenFalse)));
-    
+
     public IRequireActivationWithDescription<TModel, TMetadata> YieldWhenFalse(Func<TModel, TMetadata> whenFalse) =>
         _metadataBuilder.SetFalseMetadata(whenFalse.ThrowIfNull(nameof(whenFalse)));
 

@@ -33,15 +33,15 @@ public class AtLeastNSatisfiedSpecTests
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec("returns the model");
-            
+
         bool[] models = [first, second, third, fourth];
 
         var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(0);
         var result = sut.IsSatisfiedBy(models);
-        
+
         result.IsSatisfied.Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams(false, false, false, false, false)]
     [AutoParams(false, false, false, true, true)]
@@ -71,15 +71,15 @@ public class AtLeastNSatisfiedSpecTests
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec("returns the model");
-        
+
         bool[] models = [first, second, third, fourth];
 
         var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
-        
+
         result.IsSatisfied.Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams(false, false, false, false, false)]
     [AutoParams(false, false, false, true, false)]
@@ -109,15 +109,15 @@ public class AtLeastNSatisfiedSpecTests
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec("returns the model");
-        
+
         bool[] models = [first, second, third, fourth];
 
         var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(2);
         var result = sut.IsSatisfiedBy(models);
-        
+
         result.IsSatisfied.Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams(false, false, false, false, false)]
     [AutoParams(false, false, false, true, false)]
@@ -147,15 +147,15 @@ public class AtLeastNSatisfiedSpecTests
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec("returns the model");
-        
+
         bool[] models = [first, second, third, fourth];
 
         var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(models.Length);
         var result = sut.IsSatisfiedBy(models);
-        
-                  result.IsSatisfied.Should().Be(expected);
+
+        result.IsSatisfied.Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams(false, false, false, "AT_LEAST_1:False(False, False, False)")]
     [AutoParams(false, false, true, "AT_LEAST_1:True(False, False, True)")]
@@ -176,15 +176,15 @@ public class AtLeastNSatisfiedSpecTests
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec("returns the model");
-        
+
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
-        
-        
+
+
     }
-    
+
     [Theory]
     [AutoParams(false, false, false, "AT_LEAST_1:false(false, false, false)")]
     [AutoParams(false, false, true, "AT_LEAST_1:true(false, false, true)")]
@@ -205,15 +205,15 @@ public class AtLeastNSatisfiedSpecTests
             .YieldWhenTrue(true.ToString().ToLowerInvariant())
             .YieldWhenFalse(false.ToString().ToLowerInvariant())
             .CreateSpec();
-        
+
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
-        
+
         result.Description.Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams(false, false, false, "AT_LEAST_1:false(model:false, model:false, model:false)")]
     [AutoParams(false, false, true, "AT_LEAST_1:true(model:false, model:false, model:true)")]
@@ -234,15 +234,15 @@ public class AtLeastNSatisfiedSpecTests
             .YieldWhenTrue(true)
             .YieldWhenFalse(false)
             .CreateSpec("model");
-        
+
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
-        
+
         result.Description.Should().Be(expected);
     }
-    
+
     [Fact]
     public void Should_provide_a_description_of_the_specification()
     {
@@ -258,7 +258,7 @@ public class AtLeastNSatisfiedSpecTests
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
-    
+
     [Fact]
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
@@ -268,13 +268,13 @@ public class AtLeastNSatisfiedSpecTests
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec();
-            
+
         var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(1);
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoParams]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception(
@@ -283,13 +283,12 @@ public class AtLeastNSatisfiedSpecTests
         var throwingSpec = new ThrowingSpec<object, string>(
             "throws",
             new Exception("should be wrapped"));
-        
+
         var sut = throwingSpec.ToAtLeastNSatisfiedSpec(1);
-        
+
         var act = () => sut.IsSatisfiedBy([model]);
-        
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains(sut.Description));
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("AtLeastNSatisfiedSpec<Object, String>"));
+
+        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains(throwingSpec.Description));
         act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }

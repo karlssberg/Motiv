@@ -9,12 +9,10 @@ public static class YieldWhenTrueExtensions
         this SpecBase<TModel, TMetadata> spec,
         TNewMetadata metadata) =>
         new ChangeMetadataBuilder<TModel, TMetadata>(spec).YieldWhenTrue(metadata);
-    public static IRequireFalseMetadata<TModel, TNewMetadata> YieldWhenTrue<TModel, TMetadata, TNewMetadata>(
-        this SpecBase<TModel, TMetadata> spec,
-        Func<TNewMetadata> metadata) =>
-        new ChangeMetadataBuilder<TModel, TMetadata>(spec).YieldWhenTrue(metadata);
+    
     public static IRequireFalseMetadata<TModel, TNewMetadata> YieldWhenTrue<TModel, TMetadata, TNewMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         Func<TModel, TNewMetadata> metadata) =>
         new ChangeMetadataBuilder<TModel, TMetadata>(spec).YieldWhenTrue(metadata);
+    
 }

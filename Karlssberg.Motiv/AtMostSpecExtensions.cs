@@ -4,9 +4,7 @@ namespace Karlssberg.Motiv;
 
 public static class AtMostSpecExtensions
 {
-    /// <summary>
-    /// Converts a specification into an "at most N satisfied" specification.
-    /// </summary>
+    /// <summary>Converts a specification into an "at most N satisfied" specification.</summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
     /// <param name="spec">The original specification.</param>
@@ -14,14 +12,10 @@ public static class AtMostSpecExtensions
     /// <returns>An "at most N satisfied" specification.</returns>
     public static SpecBase<IEnumerable<TModel>, TMetadata> ToAtMostNSatisfiedSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
-        int max)
-    {
-        return new AtMostNSatisfiedSpec<TModel, TMetadata>(max, spec);
-    }
+        int max) =>
+        new AtMostNSatisfiedSpec<TModel, TMetadata>(max, spec);
 
-    /// <summary>
-    /// Creates a specification that allows at most a specified number of models to satisfy the given specification.
-    /// </summary>
+    /// <summary>Creates a specification that allows at most a specified number of models to satisfy the given specification.</summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
     /// <param name="spec">The specification to apply.</param>
@@ -31,14 +25,10 @@ public static class AtMostSpecExtensions
     public static SpecBase<IEnumerable<TModel>, TMetadata> ToAtMostNSatisfiedSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         int max,
-        Func<IEnumerable<TModel>, TMetadata> whenWithinLimit)
-    {
-        return new AtMostNSatisfiedSpec<TModel, TMetadata>(max, spec, whenWithinLimit);
-    }
+        Func<IEnumerable<TModel>, TMetadata> whenWithinLimit) =>
+        new AtMostNSatisfiedSpec<TModel, TMetadata>(max, spec, whenWithinLimit);
 
-    /// <summary>
-    /// Creates a specification that allows at most a specified number of models to satisfy the given specification.
-    /// </summary>
+    /// <summary>Creates a specification that allows at most a specified number of models to satisfy the given specification.</summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
     /// <param name="spec">The specification to apply.</param>
@@ -54,7 +44,8 @@ public static class AtMostSpecExtensions
     }
 
     /// <summary>
-    /// Creates a new specification that allows at most a specified number of models to satisfy the given specification.
+    ///     Creates a new specification that allows at most a specified number of models to satisfy the given
+    ///     specification.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
@@ -67,20 +58,19 @@ public static class AtMostSpecExtensions
         this SpecBase<TModel, TMetadata> spec,
         int max,
         Func<IEnumerable<TModel>, TMetadata> whenWithinLimit,
-        Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenMaximumExceeded)
-    {
-        return new AtMostNSatisfiedSpec<TModel, TMetadata>(max, spec, whenWithinLimit, whenMaximumExceeded);
-    }
+        Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenMaximumExceeded) =>
+        new AtMostNSatisfiedSpec<TModel, TMetadata>(max, spec, whenWithinLimit, whenMaximumExceeded);
 
-    /// <summary>
-    /// Converts the given specification into an "at most N satisfied" specification.
-    /// </summary>
+    /// <summary>Converts the given specification into an "at most N satisfied" specification.</summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
     /// <param name="spec">The original specification.</param>
     /// <param name="max">The maximum number of satisfied conditions.</param>
     /// <param name="whenWithinLimit">The metadata to use when the number of satisfied conditions is within the limit.</param>
-    /// <param name="whenMaximumExceeded">The function to determine the metadata when the number of satisfied conditions exceeds the limit.</param>
+    /// <param name="whenMaximumExceeded">
+    ///     The function to determine the metadata when the number of satisfied conditions
+    ///     exceeds the limit.
+    /// </param>
     /// <returns>An "at most N satisfied" specification.</returns>
     public static SpecBase<IEnumerable<TModel>, TMetadata> ToAtMostNSatisfiedSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
@@ -91,9 +81,7 @@ public static class AtMostSpecExtensions
         return new AtMostNSatisfiedSpec<TModel, TMetadata>(max, spec, _ => whenWithinLimit, whenMaximumExceeded);
     }
 
-    /// <summary>
-    /// Creates a specification that allows at most N models to satisfy the given specification.
-    /// </summary>
+    /// <summary>Creates a specification that allows at most N models to satisfy the given specification.</summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
     /// <param name="spec">The base specification.</param>
@@ -110,9 +98,7 @@ public static class AtMostSpecExtensions
         return new AtMostNSatisfiedSpec<TModel, TMetadata>(max, spec, whenWithinLimit, _ => whenMaximumExceeded);
     }
 
-    /// <summary>
-    /// Creates a specification that allows at most N models to satisfy the given specification.
-    /// </summary>
+    /// <summary>Creates a specification that allows at most N models to satisfy the given specification.</summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
     /// <param name="spec">The specification to apply.</param>

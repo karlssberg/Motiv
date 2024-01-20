@@ -18,7 +18,7 @@ public class SpecException : Exception
         : base(message)
     {
     }
-    
+
     public SpecException(string message, Exception innerException)
         : base(message, innerException)
     {

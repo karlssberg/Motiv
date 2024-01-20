@@ -21,7 +21,7 @@ public class SpecTests
         result.GetMetadata().Should().HaveCount(1);
         result.GetMetadata().Should().AllBe(model.ToString());
     }
-    
+
     [Fact]
     public void Should_handle_null_model_without_throwing()
     {
@@ -37,7 +37,7 @@ public class SpecTests
         result.GetMetadata().Should().HaveCount(1);
         result.GetMetadata().Should().AllBe(true.ToString());
     }
-    
+
     [Theory]
     [AutoParams(true)]
     [AutoParams(false)]
@@ -55,7 +55,7 @@ public class SpecTests
         result.GetMetadata().Should().HaveCount(1);
         result.GetMetadata().Should().AllBe(model.ToString());
     }
-    
+
     [Fact]
     public void Should_handle_null_model_without_throwing_when_using_textual_specification()
     {
@@ -71,7 +71,7 @@ public class SpecTests
         result.GetMetadata().Should().HaveCount(1);
         result.GetMetadata().Should().AllBe(true.ToString());
     }
-    
+
     [Fact]
     public void Should_throw_if_null_predicate_is_supplied()
     {
@@ -83,9 +83,9 @@ public class SpecTests
 
         act.Should().Throw<ArgumentNullException>();
     }
-    
+
     [Theory]
-    [AutoParams("true",  null)]
+    [AutoParams("true", null)]
     [AutoParams(null, "false")]
     public void Should_throw_if_null_metadata_supplied(string? trueMetadata, string? falseMetadata)
     {
@@ -94,10 +94,10 @@ public class SpecTests
             .YieldWhenTrue(trueMetadata!)
             .YieldWhenFalse(falseMetadata!)
             .CreateSpec("is null");
-        
+
         act.Should().Throw<ArgumentException>();
     }
-    
+
     [Theory]
     [AutoParams("hello world", null)]
     [AutoParams(null, "hello world")]
@@ -111,7 +111,7 @@ public class SpecTests
 
         act.Should().Throw<ArgumentException>();
     }
-    
+
     [Fact]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception_when_using_text_metadata()
     {
@@ -126,7 +126,7 @@ public class SpecTests
         act.Should().Throw<SpecException>().WithMessage("*should be wrapped*");
         act.Should().Throw<SpecException>().WithMessage($"*{true}*");
     }
-    
+
     [Fact]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception()
     {
@@ -135,7 +135,7 @@ public class SpecTests
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec("should throw");
-            
+
         var act = () => spec.IsSatisfiedBy(null);
 
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>();
