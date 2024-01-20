@@ -29,7 +29,7 @@ public sealed class AnySatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMeta
     public IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> UnderlyingResults { get; }
 
     /// <summary>Gets the determinative operand results that have the same satisfaction status as the boolean result.</summary>
-    public IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> DeterminativeOperandResults => UnderlyingResults
+    public IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> DeterminativeResults => UnderlyingResults
         .Where(result => result.IsSatisfied == IsSatisfied);
 
     /// <summary>Gets the substitute metadata associated with the boolean result.</summary>
@@ -53,10 +53,9 @@ public sealed class AnySatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMeta
     public override bool IsSatisfied { get; }
 
     /// <inheritdoc />
-    public override string Description => _specDescription is null
-        ? $"ANY:{IsSatisfiedDisplayText}({string.Join(", ", UnderlyingResults.Distinct())})"
-        : $"ANY<{_specDescription}>:{IsSatisfiedDisplayText}({string.Join(", ", UnderlyingResults.Distinct())})";
+    public override string Description => 
+        $"ANY<{DeterminativeResults.Count()}/{UnderlyingResults.Count()}>:{IsSatisfiedDisplayText}({string.Join(", ", DeterminativeResults.Distinct())})";
 
     /// <inheritdoc />
-    public override IEnumerable<string> GatherReasons() => DeterminativeOperandResults.SelectMany(r => r.GatherReasons());
+    public override IEnumerable<string> GatherReasons() => DeterminativeResults.SelectMany(r => r.GatherReasons());
 }

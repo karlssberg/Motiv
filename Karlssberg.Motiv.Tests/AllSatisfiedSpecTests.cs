@@ -39,14 +39,14 @@ public class AllSatisfiedSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "ALL:false(false, false, false)")]
-    [AutoParams(false, false, true, "ALL:false(false, false, true)")]
-    [AutoParams(false, true, false, "ALL:false(false, true, false)")]
-    [AutoParams(false, true, true, "ALL:false(false, true, true)")]
-    [AutoParams(true, false, false, "ALL:false(true, false, false)")]
-    [AutoParams(true, false, true, "ALL:false(true, false, true)")]
-    [AutoParams(true, true, false, "ALL:false(true, true, false)")]
-    [AutoParams(true, true, true, "ALL:true(true, true, true)")]
+    [AutoParams(false, false, false, "ALL<3/3>:false(false)")]
+    [AutoParams(false, false, true,  "ALL<2/3>:false(false)")]
+    [AutoParams(false, true, false,  "ALL<2/3>:false(false)")]
+    [AutoParams(false, true, true,   "ALL<1/3>:false(false)")]
+    [AutoParams(true, false, false,  "ALL<2/3>:false(false)")]
+    [AutoParams(true, false, true,   "ALL<1/3>:false(false)")]
+    [AutoParams(true, true, false,   "ALL<1/3>:false(false)")]
+    [AutoParams(true, true, true,    "ALL<3/3>:true(true)")]
     public void Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -69,14 +69,14 @@ public class AllSatisfiedSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "ALL:false(false, false, false)")]
-    [AutoParams(false, false, true, "ALL:false(false, false, true)")]
-    [AutoParams(false, true, false, "ALL:false(false, true, false)")]
-    [AutoParams(false, true, true, "ALL:false(false, true, true)")]
-    [AutoParams(true, false, false, "ALL:false(true, false, false)")]
-    [AutoParams(true, false, true, "ALL:false(true, false, true)")]
-    [AutoParams(true, true, false, "ALL:false(true, true, false)")]
-    [AutoParams(true, true, true, "ALL:true(true, true, true)")]
+    [AutoParams(false, false, false, "ALL<3/3>:false(false)")]
+    [AutoParams(false, false, true,  "ALL<2/3>:false(false)")]
+    [AutoParams(false, true, false,  "ALL<2/3>:false(false)")]
+    [AutoParams(false, true, true,   "ALL<1/3>:false(false)")]
+    [AutoParams(true, false, false,  "ALL<2/3>:false(false)")]
+    [AutoParams(true, false, true,   "ALL<1/3>:false(false)")]
+    [AutoParams(true, true, false,   "ALL<1/3>:false(false)")]
+    [AutoParams(true, true, true,    "ALL<3/3>:true(true)")]
     public void Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
         bool second,
@@ -99,14 +99,14 @@ public class AllSatisfiedSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "ALL:false(model:false, model:false, model:false)")]
-    [AutoParams(false, false, true, "ALL:false(model:false, model:false, model:true)")]
-    [AutoParams(false, true, false, "ALL:false(model:false, model:true, model:false)")]
-    [AutoParams(false, true, true, "ALL:false(model:false, model:true, model:true)")]
-    [AutoParams(true, false, false, "ALL:false(model:true, model:false, model:false)")]
-    [AutoParams(true, false, true, "ALL:false(model:true, model:false, model:true)")]
-    [AutoParams(true, true, false, "ALL:false(model:true, model:true, model:false)")]
-    [AutoParams(true, true, true, "ALL:true(model:true, model:true, model:true)")]
+    [AutoParams(false, false, false, "ALL<3/3>:false(model:false)")]
+    [AutoParams(false, false, true,  "ALL<2/3>:false(model:false)")]
+    [AutoParams(false, true, false,  "ALL<2/3>:false(model:false)")]
+    [AutoParams(false, true, true,   "ALL<1/3>:false(model:false)")]
+    [AutoParams(true, false, false,  "ALL<2/3>:false(model:false)")]
+    [AutoParams(true, false, true,   "ALL<1/3>:false(model:false)")]
+    [AutoParams(true, true, false,   "ALL<1/3>:false(model:false)")]
+    [AutoParams(true, true, true,    "ALL<3/3>:true(model:true)")]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
         bool second,

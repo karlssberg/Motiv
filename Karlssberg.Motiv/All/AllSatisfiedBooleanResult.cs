@@ -56,9 +56,8 @@ public sealed class AllSatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMeta
     public override bool IsSatisfied { get; }
 
     /// <inheritdoc />
-    public override string Description => _specDescription is null
-        ? $"ALL:{IsSatisfiedDisplayText}({string.Join(", ", UnderlyingResults.Distinct())})"
-        : $"ALL<{_specDescription}>:{IsSatisfiedDisplayText}({string.Join(", ", UnderlyingResults.Distinct())})";
+    public override string Description => 
+        $"ALL<{DeterminativeResults.Count()}/{UnderlyingResults.Count()}>:{IsSatisfiedDisplayText}({string.Join(", ", DeterminativeResults.Distinct())})";
 
     /// <inheritdoc />
     public override IEnumerable<string> GatherReasons() => DeterminativeResults.SelectMany(r => r.GatherReasons());
