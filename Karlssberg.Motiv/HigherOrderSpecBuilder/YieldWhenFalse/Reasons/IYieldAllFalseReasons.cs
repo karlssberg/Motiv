@@ -1,7 +1,7 @@
 ﻿namespace Karlssberg.Motiv.HigherOrderSpecBuilder.YieldWhenFalse.Reasons;
 
-public interface IYieldAllFalseReasons<TModel, TUnderlyingMetadata> : IHigherOrderSpecFactory<TModel>
+public interface IYieldAllFalseReasons<TModel, TUnderlyingMetadata> : IHigherOrderSpecFactory<TModel, string>
 {
-    IHigherOrderSpecFactory<TModel> YieldWhenAllFalse(
+    IHigherOrderSpecFactory<TModel, string> YieldWhenAllFalse(
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>> falseBecause);
 }

@@ -66,7 +66,7 @@ internal abstract class HigherOrderReasonsSpecBuilderBase<TModel, TUnderlyingMet
         return this;
     }
     
-    IHigherOrderSpecFactory<TModel> IYieldAllFalseReasons<TModel, TUnderlyingMetadata>.YieldWhenAllFalse(
+    IHigherOrderSpecFactory<TModel, string> IYieldAllFalseReasons<TModel, TUnderlyingMetadata>.YieldWhenAllFalse(
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>> falseBecause)
     {
         _yieldWhenAllFalse = falseBecause;
