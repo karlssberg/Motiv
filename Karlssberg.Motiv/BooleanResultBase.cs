@@ -10,7 +10,7 @@ namespace Karlssberg.Motiv;
 
 /// <summary>Represents a base class for boolean results with metadata.</summary>
 /// <typeparam name="TMetadata">The type of the metadata associated with the boolean result.</typeparam>
-[DebuggerDisplay("{ToString()}")]
+[DebuggerDisplay("{IsSatisfiedDisplayText}: {ToString()}")]
 public abstract class BooleanResultBase<TMetadata>
     : IEquatable<BooleanResultBase<TMetadata>>,
         IEquatable<bool>,

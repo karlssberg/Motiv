@@ -29,7 +29,7 @@ public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     public override string Description => Metadata switch
     {
         string reason => reason,
-        _ => $"{_description}:{(IsSatisfied ? True : False)}"
+        _ => $"{_description} is {(IsSatisfied ? True : False)}"
     };
 
     /// <summary>Gets the reasons for the result.</summary>

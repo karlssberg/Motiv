@@ -8,13 +8,10 @@ internal abstract class HigherOrderReasonsSpecBuilderBase<TModel, TUnderlyingMet
     IYieldFalseReasons<TModel, TUnderlyingMetadata>
     
 {
-    private Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>>? _yield;
     private Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>>? _yieldWhenAllFalse;
     private Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>>? _yieldWhenAllTrue;
     private Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>>? _yieldWhenAnyFalse;
     private Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>>? _yieldWhenAnyTrue;
-    protected string? Description { get; private set; }
-
 
     public IYieldAnyTrueReasonsOrFalseReasons<TModel, TUnderlyingMetadata> YieldWhenAllTrue(
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>> trueBecause)
@@ -44,9 +41,6 @@ internal abstract class HigherOrderReasonsSpecBuilderBase<TModel, TUnderlyingMet
                 _yieldWhenAnyTrue(resultArray.Where(result => result.IsSatisfied)),
             false when _yieldWhenAnyFalse is not null =>
                 _yieldWhenAnyFalse(resultArray.Where(result => !result.IsSatisfied)),
-
-            _ when _yield is not null =>
-                _yield(isSatisfied, resultArray),
 
             _ => []
         };

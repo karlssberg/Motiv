@@ -33,4 +33,20 @@ internal static class Throw
 
         return value;
     }
+
+    internal static T ThrowIfGreaterThan<T>(this T value, T maximum, string paramName) where T : IComparable<T>
+    {
+        if (value.CompareTo(maximum) > 0)
+            throw new ArgumentOutOfRangeException($"the parameter '{paramName}' must be less than or equal to {maximum}.");
+
+        return value;
+    }
+    
+    internal static T ThrowIfLessThan<T>(this T value, T minimum, string paramName) where T : IComparable<T>
+    {
+        if (value.CompareTo(minimum) < 0)
+            throw new ArgumentOutOfRangeException($"the parameter '{paramName}' must be greater than or equal {minimum}.");
+
+        return value;
+    }
 }

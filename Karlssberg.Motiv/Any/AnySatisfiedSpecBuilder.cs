@@ -42,6 +42,5 @@ internal class AnySatisfiedSpecBuilder<TModel, TUnderlyingMetadata>(
     public override SpecBase<IEnumerable<TModel>, string> CreateSpec() => 
         new AnySatisfiedSpec<TModel, string, TUnderlyingMetadata>(
             underlyingSpec, 
-            YieldReasons, 
-            Description);
+            YieldReasons);
 }

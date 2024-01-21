@@ -1,20 +1,19 @@
-﻿namespace Karlssberg.Motiv.Any;
+﻿using Humanizer;
+
+namespace Karlssberg.Motiv.Any;
 
 /// <summary>Represents a boolean result that indicates whether any of the operand results are satisfied.</summary>
 /// <typeparam name="TMetadata">The type of the metadata associated with the boolean result.</typeparam>
 /// <typeparam name="TModel">The type of the model used to evaluate each underlying operand. </typeparam>
 public sealed class AnySatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata> : BooleanResultBase<TMetadata>, IAnySatisfiedBooleanResult<TMetadata>
 {
-    private readonly string? _specDescription;
     /// <summary>Initializes a new instance of the <see cref="AnySatisfiedBooleanResult{TMetadata}" /> class.</summary>
     /// <param name="metadataFactory">A function that creates metadata based on the boolean result.</param>
     /// <param name="operandResults">The operand results to evaluate.</param>
     internal AnySatisfiedBooleanResult(
         Func<bool, IEnumerable<TMetadata>> metadataFactory,
-        IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> operandResults,
-        string? specDescription = null)
+        IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> operandResults)
     {
-        _specDescription = specDescription;
         UnderlyingResults = operandResults
             .ThrowIfNull(nameof(operandResults))
             .ToArray();
@@ -54,7 +53,7 @@ public sealed class AnySatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMeta
 
     /// <inheritdoc />
     public override string Description => 
-        $"ANY<{DeterminativeResults.Count()}/{UnderlyingResults.Count()}>:{IsSatisfiedDisplayText}({string.Join(", ", DeterminativeResults.Distinct())})";
+        $"ANY{{{DeterminativeResults.Count()}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}({DeterminativeResults.Distinct().Humanize()})";
 
     /// <inheritdoc />
     public override IEnumerable<string> GatherReasons() => DeterminativeResults.SelectMany(r => r.GatherReasons());

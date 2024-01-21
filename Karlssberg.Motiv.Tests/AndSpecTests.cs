@@ -36,10 +36,10 @@ public class AndSpecTests
     }
 
     [Theory]
-    [AutoParams(true, true, "(left:True) AND:True (right:True)")]
-    [AutoParams(true, false, "(left:True) AND:False (right:False)")]
-    [AutoParams(false, true, "(left:False) AND:False (right:True)")]
-    [AutoParams(false, false, "(left:False) AND:False (right:False)")]
+    [AutoParams(true, true, "(left is true) AND:True (right is true)")]
+    [AutoParams(true, false, "(left is true) AND:False (right is false)")]
+    [AutoParams(false, true, "(left is false) AND:False (right is true)")]
+    [AutoParams(false, false, "(left is false) AND:False (right is false)")]
     public void Should_serialize_the_result_of_the_and_operation(
         bool leftResult,
         bool rightResult,

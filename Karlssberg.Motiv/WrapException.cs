@@ -11,7 +11,7 @@ internal static class WrapException
 
     internal static TResult IfIsSatisfiedByInvocationFails<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata, TResult>(
         SpecBase<TModel, TMetadata> spec,
-        SpecBase<TUnderlyingModel, TUnderlyingMetadata> underlyingSpecification,
+        SpecBase<TUnderlyingModel, TUnderlyingMetadata>? underlyingSpecification,
         Func<TResult> func)
     {
         try

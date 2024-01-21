@@ -19,11 +19,11 @@ public static class YieldWhenAnyFalseExtensions
     
     public static IYieldAllFalseReasons<TModel, TUnderlyingMetadata> YieldWhenAnyFalse<TModel, TUnderlyingMetadata>(
         this IYieldFalseReasons<TModel, TUnderlyingMetadata> builder,
-        Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, string> metadata) =>
-        builder.YieldWhenAnyFalse(results => [metadata(results)]);
+        Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, string> falseBecause) =>
+        builder.YieldWhenAnyFalse(results => [falseBecause(results)]);
 
     public static IYieldAllFalseReasons<TModel, TUnderlyingMetadata> YieldWhenAnyFalse<TModel, TUnderlyingMetadata>(
         this IYieldFalseReasons<TModel, TUnderlyingMetadata> builder,
-        string metadata) =>
-        builder.YieldWhenAnyFalse(_ => metadata);
+        string falseBecause) =>
+        builder.YieldWhenAnyFalse(_ => falseBecause);
 }

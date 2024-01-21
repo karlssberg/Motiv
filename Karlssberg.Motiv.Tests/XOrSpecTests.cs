@@ -38,10 +38,10 @@ public class XOrSpecTests
     }
 
     [Theory]
-    [AutoParams(true, true, "(left:true) XOR:false (right:true)")]
-    [AutoParams(true, false, "(left:true) XOR:true (right:false)")]
-    [AutoParams(false, true, "(left:false) XOR:true (right:true)")]
-    [AutoParams(false, false, "(left:false) XOR:false (right:false)")]
+    [AutoParams(true, true, "(left is true) XOR:false (right is true)")]
+    [AutoParams(true, false, "(left is true) XOR:true (right is false)")]
+    [AutoParams(false, true, "(left is false) XOR:true (right is true)")]
+    [AutoParams(false, false, "(left is false) XOR:false (right is false)")]
     public void Should_serialize_the_result_of_the_xor_operation(
         bool leftResult,
         bool rightResult,

@@ -36,10 +36,10 @@ public class OrSpecTests
     }
 
     [Theory]
-    [AutoParams(true, true, "(left:true) OR:true (right:true)")]
-    [AutoParams(true, false, "(left:true) OR:true (right:false)")]
-    [AutoParams(false, true, "(left:false) OR:true (right:true)")]
-    [AutoParams(false, false, "(left:false) OR:false (right:false)")]
+    [AutoParams(true, true, "(left is true) OR:true (right is true)")]
+    [AutoParams(true, false, "(left is true) OR:true (right is false)")]
+    [AutoParams(false, true, "(left is false) OR:true (right is true)")]
+    [AutoParams(false, false, "(left is false) OR:false (right is false)")]
     public void Should_serialize_the_result_of_the_or_operation(
         bool leftResult,
         bool rightResult,

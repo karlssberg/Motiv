@@ -38,8 +38,7 @@ public class AnySatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata> :
 
         return new AnySatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied => _metadataFactory(isSatisfied, resultsWithModel),
-            resultsWithModel,
-            _description);
+            resultsWithModel);
     }
 }
 

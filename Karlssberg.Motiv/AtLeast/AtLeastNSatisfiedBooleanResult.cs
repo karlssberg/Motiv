@@ -1,11 +1,13 @@
-﻿namespace Karlssberg.Motiv.AtLeast;
+﻿using Humanizer;
+
+namespace Karlssberg.Motiv.AtLeast;
 
 /// <summary>Represents a boolean result that is satisfied if at least a specified number of operand results are satisfied.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
 public sealed class AtLeastNSatisfiedBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IAtLeastNSatisfiedBooleanResult<TMetadata>
 {
     /// <summary>Initializes a new instance of the <see cref="AtLeastNSatisfiedBooleanResult{TMetadata}" /> class.</summary>
-    /// <param name="minimum">The minimum number of operand results that need to be satisfied.</param>
+    /// <param name="minimum">The minimum number of operand results that need to be satisfied (inclusive).</param>
     /// <param name="metadataFactory">A function that generates metadata based on the overall satisfaction of the result.</param>
     /// <param name="operandResults">The collection of operand results.</param>
     internal AtLeastNSatisfiedBooleanResult(
@@ -13,13 +15,15 @@ public sealed class AtLeastNSatisfiedBooleanResult<TMetadata> : BooleanResultBas
         Func<bool, IEnumerable<TMetadata>> metadataFactory,
         IEnumerable<BooleanResultBase<TMetadata>> operandResults)
     {
+        
+        Minimum = minimum.ThrowIfLessThan(0, nameof(minimum));
+        
         UnderlyingResults = operandResults
             .ThrowIfNull(nameof(operandResults))
             .ToArray();
 
         var isSatisfied = UnderlyingResults.Count(result => result.IsSatisfied) >= minimum;
 
-        Minimum = minimum;
         IsSatisfied = isSatisfied;
         SubstituteMetadata = metadataFactory(isSatisfied);
     }
@@ -44,7 +48,19 @@ public sealed class AtLeastNSatisfiedBooleanResult<TMetadata> : BooleanResultBas
     public override bool IsSatisfied { get; }
 
     /// <summary>Gets the description of the boolean result.</summary>
-    public override string Description => $"AT_LEAST_{Minimum}:{IsSatisfiedDisplayText}({string.Join(", ", UnderlyingResults)})";
+    public override string Description
+    {
+        get
+        {
+            var satisfiedCount = UnderlyingResults.Count(result => result.IsSatisfied);
+            var higherOrderStatement =
+                $"AT_LEAST_{Minimum}{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
+                
+            return DeterminativeResults.Any()
+                ? $"{higherOrderStatement}({DeterminativeResults.Count()}x {Reasons.Humanize()})"
+                : higherOrderStatement;
+        }
+    }
 
     /// <summary>Gets the reasons associated with the boolean result.</summary>
     public override IEnumerable<string> GatherReasons() => DeterminativeResults.SelectMany(r => r.GatherReasons());

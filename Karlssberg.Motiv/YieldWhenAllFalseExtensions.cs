@@ -30,16 +30,16 @@ public static class YieldWhenAllFalseExtensions
     
     public static IHigherOrderSpecFactory<TModel, string> YieldWhenAllFalse<TModel, TUnderlyingMetadata>(
         this IYieldFalseReasons<TModel, TUnderlyingMetadata> builder,
-        Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, string> metadata) =>
-        builder.YieldWhenAllFalse(results => [metadata(results)]);
+        Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, string> falseBecause) =>
+        builder.YieldWhenAllFalse(results => [falseBecause(results)]);
 
     public static IHigherOrderSpecFactory<TModel, string> YieldWhenAllFalse<TModel, TUnderlyingMetadata>(
         this IYieldFalseReasons<TModel, TUnderlyingMetadata> builder,
-        Func<IEnumerable<string>> metadata) =>
-        builder.YieldWhenAllFalse(_ => metadata());
+        Func<IEnumerable<string>> falseBecause) =>
+        builder.YieldWhenAllFalse(_ => falseBecause());
 
     public static IHigherOrderSpecFactory<TModel, string> YieldWhenAllFalse<TModel, TUnderlyingMetadata>(
         this IYieldFalseReasons<TModel, TUnderlyingMetadata> builder,
-        string metadata) =>
-        builder.YieldWhenAllFalse(() => [metadata]);
+        string falseBecause) =>
+        builder.YieldWhenAllFalse(() => [falseBecause]);
 }

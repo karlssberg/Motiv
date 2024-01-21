@@ -157,14 +157,14 @@ public class AtLeastNSatisfiedSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "AT_LEAST_1:False(False, False, False)")]
-    [AutoParams(false, false, true, "AT_LEAST_1:True(False, False, True)")]
-    [AutoParams(false, true, false, "AT_LEAST_1:True(False, True, False)")]
-    [AutoParams(false, true, true, "AT_LEAST_1:True(False, True, True)")]
-    [AutoParams(true, false, false, "AT_LEAST_1:True(True, False, False)")]
-    [AutoParams(true, false, true, "AT_LEAST_1:True(True, False, True)")]
-    [AutoParams(true, true, false, "AT_LEAST_1:True(True, True, False)")]
-    [AutoParams(true, true, true, "AT_LEAST_1:True(True, True, True)")]
+    [AutoParams(false, false, false, "AT_LEAST_1{3/3}:False(received false)")]
+    [AutoParams(false, false, true,  "AT_LEAST_1{1/3}:True(received true")]
+    [AutoParams(false, true,  false, "AT_LEAST_1{1/3}:True(received true)")]
+    [AutoParams(false, true,  true,  "AT_LEAST_1{2/3}:True(received true)")]
+    [AutoParams(true,  false, false, "AT_LEAST_1{1/3}:True(received true)")]
+    [AutoParams(true,  false, true,  "AT_LEAST_1{2/3}:True(received true)")]
+    [AutoParams(true,  true,  false, "AT_LEAST_1{2/3}:True(received true)")]
+    [AutoParams(true,  true,  true,  "AT_LEAST_1{3/3}:True(received true)")]
     public void Should_serialize_the_result_of_the_at_least_of_1_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -173,8 +173,8 @@ public class AtLeastNSatisfiedSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .YieldWhenTrue("received true")
+            .YieldWhenFalse("received false")
             .CreateSpec("returns the model");
 
         bool[] models = [first, second, third];
@@ -186,14 +186,14 @@ public class AtLeastNSatisfiedSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "AT_LEAST_1:false(false, false, false)")]
-    [AutoParams(false, false, true, "AT_LEAST_1:true(false, false, true)")]
-    [AutoParams(false, true, false, "AT_LEAST_1:true(false, true, false)")]
-    [AutoParams(false, true, true, "AT_LEAST_1:true(false, true, true)")]
-    [AutoParams(true, false, false, "AT_LEAST_1:true(true, false, false)")]
-    [AutoParams(true, false, true, "AT_LEAST_1:true(true, false, true)")]
-    [AutoParams(true, true, false, "AT_LEAST_1:true(true, true, false)")]
-    [AutoParams(true, true, true, "AT_LEAST_1:true(true, true, true)")]
+    [AutoParams(false, false, false, "AT_LEAST_1{0/3}:false(3x underlying not satisfied)")]
+    [AutoParams(false, false, true,  "AT_LEAST_1{1/3}:true(1x underlying satisfied)")]
+    [AutoParams(false, true, false,  "AT_LEAST_1{1/3}:true(1x underlying satisfied)")]
+    [AutoParams(false, true, true,   "AT_LEAST_1{2/3}:true(2x underlying satisfied)")]
+    [AutoParams(true, false, false,  "AT_LEAST_1{1/3}:true(1x underlying satisfied)")]
+    [AutoParams(true, false, true,   "AT_LEAST_1{2/3}:true(2x underlying satisfied)")]
+    [AutoParams(true, true, false,   "AT_LEAST_1{2/3}:true(2x underlying satisfied)")]
+    [AutoParams(true, true, true,    "AT_LEAST_1{3/3}:true(3x underlying satisfied)")]
     public void Should_serialize_the_result_of_the_at_least_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
         bool second,
@@ -202,8 +202,8 @@ public class AtLeastNSatisfiedSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString().ToLowerInvariant())
-            .YieldWhenFalse(false.ToString().ToLowerInvariant())
+            .YieldWhenTrue("underlying satisfied")
+            .YieldWhenFalse("underlying not satisfied")
             .CreateSpec();
 
         bool[] models = [first, second, third];
@@ -215,14 +215,14 @@ public class AtLeastNSatisfiedSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "AT_LEAST_1:false(model:false, model:false, model:false)")]
-    [AutoParams(false, false, true, "AT_LEAST_1:true(model:false, model:false, model:true)")]
-    [AutoParams(false, true, false, "AT_LEAST_1:true(model:false, model:true, model:false)")]
-    [AutoParams(false, true, true, "AT_LEAST_1:true(model:false, model:true, model:true)")]
-    [AutoParams(true, false, false, "AT_LEAST_1:true(model:true, model:false, model:false)")]
-    [AutoParams(true, false, true, "AT_LEAST_1:true(model:true, model:false, model:true)")]
-    [AutoParams(true, true, false, "AT_LEAST_1:true(model:true, model:true, model:false)")]
-    [AutoParams(true, true, true, "AT_LEAST_1:true(model:true, model:true, model:true)")]
+    [AutoParams(false, false, false, "AT_LEAST_1{0/3}:false(3x underlying model is false)")]
+    [AutoParams(false, false, true,  "AT_LEAST_1{1/3}:true(1x underlying model is true)")]
+    [AutoParams(false, true, false,  "AT_LEAST_1{1/3}:true(1x underlying model is true)")]
+    [AutoParams(false, true, true,   "AT_LEAST_1{2/3}:true(2x underlying model is true)")]
+    [AutoParams(true, false, false,  "AT_LEAST_1{1/3}:true(1x underlying model is true)")]
+    [AutoParams(true, false, true,   "AT_LEAST_1{2/3}:true(2x underlying model is true)")]
+    [AutoParams(true, true, false,   "AT_LEAST_1{2/3}:true(2x underlying model is true)")]
+    [AutoParams(true, true, true,    "AT_LEAST_1{3/3}:true(3x underlying model is true)")]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
         bool second,
@@ -233,14 +233,14 @@ public class AtLeastNSatisfiedSpecTests
             .Build<bool>(m => m)
             .YieldWhenTrue(true)
             .YieldWhenFalse(false)
-            .CreateSpec("model");
+            .CreateSpec("underlying model");
 
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec.ToAtLeastNSatisfiedSpec(1);
         var result = sut.IsSatisfiedBy(models);
 
-        result.Description.Should().Be(expected);
+          result.Description.Should().Be(expected);
     }
 
     [Fact]

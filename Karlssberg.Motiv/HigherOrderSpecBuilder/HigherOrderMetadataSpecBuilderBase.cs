@@ -52,7 +52,6 @@ internal abstract class HigherOrderMetadataSpecBuilderBase<TModel, TMetadata, TU
     public abstract IHigherOrderSpecFactory<TModel, TAltMetadata> Yield<TAltMetadata>(
         Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TAltMetadata>> metadata);
 
-
     public IHigherOrderSpecFactory<TModel, TMetadata> Yield(
         Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>> metadata)
     {
@@ -60,13 +59,15 @@ internal abstract class HigherOrderMetadataSpecBuilderBase<TModel, TMetadata, TU
         return this;
     }
 
-
     protected IEnumerable<TMetadata> YieldMetadata(bool isSatisfied, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> results)
     {
         var resultArray = results.ToArray();
 
         return isSatisfied switch
         {
+            _ when _yield is not null =>
+                _yield(isSatisfied, resultArray),
+            
             true when _yieldWhenAllTrue is not null && AllSatisfied() =>
                 _yieldWhenAllTrue(resultArray),
             false when _yieldWhenAllFalse is not null && NoneSatisfied() =>
@@ -77,20 +78,11 @@ internal abstract class HigherOrderMetadataSpecBuilderBase<TModel, TMetadata, TU
             false when _yieldWhenAnyFalse is not null =>
                 _yieldWhenAnyFalse(resultArray.Where(result => !result.IsSatisfied)),
 
-            _ when _yield is not null =>
-                _yield(isSatisfied, resultArray),
-
             _ => []
         };
 
-        bool AllSatisfied()
-        {
-            return resultArray.All(result => result.IsSatisfied);
-        }
+        bool AllSatisfied() => resultArray.All(result => result.IsSatisfied);
 
-        bool NoneSatisfied()
-        {
-            return resultArray.All(result => !result.IsSatisfied);
-        }
+        bool NoneSatisfied() => resultArray.All(result => !result.IsSatisfied);
     }
 }
