@@ -6,11 +6,11 @@ public static class BooleanResultBaseExtensions
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
     /// <param name="booleanResultBase">The <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
     /// <returns>An <see cref="IEnumerable{TMetadata}" /> containing the insights.</returns>
-    public static IEnumerable<TMetadata> GetMetadata<TMetadata>(this BooleanResultBase<TMetadata> booleanResultBase) =>
+    public static IEnumerable<TMetadata> GetMetadata<TMetadata>(
+        this BooleanResultBase<TMetadata> booleanResultBase) =>
         booleanResultBase
-            .GetInsights(new DefaultMetadataVisitor<TMetadata>())
+            .GetMetadata(new DefaultMetadataVisitor<TMetadata>())
             .Distinct();
-
 
     /// <summary>Retrieves the insights from a <see cref="BooleanResultBase{TMetadata}" /> using a custom insights visitor.</summary>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
@@ -18,9 +18,15 @@ public static class BooleanResultBaseExtensions
     /// <param name="booleanResultBase">The <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
     /// <param name="visitor">The custom insights visitor.</param>
     /// <returns>An <see cref="IEnumerable{TMetadata}" /> containing the insights.</returns>
-    public static IEnumerable<TMetadata> GetInsights<TMetadata, TVisitor>(
+    public static IEnumerable<TMetadata> GetMetadata<TMetadata, TVisitor>(
         this BooleanResultBase<TMetadata> booleanResultBase,
         TVisitor visitor)
         where TVisitor : DefaultMetadataVisitor<TMetadata> =>
         visitor.Visit(booleanResultBase);
+    
+    public static IEnumerable<string> GetSuperficialReasons(
+        this BooleanResultBase<string> booleanResultBase) =>
+        booleanResultBase
+            .GetMetadata(new DefaultMetadataVisitor<string>())
+            .Distinct();
 }

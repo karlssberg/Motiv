@@ -16,7 +16,7 @@ public class HigherOrderSpecBuilderTests
         int third,
         int fourth,
         bool expected, 
-        string expectedMetadata,
+        string expectedSuperficialReasons,
         string expectedReason)
     {
         var underlyingSpec = Spec
@@ -34,8 +34,8 @@ public class HigherOrderSpecBuilderTests
 
         result.IsSatisfied.Should().Be(expected);
         result.Reasons.Humanize().Should().Be(expectedReason);
-        result.GetMetadata().Should().HaveCount(1);
-        result.GetMetadata().Should().AllBeEquivalentTo(expectedMetadata);
+        result.GetSuperficialReasons().Should().HaveCount(1);
+        result.GetSuperficialReasons().Should().AllBeEquivalentTo(expectedSuperficialReasons);
     }
     
     private static string GenerateReason(bool allSatisfied, IEnumerable<BooleanResultWithModel<int, string>> results)
