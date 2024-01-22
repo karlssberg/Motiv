@@ -8,7 +8,7 @@ namespace Karlssberg.Motiv.All;
 /// <typeparam name="TUnderlyingMetadata">The type of metadata associated with each underlying operand.</typeparam>
 public sealed class AllSatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata> : BooleanResultBase<TMetadata>, IAllSatisfiedBooleanResult<TMetadata>
 {
-    /// <summary>Initializes a new instance of the <see cref="AllSatisfiedBooleanResult{TMetadata}" /> class.</summary>
+    /// <summary>Initializes a new instance of the <see cref="AllSatisfiedBooleanResult{TModel, TMetadata, TUnderlyingMetadata}" /> class.</summary>
     /// <param name="metadataFactory">
     ///     A function that creates metadata based on the overall satisfaction of the operand
     ///     results.
@@ -51,10 +51,10 @@ public sealed class AllSatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMeta
         _ => Enumerable.Empty<BooleanResultBase<TMetadata>>()
     };
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="BooleanResultBase{TMetadata}.IsSatisfied" />
     public override bool IsSatisfied { get; }
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="BooleanResultBase{TMetadata}.Description" />
     public override string Description
     {
         get

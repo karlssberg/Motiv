@@ -57,15 +57,15 @@ public abstract class BooleanResultBase<TMetadata>
     }
 
     /// <summary>
-    ///     Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the
-    ///     result at this stage to avoid excessive deduplication during intermediate steps.  Deduplication is performed during
-    ///     the call to <see cref="Reasons" />.
+    /// Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the
+    /// result at this stage to avoid excessive deduplication during intermediate steps.  Deduplication is performed during the
+    /// call to <see cref="Reasons" />.
     /// </summary>
     public abstract IEnumerable<string> GatherReasons();
 
     /// <summary>
-    ///     Performs a logical AND operation between the current BooleanResultBase instance and another BooleanResultBase
-    ///     instance.
+    /// Performs a logical AND operation between the current BooleanResultBase instance and another BooleanResultBase
+    /// instance.
     /// </summary>
     /// <param name="otherResult">The other BooleanResultBase instance to perform the logical AND operation with.</param>
     /// <returns>A new instance of AndBooleanResult representing the result of the logical AND operation.</returns>
@@ -73,8 +73,8 @@ public abstract class BooleanResultBase<TMetadata>
         new AndBooleanResult<TMetadata>(this, otherResult);
 
     /// <summary>
-    ///     Performs a logical OR operation between the current BooleanResultBase instance and another BooleanResultBase
-    ///     instance.
+    /// Performs a logical OR operation between the current BooleanResultBase instance and another BooleanResultBase
+    /// instance.
     /// </summary>
     /// <param name="otherResult">The other BooleanResultBase instance to perform the OR operation with.</param>
     /// <returns>A new BooleanResultBase instance representing the result of the OR operation.</returns>
@@ -82,8 +82,8 @@ public abstract class BooleanResultBase<TMetadata>
         new OrBooleanResult<TMetadata>(this, otherResult);
 
     /// <summary>
-    ///     Performs a logical exclusive OR (XOR) operation between this BooleanResultBase instance and another
-    ///     BooleanResultBase instance.
+    /// Performs a logical exclusive OR (XOR) operation between this BooleanResultBase instance and another
+    /// BooleanResultBase instance.
     /// </summary>
     /// <param name="otherResult">The other BooleanResultBase instance to perform the XOR operation with.</param>
     /// <returns>A new XOrBooleanResult instance representing the result of the XOR operation.</returns>
@@ -91,12 +91,12 @@ public abstract class BooleanResultBase<TMetadata>
         new XOrBooleanResult<TMetadata>(this, otherResult);
 
     /// <summary>
-    ///     Returns a new instance of <see cref="NotBooleanResult{TMetadata}" /> that represents the logical negation of
-    ///     the current instance.
+    /// Returns a new instance of <see cref="NotBooleanResult{TMetadata}" /> that represents the logical negation of
+    /// the current instance.
     /// </summary>
     /// <returns>
-    ///     A new instance of <see cref="NotBooleanResult{TMetadata}" /> that represents the logical negation of the
-    ///     current instance.
+    /// A new instance of <see cref="NotBooleanResult{TMetadata}" /> that represents the logical negation of the
+    /// current instance.
     /// </returns>
     public BooleanResultBase<TMetadata> Not() =>
         new NotBooleanResult<TMetadata>(this);

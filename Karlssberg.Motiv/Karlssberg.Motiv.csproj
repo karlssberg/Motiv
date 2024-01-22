@@ -7,33 +7,33 @@
         <LangVersion>12</LangVersion>
         <Authors>Daniel Karlsson</Authors>
     </PropertyGroup>
-    
+
     <ItemGroup>
-      <InternalsVisibleTo Include="$(AssemblyName).Tests" />
-      <Compile Update="GenericMetadataSpec.cs">
-        <DependentUpon>Spec.cs</DependentUpon>
-      </Compile>
-      <Compile Update="StringMetadataSpec.cs">
-        <DependentUpon>Spec.cs</DependentUpon>
-      </Compile>
-      <Compile Update="ChangeDescriptionSpec.cs">
-        <DependentUpon>Spec.cs</DependentUpon>
-      </Compile>
-      <Compile Update="SpecBuilder\Step1\IRequireTrueReason.cs">
-        <DependentUpon>IRequireTrueReasonOrMetadata.cs</DependentUpon>
-      </Compile>
-      <Compile Update="SpecBuilder\Step1\IRequireTrueMetadata.cs">
-        <DependentUpon>IRequireTrueReasonOrMetadata.cs</DependentUpon>
-      </Compile>
-      <Compile Update="SpecBuilder\Phase1\IRequireTrueMetadata.cs" />
-      <Compile Update="ChangeMetadata\ChangeMetadataTypeBuilder.cs">
-        <DependentUpon>IChangeMetadataBooleanResult.cs</DependentUpon>
-      </Compile>
+        <InternalsVisibleTo Include="$(AssemblyName).Tests"/>
+        <Compile Update="GenericMetadataSpec.cs">
+            <DependentUpon>Spec.cs</DependentUpon>
+        </Compile>
+        <Compile Update="StringMetadataSpec.cs">
+            <DependentUpon>Spec.cs</DependentUpon>
+        </Compile>
+        <Compile Update="ChangeDescriptionSpec.cs">
+            <DependentUpon>Spec.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecBuilder\Step1\IRequireTrueReason.cs">
+            <DependentUpon>IRequireTrueReasonOrMetadata.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecBuilder\Step1\IRequireTrueMetadata.cs">
+            <DependentUpon>IRequireTrueReasonOrMetadata.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecBuilder\Phase1\IRequireTrueMetadata.cs"/>
+        <Compile Update="ChangeMetadata\ChangeMetadataTypeBuilder.cs">
+            <DependentUpon>IChangeMetadataBooleanResult.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
-    
+
     <ItemGroup>
-      <PackageReference Include="Humanizer" Version="2.14.1" />
-      <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+        <PackageReference Include="Humanizer" Version="2.14.1"/>
+        <PackageReference Include="Microsoft.CSharp" Version="4.7.0"/>
     </ItemGroup>
 
 </Project>

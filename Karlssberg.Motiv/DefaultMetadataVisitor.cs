@@ -15,8 +15,8 @@ namespace Karlssberg.Motiv;
 public class DefaultMetadataVisitor<TMetadata>
 {
     /// <summary>
-    ///     Visits a collection of <see cref="BooleanResultBase{TMetadata}" /> objects and returns a collection of
-    ///     <typeparamref name="TMetadata" />.
+    /// Visits a collection of <see cref="BooleanResultBase{TMetadata}" /> objects and returns a collection of
+    /// <typeparamref name="TMetadata" />.
     /// </summary>
     /// <param name="booleanResultBases">The collection of <see cref="BooleanResultBase{TMetadata}" /> objects to visit.</param>
     /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
@@ -24,8 +24,8 @@ public class DefaultMetadataVisitor<TMetadata>
         booleanResultBases.SelectMany(Visit);
 
     /// <summary>
-    ///     Visits a <see cref="BooleanResultBase{TMetadata}" /> and returns a collection of
-    ///     <typeparamref name="TMetadata" />.
+    /// Visits a <see cref="BooleanResultBase{TMetadata}" /> and returns a collection of
+    /// <typeparamref name="TMetadata" />.
     /// </summary>
     /// <param name="booleanResultBase">The boolean result to visit.</param>
     /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
@@ -39,7 +39,8 @@ public class DefaultMetadataVisitor<TMetadata>
             IAtLeastNSatisfiedBooleanResult<TMetadata> atLeastBooleanResult => Visit(atLeastBooleanResult),
             AtMostNSatisfiedBooleanResult<TMetadata> atMostBooleanResult => Visit(atMostBooleanResult),
             BooleanResult<TMetadata> booleanResult => Visit(booleanResult),
-            IChangeMetadataBooleanResult<TMetadata> changeMetadataTypeBooleanResult => Visit(changeMetadataTypeBooleanResult),
+            IChangeMetadataBooleanResult<TMetadata> changeMetadataTypeBooleanResult => Visit(
+                changeMetadataTypeBooleanResult),
             NotBooleanResult<TMetadata> notBooleanResult => Visit(notBooleanResult),
             OrBooleanResult<TMetadata> orBooleanResult => Visit(orBooleanResult),
             XOrBooleanResult<TMetadata> xOrBooleanResult => Visit(xOrBooleanResult),
@@ -62,8 +63,8 @@ public class DefaultMetadataVisitor<TMetadata>
         allSatisfiedBooleanResult.SubstituteMetadata.IfEmptyThen(Visit(allSatisfiedBooleanResult.DeterminativeResults));
 
     /// <summary>
-    ///     Visits an <see cref="AndBooleanResult{TMetadata}" /> and returns a collection of
-    ///     <typeparamref name="TMetadata" />.
+    /// Visits an <see cref="AndBooleanResult{TMetadata}" /> and returns a collection of
+    /// <typeparamref name="TMetadata" />.
     /// </summary>
     /// <param name="andBooleanResult">The <see cref="AndBooleanResult{TMetadata}" /> to visit.</param>
     /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
@@ -71,8 +72,8 @@ public class DefaultMetadataVisitor<TMetadata>
         Visit(andBooleanResult.DeterminativeResults);
 
     /// <summary>
-    ///     Visits an instance of <see cref="AnySatisfiedBooleanResult{TMetadata}" /> and returns a collection of
-    ///     <typeparamref name="TMetadata" />.
+    /// Visits an instance of <see cref="AnySatisfiedBooleanResult{TMetadata}" /> and returns a collection of
+    /// <typeparamref name="TMetadata" />.
     /// </summary>
     /// <param name="anySatisfiedBooleanResult">The instance of <see cref="AnySatisfiedBooleanResult{TMetadata}" /> to visit.</param>
     /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
@@ -80,22 +81,24 @@ public class DefaultMetadataVisitor<TMetadata>
         anySatisfiedBooleanResult.SubstituteMetadata.IfEmptyThen(Visit(anySatisfiedBooleanResult.DeterminativeResults));
 
     /// <summary>
-    ///     Visits an <see cref="AtLeastNSatisfiedBooleanResult{TMetadata}" /> and returns a collection of
-    ///     <typeparamref name="TMetadata" />.
+    /// Visits an <see cref="AtLeastNSatisfiedBooleanResult{TMetadata}" /> and returns a collection of
+    /// <typeparamref name="TMetadata" />.
     /// </summary>
     /// <param name="atLeastNSatisfiedBooleanResult">The <see cref="AtLeastNSatisfiedBooleanResult{TMetadata}" /> to visit.</param>
     /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
-    public virtual IEnumerable<TMetadata> Visit(IAtLeastNSatisfiedBooleanResult<TMetadata> atLeastNSatisfiedBooleanResult) =>
+    public virtual IEnumerable<TMetadata> Visit(
+        IAtLeastNSatisfiedBooleanResult<TMetadata> atLeastNSatisfiedBooleanResult) =>
         atLeastNSatisfiedBooleanResult.SubstituteMetadata
             .IfEmptyThen(Visit(atLeastNSatisfiedBooleanResult.DeterminativeResults));
 
     /// <summary>
-    ///     Visits an <see cref="AtMostNSatisfiedBooleanResult{TMetadata}" /> and returns a collection of
-    ///     <typeparamref name="TMetadata" />.
+    /// Visits an <see cref="AtMostNSatisfiedBooleanResult{TMetadata}" /> and returns a collection of
+    /// <typeparamref name="TMetadata" />.
     /// </summary>
     /// <param name="atMostNSatisfiedBooleanResult">The <see cref="AtMostNSatisfiedBooleanResult{TMetadata}" /> to visit.</param>
     /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>
-    public virtual IEnumerable<TMetadata> Visit(AtMostNSatisfiedBooleanResult<TMetadata> atMostNSatisfiedBooleanResult) =>
+    public virtual IEnumerable<TMetadata>
+        Visit(AtMostNSatisfiedBooleanResult<TMetadata> atMostNSatisfiedBooleanResult) =>
         atMostNSatisfiedBooleanResult.SubstituteMetadata
             .IfEmptyThen(Visit(atMostNSatisfiedBooleanResult.DeterminativeResults));
 
@@ -115,8 +118,8 @@ public class DefaultMetadataVisitor<TMetadata>
         Visit(notBooleanResult.OperandResult);
 
     /// <summary>
-    ///     Visits an <see cref="OrBooleanResult{TMetadata}" /> and returns a collection of
-    ///     <typeparamref name="TMetadata" />.
+    /// Visits an <see cref="OrBooleanResult{TMetadata}" /> and returns a collection of
+    /// <typeparamref name="TMetadata" />.
     /// </summary>
     /// <param name="orBooleanResult">The <see cref="OrBooleanResult{TMetadata}" /> to visit.</param>
     /// <returns>A collection of <typeparamref name="TMetadata" />.</returns>

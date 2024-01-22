@@ -4,13 +4,17 @@ using Karlssberg.Motiv.SpecBuilder.Phase1;
 
 namespace Karlssberg.Motiv;
 
-/// <summary>Represents a specification that defines a condition for a model and associated metadata.</summary>
+/// <summary>
+/// Represents a specification that yields custom metadata based on the outcome of the underlying spec/predicate.
+/// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
 {
+    // The base specification associated with the Spec instance.
     private readonly SpecBase<TModel, TMetadata> _spec;
 
+    // Initializes a new instance of the Spec class with a description, predicate, and functions for when the predicate is true or false.
     internal Spec(
         string description,
         Func<TModel, bool> predicate,
@@ -24,13 +28,14 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
             whenFalse);
     }
 
+    // Initializes a new instance of the Spec class with a SpecBase instance.
     protected Spec(SpecBase<TModel, TMetadata> spec)
     {
         spec.ThrowIfNull(nameof(spec));
         _spec = spec;
     }
 
-
+    // Initializes a new instance of the Spec class with a specification factory.
     protected Spec(Func<SpecBase<TModel, TMetadata>> specificationFactory)
     {
         specificationFactory.ThrowIfNull(nameof(specificationFactory));
@@ -39,22 +44,28 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
         _spec = specification;
     }
 
-    /// <summary>Gets the description of the specification.</summary>
+    // Gets the description of the specification.
     public override string Description => _spec.Description;
 
-    /// <summary>Determines whether the specified model satisfies the specification.</summary>
-    /// <param name="model">The model to be checked.</param>
-    /// <returns>A Boolean result indicating whether the model satisfies the specification.</returns>
+    // Determines whether the specified model satisfies the specification.
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => _spec.IsSatisfiedBy(model);
-    protected static IRequireTrueReason<TAltModel> Build<TAltModel>(Func<TAltModel, bool> predicate) => Spec.Build(predicate);
+
+    // Builds a specification with a predicate function.
+    protected static IRequireTrueReason<TAltModel> Build<TAltModel>(Func<TAltModel, bool> predicate) =>
+        Spec.Build(predicate);
 }
 
-/// <summary>Represents a specification that defines a condition for a model of type <typeparamref name="TModel" />.</summary>
+/// <summary>
+/// Represents a specification that defines a condition for a model of type TModel.
+/// This specification is associated with a string metadata.
+/// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 public class Spec<TModel> : SpecBase<TModel, string>
 {
+    // The base specification associated with the Spec instance.
     private readonly SpecBase<TModel, string> _spec;
 
+    // Initializes a new instance of the Spec class with a description, predicate, and functions for when the predicate is true or false.
     internal Spec(
         string description,
         Func<TModel, bool> predicate,
@@ -68,24 +79,34 @@ public class Spec<TModel> : SpecBase<TModel, string>
             whenFalse);
     }
 
+    // Initializes a new instance of the Spec class with a SpecBase instance.
     protected Spec(SpecBase<TModel, string> spec)
     {
         _spec = spec.ThrowIfNull(nameof(spec));
     }
 
+    // Initializes a new instance of the Spec class with a specification factory.
     protected Spec(Func<SpecBase<TModel, string>> specificationFactory)
     {
         specificationFactory.ThrowIfNull(nameof(specificationFactory));
         _spec = specificationFactory()
             .ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
     }
+
+    // Gets the description of the specification.
     public override string Description => _spec.Description;
+
+    // Determines whether the specified model satisfies the specification.
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model) => _spec.IsSatisfiedBy(model);
 }
 
 public static class Spec
 {
-    public static IRequireTrueReasonOrMetadata<TModel> Build<TModel>(Func<TModel, bool> predicate) => new SpecBuilder<TModel>(predicate);
+    // Builds a specification with a predicate function.
+    public static IRequireTrueReasonOrMetadata<TModel> Build<TModel>(Func<TModel, bool> predicate) =>
+        new SpecBuilder<TModel>(predicate);
 
-    public static IRequireTrueMetadata<TModel> Build<TModel, TMetadata>(SpecBase<TModel, TMetadata> spec) => new ChangeMetadataBuilder<TModel, TMetadata>(spec);
+    // Builds a specification with a SpecBase instance.
+    public static IRequireTrueMetadata<TModel> Build<TModel, TMetadata>(SpecBase<TModel, TMetadata> spec) =>
+        new ChangeMetadataBuilder<TModel, TMetadata>(spec);
 }

@@ -12,20 +12,45 @@ internal abstract class HigherOrderReasonsSpecBuilderBase<TModel, TUnderlyingMet
     private Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>>? _yieldWhenAllTrue;
     private Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>>? _yieldWhenAnyFalse;
     private Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>>? _yieldWhenAnyTrue;
-
+    
+    /// <inheritdoc />
     public IYieldAnyTrueReasonsOrFalseReasons<TModel, TUnderlyingMetadata> YieldWhenAllTrue(
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>> trueBecause)
     {
         _yieldWhenAllTrue = trueBecause;
         return this;
     }
+    
+    /// <inheritdoc />
     IYieldFalseReasons<TModel, TUnderlyingMetadata> IYieldAnyTrueReasons<TModel, TUnderlyingMetadata>.YieldWhenAnyTrue(
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>> trueBecause)
     {
         _yieldWhenAnyTrue = trueBecause;
         return this;
     }
-
+    
+    /// <inheritdoc />
+    public abstract SpecBase<IEnumerable<TModel>, string> CreateSpec(string description);
+    
+    /// <inheritdoc />
+    public abstract SpecBase<IEnumerable<TModel>, string> CreateSpec();
+    
+    /// <inheritdoc />
+    IYieldAllFalseReasons<TModel, TUnderlyingMetadata> IYieldAnyFalseReasons<TModel, TUnderlyingMetadata>.YieldWhenAnyFalse(
+        Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>> falseBecause)
+    {
+        _yieldWhenAnyFalse = falseBecause;
+        return this;
+    }
+    
+    /// <inheritdoc />
+    IHigherOrderSpecFactory<TModel, string> IYieldAllFalseReasons<TModel, TUnderlyingMetadata>.YieldWhenAllFalse(
+        Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>> falseBecause)
+    {
+        _yieldWhenAllFalse = falseBecause;
+        return this;
+    }
+    
     protected IEnumerable<string> YieldReasons(bool isSatisfied, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> results)
     {
         var resultArray = results.ToArray();
@@ -48,22 +73,5 @@ internal abstract class HigherOrderReasonsSpecBuilderBase<TModel, TUnderlyingMet
         bool AllSatisfied() => resultArray.All(result => result.IsSatisfied);
 
         bool NoneSatisfied() => resultArray.All(result => !result.IsSatisfied);
-    }
-
-    public abstract SpecBase<IEnumerable<TModel>, string> CreateSpec(string description);
-    public abstract SpecBase<IEnumerable<TModel>, string> CreateSpec();
-
-    IYieldAllFalseReasons<TModel, TUnderlyingMetadata> IYieldAnyFalseReasons<TModel, TUnderlyingMetadata>.YieldWhenAnyFalse(
-        Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>> falseBecause)
-    {
-        _yieldWhenAnyFalse = falseBecause;
-        return this;
-    }
-    
-    IHigherOrderSpecFactory<TModel, string> IYieldAllFalseReasons<TModel, TUnderlyingMetadata>.YieldWhenAllFalse(
-        Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<string>> falseBecause)
-    {
-        _yieldWhenAllFalse = falseBecause;
-        return this;
     }
 }

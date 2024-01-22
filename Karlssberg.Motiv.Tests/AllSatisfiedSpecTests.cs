@@ -40,13 +40,13 @@ public class AllSatisfiedSpecTests
 
     [Theory]
     [AutoParams(false, false, false, "ALL{0/3}:false(3x false)")]
-    [AutoParams(false, false, true,  "ALL{1/3}:false(2x false)")]
-    [AutoParams(false, true, false,  "ALL{1/3}:false(2x false)")]
-    [AutoParams(false, true, true,   "ALL{2/3}:false(1x false)")]
-    [AutoParams(true, false, false,  "ALL{1/3}:false(2x false)")]
-    [AutoParams(true, false, true,   "ALL{2/3}:false(1x false)")]
-    [AutoParams(true, true, false,   "ALL{2/3}:false(1x false)")]
-    [AutoParams(true, true, true,    "ALL{3/3}:true(3x true)")]
+    [AutoParams(false, false, true, "ALL{1/3}:false(2x false)")]
+    [AutoParams(false, true, false, "ALL{1/3}:false(2x false)")]
+    [AutoParams(false, true, true, "ALL{2/3}:false(1x false)")]
+    [AutoParams(true, false, false, "ALL{1/3}:false(2x false)")]
+    [AutoParams(true, false, true, "ALL{2/3}:false(1x false)")]
+    [AutoParams(true, true, false, "ALL{2/3}:false(1x false)")]
+    [AutoParams(true, true, true, "ALL{3/3}:true(3x true)")]
     public void Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -69,18 +69,19 @@ public class AllSatisfiedSpecTests
 
     [Theory]
     [AutoParams(false, false, false, "ALL{0/3}:false(3x false)")]
-    [AutoParams(false, false, true,  "ALL{1/3}:false(2x false)")]
-    [AutoParams(false, true, false,  "ALL{1/3}:false(2x false)")]
-    [AutoParams(false, true, true,   "ALL{2/3}:false(1x false)")]
-    [AutoParams(true, false, false,  "ALL{1/3}:false(2x false)")]
-    [AutoParams(true, false, true,   "ALL{2/3}:false(1x false)")]
-    [AutoParams(true, true, false,   "ALL{2/3}:false(1x false)")]
-    [AutoParams(true, true, true,    "ALL{3/3}:true(3x true)")]
-    public void Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
-        bool first,
-        bool second,
-        bool third,
-        string expected)
+    [AutoParams(false, false, true, "ALL{1/3}:false(2x false)")]
+    [AutoParams(false, true, false, "ALL{1/3}:false(2x false)")]
+    [AutoParams(false, true, true, "ALL{2/3}:false(1x false)")]
+    [AutoParams(true, false, false, "ALL{1/3}:false(2x false)")]
+    [AutoParams(true, false, true, "ALL{2/3}:false(1x false)")]
+    [AutoParams(true, true, false, "ALL{2/3}:false(1x false)")]
+    [AutoParams(true, true, true, "ALL{3/3}:true(3x true)")]
+    public void
+        Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
+            bool first,
+            bool second,
+            bool third,
+            string expected)
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
@@ -99,13 +100,13 @@ public class AllSatisfiedSpecTests
 
     [Theory]
     [AutoParams(false, false, false, "ALL{0/3}:false(3x model is false)")]
-    [AutoParams(false, false, true,  "ALL{1/3}:false(2x model is false)")]
-    [AutoParams(false, true, false,  "ALL{1/3}:false(2x model is false)")]
-    [AutoParams(false, true, true,   "ALL{2/3}:false(1x model is false)")]
-    [AutoParams(true, false, false,  "ALL{1/3}:false(2x model is false)")]
-    [AutoParams(true, false, true,   "ALL{2/3}:false(1x model is false)")]
-    [AutoParams(true, true, false,   "ALL{2/3}:false(1x model is false)")]
-    [AutoParams(true, true, true,    "ALL{3/3}:true(3x model is true)")]
+    [AutoParams(false, false, true, "ALL{1/3}:false(2x model is false)")]
+    [AutoParams(false, true, false, "ALL{1/3}:false(2x model is false)")]
+    [AutoParams(false, true, true, "ALL{2/3}:false(1x model is false)")]
+    [AutoParams(true, false, false, "ALL{1/3}:false(2x model is false)")]
+    [AutoParams(true, false, true, "ALL{2/3}:false(1x model is false)")]
+    [AutoParams(true, true, false, "ALL{2/3}:false(1x model is false)")]
+    [AutoParams(true, true, true, "ALL{3/3}:true(3x model is true)")]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
         bool second,
@@ -125,18 +126,17 @@ public class AllSatisfiedSpecTests
 
         result.Description.Should().Be(expected);
     }
-    
-    
+
 
     [Theory]
     [AutoParams(false, false, false, "ALL{0/3}:false(3x left is false and right is false)")]
-    [AutoParams(false, false, true,  "ALL{1/3}:false(2x left is false and right is false)")]
-    [AutoParams(false, true, false,  "ALL{1/3}:false(2x left is false and right is false)")]
-    [AutoParams(false, true, true,   "ALL{2/3}:false(1x left is false and right is false)")]
-    [AutoParams(true, false, false,  "ALL{1/3}:false(2x left is false and right is false)")]
-    [AutoParams(true, false, true,   "ALL{2/3}:false(1x left is false and right is false)")]
-    [AutoParams(true, true, false,   "ALL{2/3}:false(1x left is false and right is false)")]
-    [AutoParams(true, true, true,    "ALL{3/3}:true(3x left is true and right is true)")]
+    [AutoParams(false, false, true, "ALL{1/3}:false(2x left is false and right is false)")]
+    [AutoParams(false, true, false, "ALL{1/3}:false(2x left is false and right is false)")]
+    [AutoParams(false, true, true, "ALL{2/3}:false(1x left is false and right is false)")]
+    [AutoParams(true, false, false, "ALL{1/3}:false(2x left is false and right is false)")]
+    [AutoParams(true, false, true, "ALL{2/3}:false(1x left is false and right is false)")]
+    [AutoParams(true, true, false, "ALL{2/3}:false(1x left is false and right is false)")]
+    [AutoParams(true, true, true, "ALL{3/3}:true(3x left is true and right is true)")]
     public void Should_serialize_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,
@@ -148,13 +148,13 @@ public class AllSatisfiedSpecTests
             .YieldWhenTrue(true)
             .YieldWhenFalse(false)
             .CreateSpec("left");
-        
+
         var underlyingSpecRight = Spec
             .Build<bool>(m => m)
             .YieldWhenTrue(true)
             .YieldWhenFalse(false)
             .CreateSpec("right");
-        
+
         var underlyingSpec = underlyingSpecLeft & underlyingSpecRight;
 
         bool[] models = [first, second, third];
@@ -204,7 +204,7 @@ public class AllSatisfiedSpecTests
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
-    
+
     [Fact]
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
@@ -244,6 +244,7 @@ public class AllSatisfiedSpecTests
 
         act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains(throwingSpec.Description));
         act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
-        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
+        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>()
+            .Where(ex => ex.Message.Contains("should be wrapped"));
     }
 }

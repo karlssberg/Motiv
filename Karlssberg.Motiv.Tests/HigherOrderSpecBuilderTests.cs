@@ -15,7 +15,7 @@ public class HigherOrderSpecBuilderTests
         int second,
         int third,
         int fourth,
-        bool expected, 
+        bool expected,
         string expectedSuperficialReasons,
         string expectedReason)
     {
@@ -37,12 +37,12 @@ public class HigherOrderSpecBuilderTests
         result.GetSuperficialReasons().Should().HaveCount(1);
         result.GetSuperficialReasons().Should().AllBeEquivalentTo(expectedSuperficialReasons);
     }
-    
+
     private static string GenerateReason(bool allSatisfied, IEnumerable<BooleanResultWithModel<int, string>> results)
     {
         var count = results.Count(r => r.IsSatisfied == allSatisfied);
         var trueOrFalse = allSatisfied.ToString().ToLowerInvariant();
-        
+
         return $"{"is".ToQuantity(count)} {trueOrFalse}";
     }
 

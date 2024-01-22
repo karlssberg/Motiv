@@ -5,8 +5,8 @@ namespace Karlssberg.Motiv;
 public static class AtLeastSpecExtensions
 {
     /// <summary>
-    ///     Creates a new specification that requires at least a specified number of models to satisfy the given
-    ///     specification.
+    /// Creates a new specification that requires at least a specified number of models to satisfy the given
+    /// specification.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
@@ -19,8 +19,8 @@ public static class AtLeastSpecExtensions
         new AtLeastNSatisfiedSpec<TModel, TMetadata>(min, spec);
 
     /// <summary>
-    ///     Creates a new specification that requires at least a minimum number of models to satisfy the given
-    ///     specification.
+    /// Creates a new specification that requires at least a minimum number of models to satisfy the given
+    /// specification.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
@@ -42,8 +42,8 @@ public static class AtLeastSpecExtensions
 
 
     /// <summary>
-    ///     Creates a new specification that requires at least a minimum number of models to satisfy the given
-    ///     specification.
+    /// Creates a new specification that requires at least a minimum number of models to satisfy the given
+    /// specification.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
@@ -64,8 +64,8 @@ public static class AtLeastSpecExtensions
             whenBlowMinimum);
 
     /// <summary>
-    ///     Converts a single-item specification into a specification that requires at least a minimum number of items to
-    ///     satisfy the condition.
+    /// Converts a single-item specification into a specification that requires at least a minimum number of items to
+    /// satisfy the condition.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
@@ -73,8 +73,8 @@ public static class AtLeastSpecExtensions
     /// <param name="min">The minimum number of items required to satisfy the condition.</param>
     /// <param name="whenMinimumReached">The metadata to use when the minimum number of items is reached.</param>
     /// <param name="whenBlowMinimum">
-    ///     A function to determine the metadata to use when the number of items falls below the
-    ///     minimum.
+    /// A function to determine the metadata to use when the number of items falls below the
+    /// minimum.
     /// </param>
     /// <returns>A new specification that requires at least the specified minimum number of items to satisfy the condition.</returns>
     public static SpecBase<IEnumerable<TModel>, TMetadata> ToAtLeastNSatisfiedSpec<TModel, TMetadata>(
@@ -89,8 +89,8 @@ public static class AtLeastSpecExtensions
             whenBlowMinimum);
 
     /// <summary>
-    ///     Converts a single-item specification into a specification that requires at least a minimum number of items to
-    ///     satisfy the condition.
+    /// Converts a single-item specification into a specification that requires at least a minimum number of items to
+    /// satisfy the condition.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
@@ -111,20 +111,20 @@ public static class AtLeastSpecExtensions
             _ => whenBlowMinimum);
 
     /// <summary>
-    ///     Creates a new specification that requires at least a minimum number of models to satisfy the given
-    ///     specification.
+    /// Creates a new specification that requires at least a minimum number of models to satisfy the given
+    /// specification.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
     /// <param name="spec">The specification to be satisfied.</param>
     /// <param name="min">The minimum number of models required to satisfy the specification.</param>
     /// <param name="whenMinimumReached">
-    ///     The metadata to be associated with the specification when the minimum number of models
-    ///     is reached.
+    /// The metadata to be associated with the specification when the minimum number of models
+    /// is reached.
     /// </param>
     /// <param name="whenBlowMinimum">
-    ///     The metadata to be associated with the specification when the number of models is below
-    ///     the minimum.
+    /// The metadata to be associated with the specification when the number of models is below
+    /// the minimum.
     /// </param>
     /// <returns>A new specification that requires at least a minimum number of models to satisfy the given specification.</returns>
     public static SpecBase<IEnumerable<TModel>, TMetadata> ToAtLeastNSatisfiedSpec<TModel, TMetadata>(
