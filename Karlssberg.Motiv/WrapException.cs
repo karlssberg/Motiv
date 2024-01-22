@@ -14,77 +14,23 @@ internal static class WrapException
         SpecBase<TUnderlyingModel, TUnderlyingMetadata>? underlyingSpecification,
         Func<TResult> func)
     {
-        try
+        return TryCatchThrow(func, ex =>
         {
-            return func();
-        }
-        catch (Exception ex)
-        {
-            if (ex is SpecException
-                or OutOfMemoryException
-                or StackOverflowException
-                or AccessViolationException
-                or AppDomainUnloadedException
-                or SEHException
-                or BadImageFormatException
-                or InvalidProgramException)
-            {
-                throw;
-            }
-
             var message = GetErrorMessageForIsSatisfiedByCall(spec, underlyingSpecification, ex);
-            throw new SpecException(message, ex);
-        }
+            return new SpecException(message, ex);
+        });
     }
 
     internal static TResult CatchPredicateExceptionOnBehalfOfSpecType<TModel, TMetadata, TResult>(
         SpecBase<TModel, TMetadata> underlyingSpec,
-        Func<TResult> callback,
+        Func<TResult> tryThisFn,
         string callbackName)
     {
-        try
+        return TryCatchThrow<TResult, SpecException>(tryThisFn, ex =>
         {
-            return callback();
-        }
-        catch (Exception ex)
-        {
-            if (ex is SpecException
-                or OutOfMemoryException
-                or StackOverflowException
-                or AccessViolationException
-                or AppDomainUnloadedException
-                or SEHException
-                or BadImageFormatException
-                or InvalidProgramException)
-            {
-                throw;
-            }
-
             var message = CreateErrorMessageForPredicateExceptionOnBehalfOfSpecType(underlyingSpec, callbackName, ex);
             throw new SpecException(message, ex);
-        }
-    }
-
-    private static string ConvertToPrettyTypeName(Type specificationType)
-    {
-        if (!specificationType.IsGenericType)
-            return specificationType.Name;
-
-        var nameParts = specificationType.Name.Split('`');
-
-        var truncatedName = nameParts.First();
-
-        var serializedGenericArgs = SerializedGenericArguments(specificationType);
-
-        return $"{truncatedName}<{serializedGenericArgs}>";
-    }
-    private static string SerializedGenericArguments(Type specificationType)
-    {
-        if (!specificationType.IsGenericType)
-            return string.Empty;
-
-        var genericArgs = specificationType.GetGenericArguments();
-        return string.Join(", ", genericArgs.Select(arg => arg.Name));
+        });
     }
 
     private static string GetErrorMessageForIsSatisfiedByCall<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata>(
@@ -103,28 +49,6 @@ internal static class WrapException
         return message;
     }
 
-    private static string GetDescriptionPhrase<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata>(
-        SpecBase<TModel, TMetadata> spec,
-        SpecBase<TUnderlyingModel, TUnderlyingMetadata>? underlyingSpecification)
-    {
-        return underlyingSpecification switch
-        {
-            IHaveUnderlyingSpec<TModel, TUnderlyingMetadata> hasUnderlying => FindNonUnderlyingSpecDescription(hasUnderlying.UnderlyingSpec),
-            null => DescribeType(spec),
-            _ => $"{DescribeType(underlyingSpecification)}. The specification is expressed as '{spec.Description}'"
-        };
-    }
-    private static string FindNonUnderlyingSpecDescription<TModel, TUnderlyingMetadata>(SpecBase<TModel, TUnderlyingMetadata> underlyingSpec)
-    {
-        return underlyingSpec switch
-        {
-            IHaveUnderlyingSpec<TModel, TUnderlyingMetadata> hasUnderlyingSpec => FindNonUnderlyingSpecDescription(hasUnderlyingSpec.UnderlyingSpec),
-            _ => DescribeType(underlyingSpec)
-        };
-    }
-
-    private static string DescribeType<TModel, TMetadata>(SpecBase<TModel, TMetadata> spec) => ConvertToPrettyTypeName(spec.GetType());
-
     private static string CreateErrorMessageForPredicateExceptionOnBehalfOfSpecType<TModel, TMetadata>(
         SpecBase<TModel, TMetadata> underlyingSpec,
         string callerName,
@@ -138,5 +62,78 @@ internal static class WrapException
         return string.IsNullOrWhiteSpace(ex.Message)
             ? $"{article} '{exceptionTypeName}' was thrown while evaluating the '{callerName}' parameter that was supplied to Spec<{genericParams}> (aka '{underlyingSpec.Description}')."
             : $"{article} '{exceptionTypeName}' was thrown with the message '{ex.Message}' while evaluating the '{callerName}' parameter that was supplied to Spec<{genericParams}> (aka '{underlyingSpec.Description}').";
+    }
+
+    private static string GetDescriptionPhrase<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata>(
+        SpecBase<TModel, TMetadata> spec,
+        SpecBase<TUnderlyingModel, TUnderlyingMetadata>? underlyingSpecification)
+    {
+        return underlyingSpecification switch
+        {
+            IHaveUnderlyingSpec<TModel, TUnderlyingMetadata> hasUnderlying => FindNonUnderlyingSpecDescription(hasUnderlying.UnderlyingSpec),
+            null => DescribeType(spec),
+            _ => $"{DescribeType(underlyingSpecification)}. The specification is expressed as '{spec.Description}'"
+        };
+    }
+
+    private static string FindNonUnderlyingSpecDescription<TModel, TUnderlyingMetadata>(SpecBase<TModel, TUnderlyingMetadata> underlyingSpec)
+    {
+        return underlyingSpec switch
+        {
+            IHaveUnderlyingSpec<TModel, TUnderlyingMetadata> hasUnderlyingSpec => FindNonUnderlyingSpecDescription(hasUnderlyingSpec.UnderlyingSpec),
+            _ => DescribeType(underlyingSpec)
+        };
+    }
+
+    private static string DescribeType<TModel, TMetadata>(SpecBase<TModel, TMetadata> spec) => ConvertToPrettyTypeName(spec.GetType());
+
+    private static string ConvertToPrettyTypeName(Type specificationType)
+    {
+        if (!specificationType.IsGenericType)
+            return specificationType.Name;
+
+        var nameParts = specificationType.Name.Split('`');
+
+        var truncatedName = nameParts.First();
+
+        var serializedGenericArgs = SerializedGenericArguments(specificationType);
+
+        return $"{truncatedName}<{serializedGenericArgs}>";
+    }
+
+    private static string SerializedGenericArguments(Type specificationType)
+    {
+        if (!specificationType.IsGenericType)
+            return string.Empty;
+
+        var genericArgs = specificationType.GetGenericArguments();
+        return string.Join(", ", genericArgs.Select(arg => arg.Name));
+    }
+
+    private static TResult TryCatchThrow<TResult, TException>(
+        Func<TResult> tryThisFn, 
+        Func<Exception, TException> throwThisFn)
+        where TException : Exception
+    {
+        try
+        {
+            return tryThisFn();
+        }
+        catch (Exception ex)
+        {
+            if (ex is SpecException
+                or OutOfMemoryException
+                or StackOverflowException
+                or AccessViolationException
+                or AppDomainUnloadedException
+                or SEHException
+                or BadImageFormatException
+                or InvalidProgramException)
+            {
+                throw;
+            }
+
+            throw throwThisFn(ex);
+        }
     }
 }
