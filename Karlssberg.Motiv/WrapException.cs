@@ -20,6 +20,16 @@ internal static class WrapException
             return new SpecException(message, ex);
         });
     }
+    internal static BooleanResultBase<TMetadata> IsSatisfiedByOrWrapException<TModel, TMetadata>(
+        this SpecBase<TModel, TMetadata> spec,
+        TModel model)
+    {
+        return TryCatchThrow(() => spec.IsSatisfiedBy(model), ex =>
+        {
+            var message = GetErrorMessageForIsSatisfiedByCall(spec, ex);
+            return new SpecException(message, ex);
+        });
+    }
 
     internal static TResult CatchPredicateExceptionOnBehalfOfSpecType<TModel, TMetadata, TResult>(
         SpecBase<TModel, TMetadata> underlyingSpec,
@@ -33,7 +43,7 @@ internal static class WrapException
         });
     }
 
-    private static string GetErrorMessageForIsSatisfiedByCall<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata>(
+    private static string   GetErrorMessageForIsSatisfiedByCall<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata>(
         SpecBase<TModel, TMetadata> spec,
         SpecBase<TUnderlyingModel, TUnderlyingMetadata>? underlyingSpecification,
         Exception ex)
@@ -47,6 +57,20 @@ internal static class WrapException
             ? $"{article} '{exceptionTypeName}' was thrown while evaluating the specification {descriptionPhrase}."
             : $"{article} '{exceptionTypeName}' was thrown with the message '{ex.Message}' while evaluating the specification {descriptionPhrase}.";
         return message;
+    }
+    
+    private static string   GetErrorMessageForIsSatisfiedByCall<TModel, TMetadata>(
+        SpecBase<TModel, TMetadata> spec,
+        Exception ex)
+    {
+        const string vowels = "AEIOU";
+        var exceptionTypeName = ex.GetType().Name;
+        var article = vowels.Contains(exceptionTypeName[0]) ? "An" : "A";
+        var descriptionPhrase = DescribeType(spec);
+
+        return string.IsNullOrWhiteSpace(ex.Message)
+            ? $"{article} '{exceptionTypeName}' was thrown while evaluating the specification {descriptionPhrase}."
+            : $"{article} '{exceptionTypeName}' was thrown with the message '{ex.Message}' while evaluating the specification {descriptionPhrase}.";
     }
 
     private static string CreateErrorMessageForPredicateExceptionOnBehalfOfSpecType<TModel, TMetadata>(
@@ -75,7 +99,7 @@ internal static class WrapException
             _ => $"{DescribeType(underlyingSpecification)}. The specification is expressed as '{spec.Description}'"
         };
     }
-
+    
     private static string FindNonUnderlyingSpecDescription<TModel, TUnderlyingMetadata>(SpecBase<TModel, TUnderlyingMetadata> underlyingSpec)
     {
         return underlyingSpec switch

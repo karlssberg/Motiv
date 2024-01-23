@@ -8,20 +8,20 @@ namespace Karlssberg.Motiv.Any;
 public sealed class AnySatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata> : BooleanResultBase<TMetadata>, IAnySatisfiedBooleanResult<TMetadata>
 {
     /// <summary>Initializes a new instance of the <see cref="AnySatisfiedBooleanResult{TMetadata}" /> class.</summary>
-    /// <param name="metadataFactory">A function that creates metadata based on the boolean result.</param>
+    /// <param name="isSatisfied"></param>
+    /// <param name="metadata">A function that creates metadata based on the boolean result.</param>
     /// <param name="operandResults">The operand results to evaluate.</param>
     internal AnySatisfiedBooleanResult(
-        Func<bool, IEnumerable<TMetadata>> metadataFactory,
+        bool isSatisfied,
+        IEnumerable<TMetadata> metadata,
         IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> operandResults)
     {
         UnderlyingResults = operandResults
             .ThrowIfNull(nameof(operandResults))
             .ToArray();
 
-        var isSatisfied = UnderlyingResults.Any(result => result.IsSatisfied);
-
         IsSatisfied = isSatisfied;
-        SubstituteMetadata = metadataFactory(isSatisfied);
+        SubstituteMetadata = metadata;
     }
 
     /// <summary>Gets the operand results used to evaluate the boolean result.</summary>

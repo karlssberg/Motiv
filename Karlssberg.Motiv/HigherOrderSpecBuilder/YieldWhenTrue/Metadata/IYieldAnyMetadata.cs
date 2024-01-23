@@ -10,8 +10,8 @@ namespace Karlssberg.Motiv.HigherOrderSpecBuilder.YieldWhenTrue.Metadata;
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata.</typeparam>
 public interface
-    IYieldAnyTrueMetadata<TModel, TMetadata, TUnderlyingMetadata> : IYieldAnyTrueMetadataTypeConverter<TModel,
-    TMetadata>
+    IYieldAnyTrueMetadata<TModel, TMetadata, TUnderlyingMetadata> :
+    IYieldAnyTrueMetadataTypeConverter<TModel, TMetadata>
 {
     /// <summary>Registers a function that yields metadata when any of the underlying boolean results are true.</summary>
     /// <param name="metadata">A function that receives the boolean results and returns the relevant metadata.</param>

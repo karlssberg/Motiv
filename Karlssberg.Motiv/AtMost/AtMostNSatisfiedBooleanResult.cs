@@ -7,25 +7,24 @@ namespace Karlssberg.Motiv.AtMost;
 public sealed class AtMostNSatisfiedBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IAtMostNSatisfiedBooleanResult<TMetadata>
 {
     /// <summary>Initializes a new instance of the <see cref="AtMostNSatisfiedBooleanResult{TMetadata}" /> class.</summary>
+    /// <param name="isSatisfied"></param>
     /// <param name="maximum">The maximum number of satisfied operands allowed.</param>
-    /// <param name="metadataFactory">A function that creates metadata based on the overall satisfaction of the operands.</param>
+    /// <param name="metadata">A function that creates metadata based on the overall satisfaction of the operands.</param>
     /// <param name="operandResults">The collection of operand results.</param>
     internal AtMostNSatisfiedBooleanResult(
+        bool isSatisfied,
         int maximum,
-        Func<bool, IEnumerable<TMetadata>> metadataFactory,
+        IEnumerable<TMetadata> metadata,
         IEnumerable<BooleanResultBase<TMetadata>> operandResults)
     {
-        
         Maximum = maximum.ThrowIfLessThan(0, nameof(maximum));
         
         UnderlyingResults = operandResults
             .ThrowIfNull(nameof(operandResults))
             .ToArray();
 
-        var isSatisfied = UnderlyingResults.Count(result => result.IsSatisfied) <= maximum;
-
         IsSatisfied = isSatisfied;
-        SubstituteMetadata = metadataFactory(isSatisfied);
+        SubstituteMetadata = metadata;
     }
 
     /// <summary>Gets the maximum number of satisfied operands allowed.</summary>

@@ -4,9 +4,6 @@ internal sealed class NotSpec<TModel, TMetadata>(SpecBase<TModel, TMetadata> ope
 {
     public override string Description => $"!({operand})";
 
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) =>
-        WrapException.IfIsSatisfiedByInvocationFails(
-            this,
-            operand,
-            () => operand.IsSatisfiedBy(model).Not());
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => 
+        operand.IsSatisfiedByOrWrapException(model).Not();
 }

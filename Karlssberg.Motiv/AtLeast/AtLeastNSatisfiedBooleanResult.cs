@@ -7,25 +7,24 @@ namespace Karlssberg.Motiv.AtLeast;
 public sealed class AtLeastNSatisfiedBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IAtLeastNSatisfiedBooleanResult<TMetadata>
 {
     /// <summary>Initializes a new instance of the <see cref="AtLeastNSatisfiedBooleanResult{TMetadata}" /> class.</summary>
+    /// <param name="isSatisfied"></param>
     /// <param name="minimum">The minimum number of operand results that need to be satisfied (inclusive).</param>
-    /// <param name="metadataFactory">A function that generates metadata based on the overall satisfaction of the result.</param>
+    /// <param name="metadata">A function that generates metadata based on the overall satisfaction of the result.</param>
     /// <param name="operandResults">The collection of operand results.</param>
     internal AtLeastNSatisfiedBooleanResult(
+        bool isSatisfied,
         int minimum,
-        Func<bool, IEnumerable<TMetadata>> metadataFactory,
+        IEnumerable<TMetadata> metadata,
         IEnumerable<BooleanResultBase<TMetadata>> operandResults)
     {
-        
         Minimum = minimum.ThrowIfLessThan(0, nameof(minimum));
         
         UnderlyingResults = operandResults
             .ThrowIfNull(nameof(operandResults))
             .ToArray();
 
-        var isSatisfied = UnderlyingResults.Count(result => result.IsSatisfied) >= minimum;
-
         IsSatisfied = isSatisfied;
-        SubstituteMetadata = metadataFactory(isSatisfied);
+        SubstituteMetadata = metadata;
     }
 
     /// <summary>Gets the minimum number of operand results that need to be satisfied.</summary>

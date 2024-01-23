@@ -1,34 +1,34 @@
-﻿namespace Karlssberg.Motiv.AtMost;
+﻿namespace Karlssberg.Motiv.AtLeast;
 
-internal sealed class AtMostNSatisfiedSpec<TModel, TMetadata>(
-    int maximum,
+internal sealed class AtLeastNSatisfiedSpec<TModel, TMetadata>(
+    int minimum,
     SpecBase<TModel, TMetadata> underlyingSpec,
     Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactoryFn)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    internal AtMostNSatisfiedSpec(int maximum, SpecBase<TModel, TMetadata> spec)
-        : this(maximum, spec, SelectCauses)
+    internal AtLeastNSatisfiedSpec(int minimum, SpecBase<TModel, TMetadata> spec)
+        : this(minimum, spec, SelectCauses)
     {
     }
 
-    internal AtMostNSatisfiedSpec(
-        int maximum,
+    internal AtLeastNSatisfiedSpec(
+        int minimum,
         SpecBase<TModel, TMetadata> underlyingSpec,
         Func<IEnumerable<TModel>, TMetadata> whenTrue)
-        : this(maximum, underlyingSpec, CreatemetadataFactoryFn(whenTrue))
+        : this(minimum, underlyingSpec, CreatemetadataFactoryFn(whenTrue))
     {
     }
 
-    internal AtMostNSatisfiedSpec(
-        int maximum,
+    internal AtLeastNSatisfiedSpec(
+        int minimum,
         SpecBase<TModel, TMetadata> underlyingSpec,
         Func<IEnumerable<TModel>, TMetadata> whenTrue,
-        Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenMaximumExceeded)
-        : this(maximum, underlyingSpec, CreatemetadataFactoryFn(whenTrue, whenMaximumExceeded))
+        Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenMinimumExceeded)
+        : this(minimum, underlyingSpec, CreatemetadataFactoryFn(whenTrue, whenMinimumExceeded))
     {
     }
 
-    public override string Description => $"AT_MOST_{maximum}({underlyingSpec})";
+    public override string Description => $"AT_LEAST_{minimum}({underlyingSpec})";
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
@@ -39,13 +39,14 @@ internal sealed class AtMostNSatisfiedSpec<TModel, TMetadata>(
                 return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
             })
             .ToArray();
-        
-        var isSatisfied = results.Count(result => result.IsSatisfied) <= maximum;
-        return new AtMostNSatisfiedBooleanResult<TMetadata>(
+
+        var isSatisfied = results.Count(result => result.IsSatisfied) >= minimum;
+        return new AtLeastNSatisfiedBooleanResult<TMetadata>(
             isSatisfied,
-            maximum,
+            minimum, 
             metadataFactoryFn(isSatisfied, results),
-            results.Select(result => result.UnderlyingResult)); ;
+            results.Select(result => result.UnderlyingResult));
+
     }
 
     private static Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>>

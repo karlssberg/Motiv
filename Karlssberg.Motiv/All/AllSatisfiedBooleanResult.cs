@@ -9,23 +9,23 @@ namespace Karlssberg.Motiv.All;
 public sealed class AllSatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata> : BooleanResultBase<TMetadata>, IAllSatisfiedBooleanResult<TMetadata>
 {
     /// <summary>Initializes a new instance of the <see cref="AllSatisfiedBooleanResult{TModel, TMetadata, TUnderlyingMetadata}" /> class.</summary>
-    /// <param name="metadataFactory">
+    /// <param name="isSatisfied"></param>
+    /// <param name="metadata">
     ///     A function that creates metadata based on the overall satisfaction of the operand
     ///     results.
     /// </param>
     /// <param name="operandResults">The collection of operand results.</param>
     internal AllSatisfiedBooleanResult(
-        Func<bool, IEnumerable<TMetadata>> metadataFactory,
+        bool isSatisfied,
+        IEnumerable<TMetadata> metadata,
         IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> operandResults)
     {
         UnderlyingResults = operandResults
             .ThrowIfNull(nameof(operandResults))
             .ToArray();
 
-        var isSatisfied = UnderlyingResults.All(result => result.IsSatisfied);
-
         IsSatisfied = isSatisfied;
-        SubstituteMetadata = metadataFactory(isSatisfied);
+        SubstituteMetadata = metadata;
     }
 
     /// <summary>Gets the collection of operand results.</summary>

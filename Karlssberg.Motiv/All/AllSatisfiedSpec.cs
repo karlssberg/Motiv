@@ -14,23 +14,23 @@ public class AllSatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata> :
     // Function to generate metadata based on the result of the specification.
     private readonly
         Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>
-        _metadataFactory;
+        _metadataFactoryFn;
 
     /// <summary>
     /// Initializes a new instance of the AllSatisfiedSpec class with an underlying specification, a metadata factory,
     /// and an optional description.
     /// </summary>
     /// <param name="underlyingSpec">The underlying specification.</param>
-    /// <param name="metadataFactory">The metadata factory.</param>
+    /// <param name="metadataFactoryFn">The metadata factory.</param>
     /// <param name="description">The optional description.</param>
     internal AllSatisfiedSpec(
         SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
         Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>
-            metadataFactory,
+            metadataFactoryFn,
         string? description = null)
     {
         UnderlyingSpec = underlyingSpec;
-        _metadataFactory = metadataFactory;
+        _metadataFactoryFn = metadataFactoryFn;
         _description = description;
     }
 
@@ -48,17 +48,17 @@ public class AllSatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata> :
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
         var resultsWithModel = models
-            .Select(model => WrapException.IfIsSatisfiedByInvocationFails(this,
-                UnderlyingSpec,
-                () =>
-                {
-                    var underlyingResult = UnderlyingSpec.IsSatisfiedBy(model);
-                    return new BooleanResultWithModel<TModel, TUnderlyingMetadata>(model, underlyingResult);
-                }))
-            .ToList();
+            .Select(model =>
+            {
+                var underlyingResult = UnderlyingSpec.IsSatisfiedByOrWrapException(model);
+                return new BooleanResultWithModel<TModel, TUnderlyingMetadata>(model, underlyingResult);
+            })
+            .ToArray();
 
+        var isSatisfied = resultsWithModel.All(result => result.IsSatisfied);
         return new AllSatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
-            isSatisfied => _metadataFactory(isSatisfied, resultsWithModel),
+            isSatisfied,
+            _metadataFactoryFn(isSatisfied, resultsWithModel),
             resultsWithModel);
     }
 }
@@ -73,11 +73,11 @@ public class AllSatisfiedSpec<TModel, TMetadata> : AllSatisfiedSpec<TModel, TMet
     /// factory.
     /// </summary>
     /// <param name="underlyingSpec">The underlying specification.</param>
-    /// <param name="metadataFactory">The metadata factory.</param>
+    /// <param name="metadataFactoryFn">The metadata factory.</param>
     internal AllSatisfiedSpec(
         SpecBase<TModel, TMetadata> underlyingSpec,
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactory)
-        : base(underlyingSpec, metadataFactory)
+        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactoryFn)
+        : base(underlyingSpec, metadataFactoryFn)
     {
     }
 }

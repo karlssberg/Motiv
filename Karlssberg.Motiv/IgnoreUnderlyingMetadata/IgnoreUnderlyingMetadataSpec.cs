@@ -9,8 +9,6 @@ internal class IgnoreUnderlyingMetadataSpec<TModel, TMetadata, TUnderlyingMetada
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
         return new IgnoreUnderlyingMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
-            WrapException.IfIsSatisfiedByInvocationFails(this,
-                UnderlyingSpec,
-                () => UnderlyingSpec.IsSatisfiedBy(model)));
+            UnderlyingSpec.IsSatisfiedByOrWrapException(model));
     }
 }
