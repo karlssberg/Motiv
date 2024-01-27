@@ -11,10 +11,10 @@ namespace Karlssberg.Motiv.HigherOrderSpecBuilder;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata.</typeparam>
-public interface IHigherOrderMetadataSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> :
-    IYieldAllTrueMetadata<TModel, TMetadata, TUnderlyingMetadata>,
-    IYieldAnythingTypeConverter<TModel, TUnderlyingMetadata>,
-    IYieldAnyTrueMetadataOrFalseMetadata<TModel, TMetadata, TUnderlyingMetadata>
+public interface IHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> :
+    IYieldMetadataWhenTrue<TModel, TMetadata, TUnderlyingMetadata>,
+    IYieldMetadataFromFactory<TModel, TUnderlyingMetadata>,
+    IYieldMetadataWhenAnyTrueOrFalse<TModel, TMetadata, TUnderlyingMetadata>
 {
 }
 
@@ -25,8 +25,8 @@ public interface IHigherOrderMetadataSpecBuilder<TModel, TMetadata, TUnderlyingM
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata.</typeparam>
-public interface IHigherOrderReasonsSpecBuilder<TModel, TUnderlyingMetadata> :
-    IYieldAllTrueReasons<TModel, TUnderlyingMetadata>,
-    IYieldAnyTrueReasonsOrFalseReasons<TModel, TUnderlyingMetadata>
+public interface IHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> :
+    IYieldReasonsWhenAllTrue<TModel, TUnderlyingMetadata>,
+    IYieldReasonsWhenAnyTrueOrFalse<TModel, TUnderlyingMetadata>
 {
 }

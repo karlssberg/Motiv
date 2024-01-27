@@ -17,9 +17,9 @@ public static class YieldWhenAnyTrueExtensions
     /// specification.
     /// </summary>
     /// <returns>The next set of builder operations.</returns>
-    public static IYieldFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAnyTrue<TModel, TMetadata,
+    public static IYieldMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAnyTrue<TModel, TMetadata,
         TUnderlyingMetadata>(
-        this IYieldAnyTrueMetadata<TModel, TMetadata, TUnderlyingMetadata> builder,
+        this IYieldMetadataWhenAnyTrue<TModel, TMetadata, TUnderlyingMetadata> builder,
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, TMetadata> metadata) =>
         builder.YieldWhenAnyTrue(results => [metadata(results)]);
 
@@ -28,9 +28,9 @@ public static class YieldWhenAnyTrueExtensions
     /// specification.
     /// </summary>
     /// <returns>The next set of builder operations.</returns>
-    public static IYieldFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAnyTrue<TModel, TMetadata,
+    public static IYieldMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAnyTrue<TModel, TMetadata,
         TUnderlyingMetadata>(
-        this IYieldAnyTrueMetadata<TModel, TMetadata, TUnderlyingMetadata> builder,
+        this IYieldMetadataWhenAnyTrue<TModel, TMetadata, TUnderlyingMetadata> builder,
         TMetadata metadata) =>
         builder.YieldWhenAnyTrue(_ => metadata);
 
@@ -39,8 +39,8 @@ public static class YieldWhenAnyTrueExtensions
     /// specification.
     /// </summary>
     /// <returns>The next set of builder operations.</returns>
-    public static IYieldFalseReasons<TModel, TUnderlyingMetadata> YieldWhenAnyTrue<TModel, TUnderlyingMetadata>(
-        this IYieldAnyTrueReasons<TModel, TUnderlyingMetadata> builder,
+    public static IYieldReasonsWhenFalse<TModel, TUnderlyingMetadata> YieldWhenAnyTrue<TModel, TUnderlyingMetadata>(
+        this IYieldReasonsWhenAnyTrue<TModel, TUnderlyingMetadata> builder,
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, string> trueBecause) =>
         builder.YieldWhenAnyTrue(results => [trueBecause(results)]);
 
@@ -49,8 +49,8 @@ public static class YieldWhenAnyTrueExtensions
     /// specification.
     /// </summary>
     /// <returns>The next set of builder operations.</returns>
-    public static IYieldFalseReasons<TModel, TUnderlyingMetadata> YieldWhenAnyTrue<TModel, TUnderlyingMetadata>(
-        this IYieldAnyTrueReasons<TModel, TUnderlyingMetadata> builder,
+    public static IYieldReasonsWhenFalse<TModel, TUnderlyingMetadata> YieldWhenAnyTrue<TModel, TUnderlyingMetadata>(
+        this IYieldReasonsWhenAnyTrue<TModel, TUnderlyingMetadata> builder,
         string trueBecause) =>
         builder.YieldWhenAnyTrue(_ => trueBecause);
     
@@ -60,13 +60,13 @@ public static class YieldWhenAnyTrueExtensions
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TAltMetadata">The type of the alternative metadata.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
+    /// <typeparam name="TUnderlyingMetadata">The type of the metadata.</typeparam>
     /// <param name="converter">The converter to extend.</param>
     /// <param name="metadata">A function that takes a collection of BooleanResultWithModel and returns alternative metadata.</param>
     /// <returns>The next set of relevant builder operations.</returns>
-    public static IYieldFalseMetadata<TModel, TAltMetadata, TMetadata> YieldWhenAnyTrue<TModel, TAltMetadata, TMetadata>(
-        this IYieldAnyTrueMetadataTypeConverter<TModel, TMetadata> converter,
-        Func<IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, TAltMetadata> metadata) =>
+    public static IYieldMetadataWhenFalse<TModel, TAltMetadata, TUnderlyingMetadata> YieldWhenAnyTrue<TModel, TAltMetadata, TUnderlyingMetadata>(
+        this IYieldTypeConvertedMetadataWhenAnyTrue<TModel, TUnderlyingMetadata> converter,
+        Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, TAltMetadata> metadata) =>
         converter.YieldWhenAnyTrue<TAltMetadata>(results => [metadata(results)]);
 
     /// <summary>
@@ -75,12 +75,12 @@ public static class YieldWhenAnyTrueExtensions
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TAltMetadata">The type of the alternative metadata.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
+    /// <typeparam name="TUnderlyingMetadata">The type of the metadata.</typeparam>
     /// <param name="converter">The converter to extend.</param>
     /// <param name="metadata">A function that returns a collection of alternative metadata.</param>
     /// <returns>The next set of relevant builder operations.</returns>
-    public static IYieldFalseMetadata<TModel, TAltMetadata, TMetadata> YieldWhenAnyTrue<TModel, TAltMetadata, TMetadata>(
-        this IYieldAnyTrueMetadataTypeConverter<TModel, TMetadata> converter,
+    public static IYieldMetadataWhenFalse<TModel, TAltMetadata, TUnderlyingMetadata> YieldWhenAnyTrue<TModel, TAltMetadata, TUnderlyingMetadata>(
+        this IYieldTypeConvertedMetadataWhenAnyTrue<TModel, TUnderlyingMetadata> converter,
         Func<IEnumerable<TAltMetadata>> metadata) =>
         converter.YieldWhenAnyTrue(results => metadata());
 
@@ -90,12 +90,12 @@ public static class YieldWhenAnyTrueExtensions
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TAltMetadata">The type of the alternative metadata.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
+    /// <typeparam name="TUnderlyingMetadata">The type of the metadata.</typeparam>
     /// <param name="converter">The converter to extend.</param>
     /// <param name="metadata">The alternative metadata to yield.</param>
     /// <returns>The next set of relevant builder operations.</returns>
-    public static IYieldFalseMetadata<TModel, TAltMetadata, TMetadata> YieldWhenAnyTrue<TModel, TAltMetadata, TMetadata>(
-        this IYieldAnyTrueMetadataTypeConverter<TModel, TMetadata> converter,
+    public static IYieldMetadataWhenFalse<TModel, TAltMetadata, TUnderlyingMetadata> YieldWhenAnyTrue<TModel, TAltMetadata, TUnderlyingMetadata>(
+        this IYieldTypeConvertedMetadataWhenAnyTrue<TModel, TUnderlyingMetadata> converter,
         TAltMetadata metadata) =>
         converter.YieldWhenAnyTrue<TAltMetadata>(results => [metadata]);
 }

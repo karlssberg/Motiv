@@ -1,4 +1,6 @@
-﻿namespace Karlssberg.Motiv.Any;
+﻿using Karlssberg.Motiv.NSatisfied;
+
+namespace Karlssberg.Motiv.Any;
 
 public class AnySatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata> :
     SpecBase<IEnumerable<TModel>, TMetadata>,
@@ -7,17 +9,17 @@ public class AnySatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata> :
     private readonly string? _description;
 
     private readonly
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>
-        _metadataFactoryFn;
+        MetadataFactory<TModel, TMetadata, TUnderlyingMetadata>
+        _metadataFactory;
 
     internal AnySatisfiedSpec(
         SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>
-            metadataFactoryFn,
+        MetadataFactory<TModel, TMetadata, TUnderlyingMetadata>
+            metadataFactory,
         string? description = null)
     {
         UnderlyingSpec = underlyingSpec;
-        _metadataFactoryFn = metadataFactoryFn;
+        _metadataFactory = metadataFactory;
         _description = description;
     }
 
@@ -38,7 +40,7 @@ public class AnySatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata> :
             .ToArray();
         
         var isSatisfied = resultsWithModel.Any(result => result.IsSatisfied);
-        var metadata = _metadataFactoryFn(isSatisfied, resultsWithModel);
+        var metadata = _metadataFactory.Create(isSatisfied, resultsWithModel);
         return new AnySatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
             metadata,
@@ -50,8 +52,8 @@ public class AnySatisfiedSpec<TModel, TMetadata> : AnySatisfiedSpec<TModel, TMet
 {
     internal AnySatisfiedSpec(
         SpecBase<TModel, TMetadata> underlyingSpec,
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactoryFn)
-        : base(underlyingSpec, metadataFactoryFn)
+        MetadataFactory<TModel, TMetadata, TMetadata> metadataFactory)
+        : base(underlyingSpec, metadataFactory)
     {
     }
 }

@@ -19,7 +19,7 @@ public static class YieldWhenAllFalseExtensions
     /// <param name="metadata">A function that takes a collection of BooleanResultWithModel and returns metadata.</param>
     /// <returns>The next set of relevant builder operations.</returns>
     public static IHigherOrderSpecFactory<TModel, TMetadata> YieldWhenAllFalse<TModel, TMetadata, TUnderlyingMetadata>(
-        this IYieldFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> builder,
+        this IYieldMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata> builder,
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, TMetadata> metadata) =>
         builder.YieldWhenAllFalse(results => [metadata(results)]);
 
@@ -31,7 +31,7 @@ public static class YieldWhenAllFalseExtensions
     /// <param name="metadata">A function that returns a collection of metadata.</param>
     /// <returns>The next set of relevant builder operations.</returns>
     public static IHigherOrderSpecFactory<TModel, TMetadata> YieldWhenAllFalse<TModel, TMetadata, TUnderlyingMetadata>(
-        this IYieldFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> builder,
+        this IYieldMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata> builder,
         Func<IEnumerable<TMetadata>> metadata) =>
         builder.YieldWhenAllFalse(_ => metadata());
 
@@ -43,7 +43,7 @@ public static class YieldWhenAllFalseExtensions
     /// <param name="metadata">A function that returns metadata.</param>
     /// <returns>The next set of relevant builder operations.</returns>
     public static IHigherOrderSpecFactory<TModel, TMetadata> YieldWhenAllFalse<TModel, TMetadata, TUnderlyingMetadata>(
-        this IYieldFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> builder,
+        this IYieldMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata> builder,
         Func<TMetadata> metadata) =>
         builder.YieldWhenAllFalse(_ => metadata());
 
@@ -55,7 +55,7 @@ public static class YieldWhenAllFalseExtensions
     /// <param name="metadata">The metadata to yield.</param>
     /// <returns>The next set of relevant builder operations.</returns>
     public static IHigherOrderSpecFactory<TModel, TMetadata> YieldWhenAllFalse<TModel, TMetadata, TUnderlyingMetadata>(
-        this IYieldFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> builder,
+        this IYieldMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata> builder,
         TMetadata metadata) =>
         builder.YieldWhenAllFalse(() => [metadata]);
 
@@ -66,7 +66,7 @@ public static class YieldWhenAllFalseExtensions
     /// <param name="falseBecause">A function that takes a collection of BooleanResultWithModel and returns a string reason.</param>
     /// <returns>The next set of relevant builder operations.</returns>
     public static IHigherOrderSpecFactory<TModel, string> YieldWhenAllFalse<TModel, TUnderlyingMetadata>(
-        this IYieldFalseReasons<TModel, TUnderlyingMetadata> builder,
+        this IYieldReasonsWhenFalse<TModel, TUnderlyingMetadata> builder,
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, string> falseBecause) =>
         builder.YieldWhenAllFalse(results => [falseBecause(results)]);
 
@@ -77,7 +77,7 @@ public static class YieldWhenAllFalseExtensions
     /// <param name="falseBecause">A function that returns a collection of string reasons.</param>
     /// <returns>The next set of relevant builder operations.</returns>
     public static IHigherOrderSpecFactory<TModel, string> YieldWhenAllFalse<TModel, TUnderlyingMetadata>(
-        this IYieldFalseReasons<TModel, TUnderlyingMetadata> builder,
+        this IYieldReasonsWhenFalse<TModel, TUnderlyingMetadata> builder,
         Func<IEnumerable<string>> falseBecause) =>
         builder.YieldWhenAllFalse(_ => falseBecause());
 
@@ -88,7 +88,7 @@ public static class YieldWhenAllFalseExtensions
     /// <param name="falseBecause">The string reason to yield.</param>
     /// <returns>The next set of relevant builder operations.</returns>
     public static IHigherOrderSpecFactory<TModel, string> YieldWhenAllFalse<TModel, TUnderlyingMetadata>(
-        this IYieldFalseReasons<TModel, TUnderlyingMetadata> builder,
+        this IYieldReasonsWhenFalse<TModel, TUnderlyingMetadata> builder,
         string falseBecause) =>
         builder.YieldWhenAllFalse(() => [falseBecause]);
 }

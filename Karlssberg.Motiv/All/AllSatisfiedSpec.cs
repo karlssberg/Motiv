@@ -1,4 +1,6 @@
-﻿namespace Karlssberg.Motiv.All;
+﻿using Karlssberg.Motiv.NSatisfied;
+
+namespace Karlssberg.Motiv.All;
 
 /// <summary>Represents a specification that checks if all elements in a collection satisfy the underlying specification.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
@@ -13,24 +15,23 @@ public class AllSatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata> :
 
     // Function to generate metadata based on the result of the specification.
     private readonly
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>
-        _metadataFactoryFn;
+        MetadataFactory<TModel, TMetadata, TUnderlyingMetadata>
+        _metadataFactory;
 
     /// <summary>
     /// Initializes a new instance of the AllSatisfiedSpec class with an underlying specification, a metadata factory,
     /// and an optional description.
     /// </summary>
     /// <param name="underlyingSpec">The underlying specification.</param>
-    /// <param name="metadataFactoryFn">The metadata factory.</param>
+    /// <param name="metadataFactory">The metadata factory.</param>
     /// <param name="description">The optional description.</param>
     internal AllSatisfiedSpec(
         SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>>
-            metadataFactoryFn,
+        MetadataFactory<TModel, TMetadata, TUnderlyingMetadata> metadataFactory,
         string? description = null)
     {
         UnderlyingSpec = underlyingSpec;
-        _metadataFactoryFn = metadataFactoryFn;
+        _metadataFactory = metadataFactory;
         _description = description;
     }
 
@@ -58,7 +59,7 @@ public class AllSatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata> :
         var isSatisfied = resultsWithModel.All(result => result.IsSatisfied);
         return new AllSatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
-            _metadataFactoryFn(isSatisfied, resultsWithModel),
+            _metadataFactory.Create(isSatisfied, resultsWithModel),
             resultsWithModel);
     }
 }
@@ -73,11 +74,11 @@ public class AllSatisfiedSpec<TModel, TMetadata> : AllSatisfiedSpec<TModel, TMet
     /// factory.
     /// </summary>
     /// <param name="underlyingSpec">The underlying specification.</param>
-    /// <param name="metadataFactoryFn">The metadata factory.</param>
+    /// <param name="metadataFactory">The metadata factory.</param>
     internal AllSatisfiedSpec(
         SpecBase<TModel, TMetadata> underlyingSpec,
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactoryFn)
-        : base(underlyingSpec, metadataFactoryFn)
+        MetadataFactory<TModel, TMetadata, TMetadata> metadataFactory)
+        : base(underlyingSpec, metadataFactory)
     {
     }
 }

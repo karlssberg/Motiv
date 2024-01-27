@@ -19,7 +19,7 @@ public static class YieldExtensions
     /// <param name="metadata">A function that takes a boolean and a collection of BooleanResultWithModel and returns metadata.</param>
     /// <returns>The next set of builder operations.</returns>
     public static IHigherOrderSpecFactory<TModel, TMetadata> Yield<TModel, TMetadata, TUnderlyingMetadata>(
-        this IYieldAnythingTypeConverter<TModel, TUnderlyingMetadata> builder,
+        this IYieldMetadataFromFactory<TModel, TUnderlyingMetadata> builder,
         Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, TMetadata> metadata) =>
         builder.Yield<TMetadata>((isSatisfied, results) => [metadata(isSatisfied, results)]);
 
@@ -33,7 +33,7 @@ public static class YieldExtensions
     /// <param name="metadata">A function that takes a boolean and returns metadata.</param>
     /// <returns>The next set of builder operations.</returns>
     public static IHigherOrderSpecFactory<TModel, TMetadata> Yield<TModel, TMetadata, TUnderlyingMetadata>(
-        this IYieldAnythingTypeConverter<TModel, TUnderlyingMetadata> builder,
+        this IYieldMetadataFromFactory<TModel, TUnderlyingMetadata> builder,
         Func<bool, TMetadata> metadata) =>
         builder.Yield<TMetadata>((isSatisfied, _) => [metadata(isSatisfied)]);
 
@@ -47,7 +47,7 @@ public static class YieldExtensions
     /// <param name="metadata">A function that takes a boolean and a collection of BooleanResultWithModel and returns metadata.</param>
     /// <returns>The next set of builder operations.</returns>
     public static IHigherOrderSpecFactory<TModel, TMetadata> Yield<TModel, TMetadata, TUnderlyingMetadata>(
-        this IYieldAllTrueMetadata<TModel, TMetadata, TUnderlyingMetadata> builder,
+        this IYieldMetadataWhenTrue<TModel, TMetadata, TUnderlyingMetadata> builder,
         Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, TMetadata> metadata) =>
         builder.Yield((isSatisfied, results) => [metadata(isSatisfied, results)]);
 }

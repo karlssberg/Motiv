@@ -25,8 +25,8 @@
         <Compile Update="SpecBuilder\Step1\IRequireTrueMetadata.cs">
             <DependentUpon>IRequireTrueReasonOrMetadata.cs</DependentUpon>
         </Compile>
-        <Compile Update="SpecBuilder\Phase1\IRequireTrueMetadata.cs"/>
-        <Compile Update="ChangeMetadata\ChangeMetadataTypeBuilder.cs">
+        <Compile Update="SpecBuilder\Phase1\IYieldMetadataWhenTrue.cs" />
+        <Compile Update="ChangeMetadata\ChangeTypeBuilder.cs">
             <DependentUpon>IChangeMetadataBooleanResult.cs</DependentUpon>
         </Compile>
     </ItemGroup>

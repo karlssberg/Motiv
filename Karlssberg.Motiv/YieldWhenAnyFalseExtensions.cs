@@ -15,9 +15,9 @@ public static class YieldWhenAnyFalseExtensions
     /// specification.
     /// </summary>
     /// <returns>The next set of builder operations.</returns>
-    public static IYieldAllFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAnyFalse<TModel, TMetadata,
+    public static IYieldMetadataWhenAllFalse<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAnyFalse<TModel, TMetadata,
         TUnderlyingMetadata>(
-        this IYieldFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> builder,
+        this IYieldMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata> builder,
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, TMetadata> metadata)
     {
         return builder.YieldWhenAnyFalse(results => [metadata(results)]);
@@ -28,9 +28,9 @@ public static class YieldWhenAnyFalseExtensions
     /// specification.
     /// </summary>
     /// <returns>The next set of builder operations.</returns>
-    public static IYieldAllFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAnyFalse<TModel, TMetadata,
+    public static IYieldMetadataWhenAllFalse<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAnyFalse<TModel, TMetadata,
         TUnderlyingMetadata>(
-        this IYieldFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> builder,
+        this IYieldMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata> builder,
         TMetadata metadata)
     {
         return builder.YieldWhenAnyFalse(_ => metadata);
@@ -41,8 +41,8 @@ public static class YieldWhenAnyFalseExtensions
     /// underlying specification.
     /// </summary>
     /// <returns>The next set of builder operations.</returns>
-    public static IYieldAllFalseReasons<TModel, TUnderlyingMetadata> YieldWhenAnyFalse<TModel, TUnderlyingMetadata>(
-        this IYieldFalseReasons<TModel, TUnderlyingMetadata> builder,
+    public static IYieldReasonsWhenAllFalse<TModel, TUnderlyingMetadata> YieldWhenAnyFalse<TModel, TUnderlyingMetadata>(
+        this IYieldReasonsWhenFalse<TModel, TUnderlyingMetadata> builder,
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, string> falseBecause)
     {
         return builder.YieldWhenAnyFalse(results => [falseBecause(results)]);
@@ -53,8 +53,8 @@ public static class YieldWhenAnyFalseExtensions
     /// underlying specification.
     /// </summary>
     /// <returns>The next set of builder operations.</returns>
-    public static IYieldAllFalseReasons<TModel, TUnderlyingMetadata> YieldWhenAnyFalse<TModel, TUnderlyingMetadata>(
-        this IYieldFalseReasons<TModel, TUnderlyingMetadata> builder,
+    public static IYieldReasonsWhenAllFalse<TModel, TUnderlyingMetadata> YieldWhenAnyFalse<TModel, TUnderlyingMetadata>(
+        this IYieldReasonsWhenFalse<TModel, TUnderlyingMetadata> builder,
         string falseBecause)
     {
         return builder.YieldWhenAnyFalse(_ => falseBecause);

@@ -18,7 +18,7 @@ public static class YieldWhenTrueExtensions
     /// <param name="spec">The specification to extend.</param>
     /// <param name="metadata">The metadata to yield.</param>
     /// <returns>The next set of builder operations.</returns>
-    public static IRequireFalseMetadata<TModel, TNewMetadata> YieldWhenTrue<TModel, TMetadata, TNewMetadata>(
+    public static IYieldMetadataWhenFalse<TModel, TNewMetadata> YieldWhenTrue<TModel, TMetadata, TNewMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         TNewMetadata metadata) =>
         new ChangeMetadataBuilder<TModel, TMetadata>(spec).YieldWhenTrue(metadata);
@@ -32,7 +32,7 @@ public static class YieldWhenTrueExtensions
     /// <param name="spec">The specification to extend.</param>
     /// <param name="metadata">A function that takes a model and returns the metadata to yield.</param>
     /// <returns>The next set of builder operations.</returns>
-    public static IRequireFalseMetadata<TModel, TNewMetadata> YieldWhenTrue<TModel, TMetadata, TNewMetadata>(
+    public static IYieldMetadataWhenFalse<TModel, TNewMetadata> YieldWhenTrue<TModel, TMetadata, TNewMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         Func<TModel, TNewMetadata> metadata) =>
         new ChangeMetadataBuilder<TModel, TMetadata>(spec).YieldWhenTrue(metadata);

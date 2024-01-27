@@ -17,9 +17,9 @@ public static class YieldWhenAllTrueExtensions
     /// <param name="builder">The builder to extend.</param>
     /// <param name="metadata">A function that takes a collection of BooleanResultWithModel and returns metadata.</param>
     /// <returns>The next set of relevant builder operations.</returns>
-    public static IYieldAnyTrueMetadataOrFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAllTrue<TModel,
+    public static IYieldMetadataWhenAnyTrueOrFalse<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAllTrue<TModel,
         TMetadata, TUnderlyingMetadata>(
-        this IYieldAllTrueMetadata<TModel, TMetadata, TUnderlyingMetadata> builder,
+        this IYieldMetadataWhenTrue<TModel, TMetadata, TUnderlyingMetadata> builder,
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, TMetadata> metadata) =>
         builder.YieldWhenAllTrue(results => [metadata(results)]);
 
@@ -30,9 +30,9 @@ public static class YieldWhenAllTrueExtensions
     /// <param name="builder">The builder to extend.</param>
     /// <param name="metadata">A function that returns a collection of metadata.</param>
     /// <returns>The next set of relevant builder operations.</returns>
-    public static IYieldAnyTrueMetadataOrFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAllTrue<TModel,
+    public static IYieldMetadataWhenAnyTrueOrFalse<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAllTrue<TModel,
         TMetadata, TUnderlyingMetadata>(
-        this IYieldAllTrueMetadata<TModel, TMetadata, TUnderlyingMetadata> builder,
+        this IYieldMetadataWhenTrue<TModel, TMetadata, TUnderlyingMetadata> builder,
         Func<IEnumerable<TMetadata>> metadata) =>
         builder.YieldWhenAllTrue(_ => metadata());
 
@@ -43,9 +43,9 @@ public static class YieldWhenAllTrueExtensions
     /// <param name="builder">The builder to extend.</param>
     /// <param name="metadata">The metadata to yield.</param>
     /// <returns>The next set of relevant builder operations.</returns>
-    public static IYieldAnyTrueMetadataOrFalseMetadata<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAllTrue<TModel,
+    public static IYieldMetadataWhenAnyTrueOrFalse<TModel, TMetadata, TUnderlyingMetadata> YieldWhenAllTrue<TModel,
         TMetadata, TUnderlyingMetadata>(
-        this IYieldAllTrueMetadata<TModel, TMetadata, TUnderlyingMetadata> builder,
+        this IYieldMetadataWhenTrue<TModel, TMetadata, TUnderlyingMetadata> builder,
         TMetadata metadata) =>
         builder.YieldWhenAllTrue(() => [metadata]);
 
@@ -55,9 +55,9 @@ public static class YieldWhenAllTrueExtensions
     /// <param name="builder">The builder to extend.</param>
     /// <param name="trueBecause">A function that takes a collection of BooleanResultWithModel and returns a string reason.</param>
     /// <returns>The next set of relevant builder operations.</returns>
-    public static IYieldAnyTrueReasonsOrFalseReasons<TModel, TUnderlyingMetadata> YieldWhenAllTrue<TModel,
+    public static IYieldReasonsWhenAnyTrueOrFalse<TModel, TUnderlyingMetadata> YieldWhenAllTrue<TModel,
         TUnderlyingMetadata>(
-        this IYieldAllTrueReasons<TModel, TUnderlyingMetadata> builder,
+        this IYieldReasonsWhenAllTrue<TModel, TUnderlyingMetadata> builder,
         Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, string> trueBecause) =>
         builder.YieldWhenAllTrue(results => [trueBecause(results)]);
 
@@ -67,9 +67,9 @@ public static class YieldWhenAllTrueExtensions
     /// <param name="builder">The builder to extend.</param>
     /// <param name="trueBecause">A function that returns a collection of string reasons.</param>
     /// <returns>The next set of relevant builder operations.</returns>
-    public static IYieldAnyTrueReasonsOrFalseReasons<TModel, TUnderlyingMetadata> YieldWhenAllTrue<TModel,
+    public static IYieldReasonsWhenAnyTrueOrFalse<TModel, TUnderlyingMetadata> YieldWhenAllTrue<TModel,
         TUnderlyingMetadata>(
-        this IYieldAllTrueReasons<TModel, TUnderlyingMetadata> builder,
+        this IYieldReasonsWhenAllTrue<TModel, TUnderlyingMetadata> builder,
         Func<IEnumerable<string>> trueBecause) =>
         builder.YieldWhenAllTrue(_ => trueBecause());
 
@@ -79,9 +79,9 @@ public static class YieldWhenAllTrueExtensions
     /// <param name="builder">The builder to extend.</param>
     /// <param name="trueBecause">The string reason to yield.</param>
     /// <returns>The next set of relevant builder operations.</returns>
-    public static IYieldAnyTrueReasonsOrFalseReasons<TModel, TUnderlyingMetadata> YieldWhenAllTrue<TModel,
+    public static IYieldReasonsWhenAnyTrueOrFalse<TModel, TUnderlyingMetadata> YieldWhenAllTrue<TModel,
         TUnderlyingMetadata>(
-        this IYieldAllTrueReasons<TModel, TUnderlyingMetadata> builder,
+        this IYieldReasonsWhenAllTrue<TModel, TUnderlyingMetadata> builder,
         string trueBecause) =>
         builder.YieldWhenAllTrue(_ => trueBecause);
 }

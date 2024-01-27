@@ -24,7 +24,7 @@ public static class AnySatisfiedSpecExtensions
     /// </returns>
     public static AnySatisfiedSpec<TModel, TMetadata> ToAnySatisfiedSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec) =>
-        new(spec, DefaultMetadataFactory.GetFactory<TModel, TMetadata>());
+        new(spec,new MetadataFactory<TModel, TMetadata, TMetadata>());
 
     /// <summary>
     /// Commences the building of a specification that is a transformation of the <paramref name="spec" /> into one
@@ -42,7 +42,7 @@ public static class AnySatisfiedSpecExtensions
     /// <paramref name="spec" />. Whether the specification is satisfied or not satisfied, the metadata is the aggregate of the
     /// underlying results
     /// </returns>
-    public static IYieldAllTrueMetadata<TModel, TMetadata, TUnderlyingMetadata> BuildAnySatisfiedSpec<TModel, TMetadata,
+    public static IYieldMetadataWhenTrue<TModel, TMetadata, TUnderlyingMetadata> BuildAnySatisfiedSpec<TModel, TMetadata,
         TUnderlyingMetadata>(
         this SpecBase<TModel, TUnderlyingMetadata> spec) =>
         new AnySatisfiedSpecBuilder<TModel, TMetadata, TUnderlyingMetadata>(spec);
@@ -62,7 +62,7 @@ public static class AnySatisfiedSpecExtensions
     /// <paramref name="spec" />. Whether the specification is satisfied or not satisfied, the metadata is the aggregate of the
     /// underlying results
     /// </returns>
-    public static IYieldAllTrueReasons<TModel, TUnderlyingMetadata> BuildAnySatisfiedSpec<TModel, TUnderlyingMetadata>(
+    public static IYieldReasonsWhenAllTrue<TModel, TUnderlyingMetadata> BuildAnySatisfiedSpec<TModel, TUnderlyingMetadata>(
         this SpecBase<TModel, TUnderlyingMetadata> spec) =>
         new AnySatisfiedSpecBuilder<TModel, TUnderlyingMetadata>(spec);
 }

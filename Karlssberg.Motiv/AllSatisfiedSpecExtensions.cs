@@ -23,7 +23,7 @@ public static class AllSatisfiedSpecExtensions
     /// </returns>
     public static AllSatisfiedSpec<TModel, TMetadata> ToAllSatisfiedSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec) =>
-        new(spec, DefaultMetadataFactory.GetFactory<TModel, TMetadata>());
+        new(spec, new MetadataFactory<TModel, TMetadata, TMetadata>());
 
     /// <summary>
     /// Commences the building of a specification that is a transformation of the <paramref name="spec" /> into one
@@ -40,7 +40,7 @@ public static class AllSatisfiedSpecExtensions
     /// <paramref name="spec" />. Whether the specification is satisfied or not satisfied, the metadata is the aggregate of the
     /// underlying results
     /// </returns>
-    public static IYieldAllTrueMetadata<TModel, TMetadata, TMetadata> BuildAllSatisfiedSpec<TModel, TMetadata>(
+    public static IYieldMetadataWhenTrue<TModel, TMetadata, TMetadata> BuildAllSatisfiedSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec) =>
         new AllSatisfiedSpecBuilder<TModel, TMetadata, TMetadata>(spec);
 }

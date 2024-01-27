@@ -15,7 +15,7 @@ public static class ChangeToReasonExtension
     /// <param name="spec">The specification base.</param>
     /// <param name="trueBecause">The reason when the condition is true.</param>
     /// <returns>A new builder with the changed metadata.</returns>
-    public static IRequireFalseReason<TModel> YieldWhenTrue<TModel, TMetadata>(
+    public static IYieldReasonWhenFalse<TModel> YieldWhenTrue<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         string trueBecause) =>
         new ChangeMetadataBuilder<TModel, TMetadata>(spec).YieldWhenTrue(trueBecause);
@@ -29,7 +29,7 @@ public static class ChangeToReasonExtension
     /// <param name="spec">The specification base.</param>
     /// <param name="trueBecause">A function that provides the reason when the condition is true.</param>
     /// <returns>A new builder with the changed metadata that solicits the corresponding reason for a false outcome.</returns>
-    public static IRequireFalseReasonWhenDescriptionUnresolved<TModel> YieldWhenTrue<TModel, TMetadata>(
+    public static IYieldReasonWithDescriptionUnresolvedWhenFalse<TModel> YieldWhenTrue<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         Func<string> trueBecause) =>
         new ChangeMetadataBuilder<TModel, TMetadata>(spec).YieldWhenTrue(trueBecause);
@@ -46,7 +46,7 @@ public static class ChangeToReasonExtension
     /// A new builder with the changed metadata that solicits the corresponding metadata to yield when the outcome is
     /// false.
     /// </returns>
-    public static IRequireFalseReasonWhenDescriptionUnresolved<TModel> YieldWhenTrue<TModel, TMetadata>(
+    public static IYieldReasonWithDescriptionUnresolvedWhenFalse<TModel> YieldWhenTrue<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         Func<TModel, string> trueBecause) =>
         new ChangeMetadataBuilder<TModel, TMetadata>(spec).YieldWhenTrue(trueBecause);
