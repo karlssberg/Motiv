@@ -6,7 +6,7 @@ namespace Karlssberg.Motiv.NSatisfied;
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
 /// <typeparam name="TModel"></typeparam>
 /// <typeparam name="TUnderlyingMetadata"></typeparam>
-public sealed class NSatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata> : 
+public sealed class NSatisfiedBooleanResult<TModel, TMetadata> : 
     BooleanResultBase<TMetadata>
 {
     private readonly string _name;
@@ -19,8 +19,7 @@ public sealed class NSatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetada
     internal NSatisfiedBooleanResult( 
         string name,
         bool isSatisfied,
-        IEnumerable<TMetadata> metadata,
-        IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> operandResults)
+        IEnumerable<BooleanResultBase<TMetadata>> operandResults)
     {
         _name = name;
         UnderlyingResults = operandResults
@@ -28,22 +27,19 @@ public sealed class NSatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetada
             .ToArray();
         
         IsSatisfied = isSatisfied;
-        SubstituteMetadata = metadata;
     }
-
-
-    /// <summary>Gets the substitute metadata associated with the boolean result.</summary>
-    public IEnumerable<TMetadata> SubstituteMetadata { get; }
 
     
     /// <summary>Gets the collection of operand results.</summary>
-    public IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> UnderlyingResults { get; }
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
+
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
 
     /// <summary>
     ///     Gets the collection of determinative operand results that have the same satisfaction status as the overall
     ///     result.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TUnderlyingMetadata>> DeterminativeResults => UnderlyingResults
+    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => UnderlyingResults
         .Where(result => result.IsSatisfied == IsSatisfied);
 
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>

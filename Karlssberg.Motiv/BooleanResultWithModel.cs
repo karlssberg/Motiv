@@ -6,7 +6,7 @@
 /// <typeparam name="TModel">The type of the associated model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBase<TMetadata>,
-    ICompositeBooleanResult<TMetadata>
+    ILogicalOperatorResult<TMetadata>
 {
     /// <summary>
     /// Initializes a new instance of the BooleanResultWithModel class.
@@ -19,6 +19,8 @@ public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBas
     {
         Model = model ?? throw new ArgumentNullException(nameof(model));
         UnderlyingResult = underlyingResult ?? throw new ArgumentNullException(nameof(underlyingResult));
+        UnderlyingResults = [UnderlyingResult];
+        DeterminativeOperands = [UnderlyingResult];
     }
 
     /// <summary>
@@ -36,6 +38,9 @@ public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBas
     /// </summary>
     public override string Description => UnderlyingResult.Description;
 
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
+
     /// <summary>
     /// Gets a value indicating whether the result is satisfied.
     /// </summary>
@@ -44,13 +49,13 @@ public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBas
     /// <summary>
     /// Gets the underlying results of the composite boolean result.
     /// </summary>
-    IEnumerable<BooleanResultBase<TMetadata>> ICompositeBooleanResult<TMetadata>.UnderlyingResults =>
+    IEnumerable<BooleanResultBase<TMetadata>> ILogicalOperatorResult<TMetadata>.UnderlyingResults =>
         [UnderlyingResult];
 
     /// <summary>
     /// Gets the determinative results of the composite boolean result.
     /// </summary>
-    IEnumerable<BooleanResultBase<TMetadata>> ICompositeBooleanResult<TMetadata>.DeterminativeResults =>
+    IEnumerable<BooleanResultBase<TMetadata>> ILogicalOperatorResult<TMetadata>.DeterminativeOperands =>
         [UnderlyingResult];
 
     /// <summary>

@@ -1,14 +1,13 @@
 ﻿namespace Karlssberg.Motiv.ChangeMetadata;
 
 internal class ChangeMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
-    string description,
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse)
-    : SpecBase<TModel, TMetadata>, IHaveUnderlyingSpec<TModel, TUnderlyingMetadata>
+    : SpecBase<TModel, TMetadata>
 {
     /// <summary>Gets the description of the specification.</summary>
-    public override string Description => description;
+    public override string Description => UnderlyingSpec.Description;
 
     public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
 

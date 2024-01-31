@@ -1,6 +1,5 @@
-﻿using Karlssberg.Motiv.ChangeMetadata;
-using Karlssberg.Motiv.SpecBuilder;
-using Karlssberg.Motiv.SpecBuilder.Phase1;
+﻿using Karlssberg.Motiv.SpecBuilder;
+using Karlssberg.Motiv.SpecBuilder.YieldWhenTrue;
 
 namespace Karlssberg.Motiv;
 
@@ -104,9 +103,5 @@ public static class Spec
 {
     // Builds a specification with a predicate function.
     public static IYieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<TModel, bool> predicate) =>
-        new SpecBuilder<TModel>(predicate);
-
-    // Builds a specification with a SpecBase instance.
-    public static IYieldMetadataWhenTrue<TModel> Build<TModel, TMetadata>(SpecBase<TModel, TMetadata> spec) =>
-        new ChangeMetadataBuilder<TModel, TMetadata>(spec);
+        new ReasonSpecBuilder<TModel>(predicate);
 }

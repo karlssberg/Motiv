@@ -10,7 +10,7 @@ internal class ChangeMetadataBooleanResult<TMetadata, TOtherMetadata>(BooleanRes
     public BooleanResultBase<TOtherMetadata> UnderlyingBooleanResult => booleanResult;
 
     /// <summary>Gets the new metadata.</summary>
-    public TMetadata Metadata => metadata;
+    public IEnumerable<TMetadata> Metadata => [metadata];
 
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
     public override bool IsSatisfied => UnderlyingBooleanResult.IsSatisfied;
@@ -20,6 +20,18 @@ internal class ChangeMetadataBooleanResult<TMetadata, TOtherMetadata>(BooleanRes
     {
         string reason => reason,
         _ => UnderlyingBooleanResult.Description
+    };
+
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } = booleanResult switch
+    {
+        BooleanResultBase<TMetadata> result => [result],
+        _ => []
+    };
+
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => booleanResult.DeterminativeOperands switch
+    {
+        BooleanResultBase<TMetadata> result => [result],
+        _ => []
     };
 
     /// <summary>Gets the type of the original metadata.</summary>

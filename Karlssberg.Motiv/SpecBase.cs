@@ -14,7 +14,7 @@ namespace Karlssberg.Motiv;
 /// </summary>
 /// <typeparam name="TModel">The model type that the specification will evaluate against</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata to associate with the predicate</typeparam>
-public abstract class   SpecBase<TModel, TMetadata>
+public abstract class SpecBase<TModel, TMetadata>
 {
     internal SpecBase()
     {

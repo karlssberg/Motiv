@@ -6,7 +6,6 @@ internal class MetadataBuilder<TModel, TMetadata, TReturnType>(TReturnType retur
     internal Func<TModel, TMetadata>? WhenFalse { get; private set; }
     internal string? CandidateDescription { get; private set; }
 
-
     internal TReturnType SetTrueMetadata(Func<TModel, TMetadata> whenTrue)
     {
         WhenTrue = whenTrue.ThrowIfNull(nameof(whenTrue));

@@ -24,6 +24,9 @@ public abstract class BooleanResultBase<TMetadata>
 
     /// <summary>Gets a human readable description of the tree of conditions that make up this result.</summary>
     public abstract string Description { get; }
+    
+    public abstract IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
+    public abstract IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
 
     /// <summary>Gets the unique specific underlying reasons why the condition is satisfied or not.</summary>
     public IEnumerable<string> Reasons => GatherReasons().Distinct();
@@ -103,7 +106,7 @@ public abstract class BooleanResultBase<TMetadata>
 
     /// <summary>Returns a human readable description of the tree of conditions that make up this result.</summary>
     /// <returns>A string that describes the tree of conditions that make up this result.</returns>
-    public override string ToString() => GatherReasons().Humanize();
+    public override string ToString() => GatherReasons().Distinct().Humanize();
 
     /// <summary>Overloads the bitwise AND operator to perform a logical AND operation on two BooleanResultBase instances.</summary>
     /// <param name="leftResult">The left BooleanResultBase instance.</param>

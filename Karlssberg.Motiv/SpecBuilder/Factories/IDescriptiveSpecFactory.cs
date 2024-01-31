@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.SpecBuilder.Phase3;
+﻿namespace Karlssberg.Motiv.SpecBuilder.Factories;
 
 /// <summary>Represents an interface for building a specification.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>

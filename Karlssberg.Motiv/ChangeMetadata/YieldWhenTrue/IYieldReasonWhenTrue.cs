@@ -1,6 +1,7 @@
-﻿using Karlssberg.Motiv.SpecBuilder.YieldWhenFalse;
+﻿
+using Karlssberg.Motiv.ChangeMetadata.YieldWhenFalse;
 
-namespace Karlssberg.Motiv.SpecBuilder.YieldWhenTrue;
+namespace Karlssberg.Motiv.ChangeMetadata.YieldWhenTrue;
 
 public interface IYieldReasonWhenTrue<TModel>
 {

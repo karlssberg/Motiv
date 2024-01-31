@@ -1,5 +1,5 @@
 ﻿using Karlssberg.Motiv.SpecBuilder;
-using Karlssberg.Motiv.SpecBuilder.Phase1;
+using Karlssberg.Motiv.SpecBuilder.YieldWhenTrue;
 
 namespace Karlssberg.Motiv;
 
@@ -14,5 +14,5 @@ public static class PredicateExtensions
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <param name="predicate">The predicate function.</param>
     /// <returns>A new instance of SpecBuilder initialized with the specified predicate.</returns>
-    public static IYieldReasonWhenTrue<TModel> ToSpec<TModel>(this Func<TModel, bool> predicate) => new SpecBuilder<TModel>(predicate);
+    public static IYieldReasonWhenTrue<TModel> ToSpec<TModel>(this Func<TModel, bool> predicate) => new ReasonSpecBuilder<TModel>(predicate);
 }

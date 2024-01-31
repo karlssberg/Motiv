@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv;
 
-public interface ICompositeBooleanResult<TMetadata>
+public interface ILogicalOperatorResult<TMetadata>
 {
     bool IsSatisfied { get; }
 
@@ -11,5 +11,5 @@ public interface ICompositeBooleanResult<TMetadata>
     IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
 
     /// <summary>Gets the determinative operand results that have the same satisfaction as the overall result.</summary>
-    IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults { get; }
+    IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
 }

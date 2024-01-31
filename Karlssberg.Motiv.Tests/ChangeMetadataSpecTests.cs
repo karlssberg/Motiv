@@ -23,23 +23,19 @@ public class ChangeMetadataSpecTests
 
         var firstSpec = underlying
             .YieldWhenTrue("true after - A")
-            .YieldWhenFalse("false after - A")
-            .CreateSpec();
+            .YieldWhenFalse("false after - A");
 
         var secondSpec = underlying
             .YieldWhenTrue(model => $"true after + {model} - B")
-            .YieldWhenFalse("false after - B")
-            .CreateSpec("second spec");
+            .YieldWhenFalse("false after - B");
 
         var thirdSpec = underlying
             .YieldWhenTrue("true after - C")
-            .YieldWhenFalse(model => $"false after + {model} - C")
-            .CreateSpec();
+            .YieldWhenFalse(model => $"false after + {model} - C");
 
         var fourthSpec = underlying
             .YieldWhenTrue(model => $"true after + {model} - D")
-            .YieldWhenFalse(model => $"false after + {model} - D")
-            .CreateSpec("fourth spec");
+            .YieldWhenFalse(model => $"false after + {model} - D");
 
         var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
@@ -70,25 +66,21 @@ public class ChangeMetadataSpecTests
 
         var firstSpec = underlying
             .YieldWhenTrue(1)
-            .YieldWhenFalse(2)
-            .CreateSpec("first spec");
+            .YieldWhenFalse(2);
 
         var secondSpec = underlying
             .YieldWhenTrue(model => 3)
-            .YieldWhenFalse(4)
-            .CreateSpec("second spec");
+            .YieldWhenFalse(4);
 
-        var thridSpec = underlying
+        var thirdSpec = underlying
             .YieldWhenTrue(5)
-            .YieldWhenFalse(model => 6)
-            .CreateSpec("third spec");
+            .YieldWhenFalse(model => 6);
 
         var fourthSpec = underlying
             .YieldWhenTrue(model => 7)
-            .YieldWhenFalse(model => 8)
-            .CreateSpec("fourth spec");
+            .YieldWhenFalse(model => 8);
 
-        var sut = firstSpec | secondSpec | thridSpec | fourthSpec;
+        var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
         var act = sut.IsSatisfiedBy("model");
 

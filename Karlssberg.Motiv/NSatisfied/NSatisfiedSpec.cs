@@ -1,14 +1,12 @@
 ﻿namespace Karlssberg.Motiv.NSatisfied;
-internal class NSatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata>(
+internal class NSatisfiedSpec<TModel, TMetadata>(
     string name,
-    SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
-    Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicateFn,
-    MetadataFactory<TModel, TMetadata, TUnderlyingMetadata> metadataFactoryFn)
+    SpecBase<TModel, TMetadata> underlyingSpec,
+    Func<IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, bool> higherOrderPredicateFn)
     : 
-    SpecBase<IEnumerable<TModel>, TMetadata>,
-    IHaveUnderlyingSpec<TModel, TUnderlyingMetadata>
+    SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
+    public SpecBase<TModel, TMetadata> UnderlyingSpec { get; } = underlyingSpec;
     public override string Description => $"{name}({UnderlyingSpec})";
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
@@ -17,16 +15,14 @@ internal class NSatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata>(
             .Select(model =>
             {  
                 var underlyingResult = UnderlyingSpec.IsSatisfiedByOrWrapException(model);
-                return new BooleanResultWithModel<TModel, TUnderlyingMetadata>(model, underlyingResult);
+                return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
             })
             .ToArray();
 
         var isSatisfied = higherOrderPredicateFn(results);
-        var metadata = metadataFactoryFn.Create(isSatisfied, results);
-        return new NSatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
+        return new NSatisfiedBooleanResult<TModel, TMetadata>(
             name,
             isSatisfied,
-            metadata,
             results);
     }
 }

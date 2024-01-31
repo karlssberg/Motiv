@@ -12,6 +12,6 @@ public class DoesHandContainSpecifiedRanksSpec(ICollection<Rank> ranks) : Spec<H
             .CreateSpec();
 
         return underlyingSpec
-            .ToAllSatisfiedSpec()
+            .ToAllSatisfiedSpec($"all cards are either {ranks.Humanize("or")}")
             .ChangeModel<Hand>(hand => hand.Cards);
     });

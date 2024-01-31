@@ -17,6 +17,5 @@ public class IsHandStraightSpec() : Spec<Hand, HandRank>(() =>
 
     return isStraightHand
         .YieldWhenTrue(HandRank.Straight)
-        .YieldWhenFalse(HandRank.HighCard)
-        .CreateSpec("is a Straight hand");
+        .YieldWhenFalse(HandRank.HighCard);
 });

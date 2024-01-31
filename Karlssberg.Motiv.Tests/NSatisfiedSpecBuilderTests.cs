@@ -3,7 +3,7 @@ using Humanizer;
 
 namespace Karlssberg.Motiv.Tests;
 
-public class HigherOrderSpecBuilderTests
+public class NSatisfiedSpecBuilderTests
 {
     [Theory]
     [AutoParams(1, 2, 4, 6, false, "1 is false", "1 is odd")]
@@ -26,9 +26,8 @@ public class HigherOrderSpecBuilderTests
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec
-            .BuildAllSatisfiedSpec()
-            .Yield(GenerateReason)
-            .CreateSpec("count of odd or even numbers");
+            .ToAllSatisfiedSpec("all numbers are even")
+            .Yield(GenerateReason);
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
@@ -51,14 +50,14 @@ public class HigherOrderSpecBuilderTests
     {
         var underlyingSpec = Spec
             .Build<int>(n => n % 2 == 0)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
             .CreateSpec("is even");
 
         var sut = underlyingSpec
-            .BuildAllSatisfiedSpec()
-            .Yield(GenerateReason)
-            .CreateSpec();
+            .ToAllSatisfiedSpec("all numbers are even")
+            .YieldWhenTrue(results => $"{results.Count()} are true")
+            .YieldWhenFalse(results => $"{results.Count()} are false");
 
         var result = sut.IsSatisfiedBy([1, 3, 5]);
 

@@ -86,10 +86,7 @@ public class AnySatisfiedSpecTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec
-            .BuildAnySatisfiedSpec()
-            .YieldWhenAnyTrue("any true")
-            .YieldWhenAllFalse("all false")
-            .CreateSpec();
+            .ToAnySatisfiedSpec();
 
         var result = sut.IsSatisfiedBy(models);
 
@@ -138,7 +135,6 @@ public class AnySatisfiedSpecTests
 
         var act = () => sut.IsSatisfiedBy([model]);
 
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains(throwingSpec.Description));
         act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }

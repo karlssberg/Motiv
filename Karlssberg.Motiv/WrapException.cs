@@ -94,18 +94,8 @@ internal static class WrapException
     {
         return underlyingSpecification switch
         {
-            IHaveUnderlyingSpec<TModel, TUnderlyingMetadata> hasUnderlying => FindNonUnderlyingSpecDescription(hasUnderlying.UnderlyingSpec),
             null => DescribeType(spec),
             _ => $"{DescribeType(underlyingSpecification)}. The specification is expressed as '{spec.Description}'"
-        };
-    }
-    
-    private static string FindNonUnderlyingSpecDescription<TModel, TUnderlyingMetadata>(SpecBase<TModel, TUnderlyingMetadata> underlyingSpec)
-    {
-        return underlyingSpec switch
-        {
-            IHaveUnderlyingSpec<TModel, TUnderlyingMetadata> hasUnderlyingSpec => FindNonUnderlyingSpecDescription(hasUnderlyingSpec.UnderlyingSpec),
-            _ => DescribeType(underlyingSpec)
         };
     }
 

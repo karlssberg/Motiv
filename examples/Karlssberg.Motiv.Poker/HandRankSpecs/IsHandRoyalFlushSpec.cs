@@ -8,13 +8,11 @@ public class IsHandRoyalFlushSpec() : Spec<Hand, HandRank>(() =>
 
     var isAceHighStraight = new IsAceHighStraightBroadwaySpec()
         .YieldWhenTrue(HandRank.Straight)
-        .YieldWhenFalse(HandRank.HighCard)
-        .CreateSpec("is Ace High Straight");
+        .YieldWhenFalse(HandRank.HighCard);
 
     var isRoyalFlush = isFlush & isAceHighStraight;
 
     return isRoyalFlush
         .YieldWhenTrue(HandRank.RoyalFlush)
-        .YieldWhenFalse(HandRank.HighCard)
-        .CreateSpec("is Royal Flush");
+        .YieldWhenFalse(HandRank.HighCard);
 });

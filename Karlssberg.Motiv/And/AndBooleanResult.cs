@@ -5,7 +5,7 @@
 ///     objects.
 /// </summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
-public sealed class AndBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, ICompositeBooleanResult<TMetadata>
+public sealed class AndBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, ILogicalOperatorResult<TMetadata>
 {
     /// <summary>Initializes a new instance of the <see cref="AndBooleanResult{TMetadata}" /> class.</summary>
     /// <param name="leftOperandResult">The result of the left operand.</param>
@@ -27,13 +27,13 @@ public sealed class AndBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, 
     public BooleanResultBase<TMetadata> RightOperandResult { get; }
 
     /// <summary>Gets an array containing the left and right operand results.</summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => [LeftOperandResult, RightOperandResult];
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => [LeftOperandResult, RightOperandResult];
 
     /// <summary>
     ///     Gets the determinative operand results, which are the operand results that have the same satisfaction status
     ///     as the overall result.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => UnderlyingResults
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults
         .Where(r => r.IsSatisfied == IsSatisfied);
 
     /// <inheritdoc />
@@ -43,5 +43,5 @@ public sealed class AndBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, 
     public override string Description => $"({LeftOperandResult}) AND:{IsSatisfiedDisplayText} ({RightOperandResult})";
 
     /// <inheritdoc />
-    public override IEnumerable<string> GatherReasons() => DeterminativeResults.SelectMany(r => r.GatherReasons());
+    public override IEnumerable<string> GatherReasons() => DeterminativeOperands.SelectMany(r => r.GatherReasons());
 }

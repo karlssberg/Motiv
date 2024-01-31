@@ -2,7 +2,7 @@
 
 /// <summary>Represents a boolean result with associated metadata and description.</summary>
 /// <typeparam name="TMetadata">The type of the metadata associated with the result.</typeparam>
-public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>
+public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IPropositionResult<TMetadata>
 {
     private readonly string _description;
 
@@ -22,7 +22,7 @@ public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     /// <summary>Gets the metadata associated with the result.</summary>
     public TMetadata Metadata { get; }
 
-    /// <summary>Gets a value indicating whether the result is satisfied.</summary>
+    /// <summary>Gets a value indicating whether the result is sat`isfied.</summary>
     public override bool IsSatisfied { get; }
 
     /// <summary>Gets the description of the result.</summary>
@@ -31,6 +31,9 @@ public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>
         string reason => reason,
         _ => $"{_description} is {(IsSatisfied ? True : False)}"
     };
+
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } = [];
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; } = [];
 
     /// <summary>Gets the reasons for the result.</summary>
     public override IEnumerable<string> GatherReasons()

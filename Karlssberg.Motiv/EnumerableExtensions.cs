@@ -71,4 +71,21 @@ public static class EnumerableExtensions
         foreach (var item in other)
             yield return item;
     }
+
+    public static (IEnumerable<T> first, IEnumerable<T> second) Partition<T>(this IEnumerable<T> enumerable,
+        Func<T, bool> predicate)
+    {
+        var trueList = new List<T>();
+        var falseList = new List<T>();
+        foreach (var item in enumerable)
+        {
+            var list = predicate(item)
+                ? trueList
+                : falseList;
+
+            list.Add(item);
+        }
+
+        return (trueList, falseList);
+    }
 }

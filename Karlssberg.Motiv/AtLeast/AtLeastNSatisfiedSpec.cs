@@ -4,7 +4,7 @@ internal sealed class AtLeastNSatisfiedSpec<TModel, TMetadata>(
     int minimum,
     SpecBase<TModel, TMetadata> underlyingSpec,
     Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactoryFn)
-    : SpecBase<IEnumerable<TModel>, TMetadata>
+    :SpecBase<IEnumerable<TModel>, TMetadata>
 {
     internal AtLeastNSatisfiedSpec(int minimum, SpecBase<TModel, TMetadata> spec)
         : this(minimum, spec, SelectCauses)
@@ -15,7 +15,7 @@ internal sealed class AtLeastNSatisfiedSpec<TModel, TMetadata>(
         int minimum,
         SpecBase<TModel, TMetadata> underlyingSpec,
         Func<IEnumerable<TModel>, TMetadata> whenTrue)
-        : this(minimum, underlyingSpec, CreatemetadataFactoryFn(whenTrue))
+        : this(minimum, underlyingSpec, CreateMetadataFactoryFn(whenTrue))
     {
     }
 
@@ -24,7 +24,7 @@ internal sealed class AtLeastNSatisfiedSpec<TModel, TMetadata>(
         SpecBase<TModel, TMetadata> underlyingSpec,
         Func<IEnumerable<TModel>, TMetadata> whenTrue,
         Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenMinimumExceeded)
-        : this(minimum, underlyingSpec, CreatemetadataFactoryFn(whenTrue, whenMinimumExceeded))
+        : this(minimum, underlyingSpec, CreateMetadataFactoryFn(whenTrue, whenMinimumExceeded))
     {
     }
 
@@ -50,7 +50,7 @@ internal sealed class AtLeastNSatisfiedSpec<TModel, TMetadata>(
     }
 
     private static Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>>
-        CreatemetadataFactoryFn(
+        CreateMetadataFactoryFn(
             Func<IEnumerable<TModel>, TMetadata> whenTrue,
             Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenAnyFalse)
     {
@@ -60,7 +60,7 @@ internal sealed class AtLeastNSatisfiedSpec<TModel, TMetadata>(
     }
 
     private static Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>>
-        CreatemetadataFactoryFn(
+        CreateMetadataFactoryFn(
             Func<IEnumerable<TModel>, TMetadata> whenTrue)
     {
         return (isSatisfied, results) => isSatisfied

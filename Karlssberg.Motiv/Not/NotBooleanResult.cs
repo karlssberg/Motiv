@@ -9,6 +9,8 @@ public sealed class NotBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     internal NotBooleanResult(BooleanResultBase<TMetadata> operandResult)
     {
         OperandResult = operandResult.ThrowIfNull(nameof(operandResult));
+        UnderlyingResults = [operandResult];
+        DeterminativeOperands = [operandResult];
         IsSatisfied = !operandResult.IsSatisfied;
     }
 
@@ -20,6 +22,9 @@ public sealed class NotBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 
     /// <summary>Gets the description of the negation result.</summary>
     public override string Description => $"NOT:{IsSatisfiedDisplayText}({OperandResult})";
+
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
 
     /// <summary>Gets the reasons associated with the operand result.</summary>
     public override IEnumerable<string> GatherReasons() => OperandResult.GatherReasons();

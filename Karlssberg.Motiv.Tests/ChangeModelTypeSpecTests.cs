@@ -56,7 +56,7 @@ public class ChangeModelTypeSpecTests
             .CreateSpec("is a letter");
 
         var isAllLetters = isLetter
-            .ToAllSatisfiedSpec()
+            .ToAllSatisfiedSpec("all characters are letters")
             .ChangeModel<string>(m => m.ToCharArray());
 
         var act = isAllLetters.IsSatisfiedBy(model);

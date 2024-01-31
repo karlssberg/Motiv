@@ -202,7 +202,6 @@ public class OrSpecTests
 
         var act = () => sut.IsSatisfiedBy(model);
 
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains(throwingSpec.Description));
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }
 }

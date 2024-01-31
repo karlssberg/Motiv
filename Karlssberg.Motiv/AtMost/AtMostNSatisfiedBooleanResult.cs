@@ -4,7 +4,7 @@ namespace Karlssberg.Motiv.AtMost;
 
 /// <summary>Represents the result of an "at most" boolean operation with a maximum number of satisfied operands.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
-public sealed class AtMostNSatisfiedBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IAtMostNSatisfiedBooleanResult<TMetadata>
+public sealed class AtMostNSatisfiedBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 {
     /// <summary>Initializes a new instance of the <see cref="AtMostNSatisfiedBooleanResult{TMetadata}" /> class.</summary>
     /// <param name="isSatisfied"></param>
@@ -34,13 +34,13 @@ public sealed class AtMostNSatisfiedBooleanResult<TMetadata> : BooleanResultBase
     public IEnumerable<TMetadata> SubstituteMetadata { get; }
 
     /// <summary>Gets the collection of operand results.</summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
 
     /// <summary>
     ///     Gets the collection of determinative operand results that have the same satisfaction status as the overall
     ///     result.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => 
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => 
         UnderlyingResults.Where(result => result.IsSatisfied);
 
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
@@ -56,12 +56,12 @@ public sealed class AtMostNSatisfiedBooleanResult<TMetadata> : BooleanResultBase
             var higherOrderStatement =
                 $"AT_MOST_{Maximum}{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
             
-            return DeterminativeResults.Any()
-                ? $"{higherOrderStatement}({DeterminativeResults.Count()}x {Reasons.Humanize()})"
+            return DeterminativeOperands.Any()
+                ? $"{higherOrderStatement}({DeterminativeOperands.Count()}x {Reasons.Humanize()})"
                 : higherOrderStatement;
         }
     }
 
     /// <summary>Gets the reasons for the boolean result.</summary>
-    public override IEnumerable<string> GatherReasons() => DeterminativeResults.SelectMany(r => r.GatherReasons());
+    public override IEnumerable<string> GatherReasons() => DeterminativeOperands.SelectMany(r => r.GatherReasons());
 }

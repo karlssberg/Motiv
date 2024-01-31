@@ -2,7 +2,7 @@
 
 /// <summary>Represents a boolean result that is the logical OR of two operand results.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
-public sealed class OrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IBinaryBooleanResult<TMetadata>
+public sealed class OrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
 {
     /// <summary>Initializes a new instance of the <see cref="OrBooleanResult{TMetadata}" /> class.</summary>
     /// <param name="leftOperandResult">The result of the left operand.</param>
@@ -23,13 +23,13 @@ public sealed class OrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, I
     public BooleanResultBase<TMetadata> RightOperandResult { get; }
 
     /// <summary>Gets an array containing the left and right operand results.</summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => [LeftOperandResult, RightOperandResult];
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => [LeftOperandResult, RightOperandResult];
 
     /// <summary>
     ///     Gets the determinative operand results, which are the operand results that have the same satisfaction status
     ///     as the overall result.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => UnderlyingResults
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults
         .Where(r => r.IsSatisfied == IsSatisfied);
 
     /// <inheritdoc />
@@ -39,5 +39,5 @@ public sealed class OrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, I
     public override string Description => $"({LeftOperandResult}) OR:{IsSatisfiedDisplayText} ({RightOperandResult})";
 
     /// <inheritdoc />
-    public override IEnumerable<string> GatherReasons() => DeterminativeResults.SelectMany(r => r.GatherReasons());
+    public override IEnumerable<string> GatherReasons() => DeterminativeOperands.SelectMany(r => r.GatherReasons());
 }

@@ -1,59 +1,57 @@
-﻿using Karlssberg.Motiv.NSatisfied;
+﻿namespace Karlssberg.Motiv.Any;
 
-namespace Karlssberg.Motiv.Any;
-
-public class AnySatisfiedSpec<TModel, TMetadata, TUnderlyingMetadata> :
-    SpecBase<IEnumerable<TModel>, TMetadata>,
-    IHaveUnderlyingSpec<TModel, TUnderlyingMetadata>
+/// <summary>
+/// Represents a specification that is satisfied if any model in a collection satisfies an underlying specification.
+/// </summary>
+/// <typeparam name="TModel">The type of the model.</typeparam>
+/// <typeparam name="TMetadata">The type of the metadata.</typeparam>
+public class AnySatisfiedSpec<TModel, TMetadata> : SpecBase<IEnumerable<TModel>, TMetadata>
 {
     private readonly string? _description;
 
-    private readonly
-        MetadataFactory<TModel, TMetadata, TUnderlyingMetadata>
-        _metadataFactory;
-
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnySatisfiedSpec{TModel, TMetadata}"/> class.
+    /// </summary>
+    /// <param name="propositionalSpec">The underlying specification.</param>
+    /// <param name="description">The description of the specification.</param>
     internal AnySatisfiedSpec(
-        SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
-        MetadataFactory<TModel, TMetadata, TUnderlyingMetadata>
-            metadataFactory,
+        SpecBase<TModel, TMetadata> propositionalSpec,
         string? description = null)
     {
-        UnderlyingSpec = underlyingSpec;
-        _metadataFactory = metadataFactory;
+        UnderlyingSpec = propositionalSpec;
         _description = description;
     }
 
+    /// <summary>
+    /// Gets the description of the specification.
+    /// </summary>
     public override string Description => _description is null
         ? $"ANY({UnderlyingSpec})"
         : $"ANY<{_description}>({UnderlyingSpec})";
 
-    public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; }
+    /// <summary>
+    /// Gets the underlying specification.
+    /// </summary>
+    public SpecBase<TModel, TMetadata> UnderlyingSpec { get; }
 
+    /// <summary>
+    /// Determines whether the specification is satisfied by a collection of models.
+    /// </summary>
+    /// <param name="models">The collection of models.</param>
+    /// <returns>A boolean result with metadata.</returns>
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
         var resultsWithModel = models
             .Select(model =>
             {
                 var underlyingResult = UnderlyingSpec.IsSatisfiedByOrWrapException(model);
-                return new BooleanResultWithModel<TModel, TUnderlyingMetadata>(model, underlyingResult);
+                return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
             })
             .ToArray();
-        
-        var isSatisfied = resultsWithModel.Any(result => result.IsSatisfied);
-        var metadata = _metadataFactory.Create(isSatisfied, resultsWithModel);
-        return new AnySatisfiedBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
-            isSatisfied,
-            metadata,
-            resultsWithModel);
-    }
-}
 
-public class AnySatisfiedSpec<TModel, TMetadata> : AnySatisfiedSpec<TModel, TMetadata, TMetadata>
-{
-    internal AnySatisfiedSpec(
-        SpecBase<TModel, TMetadata> underlyingSpec,
-        MetadataFactory<TModel, TMetadata, TMetadata> metadataFactory)
-        : base(underlyingSpec, metadataFactory)
-    {
+        var isSatisfied = resultsWithModel.Any(result => result.IsSatisfied);
+        return new AnySatisfiedBooleanResult<TModel, TMetadata>(
+            isSatisfied,
+            resultsWithModel);
     }
 }

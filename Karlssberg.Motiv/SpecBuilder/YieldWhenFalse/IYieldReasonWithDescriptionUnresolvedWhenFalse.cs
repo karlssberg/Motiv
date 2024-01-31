@@ -1,6 +1,6 @@
-﻿using Karlssberg.Motiv.SpecBuilder.Phase3;
+﻿using Karlssberg.Motiv.SpecBuilder.Factories;
 
-namespace Karlssberg.Motiv.SpecBuilder.Phase2;
+namespace Karlssberg.Motiv.SpecBuilder.YieldWhenFalse;
 
 /// <summary>Represents an interface for asking for a false reason in a specification.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
