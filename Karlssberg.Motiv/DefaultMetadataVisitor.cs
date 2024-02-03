@@ -1,4 +1,5 @@
-﻿using Karlssberg.Motiv.ChangeMetadata;
+﻿using Karlssberg.Motiv.ChangeHigherOrderMetadata;
+using Karlssberg.Motiv.ChangeMetadata;
 
 namespace Karlssberg.Motiv;
 
@@ -26,30 +27,33 @@ public class DefaultMetadataVisitor<TMetadata>
         return booleanResultBase switch
         {
             ILogicalOperatorResult<TMetadata> logicalOperatorResult => Visit(logicalOperatorResult),
+            IHigherOrderLogicalOperatorResult<TMetadata> logicalOperatorResult => Visit(logicalOperatorResult),
             IChangeMetadataBooleanResult<TMetadata> changeMetadataBooleanResult => Visit(changeMetadataBooleanResult),
+            IChangeHigherOrderMetadataBooleanResult<TMetadata> changeMetadataBooleanResult => Visit(changeMetadataBooleanResult),
             IPropositionResult<TMetadata> propositionResult => Visit(propositionResult),
             _ => booleanResultBase.DeterminativeOperands.SelectMany(Visit)
         };
     }
 
-    private IEnumerable<TMetadata> Visit(IPropositionResult<TMetadata> propositionResult)
+    public virtual IEnumerable<TMetadata> Visit(IPropositionResult<TMetadata> propositionResult)
     {
         yield return propositionResult.Metadata;
     }
 
     public virtual IEnumerable<TMetadata> Visit(ILogicalOperatorResult<TMetadata> logicalOperatorResult) =>
         Visit(logicalOperatorResult.DeterminativeOperands);
+    
+    
+    public virtual IEnumerable<TMetadata> Visit(IHigherOrderLogicalOperatorResult<TMetadata> logicalOperatorResult) =>
+        Visit(logicalOperatorResult.DeterminativeOperands);
 
     public virtual IEnumerable<TMetadata> Visit(IChangeMetadataBooleanResult<TMetadata> changeMetadataBooleanResult)
     {
         return changeMetadataBooleanResult.Metadata;
     }
-}
-
-public class DeepMetadataVisitor<TMetadata> : DefaultMetadataVisitor<TMetadata>
-{
-    public override IEnumerable<TMetadata> Visit(IChangeMetadataBooleanResult<TMetadata> changeMetadataBooleanResult) =>
-        changeMetadataBooleanResult.UnderlyingResults
-            .SelectMany(Visit)
-            .IfEmptyThen(changeMetadataBooleanResult.Metadata);
+    public virtual IEnumerable<TMetadata> Visit(IChangeHigherOrderMetadataBooleanResult<TMetadata> changeMetadataBooleanResult)
+    {
+        return changeMetadataBooleanResult.Metadata;
+    }
+    
 }

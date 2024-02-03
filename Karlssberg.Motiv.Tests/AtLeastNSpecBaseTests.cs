@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv.Tests;
 
-public class HigherOrderSpecBaseTests
+public class AtLeastNSpecBaseTests
 {
     [Theory]
     [AutoParams(false, false, false, false, true)]

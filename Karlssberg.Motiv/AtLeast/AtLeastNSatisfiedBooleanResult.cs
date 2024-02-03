@@ -4,7 +4,9 @@ namespace Karlssberg.Motiv.AtLeast;
 
 /// <summary>Represents a boolean result that is satisfied if at least a specified number of operand results are satisfied.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
-public sealed class AtLeastNSatisfiedBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
+public sealed class AtLeastNSatisfiedBooleanResult<TMetadata> : 
+    BooleanResultBase<TMetadata>,
+    ILogicalOperatorResult<TMetadata>
 {
     /// <summary>Initializes a new instance of the <see cref="AtLeastNSatisfiedBooleanResult{TMetadata}" /> class.</summary>
     /// <param name="isSatisfied"></param>

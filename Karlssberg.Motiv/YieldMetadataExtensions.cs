@@ -4,15 +4,15 @@ namespace Karlssberg.Motiv;
 
 public static class YieldMetadataExtensions
 {
-    public static SpecBase<IEnumerable<TModel>, TMetadata> Yield<TModel, TMetadata>(
-        this SpecBase<IEnumerable<TModel>, TMetadata> spec,
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadata) =>
-        new ChangeHigherOrderMetadataSpec<TModel, TMetadata>(spec, metadata);
+    public static SpecBase<IEnumerable<TModel>, TMetadata> Yield<TModel, TMetadata, TUnderlyingMetadata>(
+        this SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> spec,
+        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>> metadata) =>
+        new ChangeHigherOrderMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(spec, metadata);
 
-    public static SpecBase<IEnumerable<TModel>, TMetadata> Yield<TModel, TMetadata>(
-        this SpecBase<IEnumerable<TModel>, TMetadata> spec,
-        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, TMetadata> metadata) =>
-        new ChangeHigherOrderMetadataSpec<TModel, TMetadata>(
+    public static SpecBase<IEnumerable<TModel>, TMetadata> Yield<TModel, TMetadata, TUnderlyingMetadata>(
+        this SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> spec,
+        Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, TMetadata> metadata) =>
+        new ChangeHigherOrderMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
             spec, 
             (isSatisfied, results) => [metadata(isSatisfied, results)]);
 }

@@ -28,9 +28,9 @@ internal class ChangeMetadataBooleanResult<TMetadata, TOtherMetadata>(BooleanRes
         _ => []
     };
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => booleanResult.DeterminativeOperands switch
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => booleanResult switch
     {
-        BooleanResultBase<TMetadata> result => [result],
+        BooleanResultBase<TMetadata> result => result.DeterminativeOperands,
         _ => []
     };
 

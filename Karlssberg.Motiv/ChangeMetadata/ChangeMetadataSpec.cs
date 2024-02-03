@@ -3,11 +3,12 @@
 internal class ChangeMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
     Func<TModel, TMetadata> whenTrue,
-    Func<TModel, TMetadata> whenFalse)
+    Func<TModel, TMetadata> whenFalse,
+    string? description = null)
     : SpecBase<TModel, TMetadata>
 {
     /// <summary>Gets the description of the specification.</summary>
-    public override string Description => UnderlyingSpec.Description;
+    public override string Description => description ?? UnderlyingSpec.Description;
 
     public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
 
@@ -20,9 +21,12 @@ internal class ChangeMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
         var booleanResult = UnderlyingSpec.IsSatisfiedBy(model);
-        var metadata = booleanResult.IsSatisfied
-            ? whenTrue(model)
-            : whenFalse(model);
+        
+        var metadata = booleanResult.IsSatisfied switch
+        {
+            true => whenTrue(model),
+            false => whenFalse(model),
+        };
 
         return new ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadata);
     }

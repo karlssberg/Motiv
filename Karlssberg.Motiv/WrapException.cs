@@ -53,10 +53,9 @@ internal static class WrapException
         var article = vowels.Contains(exceptionTypeName[0]) ? "An" : "A";
         var descriptionPhrase = GetDescriptionPhrase(spec, underlyingSpecification);
 
-        var message = string.IsNullOrWhiteSpace(ex.Message)
+        return string.IsNullOrWhiteSpace(ex.Message)
             ? $"{article} '{exceptionTypeName}' was thrown while evaluating the specification {descriptionPhrase}."
             : $"{article} '{exceptionTypeName}' was thrown with the message '{ex.Message}' while evaluating the specification {descriptionPhrase}.";
-        return message;
     }
     
     private static string   GetErrorMessageForIsSatisfiedByCall<TModel, TMetadata>(

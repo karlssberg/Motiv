@@ -6,44 +6,34 @@ namespace Karlssberg.Motiv.NSatisfied;
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
 /// <typeparam name="TModel"></typeparam>
 /// <typeparam name="TUnderlyingMetadata"></typeparam>
-public sealed class NSatisfiedBooleanResult<TModel, TMetadata> : 
-    BooleanResultBase<TMetadata>
+internal sealed class NSatisfiedBooleanResult<TModel, TMetadata>(
+    int n,
+    bool isSatisfied,
+    IEnumerable<BooleanResultBase<TMetadata>> operandResults) :
+    BooleanResultBase<TMetadata>,
+    ILogicalOperatorResult<TMetadata>
 {
-    private readonly string _name;
-
-    /// <summary>Initializes a new instance of the <see cref="NSatisfiedBooleanResult{TModel,TMetadata,TUnderlyingMetadata}" /> class.</summary>
-    /// <param name="name"></param>
-    /// <param name="isSatisfied"></param>
-    /// <param name="metadata"></param>
-    /// <param name="operandResults">The collection of operand results.</param>
-    internal NSatisfiedBooleanResult( 
-        string name,
-        bool isSatisfied,
-        IEnumerable<BooleanResultBase<TMetadata>> operandResults)
-    {
-        _name = name;
-        UnderlyingResults = operandResults
-            .ThrowIfNull(nameof(operandResults))
-            .ToArray();
-        
-        IsSatisfied = isSatisfied;
-    }
-
-    
     /// <summary>Gets the collection of operand results.</summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } = operandResults
+        .ThrowIfNull(nameof(operandResults))
+        .ToArray();
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => IsSatisfied
+        ? UnderlyingResults.Where(result => result.IsSatisfied == IsSatisfied)
+        : UnderlyingResults;
 
     /// <summary>
-    ///     Gets the collection of determinative operand results that have the same satisfaction status as the overall
-    ///     result.
+    /// Gets the collection of determinative operand results that have the same satisfaction status as the overall
+    /// result.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => UnderlyingResults
-        .Where(result => result.IsSatisfied == IsSatisfied);
+    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => IsSatisfied switch
+    {
+        true => UnderlyingResults.Where(result => result.IsSatisfied),
+        false => UnderlyingResults
+    };
 
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
-    public override bool IsSatisfied { get; }
+    public override bool IsSatisfied { get; } = isSatisfied;
 
     /// <summary>Gets the description of the boolean result.</summary>
     public override string Description
@@ -52,12 +42,22 @@ public sealed class NSatisfiedBooleanResult<TModel, TMetadata> :
         {
             var satisfiedCount = UnderlyingResults.Count(result => result.IsSatisfied);
             var higherOrderStatement =
-                $"{_name}{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
-                
+                $"{n}_SATISFIED{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
+
             return DeterminativeResults.Any()
-                ? $"{higherOrderStatement}({DeterminativeResults.Count()}x {Reasons.Humanize()})"
+                ? $"{higherOrderStatement}({SummarizeReasons()})"
                 : higherOrderStatement;
         }
+    }
+
+    private string SummarizeReasons()
+    {
+        return GatherReasons()
+            .GroupBy(reason => reason)
+            .Select(grouping => grouping.Count() == 1
+                ? $"{grouping.Key}"
+                : $"{grouping.Key} x{grouping.Count()}")
+            .Humanize();
     }
 
     /// <summary>Gets the reasons associated with the boolean result.</summary>

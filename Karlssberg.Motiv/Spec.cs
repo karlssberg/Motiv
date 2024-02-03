@@ -48,10 +48,6 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
 
     // Determines whether the specified model satisfies the specification.
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => _spec.IsSatisfiedBy(model);
-
-    // Builds a specification with a predicate function.
-    protected static IYieldReasonWhenTrue<TAltModel> Build<TAltModel>(Func<TAltModel, bool> predicate) =>
-        Spec.Build(predicate);
 }
 
 /// <summary>
@@ -103,5 +99,5 @@ public static class Spec
 {
     // Builds a specification with a predicate function.
     public static IYieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<TModel, bool> predicate) =>
-        new ReasonSpecBuilder<TModel>(predicate);
+        new SpecBuilder<TModel>(predicate);
 }

@@ -4,7 +4,9 @@ namespace Karlssberg.Motiv.AtMost;
 
 /// <summary>Represents the result of an "at most" boolean operation with a maximum number of satisfied operands.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
-public sealed class AtMostNSatisfiedBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
+public sealed class AtMostNSatisfiedBooleanResult<TMetadata> :
+    BooleanResultBase<TMetadata>,
+    ILogicalOperatorResult<TMetadata>
 {
     /// <summary>Initializes a new instance of the <see cref="AtMostNSatisfiedBooleanResult{TMetadata}" /> class.</summary>
     /// <param name="isSatisfied"></param>

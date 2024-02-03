@@ -6,22 +6,22 @@ namespace Karlssberg.Motiv.SpecBuilder;
 
 /// <summary>Represents a builder for creating specifications based on a predicate.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-internal class ReasonSpecBuilder<TModel> :
+internal class SpecBuilder<TModel> :
     IYieldReasonOrMetadataWhenTrue<TModel>,
     IYieldReasonWhenFalse<TModel>,
     IYieldMetadataWhenFalse<TModel, string>,
     IYieldReasonWithDescriptionUnresolvedWhenFalse<TModel>,
     ISpecFactory<TModel>
 {
-    private readonly MetadataBuilder<TModel, string, ReasonSpecBuilder<TModel>> _because;
+    private readonly MetadataBuilder<TModel, string, SpecBuilder<TModel>> _because;
 
     private readonly Func<TModel, bool> _predicate;
     /// <summary>Represents a builder for creating specifications based on a predicate.</summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
-    internal ReasonSpecBuilder(Func<TModel, bool> predicate)
+    internal SpecBuilder(Func<TModel, bool> predicate)
     {
         _predicate = predicate;
-        _because = new MetadataBuilder<TModel, string, ReasonSpecBuilder<TModel>>(this);
+        _because = new MetadataBuilder<TModel, string, SpecBuilder<TModel>>(this);
     }
 
     public SpecBase<TModel, string> CreateSpec() =>

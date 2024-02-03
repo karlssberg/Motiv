@@ -1,10 +1,10 @@
-﻿using Karlssberg.Motiv.ChangeMetadata;
+﻿using System.Diagnostics;
 
 namespace Karlssberg.Motiv.ChangeHigherOrderMetadata;
 
-internal class ChangeHigherOrderMetadataSpec<TModel, TMetadata>(
-    SpecBase<IEnumerable<TModel>, TMetadata> higherOrderSpec,
-    Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactory)
+internal class ChangeHigherOrderMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
+    SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> higherOrderSpec,
+    Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>> metadataFactory)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
     /// <summary>Gets the description of the specification.</summary>
@@ -26,11 +26,48 @@ internal class ChangeHigherOrderMetadataSpec<TModel, TMetadata>(
         var metadata = metadataFactory(booleanResult.IsSatisfied,
             underlyingResults);
  
-        return new ChangeHigherOrderMetadataBooleanResults<TMetadata>(
+        return new ChangeHigherOrderMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
             metadata,
             booleanResult);
     }
 
-    private static BooleanResultWithModel<TModel, TMetadata> CreateBooleanResultWithModel(
-        BooleanResultBase<TMetadata> result, TModel model) => new(model, result);
+    private static BooleanResultWithModel<TModel, TUnderlyingMetadata> CreateBooleanResultWithModel(
+        BooleanResultBase<TUnderlyingMetadata> result, TModel model) => new(model, result);
+}
+
+
+
+public interface IYieldHigherOrderMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata>
+{
+    SpecBase<IEnumerable<TModel>, TMetadata> YieldWhenFalse(Func<IEnumerable<TModel>, IEnumerable<TModel>, TMetadata> whenFalse);
+}
+
+internal class ChangeHigherOrderHigherOrderMetadataTypeBuilder<TModel, TMetadata, TUnderlyingMetadata>(
+    SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> spec,
+    Func<IEnumerable<TModel>, IEnumerable<TModel>, TMetadata> whenTrue) :
+    IYieldHigherOrderMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata>
+{
+    public SpecBase<IEnumerable<TModel>, TMetadata> YieldWhenFalse(
+        Func<IEnumerable<TModel>, IEnumerable<TModel>, TMetadata> whenFalse)
+    {
+        whenFalse.ThrowIfNull(nameof(whenFalse));
+        return new ChangeHigherOrderMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
+            spec,
+            (isSatisfied, underlyingResults) =>
+            {
+                var underlyingResultsArray = underlyingResults.ToArray();
+                var trueResults = underlyingResultsArray
+                    .GetModelsWhere(result => result.IsSatisfied == isSatisfied);
+                
+                var falseResults = underlyingResultsArray
+                    .GetModelsWhere(result => result.IsSatisfied != isSatisfied);
+                
+                var metadata = isSatisfied
+                    ? whenTrue(trueResults, falseResults)
+                    : whenFalse(trueResults, falseResults);
+
+                return [metadata];
+            });
+    }
+
 }

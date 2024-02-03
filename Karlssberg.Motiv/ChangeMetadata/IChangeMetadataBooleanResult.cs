@@ -18,4 +18,5 @@ public interface IChangeMetadataBooleanResult<TMetadata> {
     Type OriginalMetadataType { get; }
 
     IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
+    IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
 }

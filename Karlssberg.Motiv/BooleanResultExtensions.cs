@@ -4,7 +4,7 @@
 /// Provides extension methods for the BooleanResultBase class. These methods dispatch to a visitor that will
 /// aggregate metadata from the underlying result tree.
 /// </summary>
-public static class BooleanResultBaseExtensions
+public static class BooleanResultExtensions
 {
     /// <summary>Retrieves metadata from the BooleanResultBase instance using a default metadata visitor.</summary>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
@@ -28,12 +28,21 @@ public static class BooleanResultBaseExtensions
         where TVisitor : DefaultMetadataVisitor<TMetadata> =>
         visitor.Visit(booleanResultBase);
 
-    /// <summary>Retrieves superficial reasons from the BooleanResultBase instance using a default metadata visitor.</summary>
+    /// <summary>Retrieves root causes from the BooleanResultBase instance.</summary>
     /// <param name="booleanResultBase">The BooleanResultBase instance.</param>
     /// <returns>A distinct collection of superficial reasons.</returns>
-    public static IEnumerable<string> GetSuperficialReasons(
+    public static IEnumerable<string> GetDeepReasons(
         this BooleanResultBase<string> booleanResultBase) =>
         booleanResultBase
-            .GetMetadata(new DefaultMetadataVisitor<string>())
+            .GetMetadata(new DeepMetadataVisitor<string>())
             .Distinct();
+    
+    internal static IEnumerable<TModel> GetModelsWhere<TModel, TMetadata>(
+        this IEnumerable<BooleanResultWithModel<TModel, TMetadata>> underlyingResults, 
+        Func<BooleanResultWithModel<TModel, TMetadata>, bool> filter)
+    {
+        return underlyingResults
+            .Where(filter)
+            .Select(result => result.Model);
+    }
 }

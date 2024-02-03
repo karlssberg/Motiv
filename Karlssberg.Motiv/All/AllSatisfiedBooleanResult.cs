@@ -2,14 +2,13 @@
 
 namespace Karlssberg.Motiv.All;
 
-
 /// <summary>Represents a boolean result that indicates whether all operand results are satisfied.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
 /// <typeparam name="TModel">The model used to evaluate each underlying operand.</typeparam>
 /// <typeparam name="TMetadata">The type of metadata associated with each underlying operand.</typeparam>
 public sealed class AllSatisfiedBooleanResult<TModel, TMetadata> : 
     BooleanResultBase<TMetadata>,
-    ILogicalOperatorResult<TMetadata>
+    ILogicalOperatorResult<TMetadata>, IHigherOrderLogicalOperatorResult<TMetadata>
 {
     /// <summary>
     /// Initializes a new instance of the
