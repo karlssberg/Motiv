@@ -1,6 +1,6 @@
-﻿namespace Karlssberg.Motiv;
+﻿namespace Karlssberg.Motiv.Proposition;
 
-internal class StringMetadataSpec<TModel>(
+internal class ReasonSpec<TModel>(
     string description,
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,

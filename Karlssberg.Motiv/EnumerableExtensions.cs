@@ -3,6 +3,14 @@
 /// <summary>Provides extension methods for working with enumerable collections.</summary>
 public static class EnumerableExtensions
 {
+    public static SpecBase<TModel, TMetadata> AndTogether<TModel, TMetadata>(
+        this IEnumerable<SpecBase<TModel, TMetadata>> specifications) =>
+        specifications.Aggregate((leftSpec, rightSpec) => leftSpec & rightSpec);
+
+    public static SpecBase<TModel, TMetadata> OrTogether<TModel, TMetadata>(
+        this IEnumerable<SpecBase<TModel, TMetadata>> specifications) =>
+        specifications.Aggregate((leftSpec, rightSpec) => leftSpec | rightSpec);
+    
     /// <summary>Determines whether any element in the collection satisfies the specified specification.</summary>
     /// <typeparam name="TModel">The type of the elements in the collection.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
@@ -24,39 +32,13 @@ public static class EnumerableExtensions
         this IEnumerable<TModel> source,
         SpecBase<TModel, TMetadata> spec) =>
         spec.ToAnySatisfiedSpec().IsSatisfiedBy(source);
-
-    /// <summary>Combines multiple specifications into a single specification that requires all of them to be satisfied.</summary>
-    /// <typeparam name="TModel">The type of the elements in the collection.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the specifications.</typeparam>
-    /// <param name="specifications">The specifications to combine.</param>
-    /// <returns>A SpecificationBase that requires all of the input specifications to be satisfied.</returns>
-    public static SpecBase<TModel, TMetadata> ToAllSatisfiedSpec<TModel, TMetadata>(
-        this IEnumerable<SpecBase<TModel, TMetadata>> specifications)
-    {
-        return specifications.Aggregate(
-            (leftSpec, rightSpec) =>
-                leftSpec & rightSpec);
-    }
-
-    /// <summary>Combines multiple specifications into a single specification that requires any of them to be satisfied.</summary>
-    /// <typeparam name="TModel">The type of the elements in the collection.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the specifications.</typeparam>
-    /// <param name="specifications">The specifications to combine.</param>
-    /// <returns>A SpecificationBase that requires any of the input specifications to be satisfied.</returns>
-    public static SpecBase<TModel, TMetadata> ToAnySatisfiedSpec<TModel, TMetadata>(
-        this IEnumerable<SpecBase<TModel, TMetadata>> specifications)
-    {
-        return specifications.Aggregate(
-            (leftSpec, rightSpec) =>
-                leftSpec | rightSpec);
-    }
-
+    
     /// <summary>Returns the source collection if it is not empty; otherwise, returns the specified alternative collection.</summary>
     /// <typeparam name="T">The type of the elements in the collections.</typeparam>
     /// <param name="source">The source collection.</param>
     /// <param name="other">The alternative collection.</param>
     /// <returns>The source collection if it is not empty; otherwise, the alternative collection.</returns>
-    public static IEnumerable<T> IfEmptyThen<T>(this IEnumerable<T> source, IEnumerable<T> other)
+    internal static IEnumerable<T> IfEmptyThen<T>(this IEnumerable<T> source, IEnumerable<T> other)
     {
         var hasItems = false;
         foreach (var item in source)
@@ -72,7 +54,7 @@ public static class EnumerableExtensions
             yield return item;
     }
 
-    public static (IEnumerable<T> first, IEnumerable<T> second) Partition<T>(this IEnumerable<T> enumerable,
+    internal static (IEnumerable<T> first, IEnumerable<T> second) Partition<T>(this IEnumerable<T> enumerable,
         Func<T, bool> predicate)
     {
         var trueList = new List<T>();

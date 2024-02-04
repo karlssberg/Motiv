@@ -24,10 +24,11 @@ public class AllSatisfiedSpec<TModel, TMetadata> : SpecBase<IEnumerable<TModel>,
     }
 
     /// <summary>Gets the description of the specification.</summary>
-    public override string Description => _description is null
-        ? $"ALL({UnderlyingSpec})"
-        : $"ALL<{_description}>({UnderlyingSpec})";
-
+    public override string Description => _description switch
+    {
+        null =>  $"ALL({UnderlyingSpec})",
+        _ => $"<{_description}>({UnderlyingSpec})"
+    };
 
     /// <summary>Gets the underlying specification.</summary>
     public SpecBase<TModel, TMetadata> UnderlyingSpec { get; }

@@ -10,12 +10,6 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="$(AssemblyName).Tests"/>
-        <Compile Update="GenericMetadataSpec.cs">
-            <DependentUpon>Spec.cs</DependentUpon>
-        </Compile>
-        <Compile Update="StringMetadataSpec.cs">
-            <DependentUpon>Spec.cs</DependentUpon>
-        </Compile>
         <Compile Update="ChangeDescriptionSpec.cs">
             <DependentUpon>Spec.cs</DependentUpon>
         </Compile>
@@ -26,9 +20,6 @@
             <DependentUpon>IRequireTrueReasonOrMetadata.cs</DependentUpon>
         </Compile>
         <Compile Update="SpecBuilder\Phase1\IYieldMetadataWhenTrue.cs" />
-        <Compile Update="ChangeMetadata\ChangeMetadataTypeBuilder.cs">
-            <DependentUpon>IChangeMetadataBooleanResult.cs</DependentUpon>
-        </Compile>
     </ItemGroup>
 
     <ItemGroup>

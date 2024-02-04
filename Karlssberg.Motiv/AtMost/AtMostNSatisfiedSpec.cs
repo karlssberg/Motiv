@@ -4,7 +4,8 @@ namespace Karlssberg.Motiv.AtMost;
 internal sealed class AtMostNSatisfiedSpec<TModel, TMetadata>(
     int maximum,
     SpecBase<TModel, TMetadata> underlyingSpec,
-    Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactoryFn)
+    Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactoryFn,
+    string? description = null)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
     internal AtMostNSatisfiedSpec(int maximum, SpecBase<TModel, TMetadata> spec)
@@ -29,7 +30,11 @@ internal sealed class AtMostNSatisfiedSpec<TModel, TMetadata>(
     {
     }
 
-    public override string Description => $"AT_MOST_{maximum}({underlyingSpec})";
+    public override string Description => description switch
+    {
+        null => $"AT_MOST_{maximum}({underlyingSpec})",
+        _ => $"<{description}>({underlyingSpec})"
+    };
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {

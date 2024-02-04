@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.SpecBuilder;
+﻿namespace Karlssberg.Motiv.Proposition;
 
 internal class MetadataBuilder<TModel, TMetadata, TReturnType>(TReturnType returnValue)
 {

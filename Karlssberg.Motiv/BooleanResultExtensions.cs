@@ -1,4 +1,6 @@
-﻿namespace Karlssberg.Motiv;
+﻿using Karlssberg.Motiv.Visitors;
+
+namespace Karlssberg.Motiv;
 
 /// <summary>
 /// Provides extension methods for the BooleanResultBase class. These methods dispatch to a visitor that will

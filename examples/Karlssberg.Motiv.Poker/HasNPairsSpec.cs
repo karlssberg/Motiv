@@ -10,3 +10,4 @@ public class HasNPairsSpec(int pairCount) : Spec<Hand>(
     private static string PluralizePair(int count) =>
         count == 1 ? "pair" : "pairs";
 }
+

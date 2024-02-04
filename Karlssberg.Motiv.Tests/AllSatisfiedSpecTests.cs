@@ -167,12 +167,12 @@ public class AllSatisfiedSpecTests
     [Fact]
     public void Should_provide_a_description_of_the_specification()
     {
-        const string expected = "ALL<all booleans are true>(underlying spec description)";
+        const string expected = "<all booleans are true>(is true or false)";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
-            .CreateSpec("underlying spec description");
+            .CreateSpec("is true or false");
 
         var sut = underlyingSpec
             .ToAllSatisfiedSpec("all booleans are true");
@@ -184,7 +184,7 @@ public class AllSatisfiedSpecTests
     [Fact]
     public void Should_provide_a_high_level_description_of_the_specification_when_metadata_is_a_string()
     {
-        const string expected = "ALL<high-level description>(True)";
+        const string expected = "<high-level description>(True)";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
             .YieldWhenTrue(true.ToString())
@@ -203,7 +203,7 @@ public class AllSatisfiedSpecTests
     [Fact]
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
-        const string expected = "ALL<all booleans are true>(True)";
+        const string expected = "<all booleans are true>(True)";  
         var underlyingSpec = Spec
             .Build<bool>(m => m)
             .YieldWhenTrue(true.ToString())

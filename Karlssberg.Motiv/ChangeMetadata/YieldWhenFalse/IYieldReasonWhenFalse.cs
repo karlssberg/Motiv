@@ -3,8 +3,9 @@ namespace Karlssberg.Motiv.ChangeMetadata.YieldWhenFalse;
 
 /// <summary>Represents an interface for specifying the behavior when a condition is false.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-public interface IYieldReasonWhenFalse<TModel>
+public interface IYieldReasonWhenFalse<TModel, TUnderlyingMetadata> : IChangeReasonBuilder<TModel, TUnderlyingMetadata>
 {
+    
     /// <summary>Specifies the behavior when the condition is false.</summary>
     /// <param name="falseBecause">The metadata associated with the condition.</param>
     /// <returns>The specification with the specified metadata.</returns>
@@ -26,4 +27,5 @@ public interface IYieldReasonWhenFalse<TModel>
     /// </param>
     /// <returns>A specification base.</returns>
     SpecBase<TModel, string> YieldWhenFalse(Func<string> falseBecause);
+    
 }

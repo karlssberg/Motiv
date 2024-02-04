@@ -5,34 +5,24 @@
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-public class AnySatisfiedSpec<TModel, TMetadata> : SpecBase<IEnumerable<TModel>, TMetadata>
+internal class AnySatisfiedSpec<TModel, TMetadata>(
+    SpecBase<TModel, TMetadata> underlyingSpec,
+    string? description = null) : SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    private readonly string? _description;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AnySatisfiedSpec{TModel, TMetadata}"/> class.
-    /// </summary>
-    /// <param name="propositionalSpec">The underlying specification.</param>
-    /// <param name="description">The description of the specification.</param>
-    internal AnySatisfiedSpec(
-        SpecBase<TModel, TMetadata> propositionalSpec,
-        string? description = null)
-    {
-        UnderlyingSpec = propositionalSpec;
-        _description = description;
-    }
 
     /// <summary>
     /// Gets the description of the specification.
     /// </summary>
-    public override string Description => _description is null
-        ? $"ANY({UnderlyingSpec})"
-        : $"ANY<{_description}>({UnderlyingSpec})";
+    public override string Description => description switch
+    {
+        null => $"ANY({UnderlyingSpec})",
+        _ => $"<{description}>({UnderlyingSpec})"
+    };
 
     /// <summary>
     /// Gets the underlying specification.
     /// </summary>
-    public SpecBase<TModel, TMetadata> UnderlyingSpec { get; }
+    public SpecBase<TModel, TMetadata> UnderlyingSpec { get; } = underlyingSpec;
 
     /// <summary>
     /// Determines whether the specification is satisfied by a collection of models.

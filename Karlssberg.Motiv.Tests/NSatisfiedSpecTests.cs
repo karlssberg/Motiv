@@ -50,10 +50,10 @@ public class NSatisfiedSpecTests
 
         var sut = underlyingSpec
             .ToNSatisfiedSpec(2, "a pair of even numbers")
-            .YieldWhenTrue((trueModels, _) =>
-                $"{trueModels.Humanize()} are a pair of even numbers")
-            .YieldWhenFalse((trueModels, falseModels) => 
-                $"{(trueModels.Union(falseModels)).Humanize()} do not contain a pair of even numbers");
+            .YieldWhenTrue((satisfied, _) =>
+                $"{satisfied.Humanize()} are a pair of even numbers")
+            .YieldWhenFalse((satisfied, unsatisfied) => 
+                $"{(satisfied.Union(unsatisfied)).Humanize()} do not contain a pair of even numbers");
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
@@ -128,6 +128,6 @@ public class NSatisfiedSpecTests
         var sut = underlyingSpec
             .ToNSatisfiedSpec(2, "a pair of even numbers");
 
-        sut.Description.Should().Be("2_SATISFIED(is even)");
+        sut.Description.Should().Be("<a pair of even numbers>(is even)");
     }
 }

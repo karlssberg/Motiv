@@ -1,6 +1,6 @@
 ﻿using Humanizer;
 
-namespace Karlssberg.Motiv.ChangeHigherOrderMetadata;
+namespace Karlssberg.Motiv.ChangeMetadata;
 
 public class ChangeHigherOrderMetadataBooleanResult<TMetadata, TUnderlyingResult>(
     IEnumerable<TMetadata> metadata,

@@ -1,7 +1,6 @@
-﻿using Karlssberg.Motiv.ChangeHigherOrderMetadata;
-using Karlssberg.Motiv.ChangeMetadata;
+﻿using Karlssberg.Motiv.ChangeMetadata;
 
-namespace Karlssberg.Motiv;
+namespace Karlssberg.Motiv.Visitors;
 
 public class DeepMetadataVisitor<TMetadata> : DefaultMetadataVisitor<TMetadata>
 {

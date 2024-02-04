@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.ChangeHigherOrderMetadata;
+﻿namespace Karlssberg.Motiv.ChangeMetadata;
 
 public interface IChangeHigherOrderMetadataBooleanResult<TMetadata>
 {

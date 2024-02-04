@@ -20,8 +20,8 @@ public static class AnySatisfiedSpecExtensions
     /// <paramref name="spec" />. Whether the specification is satisfied or not satisfied, the metadata is the aggregate of the
     /// underlying results
     /// </returns>
-    public static AnySatisfiedSpec<TModel, TMetadata> ToAnySatisfiedSpec<TModel, TMetadata>(
+    public static SpecBase<IEnumerable<TModel>, TMetadata> ToAnySatisfiedSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         string? description = null) =>
-        new(spec, description);
+        new AnySatisfiedSpec<TModel, TMetadata>(spec, description);
 }

@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv;
+﻿namespace Karlssberg.Motiv.Proposition;
 
 /// <summary>
 /// Represents a predicate that when evaluated returns a boolean result with associated metadata and description
@@ -7,7 +7,7 @@
 /// <typeparam name="T">The type of the input parameter.</typeparam>
 /// <typeparam name="TResult">The type of the return value.</typeparam>
 /// <returns>The return value.</returns>
-internal sealed class GenericMetadataSpec<TModel, TMetadata>(
+internal sealed class MetadataSpec<TModel, TMetadata>(
     string description,
     Func<TModel, bool> predicate,
     Func<TModel, TMetadata> whenTrue,

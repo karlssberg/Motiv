@@ -3,7 +3,8 @@
 internal sealed class AtLeastNSatisfiedSpec<TModel, TMetadata>(
     int minimum,
     SpecBase<TModel, TMetadata> underlyingSpec,
-    Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactoryFn)
+    Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactoryFn,
+    string? description = null)
     :SpecBase<IEnumerable<TModel>, TMetadata>
 {
     internal AtLeastNSatisfiedSpec(int minimum, SpecBase<TModel, TMetadata> spec)
@@ -28,7 +29,11 @@ internal sealed class AtLeastNSatisfiedSpec<TModel, TMetadata>(
     {
     }
 
-    public override string Description => $"AT_LEAST_{minimum}({underlyingSpec})";
+    public override string Description => description switch
+        {
+            null => $"AT_LEAST_{minimum}({underlyingSpec})",
+            _ => $"<{description}>({underlyingSpec})"
+        };
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {

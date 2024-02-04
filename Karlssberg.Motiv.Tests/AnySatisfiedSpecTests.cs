@@ -32,6 +32,25 @@ public class AnySatisfiedSpecTests
 
         result.IsSatisfied.Should().Be(expected);
     }
+    
+    [Fact]
+    public void Should_provide_a_high_level_description_of_the_specification_when_metadata_is_a_string()
+    {
+        const string expected = "<high-level description>(True)";
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())   
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+
+        var sut = underlyingSpec
+            .ToAnySatisfiedSpec("high-level description")
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false);
+
+        sut.Description.Should().Be(expected);
+        sut.ToString().Should().Be(expected);
+    }
 
     [Theory]
     [AutoParams(false, false, false, "ANY{3/3}:false(model is false)")]

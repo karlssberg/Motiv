@@ -1,5 +1,5 @@
-﻿using Karlssberg.Motiv.SpecBuilder;
-using Karlssberg.Motiv.SpecBuilder.YieldWhenTrue;
+﻿using Karlssberg.Motiv.Proposition;
+using Karlssberg.Motiv.Proposition.YieldWhenTrue;
 
 namespace Karlssberg.Motiv;
 

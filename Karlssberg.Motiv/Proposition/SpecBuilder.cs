@@ -1,8 +1,8 @@
-﻿using Karlssberg.Motiv.SpecBuilder.Factories;
-using Karlssberg.Motiv.SpecBuilder.YieldWhenFalse;
-using Karlssberg.Motiv.SpecBuilder.YieldWhenTrue;
+﻿using Karlssberg.Motiv.Proposition.Factories;
+using Karlssberg.Motiv.Proposition.YieldWhenFalse;
+using Karlssberg.Motiv.Proposition.YieldWhenTrue;
 
-namespace Karlssberg.Motiv.SpecBuilder;
+namespace Karlssberg.Motiv.Proposition;
 
 /// <summary>Represents a builder for creating specifications based on a predicate.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
@@ -47,23 +47,14 @@ internal class SpecBuilder<TModel> :
     IDescriptiveSpecFactory<TModel, string> IYieldMetadataWhenFalse<TModel, string>.YieldWhenFalse(Func<TModel, string> falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNull(nameof(falseBecause)));
 
-    IDescriptiveSpecFactory<TModel, string> IYieldMetadataWhenFalse<TModel, string>.YieldWhenFalse(Func<string> falseBecause) =>
-        _because.SetFalseMetadata(falseBecause.ThrowIfNull(nameof(falseBecause)));
-
     public ISpecFactory<TModel> YieldWhenFalse(string falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNullOrWhitespace(nameof(falseBecause)));
 
     public ISpecFactory<TModel> YieldWhenFalse(Func<TModel, string> falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNull(nameof(falseBecause)));
 
-    ISpecFactory<TModel> IYieldReasonWhenFalse<TModel>.YieldWhenFalse(Func<string> falseBecause) =>
-        _because.SetFalseMetadata(falseBecause.ThrowIfNull(nameof(falseBecause)));
-
     IDescriptiveSpecFactory<TModel, string> IYieldReasonWithDescriptionUnresolvedWhenFalse<TModel>.YieldWhenFalse(Func<TModel, string> falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNull(nameof(falseBecause)));
-
-    public IDescriptiveSpecFactory<TModel, string> YieldWhenFalse(Func<string> falseBecause) =>
-        new MetadataSpecBuilder<TModel, string>(_predicate, _because.WhenTrue!).YieldWhenFalse(falseBecause);
 
     IDescriptiveSpecFactory<TModel, string> IYieldReasonWithDescriptionUnresolvedWhenFalse<TModel>.YieldWhenFalse(string falseBecause) =>
         _because.SetFalseMetadata(falseBecause.ThrowIfNullOrWhitespace(nameof(falseBecause)));
@@ -77,16 +68,7 @@ internal class SpecBuilder<TModel> :
     public IYieldMetadataWhenFalse<TModel, TMetadata> YieldWhenTrue<TMetadata>(Func<TModel, TMetadata> whenTrue) =>
         new MetadataSpecBuilder<TModel, TMetadata>(_predicate, whenTrue.ThrowIfNull(nameof(whenTrue)));
 
-    public IYieldMetadataWhenFalse<TModel, TMetadata> YieldWhenTrue<TMetadata>(Func<TMetadata> whenTrue)
-    {
-        whenTrue.ThrowIfNull(nameof(whenTrue));
-        return new MetadataSpecBuilder<TModel, TMetadata>(_predicate, _ => whenTrue());
-    }
-
     public IYieldReasonWithDescriptionUnresolvedWhenFalse<TModel> YieldWhenTrue(Func<TModel, string> trueBecause) =>
-        _because.SetTrueMetadata(trueBecause.ThrowIfNull(nameof(trueBecause)));
-
-    public IYieldReasonWithDescriptionUnresolvedWhenFalse<TModel> YieldWhenTrue(Func<string> trueBecause) =>
         _because.SetTrueMetadata(trueBecause.ThrowIfNull(nameof(trueBecause)));
 
     public IYieldReasonWhenFalse<TModel> YieldWhenTrue(string trueBecause) =>

@@ -1,7 +1,7 @@
-﻿using Karlssberg.Motiv.SpecBuilder.Factories;
-using Karlssberg.Motiv.SpecBuilder.YieldWhenFalse;
+﻿using Karlssberg.Motiv.Proposition.Factories;
+using Karlssberg.Motiv.Proposition.YieldWhenFalse;
 
-namespace Karlssberg.Motiv.SpecBuilder;
+namespace Karlssberg.Motiv.Proposition;
 
 internal class MetadataSpecBuilder<TModel, TMetadata> :
     IYieldMetadataWhenFalse<TModel, TMetadata>,

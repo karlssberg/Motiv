@@ -4,7 +4,12 @@ internal class NSatisfiedSpec<TModel, TMetadata>(int n, SpecBase<TModel, TMetada
     SpecBase<IEnumerable<TModel>, TMetadata>
 {
     public SpecBase<TModel, TMetadata> UnderlyingSpec { get; } = underlyingSpec;
-    public override string Description => $"{n}_SATISFIED({UnderlyingSpec})";
+
+    public override string Description => description switch
+    {
+        null => $"{n}_SATISFIED({UnderlyingSpec})",
+        _ => $"<{description}>({UnderlyingSpec})"
+    };
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {

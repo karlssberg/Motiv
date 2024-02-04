@@ -1,4 +1,4 @@
-﻿using Karlssberg.Motiv.ChangeHigherOrderMetadata;
+﻿using Karlssberg.Motiv.ChangeMetadata;
 
 namespace Karlssberg.Motiv;
 

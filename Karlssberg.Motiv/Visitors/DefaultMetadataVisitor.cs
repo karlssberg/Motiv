@@ -1,7 +1,6 @@
-﻿using Karlssberg.Motiv.ChangeHigherOrderMetadata;
-using Karlssberg.Motiv.ChangeMetadata;
+﻿using Karlssberg.Motiv.ChangeMetadata;
 
-namespace Karlssberg.Motiv;
+namespace Karlssberg.Motiv.Visitors;
 
 /// <summary>Represents a default implementation of the insights visitor for a specific metadata type.</summary>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
