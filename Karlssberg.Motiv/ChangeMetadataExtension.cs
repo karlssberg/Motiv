@@ -87,7 +87,7 @@ public static class ChangeMetadataExtension
         this SpecBase<IEnumerable<TModel>, TMetadata> spec,
         Func<IEnumerable<TModel>, IEnumerable<TModel>, TAltMetadata> metadata) =>
         new ChangeHigherOrderMetadataTypeBuilder<TModel, TAltMetadata, TMetadata>(spec, metadata);
-
+    
     public static SpecBase<IEnumerable<TModel>, TMetadata> YieldWhenFalse<TModel, TMetadata, TUnderlyingMetadata>(
         this IYieldMetadataWhenFalse<IEnumerable<TModel>, TMetadata, TUnderlyingMetadata> builder,
         Func<IEnumerable<TModel>, IEnumerable<TModel>, TMetadata> whenFalse) =>

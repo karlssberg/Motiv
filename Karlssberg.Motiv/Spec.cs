@@ -1,5 +1,4 @@
 ﻿using Karlssberg.Motiv.Proposition;
-using Karlssberg.Motiv.Proposition.Factories;
 using Karlssberg.Motiv.Proposition.YieldWhenTrue;
 
 namespace Karlssberg.Motiv;
@@ -124,7 +123,20 @@ public static class Spec
     public static IYieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<TModel, bool> predicate) =>
         new SpecBuilder<TModel>(predicate.ThrowIfNull(nameof(predicate)));
     
-    public static IDescribeSpec<TModel, TMetadata> Create<TModel, TMetadata>(Func<TModel, SpecBase<TModel, TMetadata>> specFactory) =>
-        new NestedSpecBuilder<TModel, TMetadata>(specFactory.ThrowIfNull(nameof(specFactory)));
+    public static IYieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<bool> predicate) =>
+        Build<TModel>(_ => predicate());
+    
+    public static INestedMetadataSpecBuilderStart<TModel, TMetadata> Build<TModel, TMetadata>(Func<TModel, SpecBase<TModel, TMetadata>> specFactory) =>
+        new NestedTrueMetadataSpecBuilder<TModel, TMetadata>(specFactory.ThrowIfNull(nameof(specFactory)));
+
+    public static INestedMetadataSpecBuilderStart<TModel, TMetadata> Build<TModel, TMetadata>(
+        Func<SpecBase<TModel, TMetadata>> specFactory) =>
+        Build<TModel, TMetadata>(_ => specFactory());
+    
+    public static  INestedReasonsSpecBuilderStart<TModel>  Build<TModel>(Func<TModel, SpecBase<TModel, string>> specFactory) =>
+        new NestedTrueReasonsSpecBuilder<TModel>(specFactory.ThrowIfNull(nameof(specFactory)));
+    
+    public static  INestedReasonsSpecBuilderStart<TModel>  Build<TModel>(Func<SpecBase<TModel, string>> specFactory) =>
+        Build<TModel>(_ => specFactory());
 }
 

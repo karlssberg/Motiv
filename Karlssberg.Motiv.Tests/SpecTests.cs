@@ -21,6 +21,31 @@ public class SpecTests
         result.GetMetadata().Should().HaveCount(1);
         result.GetMetadata().Should().AllBe(model.ToString());
     }
+    
+    [Theory]
+    [AutoParams(true, "underlying true")]
+    [AutoParams(false, "underlying false")]
+    public void Should_return_a_result_that_satisfies_the_spec(bool model, string expectedReason)
+    {
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue(true.ToString())
+            .YieldWhenFalse(false.ToString())
+            .CreateSpec();
+        
+        var sut = Spec
+            .Build<bool>(() => underlyingSpec)
+            .YieldWhenTrue("underlying true")
+            .YieldWhenFalse("underlying false")
+            .CreateSpec("returns model value");
+
+        var result = sut.IsSatisfiedBy(model);
+
+        result.IsSatisfied.Should().Be(model);
+        result.GetMetadata().Should().HaveCount(1);
+        result.GetMetadata().Should().AllBe(expectedReason);
+        result.Reasons.Should().BeEquivalentTo(expectedReason);
+    }
 
     [Fact]
     public void Should_handle_null_model_without_throwing()
@@ -76,7 +101,7 @@ public class SpecTests
     public void Should_throw_if_null_predicate_is_supplied()
     {
         var act = () => Spec
-            .Build<string?>(null!)
+            .Build<string?>(default(Func<string, bool>)!)
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec();
@@ -116,7 +141,7 @@ public class SpecTests
     public void Should_wrap_thrown_exceptions_in_a_specification_exception_when_using_text_metadata()
     {
         var act = () => Spec
-            .Build<string?>(_ => throw new Exception("should be wrapped"))
+            .Build((Func<string?, bool>)(_ => throw new Exception("should be wrapped")))
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec()
@@ -131,7 +156,7 @@ public class SpecTests
     public void Should_wrap_thrown_exceptions_in_a_specification_exception()
     {
         var spec = Spec
-            .Build<string?>(_ => throw new Exception("should be wrapped"))
+            .Build((Func<string?, bool>)(_ => throw new Exception("should be wrapped")))
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec("should throw");
