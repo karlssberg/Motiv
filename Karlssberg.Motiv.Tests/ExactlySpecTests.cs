@@ -3,7 +3,7 @@ using Humanizer;
 
 namespace Karlssberg.Motiv.Tests;
 
-public class NSatisfiedSpecTests
+public class ExactlySpecTests
 {
     [Theory]
     [AutoParams(2, 4, true)]
@@ -21,11 +21,11 @@ public class NSatisfiedSpecTests
             .YieldWhenFalse(i => $"{i} is odd")
             .CreateSpec("is even spec");
 
-        var sut = underlyingSpec.ToNSatisfiedSpec(2, "a pair of even numbers");
+        var sut = underlyingSpec.Exactly(2, "a pair of even numbers");
 
         var result = sut.IsSatisfiedBy([first, second]);
 
-        result.IsSatisfied.Should().Be(expected);
+        result.Value.Should().Be(expected);
     }
     
     [Theory]
@@ -49,7 +49,7 @@ public class NSatisfiedSpecTests
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec
-            .ToNSatisfiedSpec(2, "a pair of even numbers")
+            .Exactly(2, "a pair of even numbers")
             .YieldWhenTrue((satisfied, _) =>
                 $"{satisfied.Humanize()} are a pair of even numbers")
             .YieldWhenFalse((satisfied, unsatisfied) => 
@@ -57,9 +57,9 @@ public class NSatisfiedSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
-        result.IsSatisfied.Should().Be(expected);
+        result.Value.Should().Be(expected);
         result.Reasons.Humanize().Should().Be(expectedShallowReasons);
-        result.GetDeepReasons().Humanize().Should().Be(expectedDeepReason);
+        result.GetRootCauses().Humanize().Should().Be(expectedDeepReason);
     }
     
     [Theory]
@@ -81,7 +81,7 @@ public class NSatisfiedSpecTests
 
         bool[] models = [first, second];
 
-        var sut = underlyingSpec.ToNSatisfiedSpec(n, "n booleans are true");
+        var sut = underlyingSpec.Exactly(n, "n booleans are true");
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -89,7 +89,7 @@ public class NSatisfiedSpecTests
 
     private static string GenerateReason(bool allSatisfied, IEnumerable<BooleanResultWithModel<int, string>> results)
     {
-        var count = results.Count(r => r.IsSatisfied == allSatisfied);
+        var count = results.Count(r => r.Value == allSatisfied);
         var trueOrFalse = allSatisfied.ToString().ToLowerInvariant();
 
         return $"{"is".ToQuantity(count)} {trueOrFalse}";
@@ -105,13 +105,13 @@ public class NSatisfiedSpecTests
             .CreateSpec("is even");
 
         var sut = underlyingSpec
-            .ToAllSatisfiedSpec("all numbers are even")
+            .All("all numbers are even")
             .YieldWhenTrue(results => $"{results.Count()} are true")
             .YieldWhenFalse(results => $"{results.Count()} are false");
 
         var result = sut.IsSatisfiedBy([1, 3, 5]);
 
-        result.IsSatisfied.Should().BeFalse();
+        result.Value.Should().BeFalse();
         result.GetMetadata().Should().HaveCount(1);
         result.GetMetadata().Should().AllBeEquivalentTo("3 are false");
     }
@@ -126,7 +126,7 @@ public class NSatisfiedSpecTests
             .CreateSpec("is even");
 
         var sut = underlyingSpec
-            .ToNSatisfiedSpec(2, "a pair of even numbers");
+            .Exactly(2, "a pair of even numbers");
 
         sut.Description.Should().Be("<a pair of even numbers>(is even)");
     }

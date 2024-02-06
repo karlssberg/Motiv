@@ -17,10 +17,10 @@ internal class ChangeHigherOrderMetadataTypeBuilder<TModel, TMetadata, TUnderlyi
             {
                 var underlyingResultsArray = underlyingResults.ToArray();
                 var satisfied = underlyingResultsArray
-                    .GetModelsWhere(result => result.IsSatisfied == isSatisfied);
+                    .GetModelsWhere(result => result.Value == isSatisfied);
                 
                 var unsatisfied = underlyingResultsArray
-                    .GetModelsWhere(result => result.IsSatisfied != isSatisfied);
+                    .GetModelsWhere(result => result.Value != isSatisfied);
 
                 var metadata = isSatisfied switch
                 {
@@ -48,10 +48,10 @@ internal class ChangeHigherOrderMetadataTypeWithMixedYieldBuilder<TModel, TMetad
             {
                 var underlyingResultsArray = underlyingResults.ToArray();
                 var satisfied = underlyingResultsArray
-                    .GetModelsWhere(result => result.IsSatisfied == isSatisfied);
+                    .GetModelsWhere(result => result.Value == isSatisfied);
                 
                 var unsatisfied = underlyingResultsArray
-                    .GetModelsWhere(result => result.IsSatisfied != isSatisfied);
+                    .GetModelsWhere(result => result.Value != isSatisfied);
 
                 var metadata = isSatisfied switch
                 {

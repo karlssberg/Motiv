@@ -44,7 +44,7 @@ public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBas
     /// <summary>
     /// Gets a value indicating whether the result is satisfied.
     /// </summary>
-    public override bool IsSatisfied => UnderlyingResult.IsSatisfied;
+    public override bool Value => UnderlyingResult.Value;
 
     /// <summary>
     /// Gets the underlying results of the composite boolean result.

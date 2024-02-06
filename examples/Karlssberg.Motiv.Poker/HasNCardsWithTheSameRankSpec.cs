@@ -11,7 +11,7 @@ public class HasNCardsWithTheSameRankSpec(int sameRankCount) : Spec<Hand>(
 
 public class HasCardsWithTheSameRankSpec(int sameRankCount, Rank rank) : Spec<Hand>(
     new IsRankSpec(rank)
-        .ToNSatisfiedSpec(sameRankCount)
+        .Exactly(sameRankCount)
         .YieldWhenTrue($"has {sameRankCount.ToWords()} {rank}s")
         .YieldWhenFalse((satisfied, _) =>
             $"there are {satisfied.Count()} {rank}s when there should be {sameRankCount}")

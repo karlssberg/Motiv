@@ -97,10 +97,10 @@ public static class ChangeMetadataExtension
             {
                 var underlyingResultsArray = underlyingResults.ToArray();
                 var satisfied = underlyingResultsArray
-                    .GetModelsWhere(result => result.IsSatisfied == isSatisfied);
+                    .GetModelsWhere(result => result.Value == isSatisfied);
                 
                 var unsatisfied = underlyingResultsArray
-                    .GetModelsWhere(result => result.IsSatisfied != isSatisfied);
+                    .GetModelsWhere(result => result.Value != isSatisfied);
 
                 var metadata = isSatisfied switch
                 {
@@ -120,10 +120,10 @@ public static class ChangeMetadataExtension
             {
                 var underlyingResultsArray = underlyingResults.ToArray();
                 var satisfied = underlyingResultsArray
-                    .GetModelsWhere(result => result.IsSatisfied == isSatisfied);
+                    .GetModelsWhere(result => result.Value == isSatisfied);
                 
                 var unsatisfied = underlyingResultsArray
-                    .GetModelsWhere(result => result.IsSatisfied != isSatisfied);
+                    .GetModelsWhere(result => result.Value != isSatisfied);
 
                 var metadata = isSatisfied switch
                 {

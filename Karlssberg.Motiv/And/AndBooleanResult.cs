@@ -5,7 +5,7 @@
 ///     objects.
 /// </summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
-public sealed class AndBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, ILogicalOperatorResult<TMetadata>
+internal sealed class AndBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, ILogicalOperatorResult<TMetadata>
 {
     /// <summary>Initializes a new instance of the <see cref="AndBooleanResult{TMetadata}" /> class.</summary>
     /// <param name="leftOperandResult">The result of the left operand.</param>
@@ -17,7 +17,7 @@ public sealed class AndBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, 
         LeftOperandResult = leftOperandResult.ThrowIfNull(nameof(leftOperandResult));
         RightOperandResult = rightOperandResult.ThrowIfNull(nameof(rightOperandResult));
 
-        IsSatisfied = leftOperandResult.IsSatisfied && rightOperandResult.IsSatisfied;
+        Value = leftOperandResult.Value && rightOperandResult.Value;
     }
 
     /// <summary>Gets the result of the left operand.</summary>
@@ -34,10 +34,10 @@ public sealed class AndBooleanResult<TMetadata> : BooleanResultBase<TMetadata>, 
     ///     as the overall result.
     /// </summary>
     public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults
-        .Where(r => r.IsSatisfied == IsSatisfied);
+        .Where(r => r.Value == Value);
 
     /// <inheritdoc />
-    public override bool IsSatisfied { get; }
+    public override bool Value { get; }
 
     /// <inheritdoc />
     public override string Description => $"({LeftOperandResult}) AND:{IsSatisfiedDisplayText} ({RightOperandResult})";

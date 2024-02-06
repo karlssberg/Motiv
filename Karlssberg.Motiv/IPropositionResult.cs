@@ -2,7 +2,7 @@
 
 public interface IPropositionResult<out TMetadata>
 {
-    bool IsSatisfied { get; }
+    bool Value { get; }
 
     string Description { get; }
 

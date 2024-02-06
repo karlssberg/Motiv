@@ -19,7 +19,7 @@ public class ChangeModelTypeSpecTests
 
         var act = sut.IsSatisfiedBy(model);
 
-        act.IsSatisfied.Should().Be(expected);
+        act.Value.Should().Be(expected);
     }
 
     [Theory]
@@ -40,7 +40,7 @@ public class ChangeModelTypeSpecTests
 
         var act = sut.IsSatisfiedBy(model);
 
-        act.IsSatisfied.Should().Be(expected);
+        act.Value.Should().Be(expected);
     }
 
     [Theory]
@@ -56,12 +56,12 @@ public class ChangeModelTypeSpecTests
             .CreateSpec("is a letter");
 
         var isAllLetters = isLetter
-            .ToAllSatisfiedSpec("all characters are letters")
+            .All("all characters are letters")
             .ChangeModel<string>(m => m.ToCharArray());
 
         var act = isAllLetters.IsSatisfiedBy(model);
 
-        act.IsSatisfied.Should().Be(expected);
+        act.Value.Should().Be(expected);
     }
 
     [Theory]
@@ -77,7 +77,7 @@ public class ChangeModelTypeSpecTests
             .CreateSpec("is a letter");
 
         var isAllLetters = isLetter
-            .ToAllSatisfiedSpec()
+            .All()
             .ChangeModel<string>(m => m.ToCharArray());
 
         var act = isAllLetters.IsSatisfiedBy(model);

@@ -1,6 +1,6 @@
-﻿namespace Karlssberg.Motiv.NSatisfied;
+﻿namespace Karlssberg.Motiv.Exactly;
 
-internal class NSatisfiedSpec<TModel, TMetadata>(int n, SpecBase<TModel, TMetadata> underlyingSpec, string? description) :
+internal class ExactlySpec<TModel, TMetadata>(int n, SpecBase<TModel, TMetadata> underlyingSpec, string? description) :
     SpecBase<IEnumerable<TModel>, TMetadata>
 {
     public SpecBase<TModel, TMetadata> UnderlyingSpec { get; } = underlyingSpec;
@@ -8,7 +8,7 @@ internal class NSatisfiedSpec<TModel, TMetadata>(int n, SpecBase<TModel, TMetada
     public override string Description => description switch
     {
         null => $"{n}_SATISFIED({UnderlyingSpec})",
-        _ => $"<{description}>({UnderlyingSpec})"
+        not null => $"<{description}>({UnderlyingSpec})"
     };
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
@@ -21,8 +21,8 @@ internal class NSatisfiedSpec<TModel, TMetadata>(int n, SpecBase<TModel, TMetada
             })
             .ToArray();
 
-        var isSatisfied = results.Count(result => result.IsSatisfied) == n;
+        var isSatisfied = results.Count(result => result.Value) == n;
 
-        return new NSatisfiedBooleanResult<TModel, TMetadata>(n, isSatisfied, results);
+        return new ExactlyBooleanResult<TModel, TMetadata>(n, isSatisfied, results);
     }
 }

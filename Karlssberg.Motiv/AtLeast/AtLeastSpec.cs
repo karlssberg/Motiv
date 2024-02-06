@@ -1,34 +1,11 @@
 ﻿namespace Karlssberg.Motiv.AtLeast;
 
-internal sealed class AtLeastNSatisfiedSpec<TModel, TMetadata>(
+internal sealed class AtLeastSpec<TModel, TMetadata>(
     int minimum,
     SpecBase<TModel, TMetadata> underlyingSpec,
-    Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactoryFn,
     string? description = null)
     :SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    internal AtLeastNSatisfiedSpec(int minimum, SpecBase<TModel, TMetadata> spec)
-        : this(minimum, spec, SelectCauses)
-    {
-    }
-
-    internal AtLeastNSatisfiedSpec(
-        int minimum,
-        SpecBase<TModel, TMetadata> underlyingSpec,
-        Func<IEnumerable<TModel>, TMetadata> whenTrue)
-        : this(minimum, underlyingSpec, CreateMetadataFactoryFn(whenTrue))
-    {
-    }
-
-    internal AtLeastNSatisfiedSpec(
-        int minimum,
-        SpecBase<TModel, TMetadata> underlyingSpec,
-        Func<IEnumerable<TModel>, TMetadata> whenTrue,
-        Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenMinimumExceeded)
-        : this(minimum, underlyingSpec, CreateMetadataFactoryFn(whenTrue, whenMinimumExceeded))
-    {
-    }
-
     public override string Description => description switch
         {
             null => $"AT_LEAST_{minimum}({underlyingSpec})",
@@ -45,11 +22,10 @@ internal sealed class AtLeastNSatisfiedSpec<TModel, TMetadata>(
             })
             .ToArray();
 
-        var isSatisfied = results.Count(result => result.IsSatisfied) >= minimum;
-        return new AtLeastNSatisfiedBooleanResult<TMetadata>(
+        var isSatisfied = results.Count(result => result.Value) >= minimum;
+        return new AtLeastBooleanResult<TMetadata>(
             isSatisfied,
             minimum, 
-            metadataFactoryFn(isSatisfied, results),
             results.Select(result => result.UnderlyingResult));
 
     }
@@ -71,13 +47,13 @@ internal sealed class AtLeastNSatisfiedSpec<TModel, TMetadata>(
         return (isSatisfied, results) => isSatisfied
             ? [whenTrue(results.Select(result => result.Model))]
             : results
-                .Where(result => !result.IsSatisfied)
+                .Where(result => !result.Value)
                 .SelectMany(result => result.GetMetadata());
     }
 
     private static IEnumerable<TMetadata> SelectCauses(bool isSatisfied,
         IEnumerable<BooleanResultWithModel<TModel, TMetadata>> results) =>
         results
-            .Where(result => result.IsSatisfied == isSatisfied)
+            .Where(result => result.Value == isSatisfied)
             .SelectMany(result => result.GetMetadata());
 }

@@ -2,7 +2,7 @@
 
 public interface IChangeHigherOrderMetadataBooleanResult<TMetadata>
 {
-    bool IsSatisfied { get; }
+    bool Value { get; }
     string Description { get; }
     Type OriginalMetadataType { get; }
     IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }

@@ -4,7 +4,7 @@
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata.</typeparam>
-public class AllSatisfiedSpec<TModel, TMetadata> : SpecBase<IEnumerable<TModel>, TMetadata>
+internal sealed class AllSpec<TModel, TMetadata> : SpecBase<IEnumerable<TModel>, TMetadata>
 {
     // Optional description of the specification.
     private readonly string? _description;
@@ -15,7 +15,7 @@ public class AllSatisfiedSpec<TModel, TMetadata> : SpecBase<IEnumerable<TModel>,
     /// </summary>
     /// <param name="propositionalSpec"></param>
     /// <param name="description">The optional description.</param>
-    internal AllSatisfiedSpec(
+    internal AllSpec(
         SpecBase<TModel, TMetadata> propositionalSpec,
         string? description = null)
     {
@@ -27,7 +27,7 @@ public class AllSatisfiedSpec<TModel, TMetadata> : SpecBase<IEnumerable<TModel>,
     public override string Description => _description switch
     {
         null =>  $"ALL({UnderlyingSpec})",
-        _ => $"<{_description}>({UnderlyingSpec})"
+        not null => $"<{_description}>({UnderlyingSpec})"
     };
 
     /// <summary>Gets the underlying specification.</summary>
@@ -38,7 +38,7 @@ public class AllSatisfiedSpec<TModel, TMetadata> : SpecBase<IEnumerable<TModel>,
     /// <returns>A BooleanResultBase object containing the result of the evaluation.</returns>
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
-        var resultsWithModel = models
+        var underlyingResults = models
             .Select(model =>
             {
                 var underlyingResult = UnderlyingSpec.IsSatisfiedByOrWrapException(model);
@@ -46,9 +46,9 @@ public class AllSatisfiedSpec<TModel, TMetadata> : SpecBase<IEnumerable<TModel>,
             })
             .ToArray();
 
-        var isSatisfied = resultsWithModel.All(result => result.IsSatisfied);
-        return new AllSatisfiedBooleanResult<TModel, TMetadata>(
+        var isSatisfied = underlyingResults.All(result => result.Value);
+        return new AllBooleanResult<TModel, TMetadata>(
             isSatisfied,
-            resultsWithModel);
+            underlyingResults);
     }
 }

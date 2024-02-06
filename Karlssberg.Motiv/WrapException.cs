@@ -94,7 +94,7 @@ internal static class WrapException
         return underlyingSpecification switch
         {
             null => DescribeType(spec),
-            _ => $"{DescribeType(underlyingSpecification)}. The specification is expressed as '{spec.Description}'"
+            not null => $"{DescribeType(underlyingSpecification)}. The specification is expressed as '{spec.Description}'"
         };
     }
 

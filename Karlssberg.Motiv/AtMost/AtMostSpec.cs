@@ -1,39 +1,16 @@
 ﻿
 namespace Karlssberg.Motiv.AtMost;
 
-internal sealed class AtMostNSatisfiedSpec<TModel, TMetadata>(
+internal sealed class AtMostSpec<TModel, TMetadata>(
     int maximum,
     SpecBase<TModel, TMetadata> underlyingSpec,
-    Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>> metadataFactoryFn,
     string? description = null)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    internal AtMostNSatisfiedSpec(int maximum, SpecBase<TModel, TMetadata> spec)
-        : this(maximum, spec, SelectCauses)
-    {
-    }
-
-    internal AtMostNSatisfiedSpec(
-        int maximum,
-        SpecBase<TModel, TMetadata> underlyingSpec,
-        Func<IEnumerable<TModel>, TMetadata> whenTrue)
-        : this(maximum, underlyingSpec, CreatemetadataFactoryFn(whenTrue))
-    {
-    }
-
-    internal AtMostNSatisfiedSpec(
-        int maximum,
-        SpecBase<TModel, TMetadata> underlyingSpec,
-        Func<IEnumerable<TModel>, TMetadata> whenTrue,
-        Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenMaximumExceeded)
-        : this(maximum, underlyingSpec, CreatemetadataFactoryFn(whenTrue, whenMaximumExceeded))
-    {
-    }
-
     public override string Description => description switch
     {
         null => $"AT_MOST_{maximum}({underlyingSpec})",
-        _ => $"<{description}>({underlyingSpec})"
+        not null => $"<{description}>({underlyingSpec})"
     };
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
@@ -46,11 +23,10 @@ internal sealed class AtMostNSatisfiedSpec<TModel, TMetadata>(
             })
             .ToArray();
         
-        var isSatisfied = results.Count(result => result.IsSatisfied) <= maximum;
-        return new AtMostNSatisfiedBooleanResult<TMetadata>(
+        var isSatisfied = results.Count(result => result.Value) <= maximum;
+        return new AtMostBooleanResult<TMetadata>(
             isSatisfied,
             maximum,
-            metadataFactoryFn(isSatisfied, results),
             results.Select(result => result.UnderlyingResult)); ;
     }
 
@@ -71,13 +47,13 @@ internal sealed class AtMostNSatisfiedSpec<TModel, TMetadata>(
         return (isSatisfied, results) => isSatisfied
             ? [whenTrue(results.Select(result => result.Model))]
             : results
-                .Where(result => !result.IsSatisfied)
+                .Where(result => !result.Value)
                 .SelectMany(result => result.GetMetadata());
     }
 
     private static IEnumerable<TMetadata> SelectCauses(bool isSatisfied,
         IEnumerable<BooleanResultWithModel<TModel, TMetadata>> results) =>
         results
-            .Where(result => result.IsSatisfied == isSatisfied)
+            .Where(result => result.Value == isSatisfied)
             .SelectMany(result => result.GetMetadata());
 }

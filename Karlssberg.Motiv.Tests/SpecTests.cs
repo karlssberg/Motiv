@@ -17,7 +17,7 @@ public class SpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.IsSatisfied.Should().Be(model);
+        result.Value.Should().Be(model);
         result.GetMetadata().Should().HaveCount(1);
         result.GetMetadata().Should().AllBe(model.ToString());
     }
@@ -41,7 +41,7 @@ public class SpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.IsSatisfied.Should().Be(model);
+        result.Value.Should().Be(model);
         result.GetMetadata().Should().HaveCount(1);
         result.GetMetadata().Should().AllBe(expectedReason);
         result.Reasons.Should().BeEquivalentTo(expectedReason);
@@ -58,7 +58,7 @@ public class SpecTests
 
         var result = sut.IsSatisfiedBy(null);
 
-        result.IsSatisfied.Should().BeTrue();
+        result.Value.Should().BeTrue();
         result.GetMetadata().Should().HaveCount(1);
         result.GetMetadata().Should().AllBe(true.ToString());
     }
@@ -76,7 +76,7 @@ public class SpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.IsSatisfied.Should().Be(model);
+        result.Value.Should().Be(model);
         result.GetMetadata().Should().HaveCount(1);
         result.GetMetadata().Should().AllBe(model.ToString());
     }
@@ -92,7 +92,7 @@ public class SpecTests
 
         var result = sut.IsSatisfiedBy(null);
 
-        result.IsSatisfied.Should().Be(true);
+        result.Value.Should().Be(true);
         result.GetMetadata().Should().HaveCount(1);
         result.GetMetadata().Should().AllBe(true.ToString());
     }

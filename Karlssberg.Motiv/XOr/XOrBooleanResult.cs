@@ -11,13 +11,13 @@ public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
         BooleanResultBase<TMetadata> leftOperandResult,
         BooleanResultBase<TMetadata> rightOperandResult)
     {
-        IsSatisfied = leftOperandResult.IsSatisfied ^ rightOperandResult.IsSatisfied;
+        Value = leftOperandResult.Value ^ rightOperandResult.Value;
         LeftOperandResult = leftOperandResult ?? throw new ArgumentNullException(nameof(leftOperandResult));
         RightOperandResult = rightOperandResult ?? throw new ArgumentNullException(nameof(rightOperandResult));
     }
 
     /// <summary>Gets a value indicating whether the XOR operation is satisfied.</summary>
-    public override bool IsSatisfied { get; }
+    public override bool Value { get; }
 
     /// <summary>Gets the result of the left operand.</summary>
     public BooleanResultBase<TMetadata> LeftOperandResult { get; }

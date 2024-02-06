@@ -30,7 +30,7 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.IsSatisfied.Should().BeTrue();
+        act.Value.Should().BeTrue();
         act.GetMetadata().Max().Should().Be(HandRank.Straight);
     }
 
@@ -55,7 +55,7 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.IsSatisfied.Should().BeFalse();
+        act.Value.Should().BeFalse();
     }
 
     [Theory]
@@ -79,7 +79,7 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.IsSatisfied.Should().BeTrue();
+        act.Value.Should().BeTrue();
         act.GetMetadata().Max().Should().Be(HandRank.Flush);
     }
 
@@ -105,7 +105,7 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.IsSatisfied.Should().BeTrue();
+        act.Value.Should().BeTrue();
         act.GetMetadata().Max().Should().Be(HandRank.StraightFlush);
     }
 
@@ -125,7 +125,7 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.IsSatisfied.Should().BeTrue();
+        act.Value.Should().BeTrue();
         act.GetMetadata().Max().Should().Be(HandRank.RoyalFlush);
     }
 }

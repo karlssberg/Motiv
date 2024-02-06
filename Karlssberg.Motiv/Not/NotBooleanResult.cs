@@ -11,14 +11,14 @@ public sealed class NotBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
         OperandResult = operandResult.ThrowIfNull(nameof(operandResult));
         UnderlyingResults = [operandResult];
         DeterminativeOperands = [operandResult];
-        IsSatisfied = !operandResult.IsSatisfied;
+        Value = !operandResult.Value;
     }
 
     /// <summary>Gets the operand result that is being negated.</summary>
     public BooleanResultBase<TMetadata> OperandResult { get; }
 
     /// <summary>Gets a value indicating whether the negation is satisfied.</summary>
-    public override bool IsSatisfied { get; }
+    public override bool Value { get; }
 
     /// <summary>Gets the description of the negation result.</summary>
     public override string Description => $"NOT:{IsSatisfiedDisplayText}({OperandResult})";

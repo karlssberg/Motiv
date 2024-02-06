@@ -33,7 +33,7 @@ public static class BooleanResultExtensions
     /// <summary>Retrieves root causes from the BooleanResultBase instance.</summary>
     /// <param name="booleanResultBase">The BooleanResultBase instance.</param>
     /// <returns>A distinct collection of superficial reasons.</returns>
-    public static IEnumerable<string> GetDeepReasons(
+    public static IEnumerable<string> GetRootCauses(
         this BooleanResultBase<string> booleanResultBase) =>
         booleanResultBase
             .GetMetadata(new DeepMetadataVisitor<string>())

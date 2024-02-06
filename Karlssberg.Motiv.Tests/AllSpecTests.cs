@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv.Tests;
 
-public class AllSatisfiedSpecTests
+public class AllSpecTests
 {
     [Theory]
     [AutoParams(false, false, false, false)]
@@ -28,13 +28,13 @@ public class AllSatisfiedSpecTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec
-            .ToAllSatisfiedSpec("all booleans are true")
+            .All("all booleans are true")
             .Yield((allSatisfied, results) =>
-                $"{results.Count(r => r.IsSatisfied == allSatisfied)} are {allSatisfied.ToString().ToLowerInvariant()}");
+                $"{results.Count(result => result == allSatisfied)} are {allSatisfied.ToString().ToLowerInvariant()}");
 
         var result = sut.IsSatisfiedBy(models);
 
-        result.IsSatisfied.Should().Be(expected);
+        result.Value.Should().Be(expected);
     }
 
     [Theory]
@@ -60,7 +60,7 @@ public class AllSatisfiedSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAllSatisfiedSpec("all booleans are true");
+        var sut = underlyingSpec.All("all booleans are true");
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -91,7 +91,7 @@ public class AllSatisfiedSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAllSatisfiedSpec("all booleans are true");
+        var sut = underlyingSpec.All("all booleans are true");
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -120,7 +120,7 @@ public class AllSatisfiedSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAllSatisfiedSpec("all booleans are true");
+        var sut = underlyingSpec.All("all booleans are true");
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -158,7 +158,7 @@ public class AllSatisfiedSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAllSatisfiedSpec("all booleans are true");
+        var sut = underlyingSpec.All("all booleans are true");
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -175,7 +175,7 @@ public class AllSatisfiedSpecTests
             .CreateSpec("is true or false");
 
         var sut = underlyingSpec
-            .ToAllSatisfiedSpec("all booleans are true");
+            .All("all booleans are true");
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -192,7 +192,7 @@ public class AllSatisfiedSpecTests
             .CreateSpec();
 
         var sut = underlyingSpec
-            .ToAllSatisfiedSpec("high-level description")
+            .All("high-level description")
             .YieldWhenTrue(true)
             .YieldWhenFalse(false);
 
@@ -211,7 +211,7 @@ public class AllSatisfiedSpecTests
             .CreateSpec();
 
         var sut = underlyingSpec
-            .ToAllSatisfiedSpec("all booleans are true")
+            .All("all booleans are true")
             .YieldWhenTrue(true)
             .YieldWhenFalse(false);
 
@@ -229,7 +229,7 @@ public class AllSatisfiedSpecTests
             new Exception("should be wrapped"));
 
         var sut = throwingSpec
-            .ToAllSatisfiedSpec("all booleans are true") 
+            .All("all booleans are true") 
             .YieldWhenTrue(results => $"{results.Count()} true")
             .YieldWhenFalse(results => $"{results.Count()} false");
 

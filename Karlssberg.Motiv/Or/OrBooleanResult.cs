@@ -13,7 +13,7 @@ public sealed class OrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     {
         LeftOperandResult = leftOperandResult;
         RightOperandResult = rightOperandResult;
-        IsSatisfied = leftOperandResult.IsSatisfied || rightOperandResult.IsSatisfied;
+        Value = leftOperandResult.Value || rightOperandResult.Value;
     }
 
     /// <summary>Gets the result of the left operand.</summary>
@@ -30,10 +30,10 @@ public sealed class OrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     ///     as the overall result.
     /// </summary>
     public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults
-        .Where(r => r.IsSatisfied == IsSatisfied);
+        .Where(r => r.Value == Value);
 
     /// <inheritdoc />
-    public override bool IsSatisfied { get; }
+    public override bool Value { get; }
 
     /// <inheritdoc />
     public override string Description => $"({LeftOperandResult}) OR:{IsSatisfiedDisplayText} ({RightOperandResult})";

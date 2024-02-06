@@ -84,7 +84,7 @@ public class ChangeMetadataSpecTests
 
         var act = sut.IsSatisfiedBy("model");
 
-        act.Reasons.Should().BeEquivalentTo(act.IsSatisfied
+        act.Reasons.Should().BeEquivalentTo(act.Value
             ? trueReason
             : falseReason);
         act.GetMetadata().Should().BeEquivalentTo(expectation);

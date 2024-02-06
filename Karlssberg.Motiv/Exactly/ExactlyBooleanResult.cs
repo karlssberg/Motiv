@@ -1,12 +1,12 @@
 ﻿using Humanizer;
 
-namespace Karlssberg.Motiv.NSatisfied;
+namespace Karlssberg.Motiv.Exactly;
 
-/// <summary>Represents a boolean result that is satisfied if n underlying results are satisfied.</summary>
+/// <summary>Represents a boolean result that is satisfied if exactly <c>n</c> underlying results are satisfied.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
 /// <typeparam name="TModel"></typeparam>
 /// <typeparam name="TUnderlyingMetadata"></typeparam>
-internal sealed class NSatisfiedBooleanResult<TModel, TMetadata>(
+internal sealed class ExactlyBooleanResult<TModel, TMetadata>(
     int n,
     bool isSatisfied,
     IEnumerable<BooleanResultBase<TMetadata>> operandResults) :
@@ -18,29 +18,29 @@ internal sealed class NSatisfiedBooleanResult<TModel, TMetadata>(
         .ThrowIfNull(nameof(operandResults))
         .ToArray();
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => IsSatisfied
-        ? UnderlyingResults.Where(result => result.IsSatisfied == IsSatisfied)
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => Value
+        ? UnderlyingResults.Where(result => result.Value == Value)
         : UnderlyingResults;
 
     /// <summary>
     /// Gets the collection of determinative operand results that have the same satisfaction status as the overall
     /// result.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => IsSatisfied switch
+    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => Value switch
     {
-        true => UnderlyingResults.Where(result => result.IsSatisfied),
+        true => UnderlyingResults.Where(result => result.Value),
         false => UnderlyingResults
     };
 
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
-    public override bool IsSatisfied { get; } = isSatisfied;
+    public override bool Value { get; } = isSatisfied;
 
     /// <summary>Gets the description of the boolean result.</summary>
     public override string Description
     {
         get
         {
-            var satisfiedCount = UnderlyingResults.Count(result => result.IsSatisfied);
+            var satisfiedCount = UnderlyingResults.Count(result => result.Value);
             var higherOrderStatement =
                 $"{n}_SATISFIED{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
 

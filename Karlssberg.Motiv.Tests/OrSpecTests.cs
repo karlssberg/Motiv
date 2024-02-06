@@ -31,7 +31,7 @@ public class OrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.IsSatisfied.Should().Be(expected);
+        result.Value.Should().Be(expected);
         result.GetMetadata().Should().AllBeEquivalentTo(expected);
     }
 

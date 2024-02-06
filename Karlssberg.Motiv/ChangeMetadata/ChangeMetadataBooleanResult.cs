@@ -13,7 +13,7 @@ internal class ChangeMetadataBooleanResult<TMetadata, TOtherMetadata>(BooleanRes
     public IEnumerable<TMetadata> Metadata => [metadata];
 
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
-    public override bool IsSatisfied => UnderlyingBooleanResult.IsSatisfied;
+    public override bool Value => UnderlyingBooleanResult.Value;
 
     /// <summary>Gets the description of the boolean result.</summary>
     public override string Description => metadata switch

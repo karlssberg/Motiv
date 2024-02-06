@@ -7,7 +7,7 @@ public interface IChangeMetadataBooleanResult<TMetadata> {
     IEnumerable<TMetadata> Metadata { get; }
 
     /// <summary>Gets a value indicating whether the change was successful.</summary>
-    bool IsSatisfied { get; }
+    bool Value { get; }
 
     /// <summary>Gets a description of the result.</summary>
     string Description { get; }

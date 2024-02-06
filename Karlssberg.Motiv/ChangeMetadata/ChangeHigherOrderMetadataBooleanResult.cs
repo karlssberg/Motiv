@@ -8,7 +8,7 @@ public class ChangeHigherOrderMetadataBooleanResult<TMetadata, TUnderlyingResult
     BooleanResultBase<TMetadata>, 
     IChangeHigherOrderMetadataBooleanResult<TMetadata>
 {
-    public override bool IsSatisfied { get; } = underlyingResult.IsSatisfied;
+    public override bool Value { get; } = underlyingResult.Value;
 
     public override string Description => Metadata switch
     {

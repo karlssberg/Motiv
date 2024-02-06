@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.And;
 
-internal class AndSpec<TModel, TMetadata>(
+internal sealed class AndSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> leftOperand,
     SpecBase<TModel, TMetadata> rightOperand) : SpecBase<TModel, TMetadata>
 {

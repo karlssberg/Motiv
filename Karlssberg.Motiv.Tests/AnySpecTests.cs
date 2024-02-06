@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv.Tests;
 
-public class AnySatisfiedSpecTests
+public class AnySpecTests
 {
     [Theory]
     [AutoParams(false, false, false, false)]
@@ -27,10 +27,10 @@ public class AnySatisfiedSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAnySatisfiedSpec();
+        var sut = underlyingSpec.Any();
         var result = sut.IsSatisfiedBy(models);
 
-        result.IsSatisfied.Should().Be(expected);
+        result.Value.Should().Be(expected);
     }
     
     [Fact]
@@ -44,7 +44,7 @@ public class AnySatisfiedSpecTests
             .CreateSpec();
 
         var sut = underlyingSpec
-            .ToAnySatisfiedSpec("high-level description")
+            .Any("high-level description")
             .YieldWhenTrue(true)
             .YieldWhenFalse(false);
 
@@ -75,7 +75,7 @@ public class AnySatisfiedSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAnySatisfiedSpec();
+        var sut = underlyingSpec.Any();
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -105,7 +105,7 @@ public class AnySatisfiedSpecTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec
-            .ToAnySatisfiedSpec();
+            .Any();
 
         var result = sut.IsSatisfiedBy(models);
 
@@ -135,7 +135,7 @@ public class AnySatisfiedSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAnySatisfiedSpec();
+        var sut = underlyingSpec.Any();
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -150,7 +150,7 @@ public class AnySatisfiedSpecTests
             "should always throw",
             new Exception("should be wrapped"));
 
-        var sut = throwingSpec.ToAnySatisfiedSpec();
+        var sut = throwingSpec.Any();
 
         var act = () => sut.IsSatisfiedBy([model]);
 

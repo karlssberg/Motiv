@@ -9,8 +9,8 @@ public interface IHigherOrderLogicalOperatorResult<TMetadata>
     /// <summary>Gets the determinative operand results that have the same satisfaction as the overall result.</summary>
     IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
 
-    /// <inheritdoc cref="BooleanResultBase{TMetadata}.IsSatisfied" />
-    bool IsSatisfied { get; }
+    /// <inheritdoc cref="BooleanResultBase{TMetadata}.Value" />
+    bool Value { get; }
 
     /// <inheritdoc cref="BooleanResultBase{TMetadata}.Description" />
     string Description { get; }

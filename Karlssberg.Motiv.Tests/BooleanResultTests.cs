@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Karlssberg.Motiv.Proposition;
 
 namespace Karlssberg.Motiv.Tests;
 
@@ -31,7 +32,7 @@ public class BooleanResultTests
             .Where(operand => operand == act)
             .ToList();
 
-        act.IsSatisfied.Should().Be(expected);
+        act.Value.Should().Be(expected);
         act.GetMetadata().Should().HaveCount(operands.Count);
         act.Reasons.Should().Contain(operands.SelectMany(operand => operand.Reasons));
     }
@@ -52,7 +53,7 @@ public class BooleanResultTests
             .Where(operand => operand == act)
             .ToList();
 
-        act.IsSatisfied.Should().Be(expected);
+        act.Value.Should().Be(expected);
         act.GetMetadata().Should().HaveCount(operands.Count);
         act.Reasons.Should().Contain(operands.SelectMany(operand => operand.Reasons));
     }
@@ -71,7 +72,7 @@ public class BooleanResultTests
 
         var operands = new[] { leftResult, rightResult };
 
-        act.IsSatisfied.Should().Be(expected);
+        act.Value.Should().Be(expected);
         act.GetMetadata().Should().HaveCount(operands.Length);
         act.Reasons.Should().Contain(operands.SelectMany(operand => operand.Reasons));
     }
@@ -87,7 +88,7 @@ public class BooleanResultTests
 
         var act = !operandResult;
 
-        act.IsSatisfied.Should().Be(expected);
+        act.Value.Should().Be(expected);
         act.GetMetadata().Should().HaveCount(1);
         act.Reasons.Should().Contain(operandResult.Reasons);
     }
