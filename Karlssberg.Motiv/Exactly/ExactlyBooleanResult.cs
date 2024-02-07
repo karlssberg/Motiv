@@ -18,15 +18,7 @@ internal sealed class ExactlyBooleanResult<TModel, TMetadata>(
         .ThrowIfNull(nameof(operandResults))
         .ToArray();
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => Value
-        ? UnderlyingResults.Where(result => result.Value == Value)
-        : UnderlyingResults;
-
-    /// <summary>
-    /// Gets the collection of determinative operand results that have the same satisfaction status as the overall
-    /// result.
-    /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> DeterminativeResults => Value switch
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => Value switch
     {
         true => UnderlyingResults.Where(result => result.Value),
         false => UnderlyingResults
@@ -36,18 +28,17 @@ internal sealed class ExactlyBooleanResult<TModel, TMetadata>(
     public override bool Value { get; } = isSatisfied;
 
     /// <summary>Gets the description of the boolean result.</summary>
-    public override string Description
-    {
-        get
-        {
-            var satisfiedCount = UnderlyingResults.Count(result => result.Value);
-            var higherOrderStatement =
-                $"{n}_SATISFIED{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
+    public override string Description => GetDescription();
 
-            return DeterminativeResults.Any()
-                ? $"{higherOrderStatement}({SummarizeReasons()})"
-                : higherOrderStatement;
-        }
+    private string GetDescription()
+    {
+        var satisfiedCount = UnderlyingResults.Count(result => result.Value);
+        var higherOrderStatement =
+            $"{n}_SATISFIED{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
+
+        return DeterminativeOperands.Any()
+            ? $"{higherOrderStatement}({SummarizeReasons()})"
+            : higherOrderStatement;
     }
 
     private string SummarizeReasons()
@@ -61,6 +52,6 @@ internal sealed class ExactlyBooleanResult<TModel, TMetadata>(
     }
 
     /// <summary>Gets the reasons associated with the boolean result.</summary>
-    public override IEnumerable<string> GatherReasons() => DeterminativeResults
+    public override IEnumerable<string> GatherReasons() => DeterminativeOperands
         .SelectMany(r => r.GatherReasons());
 }

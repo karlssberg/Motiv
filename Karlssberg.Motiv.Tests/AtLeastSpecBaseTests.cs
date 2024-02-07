@@ -186,7 +186,7 @@ public class AtLeastSpecBaseTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "AT_LEAST_1{0/3}:false(3x underlying not satisfied)")]
+    [AutoParams(false, false, false, "AT_LEAST_1{0/3}:false")]
     [AutoParams(false, false, true,  "AT_LEAST_1{1/3}:true(1x underlying satisfied)")]
     [AutoParams(false, true, false,  "AT_LEAST_1{1/3}:true(1x underlying satisfied)")]
     [AutoParams(false, true, true,   "AT_LEAST_1{2/3}:true(2x underlying satisfied)")]
@@ -215,7 +215,7 @@ public class AtLeastSpecBaseTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "AT_LEAST_1{0/3}:false(3x underlying model is false)")]
+    [AutoParams(false, false, false, "AT_LEAST_1{0/3}:false")]
     [AutoParams(false, false, true,  "AT_LEAST_1{1/3}:true(1x underlying model is true)")]
     [AutoParams(false, true, false,  "AT_LEAST_1{1/3}:true(1x underlying model is true)")]
     [AutoParams(false, true, true,   "AT_LEAST_1{2/3}:true(2x underlying model is true)")]

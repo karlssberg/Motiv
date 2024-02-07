@@ -38,14 +38,14 @@ public class AllSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "ALL{0/3}:false(3x false)")]
-    [AutoParams(false, false, true, "ALL{1/3}:false(2x false)")]
-    [AutoParams(false, true, false, "ALL{1/3}:false(2x false)")]
-    [AutoParams(false, true, true, "ALL{2/3}:false(1x false)")]
-    [AutoParams(true, false, false, "ALL{1/3}:false(2x false)")]
-    [AutoParams(true, false, true, "ALL{2/3}:false(1x false)")]
-    [AutoParams(true, true, false, "ALL{2/3}:false(1x false)")]
-    [AutoParams(true, true, true, "ALL{3/3}:true(3x true)")]
+    [AutoParams(false, false, false, "ALL{0/3}:false(false x3)")]
+    [AutoParams(false, false, true, "ALL{1/3}:false(false x2)")]
+    [AutoParams(false, true, false, "ALL{1/3}:false(false x2)")]
+    [AutoParams(false, true, true, "ALL{2/3}:false(false)")]
+    [AutoParams(true, false, false, "ALL{1/3}:false(false x2)")]
+    [AutoParams(true, false, true, "ALL{2/3}:false(false)")]
+    [AutoParams(true, true, false, "ALL{2/3}:false(false)")]
+    [AutoParams(true, true, true, "ALL{3/3}:true(true x3)")]
     public void Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -67,14 +67,14 @@ public class AllSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "ALL{0/3}:false(3x false)")]
-    [AutoParams(false, false, true, "ALL{1/3}:false(2x false)")]
-    [AutoParams(false, true, false, "ALL{1/3}:false(2x false)")]
-    [AutoParams(false, true, true, "ALL{2/3}:false(1x false)")]
-    [AutoParams(true, false, false, "ALL{1/3}:false(2x false)")]
-    [AutoParams(true, false, true, "ALL{2/3}:false(1x false)")]
-    [AutoParams(true, true, false, "ALL{2/3}:false(1x false)")]
-    [AutoParams(true, true, true, "ALL{3/3}:true(3x true)")]
+    [AutoParams(false, false, false, "ALL{0/3}:false(false x3)")]
+    [AutoParams(false, false, true, "ALL{1/3}:false(false x2)")]
+    [AutoParams(false, true, false, "ALL{1/3}:false(false x2)")]
+    [AutoParams(false, true, true, "ALL{2/3}:false(false)")]
+    [AutoParams(true, false, false, "ALL{1/3}:false(false x2)")]
+    [AutoParams(true, false, true, "ALL{2/3}:false(false)")]
+    [AutoParams(true, true, false, "ALL{2/3}:false(false)")]
+    [AutoParams(true, true, true, "ALL{3/3}:true(true x3)")]
     public void
         Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
             bool first,
@@ -98,14 +98,14 @@ public class AllSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "ALL{0/3}:false(3x model is false)")]
-    [AutoParams(false, false, true, "ALL{1/3}:false(2x model is false)")]
-    [AutoParams(false, true, false, "ALL{1/3}:false(2x model is false)")]
-    [AutoParams(false, true, true, "ALL{2/3}:false(1x model is false)")]
-    [AutoParams(true, false, false, "ALL{1/3}:false(2x model is false)")]
-    [AutoParams(true, false, true, "ALL{2/3}:false(1x model is false)")]
-    [AutoParams(true, true, false, "ALL{2/3}:false(1x model is false)")]
-    [AutoParams(true, true, true, "ALL{3/3}:true(3x model is true)")]
+    [AutoParams(false, false, false, "ALL{0/3}:false(model is false x3)")]
+    [AutoParams(false, false, true, "ALL{1/3}:false(model is false x2)")]
+    [AutoParams(false, true, false, "ALL{1/3}:false(model is false x2)")]
+    [AutoParams(false, true, true, "ALL{2/3}:false(model is false)")]
+    [AutoParams(true, false, false, "ALL{1/3}:false(model is false x2)")]
+    [AutoParams(true, false, true, "ALL{2/3}:false(model is false)")]
+    [AutoParams(true, true, false, "ALL{2/3}:false(model is false)")]
+    [AutoParams(true, true, true, "ALL{3/3}:true(model is true x3)")]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
         bool second,
@@ -128,14 +128,14 @@ public class AllSpecTests
 
 
     [Theory]
-    [AutoParams(false, false, false, "ALL{0/3}:false(3x left is false and right is false)")]
-    [AutoParams(false, false, true, "ALL{1/3}:false(2x left is false and right is false)")]
-    [AutoParams(false, true, false, "ALL{1/3}:false(2x left is false and right is false)")]
-    [AutoParams(false, true, true, "ALL{2/3}:false(1x left is false and right is false)")]
-    [AutoParams(true, false, false, "ALL{1/3}:false(2x left is false and right is false)")]
-    [AutoParams(true, false, true, "ALL{2/3}:false(1x left is false and right is false)")]
-    [AutoParams(true, true, false, "ALL{2/3}:false(1x left is false and right is false)")]
-    [AutoParams(true, true, true, "ALL{3/3}:true(3x left is true and right is true)")]
+    [AutoParams(false, false, false, "ALL{0/3}:false(left is false x3 and right is false x3)")]
+    [AutoParams(false, false, true, "ALL{1/3}:false(left is false x2 and right is false x2)")]
+    [AutoParams(false, true, false, "ALL{1/3}:false(left is false x2 and right is false x2)")]
+    [AutoParams(false, true, true, "ALL{2/3}:false(left is false and right is false)")]
+    [AutoParams(true, false, false, "ALL{1/3}:false(left is false x2 and right is false x2)")]
+    [AutoParams(true, false, true, "ALL{2/3}:false(left is false and right is false)")]
+    [AutoParams(true, true, false, "ALL{2/3}:false(left is false and right is false)")]
+    [AutoParams(true, true, true, "ALL{3/3}:true(left is true x3 and right is true x3)")]
     public void Should_serialize_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,

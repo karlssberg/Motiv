@@ -37,27 +37,33 @@ public sealed class AtMostBooleanResult<TMetadata> :
     ///     Gets the collection of determinative operand results that have the same satisfaction status as the overall
     ///     result.
     /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => Value switch
-    {
-        true => UnderlyingResults.Where(result => result.Value == Value),
-        false => UnderlyingResults
-    };
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => 
+        UnderlyingResults.Where(result => result.Value);
 
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
     public override bool Value { get; }
 
     /// <summary>Gets the description of the boolean result.</summary>
     public override string Description => GetDescription();
-
     private string GetDescription()
     {
         var satisfiedCount = UnderlyingResults.Count(result => result.Value);
         var higherOrderStatement =
             $"AT_MOST_{Maximum}{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
-            
+
         return DeterminativeOperands.Any()
-            ? $"{higherOrderStatement}({DeterminativeOperands.Count()}x {Reasons.Humanize()})"
+            ? $"{higherOrderStatement}({SummarizeReasons()})"
             : higherOrderStatement;
+    }
+
+    private string SummarizeReasons()
+    {
+        return GatherReasons()
+            .GroupBy(reason => reason)
+            .Select(grouping => grouping.Count() == 1
+                ? $"{grouping.Key}"
+                : $"{grouping.Key} x{grouping.Count()}")
+            .Humanize();
     }
 
     /// <summary>Gets the reasons for the boolean result.</summary>

@@ -41,14 +41,27 @@ internal sealed class AllBooleanResult<TModel, TMetadata> :
     public override bool Value { get; }
 
     /// <inheritdoc cref="BooleanResultBase{TMetadata}.Description" />
-    public override string Description
+    public override string Description => GetDescription();
+
+    private string GetDescription()
     {
-        get
-        {
-            var satisfiedCount = UnderlyingResults.Count(result => result.Value);
-            var higherOrderStatement = $"ALL{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
-            return $"{higherOrderStatement}({DeterminativeOperands.Count()}x {Reasons.Humanize()})";
-        }
+        var satisfiedCount = UnderlyingResults.Count(result => result.Value);
+        var higherOrderStatement =
+            $"ALL{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
+
+        return DeterminativeOperands.Any()
+            ? $"{higherOrderStatement}({SummarizeReasons()})"
+            : higherOrderStatement;
+    }
+
+    private string SummarizeReasons()
+    {
+        return GatherReasons()
+            .GroupBy(reason => reason)
+            .Select(grouping => grouping.Count() == 1
+                ? $"{grouping.Key}"
+                : $"{grouping.Key} x{grouping.Count()}")
+            .Humanize();
     }
 
     /// <inheritdoc />

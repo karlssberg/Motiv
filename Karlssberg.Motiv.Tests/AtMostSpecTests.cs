@@ -158,13 +158,13 @@ public class AtMostSpecTests
 
     [Theory]
     [AutoParams(false, false, false, "AT_MOST_1{0/3}:true")]
-    [AutoParams(false, false, true,  "AT_MOST_1{1/3}:true(1x is satisfied)")]
-    [AutoParams(false, true,  false, "AT_MOST_1{1/3}:true(1x is satisfied)")]
-    [AutoParams(false, true,  true,  "AT_MOST_1{2/3}:false(2x is satisfied)")]
-    [AutoParams(true,  false, false, "AT_MOST_1{1/3}:true(1x is satisfied)")]
-    [AutoParams(true,  false, true,  "AT_MOST_1{2/3}:false(2x is satisfied)")]
-    [AutoParams(true,  true,  false, "AT_MOST_1{2/3}:false(2x is satisfied)")]
-    [AutoParams(true,  true,  true,  "AT_MOST_1{3/3}:false(3x is satisfied)")]
+    [AutoParams(false, false, true,  "AT_MOST_1{1/3}:true(is satisfied)")]
+    [AutoParams(false, true,  false, "AT_MOST_1{1/3}:true(is satisfied)")]
+    [AutoParams(false, true,  true,  "AT_MOST_1{2/3}:false(is satisfied x2)")]
+    [AutoParams(true,  false, false, "AT_MOST_1{1/3}:true(is satisfied)")]
+    [AutoParams(true,  false, true,  "AT_MOST_1{2/3}:false(is satisfied x2)")]
+    [AutoParams(true,  true,  false, "AT_MOST_1{2/3}:false(is satisfied x2)")]
+    [AutoParams(true,  true,  true,  "AT_MOST_1{3/3}:false(is satisfied x3)")]
     public void Should_serialize_the_result_of_the_at_most_of_1_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -187,13 +187,13 @@ public class AtMostSpecTests
 
     [Theory]
     [AutoParams(false, false, false, "AT_MOST_1{0/3}:true")]
-    [AutoParams(false, false, true,  "AT_MOST_1{1/3}:true(1x True)")]
-    [AutoParams(false, true,  false, "AT_MOST_1{1/3}:true(1x True)")]
-    [AutoParams(false, true,  true,  "AT_MOST_1{2/3}:false(2x True)")]
-    [AutoParams(true,  false, false, "AT_MOST_1{1/3}:true(1x True)")]
-    [AutoParams(true,  false, true,  "AT_MOST_1{2/3}:false(2x True)")]
-    [AutoParams(true,  true,  false, "AT_MOST_1{2/3}:false(2x True)")]
-    [AutoParams(true,  true,  true,  "AT_MOST_1{3/3}:false(3x True)")]
+    [AutoParams(false, false, true,  "AT_MOST_1{1/3}:true(True)")]
+    [AutoParams(false, true,  false, "AT_MOST_1{1/3}:true(True)")]
+    [AutoParams(false, true,  true,  "AT_MOST_1{2/3}:false(True x2)")]
+    [AutoParams(true,  false, false, "AT_MOST_1{1/3}:true(True)")]
+    [AutoParams(true,  false, true,  "AT_MOST_1{2/3}:false(True x2)")]
+    [AutoParams(true,  true,  false, "AT_MOST_1{2/3}:false(True x2)")]
+    [AutoParams(true,  true,  true,  "AT_MOST_1{3/3}:false(True x3)")]
     public void Should_serialize_the_result_of_the_at_most_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
         bool second,
@@ -216,13 +216,13 @@ public class AtMostSpecTests
 
     [Theory]
     [AutoParams(false, false, false, "AT_MOST_1{0/3}:true")]
-    [AutoParams(false, false, true,  "AT_MOST_1{1/3}:true(1x underlying model is true)")]
-    [AutoParams(false, true,  false, "AT_MOST_1{1/3}:true(1x underlying model is true)")]
-    [AutoParams(false, true,  true,  "AT_MOST_1{2/3}:false(2x underlying model is true)")]
-    [AutoParams(true,  false, false, "AT_MOST_1{1/3}:true(1x underlying model is true)")]
-    [AutoParams(true,  false, true,  "AT_MOST_1{2/3}:false(2x underlying model is true)")]
-    [AutoParams(true,  true,  false, "AT_MOST_1{2/3}:false(2x underlying model is true)")]
-    [AutoParams(true,  true,  true,  "AT_MOST_1{3/3}:false(3x underlying model is true)")]
+    [AutoParams(false, false, true,  "AT_MOST_1{1/3}:true(underlying model is true)")]
+    [AutoParams(false, true,  false, "AT_MOST_1{1/3}:true(underlying model is true)")]
+    [AutoParams(false, true,  true,  "AT_MOST_1{2/3}:false(underlying model is true x2)")]
+    [AutoParams(true,  false, false, "AT_MOST_1{1/3}:true(underlying model is true)")]
+    [AutoParams(true,  false, true,  "AT_MOST_1{2/3}:false(underlying model is true x2)")]
+    [AutoParams(true,  true,  false, "AT_MOST_1{2/3}:false(underlying model is true x2)")]
+    [AutoParams(true,  true,  true,  "AT_MOST_1{3/3}:false(underlying model is true x3)")]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first, 
         bool second,

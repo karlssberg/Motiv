@@ -23,9 +23,28 @@ internal sealed class AnyBooleanResult<TModel, TMetadata>(
     public override bool Value => isSatisfied;
 
     /// <inheritdoc />
-    public override string Description =>
-        $"ANY{{{DeterminativeOperands.Count()}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}({DeterminativeOperands.Distinct().Humanize()})";
+    public override string Description => GetDescription();
+    
+    private string GetDescription()
+    {
+        var satisfiedCount = UnderlyingResults.Count(result => result.Value);
+        var higherOrderStatement =
+            $"ANY{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
 
+        return DeterminativeOperands.Any()
+            ? $"{higherOrderStatement}({SummarizeReasons()})"
+            : higherOrderStatement;
+    }
+
+    private string SummarizeReasons()
+    {
+        return GatherReasons()
+            .GroupBy(reason => reason)
+            .Select(grouping => grouping.Count() == 1
+                ? $"{grouping.Key}"
+                : $"{grouping.Key} x{grouping.Count()}")
+            .Humanize();
+    }
     /// <inheritdoc />
     public override IEnumerable<string> GatherReasons() => DeterminativeOperands.SelectMany(r => r.GatherReasons());
 }

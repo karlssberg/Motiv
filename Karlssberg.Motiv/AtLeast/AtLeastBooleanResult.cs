@@ -37,11 +37,8 @@ public sealed class AtLeastBooleanResult<TMetadata> :
     ///     Gets the collection of determinative operand results that have the same satisfaction status as the overall
     ///     result.
     /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => Value switch
-    {
-        true => UnderlyingResults.Where(result => result.Value == Value),
-        false => UnderlyingResults
-    };
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands =>
+        UnderlyingResults.Where(result => result.Value);
 
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
     public override bool Value { get; }

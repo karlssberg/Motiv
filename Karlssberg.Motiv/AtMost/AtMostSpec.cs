@@ -29,31 +29,4 @@ internal sealed class AtMostSpec<TModel, TMetadata>(
             maximum,
             results.Select(result => result.UnderlyingResult)); ;
     }
-
-    private static Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>>
-        CreatemetadataFactoryFn(
-            Func<IEnumerable<TModel>, TMetadata> whenTrue,
-            Func<BooleanResultWithModel<TModel, TMetadata>, TMetadata> whenAnyFalse)
-    {
-        return (isSatisfied, results) => isSatisfied
-            ? [whenTrue(results.Select(result => result.Model))]
-            : results.Select(whenAnyFalse);
-    }
-
-    private static Func<bool, IEnumerable<BooleanResultWithModel<TModel, TMetadata>>, IEnumerable<TMetadata>>
-        CreatemetadataFactoryFn(
-            Func<IEnumerable<TModel>, TMetadata> whenTrue)
-    {
-        return (isSatisfied, results) => isSatisfied
-            ? [whenTrue(results.Select(result => result.Model))]
-            : results
-                .Where(result => !result.Value)
-                .SelectMany(result => result.GetMetadata());
-    }
-
-    private static IEnumerable<TMetadata> SelectCauses(bool isSatisfied,
-        IEnumerable<BooleanResultWithModel<TModel, TMetadata>> results) =>
-        results
-            .Where(result => result.Value == isSatisfied)
-            .SelectMany(result => result.GetMetadata());
 }
