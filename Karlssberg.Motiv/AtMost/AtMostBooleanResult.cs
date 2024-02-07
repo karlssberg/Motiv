@@ -4,47 +4,33 @@ namespace Karlssberg.Motiv.AtMost;
 
 /// <summary>Represents the result of an "at most" boolean operation with a maximum number of satisfied operands.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
-public sealed class AtMostBooleanResult<TMetadata> :
+public sealed class AtMostBooleanResult<TMetadata>(
+    bool isSatisfied,
+    int maximum,
+    IEnumerable<BooleanResultBase<TMetadata>> operandResults) :
     BooleanResultBase<TMetadata>,
     ILogicalOperatorResult<TMetadata>
 {
-    /// <summary>Initializes a new instance of the <see cref="AtMostBooleanResult{TMetadata}" /> class.</summary>
-    /// <param name="isSatisfied"></param>
-    /// <param name="maximum">The maximum number of satisfied operands allowed.</param>
-    /// <param name="metadata">A function that creates metadata based on the overall satisfaction of the operands.</param>
-    /// <param name="operandResults">The collection of operand results.</param>
-    internal AtMostBooleanResult(
-        bool isSatisfied,
-        int maximum,
-        IEnumerable<BooleanResultBase<TMetadata>> operandResults)
-    {
-        Maximum = maximum.ThrowIfLessThan(0, nameof(maximum));
-        
-        UnderlyingResults = operandResults
-            .ThrowIfNull(nameof(operandResults))
-            .ToArray();
-
-        Value = isSatisfied;
-    }
-
     /// <summary>Gets the maximum number of satisfied operands allowed.</summary>
-    public int Maximum { get; }
+    public int Maximum { get; } = maximum.ThrowIfLessThan(0, nameof(maximum));
 
     /// <summary>Gets the collection of operand results.</summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } =
+        operandResults.ThrowIfNull(nameof(operandResults));
 
     /// <summary>
-    ///     Gets the collection of determinative operand results that have the same satisfaction status as the overall
-    ///     result.
+    /// Gets the collection of determinative operand results that have the same satisfaction status as the overall
+    /// result.
     /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => 
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands =>
         UnderlyingResults.Where(result => result.Value);
 
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
-    public override bool Value { get; }
-
+    public override bool Value => isSatisfied;
+    
     /// <summary>Gets the description of the boolean result.</summary>
     public override string Description => GetDescription();
+
     private string GetDescription()
     {
         var satisfiedCount = UnderlyingResults.Count(result => result.Value);

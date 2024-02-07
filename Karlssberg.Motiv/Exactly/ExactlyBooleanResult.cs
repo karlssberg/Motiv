@@ -14,9 +14,8 @@ internal sealed class ExactlyBooleanResult<TModel, TMetadata>(
     ILogicalOperatorResult<TMetadata>
 {
     /// <summary>Gets the collection of operand results.</summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } = operandResults
-        .ThrowIfNull(nameof(operandResults))
-        .ToArray();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } =
+        operandResults.ThrowIfNull(nameof(operandResults));
 
     public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => Value switch
     {

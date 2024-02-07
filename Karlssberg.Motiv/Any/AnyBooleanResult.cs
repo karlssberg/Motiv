@@ -11,9 +11,8 @@ internal sealed class AnyBooleanResult<TModel, TMetadata>(
     : BooleanResultBase<TMetadata>,
     ILogicalOperatorResult<TMetadata>
 {
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } = operandResults
-        .ThrowIfNull(nameof(operandResults))
-        .ToArray();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } =
+        operandResults.ThrowIfNull(nameof(operandResults));
 
     /// <summary>Gets the determinative operand results that have the same satisfaction status as the boolean result.</summary>
     public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults
