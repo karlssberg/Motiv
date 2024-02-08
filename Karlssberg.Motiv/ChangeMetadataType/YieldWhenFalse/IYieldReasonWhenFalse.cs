@@ -1,5 +1,5 @@
 ﻿
-namespace Karlssberg.Motiv.ChangeMetadata.YieldWhenFalse;
+namespace Karlssberg.Motiv.ChangeMetadataType.YieldWhenFalse;
 
 /// <summary>Represents an interface for specifying the behavior when a condition is false.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>

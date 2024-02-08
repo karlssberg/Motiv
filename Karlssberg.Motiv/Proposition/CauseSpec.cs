@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.Proposition;
 
-internal class ReasonSpec<TModel>(
+internal class CauseSpec<TModel>(
     string description,
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,

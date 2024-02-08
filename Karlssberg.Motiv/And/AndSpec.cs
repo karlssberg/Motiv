@@ -2,7 +2,8 @@
 
 internal sealed class AndSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> leftOperand,
-    SpecBase<TModel, TMetadata> rightOperand) : SpecBase<TModel, TMetadata>
+    SpecBase<TModel, TMetadata> rightOperand) 
+    : SpecBase<TModel, TMetadata>
 {
     public override string Description => $"({leftOperand}) & ({rightOperand})";
 

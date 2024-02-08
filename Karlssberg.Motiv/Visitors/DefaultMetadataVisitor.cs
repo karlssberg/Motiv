@@ -1,4 +1,4 @@
-﻿using Karlssberg.Motiv.ChangeMetadata;
+﻿using Karlssberg.Motiv.ChangeMetadataType;
 
 namespace Karlssberg.Motiv.Visitors;
 

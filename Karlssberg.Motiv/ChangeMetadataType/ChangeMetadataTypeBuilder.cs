@@ -1,11 +1,11 @@
-﻿using Karlssberg.Motiv.ChangeMetadata.YieldWhenFalse;
+﻿using Karlssberg.Motiv.ChangeMetadataType.YieldWhenFalse;
 
-namespace Karlssberg.Motiv.ChangeMetadata;
+namespace Karlssberg.Motiv.ChangeMetadataType;
 
-public class ChangeMetadataTypeBuilder<TModel, TMetadata, TUnderlyingMetadata>(
+public struct ChangeMetadataTypeBuilder<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
-    Func<TModel, TMetadata> whenTrue) :
-    IYieldMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata>
+    Func<TModel, TMetadata> whenTrue)
+    : IYieldMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata>
 {
     public SpecBase<TModel, TUnderlyingMetadata> Spec => spec;
     public Func<TModel, TMetadata> WhenTrue => whenTrue;

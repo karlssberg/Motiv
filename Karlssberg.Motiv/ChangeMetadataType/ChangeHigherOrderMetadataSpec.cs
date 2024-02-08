@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.ChangeMetadata;
+﻿namespace Karlssberg.Motiv.ChangeMetadataType;
 
 internal class ChangeHigherOrderMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> higherOrderSpec,

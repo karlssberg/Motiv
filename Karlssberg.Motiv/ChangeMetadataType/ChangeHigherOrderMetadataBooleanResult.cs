@@ -1,20 +1,20 @@
 ﻿using Humanizer;
 
-namespace Karlssberg.Motiv.ChangeMetadata;
+namespace Karlssberg.Motiv.ChangeMetadataType;
 
 public class ChangeHigherOrderMetadataBooleanResult<TMetadata, TUnderlyingResult>(
     IEnumerable<TMetadata> metadata,
-    BooleanResultBase<TUnderlyingResult> underlyingResult) : 
-    BooleanResultBase<TMetadata>, 
-    IChangeHigherOrderMetadataBooleanResult<TMetadata>
+    BooleanResultBase<TUnderlyingResult> underlyingResult)
+    : BooleanResultBase<TMetadata>, IChangeHigherOrderMetadataBooleanResult<TMetadata>
 {
     public override bool Value { get; } = underlyingResult.Value;
 
-    public override string Description => Metadata switch
-    {
-        IEnumerable<string> reasons => reasons.Humanize(),
-        _ => underlyingResult.Description
-    };
+    public override string Description =>
+        Metadata switch
+        {
+            IEnumerable<string> reasons => reasons.Humanize(),
+            _ => underlyingResult.Description
+        };
 
     public Type OriginalMetadataType { get; } = typeof(TMetadata);
 

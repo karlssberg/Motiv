@@ -7,9 +7,8 @@ namespace Karlssberg.Motiv.AtLeast;
 public sealed class AtLeastBooleanResult<TMetadata>(
     bool isSatisfied,
     int minimum,
-    IEnumerable<BooleanResultBase<TMetadata>> operandResults) :
-    BooleanResultBase<TMetadata>,
-    ILogicalOperatorResult<TMetadata>
+    IReadOnlyCollection<BooleanResultBase<TMetadata>> operandResults) 
+    : BooleanResultBase<TMetadata>, ILogicalOperatorResult<TMetadata>
 {
     /// <summary>Gets the minimum number of operand results that need to be satisfied.</summary>
     public int Minimum { get; } = minimum.ThrowIfLessThan(0, nameof(minimum));

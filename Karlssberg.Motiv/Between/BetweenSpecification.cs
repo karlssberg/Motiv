@@ -7,20 +7,17 @@ internal class BetweenSpec<TModel, TMetadata>(
     string? description = null)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    public override string Description => description switch
-    {
-        null => $"BETWEEN_{minimum}_AND_{maximum}({underlyingSpec})",
-        not null => $"<{description}>({underlyingSpec})"
-    };
+    public override string Description => 
+        description switch
+        {
+            null => $"BETWEEN_{minimum}_AND_{maximum}({underlyingSpec})",
+            not null => $"<{description}>({underlyingSpec})"
+        };
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> model)
     {
         var underlyingResults = model
-            .Select(model =>
-            {
-                var underlyingResult = underlyingSpec.IsSatisfiedByOrWrapException(model);
-                return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
-            })
+            .Select(underlyingSpec.IsSatisfiedByOrWrapException)
             .ToArray();
 
         var count = underlyingResults.Count(result => result.Value);

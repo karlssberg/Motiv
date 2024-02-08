@@ -9,9 +9,8 @@ namespace Karlssberg.Motiv.Exactly;
 internal sealed class ExactlyBooleanResult<TModel, TMetadata>(
     int n,
     bool isSatisfied,
-    IEnumerable<BooleanResultBase<TMetadata>> operandResults) :
-    BooleanResultBase<TMetadata>,
-    ILogicalOperatorResult<TMetadata>
+    IReadOnlyCollection<BooleanResultBase<TMetadata>> operandResults)
+    : BooleanResultBase<TMetadata>, ILogicalOperatorResult<TMetadata>
 {
     /// <summary>Gets the collection of operand results.</summary>
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } =

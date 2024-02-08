@@ -7,17 +7,19 @@
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 internal sealed class AnySpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> underlyingSpec,
-    string? description = null) : SpecBase<IEnumerable<TModel>, TMetadata>
+    string? description = null)
+    : SpecBase<IEnumerable<TModel>, TMetadata>
 {
 
     /// <summary>
     /// Gets the description of the specification.
     /// </summary>
-    public override string Description => description switch
-    {
-        null => $"ANY({UnderlyingSpec})",
-        not null => $"<{description}>({UnderlyingSpec})"
-    };
+    public override string Description => 
+        description switch
+        {
+            null => $"ANY({UnderlyingSpec})",
+            not null => $"<{description}>({UnderlyingSpec})"
+        };
 
     /// <summary>
     /// Gets the underlying specification.
@@ -32,16 +34,9 @@ internal sealed class AnySpec<TModel, TMetadata>(
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
-            .Select(model =>
-            {
-                var underlyingResult = UnderlyingSpec.IsSatisfiedByOrWrapException(model);
-                return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
-            })
+            .Select(UnderlyingSpec.IsSatisfiedByOrWrapException)
             .ToArray();
 
-        var isSatisfied = underlyingResults.Any(result => result.Value);
-        return new AnyBooleanResult<TModel, TMetadata>(
-            isSatisfied,
-            underlyingResults);
+        return new AnyBooleanResult<TModel, TMetadata>(underlyingResults);
     }
 }

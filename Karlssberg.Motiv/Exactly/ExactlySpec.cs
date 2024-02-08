@@ -5,11 +5,12 @@ internal class ExactlySpec<TModel, TMetadata>(int n, SpecBase<TModel, TMetadata>
 {
     public SpecBase<TModel, TMetadata> UnderlyingSpec { get; } = underlyingSpec;
 
-    public override string Description => description switch
-    {
-        null => $"{n}_SATISFIED({UnderlyingSpec})",
-        not null => $"<{description}>({UnderlyingSpec})"
-    };
+    public override string Description =>
+        description switch
+        {
+            null => $"{n}_SATISFIED({UnderlyingSpec})",
+            not null => $"<{description}>({UnderlyingSpec})"
+        };
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {

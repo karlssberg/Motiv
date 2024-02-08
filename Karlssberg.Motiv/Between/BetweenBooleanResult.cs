@@ -6,7 +6,7 @@ internal class BetweenBooleanResult<TModel, TMetadata>(
     bool isSatisfied,
     int minimum,
     int maximum,
-    IEnumerable<BooleanResultWithModel<TModel, TMetadata>> underlyingResults)
+    IReadOnlyCollection<BooleanResultBase<TMetadata>> underlyingResults)
     : BooleanResultBase<TMetadata>
 {
     public override bool Value => isSatisfied;

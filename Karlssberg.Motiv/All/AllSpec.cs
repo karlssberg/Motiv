@@ -24,11 +24,12 @@ internal sealed class AllSpec<TModel, TMetadata> : SpecBase<IEnumerable<TModel>,
     }
 
     /// <summary>Gets the description of the specification.</summary>
-    public override string Description => _description switch
-    {
-        null =>  $"ALL({UnderlyingSpec})",
-        not null => $"<{_description}>({UnderlyingSpec})"
-    };
+    public override string Description =>
+        _description switch
+        {
+            null =>  $"ALL({UnderlyingSpec})",
+            not null => $"<{_description}>({UnderlyingSpec})"
+        };
 
     /// <summary>Gets the underlying specification.</summary>
     public SpecBase<TModel, TMetadata> UnderlyingSpec { get; }
@@ -39,15 +40,11 @@ internal sealed class AllSpec<TModel, TMetadata> : SpecBase<IEnumerable<TModel>,
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
-            .Select(model =>
-            {
-                var underlyingResult = UnderlyingSpec.IsSatisfiedByOrWrapException(model);
-                return new BooleanResultWithModel<TModel, TMetadata>(model, underlyingResult);
-            })
+            .Select(UnderlyingSpec.IsSatisfiedByOrWrapException)
             .ToArray();
 
         var isSatisfied = underlyingResults.All(result => result.Value);
-        return new AllBooleanResult<TModel, TMetadata>(
+        return new AllBooleanResult< TMetadata>(
             isSatisfied,
             underlyingResults);
     }

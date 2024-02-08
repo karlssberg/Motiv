@@ -1,13 +1,17 @@
-﻿namespace Karlssberg.Motiv.ChangeMetadata;
+﻿using Karlssberg.Motiv.ChangeMetadataType;
+
+namespace Karlssberg.Motiv.ChangeFalseMetadata;
 
 /// <summary>Represents a boolean result of changing the metadata type.</summary>
 /// <typeparam name="TMetadata">The type of the new metadata.</typeparam>
-/// <typeparam name="TOtherMetadata">The type of the original metadata.</typeparam>
-internal class ChangeMetadataBooleanResult<TMetadata, TOtherMetadata>(BooleanResultBase<TOtherMetadata> booleanResult, TMetadata metadata)
+/// <typeparam name="TUnderlyingMetadata">The underlying metadata type that is being changed.</typeparam>
+internal class ChangeTrueMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
+    BooleanResultBase<TUnderlyingMetadata> booleanResult, 
+    TMetadata metadata) 
     : BooleanResultBase<TMetadata>, IChangeMetadataBooleanResult<TMetadata>
 {
     /// <summary>Gets the underlying boolean result.</summary>
-    public BooleanResultBase<TOtherMetadata> UnderlyingBooleanResult => booleanResult;
+    public BooleanResultBase<TUnderlyingMetadata> UnderlyingBooleanResult => booleanResult;
 
     /// <summary>Gets the new metadata.</summary>
     public IEnumerable<TMetadata> Metadata => [metadata];
@@ -16,11 +20,12 @@ internal class ChangeMetadataBooleanResult<TMetadata, TOtherMetadata>(BooleanRes
     public override bool Value => UnderlyingBooleanResult.Value;
 
     /// <summary>Gets the description of the boolean result.</summary>
-    public override string Description => metadata switch
-    {
-        string reason => reason,
-        _ => UnderlyingBooleanResult.Description
-    };
+    public override string Description =>
+        metadata switch
+        {
+            string reason => reason,
+            _ => UnderlyingBooleanResult.Description
+        };
 
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } = booleanResult switch
     {
@@ -35,7 +40,7 @@ internal class ChangeMetadataBooleanResult<TMetadata, TOtherMetadata>(BooleanRes
     };
 
     /// <summary>Gets the type of the original metadata.</summary>
-    public Type OriginalMetadataType => typeof(TOtherMetadata);
+    public Type OriginalMetadataType => typeof(TUnderlyingMetadata);
 
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override IEnumerable<string> GatherReasons() =>

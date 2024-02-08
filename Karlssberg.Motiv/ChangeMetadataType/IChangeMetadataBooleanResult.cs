@@ -1,8 +1,9 @@
-﻿namespace Karlssberg.Motiv.ChangeMetadata;
+﻿namespace Karlssberg.Motiv.ChangeMetadataType;
 
 /// <summary>Represents the result of changing the metadata type to a boolean value.</summary>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-public interface IChangeMetadataBooleanResult<TMetadata> {
+public interface IChangeMetadataBooleanResult<TMetadata>
+{
     /// <summary>Gets the metadata after the type change.</summary>
     IEnumerable<TMetadata> Metadata { get; }
 
@@ -18,5 +19,6 @@ public interface IChangeMetadataBooleanResult<TMetadata> {
     Type OriginalMetadataType { get; }
 
     IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
+    
     IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
 }

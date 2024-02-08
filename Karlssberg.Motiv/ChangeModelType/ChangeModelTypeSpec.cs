@@ -2,7 +2,8 @@
 
 public sealed class ChangeModelTypeSpec<TParentModel, TModel, TMetadata>(
     SpecBase<TModel, TMetadata> spec,
-    Func<TParentModel, TModel> modelSelector) : SpecBase<TParentModel, TMetadata>
+    Func<TParentModel, TModel> modelSelector)
+    : SpecBase<TParentModel, TMetadata>
 {
     private readonly Func<TParentModel, TModel> _modelSelector = modelSelector.ThrowIfNull(nameof(modelSelector));
     private readonly SpecBase<TModel, TMetadata> _spec = spec.ThrowIfNull(nameof(spec));

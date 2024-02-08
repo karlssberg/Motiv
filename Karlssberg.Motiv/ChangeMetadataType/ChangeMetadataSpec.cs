@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.ChangeMetadata;
+﻿namespace Karlssberg.Motiv.ChangeMetadataType;
 
 internal class ChangeMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,

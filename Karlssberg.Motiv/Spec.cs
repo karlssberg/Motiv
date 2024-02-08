@@ -78,7 +78,7 @@ public class Spec<TModel> : SpecBase<TModel, string>
         Func<TModel, string> whenFalse)
     {
         Description = description.ThrowIfNullOrWhitespace(nameof(description));
-        _specFactory = _ => new ReasonSpec<TModel>(
+        _specFactory = _ => new CauseSpec<TModel>(
             description,
             predicate,
             whenTrue,

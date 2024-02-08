@@ -1,13 +1,12 @@
-﻿using Karlssberg.Motiv.ChangeMetadata.YieldWhenFalse;
+﻿using Karlssberg.Motiv.ChangeMetadataType.YieldWhenFalse;
 
-namespace Karlssberg.Motiv.ChangeMetadata;
+namespace Karlssberg.Motiv.ChangeMetadataType;
 
-public class ChangeMetadataBuilder<TModel, TMetadata>(
+public readonly struct ChangeMetadataBuilder<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> spec,
     Func<TModel, string> trueBecause,
-    string? candidateDescription = null) :
-    IYieldReasonWithDescriptionUnresolvedWhenFalse<TModel, TMetadata>,
-    IYieldReasonWhenFalse<TModel, TMetadata>
+    string? candidateDescription = null)
+    : IYieldReasonWithDescriptionUnresolvedWhenFalse<TModel, TMetadata>, IYieldReasonWhenFalse<TModel, TMetadata>
 {
     public SpecBase<TModel, string> YieldWhenFalse(string falseBecause)
     {

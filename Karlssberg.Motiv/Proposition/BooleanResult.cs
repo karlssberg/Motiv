@@ -26,11 +26,12 @@ public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IPropositi
     public override bool Value { get; }
 
     /// <summary>Gets the description of the result.</summary>
-    public override string Description => Metadata switch
-    {
-        string reason => reason,
-        _ => $"{_description} is {(Value ? True : False)}"
-    };
+    public override string Description =>
+        Metadata switch
+        {
+            string reason => reason,
+            _ => $"{_description} is {(Value ? True : False)}"
+        };
 
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } = [];
     public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; } = [];

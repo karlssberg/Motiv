@@ -7,9 +7,8 @@ namespace Karlssberg.Motiv.AtMost;
 public sealed class AtMostBooleanResult<TMetadata>(
     bool isSatisfied,
     int maximum,
-    IEnumerable<BooleanResultBase<TMetadata>> operandResults) :
-    BooleanResultBase<TMetadata>,
-    ILogicalOperatorResult<TMetadata>
+    IReadOnlyCollection<BooleanResultBase<TMetadata>> operandResults)
+    : BooleanResultBase<TMetadata>, ILogicalOperatorResult<TMetadata>
 {
     /// <summary>Gets the maximum number of satisfied operands allowed.</summary>
     public int Maximum { get; } = maximum.ThrowIfLessThan(0, nameof(maximum));

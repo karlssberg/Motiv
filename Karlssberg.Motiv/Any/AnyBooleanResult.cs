@@ -6,10 +6,8 @@ namespace Karlssberg.Motiv.Any;
 /// <typeparam name="TMetadata">The type of the metadata associated with the boolean result.</typeparam>
 /// <typeparam name="TModel">The type of the model used to evaluate each underlying operand. </typeparam>
 internal sealed class AnyBooleanResult<TModel, TMetadata>(
-    bool isSatisfied,
-    IEnumerable<BooleanResultBase<TMetadata>> operandResults)
-    : BooleanResultBase<TMetadata>,
-    ILogicalOperatorResult<TMetadata>
+    IReadOnlyCollection<BooleanResultBase<TMetadata>> operandResults)
+    : BooleanResultBase<TMetadata>, ILogicalOperatorResult<TMetadata>
 {
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } =
         operandResults.ThrowIfNull(nameof(operandResults));
@@ -19,7 +17,7 @@ internal sealed class AnyBooleanResult<TModel, TMetadata>(
         .Where(result => result.Value == Value);
 
     /// <inheritdoc />
-    public override bool Value => isSatisfied;
+    public override bool Value { get; } = operandResults.Any(result => result.Value);
 
     /// <inheritdoc />
     public override string Description => GetDescription();

@@ -6,13 +6,11 @@ namespace Karlssberg.Motiv.All;
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
 /// <typeparam name="TModel">The model used to evaluate each underlying operand.</typeparam>
 /// <typeparam name="TMetadata">The type of metadata associated with each underlying operand.</typeparam>
-internal sealed class AllBooleanResult<TModel, TMetadata>(
+internal sealed class AllBooleanResult<TMetadata>(
     bool isSatisfied,
-    IEnumerable<BooleanResultWithModel<TModel, TMetadata>> operandResults) : 
-    BooleanResultBase<TMetadata>,
-    ILogicalOperatorResult<TMetadata>, IHigherOrderLogicalOperatorResult<TMetadata>
+    IReadOnlyCollection<BooleanResultBase<TMetadata>> operandResults)
+    : BooleanResultBase<TMetadata>, ILogicalOperatorResult<TMetadata>, IHigherOrderLogicalOperatorResult<TMetadata>
 {
-
     /// <summary>Gets the collection of all the operand results.</summary>
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } =
         operandResults.ThrowIfNull(nameof(operandResults));
@@ -20,7 +18,6 @@ internal sealed class AllBooleanResult<TModel, TMetadata>(
     /// <summary>Gets the determinative operand results that have the same satisfaction as the overall result.</summary>
     public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults
         .Where(result => result.Value == Value);
-
 
     /// <inheritdoc cref="BooleanResultBase{TMetadata}.Value" />
     public override bool Value => isSatisfied;
@@ -50,5 +47,6 @@ internal sealed class AllBooleanResult<TModel, TMetadata>(
     }
 
     /// <inheritdoc />
-    public override IEnumerable<string> GatherReasons() => DeterminativeOperands.SelectMany(r => r.GatherReasons());
+    public override IEnumerable<string> GatherReasons() => DeterminativeOperands
+        .SelectMany(r => r.GatherReasons());
 }

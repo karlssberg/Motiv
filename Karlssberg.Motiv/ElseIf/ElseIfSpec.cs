@@ -2,8 +2,8 @@
 
 internal class ElseIfSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> antecedent,
-    SpecBase<TModel, TMetadata> consequent) :
-    SpecBase<TModel, TMetadata>
+    SpecBase<TModel, TMetadata> consequent)
+    : SpecBase<TModel, TMetadata>
 {
     public override string Description => $"({antecedent}) => ({consequent})";
 
