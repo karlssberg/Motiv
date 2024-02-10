@@ -5,8 +5,8 @@ namespace Karlssberg.Motiv.Tests;
 public class ElseIfSpecTests
 {
     [Theory]
-    [AutoParams(true, "antecedent satisfied")]
-    [AutoParams(false, "consequent satisfied")]
+    [InlineAutoData(true, "antecedent satisfied")]
+    [InlineAutoData(false, "consequent satisfied")]
     public void Should_return_an_antecedent_result_when_it_is_satisfied(bool model, string expected)
     {
         var antecedent = Spec.Build<bool>(m => m)
@@ -23,7 +23,7 @@ public class ElseIfSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Reasons.Select(reason => reason.Value).Should().BeEquivalentTo(expected);
+        result.ReasonHierarchy.Select(reason => reason.Description).Should().BeEquivalentTo(expected);
     }
 
 

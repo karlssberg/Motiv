@@ -6,10 +6,10 @@ namespace Karlssberg.Motiv.Tests;
 public class ChangeHigherOrderMetadataSpecTests
 {
     [Theory]
-    [AutoParams(1, 3, 5, 7, "is not a pair of even numbers")]
-    [AutoParams(1, 3, 5, 8, "is not a pair of even numbers")]
-    [AutoParams(1, 3, 6, 8, "is a pair of even numbers")]
-    [AutoParams(1, 3, 5, 7, "is not a pair of even numbers")]
+    [InlineAutoData(1, 3, 5, 7, "is not a pair of even numbers")]
+    [InlineAutoData(1, 3, 5, 8, "is not a pair of even numbers")]
+    [InlineAutoData(1, 3, 6, 8, "is a pair of even numbers")]
+    [InlineAutoData(1, 3, 5, 7, "is not a pair of even numbers")]
     public void Should_supplant_metadata_from_a_higher_order_spec(int first, int second, int third, int fourth, string expected)
     {
         var underlyingSpec = Spec
@@ -25,7 +25,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
         
-        result.Reasons.Select(reason => reason.Value).Should().BeEquivalentTo(expected);
+        result.ReasonHierarchy.Select(reason => reason.Description).Should().BeEquivalentTo(expected);
     }
     
     [Fact]
@@ -46,14 +46,14 @@ public class ChangeHigherOrderMetadataSpecTests
     }
 
     [Theory]
-    [AutoParams(true, true, true, "third true yield")]
-    [AutoParams(true, true, false, "third false yield")]
-    [AutoParams(true, false, true, "third false yield")]
-    [AutoParams(true, false, false, "third false yield")]
-    [AutoParams(false, true, true, "third false yield")]
-    [AutoParams(false, true, false, "third false yield")]
-    [AutoParams(false, false, true, "third false yield")]
-    [AutoParams(false, false, false, "third false yield")]
+    [InlineAutoData(true, true, true, "third true yield")]
+    [InlineAutoData(true, true, false, "third false yield")]
+    [InlineAutoData(true, false, true, "third false yield")]
+    [InlineAutoData(true, false, false, "third false yield")]
+    [InlineAutoData(false, true, true, "third false yield")]
+    [InlineAutoData(false, true, false, "third false yield")]
+    [InlineAutoData(false, false, true, "third false yield")]
+    [InlineAutoData(false, false, false, "third false yield")]
     public void Should_only_yield_the_most_recent_when_multiple_yields_are_chained(bool first, bool second, bool third, string expected)
     {
         var underlyingSpec = Spec
@@ -73,18 +73,18 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
-        result.Reasons.Select(reason => reason.Value).Should().BeEquivalentTo(expected);
+        result.ReasonHierarchy.Select(reason => reason.Description).Should().BeEquivalentTo(expected);
     }
     
     [Theory]
-    [AutoParams(true, true, true, "is even")]
-    [AutoParams(true, true, false, "is odd")]
-    [AutoParams(true, false, true, "is odd")]
-    [AutoParams(true, false, false, "is odd")]
-    [AutoParams(false, true, true, "is odd")]
-    [AutoParams(false, true, false, "is odd")]
-    [AutoParams(false, false, true, "is odd")]
-    [AutoParams(false, false, false, "is odd")]
+    [InlineAutoData(true, true, true, "is even")]
+    [InlineAutoData(true, true, false, "is odd")]
+    [InlineAutoData(true, false, true, "is odd")]
+    [InlineAutoData(true, false, false, "is odd")]
+    [InlineAutoData(false, true, true, "is odd")]
+    [InlineAutoData(false, true, false, "is odd")]
+    [InlineAutoData(false, false, true, "is odd")]
+    [InlineAutoData(false, false, false, "is odd")]
     public void Should_yield_the_most_deeply_nested_reason_when_requested(bool first, bool second, bool third, string expected)
     {
         var underlyingSpec = Spec

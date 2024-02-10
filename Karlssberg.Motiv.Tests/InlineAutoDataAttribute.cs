@@ -4,7 +4,7 @@ using AutoFixture.Xunit2;
 
 namespace Karlssberg.Motiv.Tests;
 
-internal class AutoParamsAttribute(params object?[] values) : InlineAutoDataAttribute(new CustomizedAutoDataAttribute(), values)
+internal class InlineAutoDataAttribute(params object?[] values) : AutoFixture.Xunit2.InlineAutoDataAttribute(new CustomizedAutoDataAttribute(), values)
 {
     private class CustomizedAutoDataAttribute() : AutoDataAttribute(CreateFixture)
     {

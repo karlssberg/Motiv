@@ -5,8 +5,8 @@ namespace Karlssberg.Motiv.Tests;
 public class ChangeModelTypeSpecTests
 {
     [Theory]
-    [AutoParams("hello", false)]
-    [AutoParams(default(string), true)]
+    [InlineAutoData("hello", false)]
+    [InlineAutoData(default(string), true)]
     public void Should_change_the_model(string? model, bool expected)
     {
         var isEmpty = Spec
@@ -23,11 +23,11 @@ public class ChangeModelTypeSpecTests
     }
 
     [Theory]
-    [AutoParams("hello", false)]
-    [AutoParams(1, true)]
-    [AutoParams(1d, true)]
-    [AutoParams(false, true)]
-    [AutoParams(typeof(object), false)]
+    [InlineAutoData("hello", false)]
+    [InlineAutoData(1, true)]
+    [InlineAutoData(1d, true)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(typeof(object), false)]
     public void Should_change_the_model_using_a_model_selector_function(object model, bool expected)
     {
         var isValueType = Spec
@@ -44,9 +44,9 @@ public class ChangeModelTypeSpecTests
     }
 
     [Theory]
-    [AutoParams("hello", true)]
-    [AutoParams("world", true)]
-    [AutoParams("h1e234j", false)]
+    [InlineAutoData("hello", true)]
+    [InlineAutoData("world", true)]
+    [InlineAutoData("h1e234j", false)]
     public void Should_logically_resolve_parent_specification(string model, bool expected)
     {
         var isLetter = Spec
@@ -65,9 +65,9 @@ public class ChangeModelTypeSpecTests
     }
 
     [Theory]
-    [AutoParams("#hello", "'#' is not a letter")]
-    [AutoParams("!world!", "'!' is not a letter")]
-    [AutoParams("ok", "'o' is a letter", "'k' is a letter")]
+    [InlineAutoData("#hello", "'#' is not a letter")]
+    [InlineAutoData("!world!", "'!' is not a letter")]
+    [InlineAutoData("ok", "'o' is a letter", "'k' is a letter")]
     public void Should_identify_non_letters(string model, params string[] expected)
     {
         var isLetter = Spec

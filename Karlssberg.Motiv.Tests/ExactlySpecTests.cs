@@ -6,10 +6,10 @@ namespace Karlssberg.Motiv.Tests;
 public class ExactlySpecTests
 {
     [Theory]
-    [AutoParams(2, 4, true)]
-    [AutoParams(4, 3, false)]
-    [AutoParams(1, 2, false)]
-    [AutoParams(1, 3, false)]
+    [InlineAutoData(2, 4, true)]
+    [InlineAutoData(4, 3, false)]
+    [InlineAutoData(1, 2, false)]
+    [InlineAutoData(1, 3, false)]
     public void Should_perform_the_logical_operation_NSatisfied(
         int first,
         int second,
@@ -29,10 +29,10 @@ public class ExactlySpecTests
     }
     
     [Theory]
-    [AutoParams(1, 3, 5, 7, false, "1, 3, 5, and 7 do not contain a pair of even numbers", "1 is odd, 3 is odd, 5 is odd, and 7 is odd")]
-    [AutoParams(1, 3, 5, 6, false, "1, 3, 5, and 6 do not contain a pair of even numbers", "1 is odd, 3 is odd, 5 is odd, and 6 is even")]
-    [AutoParams(1, 3, 4, 6, true, "4 and 6 are a pair of even numbers", "4 is even and 6 is even")]
-    [AutoParams(1, 4, 6, 8, false, "1, 4, 6, and 8 do not contain a pair of even numbers", "1 is odd, 4 is even, 6 is even, and 8 is even")]
+    [InlineAutoData(1, 3, 5, 7, false, "1, 3, 5, and 7 do not contain a pair of even numbers", "1 is odd, 3 is odd, 5 is odd, and 7 is odd")]
+    [InlineAutoData(1, 3, 5, 6, false, "1, 3, 5, and 6 do not contain a pair of even numbers", "1 is odd, 3 is odd, 5 is odd, and 6 is even")]
+    [InlineAutoData(1, 3, 4, 6, true, "4 and 6 are a pair of even numbers", "4 is even and 6 is even")]
+    [InlineAutoData(1, 4, 6, 8, false, "1, 4, 6, and 8 do not contain a pair of even numbers", "1 is odd, 4 is even, 6 is even, and 8 is even")]
     public void Should_mirror_the_outcome_of_an_all_satisfied_spec_metadata(
         int first,
         int second,
@@ -58,15 +58,15 @@ public class ExactlySpecTests
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
         result.Satisfied.Should().Be(expected);
-        result.Reasons.Humanize().Should().Be(expectedShallowReasons);
+        result.ReasonHierarchy.Humanize().Should().Be(expectedShallowReasons);
         result.GetRootCauses().Humanize().Should().Be(expectedDeepReason);
     }
     
     [Theory]
-    [AutoParams(2, true, true, "2_SATISFIED{2/2}:true(true x2)")]
-    [AutoParams(2, true, false, "2_SATISFIED{1/2}:false(true and false)")]
-    [AutoParams(2, false, true, "2_SATISFIED{1/2}:false(false and true)")]
-    [AutoParams(2, false, false, "2_SATISFIED{0/2}:false(false x2)")]
+    [InlineAutoData(2, true, true, "2_SATISFIED{2/2}:true(true x2)")]
+    [InlineAutoData(2, true, false, "2_SATISFIED{1/2}:false(true and false)")]
+    [InlineAutoData(2, false, true, "2_SATISFIED{1/2}:false(false and true)")]
+    [InlineAutoData(2, false, false, "2_SATISFIED{0/2}:false(false x2)")]
     public void Should_serialize_the_result_of_the_NSatisfied_operation_when_metadata_is_a_string(
         int n,
         bool first,

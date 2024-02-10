@@ -5,22 +5,22 @@ namespace Karlssberg.Motiv.Tests;
 public class AtMostSpecTests
 {
     [Theory]
-    [AutoParams(false, false, false, false, true )]
-    [AutoParams(false, false, false, true,  false)]
-    [AutoParams(false, false, true,  false, false)]
-    [AutoParams(false, false, true,  true,  false)]
-    [AutoParams(false, true,  false, false, false)]
-    [AutoParams(false, true,  false, true,  false)]
-    [AutoParams(false, true,  true,  false, false)]
-    [AutoParams(false, true,  true,  true,  false)]
-    [AutoParams(true,  false, false, false, false)]
-    [AutoParams(true,  false, false, true,  false)]
-    [AutoParams(true,  false, true,  false, false)]
-    [AutoParams(true,  false, true,  true,  false)]
-    [AutoParams(true,  true,  false, false, false)]
-    [AutoParams(true,  true,  false, true,  false)]
-    [AutoParams(true,  true,  true,  false, false)]
-    [AutoParams(true,  true,  true,  true,  false)]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  false)]
+    [InlineAutoData(false, false, true,  false, false)]
+    [InlineAutoData(false, false, true,  true,  false)]
+    [InlineAutoData(false, true,  false, false, false)]
+    [InlineAutoData(false, true,  false, true,  false)]
+    [InlineAutoData(false, true,  true,  false, false)]
+    [InlineAutoData(false, true,  true,  true,  false)]
+    [InlineAutoData(true,  false, false, false, false)]
+    [InlineAutoData(true,  false, false, true,  false)]
+    [InlineAutoData(true,  false, true,  false, false)]
+    [InlineAutoData(true,  false, true,  true,  false)]
+    [InlineAutoData(true,  true,  false, false, false)]
+    [InlineAutoData(true,  true,  false, true,  false)]
+    [InlineAutoData(true,  true,  true,  false, false)]
+    [InlineAutoData(true,  true,  true,  true,  false)]
     public void Should_perform_the_logical_operation_at_most_when_0_is_supplied_as_the_maximum(
         bool first,
         bool second,
@@ -43,22 +43,22 @@ public class AtMostSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, false, true )]
-    [AutoParams(false, false, false, true,  true )]
-    [AutoParams(false, false, true,  false, true )]
-    [AutoParams(false, false, true,  true,  false)]
-    [AutoParams(false, true,  false, false, true )]
-    [AutoParams(false, true,  false, true,  false)]
-    [AutoParams(false, true,  true,  false, false)]
-    [AutoParams(false, true,  true,  true,  false)]
-    [AutoParams(true,  false, false, false, true )]
-    [AutoParams(true,  false, false, true,  false)]
-    [AutoParams(true,  false, true,  false, false)]
-    [AutoParams(true,  false, true,  true,  false)]
-    [AutoParams(true,  true,  false, false, false)]
-    [AutoParams(true,  true,  false, true,  false)]
-    [AutoParams(true,  true,  true,  false, false)]
-    [AutoParams(true,  true,  true,  true,  false)]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  true )]
+    [InlineAutoData(false, false, true,  false, true )]
+    [InlineAutoData(false, false, true,  true,  false)]
+    [InlineAutoData(false, true,  false, false, true )]
+    [InlineAutoData(false, true,  false, true,  false)]
+    [InlineAutoData(false, true,  true,  false, false)]
+    [InlineAutoData(false, true,  true,  true,  false)]
+    [InlineAutoData(true,  false, false, false, true )]
+    [InlineAutoData(true,  false, false, true,  false)]
+    [InlineAutoData(true,  false, true,  false, false)]
+    [InlineAutoData(true,  false, true,  true,  false)]
+    [InlineAutoData(true,  true,  false, false, false)]
+    [InlineAutoData(true,  true,  false, true,  false)]
+    [InlineAutoData(true,  true,  true,  false, false)]
+    [InlineAutoData(true,  true,  true,  true,  false)]
     public void Should_perform_the_logical_operation_at_most_when_1_is_supplied_as_the_maximum(
         bool first,
         bool second,
@@ -81,22 +81,22 @@ public class AtMostSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, false, true )]
-    [AutoParams(false, false, false, true,  true )]
-    [AutoParams(false, false, true,  false, true )]
-    [AutoParams(false, false, true,  true,  true )]
-    [AutoParams(false, true,  false, false, true )]
-    [AutoParams(false, true,  false, true,  true )]
-    [AutoParams(false, true,  true,  false, true )]
-    [AutoParams(false, true,  true,  true,  false)]
-    [AutoParams(true,  false, false, false, true )]
-    [AutoParams(true,  false, false, true,  true )]
-    [AutoParams(true,  false, true,  false, true )]
-    [AutoParams(true,  false, true,  true,  false)]
-    [AutoParams(true,  true,  false, false, true )]
-    [AutoParams(true,  true,  false, true,  false)]
-    [AutoParams(true,  true,  true,  false, false)]
-    [AutoParams(true,  true,  true,  true,  false)]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  true )]
+    [InlineAutoData(false, false, true,  false, true )]
+    [InlineAutoData(false, false, true,  true,  true )]
+    [InlineAutoData(false, true,  false, false, true )]
+    [InlineAutoData(false, true,  false, true,  true )]
+    [InlineAutoData(false, true,  true,  false, true )]
+    [InlineAutoData(false, true,  true,  true,  false)]
+    [InlineAutoData(true,  false, false, false, true )]
+    [InlineAutoData(true,  false, false, true,  true )]
+    [InlineAutoData(true,  false, true,  false, true )]
+    [InlineAutoData(true,  false, true,  true,  false)]
+    [InlineAutoData(true,  true,  false, false, true )]
+    [InlineAutoData(true,  true,  false, true,  false)]
+    [InlineAutoData(true,  true,  true,  false, false)]
+    [InlineAutoData(true,  true,  true,  true,  false)]
     public void Should_perform_the_logical_operation_at_most_when_2_is_supplied_as_the_maximum(
         bool first,
         bool second,
@@ -119,22 +119,22 @@ public class AtMostSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, false, true )]
-    [AutoParams(false, false, false, true,  true )]
-    [AutoParams(false, false, true,  false, true )]
-    [AutoParams(false, false, true,  true,  true )]
-    [AutoParams(false, true,  false, false, true )]
-    [AutoParams(false, true,  false, true,  true )]
-    [AutoParams(false, true,  true,  false, true )]
-    [AutoParams(false, true,  true,  true,  true )]
-    [AutoParams(true,  false, false, false, true )]
-    [AutoParams(true,  false, false, true,  true )]
-    [AutoParams(true,  false, true,  false, true )]
-    [AutoParams(true,  false, true,  true,  true )]
-    [AutoParams(true,  true,  false, false, true )]
-    [AutoParams(true,  true,  false, true,  true )]
-    [AutoParams(true,  true,  true,  false, true )]
-    [AutoParams(true,  true,  true,  true,  true )]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  true )]
+    [InlineAutoData(false, false, true,  false, true )]
+    [InlineAutoData(false, false, true,  true,  true )]
+    [InlineAutoData(false, true,  false, false, true )]
+    [InlineAutoData(false, true,  false, true,  true )]
+    [InlineAutoData(false, true,  true,  false, true )]
+    [InlineAutoData(false, true,  true,  true,  true )]
+    [InlineAutoData(true,  false, false, false, true )]
+    [InlineAutoData(true,  false, false, true,  true )]
+    [InlineAutoData(true,  false, true,  false, true )]
+    [InlineAutoData(true,  false, true,  true,  true )]
+    [InlineAutoData(true,  true,  false, false, true )]
+    [InlineAutoData(true,  true,  false, true,  true )]
+    [InlineAutoData(true,  true,  true,  false, true )]
+    [InlineAutoData(true,  true,  true,  true,  true )]
     public void Should_perform_the_logical_operation_at_most_when_the_set_size_is_supplied_as_the_maximum(
         bool first,
         bool second,
@@ -157,14 +157,14 @@ public class AtMostSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "AT_MOST_1{0/3}:true")]
-    [AutoParams(false, false, true,  "AT_MOST_1{1/3}:true(is satisfied)")]
-    [AutoParams(false, true,  false, "AT_MOST_1{1/3}:true(is satisfied)")]
-    [AutoParams(false, true,  true,  "AT_MOST_1{2/3}:false(is satisfied x2)")]
-    [AutoParams(true,  false, false, "AT_MOST_1{1/3}:true(is satisfied)")]
-    [AutoParams(true,  false, true,  "AT_MOST_1{2/3}:false(is satisfied x2)")]
-    [AutoParams(true,  true,  false, "AT_MOST_1{2/3}:false(is satisfied x2)")]
-    [AutoParams(true,  true,  true,  "AT_MOST_1{3/3}:false(is satisfied x3)")]
+    [InlineAutoData(false, false, false, "AT_MOST_1{0/3}:true")]
+    [InlineAutoData(false, false, true,  "AT_MOST_1{1/3}:true(is satisfied)")]
+    [InlineAutoData(false, true,  false, "AT_MOST_1{1/3}:true(is satisfied)")]
+    [InlineAutoData(false, true,  true,  "AT_MOST_1{2/3}:false(is satisfied x2)")]
+    [InlineAutoData(true,  false, false, "AT_MOST_1{1/3}:true(is satisfied)")]
+    [InlineAutoData(true,  false, true,  "AT_MOST_1{2/3}:false(is satisfied x2)")]
+    [InlineAutoData(true,  true,  false, "AT_MOST_1{2/3}:false(is satisfied x2)")]
+    [InlineAutoData(true,  true,  true,  "AT_MOST_1{3/3}:false(is satisfied x3)")]
     public void Should_serialize_the_result_of_the_at_most_of_1_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -186,14 +186,14 @@ public class AtMostSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "AT_MOST_1{0/3}:true")]
-    [AutoParams(false, false, true,  "AT_MOST_1{1/3}:true(True)")]
-    [AutoParams(false, true,  false, "AT_MOST_1{1/3}:true(True)")]
-    [AutoParams(false, true,  true,  "AT_MOST_1{2/3}:false(True x2)")]
-    [AutoParams(true,  false, false, "AT_MOST_1{1/3}:true(True)")]
-    [AutoParams(true,  false, true,  "AT_MOST_1{2/3}:false(True x2)")]
-    [AutoParams(true,  true,  false, "AT_MOST_1{2/3}:false(True x2)")]
-    [AutoParams(true,  true,  true,  "AT_MOST_1{3/3}:false(True x3)")]
+    [InlineAutoData(false, false, false, "AT_MOST_1{0/3}:true")]
+    [InlineAutoData(false, false, true,  "AT_MOST_1{1/3}:true(True)")]
+    [InlineAutoData(false, true,  false, "AT_MOST_1{1/3}:true(True)")]
+    [InlineAutoData(false, true,  true,  "AT_MOST_1{2/3}:false(True x2)")]
+    [InlineAutoData(true,  false, false, "AT_MOST_1{1/3}:true(True)")]
+    [InlineAutoData(true,  false, true,  "AT_MOST_1{2/3}:false(True x2)")]
+    [InlineAutoData(true,  true,  false, "AT_MOST_1{2/3}:false(True x2)")]
+    [InlineAutoData(true,  true,  true,  "AT_MOST_1{3/3}:false(True x3)")]
     public void Should_serialize_the_result_of_the_at_most_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
         bool second,
@@ -215,14 +215,14 @@ public class AtMostSpecTests
     }
 
     [Theory]
-    [AutoParams(false, false, false, "AT_MOST_1{0/3}:true")]
-    [AutoParams(false, false, true,  "AT_MOST_1{1/3}:true(underlying model is true)")]
-    [AutoParams(false, true,  false, "AT_MOST_1{1/3}:true(underlying model is true)")]
-    [AutoParams(false, true,  true,  "AT_MOST_1{2/3}:false(underlying model is true x2)")]
-    [AutoParams(true,  false, false, "AT_MOST_1{1/3}:true(underlying model is true)")]
-    [AutoParams(true,  false, true,  "AT_MOST_1{2/3}:false(underlying model is true x2)")]
-    [AutoParams(true,  true,  false, "AT_MOST_1{2/3}:false(underlying model is true x2)")]
-    [AutoParams(true,  true,  true,  "AT_MOST_1{3/3}:false(underlying model is true x3)")]
+    [InlineAutoData(false, false, false, "AT_MOST_1{0/3}:true")]
+    [InlineAutoData(false, false, true,  "AT_MOST_1{1/3}:true(underlying model is true)")]
+    [InlineAutoData(false, true,  false, "AT_MOST_1{1/3}:true(underlying model is true)")]
+    [InlineAutoData(false, true,  true,  "AT_MOST_1{2/3}:false(underlying model is true x2)")]
+    [InlineAutoData(true,  false, false, "AT_MOST_1{1/3}:true(underlying model is true)")]
+    [InlineAutoData(true,  false, true,  "AT_MOST_1{2/3}:false(underlying model is true x2)")]
+    [InlineAutoData(true,  true,  false, "AT_MOST_1{2/3}:false(underlying model is true x2)")]
+    [InlineAutoData(true,  true,  true,  "AT_MOST_1{3/3}:false(underlying model is true x3)")]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first, 
         bool second,
@@ -276,7 +276,7 @@ public class AtMostSpecTests
     }
 
     [Theory]
-    [AutoParams]
+    [InlineAutoData]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception(
         string model)
     {

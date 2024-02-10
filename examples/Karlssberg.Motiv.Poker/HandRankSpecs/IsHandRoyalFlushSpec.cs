@@ -13,6 +13,7 @@ public class IsHandRoyalFlushSpec() : Spec<Hand, HandRank>(() =>
     var isRoyalFlush = isFlush & isAceHighStraight;
 
     return isRoyalFlush
+        //.ChangeMetadata<RankHand>()
         .YieldWhenTrue(HandRank.RoyalFlush)
         .YieldWhenFalse(HandRank.HighCard);
 });

@@ -5,10 +5,10 @@ namespace Karlssberg.Motiv.Tests;
 public class XOrSpecTests
 {
     [Theory]
-    [AutoParams(true, true, false)]
-    [AutoParams(true, false, true)]
-    [AutoParams(false, true, true)]
-    [AutoParams(false, false, false)]
+    [InlineAutoData(true, true, false)]
+    [InlineAutoData(true, false, true)]
+    [InlineAutoData(false, true, true)]
+    [InlineAutoData(false, false, false)]
     public void Should_perform_logical_xor(
         bool leftResult,
         bool rightResult,
@@ -38,10 +38,10 @@ public class XOrSpecTests
     }
 
     [Theory]
-    [AutoParams(true, true, "(left is true) XOR:false (right is true)")]
-    [AutoParams(true, false, "(left is true) XOR:true (right is false)")]
-    [AutoParams(false, true, "(left is false) XOR:true (right is true)")]
-    [AutoParams(false, false, "(left is false) XOR:false (right is false)")]
+    [InlineAutoData(true, true, "(left is true) XOR:false (right is true)")]
+    [InlineAutoData(true, false, "(left is true) XOR:true (right is false)")]
+    [InlineAutoData(false, true, "(left is false) XOR:true (right is true)")]
+    [InlineAutoData(false, false, "(left is false) XOR:false (right is false)")]
     public void Should_serialize_the_result_of_the_xor_operation(
         bool leftResult,
         bool rightResult,
@@ -68,10 +68,10 @@ public class XOrSpecTests
     }
 
     [Theory]
-    [AutoParams(true, true, "(True) XOR:false (True)")]
-    [AutoParams(true, false, "(True) XOR:true (False)")]
-    [AutoParams(false, true, "(False) XOR:true (True)")]
-    [AutoParams(false, false, "(False) XOR:false (False)")]
+    [InlineAutoData(true, true, "(True) XOR:false (True)")]
+    [InlineAutoData(true, false, "(True) XOR:true (False)")]
+    [InlineAutoData(false, true, "(False) XOR:true (True)")]
+    [InlineAutoData(false, false, "(False) XOR:false (False)")]
     public void Should_serialize_the_result_of_the_xor_operation_when_metadata_is_a_string(
         bool leftResult,
         bool rightResult,
@@ -98,10 +98,10 @@ public class XOrSpecTests
     }
 
     [Theory]
-    [AutoParams(true, true, "(True) XOR:false (True)")]
-    [AutoParams(true, false, "(True) XOR:true (False)")]
-    [AutoParams(false, true, "(False) XOR:true (True)")]
-    [AutoParams(false, false, "(False) XOR:false (False)")]
+    [InlineAutoData(true, true, "(True) XOR:false (True)")]
+    [InlineAutoData(true, false, "(True) XOR:true (False)")]
+    [InlineAutoData(false, true, "(False) XOR:true (True)")]
+    [InlineAutoData(false, false, "(False) XOR:false (False)")]
     public void Should_serialize_the_result_of_the_xor_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool leftResult,
         bool rightResult,
@@ -128,10 +128,10 @@ public class XOrSpecTests
     }
 
     [Theory]
-    [AutoParams(true, true)]
-    [AutoParams(true, false)]
-    [AutoParams(false, true)]
-    [AutoParams(false, false)]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
     public void Should_provide_a_description_of_the_specification(bool leftResult, bool rightResult)
     {
         var left = Spec
@@ -155,10 +155,10 @@ public class XOrSpecTests
     }
 
     [Theory]
-    [AutoParams(true, true)]
-    [AutoParams(true, false)]
-    [AutoParams(false, true)]
-    [AutoParams(false, false)]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
     public void Should_provide_a_description_of_the_specification_when_using_convenience_specification(bool leftResult, bool rightResult)
     {
         var left = Spec
@@ -182,7 +182,7 @@ public class XOrSpecTests
     }
 
     [Theory]
-    [AutoParams]
+    [InlineAutoData]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception(
         string model)
     {

@@ -4,8 +4,8 @@ namespace Karlssberg.Motiv.Tests;
 
 public class ChangeMetadataSpecTests
 {
-    [AutoParams(true, "true after - A", "true after + model - B", "true after - C", "true after + model - D")]
-    [AutoParams(false, "false after - A", "false after - B", "false after + model - C", "false after + model - D")]
+    [InlineAutoData(true, "true after - A", "true after + model - B", "true after - C", "true after + model - D")]
+    [InlineAutoData(false, "false after - A", "false after - B", "false after + model - C", "false after + model - D")]
     [Theory]
     public void Should_replace_the_metadata_with_new_metadata(
         bool isSatisfied,
@@ -41,12 +41,12 @@ public class ChangeMetadataSpecTests
 
         var act = sut.IsSatisfiedBy("model");
 
-        act.Reasons.Select(reason => reason.Value).Should().BeEquivalentTo(expectation);
+        act.ReasonHierarchy.Select(reason => reason.Description).Should().BeEquivalentTo(expectation);
         act.GetMetadata().Should().BeEquivalentTo(expectation);
     }
 
-    [AutoParams(true, 1, 3, 5, 7)]
-    [AutoParams(false, 2, 4, 6, 8)]
+    [InlineAutoData(true, 1, 3, 5, 7)]
+    [InlineAutoData(false, 2, 4, 6, 8)]
     [Theory]
     public void Should_replace_the_metadata_with_new_metadata_type(
         bool isSatisfied,
@@ -84,9 +84,10 @@ public class ChangeMetadataSpecTests
 
         var act = sut.IsSatisfiedBy("model");
 
-        act.Reasons.Select(reason => reason.Value).Should().BeEquivalentTo(act.Satisfied
+        act.Reasons.Should().BeEquivalentTo(act.Satisfied
             ? trueReason
             : falseReason);
+        
         act.GetMetadata().Should().BeEquivalentTo(expectation);
     }
 }

@@ -5,8 +5,8 @@ namespace Karlssberg.Motiv.Tests;
 public class SpecTests
 {
     [Theory]
-    [AutoParams(true)]
-    [AutoParams(false)]
+    [InlineAutoData(true)]
+    [InlineAutoData(false)]
     public void Should_return_a_result_that_satisfies_the_predicate(bool model)
     {
         var sut = Spec
@@ -18,13 +18,12 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
-        result.GetMetadata().Should().HaveCount(1);
-        result.GetMetadata().Should().AllBe(model.ToString());
+        result.GetMetadata().Should().ContainSingle(model.ToString());
     }
     
     [Theory]
-    [AutoParams(true, "underlying true")]
-    [AutoParams(false, "underlying false")]
+    [InlineAutoData(true, "underlying true")]
+    [InlineAutoData(false, "underlying false")]
     public void Should_return_a_result_that_satisfies_the_spec(bool model, string expectedReason)
     {
         var underlyingSpec = Spec
@@ -42,9 +41,8 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
-        result.GetMetadata().Should().HaveCount(1);
-        result.GetMetadata().Should().AllBe(expectedReason);
-        result.Reasons.Select(reason => reason.Value).Should().BeEquivalentTo(expectedReason);
+        result.GetMetadata().Should().ContainSingle(expectedReason);
+        result.ReasonHierarchy.Select(reason => reason.Description).Should().BeEquivalentTo(expectedReason);
     }
 
     [Fact]
@@ -59,13 +57,12 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(null);
 
         result.Satisfied.Should().BeTrue();
-        result.GetMetadata().Should().HaveCount(1);
-        result.GetMetadata().Should().AllBe(true.ToString());
+        result.GetMetadata().Should().ContainSingle(true.ToString());
     }
 
     [Theory]
-    [AutoParams(true)]
-    [AutoParams(false)]
+    [InlineAutoData(true)]
+    [InlineAutoData(false)]
     public void Should_return_a_result_that_satisfies_the_predicate_when_using_textual_specification(bool model)
     {
         var sut = Spec
@@ -77,8 +74,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
-        result.GetMetadata().Should().HaveCount(1);
-        result.GetMetadata().Should().AllBe(model.ToString());
+        result.GetMetadata().Should().ContainSingle(model.ToString());
     }
 
     [Fact]
@@ -93,8 +89,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(null);
 
         result.Satisfied.Should().Be(true);
-        result.GetMetadata().Should().HaveCount(1);
-        result.GetMetadata().Should().AllBe(true.ToString());
+        result.GetMetadata().Should().ContainSingle(true.ToString());
     }
 
     [Fact]
@@ -110,8 +105,8 @@ public class SpecTests
     }
 
     [Theory]
-    [AutoParams("true", null)]
-    [AutoParams(null, "false")]
+    [InlineAutoData("true", null)]
+    [InlineAutoData(null, "false")]
     public void Should_throw_if_null_metadata_supplied(string? trueMetadata, string? falseMetadata)
     {
         var act = () => Spec
@@ -124,8 +119,8 @@ public class SpecTests
     }
 
     [Theory]
-    [AutoParams("hello world", null)]
-    [AutoParams(null, "hello world")]
+    [InlineAutoData("hello world", null)]
+    [InlineAutoData(null, "hello world")]
     public void Should_throw_if_invalid_reasons_are_supplied(string? trueBecause, string? falseBecause)
     {
         var act = () => Spec

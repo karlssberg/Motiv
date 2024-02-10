@@ -5,8 +5,8 @@ namespace Karlssberg.Motiv.Tests;
 public class NotSpecTests
 {
     [Theory]
-    [AutoParams(true, false)]
-    [AutoParams(false, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
     public void Should_perform_logical_not(
         bool operand,
         bool expected,
@@ -27,8 +27,8 @@ public class NotSpecTests
     }
 
     [Theory]
-    [AutoParams(true, "NOT:false(underlying spec is true)")]
-    [AutoParams(false, "NOT:true(underlying spec is false)")]
+    [InlineAutoData(true, "NOT:false(underlying spec is true)")]
+    [InlineAutoData(false, "NOT:true(underlying spec is false)")]
     public void Should_serialize_the_result_of_the_not_operation(
         bool operand,
         string expected,
@@ -49,8 +49,8 @@ public class NotSpecTests
     }
 
     [Theory]
-    [AutoParams(true, "NOT:false(True)")]
-    [AutoParams(false, "NOT:true(False)")]
+    [InlineAutoData(true, "NOT:false(True)")]
+    [InlineAutoData(false, "NOT:true(False)")]
     public void Should_serialize_the_result_of_the_not_operation_when_metadata_is_a_string(
         bool operand,
         string expected,
@@ -71,8 +71,8 @@ public class NotSpecTests
     }
 
     [Theory]
-    [AutoParams(true, "NOT:false(True)")]
-    [AutoParams(false, "NOT:true(False)")]
+    [InlineAutoData(true, "NOT:false(True)")]
+    [InlineAutoData(false, "NOT:true(False)")]
     public void Should_serialize_the_result_of_the_not_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool operand,
         string expected,
@@ -93,7 +93,7 @@ public class NotSpecTests
     }
 
     [Theory]
-    [AutoParams]
+    [InlineAutoData]
     public void Should_wrap_thrown_exceptions_in_a_specification_exception(
         string model)
     {
