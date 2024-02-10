@@ -61,6 +61,6 @@ public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBas
     /// <summary>
     /// Gathers the reasons for the result.
     /// </summary>
-    /// <returns>A collection of reasons.</returns>
-    public override IEnumerable<Reason> GatherReasons() => UnderlyingResult.GatherReasons();
+    /// <value>A collection of reasons.</value>
+    public override IEnumerable<Reason> ReasonHierarchy => UnderlyingResult.ReasonHierarchy;
 }

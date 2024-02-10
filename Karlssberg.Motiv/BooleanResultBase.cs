@@ -27,13 +27,9 @@ public abstract class BooleanResultBase<TMetadata>
     
     public abstract IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
     public abstract IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
-
-    /// <summary>Gets the unique specific underlying reasons why the condition is satisfied or not.</summary>
-    public IEnumerable<Reason> Reasons => GatherReasons().Distinct();
-
+    
     /// <summary>Gets the lowercase display text for true or false states.</summary>
     protected string IsSatisfiedDisplayText => Satisfied ? True : False;
-
 
     /// <summary>Returns an enumerator that iterates through a collection.</summary>
     /// <returns>An enumerator object that can be used to iterate through the collection.</returns>
@@ -52,19 +48,22 @@ public abstract class BooleanResultBase<TMetadata>
     /// <summary>Determines whether the current BooleanResultBase object is equal to another BooleanResultBase object.</summary>
     /// <param name="other">The BooleanResultBase object to compare with the current object.</param>
     /// <returns>true if the current object is equal to the other object; otherwise, false.</returns>
-    public bool Equals(BooleanResultBase<TMetadata>? other)
-    {
-        if (ReferenceEquals(null, other)) return false;
-        if (ReferenceEquals(this, other)) return true;
-        return Satisfied == other.Satisfied;
-    }
+    public bool Equals(BooleanResultBase<TMetadata>? other) =>
+        other switch
+        {
+            null => false,
+            _ when ReferenceEquals(this, other) => true,
+            _ => Satisfied == other.Satisfied,
+        };
 
     /// <summary>
     /// Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the
     /// result at this stage to avoid excessive deduplication during intermediate steps.  Deduplication is performed during the
-    /// call to <see cref="Reasons" />.
+    /// call to <see cref="ReasonHierarchy" />.
     /// </summary>
-    public abstract IEnumerable<Reason> GatherReasons();
+    public abstract IEnumerable<Reason> ReasonHierarchy { get; }
+    
+    public IEnumerable<string> Reasons => ReasonHierarchy.Select(reason => reason.Description).Distinct();
 
     /// <summary>
     /// Performs a logical AND operation between the current BooleanResultBase instance and another BooleanResultBase
@@ -106,7 +105,7 @@ public abstract class BooleanResultBase<TMetadata>
 
     /// <summary>Returns a human readable description of the tree of conditions that make up this result.</summary>
     /// <returns>A string that describes the tree of conditions that make up this result.</returns>
-    public override string ToString() => GatherReasons().Distinct().Humanize();
+    public override string ToString() => ReasonHierarchy.Distinct().Humanize();
 
     /// <summary>Overloads the bitwise AND operator to perform a logical AND operation on two BooleanResultBase instances.</summary>
     /// <param name="leftResult">The left BooleanResultBase instance.</param>

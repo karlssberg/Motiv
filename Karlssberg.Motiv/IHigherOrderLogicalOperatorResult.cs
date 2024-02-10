@@ -16,5 +16,5 @@ public interface IHigherOrderLogicalOperatorResult<TMetadata>
     string Description { get; }
 
     /// <summary>Gets the unique specific underlying reasons why the condition is satisfied or not.</summary>
-    IEnumerable<Reason> Reasons { get; }
+    IEnumerable<Reason> ReasonHierarchy { get; }
 }

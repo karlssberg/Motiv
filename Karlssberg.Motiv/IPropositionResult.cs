@@ -8,5 +8,5 @@ public interface IPropositionResult<out TMetadata>
 
     TMetadata Metadata { get; }
 
-    IEnumerable<Reason> Reasons { get; }
+    IEnumerable<Reason> ReasonHierarchy { get; }
 }

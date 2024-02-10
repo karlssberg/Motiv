@@ -5,7 +5,7 @@ namespace Karlssberg.Motiv.ChangeFalseMetadata;
 /// <summary>Represents a boolean result of changing the metadata type.</summary>
 /// <typeparam name="TMetadata">The type of the new metadata.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The underlying metadata type that is being changed.</typeparam>
-internal class ChangeTrueMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
+internal class ChangeFalseMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult, 
     TMetadata metadata) 
     : BooleanResultBase<TMetadata>, IChangeMetadataBooleanResult<TMetadata>
@@ -45,10 +45,10 @@ internal class ChangeTrueMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
     public Type OriginalMetadataType => typeof(TUnderlyingMetadata);
 
     /// <summary>Gets the reasons for the boolean result.</summary>
-    public override IEnumerable<Reason> GatherReasons() =>
+    public override IEnumerable<Reason> ReasonHierarchy =>
         metadata switch
         {
-            string reason => [new Reason(reason, UnderlyingBooleanResult.GatherReasons())],
-            _ => UnderlyingBooleanResult.GatherReasons()
+            string reason => [new Reason(reason, UnderlyingBooleanResult.ReasonHierarchy)],
+            _ => UnderlyingBooleanResult.ReasonHierarchy
         };
 }

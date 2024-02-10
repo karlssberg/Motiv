@@ -32,21 +32,11 @@ internal sealed class AllBooleanResult<TMetadata>(
             $"ALL{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
 
         return DeterminativeOperands.Any()
-            ? $"{higherOrderStatement}({SummarizeReasons()})"
+            ? $"{higherOrderStatement}({ReasonHierarchy.SummarizeReasons()})"
             : higherOrderStatement;
     }
 
-    private string SummarizeReasons()
-    {
-        return GatherReasons()
-            .GroupBy(reason => reason)
-            .Select(grouping => grouping.Count() == 1
-                ? $"{grouping.Key}"
-                : $"{grouping.Key} x{grouping.Count()}")
-            .Humanize();
-    }
-
     /// <inheritdoc />
-    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands
-        .SelectMany(r => r.GatherReasons());
+    public override IEnumerable<Reason> ReasonHierarchy => DeterminativeOperands
+        .SelectMany(result => result.ReasonHierarchy);
 }

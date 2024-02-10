@@ -34,21 +34,11 @@ internal sealed class ExactlyBooleanResult<TModel, TMetadata>(
             $"{n}_SATISFIED{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
 
         return DeterminativeOperands.Any()
-            ? $"{higherOrderStatement}({SummarizeReasons()})"
+            ? $"{higherOrderStatement}({ReasonHierarchy.SummarizeReasons()})"
             : higherOrderStatement;
     }
 
-    private string SummarizeReasons()
-    {
-        return GatherReasons()
-            .GroupBy(reason => reason)
-            .Select(grouping => grouping.Count() == 1
-                ? $"{grouping.Key}"
-                : $"{grouping.Key} x{grouping.Count()}")
-            .Humanize();
-    }
-
     /// <summary>Gets the reasons associated with the boolean result.</summary>
-    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands
-        .SelectMany(r => r.GatherReasons());
+    public override IEnumerable<Reason> ReasonHierarchy => DeterminativeOperands
+        .SelectMany(r => r.ReasonHierarchy);
 }

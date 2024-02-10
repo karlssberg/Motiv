@@ -1,10 +1,10 @@
 ﻿namespace Karlssberg.Motiv;
 
-public record Reason(string Value, IEnumerable<Reason>? UnderlyingCauses = null)
+public record Reason(string Description, IEnumerable<Reason>? UnderlyingReasons = null)
 {
-    public IEnumerable<Reason> UnderlyingCauses { get; } = UnderlyingCauses ?? Enumerable.Empty<Reason>();
+    public IEnumerable<Reason> UnderlyingReasons { get; } = UnderlyingReasons ?? Enumerable.Empty<Reason>();
     
-    public string Value { get; } = Value;
+    public string Description { get; } = Description;
     
-    public override string ToString() => Value;
+    public override string ToString() => Description;
 }

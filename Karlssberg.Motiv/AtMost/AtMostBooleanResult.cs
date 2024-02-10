@@ -36,21 +36,11 @@ public sealed class AtMostBooleanResult<TMetadata>(
             $"AT_MOST_{Maximum}{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
 
         return DeterminativeOperands.Any()
-            ? $"{higherOrderStatement}({SummarizeReasons()})"
+            ? $"{higherOrderStatement}({ReasonHierarchy.SummarizeReasons()})"
             : higherOrderStatement;
     }
 
-    private string SummarizeReasons()
-    {
-        return GatherReasons()
-            .GroupBy(reason => reason)
-            .Select(grouping => grouping.Count() == 1
-                ? $"{grouping.Key}"
-                : $"{grouping.Key} x{grouping.Count()}")
-            .Humanize();
-    }
-
     /// <summary>Gets the reasons for the boolean result.</summary>
-    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands
-        .SelectMany(result => result.GatherReasons());
+    public override IEnumerable<Reason> ReasonHierarchy => DeterminativeOperands
+        .SelectMany(result => result.ReasonHierarchy);
 }

@@ -14,7 +14,7 @@ public class ChangeFalseMetadataSpec<TModel, TMetadata>(
         return booleanResult.Satisfied switch
         {
             true => booleanResult,
-            false => new ChangeTrueMetadataBooleanResult<TMetadata, TMetadata>(booleanResult, whenFalse(model))
+            false => new ChangeFalseMetadataBooleanResult<TMetadata, TMetadata>(booleanResult, whenFalse(model))
         };
     }
 }

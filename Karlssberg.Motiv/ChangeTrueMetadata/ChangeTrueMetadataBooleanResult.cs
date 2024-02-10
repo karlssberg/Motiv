@@ -45,10 +45,10 @@ internal class ChangeTrueMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
     public Type OriginalMetadataType => typeof(TUnderlyingMetadata);
 
     /// <summary>Gets the reasons for the boolean result.</summary>
-    public override IEnumerable<Reason> GatherReasons() =>
+    public override IEnumerable<Reason> ReasonHierarchy =>
         metadata switch
         {
-            string reason when Satisfied => [new Reason(reason, UnderlyingBooleanResult.GatherReasons())],
-            _ => UnderlyingBooleanResult.GatherReasons()
+            string reason when Satisfied => [new Reason(reason, UnderlyingBooleanResult.ReasonHierarchy)],
+            _ => UnderlyingBooleanResult.ReasonHierarchy
         };
 }

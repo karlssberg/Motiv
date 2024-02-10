@@ -6,7 +6,7 @@ public interface ILogicalOperatorResult<TMetadata>
 
     string Description { get; }
 
-    IEnumerable<Reason> Reasons { get; }
+    IEnumerable<Reason> ReasonHierarchy { get; }
 
     IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
 

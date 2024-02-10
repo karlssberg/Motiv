@@ -37,8 +37,8 @@ public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IPropositi
     public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; } = [];
 
     /// <summary>Gets the reasons for the result.</summary>
-    public override IEnumerable<Reason> GatherReasons()
+    public override IEnumerable<Reason> ReasonHierarchy
     {
-        yield return new Reason(Description);
+        get { yield return new Reason(Description); }
     }
 }

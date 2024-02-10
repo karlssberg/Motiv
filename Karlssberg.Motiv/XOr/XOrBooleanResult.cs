@@ -35,5 +35,6 @@ public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     public override string Description => $"({LeftOperandResult}) XOR:{IsSatisfiedDisplayText} ({RightOperandResult})";
 
     /// <summary>Gets the reasons for the XOR operation result.</summary>
-    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands.SelectMany(r => r.GatherReasons());
+    public override IEnumerable<Reason> ReasonHierarchy => DeterminativeOperands
+        .SelectMany(result => result.ReasonHierarchy);
 }

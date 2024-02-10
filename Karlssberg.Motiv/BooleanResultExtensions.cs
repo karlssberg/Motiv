@@ -1,4 +1,5 @@
-﻿using Karlssberg.Motiv.Visitors;
+﻿using Humanizer;
+using Karlssberg.Motiv.Visitors;
 
 namespace Karlssberg.Motiv;
 
@@ -46,5 +47,15 @@ public static class BooleanResultExtensions
         return underlyingResults
             .Where(filter)
             .Select(result => result.Model);
+    }
+
+    public static string SummarizeReasons(this IEnumerable<Reason> reasons)
+    {
+        return reasons
+            .GroupBy(reason => reason)
+            .Select(grouping => grouping.Count() == 1
+                ? $"{grouping.Key}"
+                : $"{grouping.Key} x{grouping.Count()}")
+            .Humanize();
     }
 }

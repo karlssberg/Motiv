@@ -36,11 +36,11 @@ public sealed class AtLeastBooleanResult<TMetadata>(
             $"AT_LEAST_{Minimum}{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
 
         return DeterminativeOperands.Any()
-            ? $"{higherOrderStatement}({DeterminativeOperands.Count()}x {Reasons.Humanize()})"
+            ? $"{higherOrderStatement}({ReasonHierarchy.SummarizeReasons()})"
             : higherOrderStatement;
     }
-
+    
     /// <summary>Gets the reasons associated with the boolean result.</summary>
-    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands
-        .SelectMany(result => result.GatherReasons());
+    public override IEnumerable<Reason> ReasonHierarchy => DeterminativeOperands
+        .SelectMany(result => result.ReasonHierarchy);
 }

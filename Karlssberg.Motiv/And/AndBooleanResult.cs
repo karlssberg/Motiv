@@ -33,5 +33,6 @@ internal sealed class AndBooleanResult<TMetadata>(
     public override string Description => $"({LeftOperandResult}) AND:{IsSatisfiedDisplayText} ({RightOperandResult})";
 
     /// <inheritdoc />
-    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands.SelectMany(r => r.GatherReasons());
+    public override IEnumerable<Reason> ReasonHierarchy => DeterminativeOperands
+        .SelectMany(r => r.ReasonHierarchy);
 }
