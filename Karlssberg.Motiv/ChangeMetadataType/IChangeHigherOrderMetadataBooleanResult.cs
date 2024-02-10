@@ -2,7 +2,7 @@
 
 public interface IChangeHigherOrderMetadataBooleanResult<TMetadata>
 {
-    bool Value { get; }
+    bool Satisfied { get; }
     string Description { get; }
     Type OriginalMetadataType { get; }
     IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
@@ -10,5 +10,5 @@ public interface IChangeHigherOrderMetadataBooleanResult<TMetadata>
     IEnumerable<TMetadata> Metadata { get; }
 
     /// <summary>Gets the unique specific underlying reasons why the condition is satisfied or not.</summary>
-    IEnumerable<string> Reasons { get; }
+    IEnumerable<Reason> Reasons { get; }
 }

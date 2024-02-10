@@ -25,7 +25,7 @@ public class ExactlySpecTests
 
         var result = sut.IsSatisfiedBy([first, second]);
 
-        result.Value.Should().Be(expected);
+        result.Satisfied.Should().Be(expected);
     }
     
     [Theory]
@@ -57,7 +57,7 @@ public class ExactlySpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
-        result.Value.Should().Be(expected);
+        result.Satisfied.Should().Be(expected);
         result.Reasons.Humanize().Should().Be(expectedShallowReasons);
         result.GetRootCauses().Humanize().Should().Be(expectedDeepReason);
     }
@@ -89,7 +89,7 @@ public class ExactlySpecTests
 
     private static string GenerateReason(bool allSatisfied, IEnumerable<BooleanResultWithModel<int, string>> results)
     {
-        var count = results.Count(r => r.Value == allSatisfied);
+        var count = results.Count(r => r.Satisfied == allSatisfied);
         var trueOrFalse = allSatisfied.ToString().ToLowerInvariant();
 
         return $"{"is".ToQuantity(count)} {trueOrFalse}";
@@ -111,7 +111,7 @@ public class ExactlySpecTests
 
         var result = sut.IsSatisfiedBy([1, 3, 5]);
 
-        result.Value.Should().BeFalse();
+        result.Satisfied.Should().BeFalse();
         result.GetMetadata().Should().HaveCount(1);
         result.GetMetadata().Should().AllBeEquivalentTo("3 are false");
     }

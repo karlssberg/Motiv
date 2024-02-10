@@ -9,22 +9,21 @@ internal sealed class AnyBooleanResult<TModel, TMetadata>(
     IReadOnlyCollection<BooleanResultBase<TMetadata>> operandResults)
     : BooleanResultBase<TMetadata>, ILogicalOperatorResult<TMetadata>
 {
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } =
-        operandResults.ThrowIfNull(nameof(operandResults));
+    /// <inheritdoc />
+    public override bool Satisfied { get; } = operandResults.Any(result => result.Satisfied);
+    
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => operandResults;
 
     /// <summary>Gets the determinative operand results that have the same satisfaction status as the boolean result.</summary>
     public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults
-        .Where(result => result.Value == Value);
-
-    /// <inheritdoc />
-    public override bool Value { get; } = operandResults.Any(result => result.Value);
+        .Where(result => result.Satisfied == Satisfied);
 
     /// <inheritdoc />
     public override string Description => GetDescription();
     
     private string GetDescription()
     {
-        var satisfiedCount = UnderlyingResults.Count(result => result.Value);
+        var satisfiedCount = UnderlyingResults.Count(result => result.Satisfied);
         var higherOrderStatement =
             $"ANY{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
 
@@ -42,6 +41,8 @@ internal sealed class AnyBooleanResult<TModel, TMetadata>(
                 : $"{grouping.Key} x{grouping.Count()}")
             .Humanize();
     }
+    
     /// <inheritdoc />
-    public override IEnumerable<string> GatherReasons() => DeterminativeOperands.SelectMany(r => r.GatherReasons());
+    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands
+        .SelectMany(r => r.GatherReasons());
 }

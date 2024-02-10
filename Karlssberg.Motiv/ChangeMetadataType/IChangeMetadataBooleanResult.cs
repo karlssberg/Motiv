@@ -8,12 +8,12 @@ public interface IChangeMetadataBooleanResult<TMetadata>
     IEnumerable<TMetadata> Metadata { get; }
 
     /// <summary>Gets a value indicating whether the change was successful.</summary>
-    bool Value { get; }
+    bool Satisfied { get; }
 
     /// <summary>Gets a description of the result.</summary>
     string Description { get; }
 
-    IEnumerable<string> Reasons { get; }
+    IEnumerable<Reason> Reasons { get; }
 
     /// <summary>Gets the original type of the metadata.</summary>
     Type OriginalMetadataType { get; }

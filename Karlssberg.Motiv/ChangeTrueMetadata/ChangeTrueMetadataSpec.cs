@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.ChangeTrueMetadata;
 
-public class ChangeTrueMetadataSpec<TModel, TMetadata>(
+internal class ChangeTrueMetadataSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> underlyingSpec,
     Func<TModel, TMetadata> whenTrue)
     : SpecBase<TModel, TMetadata>
@@ -10,7 +10,7 @@ public class ChangeTrueMetadataSpec<TModel, TMetadata>(
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
         var booleanResult = underlyingSpec.IsSatisfiedBy(model);
-        return booleanResult.Value switch
+        return booleanResult.Satisfied switch
         {
             true => new ChangeTrueMetadataBooleanResult<TMetadata, TMetadata>(booleanResult, whenTrue(model)),
             false => booleanResult

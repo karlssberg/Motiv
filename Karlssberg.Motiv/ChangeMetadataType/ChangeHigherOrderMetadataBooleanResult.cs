@@ -2,41 +2,43 @@
 
 namespace Karlssberg.Motiv.ChangeMetadataType;
 
-public class ChangeHigherOrderMetadataBooleanResult<TMetadata, TUnderlyingResult>(
+internal class ChangeHigherOrderMetadataBooleanResult<TMetadata, TUnderlyingResult>(
     IEnumerable<TMetadata> metadata,
     BooleanResultBase<TUnderlyingResult> underlyingResult)
     : BooleanResultBase<TMetadata>, IChangeHigherOrderMetadataBooleanResult<TMetadata>
 {
-    public override bool Value { get; } = underlyingResult.Value;
+    public override bool Satisfied { get; } = underlyingResult.Satisfied;
+    public BooleanResultBase<TUnderlyingResult> UnderlyingResult => underlyingResult;
 
     public override string Description =>
         Metadata switch
         {
-            IEnumerable<string> reasons => reasons.Humanize(),
+            IEnumerable<Reason> reasons => reasons.Humanize(),
             _ => underlyingResult.Description
         };
 
-    public Type OriginalMetadataType { get; } = typeof(TMetadata);
+    public Type OriginalMetadataType => typeof(TMetadata);
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } = underlyingResult switch
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults =>
+        underlyingResult switch
         {
             BooleanResultBase<TMetadata> result => [result],
             _ => []
         };
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; } = underlyingResult switch
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands =>
+        underlyingResult switch
         {
             BooleanResultBase<TMetadata> result => result.DeterminativeOperands,
             _ => []
         };
 
-    public override IEnumerable<string> GatherReasons() => Metadata switch
-    {
-        IEnumerable<string> reasons => reasons,
-        _ => underlyingResult.GatherReasons()
-    };
+    public IEnumerable<TMetadata> Metadata => metadata;
 
-    public IEnumerable<TMetadata> Metadata { get; } = metadata;
-    
-    public BooleanResultBase<TUnderlyingResult> UnderlyingResult { get; } = underlyingResult;
+    public override IEnumerable<Reason> GatherReasons() =>
+        Metadata switch
+        {
+            IEnumerable<string> reasons => [new Reason(reasons.Humanize(), underlyingResult.GatherReasons())],
+            _ => underlyingResult.GatherReasons()
+        };
 }

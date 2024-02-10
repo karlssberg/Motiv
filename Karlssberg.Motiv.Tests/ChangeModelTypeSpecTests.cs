@@ -19,7 +19,7 @@ public class ChangeModelTypeSpecTests
 
         var act = sut.IsSatisfiedBy(model);
 
-        act.Value.Should().Be(expected);
+        act.Satisfied.Should().Be(expected);
     }
 
     [Theory]
@@ -40,7 +40,7 @@ public class ChangeModelTypeSpecTests
 
         var act = sut.IsSatisfiedBy(model);
 
-        act.Value.Should().Be(expected);
+        act.Satisfied.Should().Be(expected);
     }
 
     [Theory]
@@ -61,7 +61,7 @@ public class ChangeModelTypeSpecTests
 
         var act = isAllLetters.IsSatisfiedBy(model);
 
-        act.Value.Should().Be(expected);
+        act.Satisfied.Should().Be(expected);
     }
 
     [Theory]

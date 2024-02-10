@@ -20,7 +20,7 @@ public abstract class BooleanResultBase<TMetadata>
     protected const string False = "false";
 
     /// <summary>Gets a value indicating whether the condition is satisfied.</summary>
-    public abstract bool Value { get; }
+    public abstract bool Satisfied { get; }
 
     /// <summary>Gets a human readable description of the tree of conditions that make up this result.</summary>
     public abstract string Description { get; }
@@ -29,10 +29,10 @@ public abstract class BooleanResultBase<TMetadata>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
 
     /// <summary>Gets the unique specific underlying reasons why the condition is satisfied or not.</summary>
-    public IEnumerable<string> Reasons => GatherReasons().Distinct();
+    public IEnumerable<Reason> Reasons => GatherReasons().Distinct();
 
     /// <summary>Gets the lowercase display text for true or false states.</summary>
-    protected string IsSatisfiedDisplayText => Value ? True : False;
+    protected string IsSatisfiedDisplayText => Satisfied ? True : False;
 
 
     /// <summary>Returns an enumerator that iterates through a collection.</summary>
@@ -47,7 +47,7 @@ public abstract class BooleanResultBase<TMetadata>
     /// <summary>Determines whether the current BooleanResultBase object is equal to the specified boolean value.</summary>
     /// <param name="other">The boolean value to compare with the current BooleanResultBase object.</param>
     /// <returns>True if the current BooleanResultBase object is equal to the specified boolean value; otherwise, false.</returns>
-    public bool Equals(bool other) => Value == other;
+    public bool Equals(bool other) => Satisfied == other;
 
     /// <summary>Determines whether the current BooleanResultBase object is equal to another BooleanResultBase object.</summary>
     /// <param name="other">The BooleanResultBase object to compare with the current object.</param>
@@ -56,7 +56,7 @@ public abstract class BooleanResultBase<TMetadata>
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
-        return Value == other.Value;
+        return Satisfied == other.Satisfied;
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ public abstract class BooleanResultBase<TMetadata>
     /// result at this stage to avoid excessive deduplication during intermediate steps.  Deduplication is performed during the
     /// call to <see cref="Reasons" />.
     /// </summary>
-    public abstract IEnumerable<string> GatherReasons();
+    public abstract IEnumerable<Reason> GatherReasons();
 
     /// <summary>
     /// Performs a logical AND operation between the current BooleanResultBase instance and another BooleanResultBase
@@ -147,13 +147,13 @@ public abstract class BooleanResultBase<TMetadata>
     /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
     /// <returns><c>true</c> if the <paramref name="result" /> is satisfied; otherwise, <c>false</c>.</returns>
     public static bool operator true(BooleanResultBase<TMetadata> result) =>
-        result.Value;
+        result.Satisfied;
 
     /// <summary>Defines the false operator for the <see cref="BooleanResultBase{TMetadata}" /> class.</summary>
     /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
     /// <returns><c>true</c> if the <paramref name="result" /> is not satisfied; otherwise, <c>false</c>.</returns>
     public static bool operator false(BooleanResultBase<TMetadata> result) =>
-        !result.Value;
+        !result.Satisfied;
 
     /// <summary>Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are equal.</summary>
     /// <param name="leftResult">The first <see cref="BooleanResultBase{TMetadata}" /> to compare.</param>
@@ -167,7 +167,7 @@ public abstract class BooleanResultBase<TMetadata>
     /// <param name="right">The second <see cref="bool" /> to compare.</param>
     /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
     public static bool operator ==(bool left, BooleanResultBase<TMetadata> rightResult) =>
-        left == rightResult.Value;
+        left == rightResult.Satisfied;
 
     public static bool operator !=(bool left, BooleanResultBase<TMetadata> rightResult) => !(left == rightResult);
 
@@ -176,7 +176,7 @@ public abstract class BooleanResultBase<TMetadata>
     /// <param name="right">The second <see cref="bool" /> to compare.</param>
     /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
     public static bool operator ==(BooleanResultBase<TMetadata> leftResult, bool right) =>
-        leftResult.Value == right;
+        leftResult.Satisfied == right;
 
     public static bool operator !=(BooleanResultBase<TMetadata> leftResult, bool right) => !(leftResult == right);
 
@@ -191,7 +191,7 @@ public abstract class BooleanResultBase<TMetadata>
     /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance to convert.</param>
     /// <returns>The boolean value indicating whether the result is satisfied.</returns>
     public static explicit operator bool(BooleanResultBase<TMetadata> result) =>
-        result.Value;
+        result.Satisfied;
 
     /// <summary>Determines whether the current object is equal to another object.</summary>
     /// <param name="obj">The object to compare with the current object.</param>
@@ -206,5 +206,5 @@ public abstract class BooleanResultBase<TMetadata>
 
     /// <summary>Computes the hash code for the current BooleanResultBase object.</summary>
     /// <returns>A hash code for the current object.</returns>
-    public override int GetHashCode() => Value.GetHashCode();
+    public override int GetHashCode() => Satisfied.GetHashCode();
 }

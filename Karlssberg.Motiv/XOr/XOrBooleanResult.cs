@@ -11,13 +11,13 @@ public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
         BooleanResultBase<TMetadata> leftOperandResult,
         BooleanResultBase<TMetadata> rightOperandResult)
     {
-        Value = leftOperandResult.Value ^ rightOperandResult.Value;
+        Satisfied = leftOperandResult.Satisfied ^ rightOperandResult.Satisfied;
         LeftOperandResult = leftOperandResult ?? throw new ArgumentNullException(nameof(leftOperandResult));
         RightOperandResult = rightOperandResult ?? throw new ArgumentNullException(nameof(rightOperandResult));
     }
 
     /// <summary>Gets a value indicating whether the XOR operation is satisfied.</summary>
-    public override bool Value { get; }
+    public override bool Satisfied { get; }
 
     /// <summary>Gets the result of the left operand.</summary>
     public BooleanResultBase<TMetadata> LeftOperandResult { get; }
@@ -35,5 +35,5 @@ public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     public override string Description => $"({LeftOperandResult}) XOR:{IsSatisfiedDisplayText} ({RightOperandResult})";
 
     /// <summary>Gets the reasons for the XOR operation result.</summary>
-    public override IEnumerable<string> GatherReasons() => DeterminativeOperands.SelectMany(r => r.GatherReasons());
+    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands.SelectMany(r => r.GatherReasons());
 }

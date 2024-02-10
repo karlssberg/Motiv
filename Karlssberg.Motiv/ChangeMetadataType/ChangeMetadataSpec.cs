@@ -22,7 +22,7 @@ internal class ChangeMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
     {
         var booleanResult = UnderlyingSpec.IsSatisfiedBy(model);
         
-        var metadata = booleanResult.Value switch
+        var metadata = booleanResult.Satisfied switch
         {
             true => whenTrue(model),
             false => whenFalse(model),

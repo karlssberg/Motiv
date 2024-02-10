@@ -2,11 +2,11 @@
 
 public interface IPropositionResult<out TMetadata>
 {
-    bool Value { get; }
+    bool Satisfied { get; }
 
     string Description { get; }
 
     TMetadata Metadata { get; }
 
-    IEnumerable<string> Reasons { get; }
+    IEnumerable<Reason> Reasons { get; }
 }

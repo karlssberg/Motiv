@@ -5,17 +5,21 @@
 internal sealed class NotBooleanResult<TMetadata>(BooleanResultBase<TMetadata> operandResult) : BooleanResultBase<TMetadata>
 {
     /// <summary>Gets the operand result that is being negated.</summary>
-    public BooleanResultBase<TMetadata> OperandResult { get; } = operandResult.ThrowIfNull(nameof(operandResult));
+    public BooleanResultBase<TMetadata> OperandResult => operandResult;
 
     /// <summary>Gets a value indicating whether the negation is satisfied.</summary>
-    public override bool Value { get; } = !operandResult.Value;
+    public override bool Satisfied => !operandResult.Satisfied;
 
     /// <summary>Gets the description of the negation result.</summary>
     public override string Description => $"NOT:{IsSatisfiedDisplayText}({OperandResult})";
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } = [operandResult];
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; } = [operandResult];
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults
+    {
+        get { yield return operandResult; }
+    }
+
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults;
 
     /// <summary>Gets the reasons associated with the operand result.</summary>
-    public override IEnumerable<string> GatherReasons() => OperandResult.GatherReasons();
+    public override IEnumerable<Reason> GatherReasons() => OperandResult.GatherReasons();
 }

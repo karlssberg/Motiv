@@ -3,7 +3,7 @@
 internal class ExactlySpec<TModel, TMetadata>(int n, SpecBase<TModel, TMetadata> underlyingSpec, string? description) :
     SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    public SpecBase<TModel, TMetadata> UnderlyingSpec { get; } = underlyingSpec;
+    public SpecBase<TModel, TMetadata> UnderlyingSpec => underlyingSpec;
 
     public override string Description =>
         description switch
@@ -22,7 +22,7 @@ internal class ExactlySpec<TModel, TMetadata>(int n, SpecBase<TModel, TMetadata>
             })
             .ToArray();
 
-        var isSatisfied = results.Count(result => result.Value) == n;
+        var isSatisfied = results.Count(result => result.Satisfied) == n;
 
         return new ExactlyBooleanResult<TModel, TMetadata>(n, isSatisfied, results);
     }

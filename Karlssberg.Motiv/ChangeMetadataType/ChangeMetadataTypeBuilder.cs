@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv.ChangeMetadataType;
 
-public struct ChangeMetadataTypeBuilder<TModel, TMetadata, TUnderlyingMetadata>(
+internal struct ChangeMetadataTypeBuilder<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<TModel, TMetadata> whenTrue)
     : IYieldMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata>

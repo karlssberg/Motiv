@@ -21,7 +21,7 @@ internal class ChangeHigherOrderMetadataSpec<TModel, TMetadata, TUnderlyingMetad
         var underlyingResults = booleanResult.UnderlyingResults
             .Zip(modelsArray, CreateBooleanResultWithModel);
         
-        var metadata = metadataFactory(booleanResult.Value,
+        var metadata = metadataFactory(booleanResult.Satisfied,
             underlyingResults);
  
         return new ChangeHigherOrderMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(

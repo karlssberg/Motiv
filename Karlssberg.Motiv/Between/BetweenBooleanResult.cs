@@ -9,14 +9,14 @@ internal class BetweenBooleanResult<TModel, TMetadata>(
     IReadOnlyCollection<BooleanResultBase<TMetadata>> underlyingResults)
     : BooleanResultBase<TMetadata>
 {
-    public override bool Value => isSatisfied;
+    public override bool Satisfied => isSatisfied;
     
     
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => underlyingResults;
     
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => Value switch
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => Satisfied switch
     {
-        true => UnderlyingResults.Where(result => result.Value == Value),
+        true => UnderlyingResults.Where(result => result.Satisfied == Satisfied),
         false => UnderlyingResults
     };
 
@@ -41,6 +41,6 @@ internal class BetweenBooleanResult<TModel, TMetadata>(
             .Humanize();
     }
     
-    public override IEnumerable<string> GatherReasons() => DeterminativeOperands
+    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands
         .SelectMany(result => result.GatherReasons());
 }

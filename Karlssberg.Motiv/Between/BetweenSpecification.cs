@@ -20,7 +20,7 @@ internal class BetweenSpec<TModel, TMetadata>(
             .Select(underlyingSpec.IsSatisfiedByOrWrapException)
             .ToArray();
 
-        var count = underlyingResults.Count(result => result.Value);
+        var count = underlyingResults.Count(result => result.Satisfied);
         var isSatisfied = count >= minimum && count <= maximum;
 
         return new BetweenBooleanResult<TModel, TMetadata>(isSatisfied, minimum, maximum, underlyingResults);

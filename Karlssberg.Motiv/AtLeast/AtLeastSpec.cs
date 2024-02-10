@@ -19,7 +19,7 @@ internal sealed class AtLeastSpec<TModel, TMetadata>(
             .Select(underlyingSpec.IsSatisfiedByOrWrapException)
             .ToArray();
 
-        var isSatisfied = results.Count(result => result.Value) >= minimum;
+        var isSatisfied = results.Count(result => result.Satisfied) >= minimum;
         return new AtLeastBooleanResult<TMetadata>(
             isSatisfied,
             minimum, 

@@ -17,17 +17,17 @@ internal sealed class AllBooleanResult<TMetadata>(
 
     /// <summary>Gets the determinative operand results that have the same satisfaction as the overall result.</summary>
     public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults
-        .Where(result => result.Value == Value);
+        .Where(result => result.Satisfied == Satisfied);
 
-    /// <inheritdoc cref="BooleanResultBase{TMetadata}.Value" />
-    public override bool Value => isSatisfied;
+    /// <inheritdoc cref="BooleanResultBase{TMetadata}.Satisfied" />
+    public override bool Satisfied => isSatisfied;
 
     /// <inheritdoc cref="BooleanResultBase{TMetadata}.Description" />
     public override string Description => GetDescription();
 
     private string GetDescription()
     {
-        var satisfiedCount = UnderlyingResults.Count(result => result.Value);
+        var satisfiedCount = UnderlyingResults.Count(result => result.Satisfied);
         var higherOrderStatement =
             $"ALL{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
 
@@ -47,6 +47,6 @@ internal sealed class AllBooleanResult<TMetadata>(
     }
 
     /// <inheritdoc />
-    public override IEnumerable<string> GatherReasons() => DeterminativeOperands
+    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands
         .SelectMany(r => r.GatherReasons());
 }

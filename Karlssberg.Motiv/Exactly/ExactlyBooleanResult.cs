@@ -13,24 +13,23 @@ internal sealed class ExactlyBooleanResult<TModel, TMetadata>(
     : BooleanResultBase<TMetadata>, ILogicalOperatorResult<TMetadata>
 {
     /// <summary>Gets the collection of operand results.</summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } =
-        operandResults.ThrowIfNull(nameof(operandResults));
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => operandResults;
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => Value switch
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => Satisfied switch
     {
-        true => UnderlyingResults.Where(result => result.Value),
+        true => UnderlyingResults.Where(result => result.Satisfied),
         false => UnderlyingResults
     };
 
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
-    public override bool Value { get; } = isSatisfied;
+    public override bool Satisfied => isSatisfied;
 
     /// <summary>Gets the description of the boolean result.</summary>
     public override string Description => GetDescription();
 
     private string GetDescription()
     {
-        var satisfiedCount = UnderlyingResults.Count(result => result.Value);
+        var satisfiedCount = UnderlyingResults.Count(result => result.Satisfied);
         var higherOrderStatement =
             $"{n}_SATISFIED{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
 
@@ -50,6 +49,6 @@ internal sealed class ExactlyBooleanResult<TModel, TMetadata>(
     }
 
     /// <summary>Gets the reasons associated with the boolean result.</summary>
-    public override IEnumerable<string> GatherReasons() => DeterminativeOperands
+    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands
         .SelectMany(r => r.GatherReasons());
 }

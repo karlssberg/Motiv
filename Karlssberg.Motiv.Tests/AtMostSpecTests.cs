@@ -39,7 +39,7 @@ public class AtMostSpecTests
         var sut = underlyingSpec.AtMost(0);
         var result = sut.IsSatisfiedBy(models);
 
-        result.Value.Should().Be(expected);
+        result.Satisfied.Should().Be(expected);
     }
 
     [Theory]
@@ -77,7 +77,7 @@ public class AtMostSpecTests
         var sut = underlyingSpec.AtMost(1);
         var result = sut.IsSatisfiedBy(models);
 
-        result.Value.Should().Be(expected);
+        result.Satisfied.Should().Be(expected);
     }
 
     [Theory]
@@ -115,7 +115,7 @@ public class AtMostSpecTests
         var sut = underlyingSpec.AtMost(2);
         var result = sut.IsSatisfiedBy(models);
 
-        result.Value.Should().Be(expected);
+        result.Satisfied.Should().Be(expected);
     }
 
     [Theory]
@@ -153,7 +153,7 @@ public class AtMostSpecTests
         var sut = underlyingSpec.AtMost(models.Length);
         var result = sut.IsSatisfiedBy(models);
 
-        result.Value.Should().Be(expected);
+        result.Satisfied.Should().Be(expected);
     }
 
     [Theory]

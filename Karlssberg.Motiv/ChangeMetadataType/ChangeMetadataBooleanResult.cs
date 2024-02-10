@@ -15,7 +15,7 @@ internal class ChangeMetadataBooleanResult<TMetadata, TOtherMetadata>(
     public IEnumerable<TMetadata> Metadata => [metadata];
 
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
-    public override bool Value => UnderlyingBooleanResult.Value;
+    public override bool Satisfied => UnderlyingBooleanResult.Satisfied;
 
     /// <summary>Gets the description of the boolean result.</summary>
     public override string Description =>
@@ -25,26 +25,28 @@ internal class ChangeMetadataBooleanResult<TMetadata, TOtherMetadata>(
             _ => UnderlyingBooleanResult.Description
         };
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } = booleanResult switch
-    {
-        BooleanResultBase<TMetadata> result => [result],
-        _ => []
-    };
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => 
+        booleanResult switch
+        {
+            BooleanResultBase<TMetadata> result => [result],
+            _ => []
+        };
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => booleanResult switch
-    {
-        BooleanResultBase<TMetadata> result => result.DeterminativeOperands,
-        _ => []
-    };
+    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands =>
+        booleanResult switch
+        {
+            BooleanResultBase<TMetadata> result => result.DeterminativeOperands,
+            _ => []
+        };
 
     /// <summary>Gets the type of the original metadata.</summary>
     public Type OriginalMetadataType => typeof(TOtherMetadata);
 
     /// <summary>Gets the reasons for the boolean result.</summary>
-    public override IEnumerable<string> GatherReasons() =>
+    public override IEnumerable<Reason> GatherReasons() =>
         metadata switch
         {
-            string reason => [reason],
+            string reason => [new Reason(reason, UnderlyingBooleanResult.GatherReasons())],
             _ => UnderlyingBooleanResult.GatherReasons()
         };
 }

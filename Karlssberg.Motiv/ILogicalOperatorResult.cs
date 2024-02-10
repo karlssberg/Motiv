@@ -2,11 +2,11 @@
 
 public interface ILogicalOperatorResult<TMetadata>
 {
-    bool Value { get; }
+    bool Satisfied { get; }
 
     string Description { get; }
 
-    IEnumerable<string> Reasons { get; }
+    IEnumerable<Reason> Reasons { get; }
 
     IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
 

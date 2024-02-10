@@ -11,7 +11,7 @@ public class ChangeFalseMetadataSpec<TModel, TMetadata>(
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
         var booleanResult = underlyingSpec.IsSatisfiedBy(model);
-        return booleanResult.Value switch
+        return booleanResult.Satisfied switch
         {
             true => booleanResult,
             false => new ChangeTrueMetadataBooleanResult<TMetadata, TMetadata>(booleanResult, whenFalse(model))

@@ -21,14 +21,14 @@ internal sealed class OrBooleanResult<TMetadata>(
     ///     as the overall result.
     /// </summary>
     public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults
-        .Where(r => r.Value == Value);
+        .Where(r => r.Satisfied == Satisfied);
 
     /// <inheritdoc />
-    public override bool Value { get; } = leftOperandResult.Value || rightOperandResult.Value;
+    public override bool Satisfied { get; } = leftOperandResult.Satisfied || rightOperandResult.Satisfied;
 
     /// <inheritdoc />
     public override string Description => $"({LeftOperandResult}) OR:{IsSatisfiedDisplayText} ({RightOperandResult})";
 
     /// <inheritdoc />
-    public override IEnumerable<string> GatherReasons() => DeterminativeOperands.SelectMany(r => r.GatherReasons());
+    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands.SelectMany(r => r.GatherReasons());
 }

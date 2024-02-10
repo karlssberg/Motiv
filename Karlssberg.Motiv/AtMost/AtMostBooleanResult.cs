@@ -14,25 +14,24 @@ public sealed class AtMostBooleanResult<TMetadata>(
     public int Maximum { get; } = maximum.ThrowIfLessThan(0, nameof(maximum));
 
     /// <summary>Gets the collection of operand results.</summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } =
-        operandResults.ThrowIfNull(nameof(operandResults));
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => operandResults;
 
     /// <summary>
     /// Gets the collection of determinative operand results that have the same satisfaction status as the overall
     /// result.
     /// </summary>
     public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands =>
-        UnderlyingResults.Where(result => result.Value);
+        UnderlyingResults.Where(result => result.Satisfied);
 
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
-    public override bool Value => isSatisfied;
+    public override bool Satisfied => isSatisfied;
     
     /// <summary>Gets the description of the boolean result.</summary>
     public override string Description => GetDescription();
 
     private string GetDescription()
     {
-        var satisfiedCount = UnderlyingResults.Count(result => result.Value);
+        var satisfiedCount = UnderlyingResults.Count(result => result.Satisfied);
         var higherOrderStatement =
             $"AT_MOST_{Maximum}{{{satisfiedCount}/{UnderlyingResults.Count()}}}:{IsSatisfiedDisplayText}";
 
@@ -52,6 +51,6 @@ public sealed class AtMostBooleanResult<TMetadata>(
     }
 
     /// <summary>Gets the reasons for the boolean result.</summary>
-    public override IEnumerable<string> GatherReasons() => DeterminativeOperands
-        .SelectMany(r => r.GatherReasons());
+    public override IEnumerable<Reason> GatherReasons() => DeterminativeOperands
+        .SelectMany(result => result.GatherReasons());
 }

@@ -10,7 +10,7 @@ internal class ElseIfSpec<TModel, TMetadata>(
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
         var antecedentResult = antecedent.IsSatisfiedByOrWrapException(model);
-        return antecedentResult.Value switch
+        return antecedentResult.Satisfied switch
         {
             true => antecedentResult,
             false => consequent.IsSatisfiedByOrWrapException(model)

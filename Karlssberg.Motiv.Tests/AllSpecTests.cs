@@ -34,7 +34,7 @@ public class AllSpecTests
 
         var result = sut.IsSatisfiedBy(models);
 
-        result.Value.Should().Be(expected);
+        result.Satisfied.Should().Be(expected);
     }
 
     [Theory]

@@ -43,7 +43,7 @@ internal sealed class AllSpec<TModel, TMetadata> : SpecBase<IEnumerable<TModel>,
             .Select(UnderlyingSpec.IsSatisfiedByOrWrapException)
             .ToArray();
 
-        var isSatisfied = underlyingResults.All(result => result.Value);
+        var isSatisfied = underlyingResults.All(result => result.Satisfied);
         return new AllBooleanResult< TMetadata>(
             isSatisfied,
             underlyingResults);

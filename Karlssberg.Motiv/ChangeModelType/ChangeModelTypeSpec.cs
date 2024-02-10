@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.ChangeModelType;
 
-public sealed class ChangeModelTypeSpec<TParentModel, TModel, TMetadata>(
+internal sealed class ChangeModelTypeSpec<TParentModel, TModel, TMetadata>(
     SpecBase<TModel, TMetadata> spec,
     Func<TParentModel, TModel> modelSelector)
     : SpecBase<TParentModel, TMetadata>

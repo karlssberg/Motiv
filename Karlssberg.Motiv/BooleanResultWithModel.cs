@@ -44,7 +44,7 @@ public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBas
     /// <summary>
     /// Gets a value indicating whether the result is satisfied.
     /// </summary>
-    public override bool Value => UnderlyingResult.Value;
+    public override bool Satisfied => UnderlyingResult.Satisfied;
 
     /// <summary>
     /// Gets the underlying results of the composite boolean result.
@@ -62,5 +62,5 @@ public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBas
     /// Gathers the reasons for the result.
     /// </summary>
     /// <returns>A collection of reasons.</returns>
-    public override IEnumerable<string> GatherReasons() => UnderlyingResult.GatherReasons();
+    public override IEnumerable<Reason> GatherReasons() => UnderlyingResult.GatherReasons();
 }

@@ -16,29 +16,29 @@ public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IPropositi
 
         _description = description;
         Metadata = metadata;
-        Value = value;
+        Satisfied = value;
     }
 
     /// <summary>Gets the metadata associated with the result.</summary>
     public TMetadata Metadata { get; }
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
-    public override bool Value { get; }
+    public override bool Satisfied { get; }
 
     /// <summary>Gets the description of the result.</summary>
     public override string Description =>
         Metadata switch
         {
             string reason => reason,
-            _ => $"{_description} is {(Value ? True : False)}"
+            _ => $"{_description} is {(Satisfied ? True : False)}"
         };
 
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } = [];
     public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; } = [];
 
     /// <summary>Gets the reasons for the result.</summary>
-    public override IEnumerable<string> GatherReasons()
+    public override IEnumerable<Reason> GatherReasons()
     {
-        yield return Description;
+        yield return new Reason(Description);
     }
 }

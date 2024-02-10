@@ -39,7 +39,7 @@ public class AtLeastSpecBaseTests
         var sut = underlyingSpec.AtLeast(0);
         var result = sut.IsSatisfiedBy(models);
 
-        result.Value.Should().Be(expected);
+        result.Satisfied.Should().Be(expected);
     }
 
     [Theory]
@@ -77,7 +77,7 @@ public class AtLeastSpecBaseTests
         var sut = underlyingSpec.AtLeast(1);
         var result = sut.IsSatisfiedBy(models);
 
-        result.Value.Should().Be(expected);
+        result.Satisfied.Should().Be(expected);
     }
 
     [Theory]
@@ -115,7 +115,7 @@ public class AtLeastSpecBaseTests
         var sut = underlyingSpec.AtLeast(2);
         var result = sut.IsSatisfiedBy(models);
 
-        result.Value.Should().Be(expected);
+        result.Satisfied.Should().Be(expected);
     }
 
     [Theory]
@@ -153,7 +153,7 @@ public class AtLeastSpecBaseTests
         var sut = underlyingSpec.AtLeast(models.Length);
         var result = sut.IsSatisfiedBy(models);
 
-        result.Value.Should().Be(expected);
+        result.Satisfied.Should().Be(expected);
     }
 
     [Theory]

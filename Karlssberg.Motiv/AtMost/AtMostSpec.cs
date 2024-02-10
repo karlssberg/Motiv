@@ -20,7 +20,7 @@ internal sealed class AtMostSpec<TModel, TMetadata>(
             .Select(underlyingSpec.IsSatisfiedByOrWrapException)
             .ToArray();
         
-        var isSatisfied = results.Count(result => result.Value) <= maximum;
+        var isSatisfied = results.Count(result => result.Satisfied) <= maximum;
         return new AtMostBooleanResult<TMetadata>(
             isSatisfied,
             maximum,

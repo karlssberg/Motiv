@@ -30,7 +30,7 @@ public class AnySpecTests
         var sut = underlyingSpec.Any();
         var result = sut.IsSatisfiedBy(models);
 
-        result.Value.Should().Be(expected);
+        result.Satisfied.Should().Be(expected);
     }
     
     [Fact]
