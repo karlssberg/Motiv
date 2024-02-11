@@ -41,7 +41,7 @@ public class ChangeMetadataSpecTests
 
         var act = sut.IsSatisfiedBy("model");
 
-        act.ReasonHierarchy.Select(reason => reason.Description).Should().BeEquivalentTo(expectation);
+        act.Reasons.Should().BeEquivalentTo(expectation);
         act.GetMetadata().Should().BeEquivalentTo(expectation);
     }
 
@@ -64,21 +64,29 @@ public class ChangeMetadataSpecTests
             .YieldWhenFalse(falseReason)
             .CreateSpec();
 
-        var firstSpec = underlying
+        var firstSpec = Spec
+            .Build(underlying)
             .YieldWhenTrue(1)
-            .YieldWhenFalse(2);
+            .YieldWhenFalse(2)
+            .CreateSpec("first spec");
 
-        var secondSpec = underlying
+        var secondSpec = Spec
+            .Build(underlying)
             .YieldWhenTrue(model => 3)
-            .YieldWhenFalse(4);
+            .YieldWhenFalse(4)
+            .CreateSpec("second spec");
 
-        var thirdSpec = underlying
+        var thirdSpec = Spec
+            .Build(underlying)
             .YieldWhenTrue(5)
-            .YieldWhenFalse(model => 6);
+            .YieldWhenFalse(model => 6)
+            .CreateSpec("third spec");
 
-        var fourthSpec = underlying
+        var fourthSpec = Spec
+            .Build(underlying)
             .YieldWhenTrue(model => 7)
-            .YieldWhenFalse(model => 8);
+            .YieldWhenFalse(model => 8)
+            .CreateSpec("fourth spec");
 
         var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
 

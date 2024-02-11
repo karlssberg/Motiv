@@ -1,4 +1,5 @@
-﻿using Karlssberg.Motiv.ChangeMetadataType;
+﻿using Karlssberg.Motiv.ChangeFalseMetadata;
+using Karlssberg.Motiv.ChangeMetadataType;
 using Karlssberg.Motiv.ChangeMetadataType.YieldWhenFalse;
 using Karlssberg.Motiv.ChangeTrueMetadata;
 
@@ -16,10 +17,10 @@ public static class ChangeMetadataExtension
     /// <param name="spec">The specification base.</param>
     /// <param name="trueBecause">The reason when the condition is true.</param>
     /// <returns>A new builder with the changed metadata.</returns>
-    public static IYieldReasonWhenFalse<TModel, TMetadata> YieldWhenTrue<TModel, TMetadata>(
-        this SpecBase<TModel, TMetadata> spec,
+    public static IYieldReasonWhenFalse<IEnumerable<TModel>, TMetadata> YieldWhenTrue<TModel, TMetadata>(
+        this SpecBase<IEnumerable<TModel>, TMetadata> spec,
         string trueBecause) =>
-        new ChangeMetadataBuilder<TModel, TMetadata>(spec, _ => trueBecause, trueBecause);
+        new ChangeMetadataBuilder<IEnumerable<TModel>, TMetadata>(spec, _ => trueBecause, trueBecause);
 
     /// <summary>
     /// Changes the metadata of the underlying specification when the condition is true and returns a new builder.
@@ -33,10 +34,10 @@ public static class ChangeMetadataExtension
     /// A new builder with the changed metadata that solicits the corresponding metadata to yield when the outcome is
     /// false.
     /// </returns>
-    public static IYieldReasonWithDescriptionUnresolvedWhenFalse<TModel, TMetadata> YieldWhenTrue<TModel, TMetadata>(
-        this SpecBase<TModel, TMetadata> spec,
-        Func<TModel, string> trueBecause) =>
-        new ChangeMetadataBuilder<TModel, TMetadata>(spec, trueBecause);
+    public static IYieldReasonWithDescriptionUnresolvedWhenFalse<IEnumerable<TModel>, TMetadata> YieldWhenTrue<TModel, TMetadata>(
+        this SpecBase<IEnumerable<TModel>, TMetadata> spec,
+        Func<IEnumerable<TModel>, string> trueBecause) =>
+        new ChangeMetadataBuilder<IEnumerable<TModel>, TMetadata>(spec, trueBecause);
 
 
     /// <summary>Changes the metadata of the underlying specification when the condition is true and returns a new builder.</summary>
@@ -46,10 +47,10 @@ public static class ChangeMetadataExtension
     /// <param name="spec">The specification base.</param>
     /// <param name="metadata">The reason when the condition is true.</param>
     /// <returns>A new builder with the changed metadata.</returns>
-    public static IYieldMetadataWhenFalse<TModel, TAltMetadata, TMetadata> YieldWhenTrue<TModel, TMetadata, TAltMetadata>(
-        this SpecBase<TModel, TMetadata> spec,
+    public static IYieldMetadataWhenFalse<IEnumerable<TModel>, TAltMetadata, TMetadata> YieldWhenTrue<TModel, TMetadata, TAltMetadata>(
+        this SpecBase<IEnumerable<TModel>, TMetadata> spec,
         TAltMetadata metadata) =>
-        new ChangeMetadataTypeBuilder<TModel, TAltMetadata, TMetadata>(spec, _ => metadata);
+        new ChangeMetadataTypeBuilder<IEnumerable<TModel>, TAltMetadata, TMetadata>(spec, _ => metadata);
 
 
     /// <summary>
@@ -65,10 +66,10 @@ public static class ChangeMetadataExtension
     /// A new builder with the changed metadata that solicits the corresponding metadata to yield when the outcome is
     /// false.
     /// </returns>
-    public static IYieldMetadataWhenFalse<TModel, TAltMetadata, TMetadata> YieldWhenTrue<TModel, TMetadata, TAltMetadata>(
-        this SpecBase<TModel, TMetadata> spec,
-        Func<TModel, TAltMetadata> metadata) =>
-        new ChangeMetadataTypeBuilder<TModel, TAltMetadata, TMetadata>(spec, metadata);
+    public static IYieldMetadataWhenFalse<IEnumerable<TModel>, TAltMetadata, TMetadata> YieldWhenTrue<TModel, TMetadata, TAltMetadata>(
+        this SpecBase<IEnumerable<TModel>, TMetadata> spec,
+        Func<IEnumerable<TModel>, TAltMetadata> metadata) =>
+        new ChangeMetadataTypeBuilder<IEnumerable<TModel>, TAltMetadata, TMetadata>(spec, metadata);
 
     /// <summary>
     /// Changes the metadata of the underlying specification when the condition is true and returns a new builder.
@@ -106,12 +107,12 @@ public static class ChangeMetadataExtension
     public static SpecBase<TModel, TMetadata> YieldWhenFalse<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         Func<TModel, TMetadata> whenFalse) =>
-        new ChangeTrueMetadataSpec<TModel, TMetadata>(spec, whenFalse);
+        new ChangeFalseMetadataSpec<TModel, TMetadata>(spec, whenFalse);
     
     public static SpecBase<TModel, TMetadata> YieldWhenFalse<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         TMetadata whenTrue) =>
-        new ChangeTrueMetadataSpec<TModel, TMetadata>(spec, _ => whenTrue);
+        new ChangeFalseMetadataSpec<TModel, TMetadata>(spec, _ => whenTrue);
 
     public static SpecBase<IEnumerable<TModel>, TMetadata> YieldWhenFalse<TModel, TMetadata, TUnderlyingMetadata>(
         this IYieldMetadataWhenFalse<IEnumerable<TModel>, TMetadata, TUnderlyingMetadata> builder,

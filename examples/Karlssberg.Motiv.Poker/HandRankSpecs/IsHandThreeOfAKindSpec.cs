@@ -1,6 +1,7 @@
 ﻿namespace Karlssberg.Motiv.Poker.HandRankSpecs;
 
 public class IsHandThreeOfAKindSpec() : Spec<Hand, HandRank>(
-    new HasNCardsWithTheSameRankSpec(3)
+    Spec.Build(new HasNCardsWithTheSameRankSpec(3))
         .YieldWhenTrue(HandRank.ThreeOfAKind)
-        .YieldWhenFalse(HandRank.HighCard));
+        .YieldWhenFalse(HandRank.HighCard)
+        .CreateSpec("is a three of a kind hand"));

@@ -25,7 +25,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
         
-        result.ReasonHierarchy.Select(reason => reason.Description).Should().BeEquivalentTo(expected);
+        result.Reasons.Should().BeEquivalentTo(expected);
     }
     
     [Fact]
@@ -73,7 +73,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
-        result.ReasonHierarchy.Select(reason => reason.Description).Should().BeEquivalentTo(expected);
+        result.Reasons.Should().BeEquivalentTo(expected);
     }
     
     [Theory]

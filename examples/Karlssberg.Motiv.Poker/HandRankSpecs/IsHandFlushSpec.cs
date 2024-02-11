@@ -1,20 +1,24 @@
 ﻿namespace Karlssberg.Motiv.Poker.HandRankSpecs;
 
 public class IsHandFlushSpec() : Spec<Hand, HandRank>(
-    (new AllOfSuit(Suit.Clubs) | new AllOfSuit(Suit.Hearts) | new AllOfSuit(Suit.Spades) | new AllOfSuit(Suit.Diamonds))
+    Spec.Build(Enum.GetValues<Suit>()
+            .Select(suit => new HasFiveCardsWithSameSuit(suit))
+            .OrTogether())
         .YieldWhenTrue(HandRank.Flush)
-        .YieldWhenFalse(HandRank.HighCard));
+        .YieldWhenFalse(HandRank.HighCard)
+        .CreateSpec("is a flush hand"));
         
-public class IsSuit(Suit suit) : Spec<Card>(
-    Spec.Build<Card>(card => card.Suit == suit)
-        .YieldWhenTrue(card => $"{card} is a {suit}")
-        .YieldWhenFalse(card => $"{card} is not a {suit}")
-        .CreateSpec($"is a {suit}"));
 
-public class AllOfSuit(Suit suit) : Spec<Hand>(
+public class HasFiveCardsWithSameSuit(Suit suit) : Spec<Hand>(
     new IsSuit(suit)
         .CreateExactlySpec(5)
         .YieldWhenTrue($"a flush of {suit}")
         .YieldWhenFalse($"not a flush of {suit}")
         .ChangeModel<Hand>(hand => hand.Cards));
         
+
+public class IsSuit(Suit suit) : Spec<Card>(
+    Spec.Build<Card>(card => card.Suit == suit)
+        .YieldWhenTrue(card => $"{card} is a {suit}")
+        .YieldWhenFalse(card => $"{card} is not a {suit}")
+        .CreateSpec($"is a {suit}"));
