@@ -2,7 +2,7 @@
 using Karlssberg.Motiv.Any;
 using Karlssberg.Motiv.AtLeast;
 using Karlssberg.Motiv.AtMost;
-using Karlssberg.Motiv.Between;
+using Karlssberg.Motiv.Range;
 using Karlssberg.Motiv.Exactly;
 
 namespace Karlssberg.Motiv;
@@ -25,7 +25,7 @@ public static class HigherOrderSpecExtensions
     /// <paramref name="spec" />. Whether the specification is satisfied or not satisfied, the metadata is the aggregate of the
     /// underlying results
     /// </returns>
-    public static SpecBase<IEnumerable<TModel>, TMetadata> Any<TModel, TMetadata>(
+    public static SpecBase<IEnumerable<TModel>, TMetadata> ToAnySpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         string? description = null) =>
         new AnySpec<TModel, TMetadata>(spec, description);
@@ -46,7 +46,7 @@ public static class HigherOrderSpecExtensions
     /// <paramref name="spec" />. Whether the specification is satisfied or not satisfied, the metadata is the aggregate of the
     /// underlying results
     /// </returns>
-    public static SpecBase<IEnumerable<TModel>, TMetadata> All<TModel, TMetadata>(
+    public static SpecBase<IEnumerable<TModel>, TMetadata> CreateAllSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         string? description = null) =>
         new AllSpec<TModel, TMetadata>(spec, description);
@@ -64,7 +64,7 @@ public static class HigherOrderSpecExtensions
     /// A specification that is satisfied if the underlying specification is satisfied by at least
     /// <paramref name="n" /> models.
     /// </returns>
-    public static SpecBase<IEnumerable<TModel>, TMetadata> Exactly<TModel, TMetadata>(
+    public static SpecBase<IEnumerable<TModel>, TMetadata> CreateExactlySpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         int n,
         string? description = null) =>
@@ -79,7 +79,7 @@ public static class HigherOrderSpecExtensions
     /// <param name="spec">The base specification.</param>
     /// <param name="min">The minimum number of models that need to satisfy the specification.</param>
     /// <returns>A new specification that requires at least the specified number of models to satisfy the given specification.</returns>
-    public static SpecBase<IEnumerable<TModel>, TMetadata> AtLeast<TModel, TMetadata>(
+    public static SpecBase<IEnumerable<TModel>, TMetadata> CreateAtLeastSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         int min) =>
         new AtLeastSpec<TModel, TMetadata>(min, spec);
@@ -90,7 +90,7 @@ public static class HigherOrderSpecExtensions
     /// <param name="spec">The original specification.</param>
     /// <param name="max">The maximum number of satisfied conditions.</param>
     /// <returns>An "at most N satisfied" specification.</returns>
-    public static SpecBase<IEnumerable<TModel>, TMetadata> AtMost<TModel, TMetadata>(
+    public static SpecBase<IEnumerable<TModel>, TMetadata> CreateAtMostSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         int max) =>
         new AtMostSpec<TModel, TMetadata>(max, spec);
@@ -108,11 +108,11 @@ public static class HigherOrderSpecExtensions
     /// A new specification that requires the number of models that satisfy the given specification to be between the
     /// specified minimum and maximum values.
     /// </returns>
-    public static SpecBase<IEnumerable<TModel>, TMetadata> Between<TModel, TMetadata>(
+    public static SpecBase<IEnumerable<TModel>, TMetadata> CreateRangeSpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         int min,
         int max) =>
-        new BetweenSpec<TModel, TMetadata>(
+        new RangeSpec<TModel, TMetadata>(
             min.ThrowIfLessThan(0, nameof(min)),
             max.ThrowIfLessThan(min, nameof(max)), 
             spec);

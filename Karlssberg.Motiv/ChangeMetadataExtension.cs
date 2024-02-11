@@ -1,5 +1,6 @@
 ﻿using Karlssberg.Motiv.ChangeMetadataType;
 using Karlssberg.Motiv.ChangeMetadataType.YieldWhenFalse;
+using Karlssberg.Motiv.ChangeTrueMetadata;
 
 namespace Karlssberg.Motiv;
 
@@ -88,6 +89,30 @@ public static class ChangeMetadataExtension
         Func<IEnumerable<TModel>, IEnumerable<TModel>, TAltMetadata> metadata) =>
         new ChangeHigherOrderMetadataTypeBuilder<TModel, TAltMetadata, TMetadata>(spec, metadata);
     
+    public static SpecBase<TModel, TMetadata> YieldWhenTrue<TModel, TMetadata>(
+        this SpecBase<TModel, TMetadata> spec,
+        Func<TModel, TMetadata> whenTrue) =>
+        new ChangeTrueMetadataSpec<TModel, TMetadata>(spec, whenTrue);
+    
+    public static SpecBase<TModel, TMetadata> YieldWhenTrue<TModel, TMetadata>(
+        this SpecBase<TModel, TMetadata> spec,
+        TMetadata whenTrue) =>
+            whenTrue switch
+            {
+                string description => new ChangeTrueMetadataSpec<TModel, TMetadata>(spec, _ => whenTrue, description),
+                _ => new ChangeTrueMetadataSpec<TModel, TMetadata>(spec, _ => whenTrue)
+            };
+    
+    public static SpecBase<TModel, TMetadata> YieldWhenFalse<TModel, TMetadata>(
+        this SpecBase<TModel, TMetadata> spec,
+        Func<TModel, TMetadata> whenFalse) =>
+        new ChangeTrueMetadataSpec<TModel, TMetadata>(spec, whenFalse);
+    
+    public static SpecBase<TModel, TMetadata> YieldWhenFalse<TModel, TMetadata>(
+        this SpecBase<TModel, TMetadata> spec,
+        TMetadata whenTrue) =>
+        new ChangeTrueMetadataSpec<TModel, TMetadata>(spec, _ => whenTrue);
+
     public static SpecBase<IEnumerable<TModel>, TMetadata> YieldWhenFalse<TModel, TMetadata, TUnderlyingMetadata>(
         this IYieldMetadataWhenFalse<IEnumerable<TModel>, TMetadata, TUnderlyingMetadata> builder,
         Func<IEnumerable<TModel>, IEnumerable<TModel>, TMetadata> whenFalse) =>

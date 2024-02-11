@@ -10,10 +10,9 @@ public class IsHandRoyalFlushSpec() : Spec<Hand, HandRank>(() =>
         .YieldWhenTrue(HandRank.Straight)
         .YieldWhenFalse(HandRank.HighCard);
 
-    var isRoyalFlush = isFlush & isAceHighStraight;
-
-    return isRoyalFlush
-        //.ChangeMetadata<RankHand>()
+    return Spec
+        .Build(isFlush & isAceHighStraight)
         .YieldWhenTrue(HandRank.RoyalFlush)
-        .YieldWhenFalse(HandRank.HighCard);
+        .YieldWhenFalse(HandRank.HighCard)
+        .CreateSpec("is a royal flush hand");
 });

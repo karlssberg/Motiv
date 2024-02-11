@@ -2,14 +2,16 @@
 
 namespace Karlssberg.Motiv.Poker;  
 public class HasNCardsWithTheSameRankSpec(int sameRankCount) : Spec<Hand>(
-    "has n cards with the same rank",
-    hand => hand.Ranks
-        .Select(rank => new HasCardsWithTheSameRankSpec(sameRankCount, rank))
-        .OrTogether());
+    Spec.Build((Hand hand) => hand.Ranks
+                       .Select(rank => new HasCardsWithTheSameRankSpec(sameRankCount, rank))
+                       .OrTogether())
+        .YieldWhenTrue(hand => $"has {sameRankCount.ToWords()} cards with the same rank")
+        .YieldWhenFalse(hand => $"there are {hand.Ranks.Count()} ranks when there should be {sameRankCount}")
+        .CreateSpec($"has {sameRankCount.ToWords()} cards with the same rank"));
 
 public class HasCardsWithTheSameRankSpec(int sameRankCount, Rank rank) : Spec<Hand>(
     new IsRankSpec(rank)
-        .Exactly(sameRankCount)
+        .CreateExactlySpec(sameRankCount)
         .YieldWhenTrue($"has {sameRankCount.ToWords()} {rank}s")
         .YieldWhenFalse((satisfied, _) =>
             $"there are {satisfied.Count()} {rank}s when there should be {sameRankCount}")

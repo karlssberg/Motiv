@@ -21,7 +21,7 @@ public class ExactlySpecTests
             .YieldWhenFalse(i => $"{i} is odd")
             .CreateSpec("is even spec");
 
-        var sut = underlyingSpec.Exactly(2, "a pair of even numbers");
+        var sut = underlyingSpec.CreateExactlySpec(2, "a pair of even numbers");
 
         var result = sut.IsSatisfiedBy([first, second]);
 
@@ -49,7 +49,7 @@ public class ExactlySpecTests
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec
-            .Exactly(2, "a pair of even numbers")
+            .CreateExactlySpec(2, "a pair of even numbers")
             .YieldWhenTrue((satisfied, _) =>
                 $"{satisfied.Humanize()} are a pair of even numbers")
             .YieldWhenFalse((satisfied, unsatisfied) => 
@@ -81,7 +81,7 @@ public class ExactlySpecTests
 
         bool[] models = [first, second];
 
-        var sut = underlyingSpec.Exactly(n, "n booleans are true");
+        var sut = underlyingSpec.CreateExactlySpec(n, "n booleans are true");
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -105,7 +105,7 @@ public class ExactlySpecTests
             .CreateSpec("is even");
 
         var sut = underlyingSpec
-            .All("all numbers are even")
+            .CreateAllSpec("all numbers are even")
             .YieldWhenTrue(results => $"{results.Count()} are true")
             .YieldWhenFalse(results => $"{results.Count()} are false");
 
@@ -126,7 +126,7 @@ public class ExactlySpecTests
             .CreateSpec("is even");
 
         var sut = underlyingSpec
-            .Exactly(2, "a pair of even numbers");
+            .CreateExactlySpec(2, "a pair of even numbers");
 
         sut.Description.Should().Be("<a pair of even numbers>(is even)");
     }

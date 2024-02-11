@@ -19,7 +19,7 @@ public class ChangeHigherOrderMetadataSpecTests
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec
-            .Exactly(2, "a pair of even numbers")
+            .CreateExactlySpec(2, "a pair of even numbers")
             .YieldWhenTrue("is a pair of even numbers")
             .YieldWhenFalse("is not a pair of even numbers");
 
@@ -38,7 +38,7 @@ public class ChangeHigherOrderMetadataSpecTests
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec
-            .Exactly(2, "a pair of even numbers")
+            .CreateExactlySpec(2, "a pair of even numbers")
             .YieldWhenTrue((_, _) => "is a pair of even numbers")
             .YieldWhenFalse((_, _) => "is not a pair of even numbers");
 
@@ -63,7 +63,7 @@ public class ChangeHigherOrderMetadataSpecTests
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec
-            .All("a pair of even numbers")
+            .CreateAllSpec("a pair of even numbers")
             .YieldWhenTrue((_, _) => "first true yield")
             .YieldWhenFalse((_, _) => "first false yield")
             .YieldWhenTrue((_, _) => "second true yield")
@@ -94,7 +94,7 @@ public class ChangeHigherOrderMetadataSpecTests
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec
-            .All("a pair of even numbers")
+            .CreateAllSpec("a pair of even numbers")
             .YieldWhenTrue((_, _) => "first true yield")
             .YieldWhenFalse((_, _) => "first false yield")
             .YieldWhenTrue((_, _) => "second true yield")
@@ -117,7 +117,7 @@ public class ChangeHigherOrderMetadataSpecTests
             .CreateSpec("is even spec");
         
         var sut = underlyingSpec
-            .All("all even")
+            .CreateAllSpec("all even")
             .YieldWhenTrue("all even")
             .YieldWhenFalse((_, unsatisfied) => $"not all even, {unsatisfied.Humanize()} are odd");
 

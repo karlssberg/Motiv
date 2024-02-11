@@ -1,4 +1,7 @@
-﻿using Karlssberg.Motiv.Proposition;
+﻿using Karlssberg.Motiv.All;
+using Karlssberg.Motiv.Proposition;
+using Karlssberg.Motiv.Proposition.NestedMetadataSpecBuilder;
+using Karlssberg.Motiv.Proposition.NestedReasonSpecBuilder;
 using Karlssberg.Motiv.Proposition.YieldWhenTrue;
 
 namespace Karlssberg.Motiv;
@@ -78,7 +81,7 @@ public class Spec<TModel> : SpecBase<TModel, string>
         Func<TModel, string> whenFalse)
     {
         Description = description.ThrowIfNullOrWhitespace(nameof(description));
-        _specFactory = _ => new CauseSpec<TModel>(
+        _specFactory = _ => new CausalSpec<TModel>(
             description,
             predicate,
             whenTrue,
@@ -120,23 +123,35 @@ public class Spec<TModel> : SpecBase<TModel, string>
 public static class Spec
 {
     // Builds a specification with a predicate function.
-    public static IYieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<TModel, bool> predicate) =>
-        new SpecBuilder<TModel>(predicate.ThrowIfNull(nameof(predicate)));
-    
-    public static IYieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<bool> predicate) =>
-        Build<TModel>(_ => predicate());
-    
-    public static INestedMetadataSpecBuilderStart<TModel, TMetadata> Build<TModel, TMetadata>(Func<TModel, SpecBase<TModel, TMetadata>> specFactory) =>
-        new NestedTrueMetadataSpecBuilder<TModel, TMetadata>(specFactory.ThrowIfNull(nameof(specFactory)));
+    public static IYieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<TModel, bool> predicate)
+    {
+        predicate.ThrowIfNull(nameof(predicate));
+        return new SpecBuilder<TModel>(predicate);
+    }
+    public static IYieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<bool> predicate)
+    {
+        predicate.ThrowIfNull(nameof(predicate));
+        return new SpecBuilder<TModel>(_ => predicate());
+    }
 
-    public static INestedMetadataSpecBuilderStart<TModel, TMetadata> Build<TModel, TMetadata>(
-        Func<SpecBase<TModel, TMetadata>> specFactory) =>
-        Build<TModel, TMetadata>(_ => specFactory());
     
-    public static  INestedReasonsSpecBuilderStart<TModel>  Build<TModel>(Func<TModel, SpecBase<TModel, string>> specFactory) =>
-        new NestedTrueReasonsSpecBuilder<TModel>(specFactory.ThrowIfNull(nameof(specFactory)));
-    
-    public static  INestedReasonsSpecBuilderStart<TModel>  Build<TModel>(Func<SpecBase<TModel, string>> specFactory) =>
-        Build<TModel>(_ => specFactory());
+    public static NestedTrueSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+        Func<TModel, SpecBase<TModel, TMetadata>> specFactory)
+    {
+        specFactory.ThrowIfNull(nameof(specFactory));
+        return new NestedTrueSpecBuilder<TModel, TMetadata>(specFactory);
+    }
+    public static NestedTrueSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+        Func<SpecBase<TModel, TMetadata>> specFactory)
+    {
+        specFactory.ThrowIfNull(nameof(specFactory));
+        return new NestedTrueSpecBuilder<TModel, TMetadata>(_ => specFactory());
+    }
+    public static NestedTrueSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+        SpecBase<TModel, TMetadata> spec)
+    {
+        spec.ThrowIfNull(nameof(spec));
+        return new NestedTrueSpecBuilder<TModel, TMetadata>(_ => spec);
+    }
 }
 

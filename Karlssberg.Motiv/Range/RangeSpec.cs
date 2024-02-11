@@ -1,6 +1,6 @@
-﻿namespace Karlssberg.Motiv.Between;
+﻿namespace Karlssberg.Motiv.Range;
 
-internal class BetweenSpec<TModel, TMetadata>(
+internal class RangeSpec<TModel, TMetadata>(
     int minimum,
     int maximum,
     SpecBase<TModel, TMetadata> underlyingSpec,
@@ -10,7 +10,7 @@ internal class BetweenSpec<TModel, TMetadata>(
     public override string Description => 
         description switch
         {
-            null => $"BETWEEN_{minimum}_AND_{maximum}({underlyingSpec})",
+            null => $"RANGE_{minimum}_TO_{maximum}({underlyingSpec})",
             not null => $"<{description}>({underlyingSpec})"
         };
 
@@ -23,6 +23,6 @@ internal class BetweenSpec<TModel, TMetadata>(
         var count = underlyingResults.Count(result => result.Satisfied);
         var isSatisfied = count >= minimum && count <= maximum;
 
-        return new BetweenBooleanResult<TModel, TMetadata>(isSatisfied, minimum, maximum, underlyingResults);
+        return new RangeBooleanResult<TModel, TMetadata>(isSatisfied, minimum, maximum, underlyingResults);
     }
 }

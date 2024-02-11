@@ -33,12 +33,14 @@ internal class ChangeHigherOrderMetadataBooleanResult<TMetadata, TUnderlyingResu
             _ => []
         };
 
-    public IEnumerable<TMetadata> Metadata => metadata;
-
-    public override IEnumerable<Reason> GatherReasons() =>
+    public override IEnumerable<Reason> ReasonHierarchy =>
         Metadata switch
         {
-            IEnumerable<string> reasons => [new Reason(reasons.Humanize(), underlyingResult.GatherReasons())],
-            _ => underlyingResult.GatherReasons()
+            IEnumerable<string> reasons => [new Reason(reasons.Humanize(), underlyingResult.ReasonHierarchy)],
+            _ => underlyingResult.ReasonHierarchy
         };
+
+    public IEnumerable<TMetadata> Metadata => metadata;
 }
+
+        

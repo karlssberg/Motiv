@@ -13,7 +13,7 @@ public class IsSuit(Suit suit) : Spec<Card>(
 
 public class AllOfSuit(Suit suit) : Spec<Hand>(
     new IsSuit(suit)
-        .Exactly(5)
+        .CreateExactlySpec(5)
         .YieldWhenTrue($"a flush of {suit}")
         .YieldWhenFalse($"not a flush of {suit}")
         .ChangeModel<Hand>(hand => hand.Cards));

@@ -13,7 +13,7 @@ public interface IChangeMetadataBooleanResult<TMetadata>
     /// <summary>Gets a description of the result.</summary>
     string Description { get; }
 
-    IEnumerable<Reason> Reasons { get; }
+    IEnumerable<Reason> ReasonHierarchy { get; }
 
     /// <summary>Gets the original type of the metadata.</summary>
     Type OriginalMetadataType { get; }

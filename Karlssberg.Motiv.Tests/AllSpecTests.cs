@@ -28,7 +28,7 @@ public class AllSpecTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec
-            .All("all booleans are true")
+            .CreateAllSpec("all booleans are true")
             .Yield((allSatisfied, results) =>
                 $"{results.Count(result => result == allSatisfied)} are {allSatisfied.ToString().ToLowerInvariant()}");
 
@@ -60,7 +60,7 @@ public class AllSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.All("all booleans are true");
+        var sut = underlyingSpec.CreateAllSpec("all booleans are true");
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -91,7 +91,7 @@ public class AllSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.All("all booleans are true");
+        var sut = underlyingSpec.CreateAllSpec("all booleans are true");
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -120,7 +120,7 @@ public class AllSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.All("all booleans are true");
+        var sut = underlyingSpec.CreateAllSpec("all booleans are true");
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -158,7 +158,7 @@ public class AllSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.All("all booleans are true");
+        var sut = underlyingSpec.CreateAllSpec("all booleans are true");
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -175,7 +175,7 @@ public class AllSpecTests
             .CreateSpec("is true or false");
 
         var sut = underlyingSpec
-            .All("all booleans are true");
+            .CreateAllSpec("all booleans are true");
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -192,7 +192,7 @@ public class AllSpecTests
             .CreateSpec();
 
         var sut = underlyingSpec
-            .All("high-level description")
+            .CreateAllSpec("high-level description")
             .YieldWhenTrue(true)
             .YieldWhenFalse(false);
 
@@ -211,7 +211,7 @@ public class AllSpecTests
             .CreateSpec();
 
         var sut = underlyingSpec
-            .All("all booleans are true")
+            .CreateAllSpec("all booleans are true")
             .YieldWhenTrue(true)
             .YieldWhenFalse(false);
 
@@ -229,7 +229,7 @@ public class AllSpecTests
             new Exception("should be wrapped"));
 
         var sut = throwingSpec
-            .All("all booleans are true") 
+            .CreateAllSpec("all booleans are true") 
             .YieldWhenTrue(results => $"{results.Count()} true")
             .YieldWhenFalse(results => $"{results.Count()} false");
 

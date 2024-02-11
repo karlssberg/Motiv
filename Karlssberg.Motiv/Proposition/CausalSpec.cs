@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.Proposition;
 
-internal class CauseSpec<TModel>(
+internal class CausalSpec<TModel>(
     string description,
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
@@ -13,7 +13,8 @@ internal class CauseSpec<TModel>(
     public override string Description => description;
 
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
-        WrapException.IfIsSatisfiedByInvocationFails(this,
+        WrapException.IfIsSatisfiedByInvocationFails(
+            this,
             () =>
             {
                 var isSatisfied = InvokePredicate(model);

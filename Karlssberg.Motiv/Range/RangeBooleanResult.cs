@@ -1,8 +1,8 @@
 ﻿using Humanizer;
 
-namespace Karlssberg.Motiv.Between;
+namespace Karlssberg.Motiv.Range;
 
-internal class BetweenBooleanResult<TModel, TMetadata>(
+internal class RangeBooleanResult<TModel, TMetadata>(
     bool isSatisfied,
     int minimum,
     int maximum,

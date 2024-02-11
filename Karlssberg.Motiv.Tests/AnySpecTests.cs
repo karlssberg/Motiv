@@ -27,7 +27,7 @@ public class AnySpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.Any();
+        var sut = underlyingSpec.ToAnySpec();
         var result = sut.IsSatisfiedBy(models);
 
         result.Satisfied.Should().Be(expected);
@@ -44,7 +44,7 @@ public class AnySpecTests
             .CreateSpec();
 
         var sut = underlyingSpec
-            .Any("high-level description")
+            .ToAnySpec("high-level description")
             .YieldWhenTrue(true)
             .YieldWhenFalse(false);
 
@@ -75,7 +75,7 @@ public class AnySpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.Any();
+        var sut = underlyingSpec.ToAnySpec();
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -105,7 +105,7 @@ public class AnySpecTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec
-            .Any();
+            .ToAnySpec();
 
         var result = sut.IsSatisfiedBy(models);
 
@@ -135,7 +135,7 @@ public class AnySpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.Any();
+        var sut = underlyingSpec.ToAnySpec();
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -150,7 +150,7 @@ public class AnySpecTests
             "should always throw",
             new Exception("should be wrapped"));
 
-        var sut = throwingSpec.Any();
+        var sut = throwingSpec.ToAnySpec();
 
         var act = () => sut.IsSatisfiedBy([model]);
 

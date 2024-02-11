@@ -33,7 +33,7 @@ public class SpecTests
             .CreateSpec();
         
         var sut = Spec
-            .Build<bool>(() => underlyingSpec)
+            .Build(() => underlyingSpec)
             .YieldWhenTrue("underlying true")
             .YieldWhenFalse("underlying false")
             .CreateSpec("returns model value");
@@ -70,6 +70,29 @@ public class SpecTests
             .YieldWhenTrue(true.ToString())
             .YieldWhenFalse(false.ToString())
             .CreateSpec();
+
+        var result = sut.IsSatisfiedBy(model);
+
+        result.Satisfied.Should().Be(model);
+        result.GetMetadata().Should().ContainSingle(model.ToString());
+    }
+
+    [Theory]
+    [InlineAutoData(true)]
+    [InlineAutoData(false)]
+    public void Should_allow_change_of_metadata_from_spec_creation_from_existing_spec(bool model)
+    {
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .YieldWhenTrue("is true")
+            .YieldWhenFalse("is false")
+            .CreateSpec();
+        
+        var sut = Spec
+            .Build(underlyingSpec)
+            .YieldWhenTrue(true)
+            .YieldWhenFalse(false)
+            .CreateSpec("new spec");
 
         var result = sut.IsSatisfiedBy(model);
 

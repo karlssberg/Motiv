@@ -3,6 +3,7 @@
 namespace Karlssberg.Motiv.Poker.HandRankSpecs;
 
 public class IsHandTwoPairSpec() : Spec<Hand, HandRank>(
-    new HasNPairsSpec(2)
+    Spec.Build(new HasNPairsSpec(2))
         .YieldWhenTrue(TwoPair)
-        .YieldWhenFalse(HighCard));
+        .YieldWhenFalse(HighCard)
+        .CreateSpec("is a two pair hand"));

@@ -36,7 +36,7 @@ public class AtMostSpecTests
 
         bool[] models = [first, second, third, fourth];
 
-        var sut = underlyingSpec.AtMost(0);
+        var sut = underlyingSpec.CreateAtMostSpec(0);
         var result = sut.IsSatisfiedBy(models);
 
         result.Satisfied.Should().Be(expected);
@@ -74,7 +74,7 @@ public class AtMostSpecTests
 
         bool[] models = [first, second, third, fourth];
 
-        var sut = underlyingSpec.AtMost(1);
+        var sut = underlyingSpec.CreateAtMostSpec(1);
         var result = sut.IsSatisfiedBy(models);
 
         result.Satisfied.Should().Be(expected);
@@ -112,7 +112,7 @@ public class AtMostSpecTests
 
         bool[] models = [first, second, third, fourth];
 
-        var sut = underlyingSpec.AtMost(2);
+        var sut = underlyingSpec.CreateAtMostSpec(2);
         var result = sut.IsSatisfiedBy(models);
 
         result.Satisfied.Should().Be(expected);
@@ -150,7 +150,7 @@ public class AtMostSpecTests
 
         bool[] models = [first, second, third, fourth];
 
-        var sut = underlyingSpec.AtMost(models.Length);
+        var sut = underlyingSpec.CreateAtMostSpec(models.Length);
         var result = sut.IsSatisfiedBy(models);
 
         result.Satisfied.Should().Be(expected);
@@ -179,7 +179,7 @@ public class AtMostSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.AtMost(1);
+        var sut = underlyingSpec.CreateAtMostSpec(1);
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -208,7 +208,7 @@ public class AtMostSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.AtMost(1);
+        var sut = underlyingSpec.CreateAtMostSpec(1);
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -237,7 +237,7 @@ public class AtMostSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.AtMost(1);
+        var sut = underlyingSpec.CreateAtMostSpec(1);
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -253,7 +253,7 @@ public class AtMostSpecTests
             .YieldWhenFalse("underlying model is false")
             .CreateSpec("underlying spec description");
 
-        var sut = underlyingSpec.AtMost(1);
+        var sut = underlyingSpec.CreateAtMostSpec(1);
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -269,7 +269,7 @@ public class AtMostSpecTests
             .YieldWhenFalse(false.ToString())
             .CreateSpec();
 
-        var sut = underlyingSpec.AtMost(1);
+        var sut = underlyingSpec.CreateAtMostSpec(1);
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -284,7 +284,7 @@ public class AtMostSpecTests
             "throws",
             new Exception("should be wrapped"));
 
-        var sut = throwingSpec.AtMost(1);
+        var sut = throwingSpec.CreateAtMostSpec(1);
 
         var act = () => sut.IsSatisfiedBy([model]);
 
