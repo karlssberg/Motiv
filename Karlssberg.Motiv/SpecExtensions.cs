@@ -1,7 +1,7 @@
 ﻿using Karlssberg.Motiv.ChangeMetadataType;
 using Karlssberg.Motiv.ElseIf;
 using Karlssberg.Motiv.Proposition;
-using Karlssberg.Motiv.Proposition.YieldWhenTrue;
+using Karlssberg.Motiv.Proposition.WhenTrue;
 
 namespace Karlssberg.Motiv;
 

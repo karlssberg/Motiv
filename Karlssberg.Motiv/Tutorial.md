@@ -10,8 +10,8 @@ specifications.
 ```csharp
 SpecBase<int, string> isEven = Spec
     .Build<int>(n => n % 2 == 0)
-    .YieldWhenTrue("the number is even")
-    .YieldWhenFalse("the number is odd")
+    .WhenTrue("the number is even")
+    .WhenFalse("the number is odd")
     .CreateSpec();
 
 isEven.IsSatisfiedBy(2).Satisfied; // returns true
@@ -23,8 +23,8 @@ isEven.IsSatisfiedBy(3).Reasons; // returns ["the number is odd"]
 ```csharp
 SpecBase<int, string> isPositive = Spec
     .Build<int>(n => n > 0)
-    .YieldWhenTrue("the number is positive")
-    .YieldWhenFalse(n => n switch 
+    .WhenTrue("the number is positive")
+    .WhenFalse(n => n switch 
         {
             0 => "the number is zero",
             _ => "the number is negative"
@@ -33,8 +33,8 @@ SpecBase<int, string> isPositive = Spec
 
 SpecBase<int, string> isEven = Spec
     .Build<int>(n => n % 2 == 0)
-    .YieldWhenTrue("the number is even")
-    .YieldWhenFalse("the number is odd")
+    .WhenTrue("the number is even")
+    .WhenFalse("the number is odd")
     .CreateSpec();
 
 var isPositiveAndEven = isPositive & isEven;
@@ -53,8 +53,8 @@ isPositiveAndEven.IsSatisfiedBy(-2).Reasons; // returns ["the number is even", "
 ```csharp
 var isEven = Spec
     .Build<int>(n => n % 2 == 0)
-    .YieldWhenTrue(n => new { English = "the number is even", Spanish = "el número es par" })
-    .YieldWhenFalse(n => new { English = "the number is odd", Spanish = "el número es impar" })
+    .WhenTrue(n => new { English = "the number is even", Spanish = "el número es par" })
+    .WhenFalse(n => new { English = "the number is odd", Spanish = "el número es impar" })
     .CreateSpec("even number");
 
 isEven.IsSatisfiedBy(2).Satisfied; // returns true

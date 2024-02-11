@@ -30,8 +30,8 @@ public class AtMostSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec("returns the model");
 
         bool[] models = [first, second, third, fourth];
@@ -68,8 +68,8 @@ public class AtMostSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec("returns the model");
 
         bool[] models = [first, second, third, fourth];
@@ -106,8 +106,8 @@ public class AtMostSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec("returns the model");
 
         bool[] models = [first, second, third, fourth];
@@ -144,8 +144,8 @@ public class AtMostSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec("returns the model");
 
         bool[] models = [first, second, third, fourth];
@@ -173,8 +173,8 @@ public class AtMostSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue("is satisfied")
-            .YieldWhenFalse("is not satisfied")
+            .WhenTrue("is satisfied")
+            .WhenFalse("is not satisfied")
             .CreateSpec("returns the model");
 
         bool[] models = [first, second, third];
@@ -202,8 +202,8 @@ public class AtMostSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         bool[] models = [first, second, third];
@@ -231,8 +231,8 @@ public class AtMostSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("underlying model");
 
         bool[] models = [first, second, third];
@@ -249,8 +249,8 @@ public class AtMostSpecTests
         const string expected = "AT_MOST_1(underlying spec description)";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue("underlying model is true")
-            .YieldWhenFalse("underlying model is false")
+            .WhenTrue("underlying model is true")
+            .WhenFalse("underlying model is false")
             .CreateSpec("underlying spec description");
 
         var sut = underlyingSpec.CreateAtMostSpec(1);
@@ -265,8 +265,8 @@ public class AtMostSpecTests
         const string expected = "AT_MOST_1(True)";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var sut = underlyingSpec.CreateAtMostSpec(1);

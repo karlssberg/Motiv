@@ -10,13 +10,13 @@ public class ElseIfSpecTests
     public void Should_return_an_antecedent_result_when_it_is_satisfied(bool model, string expected)
     {
         var antecedent = Spec.Build<bool>(m => m)
-            .YieldWhenTrue("antecedent satisfied")
-            .YieldWhenFalse("antecedent not satisfied")
+            .WhenTrue("antecedent satisfied")
+            .WhenFalse("antecedent not satisfied")
             .CreateSpec();
 
         var consequent = Spec.Build<bool>(m => !m)
-            .YieldWhenTrue("consequent satisfied")
-            .YieldWhenFalse("consequent not satisfied")
+            .WhenTrue("consequent satisfied")
+            .WhenFalse("consequent not satisfied")
             .CreateSpec();
 
         var sut = antecedent.ElseIf(consequent);
@@ -31,13 +31,13 @@ public class ElseIfSpecTests
     public void Should_describe_the_else_if_spec()
     {
         var antecedent = Spec.Build<bool>(m => m)
-            .YieldWhenTrue("when true")
-            .YieldWhenFalse("when false")
+            .WhenTrue("when true")
+            .WhenFalse("when false")
             .CreateSpec();
 
         var consequent = Spec.Build<bool>(m => !m)
-            .YieldWhenTrue("when false")
-            .YieldWhenFalse("when true")
+            .WhenTrue("when false")
+            .WhenFalse("when true")
             .CreateSpec();
 
         var sut = antecedent.ElseIf(consequent);

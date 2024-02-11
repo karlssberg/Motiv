@@ -1,5 +1,5 @@
 ﻿using Karlssberg.Motiv.Proposition.Factories;
-using Karlssberg.Motiv.Proposition.YieldWhenFalse;
+using Karlssberg.Motiv.Proposition.WhenFalse;
 
 namespace Karlssberg.Motiv.Proposition;
 
@@ -23,12 +23,12 @@ internal class MetadataSpecBuilder<TModel, TMetadata> :
         _metadataBuilder.WhenTrue ?? throw new InvalidOperationException("Must specify a true metadata"),
         _metadataBuilder.WhenFalse ?? throw new InvalidOperationException("Must specify a false metadata"));
 
-    public IDescriptiveSpecFactory<TModel, TMetadata> YieldWhenFalse(TMetadata whenFalse) =>
+    public IDescriptiveSpecFactory<TModel, TMetadata> WhenFalse(TMetadata whenFalse) =>
         _metadataBuilder.SetFalseMetadata(whenFalse.ThrowIfNull(nameof(whenFalse)));
 
-    public IDescriptiveSpecFactory<TModel, TMetadata> YieldWhenFalse(Func<TModel, TMetadata> whenFalse) =>
+    public IDescriptiveSpecFactory<TModel, TMetadata> WhenFalse(Func<TModel, TMetadata> whenFalse) =>
         _metadataBuilder.SetFalseMetadata(whenFalse.ThrowIfNull(nameof(whenFalse)));
 
-    public IDescriptiveSpecFactory<TModel, TMetadata> YieldWhenFalse(Func<TMetadata> whenFalse) =>
+    public IDescriptiveSpecFactory<TModel, TMetadata> WhenFalse(Func<TMetadata> whenFalse) =>
         _metadataBuilder.SetFalseMetadata(whenFalse.ThrowIfNull(nameof(whenFalse)));
 }

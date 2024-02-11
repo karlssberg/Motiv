@@ -8,15 +8,15 @@ namespace Karlssberg.Motiv.Proposition.NestedMetadataSpecBuilder;
 public readonly struct NestedTrueSpecBuilder<TModel, TUnderlyingMetadata>(
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate)
 {
-    public NestedFalseMetadataSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> YieldWhenTrue<TMetadata>(TMetadata whenTrue) =>
+    public NestedFalseMetadataSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(TMetadata whenTrue) =>
         new(specPredicate, _ => whenTrue);
 
-    public NestedFalseMetadataSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> YieldWhenTrue<TMetadata>(Func<TModel, TMetadata> whenTrue) =>
+    public NestedFalseMetadataSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(Func<TModel, TMetadata> whenTrue) =>
         new(specPredicate, whenTrue);
     
-    public NestedFalseReasonsWithDescriptionSpecBuilder<TModel, TUnderlyingMetadata> YieldWhenTrue(string trueBecause) =>
+    public NestedFalseReasonsWithDescriptionSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
         new(specPredicate, _ => trueBecause, trueBecause);
 
-    public NestedFalseReasonsSpecBuilder<TModel, TUnderlyingMetadata> YieldWhenTrue(Func<TModel, string> trueBecause) =>
+    public NestedFalseReasonsSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(Func<TModel, string> trueBecause) =>
         new(specPredicate, trueBecause);
 }

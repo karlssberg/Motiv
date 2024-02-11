@@ -1,4 +1,4 @@
-﻿using Karlssberg.Motiv.ChangeMetadataType.YieldWhenFalse;
+﻿using Karlssberg.Motiv.ChangeMetadataType.WhenFalse;
 
 namespace Karlssberg.Motiv.ChangeMetadataType;
 
@@ -11,13 +11,13 @@ internal struct ChangeMetadataTypeBuilder<TModel, TMetadata, TUnderlyingMetadata
     public Func<TModel, TMetadata> WhenTrue => whenTrue;
     private Func<TModel, TMetadata>? _whenFalse;
 
-    public SpecBase<TModel, TMetadata> YieldWhenFalse(TMetadata whenFalse)
+    public SpecBase<TModel, TMetadata> WhenFalse(TMetadata whenFalse)
     {
         _whenFalse = _ => whenFalse;
         return CreateSpec();
     }
 
-    public SpecBase<TModel, TMetadata> YieldWhenFalse(Func<TModel, TMetadata> whenFalse)
+    public SpecBase<TModel, TMetadata> WhenFalse(Func<TModel, TMetadata> whenFalse)
     {
         _whenFalse = whenFalse;
         return CreateSpec();

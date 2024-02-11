@@ -17,8 +17,8 @@ public class ExactlySpecTests
     {
         var underlyingSpec = Spec
             .Build<int>(i => i % 2 == 0)
-            .YieldWhenTrue(i => $"{i} is even")
-            .YieldWhenFalse(i => $"{i} is odd")
+            .WhenTrue(i => $"{i} is even")
+            .WhenFalse(i => $"{i} is odd")
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec.CreateExactlySpec(2, "a pair of even numbers");
@@ -44,15 +44,15 @@ public class ExactlySpecTests
     {
         var underlyingSpec = Spec
             .Build<int>(n => n % 2 == 0)
-            .YieldWhenTrue(n => $"{n} is even")
-            .YieldWhenFalse(n => $"{n} is odd")
+            .WhenTrue(n => $"{n} is even")
+            .WhenFalse(n => $"{n} is odd")
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec
             .CreateExactlySpec(2, "a pair of even numbers")
-            .YieldWhenTrue((satisfied, _) =>
+            .WhenTrue((satisfied, _) =>
                 $"{satisfied.Humanize()} are a pair of even numbers")
-            .YieldWhenFalse((satisfied, unsatisfied) => 
+            .WhenFalse((satisfied, unsatisfied) => 
                 $"{(satisfied.Union(unsatisfied)).Humanize()} do not contain a pair of even numbers");
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
@@ -75,8 +75,8 @@ public class ExactlySpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString().ToLowerInvariant())
-            .YieldWhenFalse(false.ToString().ToLowerInvariant())
+            .WhenTrue(true.ToString().ToLowerInvariant())
+            .WhenFalse(false.ToString().ToLowerInvariant())
             .CreateSpec();
 
         bool[] models = [first, second];
@@ -100,14 +100,14 @@ public class ExactlySpecTests
     {
         var underlyingSpec = Spec
             .Build<int>(n => n % 2 == 0)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("is even");
 
         var sut = underlyingSpec
             .CreateAllSpec("all numbers are even")
-            .YieldWhenTrue(results => $"{results.Count()} are true")
-            .YieldWhenFalse(results => $"{results.Count()} are false");
+            .WhenTrue(results => $"{results.Count()} are true")
+            .WhenFalse(results => $"{results.Count()} are false");
 
         var result = sut.IsSatisfiedBy([1, 3, 5]);
 
@@ -121,8 +121,8 @@ public class ExactlySpecTests
     {
         var underlyingSpec = Spec
             .Build<int>(n => n % 2 == 0)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("is even");
 
         var sut = underlyingSpec

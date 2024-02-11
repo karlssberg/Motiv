@@ -5,13 +5,13 @@ public readonly struct NestedFalseReasonsWithDescriptionSpecBuilder<TModel, TUnd
     Func<TModel, string> trueBecause,
     string candidateDescription)
 {
-    public NestedReasonWithDescriptionSpecFactory<TModel, TUnderlyingMetadata> YieldWhenFalse(string falseBecause) =>
+    public NestedReasonWithDescriptionSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(string falseBecause) =>
         new(specPredicate,
             trueBecause,
             _ => falseBecause,
             candidateDescription);
 
-    public NestedReasonWithDescriptionSpecFactory<TModel, TUnderlyingMetadata> YieldWhenFalse(Func<TModel, string> falseBecause) =>
+    public NestedReasonWithDescriptionSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(Func<TModel, string> falseBecause) =>
         new(specPredicate,
             trueBecause,
             falseBecause,

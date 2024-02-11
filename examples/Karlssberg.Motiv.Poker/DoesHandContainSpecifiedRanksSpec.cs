@@ -7,8 +7,8 @@ public class DoesHandContainSpecifiedRanksSpec(ICollection<Rank> ranks) : Spec<H
     {
         var underlyingSpec = Spec
             .Build<Card>(card => ranks.Contains(card.Rank))
-            .YieldWhenTrue($"Is one of {ranks.Humanize()}")
-            .YieldWhenFalse($"Is not one of {ranks.Humanize()}")
+            .WhenTrue($"Is one of {ranks.Humanize()}")
+            .WhenFalse($"Is not one of {ranks.Humanize()}")
             .CreateSpec();
 
         return underlyingSpec

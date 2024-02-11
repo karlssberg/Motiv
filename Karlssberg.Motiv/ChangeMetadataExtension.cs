@@ -1,6 +1,6 @@
 ﻿using Karlssberg.Motiv.ChangeFalseMetadata;
 using Karlssberg.Motiv.ChangeMetadataType;
-using Karlssberg.Motiv.ChangeMetadataType.YieldWhenFalse;
+using Karlssberg.Motiv.ChangeMetadataType.WhenFalse;
 using Karlssberg.Motiv.ChangeTrueMetadata;
 
 namespace Karlssberg.Motiv;
@@ -17,7 +17,7 @@ public static class ChangeMetadataExtension
     /// <param name="spec">The specification base.</param>
     /// <param name="trueBecause">The reason when the condition is true.</param>
     /// <returns>A new builder with the changed metadata.</returns>
-    public static IYieldReasonWhenFalse<IEnumerable<TModel>, TMetadata> YieldWhenTrue<TModel, TMetadata>(
+    public static IYieldReasonWhenFalse<IEnumerable<TModel>, TMetadata> WhenTrue<TModel, TMetadata>(
         this SpecBase<IEnumerable<TModel>, TMetadata> spec,
         string trueBecause) =>
         new ChangeMetadataBuilder<IEnumerable<TModel>, TMetadata>(spec, _ => trueBecause, trueBecause);
@@ -34,7 +34,7 @@ public static class ChangeMetadataExtension
     /// A new builder with the changed metadata that solicits the corresponding metadata to yield when the outcome is
     /// false.
     /// </returns>
-    public static IYieldReasonWithDescriptionUnresolvedWhenFalse<IEnumerable<TModel>, TMetadata> YieldWhenTrue<TModel, TMetadata>(
+    public static IYieldReasonWithDescriptionUnresolvedWhenFalse<IEnumerable<TModel>, TMetadata> WhenTrue<TModel, TMetadata>(
         this SpecBase<IEnumerable<TModel>, TMetadata> spec,
         Func<IEnumerable<TModel>, string> trueBecause) =>
         new ChangeMetadataBuilder<IEnumerable<TModel>, TMetadata>(spec, trueBecause);
@@ -47,7 +47,7 @@ public static class ChangeMetadataExtension
     /// <param name="spec">The specification base.</param>
     /// <param name="metadata">The reason when the condition is true.</param>
     /// <returns>A new builder with the changed metadata.</returns>
-    public static IYieldMetadataWhenFalse<IEnumerable<TModel>, TAltMetadata, TMetadata> YieldWhenTrue<TModel, TMetadata, TAltMetadata>(
+    public static IYieldMetadataWhenFalse<IEnumerable<TModel>, TAltMetadata, TMetadata> WhenTrue<TModel, TMetadata, TAltMetadata>(
         this SpecBase<IEnumerable<TModel>, TMetadata> spec,
         TAltMetadata metadata) =>
         new ChangeMetadataTypeBuilder<IEnumerable<TModel>, TAltMetadata, TMetadata>(spec, _ => metadata);
@@ -66,7 +66,7 @@ public static class ChangeMetadataExtension
     /// A new builder with the changed metadata that solicits the corresponding metadata to yield when the outcome is
     /// false.
     /// </returns>
-    public static IYieldMetadataWhenFalse<IEnumerable<TModel>, TAltMetadata, TMetadata> YieldWhenTrue<TModel, TMetadata, TAltMetadata>(
+    public static IYieldMetadataWhenFalse<IEnumerable<TModel>, TAltMetadata, TMetadata> WhenTrue<TModel, TMetadata, TAltMetadata>(
         this SpecBase<IEnumerable<TModel>, TMetadata> spec,
         Func<IEnumerable<TModel>, TAltMetadata> metadata) =>
         new ChangeMetadataTypeBuilder<IEnumerable<TModel>, TAltMetadata, TMetadata>(spec, metadata);
@@ -84,18 +84,18 @@ public static class ChangeMetadataExtension
     /// A new builder with the changed metadata that solicits the corresponding metadata to yield when the outcome is
     /// false.
     /// </returns>
-    public static IYieldHigherOrderMetadataWhenFalse<TModel, TAltMetadata, TMetadata> YieldWhenTrue<TModel, TMetadata,
+    public static IYieldHigherOrderMetadataWhenFalse<TModel, TAltMetadata, TMetadata> WhenTrue<TModel, TMetadata,
         TAltMetadata>(
         this SpecBase<IEnumerable<TModel>, TMetadata> spec,
         Func<IEnumerable<TModel>, IEnumerable<TModel>, TAltMetadata> metadata) =>
         new ChangeHigherOrderMetadataTypeBuilder<TModel, TAltMetadata, TMetadata>(spec, metadata);
     
-    public static SpecBase<TModel, TMetadata> YieldWhenTrue<TModel, TMetadata>(
+    public static SpecBase<TModel, TMetadata> WhenTrue<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         Func<TModel, TMetadata> whenTrue) =>
         new ChangeTrueMetadataSpec<TModel, TMetadata>(spec, whenTrue);
     
-    public static SpecBase<TModel, TMetadata> YieldWhenTrue<TModel, TMetadata>(
+    public static SpecBase<TModel, TMetadata> WhenTrue<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         TMetadata whenTrue) =>
             whenTrue switch
@@ -104,17 +104,17 @@ public static class ChangeMetadataExtension
                 _ => new ChangeTrueMetadataSpec<TModel, TMetadata>(spec, _ => whenTrue)
             };
     
-    public static SpecBase<TModel, TMetadata> YieldWhenFalse<TModel, TMetadata>(
+    public static SpecBase<TModel, TMetadata> WhenFalse<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         Func<TModel, TMetadata> whenFalse) =>
         new ChangeFalseMetadataSpec<TModel, TMetadata>(spec, whenFalse);
     
-    public static SpecBase<TModel, TMetadata> YieldWhenFalse<TModel, TMetadata>(
+    public static SpecBase<TModel, TMetadata> WhenFalse<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         TMetadata whenTrue) =>
         new ChangeFalseMetadataSpec<TModel, TMetadata>(spec, _ => whenTrue);
 
-    public static SpecBase<IEnumerable<TModel>, TMetadata> YieldWhenFalse<TModel, TMetadata, TUnderlyingMetadata>(
+    public static SpecBase<IEnumerable<TModel>, TMetadata> WhenFalse<TModel, TMetadata, TUnderlyingMetadata>(
         this IYieldMetadataWhenFalse<IEnumerable<TModel>, TMetadata, TUnderlyingMetadata> builder,
         Func<IEnumerable<TModel>, IEnumerable<TModel>, TMetadata> whenFalse) =>
         new ChangeHigherOrderMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
@@ -137,7 +137,7 @@ public static class ChangeMetadataExtension
                 return [metadata];
             });
     
-    public static SpecBase<IEnumerable<TModel>, string> YieldWhenFalse<TModel, TMetadata>(
+    public static SpecBase<IEnumerable<TModel>, string> WhenFalse<TModel, TMetadata>(
         this IYieldReasonWhenFalse<IEnumerable<TModel>, TMetadata> builder,
         Func<IEnumerable<TModel>, IEnumerable<TModel>, string> whenFalse) =>
         new ChangeHigherOrderMetadataSpec<TModel, string, TMetadata>(

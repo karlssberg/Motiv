@@ -14,8 +14,8 @@ public class NotSpecTests
     {
         var spec = Spec
             .Build<object>(m => operand)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec($"is {operand}");
 
         var sut = !spec;
@@ -36,8 +36,8 @@ public class NotSpecTests
     {
         var spec = Spec
             .Build<object>(m => operand)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("underlying spec");
 
         var sut = !spec;
@@ -58,8 +58,8 @@ public class NotSpecTests
     {
         var spec = Spec
             .Build<object>(m => operand)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var sut = !spec;
@@ -80,8 +80,8 @@ public class NotSpecTests
     {
         var spec = Spec
             .Build<object>(m => operand)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var sut = !spec;

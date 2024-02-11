@@ -11,8 +11,8 @@ public class ChangeModelTypeSpecTests
     {
         var isEmpty = Spec
             .Build<object?>(m => m is null)
-            .YieldWhenTrue("is null")
-            .YieldWhenFalse("is not null")
+            .WhenTrue("is null")
+            .WhenFalse("is not null")
             .CreateSpec();
 
         var sut = isEmpty.ChangeModel<string?>();
@@ -32,8 +32,8 @@ public class ChangeModelTypeSpecTests
     {
         var isValueType = Spec
             .Build<Type>(t => t.IsValueType)
-            .YieldWhenTrue("is value-type")
-            .YieldWhenFalse("is not value-type")
+            .WhenTrue("is value-type")
+            .WhenFalse("is not value-type")
             .CreateSpec();
 
         var sut = isValueType.ChangeModel<object>(m => m.GetType());
@@ -51,8 +51,8 @@ public class ChangeModelTypeSpecTests
     {
         var isLetter = Spec
             .Build<char>(char.IsLetter)
-            .YieldWhenTrue(ch => $"'{ch}' is a letter")
-            .YieldWhenFalse(ch => $"'{ch}' is not a letter")
+            .WhenTrue(ch => $"'{ch}' is a letter")
+            .WhenFalse(ch => $"'{ch}' is not a letter")
             .CreateSpec("is a letter");
 
         var isAllLetters = isLetter
@@ -72,8 +72,8 @@ public class ChangeModelTypeSpecTests
     {
         var isLetter = Spec
             .Build<char>(char.IsLetter)
-            .YieldWhenTrue(ch => $"'{ch}' is a letter")
-            .YieldWhenFalse(ch => $"'{ch}' is not a letter")
+            .WhenTrue(ch => $"'{ch}' is a letter")
+            .WhenFalse(ch => $"'{ch}' is not a letter")
             .CreateSpec("is a letter");
 
         var isAllLetters = isLetter

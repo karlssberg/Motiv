@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.ChangeMetadataType.YieldWhenFalse;
+﻿namespace Karlssberg.Motiv.ChangeMetadataType.WhenFalse;
 
 public interface IChangeMetadataBuilder<TModel, out TMetadata, TUnderlyingMetadata>
 {

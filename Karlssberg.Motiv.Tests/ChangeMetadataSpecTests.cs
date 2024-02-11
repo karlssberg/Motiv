@@ -17,25 +17,25 @@ public class ChangeMetadataSpecTests
         string[] expectation = [expectedA, expectedB, expectedC, expectedD];
         var underlying = Spec
             .Build<string>(m => isSatisfied)
-            .YieldWhenTrue("true before")
-            .YieldWhenFalse("false before")
+            .WhenTrue("true before")
+            .WhenFalse("false before")
             .CreateSpec();
 
         var firstSpec = underlying
-            .YieldWhenTrue("true after - A")
-            .YieldWhenFalse("false after - A");
+            .WhenTrue("true after - A")
+            .WhenFalse("false after - A");
 
         var secondSpec = underlying
-            .YieldWhenTrue(model => $"true after + {model} - B")
-            .YieldWhenFalse("false after - B");
+            .WhenTrue(model => $"true after + {model} - B")
+            .WhenFalse("false after - B");
 
         var thirdSpec = underlying
-            .YieldWhenTrue("true after - C")
-            .YieldWhenFalse(model => $"false after + {model} - C");
+            .WhenTrue("true after - C")
+            .WhenFalse(model => $"false after + {model} - C");
 
         var fourthSpec = underlying
-            .YieldWhenTrue(model => $"true after + {model} - D")
-            .YieldWhenFalse(model => $"false after + {model} - D");
+            .WhenTrue(model => $"true after + {model} - D")
+            .WhenFalse(model => $"false after + {model} - D");
 
         var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
@@ -60,32 +60,32 @@ public class ChangeMetadataSpecTests
         int[] expectation = [expectedA, expectedB, expectedC, expectedD];
         var underlying = Spec
             .Build<string>(m => isSatisfied)
-            .YieldWhenTrue(trueReason)
-            .YieldWhenFalse(falseReason)
+            .WhenTrue(trueReason)
+            .WhenFalse(falseReason)
             .CreateSpec();
 
         var firstSpec = Spec
             .Build(underlying)
-            .YieldWhenTrue(1)
-            .YieldWhenFalse(2)
+            .WhenTrue(1)
+            .WhenFalse(2)
             .CreateSpec("first spec");
 
         var secondSpec = Spec
             .Build(underlying)
-            .YieldWhenTrue(model => 3)
-            .YieldWhenFalse(4)
+            .WhenTrue(model => 3)
+            .WhenFalse(4)
             .CreateSpec("second spec");
 
         var thirdSpec = Spec
             .Build(underlying)
-            .YieldWhenTrue(5)
-            .YieldWhenFalse(model => 6)
+            .WhenTrue(5)
+            .WhenFalse(model => 6)
             .CreateSpec("third spec");
 
         var fourthSpec = Spec
             .Build(underlying)
-            .YieldWhenTrue(model => 7)
-            .YieldWhenFalse(model => 8)
+            .WhenTrue(model => 7)
+            .WhenFalse(model => 8)
             .CreateSpec("fourth spec");
 
         var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;

@@ -2,6 +2,6 @@
 
 public class IsHandPairSpec() : Spec<Hand, HandRank>(
     Spec.Build(new HasNPairsSpec(1))
-        .YieldWhenTrue(HandRank.Pair)
-        .YieldWhenFalse(HandRank.HighCard)
+        .WhenTrue(HandRank.Pair)
+        .WhenFalse(HandRank.HighCard)
         .CreateSpec("is a pair hand"));

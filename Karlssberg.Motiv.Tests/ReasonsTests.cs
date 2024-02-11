@@ -10,8 +10,8 @@ public class ReasonsTests
     public void Should_provide_a_reason_for_a_spec_result(int n, string expected)
     {
         var spec = Spec.Build<int>(i => i % 2 == 0)
-            .YieldWhenTrue("is even")
-            .YieldWhenFalse("is odd")
+            .WhenTrue("is even")
+            .WhenFalse("is odd")
             .CreateSpec();
         
         var result = spec.IsSatisfiedBy(n);

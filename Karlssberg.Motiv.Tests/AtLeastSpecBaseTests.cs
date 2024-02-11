@@ -30,8 +30,8 @@ public class AtLeastSpecBaseTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec("returns the model");
 
         bool[] models = [first, second, third, fourth];
@@ -68,8 +68,8 @@ public class AtLeastSpecBaseTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec("returns the model");
 
         bool[] models = [first, second, third, fourth];
@@ -106,8 +106,8 @@ public class AtLeastSpecBaseTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec("returns the model");
 
         bool[] models = [first, second, third, fourth];
@@ -144,8 +144,8 @@ public class AtLeastSpecBaseTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec("returns the model");
 
         bool[] models = [first, second, third, fourth];
@@ -173,8 +173,8 @@ public class AtLeastSpecBaseTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue("received true")
-            .YieldWhenFalse("received false")
+            .WhenTrue("received true")
+            .WhenFalse("received false")
             .CreateSpec("returns the model");
 
         bool[] models = [first, second, third];
@@ -202,8 +202,8 @@ public class AtLeastSpecBaseTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue("underlying satisfied")
-            .YieldWhenFalse("underlying not satisfied")
+            .WhenTrue("underlying satisfied")
+            .WhenFalse("underlying not satisfied")
             .CreateSpec();
 
         bool[] models = [first, second, third];
@@ -231,8 +231,8 @@ public class AtLeastSpecBaseTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("underlying model");
 
         bool[] models = [first, second, third];
@@ -249,8 +249,8 @@ public class AtLeastSpecBaseTests
         const string expected = "AT_LEAST_1(underlying spec description)";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec("underlying spec description");
 
         var sut = underlyingSpec.CreateAtLeastSpec(1);
@@ -265,8 +265,8 @@ public class AtLeastSpecBaseTests
         const string expected = "AT_LEAST_1(True)";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var sut = underlyingSpec.CreateAtLeastSpec(1);

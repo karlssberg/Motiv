@@ -17,14 +17,14 @@ public class XOrSpecTests
     {
         var left = Spec
             .Build<object>(m => leftResult)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("left");
 
         var right = Spec
             .Build<object>(m => rightResult)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("right");
 
         var sut = left ^ right;
@@ -50,14 +50,14 @@ public class XOrSpecTests
     {
         var left = Spec
             .Build<object>(m => leftResult)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("left");
 
         var right = Spec
             .Build<object>(m => rightResult)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("right");
 
         var sut = left ^ right;
@@ -80,14 +80,14 @@ public class XOrSpecTests
     {
         var left = Spec
             .Build<object>(m => leftResult)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var right = Spec
             .Build<object>(m => rightResult)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var sut = left ^ right;
@@ -110,14 +110,14 @@ public class XOrSpecTests
     {
         var left = Spec
             .Build<object>(m => leftResult)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var right = Spec
             .Build<object>(m => rightResult)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var sut = left ^ right;
@@ -136,14 +136,14 @@ public class XOrSpecTests
     {
         var left = Spec
             .Build<object>(m => leftResult)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("left");
 
         var right = Spec
             .Build<object>(m => rightResult)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("right");
 
         var expected = $"({left.Description}) ^ ({right.Description})";
@@ -163,14 +163,14 @@ public class XOrSpecTests
     {
         var left = Spec
             .Build<object>(m => leftResult)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var right = Spec
             .Build<object>(m => rightResult)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var expected = $"({left.Description}) ^ ({right.Description})";
@@ -188,8 +188,8 @@ public class XOrSpecTests
     {
         var normalSpec = Spec
             .Build<object>(m => true)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var throwingSpec = new ThrowingSpec<object, string>(

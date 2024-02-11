@@ -14,14 +14,14 @@ public class ChangeHigherOrderMetadataSpecTests
     {
         var underlyingSpec = Spec
             .Build<int>(i => i % 2 == 0)
-            .YieldWhenTrue(i => $"{i} is even")
-            .YieldWhenFalse(i => $"{i} is odd")
+            .WhenTrue(i => $"{i} is even")
+            .WhenFalse(i => $"{i} is odd")
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec
             .CreateExactlySpec(2, "a pair of even numbers")
-            .YieldWhenTrue("is a pair of even numbers")
-            .YieldWhenFalse("is not a pair of even numbers");
+            .WhenTrue("is a pair of even numbers")
+            .WhenFalse("is not a pair of even numbers");
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
         
@@ -33,14 +33,14 @@ public class ChangeHigherOrderMetadataSpecTests
     {
         var underlyingSpec = Spec
             .Build<int>(i => i % 2 == 0)
-            .YieldWhenTrue("is even")
-            .YieldWhenFalse("is odd")
+            .WhenTrue("is even")
+            .WhenFalse("is odd")
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec
             .CreateExactlySpec(2, "a pair of even numbers")
-            .YieldWhenTrue((_, _) => "is a pair of even numbers")
-            .YieldWhenFalse((_, _) => "is not a pair of even numbers");
+            .WhenTrue((_, _) => "is a pair of even numbers")
+            .WhenFalse((_, _) => "is not a pair of even numbers");
 
         sut.Description.Should().Be("<a pair of even numbers>(is even spec)");
     }
@@ -58,18 +58,18 @@ public class ChangeHigherOrderMetadataSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(b => b)
-            .YieldWhenTrue("is even")
-            .YieldWhenFalse("is odd")
+            .WhenTrue("is even")
+            .WhenFalse("is odd")
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec
             .CreateAllSpec("a pair of even numbers")
-            .YieldWhenTrue((_, _) => "first true yield")
-            .YieldWhenFalse((_, _) => "first false yield")
-            .YieldWhenTrue((_, _) => "second true yield")
-            .YieldWhenFalse((_, _) => "second false yield")
-            .YieldWhenTrue((_, _) => "third true yield")
-            .YieldWhenFalse((_, _) => "third false yield");
+            .WhenTrue((_, _) => "first true yield")
+            .WhenFalse((_, _) => "first false yield")
+            .WhenTrue((_, _) => "second true yield")
+            .WhenFalse((_, _) => "second false yield")
+            .WhenTrue((_, _) => "third true yield")
+            .WhenFalse((_, _) => "third false yield");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
@@ -89,18 +89,18 @@ public class ChangeHigherOrderMetadataSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(b => b)
-            .YieldWhenTrue("is even")
-            .YieldWhenFalse("is odd")
+            .WhenTrue("is even")
+            .WhenFalse("is odd")
             .CreateSpec("is even spec");
 
         var sut = underlyingSpec
             .CreateAllSpec("a pair of even numbers")
-            .YieldWhenTrue((_, _) => "first true yield")
-            .YieldWhenFalse((_, _) => "first false yield")
-            .YieldWhenTrue((_, _) => "second true yield")
-            .YieldWhenFalse((_, _) => "second false yield")
-            .YieldWhenTrue((_, _) => "third true yield")
-            .YieldWhenFalse((_, _) => "third false yield");
+            .WhenTrue((_, _) => "first true yield")
+            .WhenFalse((_, _) => "first false yield")
+            .WhenTrue((_, _) => "second true yield")
+            .WhenFalse((_, _) => "second false yield")
+            .WhenTrue((_, _) => "third true yield")
+            .WhenFalse((_, _) => "third false yield");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
@@ -112,14 +112,14 @@ public class ChangeHigherOrderMetadataSpecTests
     {
         var underlyingSpec = Spec
             .Build<int>(i => i % 2 == 0)
-            .YieldWhenTrue(i => $"{i} is even")
-            .YieldWhenFalse(i => $"{i} is odd")
+            .WhenTrue(i => $"{i} is even")
+            .WhenFalse(i => $"{i} is odd")
             .CreateSpec("is even spec");
         
         var sut = underlyingSpec
             .CreateAllSpec("all even")
-            .YieldWhenTrue("all even")
-            .YieldWhenFalse((_, unsatisfied) => $"not all even, {unsatisfied.Humanize()} are odd");
+            .WhenTrue("all even")
+            .WhenFalse((_, unsatisfied) => $"not all even, {unsatisfied.Humanize()} are odd");
 
     }
 }

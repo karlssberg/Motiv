@@ -2,5 +2,5 @@
 
 public class IsTenHighStraightSpec() : Spec<Hand>(
     new DoesHandContainSpecifiedRanksSpec([Rank.Ten, Rank.Nine, Rank.Eight, Rank.Seven, Rank.Six])
-        .YieldWhenTrue("is Ten High Straight")
-        .YieldWhenFalse("is Not Ten High Straight"));
+        .WhenTrue("is Ten High Straight")
+        .WhenFalse("is Not Ten High Straight"));

@@ -21,8 +21,8 @@ public class AllSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         bool[] models = [first, second, third];
@@ -54,8 +54,8 @@ public class AllSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString().ToLowerInvariant())
-            .YieldWhenFalse(false.ToString().ToLowerInvariant())
+            .WhenTrue(true.ToString().ToLowerInvariant())
+            .WhenFalse(false.ToString().ToLowerInvariant())
             .CreateSpec();
 
         bool[] models = [first, second, third];
@@ -84,8 +84,8 @@ public class AllSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString().ToLowerInvariant())
-            .YieldWhenFalse(false.ToString().ToLowerInvariant())
+            .WhenTrue(true.ToString().ToLowerInvariant())
+            .WhenFalse(false.ToString().ToLowerInvariant())
             .CreateSpec();
         ;
 
@@ -114,8 +114,8 @@ public class AllSpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("model");
 
         bool[] models = [first, second, third];
@@ -144,14 +144,14 @@ public class AllSpecTests
     {
         var underlyingSpecLeft = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("left");
 
         var underlyingSpecRight = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("right");
 
         var underlyingSpec = underlyingSpecLeft & underlyingSpecRight;
@@ -170,8 +170,8 @@ public class AllSpecTests
         const string expected = "<all booleans are true>(is true or false)";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec("is true or false");
 
         var sut = underlyingSpec
@@ -187,14 +187,14 @@ public class AllSpecTests
         const string expected = "<high-level description>(True)";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var sut = underlyingSpec
             .CreateAllSpec("high-level description")
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false);
+            .WhenTrue(true)
+            .WhenFalse(false);
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -206,14 +206,14 @@ public class AllSpecTests
         const string expected = "<all booleans are true>(True)";  
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var sut = underlyingSpec
             .CreateAllSpec("all booleans are true")
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false);
+            .WhenTrue(true)
+            .WhenFalse(false);
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -230,8 +230,8 @@ public class AllSpecTests
 
         var sut = throwingSpec
             .CreateAllSpec("all booleans are true") 
-            .YieldWhenTrue(results => $"{results.Count()} true")
-            .YieldWhenFalse(results => $"{results.Count()} false");
+            .WhenTrue(results => $"{results.Count()} true")
+            .WhenFalse(results => $"{results.Count()} false");
 
         var act = () => sut.IsSatisfiedBy([model]);
 

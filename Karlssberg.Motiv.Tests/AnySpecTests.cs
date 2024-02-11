@@ -21,8 +21,8 @@ public class AnySpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         bool[] models = [first, second, third];
@@ -39,14 +39,14 @@ public class AnySpecTests
         const string expected = "<high-level description>(True)";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())   
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())   
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         var sut = underlyingSpec
             .ToAnySpec("high-level description")
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false);
+            .WhenTrue(true)
+            .WhenFalse(false);
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -69,8 +69,8 @@ public class AnySpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true)
-            .YieldWhenFalse(false)
+            .WhenTrue(true)
+            .WhenFalse(false)
             .CreateSpec("model");
 
         bool[] models = [first, second, third];
@@ -98,8 +98,8 @@ public class AnySpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec("returns the model");
 
         bool[] models = [first, second, third];
@@ -129,8 +129,8 @@ public class AnySpecTests
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .YieldWhenTrue(true.ToString())
-            .YieldWhenFalse(false.ToString())
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
             .CreateSpec();
 
         bool[] models = [first, second, third];

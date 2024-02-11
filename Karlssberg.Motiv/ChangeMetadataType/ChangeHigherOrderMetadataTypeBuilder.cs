@@ -1,4 +1,4 @@
-﻿using Karlssberg.Motiv.ChangeMetadataType.YieldWhenFalse;
+﻿using Karlssberg.Motiv.ChangeMetadataType.WhenFalse;
 
 namespace Karlssberg.Motiv.ChangeMetadataType;
 
@@ -7,7 +7,7 @@ internal class ChangeHigherOrderMetadataTypeBuilder<TModel, TMetadata, TUnderlyi
     Func<IEnumerable<TModel>, IEnumerable<TModel>, TMetadata> whenTrue)
     : IYieldHigherOrderMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata>
 {
-    public SpecBase<IEnumerable<TModel>, TMetadata> YieldWhenFalse(
+    public SpecBase<IEnumerable<TModel>, TMetadata> WhenFalse(
         Func<IEnumerable<TModel>, IEnumerable<TModel>, TMetadata> whenFalse)
     {
         whenFalse.ThrowIfNull(nameof(whenFalse));
