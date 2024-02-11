@@ -65,25 +65,25 @@ public class ChangeMetadataSpecTests
             .CreateSpec();
 
         var firstSpec = Spec
-            .Build(underlying)
+            .Extend(underlying)
             .WhenTrue(1)
             .WhenFalse(2)
             .CreateSpec("first spec");
 
         var secondSpec = Spec
-            .Build(underlying)
+            .Extend(underlying)
             .WhenTrue(model => 3)
             .WhenFalse(4)
             .CreateSpec("second spec");
 
         var thirdSpec = Spec
-            .Build(underlying)
+            .Extend(underlying)
             .WhenTrue(5)
             .WhenFalse(model => 6)
             .CreateSpec("third spec");
 
         var fourthSpec = Spec
-            .Build(underlying)
+            .Extend(underlying)
             .WhenTrue(model => 7)
             .WhenFalse(model => 8)
             .CreateSpec("fourth spec");

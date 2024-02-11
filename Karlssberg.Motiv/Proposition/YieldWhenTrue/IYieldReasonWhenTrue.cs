@@ -1,6 +1,6 @@
-﻿using Karlssberg.Motiv.Proposition.WhenFalse;
+﻿using Karlssberg.Motiv.Proposition.YieldWhenFalse;
 
-namespace Karlssberg.Motiv.Proposition.WhenTrue;
+namespace Karlssberg.Motiv.Proposition.YieldWhenTrue;
 
 public interface IYieldReasonWhenTrue<TModel>
 {

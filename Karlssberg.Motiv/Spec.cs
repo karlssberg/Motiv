@@ -1,6 +1,6 @@
 ﻿using Karlssberg.Motiv.Proposition;
 using Karlssberg.Motiv.Proposition.NestedMetadataSpecBuilder;
-using Karlssberg.Motiv.Proposition.WhenTrue;
+using Karlssberg.Motiv.Proposition.YieldWhenTrue;
 
 namespace Karlssberg.Motiv;
 
@@ -131,7 +131,6 @@ public static class Spec
         predicate.ThrowIfNull(nameof(predicate));
         return new SpecBuilder<TModel>(_ => predicate());
     }
-
     
     public static NestedTrueSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         Func<TModel, SpecBase<TModel, TMetadata>> specFactory)
@@ -145,11 +144,12 @@ public static class Spec
         specFactory.ThrowIfNull(nameof(specFactory));
         return new NestedTrueSpecBuilder<TModel, TMetadata>(_ => specFactory());
     }
-    public static NestedTrueSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+    
+    public static TrueSpecBuilder<TModel, TMetadata> Extend<TModel, TMetadata>(
         SpecBase<TModel, TMetadata> spec)
     {
         spec.ThrowIfNull(nameof(spec));
-        return new NestedTrueSpecBuilder<TModel, TMetadata>(_ => spec);
+        return new TrueSpecBuilder<TModel, TMetadata>(spec);
     }
 }
 

@@ -1,6 +1,6 @@
 ﻿using Karlssberg.Motiv.ChangeFalseMetadata;
 using Karlssberg.Motiv.ChangeMetadataType;
-using Karlssberg.Motiv.ChangeMetadataType.WhenFalse;
+using Karlssberg.Motiv.ChangeMetadataType.YieldWhenFalse;
 using Karlssberg.Motiv.ChangeTrueMetadata;
 
 namespace Karlssberg.Motiv;

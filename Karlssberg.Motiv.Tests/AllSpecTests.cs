@@ -203,17 +203,18 @@ public class AllSpecTests
     [Fact]
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
-        const string expected = "<all booleans are true>(True)";  
+        const string expected = "all are true";  
         var underlyingSpec = Spec
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
 
-        var sut = underlyingSpec
-            .CreateAllSpec("all booleans are true")
-            .WhenTrue(true)
-            .WhenFalse(false);
+        var sut = Spec
+            .Extend(underlyingSpec)
+            .WhenAllTrue(true)
+            .WhenFalse(false)
+            .CreateSpec("all are true");
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -228,10 +229,11 @@ public class AllSpecTests
             "throws",
             new Exception("should be wrapped"));
 
-        var sut = throwingSpec
-            .CreateAllSpec("all booleans are true") 
-            .WhenTrue(results => $"{results.Count()} true")
-            .WhenFalse(results => $"{results.Count()} false");
+        var sut = Spec
+            .Extend(throwingSpec)
+            .WhenAllTrue(results => $"{results.Count()} true")
+            .WhenFalse(results => $"{results.Count()} false")
+            .CreateSpec("all booleans are true");
 
         var act = () => sut.IsSatisfiedBy([model]);
 

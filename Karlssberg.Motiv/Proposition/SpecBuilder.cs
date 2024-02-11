@@ -1,6 +1,6 @@
 ﻿using Karlssberg.Motiv.Proposition.Factories;
-using Karlssberg.Motiv.Proposition.WhenFalse;
-using Karlssberg.Motiv.Proposition.WhenTrue;
+using Karlssberg.Motiv.Proposition.YieldWhenFalse;
+using Karlssberg.Motiv.Proposition.YieldWhenTrue;
 
 namespace Karlssberg.Motiv.Proposition;
 

@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.ChangeMetadataType.WhenFalse;
+﻿namespace Karlssberg.Motiv.ChangeMetadataType.YieldWhenFalse;
 
 public interface IYieldHigherOrderMetadataWhenFalse<TModel, TMetadata, TUnderlyingMetadata>
 {

@@ -1,6 +1,6 @@
 ﻿using Karlssberg.Motiv.Proposition.Factories;
 
-namespace Karlssberg.Motiv.Proposition.WhenFalse;
+namespace Karlssberg.Motiv.Proposition.YieldWhenFalse;
 
 /// <summary>Represents an interface for specifying the behavior when a condition is false.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>

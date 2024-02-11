@@ -2,6 +2,7 @@
 using Karlssberg.Motiv.Any;
 using Karlssberg.Motiv.AtLeast;
 using Karlssberg.Motiv.AtMost;
+using Karlssberg.Motiv.ChangeMetadataType;
 using Karlssberg.Motiv.Range;
 using Karlssberg.Motiv.Exactly;
 
@@ -25,7 +26,7 @@ public static class HigherOrderSpecExtensions
     /// <paramref name="spec" />. Whether the specification is satisfied or not satisfied, the metadata is the aggregate of the
     /// underlying results
     /// </returns>
-    public static SpecBase<IEnumerable<TModel>, TMetadata> ToAnySpec<TModel, TMetadata>(
+    public static SpecBase<IEnumerable<TModel>, TMetadata> CreateAnySpec<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         string? description = null) =>
         new AnySpec<TModel, TMetadata>(spec, description);
@@ -50,7 +51,7 @@ public static class HigherOrderSpecExtensions
         this SpecBase<TModel, TMetadata> spec,
         string? description = null) =>
         new AllSpec<TModel, TMetadata>(spec, description);
-
+    
     /// <summary>
     /// Creates a specification that is satisfied if the underlying specification is satisfied by at least
     /// <paramref name="n" /> models.

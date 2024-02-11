@@ -1,4 +1,4 @@
-﻿using Karlssberg.Motiv.ChangeMetadataType.WhenFalse;
+﻿using Karlssberg.Motiv.ChangeMetadataType.YieldWhenFalse;
 
 namespace Karlssberg.Motiv.ChangeMetadataType;
 

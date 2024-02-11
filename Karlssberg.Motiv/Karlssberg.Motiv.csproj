@@ -20,6 +20,42 @@
             <DependentUpon>IRequireTrueReasonOrMetadata.cs</DependentUpon>
         </Compile>
         <Compile Update="SpecBuilder\Phase1\IYieldMetadataWhenTrue.cs" />
+        <Compile Update="Proposition\NestedMetadataSpecBuilder\NestedFalseMetadataSpecBuilder.cs">
+          <DependentUpon>NestedTrueSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Proposition\NestedMetadataSpecBuilder\NestedMetadataSpecFactory.cs">
+          <DependentUpon>NestedFalseMetadataSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Proposition\NestedMetadataSpecBuilder\NestedFalseReasonsWithDescriptionSpecBuilder.cs">
+          <DependentUpon>NestedTrueSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Proposition\NestedMetadataSpecBuilder\NestedFalseReasonsSpecBuilder.cs">
+          <DependentUpon>NestedTrueSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Proposition\NestedMetadataSpecBuilder\FalseReasonsWithDescriptionSpecBuilder.cs">
+          <DependentUpon>TrueSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Proposition\NestedMetadataSpecBuilder\FalseReasonsSpecBuilder.cs">
+          <DependentUpon>TrueSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Proposition\NestedMetadataSpecBuilder\FalseMetadataSpecBuilder.cs">
+          <DependentUpon>TrueSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Proposition\NestedMetadataSpecBuilder\ReasonWithDescriptionSpecFactory.cs">
+          <DependentUpon>FalseReasonsWithDescriptionSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Proposition\NestedMetadataSpecBuilder\ReasonSpecFactory.cs">
+          <DependentUpon>FalseReasonsSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Proposition\NestedMetadataSpecBuilder\MetadataSpecFactory.cs">
+          <DependentUpon>FalseMetadataSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Proposition\NestedMetadataSpecBuilder\NestedReasonWithDescriptionSpecFactory.cs">
+          <DependentUpon>NestedFalseReasonsWithDescriptionSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Proposition\NestedMetadataSpecBuilder\NestedReasonSpecFactory.cs">
+          <DependentUpon>NestedFalseReasonsSpecBuilder.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>

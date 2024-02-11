@@ -89,7 +89,7 @@ public class SpecTests
             .CreateSpec();
         
         var sut = Spec
-            .Build(underlyingSpec)
+            .Extend(underlyingSpec)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("new spec");

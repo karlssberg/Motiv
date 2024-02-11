@@ -27,7 +27,7 @@ public class AnySpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAnySpec();
+        var sut = underlyingSpec.CreateAnySpec();
         var result = sut.IsSatisfiedBy(models);
 
         result.Satisfied.Should().Be(expected);
@@ -36,17 +36,18 @@ public class AnySpecTests
     [Fact]
     public void Should_provide_a_high_level_description_of_the_specification_when_metadata_is_a_string()
     {
-        const string expected = "<high-level description>(True)";
+        const string expected = "high-level description";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())   
             .WhenFalse(false.ToString())
             .CreateSpec();
 
-        var sut = underlyingSpec
-            .ToAnySpec("high-level description")
-            .WhenTrue(true)
-            .WhenFalse(false);
+        var sut = Spec
+            .Extend(underlyingSpec)
+            .WhenAllTrue(true)
+            .WhenFalse(false)
+            .CreateSpec("high-level description");
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -75,7 +76,7 @@ public class AnySpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAnySpec();
+        var sut = underlyingSpec.CreateAnySpec();
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -105,7 +106,7 @@ public class AnySpecTests
         bool[] models = [first, second, third];
 
         var sut = underlyingSpec
-            .ToAnySpec();
+            .CreateAnySpec();
 
         var result = sut.IsSatisfiedBy(models);
 
@@ -135,7 +136,7 @@ public class AnySpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.ToAnySpec();
+        var sut = underlyingSpec.CreateAnySpec();
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -150,7 +151,7 @@ public class AnySpecTests
             "should always throw",
             new Exception("should be wrapped"));
 
-        var sut = throwingSpec.ToAnySpec();
+        var sut = throwingSpec.CreateAnySpec();
 
         var act = () => sut.IsSatisfiedBy([model]);
 

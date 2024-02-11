@@ -7,6 +7,14 @@ internal class ChangeMetadataSpecFactorySpec<TModel, TMetadata, TUnderlyingMetad
     string description)
     : SpecBase<TModel, TMetadata>
 {
+    internal ChangeMetadataSpecFactorySpec(
+        SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
+        Func<TModel, TMetadata> whenTrue,
+        Func<TModel, TMetadata> whenFalse,
+        string description) : this(_ => underlyingSpec, whenTrue, whenFalse, description)
+    {
+    }
+    
     /// <summary>Gets the description of the specification.</summary>
     public override string Description => description;
 

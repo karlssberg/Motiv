@@ -1,5 +1,5 @@
 ﻿using Karlssberg.Motiv.Proposition.Factories;
-using Karlssberg.Motiv.Proposition.WhenFalse;
+using Karlssberg.Motiv.Proposition.YieldWhenFalse;
 
 namespace Karlssberg.Motiv.Proposition;
 

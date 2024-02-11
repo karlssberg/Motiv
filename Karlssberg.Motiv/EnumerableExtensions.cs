@@ -20,7 +20,7 @@ public static class EnumerableExtensions
     public static BooleanResultBase<TMetadata> Any<TModel, TMetadata>(
         this IEnumerable<TModel> source,
         SpecBase<TModel, TMetadata> spec) =>
-        spec.ToAnySpec().IsSatisfiedBy(source);
+        spec.CreateAnySpec().IsSatisfiedBy(source);
 
     /// <summary>Determines whether all elements in the collection satisfy the specified specification.</summary>
     /// <typeparam name="TModel">The type of the elements in the collection.</typeparam>
@@ -31,7 +31,7 @@ public static class EnumerableExtensions
     public static BooleanResultBase<TMetadata> All<TModel, TMetadata>(
         this IEnumerable<TModel> source,
         SpecBase<TModel, TMetadata> spec) =>
-        spec.ToAnySpec().IsSatisfiedBy(source);
+        spec.CreateAnySpec().IsSatisfiedBy(source);
     
     /// <summary>Returns the source collection if it is not empty; otherwise, returns the specified alternative collection.</summary>
     /// <typeparam name="T">The type of the elements in the collections.</typeparam>
