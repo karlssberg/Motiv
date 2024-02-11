@@ -1,7 +1,5 @@
-﻿using Karlssberg.Motiv.All;
-using Karlssberg.Motiv.Proposition;
+﻿using Karlssberg.Motiv.Proposition;
 using Karlssberg.Motiv.Proposition.NestedMetadataSpecBuilder;
-using Karlssberg.Motiv.Proposition.NestedReasonSpecBuilder;
 using Karlssberg.Motiv.Proposition.YieldWhenTrue;
 
 namespace Karlssberg.Motiv;

@@ -1,6 +1,4 @@
-﻿using Humanizer;
-
-namespace Karlssberg.Motiv.Exactly;
+﻿namespace Karlssberg.Motiv.Exactly;
 
 /// <summary>Represents a boolean result that is satisfied if exactly <c>n</c> underlying results are satisfied.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>

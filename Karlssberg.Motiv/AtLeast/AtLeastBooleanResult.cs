@@ -1,6 +1,4 @@
-﻿using Humanizer;
-
-namespace Karlssberg.Motiv.AtLeast;
+﻿namespace Karlssberg.Motiv.AtLeast;
 
 /// <summary>Represents a boolean result that is satisfied if at least a specified number of operand results are satisfied.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>

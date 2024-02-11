@@ -1,6 +1,4 @@
-﻿using Humanizer;
-
-namespace Karlssberg.Motiv.Range;
+﻿namespace Karlssberg.Motiv.Range;
 
 internal class RangeBooleanResult<TModel, TMetadata>(
     bool isSatisfied,

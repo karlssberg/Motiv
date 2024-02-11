@@ -1,4 +1,5 @@
-﻿using Karlssberg.Motiv.ElseIf;
+﻿using Karlssberg.Motiv.ChangeMetadataType;
+using Karlssberg.Motiv.ElseIf;
 using Karlssberg.Motiv.Proposition;
 using Karlssberg.Motiv.Proposition.YieldWhenTrue;
 
@@ -24,4 +25,16 @@ public static class SpecExtensions
     {
         return new ElseIfSpec<TModel, TMetadata>(antecedent, consequent);
     }
+
+    public static SpecBase<TModel, string> ToSimpleSpec<TModel, TMetadata>(
+        this SpecBase<TModel, TMetadata> underlyingSpec) =>
+        underlyingSpec switch
+        {
+            SpecBase<TModel, string> reasonSpec => reasonSpec,
+            _ => new ChangeMetadataSpec<TModel, string, TMetadata>(
+                underlyingSpec,
+                _ => $"{underlyingSpec.Description} is true",
+                _ => $"{underlyingSpec.Description} is false",
+                underlyingSpec.Description)
+        };
 }

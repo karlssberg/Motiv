@@ -1,6 +1,4 @@
-﻿using Humanizer;
-
-namespace Karlssberg.Motiv.AtMost;
+﻿namespace Karlssberg.Motiv.AtMost;
 
 /// <summary>Represents the result of an "at most" boolean operation with a maximum number of satisfied operands.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
