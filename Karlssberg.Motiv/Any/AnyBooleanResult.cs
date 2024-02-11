@@ -1,6 +1,4 @@
-﻿using Humanizer;
-
-namespace Karlssberg.Motiv.Any;
+﻿namespace Karlssberg.Motiv.Any;
 
 /// <summary>Represents a boolean result that indicates whether any of the operand results are satisfied.</summary>
 /// <typeparam name="TMetadata">The type of the metadata associated with the boolean result.</typeparam>
