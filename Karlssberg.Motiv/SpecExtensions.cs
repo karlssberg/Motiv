@@ -1,7 +1,6 @@
 ﻿using Karlssberg.Motiv.ChangeMetadataType;
 using Karlssberg.Motiv.ElseIf;
-using Karlssberg.Motiv.Proposition;
-using Karlssberg.Motiv.Proposition.FirstOrderSpecBuilders;
+using Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders;
 
 namespace Karlssberg.Motiv;
 

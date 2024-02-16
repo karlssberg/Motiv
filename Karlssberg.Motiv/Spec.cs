@@ -1,7 +1,7 @@
-﻿using Karlssberg.Motiv.Proposition;
-using Karlssberg.Motiv.Proposition.FirstOrderSpecBuilders;
-using Karlssberg.Motiv.Proposition.NestedSpecBuilders;
-using Karlssberg.Motiv.Proposition.SpecBuilders;
+﻿using Karlssberg.Motiv.Propositions;
+using Karlssberg.Motiv.Propositions.CompositeSpecBuilders;
+using Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders;
+using Karlssberg.Motiv.Propositions.NestedSpecBuilders;
 
 namespace Karlssberg.Motiv;
 

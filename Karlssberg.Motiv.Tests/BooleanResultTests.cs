@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using Karlssberg.Motiv.Proposition;
+using Karlssberg.Motiv.Propositions;
 
 namespace Karlssberg.Motiv.Tests;
 
