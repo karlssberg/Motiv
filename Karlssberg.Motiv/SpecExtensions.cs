@@ -15,7 +15,7 @@ public static class SpecExtensions
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <param name="predicate">The predicate function.</param>
     /// <returns>A new instance of SpecBuilder initialized with the specified predicate.</returns>
-    public static YieldReasonOrMetadataWhenTrue<TModel> ToSpec<TModel>(this Func<TModel, bool> predicate) =>
+    public static TrueFirstOrderSpecBuilder<TModel> ToSpec<TModel>(this Func<TModel, bool> predicate) =>
         new (predicate);
     
     public static SpecBase<TModel, TMetadata> ElseIf<TModel, TMetadata>(
@@ -24,16 +24,4 @@ public static class SpecExtensions
     {
         return new ElseIfSpec<TModel, TMetadata>(antecedent, consequent);
     }
-
-    public static SpecBase<TModel, string> ToSimpleSpec<TModel, TMetadata>(
-        this SpecBase<TModel, TMetadata> underlyingSpec) =>
-        underlyingSpec switch
-        {
-            SpecBase<TModel, string> reasonSpec => reasonSpec,
-            _ => new ChangeMetadataSpec<TModel, string, TMetadata>(
-                underlyingSpec,
-                _ => $"{underlyingSpec.Description} is true",
-                _ => $"{underlyingSpec.Description} is false",
-                underlyingSpec.Description)
-        };
 }

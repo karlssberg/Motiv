@@ -2,22 +2,22 @@
 using Karlssberg.Motiv.Propositions.CompositeSpecBuilders.Reasons;
 using Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders;
 
-namespace Karlssberg.Motiv.Propositions.CompositeSpecBuilders;
+namespace Karlssberg.Motiv.Propositions;
 
-public readonly struct TrueSpecBuilder<TModel, TUnderlyingMetadata>(
+public readonly struct SpecBuilder<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec)
 {
-    public FalseMetadataSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(TMetadata whenTrue) =>
+    public FalseMetadataCompositeSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(TMetadata whenTrue) =>
         new(spec, _ => whenTrue);
 
-    public FalseMetadataSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+    public FalseMetadataCompositeSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<TModel, TMetadata> whenTrue) =>
         new(spec, whenTrue);
 
-    public FalseReasonsWithDescriptionSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
+    public FalseReasonsWithDescriptionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
         new(spec, _ => trueBecause, trueBecause);
 
-    public FalseReasonsSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(Func<TModel, string> trueBecause) =>
+    public FalseReasonsCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(Func<TModel, string> trueBecause) =>
         new(spec, trueBecause);
     
     public TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> As(

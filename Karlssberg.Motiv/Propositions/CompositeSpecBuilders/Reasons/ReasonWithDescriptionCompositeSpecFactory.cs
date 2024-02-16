@@ -1,9 +1,9 @@
 ﻿using Karlssberg.Motiv.ChangeMetadataType;
 
-namespace Karlssberg.Motiv.Propositions.NestedSpecBuilders.Reasons;
+namespace Karlssberg.Motiv.Propositions.CompositeSpecBuilders.Reasons;
 
-public readonly struct NestedReasonWithDescriptionSpecFactory<TModel, TUnderlyingMetadata>(
-    Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate,
+public readonly struct ReasonWithDescriptionCompositeSpecFactory<TModel, TUnderlyingMetadata>(
+    SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,
     string candidateDescription)
@@ -15,8 +15,8 @@ public readonly struct NestedReasonWithDescriptionSpecFactory<TModel, TUnderlyin
         CreateSpecInternal(description.ThrowIfNullOrWhitespace(nameof(description)));
 
     private SpecBase<TModel, string> CreateSpecInternal(string description) =>
-        new ChangeMetadataSpecFactorySpec<TModel, string, TUnderlyingMetadata>(
-            specPredicate,
+        new CompositeSpecFactorySpec<TModel, string, TUnderlyingMetadata>(
+            spec,
             trueBecause,
             falseBecause,
             description);

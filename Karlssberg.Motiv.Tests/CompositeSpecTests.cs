@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv.Tests;
 
-public class ChangeMetadataSpecTests
+public class CompositeSpecTests
 {
     [InlineAutoData(true, "true after - A", "true after + model - B", "true after - C", "true after + model - D")]
     [InlineAutoData(false, "false after - A", "false after - B", "false after + model - C", "false after + model - D")]

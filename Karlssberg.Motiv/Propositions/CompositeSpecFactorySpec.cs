@@ -1,13 +1,15 @@
-﻿namespace Karlssberg.Motiv.ChangeMetadataType;
+﻿using Karlssberg.Motiv.ChangeMetadataType;
 
-internal class ChangeMetadataSpecFactorySpec<TModel, TMetadata, TUnderlyingMetadata>(
+namespace Karlssberg.Motiv.Propositions;
+
+internal class CompositeSpecFactorySpec<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> underlyingSpecFactory,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse,
     string description)
     : SpecBase<TModel, TMetadata>
 {
-    internal ChangeMetadataSpecFactorySpec(
+    internal CompositeSpecFactorySpec(
         SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
         Func<TModel, TMetadata> whenTrue,
         Func<TModel, TMetadata> whenFalse,

@@ -1,7 +1,7 @@
 ﻿using Karlssberg.Motiv.Propositions;
+using Karlssberg.Motiv.Propositions.CompositeFactorySpecBuilders;
 using Karlssberg.Motiv.Propositions.CompositeSpecBuilders;
 using Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders;
-using Karlssberg.Motiv.Propositions.NestedSpecBuilders;
 
 namespace Karlssberg.Motiv;
 
@@ -122,35 +122,35 @@ public class Spec<TModel> : SpecBase<TModel, string>
 public static class Spec
 {
     // Builds a specification with a predicate function.
-    public static YieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<TModel, bool> predicate)
+    public static TrueFirstOrderSpecBuilder<TModel> Build<TModel>(Func<TModel, bool> predicate)
     {
         predicate.ThrowIfNull(nameof(predicate));
-        return new YieldReasonOrMetadataWhenTrue<TModel>(predicate);
+        return new TrueFirstOrderSpecBuilder<TModel>(predicate);
     }
-    public static YieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<bool> predicate)
+    public static TrueFirstOrderSpecBuilder<TModel> Build<TModel>(Func<bool> predicate)
     {
         predicate.ThrowIfNull(nameof(predicate));
-        return new YieldReasonOrMetadataWhenTrue<TModel>(_ => predicate());
+        return new TrueFirstOrderSpecBuilder<TModel>(_ => predicate());
     }
     
-    public static NestedTrueSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+    public static TrueCompositeFactorySpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         Func<TModel, SpecBase<TModel, TMetadata>> specFactory)
     {
         specFactory.ThrowIfNull(nameof(specFactory));
-        return new NestedTrueSpecBuilder<TModel, TMetadata>(specFactory);
+        return new TrueCompositeFactorySpecBuilder<TModel, TMetadata>(specFactory);
     }
-    public static NestedTrueSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+    public static TrueCompositeFactorySpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         Func<SpecBase<TModel, TMetadata>> specFactory)
     {
         specFactory.ThrowIfNull(nameof(specFactory));
-        return new NestedTrueSpecBuilder<TModel, TMetadata>(_ => specFactory());
+        return new TrueCompositeFactorySpecBuilder<TModel, TMetadata>(_ => specFactory());
     }
     
-    public static TrueSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+    public static SpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         SpecBase<TModel, TMetadata> spec)
     {
         spec.ThrowIfNull(nameof(spec));
-        return new TrueSpecBuilder<TModel, TMetadata>(spec);
+        return new SpecBuilder<TModel, TMetadata>(spec);
     }
 }
 

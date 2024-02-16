@@ -3,6 +3,7 @@ using Karlssberg.Motiv.ChangeMetadataType;
 using Karlssberg.Motiv.ChangeModelType;
 using Karlssberg.Motiv.Not;
 using Karlssberg.Motiv.Or;
+using Karlssberg.Motiv.Propositions;
 using Karlssberg.Motiv.XOr;
 
 namespace Karlssberg.Motiv;
@@ -122,7 +123,7 @@ public abstract class SpecBase<TModel, TMetadata>
     
     
     public static implicit operator SpecBase<TModel, string>(SpecBase<TModel, TMetadata> spec) =>
-        new ChangeMetadataSpec<TModel, string, TMetadata>(
+        new CompositeSpec<TModel, string, TMetadata>(
             spec,
             _ => $"'{spec.Description}' is true",
             _ =>  $"'{spec.Description}' is false",

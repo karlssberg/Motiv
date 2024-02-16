@@ -2,13 +2,13 @@
 
 namespace Karlssberg.Motiv.Propositions.CompositeSpecBuilders.Metadata;
 
-public readonly struct MetadataSpecFactory<TModel, TMetadata, TUnderlyingMetadata>(
+public readonly struct MetadataCompositeSpecFactory<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse)
 {
     public SpecBase<TModel, TMetadata> CreateSpec(string description) =>
-        new ChangeMetadataSpecFactorySpec<TModel, TMetadata, TUnderlyingMetadata>(
+        new CompositeSpecFactorySpec<TModel, TMetadata, TUnderlyingMetadata>(
             spec,
             whenTrue,
             whenFalse,

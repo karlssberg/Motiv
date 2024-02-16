@@ -2,7 +2,7 @@
 
 /// <summary>Represents an interface for specifying the behavior when a condition is false.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-public readonly struct YieldReasonWhenFalse<TModel>(
+public readonly struct FalseReasonFirstOrderSpecBuilder<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
     string description)
@@ -10,10 +10,10 @@ public readonly struct YieldReasonWhenFalse<TModel>(
     /// <summary>Specifies the behavior when the condition is false.</summary>
     /// <param name="falseBecause">The metadata associated with the condition.</param>
     /// <returns>The specification with the specified metadata.</returns>
-    public ReasonSpecFactory<TModel> WhenFalse(string falseBecause)
+    public ReasonFirstOrderSpecFactory<TModel> WhenFalse(string falseBecause)
     {
         falseBecause.ThrowIfNullOrWhitespace(nameof(falseBecause));
-        return new ReasonSpecFactory<TModel>(
+        return new ReasonFirstOrderSpecFactory<TModel>(
             predicate,
             trueBecause, 
             _ => falseBecause, 
@@ -26,10 +26,10 @@ public readonly struct YieldReasonWhenFalse<TModel>(
     ///     predicate returned false.
     /// </param>
     /// <returns>A specification base.</returns>
-    public ReasonSpecFactory<TModel> WhenFalse(Func<TModel, string> falseBecause)
+    public ReasonFirstOrderSpecFactory<TModel> WhenFalse(Func<TModel, string> falseBecause)
     {
         falseBecause.ThrowIfNull(nameof(falseBecause));
-        return new ReasonSpecFactory<TModel>(
+        return new ReasonFirstOrderSpecFactory<TModel>(
             predicate, 
             trueBecause,
             falseBecause,

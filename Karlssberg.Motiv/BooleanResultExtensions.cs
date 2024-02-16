@@ -39,13 +39,4 @@ public static class BooleanResultExtensions
         booleanResultBase
             .GetMetadata(new DeepMetadataVisitor<string>())
             .Distinct();
-    
-    internal static IEnumerable<TModel> GetModelsWhere<TModel, TMetadata>(
-        this IEnumerable<BooleanResult<TModel, TMetadata>> underlyingResults, 
-        Func<BooleanResult<TModel, TMetadata>, bool> filter)
-    {
-        return underlyingResults
-            .Where(filter)
-            .Select(result => result.Model);
-    }
 }

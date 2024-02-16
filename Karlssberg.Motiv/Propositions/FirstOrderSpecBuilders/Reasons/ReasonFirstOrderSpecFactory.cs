@@ -3,7 +3,7 @@
 /// <summary>Represents an interface for building a specifcation.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata"></typeparam>
-public readonly struct ReasonSpecFactory<TModel>(
+public readonly struct ReasonFirstOrderSpecFactory<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,
