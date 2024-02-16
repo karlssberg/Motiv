@@ -13,7 +13,7 @@ internal class CausalSpec<TModel>(
     public override string Description => description;
 
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
-        WrapException.IfIsSatisfiedByInvocationFails(
+        WrapException.IfIsSatisfiedByMethodFails(
             this,
             () =>
             {

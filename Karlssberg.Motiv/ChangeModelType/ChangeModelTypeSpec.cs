@@ -12,7 +12,7 @@ internal sealed class ChangeModelTypeSpec<TParentModel, TModel, TMetadata>(
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TParentModel model)
     {
-        return WrapException.IfIsSatisfiedByInvocationFails(
+        return WrapException.IfIsSatisfiedByMethodFails(
             _spec,
             () => _spec.IsSatisfiedBy(_modelSelector(model)));
     }

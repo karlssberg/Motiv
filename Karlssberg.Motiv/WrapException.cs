@@ -4,12 +4,12 @@ namespace Karlssberg.Motiv;
 
 internal static class WrapException
 {
-    internal static TResult IfIsSatisfiedByInvocationFails<TModel, TMetadata, TResult>(
+    internal static TResult IfIsSatisfiedByMethodFails<TModel, TMetadata, TResult>(
         SpecBase<TModel, TMetadata> spec,
         Func<TResult> func) =>
-        IfIsSatisfiedByInvocationFails<TModel, object?, TMetadata, object?, TResult>(spec, null, func);
+        IfIsSatisfiedByMethodFails<TModel, object?, TMetadata, object?, TResult>(spec, null, func);
 
-    internal static TResult IfIsSatisfiedByInvocationFails<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata, TResult>(
+    internal static TResult IfIsSatisfiedByMethodFails<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata, TResult>(
         SpecBase<TModel, TMetadata> spec,
         SpecBase<TUnderlyingModel, TUnderlyingMetadata>? underlyingSpecification,
         Func<TResult> func)
