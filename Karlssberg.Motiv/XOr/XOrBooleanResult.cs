@@ -29,12 +29,12 @@ public sealed class XOrBooleanResult<TMetadata> : BooleanResultBase<TMetadata>
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => [LeftOperandResult, RightOperandResult];
 
     /// <summary>Gets the determinative operand results.</summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults;
+    public override IEnumerable<BooleanResultBase<TMetadata>> Causes => UnderlyingResults;
 
     /// <summary>Gets the description of the XOR operation.</summary>
     public override string Description => $"({LeftOperandResult}) XOR:{IsSatisfiedDisplayText} ({RightOperandResult})";
 
     /// <summary>Gets the reasons for the XOR operation result.</summary>
-    public override IEnumerable<Reason> ReasonHierarchy => DeterminativeOperands
+    public override IEnumerable<Reason> ReasonHierarchy => Causes
         .SelectMany(result => result.ReasonHierarchy);
 }

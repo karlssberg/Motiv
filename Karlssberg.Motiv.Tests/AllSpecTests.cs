@@ -27,10 +27,11 @@ public class AllSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec
-            .CreateAllSpec("all booleans are true")
-            .Yield((allSatisfied, results) =>
-                $"{results.Count(result => result == allSatisfied)} are {allSatisfied.ToString().ToLowerInvariant()}");
+        var sut = Spec
+            .Build(underlyingSpec).AsAllSatisfied()
+            .WhenTrue(results => $"{results.Count()} are true")
+            .WhenFalse(results => $"{results.Count()} are false")
+            .CreateSpec("all are true");
 
         var result = sut.IsSatisfiedBy(models);
 
@@ -38,14 +39,14 @@ public class AllSpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "ALL{0/3}:false(false x3)")]
-    [InlineAutoData(false, false, true, "ALL{1/3}:false(false x2)")]
-    [InlineAutoData(false, true, false, "ALL{1/3}:false(false x2)")]
-    [InlineAutoData(false, true, true, "ALL{2/3}:false(false)")]
-    [InlineAutoData(true, false, false, "ALL{1/3}:false(false x2)")]
-    [InlineAutoData(true, false, true, "ALL{2/3}:false(false)")]
-    [InlineAutoData(true, true, false, "ALL{2/3}:false(false)")]
-    [InlineAutoData(true, true, true, "ALL{3/3}:true(true x3)")]
+    [InlineAutoData(false, false, false, "<all are true>{0/3}:false(false x3)")]
+    [InlineAutoData(false, false, true, "<all are true>{1/3}:false(false x2)")]
+    [InlineAutoData(false, true, false, "<all are true>{1/3}:false(false x2)")]
+    [InlineAutoData(false, true, true, "<all are true>{2/3}:false(false x1)")]
+    [InlineAutoData(true, false, false, "<all are true>{1/3}:false(false x2)")]
+    [InlineAutoData(true, false, true, "<all are true>{2/3}:false(false x1)")]
+    [InlineAutoData(true, true, false, "<all are true>{2/3}:false(false x1)")]
+    [InlineAutoData(true, true, true, "<all are true>{3/3}:true(true x3)")]
     public void Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -58,23 +59,26 @@ public class AllSpecTests
             .WhenFalse(false.ToString().ToLowerInvariant())
             .CreateSpec();
 
-        bool[] models = [first, second, third];
-
-        var sut = underlyingSpec.CreateAllSpec("all booleans are true");
-        var result = sut.IsSatisfiedBy(models);
+        var sut = Spec
+            .Build(underlyingSpec).AsAllSatisfied()
+            .WhenTrue(results => results.Metadata)
+            .WhenFalse(results => results.Metadata)
+            .CreateSpec("all are true");
+        
+        var result = sut.IsSatisfiedBy([first, second, third]);
 
         result.Description.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "ALL{0/3}:false(false x3)")]
-    [InlineAutoData(false, false, true, "ALL{1/3}:false(false x2)")]
-    [InlineAutoData(false, true, false, "ALL{1/3}:false(false x2)")]
-    [InlineAutoData(false, true, true, "ALL{2/3}:false(false)")]
-    [InlineAutoData(true, false, false, "ALL{1/3}:false(false x2)")]
-    [InlineAutoData(true, false, true, "ALL{2/3}:false(false)")]
-    [InlineAutoData(true, true, false, "ALL{2/3}:false(false)")]
-    [InlineAutoData(true, true, true, "ALL{3/3}:true(true x3)")]
+    [InlineAutoData(false, false, false, "<all are true>{0/3}:false(false x3)")]
+    [InlineAutoData(false, false, true, "<all are true>{1/3}:false(false x2)")]
+    [InlineAutoData(false, true, false, "<all are true>{1/3}:false(false x2)")]
+    [InlineAutoData(false, true, true, "<all are true>{2/3}:false(false x1)")]
+    [InlineAutoData(true, false, false, "<all are true>{1/3}:false(false x2)")]
+    [InlineAutoData(true, false, true, "<all are true>{2/3}:false(false x1)")]
+    [InlineAutoData(true, true, false, "<all are true>{2/3}:false(false x1)")]
+    [InlineAutoData(true, true, true, "<all are true>{3/3}:true(true x3)")]
     public void
         Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
             bool first,
@@ -87,25 +91,28 @@ public class AllSpecTests
             .WhenTrue(true.ToString().ToLowerInvariant())
             .WhenFalse(false.ToString().ToLowerInvariant())
             .CreateSpec();
-        ;
 
-        bool[] models = [first, second, third];
+        var sut = Spec
+            .Build(underlyingSpec).AsAllSatisfied()
+            .WhenTrue(results => results.Metadata)
+            .WhenFalse(results => results.Metadata)
+            .CreateSpec("all are true");
+        
 
-        var sut = underlyingSpec.CreateAllSpec("all booleans are true");
-        var result = sut.IsSatisfiedBy(models);
+        var result = sut.IsSatisfiedBy([first, second, third]);
 
         result.Description.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "ALL{0/3}:false(model is false x3)")]
-    [InlineAutoData(false, false, true, "ALL{1/3}:false(model is false x2)")]
-    [InlineAutoData(false, true, false, "ALL{1/3}:false(model is false x2)")]
-    [InlineAutoData(false, true, true, "ALL{2/3}:false(model is false)")]
-    [InlineAutoData(true, false, false, "ALL{1/3}:false(model is false x2)")]
-    [InlineAutoData(true, false, true, "ALL{2/3}:false(model is false)")]
-    [InlineAutoData(true, true, false, "ALL{2/3}:false(model is false)")]
-    [InlineAutoData(true, true, true, "ALL{3/3}:true(model is true x3)")]
+    [InlineAutoData(false, false, false, "<all are true>{0/3}:false('model' is false x3)")]
+    [InlineAutoData(false, false, true, "<all are true>{1/3}:false('model' is false x2)")]
+    [InlineAutoData(false, true, false, "<all are true>{1/3}:false('model' is false x2)")]
+    [InlineAutoData(false, true, true, "<all are true>{2/3}:false('model' is false x1)")]
+    [InlineAutoData(true, false, false, "<all are true>{1/3}:false('model' is false x2)")]
+    [InlineAutoData(true, false, true, "<all are true>{2/3}:false('model' is false x1)")]
+    [InlineAutoData(true, true, false, "<all are true>{2/3}:false('model' is false x1)")]
+    [InlineAutoData(true, true, true, "<all are true>{3/3}:true('model' is true x3)")]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
         bool second,
@@ -118,24 +125,28 @@ public class AllSpecTests
             .WhenFalse(false)
             .CreateSpec("model");
 
-        bool[] models = [first, second, third];
-
-        var sut = underlyingSpec.CreateAllSpec("all booleans are true");
-        var result = sut.IsSatisfiedBy(models);
+        var sut = Spec
+            .Build(underlyingSpec)
+            .AsAllSatisfied()
+            .WhenTrue(results => results.Metadata)
+            .WhenFalse(results => results.Metadata)
+            .CreateSpec("all are true");
+        
+        var result = sut.IsSatisfiedBy([first, second, third]);
 
         result.Description.Should().Be(expected);
     }
 
 
     [Theory]
-    [InlineAutoData(false, false, false, "ALL{0/3}:false(left is false x3 and right is false x3)")]
-    [InlineAutoData(false, false, true, "ALL{1/3}:false(left is false x2 and right is false x2)")]
-    [InlineAutoData(false, true, false, "ALL{1/3}:false(left is false x2 and right is false x2)")]
-    [InlineAutoData(false, true, true, "ALL{2/3}:false(left is false and right is false)")]
-    [InlineAutoData(true, false, false, "ALL{1/3}:false(left is false x2 and right is false x2)")]
-    [InlineAutoData(true, false, true, "ALL{2/3}:false(left is false and right is false)")]
-    [InlineAutoData(true, true, false, "ALL{2/3}:false(left is false and right is false)")]
-    [InlineAutoData(true, true, true, "ALL{3/3}:true(left is true x3 and right is true x3)")]
+    [InlineAutoData(false, false, false, "<all are true>{0/3}:false('left' is false x3, 'right' is false x3)")]
+    [InlineAutoData(false, false, true, "<all are true>{1/3}:false('left' is false x2, 'right' is false x2)")]
+    [InlineAutoData(false, true, false, "<all are true>{1/3}:false('left' is false x2, 'right' is false x2)")]
+    [InlineAutoData(false, true, true, "<all are true>{2/3}:false('left' is false x1, 'right' is false x1)")]
+    [InlineAutoData(true, false, false, "<all are true>{1/3}:false('left' is false x2, 'right' is false x2)")]
+    [InlineAutoData(true, false, true, "<all are true>{2/3}:false('left' is false x1, 'right' is false x1)")]
+    [InlineAutoData(true, true, false, "<all are true>{2/3}:false('left' is false x1, 'right' is false x1)")]
+    [InlineAutoData(true, true, true, "<all are true>{3/3}:true('left' is true x3, 'right' is true x3)")]
     public void Should_serialize_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,
@@ -154,11 +165,14 @@ public class AllSpecTests
             .WhenFalse(false)
             .CreateSpec("right");
 
-        var underlyingSpec = underlyingSpecLeft & underlyingSpecRight;
+        var sut = Spec 
+            .Build(underlyingSpecLeft & underlyingSpecRight)
+            .AsAllSatisfied()
+            .WhenTrue(results => results.Metadata)
+            .WhenFalse(results => results.Metadata)
+            .CreateSpec("all are true");
 
         bool[] models = [first, second, third];
-
-        var sut = underlyingSpec.CreateAllSpec("all booleans are true");
         var result = sut.IsSatisfiedBy(models);
 
         result.Description.Should().Be(expected);
@@ -174,8 +188,12 @@ public class AllSpecTests
             .WhenFalse(false.ToString())
             .CreateSpec("is true or false");
 
-        var sut = underlyingSpec
-            .CreateAllSpec("all booleans are true");
+        var sut = Spec
+            .Build(underlyingSpec)
+            .AsAllSatisfied()
+            .WhenTrue(results => $"{results.Count()} true")
+            .WhenFalse(results => $"{results.Count()} false")
+            .CreateSpec("all booleans are true");
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -191,10 +209,11 @@ public class AllSpecTests
             .WhenFalse(false.ToString())
             .CreateSpec();
 
-        var sut = underlyingSpec
-            .CreateAllSpec("high-level description")
+        var sut = Spec
+            .Build(underlyingSpec).AsAllSatisfied()
             .WhenTrue(true)
-            .WhenFalse(false);
+            .WhenFalse(false)
+            .CreateSpec("high-level description");
 
         sut.Description.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -203,16 +222,17 @@ public class AllSpecTests
     [Fact]
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
-        const string expected = "all are true";  
+        const string expected = "<all are true>(is true)";  
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
+            .WhenTrue("is true")
+            .WhenFalse("is false")
             .CreateSpec();
 
         var sut = Spec
-            .Extend(underlyingSpec)
-            .WhenAllTrue(true)
+            .Build(underlyingSpec)
+            .AsAllSatisfied()
+            .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("all are true");
 
@@ -230,8 +250,8 @@ public class AllSpecTests
             new Exception("should be wrapped"));
 
         var sut = Spec
-            .Extend(throwingSpec)
-            .WhenAllTrue(results => $"{results.Count()} true")
+            .Build(throwingSpec).AsAllSatisfied()
+            .WhenTrue(results => $"{results.Count()} true")
             .WhenFalse(results => $"{results.Count()} false")
             .CreateSpec("all booleans are true");
 

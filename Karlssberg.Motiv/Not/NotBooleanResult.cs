@@ -18,7 +18,7 @@ internal sealed class NotBooleanResult<TMetadata>(BooleanResultBase<TMetadata> o
         get { yield return operandResult; }
     }
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults;
+    public override IEnumerable<BooleanResultBase<TMetadata>> Causes => UnderlyingResults;
 
     /// <summary>Gets the reasons associated with the operand result.</summary>
     public override IEnumerable<Reason> ReasonHierarchy => OperandResult.ReasonHierarchy;

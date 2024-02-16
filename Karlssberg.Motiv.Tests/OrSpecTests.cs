@@ -36,10 +36,10 @@ public class OrSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, true, "(left is true) OR:true (right is true)")]
-    [InlineAutoData(true, false, "(left is true) OR:true (right is false)")]
-    [InlineAutoData(false, true, "(left is false) OR:true (right is true)")]
-    [InlineAutoData(false, false, "(left is false) OR:false (right is false)")]
+    [InlineAutoData(true, true, "('left' is true) OR:true ('right' is true)")]
+    [InlineAutoData(true, false, "('left' is true) OR:true ('right' is false)")]
+    [InlineAutoData(false, true, "('left' is false) OR:true ('right' is true)")]
+    [InlineAutoData(false, false, "('left' is false) OR:false ('right' is false)")]
     public void Should_serialize_the_result_of_the_or_operation(
         bool leftResult,
         bool rightResult,
@@ -63,7 +63,6 @@ public class OrSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.Should().Be(expected);
-
     }
 
 
@@ -96,7 +95,6 @@ public class OrSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.Should().Be(expected);
-
     }
 
     [Theory]
@@ -127,7 +125,6 @@ public class OrSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.Should().Be(expected);
-
     }
 
     [Theory]

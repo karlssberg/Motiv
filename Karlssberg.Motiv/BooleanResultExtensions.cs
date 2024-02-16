@@ -41,21 +41,11 @@ public static class BooleanResultExtensions
             .Distinct();
     
     internal static IEnumerable<TModel> GetModelsWhere<TModel, TMetadata>(
-        this IEnumerable<BooleanResultWithModel<TModel, TMetadata>> underlyingResults, 
-        Func<BooleanResultWithModel<TModel, TMetadata>, bool> filter)
+        this IEnumerable<BooleanResult<TModel, TMetadata>> underlyingResults, 
+        Func<BooleanResult<TModel, TMetadata>, bool> filter)
     {
         return underlyingResults
             .Where(filter)
             .Select(result => result.Model);
-    }
-
-    public static string SummarizeReasons(this IEnumerable<Reason> reasons)
-    {
-        return reasons
-            .GroupBy(reason => reason)
-            .Select(grouping => grouping.Count() == 1
-                ? $"{grouping.Key}"
-                : $"{grouping.Key} x{grouping.Count()}")
-            .Humanize();
     }
 }

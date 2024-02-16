@@ -38,10 +38,10 @@ public class XOrSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, true, "(left is true) XOR:false (right is true)")]
-    [InlineAutoData(true, false, "(left is true) XOR:true (right is false)")]
-    [InlineAutoData(false, true, "(left is false) XOR:true (right is true)")]
-    [InlineAutoData(false, false, "(left is false) XOR:false (right is false)")]
+    [InlineAutoData(true, true, "('left' is true) XOR:false ('right' is true)")]
+    [InlineAutoData(true, false, "('left' is true) XOR:true ('right' is false)")]
+    [InlineAutoData(false, true, "('left' is false) XOR:true ('right' is true)")]
+    [InlineAutoData(false, false, "('left' is false) XOR:false ('right' is false)")]
     public void Should_serialize_the_result_of_the_xor_operation(
         bool leftResult,
         bool rightResult,

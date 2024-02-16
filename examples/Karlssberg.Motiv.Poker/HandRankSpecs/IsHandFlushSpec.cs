@@ -1,7 +1,7 @@
 ﻿namespace Karlssberg.Motiv.Poker.HandRankSpecs;
 
 public class IsHandFlushSpec() : Spec<Hand, HandRank>(
-    Spec.Extend(Enum.GetValues<Suit>()
+    Spec.Build(Enum.GetValues<Suit>()
             .Select(suit => new HasFiveCardsWithSameSuit(suit))
             .OrTogether())
         .WhenTrue(HandRank.Flush)
@@ -10,11 +10,11 @@ public class IsHandFlushSpec() : Spec<Hand, HandRank>(
         
 
 public class HasFiveCardsWithSameSuit(Suit suit) : Spec<Hand>(
-    new IsSuit(suit)
-        .CreateExactlySpec(5)
+    Spec.Build(new IsSuit(suit)).AsNSatisfied(5)
         .WhenTrue($"a flush of {suit}")
         .WhenFalse($"not a flush of {suit}")
-        .ChangeModel<Hand>(hand => hand.Cards));
+        .CreateSpec($"has 5 {suit} cards")
+        .ChangeModelTo<Hand>(hand => hand.Cards));
         
 
 public class IsSuit(Suit suit) : Spec<Card>(

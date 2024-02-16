@@ -11,7 +11,11 @@ public class DoesHandContainSpecifiedRanksSpec(ICollection<Rank> ranks) : Spec<H
             .WhenFalse($"Is not one of {ranks.Humanize()}")
             .CreateSpec();
 
-        return underlyingSpec
-            .CreateAllSpec($"all cards are either {ranks.Humanize("or")}")
-            .ChangeModel<Hand>(hand => hand.Cards);
+        return Spec
+            .Build(underlyingSpec)
+            .As(results => results.AllTrue())
+            .WhenTrue($"all cards are either {ranks.Humanize("or")}")
+            .WhenFalse(results => results.SelectMany(r => r.Reasons))
+            .CreateSpec()
+            .ChangeModelTo<Hand>(hand => hand.Cards);
     });

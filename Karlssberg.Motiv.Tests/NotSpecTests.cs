@@ -27,8 +27,8 @@ public class NotSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, "NOT:false(underlying spec is true)")]
-    [InlineAutoData(false, "NOT:true(underlying spec is false)")]
+    [InlineAutoData(true, "NOT:false('underlying spec' is true)")]
+    [InlineAutoData(false, "NOT:true('underlying spec' is false)")]
     public void Should_serialize_the_result_of_the_not_operation(
         bool operand,
         string expected,
@@ -45,7 +45,6 @@ public class NotSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.Should().Be(expected);
-
     }
 
     [Theory]

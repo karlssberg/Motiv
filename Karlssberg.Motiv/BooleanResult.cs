@@ -5,7 +5,7 @@
 /// </summary>
 /// <typeparam name="TModel">The type of the associated model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBase<TMetadata>,
+public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetadata>,
     ILogicalOperatorResult<TMetadata>
 {
     /// <summary>
@@ -13,14 +13,14 @@ public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBas
     /// </summary>
     /// <param name="model">The associated model.</param>
     /// <param name="underlyingResult">The underlying boolean result.</param>
-    internal BooleanResultWithModel(
+    internal BooleanResult(
         TModel model,
         BooleanResultBase<TMetadata> underlyingResult)
     {
         Model = model ?? throw new ArgumentNullException(nameof(model));
         UnderlyingResult = underlyingResult ?? throw new ArgumentNullException(nameof(underlyingResult));
         UnderlyingResults = [UnderlyingResult];
-        DeterminativeOperands = [UnderlyingResult];
+        Causes = [UnderlyingResult];
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBas
     public override string Description => UnderlyingResult.Description;
 
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
+    public override IEnumerable<BooleanResultBase<TMetadata>> Causes { get; }
 
     /// <summary>
     /// Gets a value indicating whether the result is satisfied.
@@ -55,7 +55,7 @@ public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBas
     /// <summary>
     /// Gets the determinative results of the composite boolean result.
     /// </summary>
-    IEnumerable<BooleanResultBase<TMetadata>> ILogicalOperatorResult<TMetadata>.DeterminativeOperands =>
+    IEnumerable<BooleanResultBase<TMetadata>> ILogicalOperatorResult<TMetadata>.Causes =>
         [UnderlyingResult];
 
     /// <summary>

@@ -1,4 +1,5 @@
 ﻿using Karlssberg.Motiv.And;
+using Karlssberg.Motiv.ChangeMetadataType;
 using Karlssberg.Motiv.ChangeModelType;
 using Karlssberg.Motiv.Not;
 using Karlssberg.Motiv.Or;
@@ -64,7 +65,7 @@ public abstract class SpecBase<TModel, TMetadata>
     ///     A new specification that represents the same specification but with a different <typeparamref name="TModel" />
     ///     .
     /// </returns>
-    public SpecBase<TNewModel, TMetadata> ChangeModel<TNewModel>(
+    public SpecBase<TNewModel, TMetadata> ChangeModelTo<TNewModel>(
         Func<TNewModel, TModel> childModelSelector) =>
         new ChangeModelTypeSpec<TNewModel, TModel, TMetadata>(this, childModelSelector);
 
@@ -77,7 +78,7 @@ public abstract class SpecBase<TModel, TMetadata>
     ///     A new specification that represents the same specification but with a different <typeparamref name="TModel" />
     ///     .
     /// </returns>
-    public SpecBase<TDerivedModel, TMetadata> ChangeModel<TDerivedModel>()
+    public SpecBase<TDerivedModel, TMetadata> ChangeModelTo<TDerivedModel>()
         where TDerivedModel : TModel =>
         new ChangeModelTypeSpec<TDerivedModel, TModel, TMetadata>(this, model => model);
 
@@ -118,4 +119,12 @@ public abstract class SpecBase<TModel, TMetadata>
     public static SpecBase<TModel, TMetadata> operator !(
         SpecBase<TModel, TMetadata> spec) =>
         spec.Not();
+    
+    
+    public static implicit operator SpecBase<TModel, string>(SpecBase<TModel, TMetadata> spec) =>
+        new ChangeMetadataSpec<TModel, string, TMetadata>(
+            spec,
+            _ => $"'{spec.Description}' is true",
+            _ =>  $"'{spec.Description}' is false",
+            spec.Description);
 }

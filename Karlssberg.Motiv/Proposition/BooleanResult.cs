@@ -30,11 +30,11 @@ public class BooleanResult<TMetadata> : BooleanResultBase<TMetadata>, IPropositi
         Metadata switch
         {
             string reason => reason,
-            _ => $"{_description} is {(Satisfied ? True : False)}"
+            _ => $"'{_description}' is {(Satisfied ? True : False)}"
         };
 
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } = [];
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; } = [];
+    public override IEnumerable<BooleanResultBase<TMetadata>> Causes { get; } = [];
 
     /// <summary>Gets the reasons for the result.</summary>
     public override IEnumerable<Reason> ReasonHierarchy

@@ -20,7 +20,7 @@ internal sealed class OrBooleanResult<TMetadata>(
     ///     Gets the determinative operand results, which are the operand results that have the same satisfaction status
     ///     as the overall result.
     /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands => UnderlyingResults
+    public override IEnumerable<BooleanResultBase<TMetadata>> Causes => UnderlyingResults
         .Where(r => r.Satisfied == Satisfied);
 
     /// <inheritdoc />
@@ -30,6 +30,6 @@ internal sealed class OrBooleanResult<TMetadata>(
     public override string Description => $"({LeftOperandResult}) OR:{IsSatisfiedDisplayText} ({RightOperandResult})";
 
     /// <inheritdoc />
-    public override IEnumerable<Reason> ReasonHierarchy => DeterminativeOperands
+    public override IEnumerable<Reason> ReasonHierarchy => Causes
         .SelectMany(r => r.ReasonHierarchy);
 }

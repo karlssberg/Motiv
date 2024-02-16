@@ -1,6 +1,11 @@
 ﻿namespace Karlssberg.Motiv.Poker.StraightHandSpecs;
 
 public class IsJackHighStraightSpec() : Spec<Hand>(
-    new DoesHandContainSpecifiedRanksSpec([Rank.Jack, Rank.Ten, Rank.Nine, Rank.Eight, Rank.Seven])
+    Spec.Build(new DoesHandContainSpecifiedRanksSpec(JackHighStraight))
         .WhenTrue("is Jack High Straight")
-        .WhenFalse("is Not Jack High Straight"));
+        .WhenFalse("is Not Jack High Straight")
+        .CreateSpec())
+{
+    private static readonly ICollection<Rank> JackHighStraight = 
+        [Rank.Jack, Rank.Ten, Rank.Nine, Rank.Eight, Rank.Seven];
+}

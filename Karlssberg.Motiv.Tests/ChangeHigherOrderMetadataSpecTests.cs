@@ -18,10 +18,12 @@ public class ChangeHigherOrderMetadataSpecTests
             .WhenFalse(i => $"{i} is odd")
             .CreateSpec("is even spec");
 
-        var sut = underlyingSpec
-            .CreateExactlySpec(2, "a pair of even numbers")
+        var sut = Spec
+            .Build(underlyingSpec)
+            .AsNSatisfied(2)
             .WhenTrue("is a pair of even numbers")
-            .WhenFalse("is not a pair of even numbers");
+            .WhenFalse("is not a pair of even numbers")
+            .CreateSpec();
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
         
@@ -37,12 +39,14 @@ public class ChangeHigherOrderMetadataSpecTests
             .WhenFalse("is odd")
             .CreateSpec("is even spec");
 
-        var sut = underlyingSpec
-            .CreateExactlySpec(2, "a pair of even numbers")
-            .WhenTrue((_, _) => "is a pair of even numbers")
-            .WhenFalse((_, _) => "is not a pair of even numbers");
+        var sut = Spec
+            .Build(underlyingSpec)
+            .AsNSatisfied(2)
+            .WhenTrue("is a pair of even numbers")
+            .WhenFalse("is not a pair of even numbers")
+            .CreateSpec();
 
-        sut.Description.Should().Be("<a pair of even numbers>(is even spec)");
+        sut.Description.Should().Be("<is a pair of even numbers>(is even spec)");
     }
 
     [Theory]
@@ -56,20 +60,30 @@ public class ChangeHigherOrderMetadataSpecTests
     [InlineAutoData(false, false, false, "third false yield")]
     public void Should_only_yield_the_most_recent_when_multiple_yields_are_chained(bool first, bool second, bool third, string expected)
     {
-        var underlyingSpec = Spec
+        var underlying = Spec
             .Build<bool>(b => b)
             .WhenTrue("is even")
             .WhenFalse("is odd")
             .CreateSpec("is even spec");
 
-        var sut = underlyingSpec
-            .CreateAllSpec("a pair of even numbers")
-            .WhenTrue((_, _) => "first true yield")
-            .WhenFalse((_, _) => "first false yield")
-            .WhenTrue((_, _) => "second true yield")
-            .WhenFalse((_, _) => "second false yield")
-            .WhenTrue((_, _) => "third true yield")
-            .WhenFalse((_, _) => "third false yield");
+        var firstSpec = Spec  
+            .Build(underlying)
+            .AsAllSatisfied()
+            .WhenTrue("first true yield")
+            .WhenFalse("first false yield")
+            .CreateSpec("first spec");
+            
+        var secondSpec = Spec
+            .Build(firstSpec)
+            .WhenTrue("second true yield")
+            .WhenFalse("second false yield")
+            .CreateSpec("second spec");
+            
+        var sut = Spec
+            .Build(secondSpec)
+            .WhenTrue("third true yield")
+            .WhenFalse("third false yield")
+            .CreateSpec("third spec");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
@@ -93,33 +107,66 @@ public class ChangeHigherOrderMetadataSpecTests
             .WhenFalse("is odd")
             .CreateSpec("is even spec");
 
-        var sut = underlyingSpec
-            .CreateAllSpec("a pair of even numbers")
-            .WhenTrue((_, _) => "first true yield")
-            .WhenFalse((_, _) => "first false yield")
-            .WhenTrue((_, _) => "second true yield")
-            .WhenFalse((_, _) => "second false yield")
-            .WhenTrue((_, _) => "third true yield")
-            .WhenFalse((_, _) => "third false yield");
+        var firstSpec = Spec
+            .Build(underlyingSpec).AsAllSatisfied()
+            .WhenTrue("first true yield")
+            .WhenFalse("first false yield")
+            .CreateSpec("all even");
+            
+        var secondSpec = Spec
+            .Build(firstSpec)
+            .WhenTrue("second true yield")
+            .WhenFalse("second false yield")
+            .CreateSpec("all even");
+            
+        var sut = Spec
+            .Build(secondSpec)
+            .WhenTrue("third true yield")
+            .WhenFalse("third false yield")
+            .CreateSpec("all even");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
         result.GetRootCauses().Should().BeEquivalentTo(expected);
     }
-
-    [Fact]
-    public void Should_allow_regular_true_yield_to_be_used_with_a_higher_order_yield_false()
+    
+    [Theory]
+    [InlineAutoData(2, 4, 6, 8, true, "all even")]
+    [InlineAutoData(2, 4, 6, 9, false, "not all even: 9 is odd")]
+    [InlineAutoData(1, 4, 6, 9, false, "not all even: 1 and 9 are odd")]
+    [InlineAutoData(1, 3, 6, 9, false, "not all even: 1, 3, and 9 are odd")]
+    [InlineAutoData(1, 3, 5, 9, false, "not all even: 1, 3, 5, and 9 are odd")]
+    public void Should_allow_regular_true_yield_to_be_used_with_a_higher_order_yield_false(
+        int first, 
+        int second, 
+        int third,
+        int forth,
+        bool expected,
+        string expectedReason)
     {
         var underlyingSpec = Spec
             .Build<int>(i => i % 2 == 0)
             .WhenTrue(i => $"{i} is even")
             .WhenFalse(i => $"{i} is odd")
             .CreateSpec("is even spec");
-        
-        var sut = underlyingSpec
-            .CreateAllSpec("all even")
-            .WhenTrue("all even")
-            .WhenFalse((_, unsatisfied) => $"not all even, {unsatisfied.Humanize()} are odd");
 
+        var sut = Spec
+            .Build(underlyingSpec)
+            .AsAllSatisfied()
+            .WhenTrue("all even")
+            .WhenFalse(results =>
+            {
+                var serializedModels = results.DeterminativeModels.Humanize();
+                var modelCount = results.DeterminativeModels.Count();
+                var isOrAre = "is".ToQuantity(modelCount, ShowQuantityAs.None);
+                
+                return $"not all even: {serializedModels} {isOrAre} odd";
+            })
+            .CreateSpec();
+
+        var act = sut.IsSatisfiedBy([first, second, third, forth]);
+            
+        act.Reasons.Should().BeEquivalentTo(expectedReason);
+        act.Satisfied.Should().Be(expected);
     }
 }

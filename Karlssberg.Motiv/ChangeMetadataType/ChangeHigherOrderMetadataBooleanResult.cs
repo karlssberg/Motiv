@@ -26,10 +26,10 @@ internal class ChangeHigherOrderMetadataBooleanResult<TMetadata, TUnderlyingResu
             _ => []
         };
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands =>
+    public override IEnumerable<BooleanResultBase<TMetadata>> Causes =>
         underlyingResult switch
         {
-            BooleanResultBase<TMetadata> result => result.DeterminativeOperands,
+            BooleanResultBase<TMetadata> result => result.Causes,
             _ => []
         };
 

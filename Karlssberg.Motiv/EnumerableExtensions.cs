@@ -11,27 +11,54 @@ public static class EnumerableExtensions
         this IEnumerable<SpecBase<TModel, TMetadata>> specifications) =>
         specifications.Aggregate((leftSpec, rightSpec) => leftSpec | rightSpec);
     
-    /// <summary>Determines whether any element in the collection satisfies the specified specification.</summary>
-    /// <typeparam name="TModel">The type of the elements in the collection.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
-    /// <param name="source">The collection to check.</param>
-    /// <param name="spec">The specification to apply.</param>
-    /// <returns>A BooleanResultBase indicating whether any element satisfies the specification.</returns>
-    public static BooleanResultBase<TMetadata> Any<TModel, TMetadata>(
-        this IEnumerable<TModel> source,
-        SpecBase<TModel, TMetadata> spec) =>
-        spec.CreateAnySpec().IsSatisfiedBy(source);
+    public static IEnumerable<string> GetReasonsAtLevel(
+        this IEnumerable<Reason> reasons,
+        int level) => 
+            level switch 
+            {
+                0 => reasons.Select(reason => reason.Description),
+                _ => reasons
+                    .SelectMany(reason => reason.UnderlyingReasons)
+                    .GetReasonsAtLevel(level - 1)
+            };
 
-    /// <summary>Determines whether all elements in the collection satisfy the specified specification.</summary>
-    /// <typeparam name="TModel">The type of the elements in the collection.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
-    /// <param name="source">The collection to check.</param>
-    /// <param name="spec">The specification to apply.</param>
-    /// <returns>A BooleanResultBase indicating whether all elements satisfy the specification.</returns>
-    public static BooleanResultBase<TMetadata> All<TModel, TMetadata>(
-        this IEnumerable<TModel> source,
-        SpecBase<TModel, TMetadata> spec) =>
-        spec.CreateAnySpec().IsSatisfiedBy(source);
+    public static IEnumerable<string> GetRootCauseReasons(this IEnumerable<Reason> reasons)
+    {
+        while (true)
+        {
+            var reasonsArray = reasons.ToArray();
+            var underlyingReasons = reasonsArray.SelectMany(r => r.UnderlyingReasons).ToArray();
+            if (!underlyingReasons.Any()) 
+                return reasonsArray.Select(r => r.Description);
+            
+            reasons = underlyingReasons;
+        }
+    }
+
+    public static int CountTrue<TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
+        results.Count(result => result.Satisfied);
+    
+    public static int CountFalse<TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
+        results.Count(result => !result.Satisfied);
+    
+    public static bool AllTrue<TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
+        results.All(result => result.Satisfied);
+    
+    public static bool AllFalse<TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
+        results.All(result => !result.Satisfied);
+    
+    public static bool AnyTrue<TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
+        results.Any(result => result.Satisfied);
+    
+    public static bool AnyFalse<TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
+        results.Any(result => !result.Satisfied);
+    
     
     /// <summary>Returns the source collection if it is not empty; otherwise, returns the specified alternative collection.</summary>
     /// <typeparam name="T">The type of the elements in the collections.</typeparam>

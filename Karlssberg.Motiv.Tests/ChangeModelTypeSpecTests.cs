@@ -15,7 +15,7 @@ public class ChangeModelTypeSpecTests
             .WhenFalse("is not null")
             .CreateSpec();
 
-        var sut = isEmpty.ChangeModel<string?>();
+        var sut = isEmpty.ChangeModelTo<string?>();
 
         var act = sut.IsSatisfiedBy(model);
 
@@ -36,7 +36,7 @@ public class ChangeModelTypeSpecTests
             .WhenFalse("is not value-type")
             .CreateSpec();
 
-        var sut = isValueType.ChangeModel<object>(m => m.GetType());
+        var sut = isValueType.ChangeModelTo<object>(m => m.GetType());
 
         var act = sut.IsSatisfiedBy(model);
 
@@ -49,15 +49,19 @@ public class ChangeModelTypeSpecTests
     [InlineAutoData("h1e234j", false)]
     public void Should_logically_resolve_parent_specification(string model, bool expected)
     {
-        var isLetter = Spec
-            .Build<char>(char.IsLetter)
-            .WhenTrue(ch => $"'{ch}' is a letter")
-            .WhenFalse(ch => $"'{ch}' is not a letter")
-            .CreateSpec("is a letter");
+        var isLetter = 
+            Spec.Build<char>(char.IsLetter)
+                .WhenTrue(ch => $"'{ch}' is a letter")
+                .WhenFalse(ch => $"'{ch}' is not a letter")
+                .CreateSpec("is a letter");
 
-        var isAllLetters = isLetter
-            .CreateAllSpec("all characters are letters")
-            .ChangeModel<string>(m => m.ToCharArray());
+        var isAllLetters = 
+            Spec.Build(isLetter)
+                .As(result => result.AllTrue())
+                .WhenTrue("all characters are letters")
+                .WhenFalse(results => results.Reasons)
+                .CreateSpec() 
+                .ChangeModelTo<string>(m => m.ToCharArray());
 
         var act = isAllLetters.IsSatisfiedBy(model);
 
@@ -76,9 +80,12 @@ public class ChangeModelTypeSpecTests
             .WhenFalse(ch => $"'{ch}' is not a letter")
             .CreateSpec("is a letter");
 
-        var isAllLetters = isLetter
-            .CreateAllSpec()
-            .ChangeModel<string>(m => m.ToCharArray());
+        var isAllLetters = Spec
+            .Build(isLetter).AsAllSatisfied()
+            .WhenTrue(results => results.Reasons)
+            .WhenFalse(results => results.Reasons)
+            .CreateSpec("has all letters")
+            .ChangeModelTo<string>(m => m.ToCharArray());
 
         var act = isAllLetters.IsSatisfiedBy(model);
 

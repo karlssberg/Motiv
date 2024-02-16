@@ -21,21 +21,29 @@ public class ChangeMetadataSpecTests
             .WhenFalse("false before")
             .CreateSpec();
 
-        var firstSpec = underlying
+        var firstSpec = Spec
+            .Build(underlying)
             .WhenTrue("true after - A")
-            .WhenFalse("false after - A");
+            .WhenFalse("false after - A")
+            .CreateSpec();
 
-        var secondSpec = underlying
+        var secondSpec = Spec
+            .Build(underlying)
             .WhenTrue(model => $"true after + {model} - B")
-            .WhenFalse("false after - B");
+            .WhenFalse("false after - B")
+            .CreateSpec("true after + model - B");
 
-        var thirdSpec = underlying
+        var thirdSpec = Spec
+            .Build(underlying)
             .WhenTrue("true after - C")
-            .WhenFalse(model => $"false after + {model} - C");
+            .WhenFalse(model => $"false after + {model} - C")
+            .CreateSpec();
 
-        var fourthSpec = underlying
+        var fourthSpec = Spec
+            .Build(underlying)
             .WhenTrue(model => $"true after + {model} - D")
-            .WhenFalse(model => $"false after + {model} - D");
+            .WhenFalse(model => $"false after + {model} - D")
+            .CreateSpec("true after + model - D");
 
         var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
@@ -65,25 +73,25 @@ public class ChangeMetadataSpecTests
             .CreateSpec();
 
         var firstSpec = Spec
-            .Extend(underlying)
+            .Build(underlying)
             .WhenTrue(1)
             .WhenFalse(2)
             .CreateSpec("first spec");
 
         var secondSpec = Spec
-            .Extend(underlying)
+            .Build(underlying)
             .WhenTrue(model => 3)
             .WhenFalse(4)
             .CreateSpec("second spec");
 
         var thirdSpec = Spec
-            .Extend(underlying)
+            .Build(underlying)
             .WhenTrue(5)
             .WhenFalse(model => 6)
             .CreateSpec("third spec");
 
         var fourthSpec = Spec
-            .Extend(underlying)
+            .Build(underlying)
             .WhenTrue(model => 7)
             .WhenFalse(model => 8)
             .CreateSpec("fourth spec");

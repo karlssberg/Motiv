@@ -1,5 +1,5 @@
 ﻿using Karlssberg.Motiv.Proposition;
-using Karlssberg.Motiv.Proposition.NestedMetadataSpecBuilder;
+using Karlssberg.Motiv.Proposition.SpecBuilders;
 using Karlssberg.Motiv.Proposition.YieldWhenTrue;
 
 namespace Karlssberg.Motiv;
@@ -145,7 +145,7 @@ public static class Spec
         return new NestedTrueSpecBuilder<TModel, TMetadata>(_ => specFactory());
     }
     
-    public static TrueSpecBuilder<TModel, TMetadata> Extend<TModel, TMetadata>(
+    public static TrueSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         SpecBase<TModel, TMetadata> spec)
     {
         spec.ThrowIfNull(nameof(spec));

@@ -34,10 +34,10 @@ internal class ChangeFalseMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
             _ => []
         };
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands =>
+    public override IEnumerable<BooleanResultBase<TMetadata>> Causes =>
         booleanResult switch
         {
-            BooleanResultBase<TMetadata> result => result.DeterminativeOperands,
+            BooleanResultBase<TMetadata> result => result.Causes,
             _ => []
         };
 

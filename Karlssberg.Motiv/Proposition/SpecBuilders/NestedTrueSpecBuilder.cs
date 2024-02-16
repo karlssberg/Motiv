@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.Proposition.NestedMetadataSpecBuilder;
+﻿namespace Karlssberg.Motiv.Proposition.SpecBuilders;
 
 /// <summary>Represents a builder for creating specifications based on a predicate.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>

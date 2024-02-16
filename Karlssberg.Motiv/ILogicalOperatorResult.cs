@@ -11,5 +11,5 @@ public interface ILogicalOperatorResult<TMetadata>
     IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
 
     /// <summary>Gets the determinative operand results that have the same satisfaction as the overall result.</summary>
-    IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
+    IEnumerable<BooleanResultBase<TMetadata>> Causes { get; }
 }

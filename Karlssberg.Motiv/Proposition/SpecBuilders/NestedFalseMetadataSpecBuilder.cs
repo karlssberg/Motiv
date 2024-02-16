@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.Proposition.NestedMetadataSpecBuilder;
+﻿namespace Karlssberg.Motiv.Proposition.SpecBuilders;
 
 public readonly struct NestedFalseMetadataSpecBuilder<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate,

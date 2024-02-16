@@ -3,7 +3,7 @@
 namespace Karlssberg.Motiv.Poker.HandRankSpecs;
 
 public class IsHandStraightSpec() : Spec<Hand, HandRank>(() => 
-    Spec.Extend(
+    Spec.Build(
     new IsAceHighStraightBroadwaySpec()
        | new IsKingHighStraightSpec()
        | new IsQueenHighStraightSpec()

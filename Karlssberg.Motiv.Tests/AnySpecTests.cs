@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Humanizer;
 
 namespace Karlssberg.Motiv.Tests;
 
@@ -27,7 +28,11 @@ public class AnySpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec.CreateAnySpec();
+        var sut = Spec.Build(underlyingSpec)
+            .AsAnySatisfied()
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .CreateSpec("any satisfied");
         var result = sut.IsSatisfiedBy(models);
 
         result.Satisfied.Should().Be(expected);
@@ -36,16 +41,17 @@ public class AnySpecTests
     [Fact]
     public void Should_provide_a_high_level_description_of_the_specification_when_metadata_is_a_string()
     {
-        const string expected = "high-level description";
+        const string expected = "<high-level description>(boolean is true)";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
-            .WhenTrue(true.ToString())   
-            .WhenFalse(false.ToString())
+            .WhenTrue("boolean is true")   
+            .WhenFalse("boolean is false")
             .CreateSpec();
 
         var sut = Spec
-            .Extend(underlyingSpec)
-            .WhenAllTrue(true)
+            .Build(underlyingSpec)
+            .AsAnySatisfied()   
+            .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("high-level description");
 
@@ -54,14 +60,14 @@ public class AnySpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "ANY{0/3}:false(model is false x3)")]
-    [InlineAutoData(false, false, true,  "ANY{1/3}:true(model is true)")]
-    [InlineAutoData(false, true, false,  "ANY{1/3}:true(model is true)")]
-    [InlineAutoData(false, true, true,   "ANY{2/3}:true(model is true x2)")]
-    [InlineAutoData(true, false, false,  "ANY{1/3}:true(model is true)")]
-    [InlineAutoData(true, false, true,   "ANY{2/3}:true(model is true x2)")]
-    [InlineAutoData(true, true, false,   "ANY{2/3}:true(model is true x2)")]
-    [InlineAutoData(true, true, true,    "ANY{3/3}:true(model is true x3)")]
+    [InlineAutoData(false, false, false, "<any satisfied>{0/3}:false('model' is false x3)")]
+    [InlineAutoData(false, false, true,  "<any satisfied>{1/3}:true('model' is true x1)")]
+    [InlineAutoData(false, true, false,  "<any satisfied>{1/3}:true('model' is true x1)")]
+    [InlineAutoData(false, true, true,   "<any satisfied>{2/3}:true('model' is true x2)")]
+    [InlineAutoData(true, false, false,  "<any satisfied>{1/3}:true('model' is true x1)")]
+    [InlineAutoData(true, false, true,   "<any satisfied>{2/3}:true('model' is true x2)")]
+    [InlineAutoData(true, true, false,   "<any satisfied>{2/3}:true('model' is true x2)")]
+    [InlineAutoData(true, true, true,    "<any satisfied>{3/3}:true('model' is true x3)")]
     public void Should_serialize_the_result_of_the_any_operation(
         bool first,
         bool second,
@@ -74,23 +80,27 @@ public class AnySpecTests
             .WhenFalse(false)
             .CreateSpec("model");
 
-        bool[] models = [first, second, third];
-
-        var sut = underlyingSpec.CreateAnySpec();
-        var result = sut.IsSatisfiedBy(models);
+        var sut = Spec
+            .Build(underlyingSpec)
+            .AsAnySatisfied()
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .CreateSpec("any satisfied");
+            
+        var result = sut.IsSatisfiedBy([first, second, third]);
 
         result.Description.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "ANY{0/3}:false(False x3)")]
-    [InlineAutoData(false, false, true,  "ANY{1/3}:true(True)")]
-    [InlineAutoData(false, true, false,  "ANY{1/3}:true(True)")]
-    [InlineAutoData(false, true, true,   "ANY{2/3}:true(True x2)")]
-    [InlineAutoData(true, false, false,  "ANY{1/3}:true(True)")]
-    [InlineAutoData(true, false, true,   "ANY{2/3}:true(True x2)")]
-    [InlineAutoData(true, true, false,   "ANY{2/3}:true(True x2)")]
-    [InlineAutoData(true, true, true,    "ANY{3/3}:true(True x3)")]
+    [InlineAutoData(false, false, false, "<all true>{0/3}:false(False x3)")]
+    [InlineAutoData(false, false, true,  "<all true>{1/3}:true(True x1)")]
+    [InlineAutoData(false, true, false,  "<all true>{1/3}:true(True x1)")]
+    [InlineAutoData(false, true, true,   "<all true>{2/3}:true(True x2)")]
+    [InlineAutoData(true, false, false,  "<all true>{1/3}:true(True x1)")]
+    [InlineAutoData(true, false, true,   "<all true>{2/3}:true(True x2)")]
+    [InlineAutoData(true, true, false,   "<all true>{2/3}:true(True x2)")]
+    [InlineAutoData(true, true, true,    "<all true>{3/3}:true(True x3)")]
     public void Should_serialize_the_result_of_the_any_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -105,8 +115,12 @@ public class AnySpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = underlyingSpec
-            .CreateAnySpec();
+        var sut = Spec
+            .Build(underlyingSpec)
+            .AsAnySatisfied()
+            .WhenTrue("all true")
+            .WhenFalse("some false")
+            .CreateSpec();
 
         var result = sut.IsSatisfiedBy(models);
 
@@ -114,14 +128,14 @@ public class AnySpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "ANY{0/3}:false(False x3)")]
-    [InlineAutoData(false, false, true,  "ANY{1/3}:true(True)")]
-    [InlineAutoData(false, true, false,  "ANY{1/3}:true(True)")]
-    [InlineAutoData(false, true, true,   "ANY{2/3}:true(True x2)")]
-    [InlineAutoData(true, false, false,  "ANY{1/3}:true(True)")]
-    [InlineAutoData(true, false, true,   "ANY{2/3}:true(True x2)")]
-    [InlineAutoData(true, true, false,   "ANY{2/3}:true(True x2)")]
-    [InlineAutoData(true, true, true,    "ANY{3/3}:true(True x3)")]
+    [InlineAutoData(false, false, false, "<all true>{0/3}:false(False x3)")]
+    [InlineAutoData(false, false, true,  "<all true>{1/3}:true(True x1)")]
+    [InlineAutoData(false, true, false,  "<all true>{1/3}:true(True x1)")]
+    [InlineAutoData(false, true, true,   "<all true>{2/3}:true(True x2)")]
+    [InlineAutoData(true, false, false,  "<all true>{1/3}:true(True x1)")]
+    [InlineAutoData(true, false, true,   "<all true>{2/3}:true(True x2)")]
+    [InlineAutoData(true, true, false,   "<all true>{2/3}:true(True x2)")]
+    [InlineAutoData(true, true, true,    "<all true>{3/3}:true(True x3)")]
     public void Should_serialize_the_result_of_the_any_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
         bool second,
@@ -132,12 +146,15 @@ public class AnySpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .CreateSpec("is true");
 
-        bool[] models = [first, second, third];
-
-        var sut = underlyingSpec.CreateAnySpec();
-        var result = sut.IsSatisfiedBy(models);
+        var sut = Spec
+            .Build(underlyingSpec)
+            .AsAnySatisfied()
+            .WhenTrue(results => results.Reasons.Humanize())
+            .WhenFalse(results => results.Reasons.Humanize())
+            .CreateSpec("all true");
+        var result = sut.IsSatisfiedBy([first, second, third]);
 
         result.Description.Should().Be(expected);
     }
@@ -151,7 +168,12 @@ public class AnySpecTests
             "should always throw",
             new Exception("should be wrapped"));
 
-        var sut = throwingSpec.CreateAnySpec();
+        var sut = 
+            Spec.Build(throwingSpec)
+                .AsAnySatisfied()
+                .WhenTrue("any true")
+                .WhenFalse("all false")
+                .CreateSpec();
 
         var act = () => sut.IsSatisfiedBy([model]);
 

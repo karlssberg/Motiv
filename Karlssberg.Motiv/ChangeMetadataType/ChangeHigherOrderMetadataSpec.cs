@@ -2,7 +2,7 @@
 
 internal class ChangeHigherOrderMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> higherOrderSpec,
-    Func<bool, IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>> metadataFactory)
+    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<TMetadata>> metadataFactory)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
     /// <summary>Gets the description of the specification.</summary>
@@ -29,6 +29,6 @@ internal class ChangeHigherOrderMetadataSpec<TModel, TMetadata, TUnderlyingMetad
             booleanResult);
     }
 
-    private static BooleanResultWithModel<TModel, TUnderlyingMetadata> CreateBooleanResultWithModel(
+    private static BooleanResult<TModel, TUnderlyingMetadata> CreateBooleanResultWithModel(
         BooleanResultBase<TUnderlyingMetadata> result, TModel model) => new(model, result);
 }

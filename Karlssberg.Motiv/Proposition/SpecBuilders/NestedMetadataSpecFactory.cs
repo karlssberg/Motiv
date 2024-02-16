@@ -1,6 +1,6 @@
 ﻿using Karlssberg.Motiv.ChangeMetadataType;
 
-namespace Karlssberg.Motiv.Proposition.NestedMetadataSpecBuilder;
+namespace Karlssberg.Motiv.Proposition.SpecBuilders;
 
 public readonly struct NestedMetadataSpecFactory<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate,

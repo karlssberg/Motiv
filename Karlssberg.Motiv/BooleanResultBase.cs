@@ -26,7 +26,7 @@ public abstract class BooleanResultBase<TMetadata>
     public abstract string Description { get; }
     
     public abstract IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
-    public abstract IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
+    public abstract IEnumerable<BooleanResultBase<TMetadata>> Causes { get; }
     
     /// <summary>Gets the lowercase display text for true or false states.</summary>
     protected string IsSatisfiedDisplayText => Satisfied ? True : False;

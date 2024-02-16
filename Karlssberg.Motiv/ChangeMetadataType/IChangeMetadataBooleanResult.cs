@@ -20,5 +20,5 @@ public interface IChangeMetadataBooleanResult<TMetadata>
 
     IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
     
-    IEnumerable<BooleanResultBase<TMetadata>> DeterminativeOperands { get; }
+    IEnumerable<BooleanResultBase<TMetadata>> Causes { get; }
 }

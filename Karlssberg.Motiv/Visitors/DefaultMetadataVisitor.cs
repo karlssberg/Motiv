@@ -30,7 +30,7 @@ public class DefaultMetadataVisitor<TMetadata>
             IChangeMetadataBooleanResult<TMetadata> changeMetadataBooleanResult => Visit(changeMetadataBooleanResult),
             IChangeHigherOrderMetadataBooleanResult<TMetadata> changeMetadataBooleanResult => Visit(changeMetadataBooleanResult),
             IPropositionResult<TMetadata> propositionResult => Visit(propositionResult),
-            _ => booleanResultBase.DeterminativeOperands.SelectMany(Visit)
+            _ => booleanResultBase.Causes.SelectMany(Visit)
         };
     }
 
@@ -40,11 +40,11 @@ public class DefaultMetadataVisitor<TMetadata>
     }
 
     public virtual IEnumerable<TMetadata> Visit(ILogicalOperatorResult<TMetadata> logicalOperatorResult) =>
-        Visit(logicalOperatorResult.DeterminativeOperands);
+        Visit(logicalOperatorResult.Causes);
     
     
     public virtual IEnumerable<TMetadata> Visit(IHigherOrderLogicalOperatorResult<TMetadata> logicalOperatorResult) =>
-        Visit(logicalOperatorResult.DeterminativeOperands);
+        Visit(logicalOperatorResult.Causes);
 
     public virtual IEnumerable<TMetadata> Visit(IChangeMetadataBooleanResult<TMetadata> changeMetadataBooleanResult)
     {
