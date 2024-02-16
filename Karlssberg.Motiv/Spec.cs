@@ -1,6 +1,7 @@
 ﻿using Karlssberg.Motiv.Proposition;
+using Karlssberg.Motiv.Proposition.FirstOrderSpecBuilders;
+using Karlssberg.Motiv.Proposition.NestedSpecBuilders;
 using Karlssberg.Motiv.Proposition.SpecBuilders;
-using Karlssberg.Motiv.Proposition.YieldWhenTrue;
 
 namespace Karlssberg.Motiv;
 
@@ -121,15 +122,15 @@ public class Spec<TModel> : SpecBase<TModel, string>
 public static class Spec
 {
     // Builds a specification with a predicate function.
-    public static IYieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<TModel, bool> predicate)
+    public static YieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<TModel, bool> predicate)
     {
         predicate.ThrowIfNull(nameof(predicate));
-        return new SpecBuilder<TModel>(predicate);
+        return new YieldReasonOrMetadataWhenTrue<TModel>(predicate);
     }
-    public static IYieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<bool> predicate)
+    public static YieldReasonOrMetadataWhenTrue<TModel> Build<TModel>(Func<bool> predicate)
     {
         predicate.ThrowIfNull(nameof(predicate));
-        return new SpecBuilder<TModel>(_ => predicate());
+        return new YieldReasonOrMetadataWhenTrue<TModel>(_ => predicate());
     }
     
     public static NestedTrueSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(

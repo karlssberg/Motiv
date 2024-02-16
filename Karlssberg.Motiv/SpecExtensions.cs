@@ -1,7 +1,7 @@
 ﻿using Karlssberg.Motiv.ChangeMetadataType;
 using Karlssberg.Motiv.ElseIf;
 using Karlssberg.Motiv.Proposition;
-using Karlssberg.Motiv.Proposition.YieldWhenTrue;
+using Karlssberg.Motiv.Proposition.FirstOrderSpecBuilders;
 
 namespace Karlssberg.Motiv;
 
@@ -16,8 +16,8 @@ public static class SpecExtensions
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <param name="predicate">The predicate function.</param>
     /// <returns>A new instance of SpecBuilder initialized with the specified predicate.</returns>
-    public static IYieldReasonWhenTrue<TModel> ToSpec<TModel>(this Func<TModel, bool> predicate) =>
-        new SpecBuilder<TModel>(predicate);
+    public static YieldReasonOrMetadataWhenTrue<TModel> ToSpec<TModel>(this Func<TModel, bool> predicate) =>
+        new (predicate);
     
     public static SpecBase<TModel, TMetadata> ElseIf<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> antecedent,
