@@ -20,8 +20,6 @@ public static class SpecExtensions
     
     public static SpecBase<TModel, TMetadata> ElseIf<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> antecedent,
-        SpecBase<TModel, TMetadata> consequent)
-    {
-        return new ElseIfSpec<TModel, TMetadata>(antecedent, consequent);
-    }
+        SpecBase<TModel, TMetadata> consequent) =>
+        new ElseIfSpec<TModel, TMetadata>(antecedent, consequent);
 }
