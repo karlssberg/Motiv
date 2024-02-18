@@ -8,41 +8,54 @@ internal class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
     string description) 
     : BooleanResultBase<TMetadata>
 {
-    public IEnumerable<TMetadata> Metadata => metadataCollection;
+    public override MetadataSet<TMetadata> Metadata => new(metadataCollection);
+        
+    
     public override bool Satisfied => isSatisfied;
+    
     public override string Description => GetFullDescription();
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; } =
+    
+    public override IEnumerable<BooleanResultBase> UnderlyingResults { get; } =
         operandResults switch
         {
             IEnumerable<BooleanResultBase<TMetadata>> results => results,
             _ => Enumerable.Empty<BooleanResultBase<TMetadata>>()
         };
-    
-    public override IEnumerable<BooleanResultBase<TMetadata>> Causes { get; } = causes
-        switch
+
+    public override Explanation Explanation => GetExplanation();
+
+    public override Cause<TMetadata> Cause =>
+        new (Metadata, Explanation.Reasons)
         {
-            IEnumerable<BooleanResultBase<TMetadata>> results => results,
-            _ => Enumerable.Empty<BooleanResultBase<TMetadata>>()
+            Underlying = causes switch
+            {
+                IEnumerable<BooleanResultBase<TMetadata>> results => results.Select(result => result.Cause),
+                _ => Enumerable.Empty<Cause<TMetadata>>()
+            }
         };
-
-
-    public override IEnumerable<Reason> ReasonHierarchy => GetReasonHierarchy();
-
-    private IEnumerable<Reason> GetReasonHierarchy() =>
-        [metadataCollection switch
+    
+    private Explanation GetExplanation()
+    {
+        var underlyingReasons = causes
+            .Select(cause => cause.Explanation);
+        
+        return metadataCollection switch
         {
-            IEnumerable<string> reasons => new Reason(
-                GetShortDescription(reasons),
-                causes.SelectMany(cause => cause.ReasonHierarchy)),
-            _ => new Reason(
-                $"'{description}' is {IsSatisfiedDisplayText}", 
-                causes.SelectMany(cause => cause.ReasonHierarchy))
-        }];
+            IEnumerable<string> reasons => new Explanation(GetShortDescription(reasons))
+            {
+                Underlying = underlyingReasons
+            },
+            _ => new Explanation($"'{description}' is {IsSatisfiedDisplayText()}")
+            {
+                Underlying = underlyingReasons
+            }
+        };
+    }
 
     private string GetShortDescription(IEnumerable<string> reasons) => reasons.Count() switch
     {
         1 => reasons.First(),
-        _ => $"'{description}' is {IsSatisfiedDisplayText}"
+        _ => $"'{description}' is {IsSatisfiedDisplayText()}"
     };
     private string GetFullDescription()
     {
@@ -50,7 +63,7 @@ internal class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
         var total = operandResults.Count();
         var reasons = SummarizeUnderlyingReasons();
         
-        var higherOrderStatement = $"<{description}>{{{trueCount}/{total}}}:{IsSatisfiedDisplayText}";
+        var higherOrderStatement = $"<{description}>{{{trueCount}/{total}}}:{IsSatisfiedDisplayText()}";
         return causes.Any()
             ? $"{higherOrderStatement}({reasons})"
             : higherOrderStatement;
@@ -60,7 +73,7 @@ internal class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
     {
         var summaries = causes
             .OrderByDescending(result => result.Satisfied)
-            .SelectMany(result => result.Reasons)
+            .SelectMany(result => result.Explanation.Reasons)
             .GroupBy(reason => reason)
             .Select(grouping =>
             {
@@ -71,7 +84,7 @@ internal class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             
         return summaries.Length switch
         {
-            0 => "no reason",
+            0 => "",
             1 => summaries.First(),
             _ => string.Join(", ", summaries)
         };

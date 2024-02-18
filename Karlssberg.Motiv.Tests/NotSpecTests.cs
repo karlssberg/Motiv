@@ -23,7 +23,7 @@ public class NotSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(expected);
-        result.GetMetadata().Should().AllBeEquivalentTo(operand);
+        result.Metadata.Should().AllBeEquivalentTo(operand);
     }
 
     [Theory]

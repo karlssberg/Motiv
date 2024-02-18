@@ -57,15 +57,15 @@ public class ExactlySpecTests
             .Build(isEven)
             .AsNSatisfied(2)
             .WhenTrue((results) =>
-                $"{results.DeterminativeModels.Humanize()} are a pair of even numbers")
+                $"{results.CausalModels.Humanize()} are a pair of even numbers")
             .WhenFalse("The pack does not contain exactly a pair of even numbers")
             .CreateSpec("a pair of even numbers");
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
         result.Satisfied.Should().Be(expected);
-        result.ReasonHierarchy.Humanize().Should().Be(expectedShallowReasons);
-        result.ReasonHierarchy.GetRootCauseReasons().Humanize().Should().Be(expectedDeepReason);
+        result.Explanation.Reasons.Humanize().Should().Be(expectedShallowReasons);
+        result.Explanation.DeepReasons.Humanize().Should().Be(expectedDeepReason);
     }
     
     [Theory]

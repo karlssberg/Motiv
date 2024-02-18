@@ -32,9 +32,9 @@ public class XOrSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(expected);
-        result.GetMetadata().Should().HaveCount(leftResult == rightResult ? 1 : 2);
-        result.GetMetadata().Should().Contain(leftResult);
-        result.GetMetadata().Should().Contain(rightResult);
+        result.Metadata.Should().HaveCount(leftResult == rightResult ? 1 : 2);
+        result.Metadata.Should().Contain(leftResult);
+        result.Metadata.Should().Contain(rightResult);
     }
 
     [Theory]

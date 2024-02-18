@@ -27,7 +27,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
         
-        result.Reasons.Should().BeEquivalentTo(expected);
+        result.Explanation.Reasons.Should().BeEquivalentTo(expected);
     }
     
     [Fact]
@@ -87,7 +87,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
-        result.Reasons.Should().BeEquivalentTo(expected);
+        result.Explanation.Reasons.Should().BeEquivalentTo(expected);
     }
     
     [Theory]
@@ -127,7 +127,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
-        result.GetRootCauses().Should().BeEquivalentTo(expected);
+        result.Explanation.DeepReasons.Should().BeEquivalentTo(expected);
     }
     
     [Theory]
@@ -156,8 +156,8 @@ public class ChangeHigherOrderMetadataSpecTests
             .WhenTrue("all even")
             .WhenFalse(results =>
             {
-                var serializedModels = results.DeterminativeModels.Humanize();
-                var modelCount = results.DeterminativeModels.Count();
+                var serializedModels = results.CausalModels.Humanize();
+                var modelCount = results.CausalModels.Count();
                 var isOrAre = "is".ToQuantity(modelCount, ShowQuantityAs.None);
                 
                 return $"not all even: {serializedModels} {isOrAre} odd";
@@ -166,7 +166,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var act = sut.IsSatisfiedBy([first, second, third, forth]);
             
-        act.Reasons.Should().BeEquivalentTo(expectedReason);
+        act.Explanation.Reasons.Should().BeEquivalentTo(expectedReason);
         act.Satisfied.Should().Be(expected);
     }
 }

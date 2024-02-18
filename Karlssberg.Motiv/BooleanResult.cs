@@ -5,8 +5,7 @@
 /// </summary>
 /// <typeparam name="TModel">The type of the associated model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetadata>,
-    ILogicalOperatorResult<TMetadata>
+public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetadata>
 {
     /// <summary>
     /// Initializes a new instance of the BooleanResultWithModel class.
@@ -20,7 +19,6 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
         Model = model ?? throw new ArgumentNullException(nameof(model));
         UnderlyingResult = underlyingResult ?? throw new ArgumentNullException(nameof(underlyingResult));
         UnderlyingResults = [UnderlyingResult];
-        Causes = [UnderlyingResult];
     }
 
     /// <summary>
@@ -38,29 +36,13 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     /// </summary>
     public override string Description => UnderlyingResult.Description;
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults { get; }
-    public override IEnumerable<BooleanResultBase<TMetadata>> Causes { get; }
-
+    public override IEnumerable<BooleanResultBase> UnderlyingResults { get; }
+    public override Explanation Explanation => UnderlyingResult.Explanation;
     /// <summary>
     /// Gets a value indicating whether the result is satisfied.
     /// </summary>
     public override bool Satisfied => UnderlyingResult.Satisfied;
 
-    /// <summary>
-    /// Gets the underlying results of the composite boolean result.
-    /// </summary>
-    IEnumerable<BooleanResultBase<TMetadata>> ILogicalOperatorResult<TMetadata>.UnderlyingResults =>
-        [UnderlyingResult];
-
-    /// <summary>
-    /// Gets the determinative results of the composite boolean result.
-    /// </summary>
-    IEnumerable<BooleanResultBase<TMetadata>> ILogicalOperatorResult<TMetadata>.Causes =>
-        [UnderlyingResult];
-
-    /// <summary>
-    /// Gathers the reasons for the result.
-    /// </summary>
-    /// <value>A collection of reasons.</value>
-    public override IEnumerable<Reason> ReasonHierarchy => UnderlyingResult.ReasonHierarchy;
+    public override MetadataSet<TMetadata> Metadata => UnderlyingResult.Metadata;
+    public override Cause<TMetadata> Cause => UnderlyingResult.Cause;
 }

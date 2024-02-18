@@ -21,7 +21,7 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
         Func<TModel, TMetadata> whenFalse)
     {
         Description = description.ThrowIfNullOrWhitespace(nameof(description));
-        _specFactory = _ => new MetadataSpec<TModel, TMetadata>(
+        _specFactory = _ => new MetadataPropositionalSpec<TModel, TMetadata>(
             description,
             predicate,
             whenTrue,
@@ -80,7 +80,7 @@ public class Spec<TModel> : SpecBase<TModel, string>
         Func<TModel, string> whenFalse)
     {
         Description = description.ThrowIfNullOrWhitespace(nameof(description));
-        _specFactory = _ => new CausalSpec<TModel>(
+        _specFactory = _ => new PropositionalSpec<TModel>(
             description,
             predicate,
             whenTrue,
@@ -139,6 +139,14 @@ public static class Spec
         specFactory.ThrowIfNull(nameof(specFactory));
         return new TrueCompositeFactorySpecBuilder<TModel, TMetadata>(specFactory);
     }
+    
+    public static TrueCompositeFactorySpecBuilder<TModel, string> Build<TModel>(
+        Func<TModel, SpecBase<TModel, string>> specFactory)
+    {
+        specFactory.ThrowIfNull(nameof(specFactory));
+        return new TrueCompositeFactorySpecBuilder<TModel, string>(specFactory);
+    }
+    
     public static TrueCompositeFactorySpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         Func<SpecBase<TModel, TMetadata>> specFactory)
     {
@@ -146,11 +154,25 @@ public static class Spec
         return new TrueCompositeFactorySpecBuilder<TModel, TMetadata>(_ => specFactory());
     }
     
+    public static TrueCompositeFactorySpecBuilder<TModel, string> Build<TModel>(
+        Func<SpecBase<TModel, string>> specFactory)
+    {
+        specFactory.ThrowIfNull(nameof(specFactory));
+        return new TrueCompositeFactorySpecBuilder<TModel, string>(_ => specFactory());
+    }
+    
     public static SpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         SpecBase<TModel, TMetadata> spec)
     {
         spec.ThrowIfNull(nameof(spec));
         return new SpecBuilder<TModel, TMetadata>(spec);
+    }
+    
+    public static SpecBuilder<TModel, string> Build<TModel>(
+        SpecBase<TModel, string> spec)
+    {
+        spec.ThrowIfNull(nameof(spec));
+        return new SpecBuilder<TModel, string>(spec);
     }
 }
 

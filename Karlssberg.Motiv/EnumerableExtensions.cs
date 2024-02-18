@@ -10,30 +10,6 @@ public static class EnumerableExtensions
     public static SpecBase<TModel, TMetadata> OrTogether<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> specifications) =>
         specifications.Aggregate((leftSpec, rightSpec) => leftSpec | rightSpec);
-    
-    public static IEnumerable<string> GetReasonsAtLevel(
-        this IEnumerable<Reason> reasons,
-        int level) => 
-            level switch 
-            {
-                0 => reasons.Select(reason => reason.Description),
-                _ => reasons
-                    .SelectMany(reason => reason.UnderlyingReasons)
-                    .GetReasonsAtLevel(level - 1)
-            };
-
-    public static IEnumerable<string> GetRootCauseReasons(this IEnumerable<Reason> reasons)
-    {
-        while (true)
-        {
-            var reasonsArray = reasons.ToArray();
-            var underlyingReasons = reasonsArray.SelectMany(r => r.UnderlyingReasons).ToArray();
-            if (!underlyingReasons.Any()) 
-                return reasonsArray.Select(r => r.Description);
-            
-            reasons = underlyingReasons;
-        }
-    }
 
     public static int CountTrue<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
@@ -59,7 +35,41 @@ public static class EnumerableExtensions
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results.Any(result => !result.Satisfied);
     
+    internal static Cause<TMetadata> CreateCause<TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> causalResults)
+    {
+        var causalResultsArray = causalResults.ToArray();
+        var metadata = causalResultsArray
+            .SelectMany(cause => cause.Cause.Metadata);
+        
+        var reasons = causalResultsArray
+            .SelectMany(cause => cause.Cause.Reasons);
+        
+        var underlyingCauses = causalResultsArray
+            .SelectMany(cause => cause.Cause.Underlying);
+        
+        return new Cause<TMetadata>(metadata, reasons)
+        {
+            Underlying = underlyingCauses
+        };
+    }
     
+    internal static Explanation CreateExplanation(
+        this IEnumerable<BooleanResultBase> underlyingResults)
+    {
+        var resultArray = underlyingResults.ToArray();
+
+        var reasons = resultArray
+            .SelectMany(result => result.Explanation.Reasons);
+        
+        var underlying = resultArray
+            .Select(result => result.Explanation);
+        
+        return new Explanation(reasons)
+        {
+            Underlying = underlying
+        };
+    }
     /// <summary>Returns the source collection if it is not empty; otherwise, returns the specified alternative collection.</summary>
     /// <typeparam name="T">The type of the elements in the collections.</typeparam>
     /// <param name="source">The source collection.</param>
@@ -79,22 +89,5 @@ public static class EnumerableExtensions
 
         foreach (var item in other)
             yield return item;
-    }
-
-    internal static (IEnumerable<T> first, IEnumerable<T> second) Partition<T>(this IEnumerable<T> enumerable,
-        Func<T, bool> predicate)
-    {
-        var trueList = new List<T>();
-        var falseList = new List<T>();
-        foreach (var item in enumerable)
-        {
-            var list = predicate(item)
-                ? trueList
-                : falseList;
-
-            list.Add(item);
-        }
-
-        return (trueList, falseList);
     }
 }

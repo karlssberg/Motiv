@@ -18,7 +18,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
-        result.GetMetadata().Should().ContainSingle(model.ToString());
+        result.Metadata.Should().ContainSingle(model.ToString());
     }
     
     [Theory]
@@ -41,8 +41,8 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
-        result.GetMetadata().Should().ContainSingle(expectedReason);
-        result.Reasons.Should().BeEquivalentTo(expectedReason);
+        result.Metadata.Should().ContainSingle(expectedReason);
+        result.Explanation.Reasons.Should().BeEquivalentTo(expectedReason);
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(null);
 
         result.Satisfied.Should().BeTrue();
-        result.GetMetadata().Should().ContainSingle(true.ToString());
+        result.Metadata.Should().ContainSingle(true.ToString());
     }
 
     [Theory]
@@ -74,7 +74,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
-        result.GetMetadata().Should().ContainSingle(model.ToString());
+        result.Metadata.Should().ContainSingle(model.ToString());
     }
 
     [Theory]
@@ -97,7 +97,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
-        result.GetMetadata().Should().ContainSingle(model.ToString());
+        result.Metadata.Should().ContainSingle(model.ToString());
     }
 
     [Fact]
@@ -112,7 +112,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(null);
 
         result.Satisfied.Should().Be(true);
-        result.GetMetadata().Should().ContainSingle(true.ToString());
+        result.Metadata.Should().ContainSingle(true.ToString());
     }
 
     [Fact]

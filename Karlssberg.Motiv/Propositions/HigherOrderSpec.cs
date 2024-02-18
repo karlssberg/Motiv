@@ -30,7 +30,7 @@ internal class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
         
         return new HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied, 
-            metadata, 
+            metadata.Distinct(), 
             underlyingResults,
             causes,
             description);

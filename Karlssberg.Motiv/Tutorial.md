@@ -59,7 +59,7 @@ var isEven = Spec
 
 isEven.IsSatisfiedBy(2).Satisfied; // returns true
 isEven.IsSatisfiedBy(2).Reasons; // returns ["even number is true"]
-isEven.IsSatisfiedBy(2).GetMetadata().Select(m => m.English); // returns ["the number is even"]
-isEven.IsSatisfiedBy(2).GetMetadata().Select(m => m.Spanish); // returns ["el número es par"]
+isEven.IsSatisfiedBy(2).Metadata.Select(m => m.English); // returns ["the number is even"]
+isEven.IsSatisfiedBy(2).Metadata.Select(m => m.Spanish); // returns ["el número es par"]
 ```
 

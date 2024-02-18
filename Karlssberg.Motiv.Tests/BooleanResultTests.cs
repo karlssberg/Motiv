@@ -33,8 +33,8 @@ public class BooleanResultTests
             .ToList();
 
         act.Satisfied.Should().Be(expected);
-        act.GetMetadata().Should().HaveCount(operands.Count);
-        act.ReasonHierarchy.Should().Contain(operands.SelectMany(operand => operand.ReasonHierarchy));
+        act.Metadata.Should().HaveCount(operands.Count);
+        act.Explanation.Reasons.Should().Contain(operands.SelectMany(operand => operand.Explanation.Reasons));
     }
 
     [Theory]
@@ -54,11 +54,11 @@ public class BooleanResultTests
             .ToList();
 
         act.Satisfied.Should().Be(expected);
-        act.GetMetadata().Should().HaveCount(operands.Count);
-        act.ReasonHierarchy.Should().Contain(operands.SelectMany(operand => operand.ReasonHierarchy));
+        act.Metadata.Should().HaveCount(operands.Count);
+        act.Explanation.Reasons.Should().Contain(operands.SelectMany(operand => operand.Explanation.Reasons));
     }
 
-    [Theory]
+    [Theory]  
     [InlineAutoData(false, false, false)]
     [InlineAutoData(false, true, true)]
     [InlineAutoData(true, false, true)]
@@ -73,8 +73,8 @@ public class BooleanResultTests
         var operands = new[] { leftResult, rightResult };
 
         act.Satisfied.Should().Be(expected);
-        act.GetMetadata().Should().HaveCount(operands.Length);
-        act.ReasonHierarchy.Should().Contain(operands.SelectMany(operand => operand.ReasonHierarchy));
+        act.Metadata.Should().HaveCount(operands.Length);
+        act.Explanation.Reasons.Should().Contain(operands.SelectMany(operand => operand.Explanation.Reasons));
     }
 
 
@@ -89,7 +89,7 @@ public class BooleanResultTests
         var act = !operandResult;
 
         act.Satisfied.Should().Be(expected);
-        act.GetMetadata().Should().HaveCount(1);
-        act.ReasonHierarchy.Should().Contain(operandResult.ReasonHierarchy);
+        act.Metadata.Should().HaveCount(1);
+        act.Explanation.Reasons.Should().Contain(operandResult.Explanation.Reasons);
     }
 }

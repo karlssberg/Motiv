@@ -8,7 +8,7 @@
 internal sealed class AndBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> leftOperandResult,
     BooleanResultBase<TMetadata> rightOperandResult)
-    : BooleanResultBase<TMetadata>, ILogicalOperatorResult<TMetadata>
+    : BooleanResultBase<TMetadata>
 {
     /// <inheritdoc />
     public override bool Satisfied { get; } = leftOperandResult.Satisfied && rightOperandResult.Satisfied;
@@ -20,19 +20,25 @@ internal sealed class AndBooleanResult<TMetadata>(
     public BooleanResultBase<TMetadata> RightOperandResult { get; } = rightOperandResult;
 
     /// <summary>Gets an array containing the left and right operand results.</summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => [LeftOperandResult, RightOperandResult];
+    public override IEnumerable<BooleanResultBase> UnderlyingResults => [LeftOperandResult, RightOperandResult];
 
-    /// <summary>
-    ///     Gets the determinative operand results, which are the operand results that have the same satisfaction status
-    ///     as the overall result.
-    /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> Causes => UnderlyingResults
-        .Where(r => r.Satisfied == Satisfied);
 
     /// <inheritdoc />
-    public override string Description => $"({LeftOperandResult}) AND:{IsSatisfiedDisplayText} ({RightOperandResult})";
+    public override string Description => $"({LeftOperandResult}) AND:{IsSatisfiedDisplayText()} ({RightOperandResult})";
 
     /// <inheritdoc />
-    public override IEnumerable<Reason> ReasonHierarchy => Causes
-        .SelectMany(r => r.ReasonHierarchy);
+    public override Explanation Explanation => GetCausalResults().CreateExplanation();
+
+    public override MetadataSet<TMetadata> Metadata => new(GetCausalResults()
+        .SelectMany(result => result.Metadata));
+    
+    public override Cause<TMetadata> Cause => GetCausalResults().CreateCause();
+
+    private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
+    {
+        if (leftOperandResult.Satisfied == Satisfied)
+            yield return leftOperandResult;
+        if (rightOperandResult.Satisfied == Satisfied)
+            yield return rightOperandResult;
+    }
 }

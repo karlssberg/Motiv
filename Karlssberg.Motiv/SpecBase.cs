@@ -18,6 +18,9 @@ namespace Karlssberg.Motiv;
 /// <typeparam name="TMetadata">The type of the metadata to associate with the predicate</typeparam>
 public abstract class SpecBase<TModel, TMetadata>
 {
+    /// <summary>
+    ///     Prevents the external instantiation of the <see cref="SpecBase{TModel,TMetadata}" /> class.
+    /// </summary>
     internal SpecBase()
     {
     }

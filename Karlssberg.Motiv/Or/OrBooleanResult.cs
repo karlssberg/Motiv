@@ -8,28 +8,32 @@ internal sealed class OrBooleanResult<TMetadata>(
     : BooleanResultBase<TMetadata>
 {
     /// <summary>Gets the result of the left operand.</summary>
-    public BooleanResultBase<TMetadata> LeftOperandResult { get; } = leftOperandResult;
+    public BooleanResultBase<TMetadata> LeftOperandResult => leftOperandResult;
 
     /// <summary>Gets the result of the right operand.</summary>
-    public BooleanResultBase<TMetadata> RightOperandResult { get; } = rightOperandResult;
+    public BooleanResultBase<TMetadata> RightOperandResult => rightOperandResult;
 
     /// <summary>Gets an array containing the left and right operand results.</summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingResults => [LeftOperandResult, RightOperandResult];
+    public override IEnumerable<BooleanResultBase> UnderlyingResults => [LeftOperandResult, RightOperandResult];
 
-    /// <summary>
-    ///     Gets the determinative operand results, which are the operand results that have the same satisfaction status
-    ///     as the overall result.
-    /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> Causes => UnderlyingResults
-        .Where(r => r.Satisfied == Satisfied);
+    public override Explanation Explanation => GetCausalResults().CreateExplanation();
+    
+    public override MetadataSet<TMetadata> Metadata => new(GetCausalResults()
+        .SelectMany(result => result.Metadata));
+    
+    public override Cause<TMetadata> Cause => GetCausalResults().CreateCause();
 
-    /// <inheritdoc />
+    /// <inheritdoc />`
     public override bool Satisfied { get; } = leftOperandResult.Satisfied || rightOperandResult.Satisfied;
 
     /// <inheritdoc />
-    public override string Description => $"({LeftOperandResult}) OR:{IsSatisfiedDisplayText} ({RightOperandResult})";
-
-    /// <inheritdoc />
-    public override IEnumerable<Reason> ReasonHierarchy => Causes
-        .SelectMany(r => r.ReasonHierarchy);
+    public override string Description => $"({LeftOperandResult}) OR:{IsSatisfiedDisplayText()} ({RightOperandResult})";
+    
+    private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
+    {
+        if (LeftOperandResult.Satisfied == Satisfied)
+            yield return leftOperandResult;
+        if (RightOperandResult.Satisfied == Satisfied)
+            yield return rightOperandResult;
+    }
 }

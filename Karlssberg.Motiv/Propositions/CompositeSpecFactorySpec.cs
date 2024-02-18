@@ -36,6 +36,6 @@ internal class CompositeSpecFactorySpec<TModel, TMetadata, TUnderlyingMetadata>(
             false => whenFalse(model),
         };
 
-        return new ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadata);
+        return new ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadata, description);
     }
 }
