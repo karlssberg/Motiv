@@ -1,6 +1,4 @@
-﻿using Karlssberg.Motiv.ChangeMetadataType;
-
-namespace Karlssberg.Motiv.Propositions.CompositeSpecBuilders.Metadata;
+﻿namespace Karlssberg.Motiv.Propositions.CompositeSpecBuilders.Metadata;
 
 public readonly struct MetadataCompositeSpecFactory<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,

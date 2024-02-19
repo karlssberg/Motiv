@@ -151,7 +151,9 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// </returns>
     public SpecBase<TNewModel, TMetadata> ChangeModelTo<TNewModel>(
         Func<TNewModel, TModel> childModelSelector) =>
-        new ChangeModelTypeSpec<TNewModel, TModel, TMetadata>(this, childModelSelector);
+        new ChangeModelTypeSpec<TNewModel, TModel, TMetadata>(
+            this,
+            childModelSelector.ThrowIfNull(nameof(childModelSelector)));
 
     /// <summary>Changes the <typeparamref name="TModel" /> <see cref="Type" /> of the specification.</summary>
     /// <typeparam name="TDerivedModel">

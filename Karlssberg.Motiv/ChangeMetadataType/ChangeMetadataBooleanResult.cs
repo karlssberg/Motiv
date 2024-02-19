@@ -3,7 +3,7 @@
 /// <summary>Represents a boolean result of changing the metadata type.</summary>
 /// <typeparam name="TMetadata">The type of the new metadata.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
-internal class  ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
+internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
     TMetadata metadata,
     string description)
@@ -19,8 +19,6 @@ internal class  ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
             string reason => reason,
             _ => description
         };
-
-    public override IEnumerable<BooleanResultBase> UnderlyingResults => [booleanResult];
 
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override Explanation Explanation =>

@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.Propositions;
 
-internal class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
+internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec, 
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate, 
     Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue, 

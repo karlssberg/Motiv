@@ -2,16 +2,13 @@
 
 /// <summary>Represents a boolean result with associated metadata and description.</summary>
 /// <typeparam name="TMetadata">The type of the metadata associated with the result.</typeparam>
-public class BooleanResult<TMetadata>(bool value, TMetadata metadata, string specDescription)
+public sealed class BooleanResult<TMetadata>(bool value, TMetadata metadata, string specDescription)
     : BooleanResultBase<TMetadata>
 {
     private readonly string _specDescription = specDescription.ThrowIfNull(nameof(specDescription));
 
     public override MetadataSet<TMetadata> Metadata => new([metadata]);
     public override Cause<TMetadata> Cause => new(Metadata, Explanation.Reasons);
-    
-    public override IEnumerable<BooleanResultBase> UnderlyingResults { get; } =
-        Enumerable.Empty<BooleanResultBase>();
 
     /// <summary>Gets the reasons for the result.</summary>
     public override Explanation Explanation => new (Description);

@@ -27,8 +27,6 @@ public abstract class BooleanResultBase
     /// <summary>Gets a human readable description of the tree of conditions that make up this result.</summary>
     public abstract string Description { get; }
 
-    public abstract IEnumerable<BooleanResultBase> UnderlyingResults { get; }
-
     /// <summary>
     /// Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the
     /// result at this stage to avoid excessive deduplication during intermediate steps.  Deduplication is performed during the

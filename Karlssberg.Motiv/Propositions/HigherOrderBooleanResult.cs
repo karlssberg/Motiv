@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.Propositions;
 
-internal class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
+internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
     IEnumerable<TMetadata> metadataCollection,
     IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> operandResults,
@@ -14,13 +14,6 @@ internal class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
     public override bool Satisfied => isSatisfied;
     
     public override string Description => GetFullDescription();
-    
-    public override IEnumerable<BooleanResultBase> UnderlyingResults { get; } =
-        operandResults switch
-        {
-            IEnumerable<BooleanResultBase<TMetadata>> results => results,
-            _ => Enumerable.Empty<BooleanResultBase<TMetadata>>()
-        };
 
     public override Explanation Explanation => GetExplanation();
 

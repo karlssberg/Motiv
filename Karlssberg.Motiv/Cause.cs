@@ -3,7 +3,7 @@ using Humanizer;
 
 namespace Karlssberg.Motiv;
 
-public record Cause<TMetadata>(IEnumerable<TMetadata> Metadata, IEnumerable<string> Reasons)
+public sealed record Cause<TMetadata>(IEnumerable<TMetadata> Metadata, IEnumerable<string> Reasons)
 {
     public Cause(TMetadata metadata, string reason) : this([metadata], [reason])
     {
@@ -17,7 +17,7 @@ public record Cause<TMetadata>(IEnumerable<TMetadata> Metadata, IEnumerable<stri
     public override string ToString() => Reasons.Humanize();
 }
 
-public class MetadataSet<TMetadata>(IEnumerable<TMetadata> metadataCollection) : IEnumerable<TMetadata>
+public sealed class MetadataSet<TMetadata>(IEnumerable<TMetadata> metadataCollection) : IEnumerable<TMetadata>
 {
     public MetadataSet(TMetadata metadata) : this([metadata])
     {

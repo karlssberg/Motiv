@@ -1,11 +1,10 @@
-﻿using System.Collections;
-using Humanizer;
+﻿using Humanizer;
 
 namespace Karlssberg.Motiv;
 
-public record Explanation(IEnumerable<string> Reasons)
+public sealed record Explanation(IEnumerable<string> Reasons)
 {
-    public Explanation(string reason) : this(Enumerable.Empty<string>().Append(reason))
+    public Explanation(string reason) : this([reason])
     {
     }
 

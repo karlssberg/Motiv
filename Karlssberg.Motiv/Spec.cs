@@ -1,6 +1,5 @@
 ﻿using Karlssberg.Motiv.Propositions;
 using Karlssberg.Motiv.Propositions.CompositeFactorySpecBuilders;
-using Karlssberg.Motiv.Propositions.CompositeSpecBuilders;
 using Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders;
 
 namespace Karlssberg.Motiv;

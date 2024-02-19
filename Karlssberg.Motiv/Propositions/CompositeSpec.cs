@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv.Propositions;
 
-internal class CompositeSpec<TModel, TMetadata, TUnderlyingMetadata>(
+internal sealed class CompositeSpec<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse,

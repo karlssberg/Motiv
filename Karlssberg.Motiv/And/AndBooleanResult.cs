@@ -13,18 +13,8 @@ internal sealed class AndBooleanResult<TMetadata>(
     /// <inheritdoc />
     public override bool Satisfied { get; } = leftOperandResult.Satisfied && rightOperandResult.Satisfied;
 
-    /// <summary>Gets the result of the left operand.</summary>
-    public BooleanResultBase<TMetadata> LeftOperandResult { get; } = leftOperandResult;
-
-    /// <summary>Gets the result of the right operand.</summary>
-    public BooleanResultBase<TMetadata> RightOperandResult { get; } = rightOperandResult;
-
-    /// <summary>Gets an array containing the left and right operand results.</summary>
-    public override IEnumerable<BooleanResultBase> UnderlyingResults => [LeftOperandResult, RightOperandResult];
-
-
     /// <inheritdoc />
-    public override string Description => $"({LeftOperandResult}) AND:{IsSatisfiedDisplayText()} ({RightOperandResult})";
+    public override string Description => $"({leftOperandResult}) AND:{IsSatisfiedDisplayText()} ({rightOperandResult})";
 
     /// <inheritdoc />
     public override Explanation Explanation => GetCausalResults().CreateExplanation();

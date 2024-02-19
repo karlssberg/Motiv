@@ -7,14 +7,6 @@ internal sealed class OrBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> rightOperandResult)
     : BooleanResultBase<TMetadata>
 {
-    /// <summary>Gets the result of the left operand.</summary>
-    public BooleanResultBase<TMetadata> LeftOperandResult => leftOperandResult;
-
-    /// <summary>Gets the result of the right operand.</summary>
-    public BooleanResultBase<TMetadata> RightOperandResult => rightOperandResult;
-
-    /// <summary>Gets an array containing the left and right operand results.</summary>
-    public override IEnumerable<BooleanResultBase> UnderlyingResults => [LeftOperandResult, RightOperandResult];
 
     public override Explanation Explanation => GetCausalResults().CreateExplanation();
     
@@ -27,13 +19,13 @@ internal sealed class OrBooleanResult<TMetadata>(
     public override bool Satisfied { get; } = leftOperandResult.Satisfied || rightOperandResult.Satisfied;
 
     /// <inheritdoc />
-    public override string Description => $"({LeftOperandResult}) OR:{IsSatisfiedDisplayText()} ({RightOperandResult})";
+    public override string Description => $"({leftOperandResult}) OR:{IsSatisfiedDisplayText()} ({rightOperandResult})";
     
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {
-        if (LeftOperandResult.Satisfied == Satisfied)
+        if (leftOperandResult.Satisfied == Satisfied)
             yield return leftOperandResult;
-        if (RightOperandResult.Satisfied == Satisfied)
+        if (rightOperandResult.Satisfied == Satisfied)
             yield return rightOperandResult;
     }
 }

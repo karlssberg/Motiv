@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.ChangeMetadataType;
 
-internal class ChangeToReasonSpec<TModel, TUnderlyingModel>(
+internal sealed class ChangeToReasonSpec<TModel, TUnderlyingModel>(
     SpecBase<TModel, TUnderlyingModel> spec) 
     : SpecBase<TModel, string>
 {

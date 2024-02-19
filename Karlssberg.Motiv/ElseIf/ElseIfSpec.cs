@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.ElseIf;
 
-internal class ElseIfSpec<TModel, TMetadata>(
+internal sealed class ElseIfSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> antecedent,
     SpecBase<TModel, TMetadata> consequent)
     : SpecBase<TModel, TMetadata>

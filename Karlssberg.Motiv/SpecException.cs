@@ -6,7 +6,7 @@ namespace Karlssberg.Motiv;
 /// Represents errors that occur during the execution of a specification.
 /// </summary>
 [Serializable]
-public class SpecException : Exception
+public  class SpecException : Exception
 {
     /// <summary>
     /// Initializes a new instance of the SpecException class.
