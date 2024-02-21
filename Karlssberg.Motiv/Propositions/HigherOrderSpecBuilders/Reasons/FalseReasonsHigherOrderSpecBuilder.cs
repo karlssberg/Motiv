@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Reasons;
 
-public readonly struct FalseReasonsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
+public readonly ref struct FalseReasonsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause)

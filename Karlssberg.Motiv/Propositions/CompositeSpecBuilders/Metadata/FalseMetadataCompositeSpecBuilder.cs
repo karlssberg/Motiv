@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.Propositions.CompositeSpecBuilders.Metadata;
 
-public readonly struct FalseMetadataCompositeSpecBuilder<TModel, TMetadata, TUnderlyingMetadata>(
+public readonly ref struct FalseMetadataCompositeSpecBuilder<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<TModel, TMetadata> whenTrue)
 {

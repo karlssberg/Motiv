@@ -8,8 +8,7 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
     string description)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    private readonly string _description = description.ThrowIfNullOrWhitespace(nameof(description));
-    public override string Description => $"<{_description}>({underlyingSpec.Description})";
+    public override string Description => $"<{description}>({underlyingSpec.Description})";
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
@@ -27,10 +26,10 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
         var metadata = isSatisfied
             ? whenTrue(booleanCollectionResults)
             : whenFalse(booleanCollectionResults);
-        
+
         return new HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
-            isSatisfied, 
-            metadata.Distinct(), 
+            isSatisfied,
+            metadata.Distinct(),
             underlyingResults,
             causes,
             description);

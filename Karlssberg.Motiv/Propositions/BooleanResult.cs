@@ -10,6 +10,8 @@ public sealed class BooleanResult<TMetadata>(bool value, TMetadata metadata, str
     public override MetadataSet<TMetadata> Metadata => new([metadata]);
     public override Cause<TMetadata> Cause => new(Metadata, Explanation.Reasons);
 
+    internal override string DebuggerDisplay() => Description;
+
     /// <summary>Gets the reasons for the result.</summary>
     public override Explanation Explanation => new (Description);
 

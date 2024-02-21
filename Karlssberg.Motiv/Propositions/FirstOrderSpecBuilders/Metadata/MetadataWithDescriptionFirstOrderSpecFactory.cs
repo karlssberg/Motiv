@@ -3,7 +3,7 @@
 /// <summary>Represents an interface for building a specification.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata"></typeparam>
-public readonly struct MetadataWithDescriptionFirstOrderSpecFactory<TModel, TMetadata>(
+public readonly ref struct MetadataWithDescriptionFirstOrderSpecFactory<TModel, TMetadata>(
     Func<TModel, bool> predicate, 
     Func<TModel, TMetadata> whenTrue, 
     Func<TModel, TMetadata> whenFalse)

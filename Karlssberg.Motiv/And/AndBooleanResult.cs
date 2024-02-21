@@ -1,4 +1,6 @@
-﻿namespace Karlssberg.Motiv.And;
+﻿using Humanizer;
+
+namespace Karlssberg.Motiv.And;
 
 /// <summary>
 ///     Represents the result of a boolean AND operation between two <see cref="BooleanResultBase{TMetadata}" />
@@ -14,7 +16,11 @@ internal sealed class AndBooleanResult<TMetadata>(
     public override bool Satisfied { get; } = leftOperandResult.Satisfied && rightOperandResult.Satisfied;
 
     /// <inheritdoc />
-    public override string Description => $"({leftOperandResult}) AND:{IsSatisfiedDisplayText()} ({rightOperandResult})";
+    public override string Description => GetCausalResults().Select(result => result.Description)
+        .Humanize();
+
+    internal override string DebuggerDisplay() =>
+        $"({leftOperandResult}) AND:{IsSatisfiedDisplayText()} ({rightOperandResult})";
 
     /// <inheritdoc />
     public override Explanation Explanation => GetCausalResults().CreateExplanation();

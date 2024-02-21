@@ -6,7 +6,7 @@ namespace Karlssberg.Motiv.Propositions.CompositeFactorySpecBuilders;
 /// <summary>Represents a builder for creating specifications based on a predicate.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata"></typeparam>
-public readonly struct TrueCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata>(
+public readonly ref struct TrueCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata>(
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate)
 {
     public FalseMetadataCompositeSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(TMetadata whenTrue) =>

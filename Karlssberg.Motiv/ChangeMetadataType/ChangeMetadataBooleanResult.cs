@@ -20,6 +20,8 @@ internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata
             _ => description
         };
 
+    internal override string DebuggerDisplay() => booleanResult.DebuggerDisplay();
+
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override Explanation Explanation =>
         metadata switch

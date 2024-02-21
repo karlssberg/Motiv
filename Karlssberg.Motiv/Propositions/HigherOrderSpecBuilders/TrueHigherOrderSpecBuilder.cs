@@ -3,7 +3,7 @@ using Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Reasons;
 
 namespace Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders;
 
-public readonly struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
+public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate)
 {

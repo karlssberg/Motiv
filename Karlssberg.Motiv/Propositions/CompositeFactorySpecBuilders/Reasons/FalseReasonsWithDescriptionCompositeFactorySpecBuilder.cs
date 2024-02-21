@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.Propositions.CompositeFactorySpecBuilders.Reasons;
 
-public readonly struct FalseReasonsWithDescriptionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata>(
+public readonly ref struct FalseReasonsWithDescriptionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata>(
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate,
     Func<TModel, string> trueBecause,
     string candidateDescription)

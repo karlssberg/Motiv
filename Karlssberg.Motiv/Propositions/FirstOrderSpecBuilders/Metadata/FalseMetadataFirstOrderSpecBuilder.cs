@@ -3,7 +3,7 @@
 /// <summary>Represents an interface for asking for a false reason in a specification.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
-public readonly struct FalseMetadataFirstOrderSpecBuilder<TModel, TMetadata>(
+public readonly ref struct FalseMetadataFirstOrderSpecBuilder<TModel, TMetadata>(
     Func<TModel, bool> predicate, 
     Func<TModel, TMetadata> whenTrue)
 {

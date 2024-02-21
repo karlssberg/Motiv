@@ -8,7 +8,7 @@ using Karlssberg.Motiv.XOr;
 namespace Karlssberg.Motiv;
 
 /// <summary>Represents a base class for boolean results.</summary>
-[DebuggerDisplay("{IsSatisfiedDisplayText()}: {ToString()}")]
+[DebuggerDisplay("{IsSatisfiedDisplayText()}: {DebuggerDisplay()}")]
 public abstract class BooleanResultBase
     : IEquatable<BooleanResultBase>,
         IEquatable<bool>
@@ -26,6 +26,8 @@ public abstract class BooleanResultBase
 
     /// <summary>Gets a human readable description of the tree of conditions that make up this result.</summary>
     public abstract string Description { get; }
+
+    internal abstract string DebuggerDisplay();
 
     /// <summary>
     /// Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the

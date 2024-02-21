@@ -1,4 +1,6 @@
-﻿namespace Karlssberg.Motiv.Or;
+﻿using Humanizer;
+
+namespace Karlssberg.Motiv.Or;
 
 /// <summary>Represents a boolean result that is the logical OR of two operand results.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
@@ -7,6 +9,7 @@ internal sealed class OrBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> rightOperandResult)
     : BooleanResultBase<TMetadata>
 {
+    internal override string DebuggerDisplay() => $"({leftOperandResult}) OR:{IsSatisfiedDisplayText()} ({rightOperandResult})";
 
     public override Explanation Explanation => GetCausalResults().CreateExplanation();
     
@@ -19,12 +22,13 @@ internal sealed class OrBooleanResult<TMetadata>(
     public override bool Satisfied { get; } = leftOperandResult.Satisfied || rightOperandResult.Satisfied;
 
     /// <inheritdoc />
-    public override string Description => $"({leftOperandResult}) OR:{IsSatisfiedDisplayText()} ({rightOperandResult})";
+    public override string Description => GetCausalResults().Select(result => result.Description).Humanize();
     
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {
         if (leftOperandResult.Satisfied == Satisfied)
             yield return leftOperandResult;
+        
         if (rightOperandResult.Satisfied == Satisfied)
             yield return rightOperandResult;
     }

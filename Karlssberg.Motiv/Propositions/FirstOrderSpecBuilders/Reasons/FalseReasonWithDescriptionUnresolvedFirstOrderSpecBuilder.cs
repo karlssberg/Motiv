@@ -4,7 +4,7 @@ namespace Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders.Reasons;
 
 /// <summary>Represents an interface for asking for a false reason in a specification.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-public readonly struct FalseReasonWithDescriptionUnresolvedFirstOrderSpecBuilder<TModel>(
+public readonly ref struct FalseReasonWithDescriptionUnresolvedFirstOrderSpecBuilder<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause)
 {

@@ -10,7 +10,9 @@ internal sealed class NotBooleanResult<TMetadata>(BooleanResultBase<TMetadata> o
     public override bool Satisfied => !operandResult.Satisfied;
 
     /// <summary>Gets the description of the negation result.</summary>
-    public override string Description => $"NOT:{IsSatisfiedDisplayText()}({operandResult})";
+    public override string Description => operandResult.Description;
+
+    internal override string DebuggerDisplay() => $"NOT:{IsSatisfiedDisplayText()}({operandResult})";
 
     /// <summary>Gets the reasons associated with the operand result.</summary>
     public override Explanation Explanation => operandResult.Explanation;

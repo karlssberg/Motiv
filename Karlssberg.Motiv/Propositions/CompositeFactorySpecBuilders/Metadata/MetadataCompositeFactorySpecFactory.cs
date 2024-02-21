@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.Propositions.CompositeFactorySpecBuilders.Metadata;
 
-public readonly struct MetadataCompositeFactorySpecFactory<TModel, TMetadata, TUnderlyingMetadata>(
+public readonly ref struct MetadataCompositeFactorySpecFactory<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse)

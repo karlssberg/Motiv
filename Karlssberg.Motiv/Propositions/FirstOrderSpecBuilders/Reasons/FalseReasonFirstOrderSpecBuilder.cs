@@ -2,7 +2,7 @@
 
 /// <summary>Represents an interface for specifying the behavior when a condition is false.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-public readonly struct FalseReasonFirstOrderSpecBuilder<TModel>(
+public readonly ref struct FalseReasonFirstOrderSpecBuilder<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
     string description)

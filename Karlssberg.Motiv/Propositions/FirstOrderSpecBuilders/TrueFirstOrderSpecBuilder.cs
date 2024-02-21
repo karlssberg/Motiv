@@ -3,7 +3,7 @@ using Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders.Reasons;
 
 namespace Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders;
 
-public readonly struct TrueFirstOrderSpecBuilder<TModel>(Func<TModel, bool> predicate)
+public readonly ref struct TrueFirstOrderSpecBuilder<TModel>(Func<TModel, bool> predicate)
 {
     /// <summary>Sets the reason why the condition is true.</summary>
     /// <param name="trueBecause">The human-readable reason why the condition is true.</param>
