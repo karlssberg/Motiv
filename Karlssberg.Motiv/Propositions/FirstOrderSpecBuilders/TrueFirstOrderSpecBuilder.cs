@@ -46,4 +46,9 @@ public readonly ref struct TrueFirstOrderSpecBuilder<TModel>(Func<TModel, bool> 
         whenTrue.ThrowIfNull(nameof(whenTrue));
         return new FalseMetadataFirstOrderSpecBuilder<TModel, TMetadata>(predicate, whenTrue);
     }
+    
+    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+        new ReasonSpec<TModel>(
+            predicate, 
+            proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

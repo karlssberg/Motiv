@@ -6,22 +6,41 @@ internal class AndBooleanResultDescription<TMetadata>(
     IEnumerable<BooleanResultBase<TMetadata>> causalResults) 
     : IResultDescription
 {
-    public string Reason => string.Join(" & ", causalResults.Select(result => result.Description.Reason));
+    private readonly BooleanResultBase<TMetadata>[] _causalResults = causalResults.ToArray();
+    public int CausalOperandCount => _causalResults.Length;
+
+    public string Reason => 
+        CausalOperandCount switch
+        {
+            0 => "",
+            1 => _causalResults.First().Description.Reason,
+            _ =>  string.Join(" & ", _causalResults.Select(ExplainReasons))
+        };
 
     public string Details =>
         $"""
-           {Explain(left).IndentAfterFirstLine()}
-         & {Explain(right).IndentAfterFirstLine()}
+           {ExplainDetails(left).IndentAfterFirstLine()}
+         & {ExplainDetails(right).IndentAfterFirstLine()}
          """;
     
     
-    private string Explain(BooleanResultBase<TMetadata> result)
+    private string ExplainDetails(BooleanResultBase<TMetadata> result)
     {
         return result switch 
         {
             AndBooleanResult<TMetadata> andSpec => andSpec.Description.Details,
             ICompositeBooleanResult compositeSpec => $"({compositeSpec.Description.Details})",
             _ => result.Description.Details
+        };
+    }
+    
+    private string ExplainReasons(BooleanResultBase<TMetadata> result)
+    {
+        return result switch 
+        {
+            AndBooleanResult<TMetadata> andSpec => andSpec.Description.Reason,
+            ICompositeBooleanResult { Description.CausalOperandCount: > 1 } compositeSpec => $"({compositeSpec.Description.Reason})",
+            _ => result.Description.Reason
         };
     }
     

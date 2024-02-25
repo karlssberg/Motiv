@@ -7,10 +7,15 @@ internal sealed class ReasonSpec<TModel>(
     string propositionalStatement)
     : SpecBase<TModel, string>
 {
-    private readonly Func<TModel, string> _falseBecause = falseBecause.ThrowIfNull(nameof(falseBecause));
-    private readonly Func<TModel, bool> _predicate = predicate.ThrowIfNull(nameof(predicate));
-    private readonly Func<TModel, string> _trueBecause = trueBecause.ThrowIfNull(nameof(trueBecause));
-
+    public ReasonSpec(Func<TModel, bool> predicate, string propositionalStatement) 
+        : this(
+            predicate, 
+            _ => ReasonFromProposition(true, propositionalStatement), 
+            _ => ReasonFromProposition(false, propositionalStatement), 
+            propositionalStatement)
+    {
+    }
+    
     public override IProposition Proposition => new Proposition(propositionalStatement);
 
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
@@ -31,18 +36,28 @@ internal sealed class ReasonSpec<TModel>(
     private bool InvokePredicate(TModel model) =>
         WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
             this,
-            () => _predicate(model),
+            () => predicate(model),
             nameof(predicate));
 
     private string InvokeTrueBecauseFunction(TModel model) =>
         WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
             this,
-            () => _trueBecause(model),
+            () => trueBecause(model),
             nameof(trueBecause));
 
     private string InvokeFalseBecauseFunction(TModel model) =>
         WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
             this,
-            () => _falseBecause(model),
+            () => falseBecause(model),
             nameof(falseBecause));
+    
+    private static string ReasonFromProposition(bool isSatisfied, string proposition) =>
+        (isSatisfied, proposition.Contains('!')) switch
+        {
+            (true, true) => $"({proposition})",
+            (true, _)=> proposition,
+            (false, true) when proposition.Contains('!') => $"!({proposition})",
+            (false, _) => $"!{proposition}"
+        };
+
 }

@@ -2,9 +2,10 @@
 
 internal class NotBooleanResultDescription(BooleanResultBase operand) : IResultDescription
 {
-    public string Reason => FormatDescription(operand.Description.Reason);
+    public int CausalOperandCount => 1;
+    public string Reason => operand.Description.Reason;
     
-    public string Details => FormatDescription(operand.Description.Details);
+    public string Details => operand.Description.Details;
     
     private string FormatDescription(string underlyingDescription)
     {

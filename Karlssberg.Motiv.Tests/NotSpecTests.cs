@@ -27,8 +27,8 @@ public class NotSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, "!is true")]
-    [InlineAutoData(false, "is true")]
+    [InlineAutoData(true, "is true")]
+    [InlineAutoData(false, "!is true")]
     public void Should_serialize_the_result_of_the_not_operation(
         bool operand,
         string expected,
@@ -48,8 +48,8 @@ public class NotSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, "!True")]
-    [InlineAutoData(false, "!False")]
+    [InlineAutoData(true, "True")]
+    [InlineAutoData(false, "False")]
     public void Should_serialize_the_result_of_the_not_operation_when_metadata_is_a_string(
         bool operand,
         string expected,
@@ -66,12 +66,11 @@ public class NotSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.Reason.Should().Be(expected);
-
     }
 
     [Theory]
-    [InlineAutoData(true, "!True")]
-    [InlineAutoData(false, "!False")]
+    [InlineAutoData(true, "True")]
+    [InlineAutoData(false, "False")]
     public void Should_serialize_the_result_of_the_not_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool operand,
         string expected,

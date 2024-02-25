@@ -8,7 +8,10 @@ internal sealed class ResultDescription<TMetadata>(
     TMetadata metadata)
     : IResultDescription
 {
+    public int CausalOperandCount => 0;
+    
     public string Reason => proposition.ToReason(isSatisfied, metadata);
+    
     public string Details => proposition.ToReason(isSatisfied, metadata);
     
     public override string ToString() => Reason;

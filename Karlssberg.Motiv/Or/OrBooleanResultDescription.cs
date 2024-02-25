@@ -6,7 +6,11 @@ internal class OrBooleanResultDescription<TMetadata>(
     IEnumerable<BooleanResultBase<TMetadata>> causalResults) 
     : IResultDescription
 {
-    public string Reason => string.Join(" | ", causalResults.Select(result => result.Description.Reason));
+    private readonly BooleanResultBase<TMetadata>[] _causalResults = causalResults.ToArray();
+    
+    public int CausalOperandCount => _causalResults.Length;
+    
+    public string Reason => string.Join(" | ", _causalResults.Select(result => result.Description.Reason));
 
     public string Details =>
         $"""

@@ -10,6 +10,8 @@ internal class HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetada
     ReasonSource reasonSource)
     : IResultDescription
 {
+    private readonly BooleanResult<TModel, TUnderlyingMetadata>[] _causes = causes.ToArray();
+    public int CausalOperandCount => _causes.Length;
     public string Reason => proposition.ToReason(isSatisfied, metadataCollection.SingleOrDefault(), reasonSource);
     public string Details => GetFullDescription();
 
@@ -27,7 +29,7 @@ internal class HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetada
         
         string GetDetails()
         {
-            var reasonFrequency = causes
+            var reasonFrequency = _causes
                 .OrderByDescending(result => result.Satisfied)
                 .Select(result => result.Description.Reason)
                 .GroupBy(reason => reason)

@@ -123,7 +123,6 @@ public class AndSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.Reason.Should().Be(expected);
-
     }
 
     [Theory]
