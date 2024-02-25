@@ -1,10 +1,10 @@
 ﻿namespace Karlssberg.Motiv.ChangeMetadataType;
 
-internal sealed class ChangeToReasonSpec<TModel, TUnderlyingModel>(
+internal sealed class MetadataToReasonAdapterSpec<TModel, TUnderlyingModel>(
     SpecBase<TModel, TUnderlyingModel> spec) 
     : SpecBase<TModel, string>
 {
-    public override string Description => spec.Description;
+    public override IProposition Proposition => spec.Proposition;
 
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
     {
@@ -12,12 +12,12 @@ internal sealed class ChangeToReasonSpec<TModel, TUnderlyingModel>(
         var metadata = results.Metadata switch
         {
             string reason => reason,
-            _ => Description
+            _ => spec.Proposition.Name
         };
         
         return new ChangeMetadataBooleanResult<string, TUnderlyingModel>(
             results,
             metadata,
-            Description);
+            spec.Proposition);
     }
 }

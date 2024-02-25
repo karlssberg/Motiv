@@ -171,14 +171,37 @@ public class AtMostSpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "<at most one is satisfied>{0/3}:true")]
-    [InlineAutoData(false, false, true,  "<at most one is satisfied>{1/3}:true(is satisfied x1)")]
-    [InlineAutoData(false, true,  false, "<at most one is satisfied>{1/3}:true(is satisfied x1)")]
-    [InlineAutoData(false, true,  true,  "<at most one is satisfied>{2/3}:false(is satisfied x2)")]
-    [InlineAutoData(true,  false, false, "<at most one is satisfied>{1/3}:true(is satisfied x1)")]
-    [InlineAutoData(true,  false, true,  "<at most one is satisfied>{2/3}:false(is satisfied x2)")]
-    [InlineAutoData(true,  true,  false, "<at most one is satisfied>{2/3}:false(is satisfied x2)")]
-    [InlineAutoData(true,  true,  true,  "<at most one is satisfied>{3/3}:false(is satisfied x3)")]
+    [InlineAutoData(false, false, false, """
+                                             at most one is satisfied
+                                             """)]
+    [InlineAutoData(false, false, true,  """
+                                            at most one is satisfied
+                                                1x is satisfied
+                                            """)]
+    [InlineAutoData(false, true,  false, """
+                                            at most one is satisfied
+                                                1x is satisfied
+                                            """)]
+    [InlineAutoData(false, true,  true,  """
+                                            more than one is satisfied
+                                                2x is satisfied
+                                            """)]
+    [InlineAutoData(true,  false, false, """
+                                            at most one is satisfied
+                                                1x is satisfied
+                                            """)]
+    [InlineAutoData(true,  false, true,  """
+                                            more than one is satisfied
+                                                2x is satisfied
+                                            """)]
+    [InlineAutoData(true,  true,  false, """
+                                            more than one is satisfied
+                                                2x is satisfied
+                                            """)]
+    [InlineAutoData(true,  true,  true,  """
+                                            more than one is satisfied
+                                                3x is satisfied
+                                            """)]
     public void Should_serialize_the_result_of_the_at_most_of_1_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -200,18 +223,41 @@ public class AtMostSpecTests
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Should().Be(expected);
+        result.Description.Details.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "<at most one is satisfied>{0/3}:true")]
-    [InlineAutoData(false, false, true,  "<at most one is satisfied>{1/3}:true(True x1)")]
-    [InlineAutoData(false, true,  false, "<at most one is satisfied>{1/3}:true(True x1)")]
-    [InlineAutoData(false, true,  true,  "<at most one is satisfied>{2/3}:false(True x2)")]
-    [InlineAutoData(true,  false, false, "<at most one is satisfied>{1/3}:true(True x1)")]
-    [InlineAutoData(true,  false, true,  "<at most one is satisfied>{2/3}:false(True x2)")]
-    [InlineAutoData(true,  true,  false, "<at most one is satisfied>{2/3}:false(True x2)")]
-    [InlineAutoData(true,  true,  true,  "<at most one is satisfied>{3/3}:false(True x3)")]
+    [InlineAutoData(false, false, false, """
+                                            at most one is satisfied
+                                            """)]
+    [InlineAutoData(false, false, true, """
+                                            at most one is satisfied
+                                                1x True
+                                            """)]
+    [InlineAutoData(false, true,  false, """
+                                            at most one is satisfied
+                                                1x True
+                                            """)]
+    [InlineAutoData(false, true,  true, """
+                                            more than one is satisfied
+                                                2x True
+                                            """)]
+    [InlineAutoData(true,  false, false, """
+                                            at most one is satisfied
+                                                1x True
+                                            """)]
+    [InlineAutoData(true,  false, true, """
+                                            more than one is satisfied
+                                                2x True
+                                            """)]
+    [InlineAutoData(true,  true,  false, """
+                                            more than one is satisfied
+                                                2x True
+                                            """)]
+    [InlineAutoData(true,  true,  true, """
+                                            more than one is satisfied
+                                                3x True
+                                            """)]
     public void Should_serialize_the_result_of_the_at_most_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
         bool second,
@@ -233,18 +279,41 @@ public class AtMostSpecTests
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Should().Be(expected);
+        result.Description.Details.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "<at most one is satisfied>{0/3}:true")]
-    [InlineAutoData(false, false, true,  "<at most one is satisfied>{1/3}:true('underlying model' is true x1)")]
-    [InlineAutoData(false, true,  false, "<at most one is satisfied>{1/3}:true('underlying model' is true x1)")]
-    [InlineAutoData(false, true,  true,  "<at most one is satisfied>{2/3}:false('underlying model' is true x2)")]
-    [InlineAutoData(true,  false, false, "<at most one is satisfied>{1/3}:true('underlying model' is true x1)")]
-    [InlineAutoData(true,  false, true,  "<at most one is satisfied>{2/3}:false('underlying model' is true x2)")]
-    [InlineAutoData(true,  true,  false, "<at most one is satisfied>{2/3}:false('underlying model' is true x2)")]
-    [InlineAutoData(true,  true,  true,  "<at most one is satisfied>{3/3}:false('underlying model' is true x3)")]
+    [InlineAutoData(false, false, false, """
+                                            at most one is satisfied
+                                            """)]
+    [InlineAutoData(false, false, true,  """
+                                            at most one is satisfied
+                                                1x is true
+                                            """)]
+    [InlineAutoData(false, true,  false, """
+                                            at most one is satisfied
+                                                1x is true
+                                            """)]
+    [InlineAutoData(false, true,  true,  """
+                                            more than one is satisfied
+                                                2x is true
+                                            """)]
+    [InlineAutoData(true,  false, false, """
+                                            at most one is satisfied
+                                                1x is true
+                                            """)]
+    [InlineAutoData(true,  false, true,  """
+                                            more than one is satisfied
+                                                2x is true
+                                            """)]
+    [InlineAutoData(true,  true,  false, """
+                                            more than one is satisfied
+                                                2x is true
+                                            """)]
+    [InlineAutoData(true,  true,  true,  """
+                                            more than one is satisfied
+                                                3x is true
+                                            """)]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first, 
         bool second,
@@ -255,7 +324,7 @@ public class AtMostSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("underlying model");
+            .CreateSpec("is true");
 
         var sut = Spec
             .Build(underlyingSpec)
@@ -266,13 +335,13 @@ public class AtMostSpecTests
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Should().Be(expected);
+        result.Description.Details.Should().Be(expected);
     }
 
     [Fact]
     public void Should_provide_a_description_of_the_specification()
     {
-        const string expected = "<at most one is satisfied>(underlying spec description)";
+        const string expected = "at most one is satisfied";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
             .WhenTrue("underlying model is true")
@@ -286,28 +355,7 @@ public class AtMostSpecTests
             .WhenFalse("more than one is satisfied")
             .CreateSpec();
 
-        sut.Description.Should().Be(expected);
-        sut.ToString().Should().Be(expected);
-    }
-
-    [Fact]
-    public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
-    {
-        const string expected = "<at most one is satisfied>(True)";
-        var underlyingSpec = Spec
-            .Build<bool>(m => m)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
-            .CreateSpec();
-
-        var sut = Spec
-            .Build(underlyingSpec)
-            .AsAtMostNSatisfied(1)
-            .WhenTrue("at most one is satisfied")
-            .WhenFalse("more than one is satisfied")
-            .CreateSpec();
-
-        sut.Description.Should().Be(expected);
+        sut.Proposition.Name.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 

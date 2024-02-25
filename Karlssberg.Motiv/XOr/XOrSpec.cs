@@ -1,15 +1,17 @@
 ﻿namespace Karlssberg.Motiv.XOr;
 
 internal sealed class XOrSpec<TModel, TMetadata>(
-    SpecBase<TModel, TMetadata> leftOperand,
-    SpecBase<TModel, TMetadata> rightOperand) : SpecBase<TModel, TMetadata>
+    SpecBase<TModel, TMetadata> right,
+    SpecBase<TModel, TMetadata> left)
+    : SpecBase<TModel, TMetadata>, ICompositeSpec
 {
-    public override string Description => $"({leftOperand}) ^ ({rightOperand})";
+    public override IProposition Proposition => 
+        new XOrProposition<TModel, TMetadata>(right, left);
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var leftResult = leftOperand.IsSatisfiedByOrWrapException(model);
-        var rightResult = rightOperand.IsSatisfiedByOrWrapException(model);
+        var leftResult = right.IsSatisfiedByOrWrapException(model);
+        var rightResult = left.IsSatisfiedByOrWrapException(model);
 
         return leftResult.XOr(rightResult);
     }

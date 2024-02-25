@@ -1,16 +1,17 @@
 ﻿namespace Karlssberg.Motiv.Propositions;
 
-internal sealed class PropositionalSpec<TModel>(
-    string description,
+internal sealed class ReasonSpec<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
-    Func<TModel, string> falseBecause) : SpecBase<TModel, string>
+    Func<TModel, string> falseBecause,
+    string propositionalStatement)
+    : SpecBase<TModel, string>
 {
     private readonly Func<TModel, string> _falseBecause = falseBecause.ThrowIfNull(nameof(falseBecause));
     private readonly Func<TModel, bool> _predicate = predicate.ThrowIfNull(nameof(predicate));
     private readonly Func<TModel, string> _trueBecause = trueBecause.ThrowIfNull(nameof(trueBecause));
 
-    public override string Description => description;
+    public override IProposition Proposition => new Proposition(propositionalStatement);
 
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
         WrapException.IfIsSatisfiedByMethodFails(
@@ -19,12 +20,12 @@ internal sealed class PropositionalSpec<TModel>(
             {
                 var isSatisfied = InvokePredicate(model);
                 var because = isSatisfied switch
-                {
+                {  
                     true => InvokeTrueBecauseFunction(model),
                     false => InvokeFalseBecauseFunction(model)
                 };
 
-                return new BooleanResult<string>(isSatisfied, because, because);
+                return new BooleanResult<string>(isSatisfied, because, Proposition);
             });
 
     private bool InvokePredicate(TModel model) =>

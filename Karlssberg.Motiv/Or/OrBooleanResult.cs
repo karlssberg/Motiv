@@ -1,16 +1,12 @@
-﻿using Humanizer;
-
-namespace Karlssberg.Motiv.Or;
+﻿namespace Karlssberg.Motiv.Or;
 
 /// <summary>Represents a boolean result that is the logical OR of two operand results.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
 internal sealed class OrBooleanResult<TMetadata>(
-    BooleanResultBase<TMetadata> leftOperandResult,
-    BooleanResultBase<TMetadata> rightOperandResult)
-    : BooleanResultBase<TMetadata>
+    BooleanResultBase<TMetadata> left,
+    BooleanResultBase<TMetadata> right)
+    : BooleanResultBase<TMetadata>, ICompositeBooleanResult
 {
-    internal override string DebuggerDisplay() => $"({leftOperandResult}) OR:{IsSatisfiedDisplayText()} ({rightOperandResult})";
-
     public override Explanation Explanation => GetCausalResults().CreateExplanation();
     
     public override MetadataSet<TMetadata> Metadata => new(GetCausalResults()
@@ -19,17 +15,17 @@ internal sealed class OrBooleanResult<TMetadata>(
     public override Cause<TMetadata> Cause => GetCausalResults().CreateCause();
 
     /// <inheritdoc />`
-    public override bool Satisfied { get; } = leftOperandResult.Satisfied || rightOperandResult.Satisfied;
+    public override bool Satisfied { get; } = left.Satisfied || right.Satisfied;
 
     /// <inheritdoc />
-    public override string Description => GetCausalResults().Select(result => result.Description).Humanize();
+    public override IResultDescription Description => new OrBooleanResultDescription<TMetadata>(left, right, GetCausalResults());
     
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {
-        if (leftOperandResult.Satisfied == Satisfied)
-            yield return leftOperandResult;
+        if (left.Satisfied == Satisfied)
+            yield return left;
         
-        if (rightOperandResult.Satisfied == Satisfied)
-            yield return rightOperandResult;
+        if (right.Satisfied == Satisfied)
+            yield return right;
     }
 }

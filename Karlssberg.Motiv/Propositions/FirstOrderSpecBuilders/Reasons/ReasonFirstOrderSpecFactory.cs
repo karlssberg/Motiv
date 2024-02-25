@@ -7,25 +7,21 @@ public readonly ref struct ReasonFirstOrderSpecFactory<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,
-    string candidateDescription)
+    string candidateName)
 {
     /// <summary>Provide a human readable explanation for when the condition is false.</summary>
     /// <param name="description">The description of the specification. If not specified, the description of the specification</param>
     /// <returns>A specification base.</returns>
     public SpecBase<TModel, string> CreateSpec() =>
-        new Spec<TModel, string>(
-            candidateDescription,
-            predicate,
+        new Spec<TModel, string>(predicate,
             trueBecause,
-            falseBecause);
+            falseBecause, candidateName);
     
     /// <summary>Provide a human readable explanation for when the condition is false.</summary>
     /// <param name="description">The description of the specification. If not specified, the description of the specification</param>
     /// <returns>A specification base.</returns>
-    public SpecBase<TModel, string> CreateSpec(string description) =>
-        new Spec<TModel, string>(
-            description.ThrowIfNullOrWhitespace(nameof(description)),
-            predicate,
+    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+        new Spec<TModel, string>(predicate,
             trueBecause,
-            falseBecause);
+            falseBecause, proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

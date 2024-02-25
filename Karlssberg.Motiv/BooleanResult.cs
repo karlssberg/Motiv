@@ -23,9 +23,7 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     public TModel Model { get; }
 
     /// <summary>Gets the description of the result.</summary>
-    public override string Description => _underlyingResult.Description;
-
-    internal override string DebuggerDisplay() => _underlyingResult.DebuggerDisplay();
+    public override IResultDescription Description => _underlyingResult.Description;
 
     public override Explanation Explanation => _underlyingResult.Explanation;
 
@@ -33,5 +31,6 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     public override bool Satisfied => _underlyingResult.Satisfied;
 
     public override MetadataSet<TMetadata> Metadata => _underlyingResult.Metadata;
+    
     public override Cause<TMetadata> Cause => _underlyingResult.Cause;
 }

@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using Humanizer;
 using Karlssberg.Motiv.And;
 using Karlssberg.Motiv.Not;
 using Karlssberg.Motiv.Or;
@@ -8,7 +7,7 @@ using Karlssberg.Motiv.XOr;
 namespace Karlssberg.Motiv;
 
 /// <summary>Represents a base class for boolean results.</summary>
-[DebuggerDisplay("{IsSatisfiedDisplayText()}: {DebuggerDisplay()}")]
+[DebuggerDisplay("{IsSatisfiedDisplayText()}: {Description.Reason}")]
 public abstract class BooleanResultBase
     : IEquatable<BooleanResultBase>,
         IEquatable<bool>
@@ -25,9 +24,7 @@ public abstract class BooleanResultBase
     public abstract bool Satisfied { get; }
 
     /// <summary>Gets a human readable description of the tree of conditions that make up this result.</summary>
-    public abstract string Description { get; }
-
-    internal abstract string DebuggerDisplay();
+    public abstract IResultDescription Description { get; }
 
     /// <summary>
     /// Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the
@@ -57,7 +54,7 @@ public abstract class BooleanResultBase
 
     /// <summary>Returns a human readable description of the tree of conditions that make up this result.</summary>
     /// <returns>A string that describes the tree of conditions that make up this result.</returns>
-    public override string ToString() => Explanation.Reasons.Distinct().Humanize();
+    public override string ToString() => Description.Reason;
 
     /// <summary>Defines the true operator for the <see cref="BooleanResultBase{TMetadata}" /> class.</summary>
     /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
@@ -114,7 +111,7 @@ public abstract class BooleanResultBase
     /// <returns>true if the specified object is equal to the current object; otherwise, false.</returns>
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj)) return false;
+        if (obj is null) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != GetType()) return false;
         return Equals((BooleanResultBase)obj);

@@ -1,6 +1,4 @@
-﻿using Humanizer;
-
-namespace Karlssberg.Motiv.And;
+﻿namespace Karlssberg.Motiv.And;
 
 /// <summary>
 ///     Represents the result of a boolean AND operation between two <see cref="BooleanResultBase{TMetadata}" />
@@ -8,19 +6,16 @@ namespace Karlssberg.Motiv.And;
 /// </summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
 internal sealed class AndBooleanResult<TMetadata>(
-    BooleanResultBase<TMetadata> leftOperandResult,
-    BooleanResultBase<TMetadata> rightOperandResult)
-    : BooleanResultBase<TMetadata>
+    BooleanResultBase<TMetadata> left,
+    BooleanResultBase<TMetadata> right)
+    : BooleanResultBase<TMetadata>, ICompositeBooleanResult
 {
     /// <inheritdoc />
-    public override bool Satisfied { get; } = leftOperandResult.Satisfied && rightOperandResult.Satisfied;
+    public override bool Satisfied { get; } = left.Satisfied && right.Satisfied;
 
     /// <inheritdoc />
-    public override string Description => GetCausalResults().Select(result => result.Description)
-        .Humanize();
-
-    internal override string DebuggerDisplay() =>
-        $"({leftOperandResult}) AND:{IsSatisfiedDisplayText()} ({rightOperandResult})";
+    public override IResultDescription Description =>
+        new AndBooleanResultDescription<TMetadata>(left, right, GetCausalResults());
 
     /// <inheritdoc />
     public override Explanation Explanation => GetCausalResults().CreateExplanation();
@@ -32,9 +27,9 @@ internal sealed class AndBooleanResult<TMetadata>(
 
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {
-        if (leftOperandResult.Satisfied == Satisfied)
-            yield return leftOperandResult;
-        if (rightOperandResult.Satisfied == Satisfied)
-            yield return rightOperandResult;
+        if (left.Satisfied == Satisfied)
+            yield return left;
+        if (right.Satisfied == Satisfied)
+            yield return right;
     }
 }

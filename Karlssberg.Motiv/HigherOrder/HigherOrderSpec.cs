@@ -1,14 +1,19 @@
-﻿namespace Karlssberg.Motiv.Propositions;
+﻿using Karlssberg.Motiv.Propositions;
+using Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders;
+
+namespace Karlssberg.Motiv.HigherOrder;
 
 internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec, 
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate, 
     Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue, 
     Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
-    string description)
+    string propositionalStatement,
+    ReasonSource reasonSource)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    public override string Description => $"<{description}>({underlyingSpec.Description})";
+    public override IProposition Proposition =>
+        new HigherOrderProposition<TModel, TUnderlyingMetadata>(propositionalStatement, underlyingSpec);
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
@@ -30,9 +35,9 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
         return new HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
             metadata.Distinct(),
-            underlyingResults,
             causes,
-            description);
+            Proposition,
+            reasonSource);
     }
     
     private IEnumerable<BooleanResult<TModel,TUnderlyingMetadata>> GetCauses(
@@ -51,8 +56,6 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
             _ => operandResults
         };
     }
-    
-    
 
     private static ICollection<BooleanResult<TModel,TUnderlyingMetadata>> GetFalseOperands(
         IEnumerable<BooleanResult<TModel,TUnderlyingMetadata>> operandResults) =>
@@ -65,5 +68,4 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
         operandResults
             .Where(result => result.Satisfied)
             .ToArray();
-    
 }

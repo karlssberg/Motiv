@@ -13,33 +13,34 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     private readonly Func<TModel, SpecBase<TModel, TMetadata>> _specFactory;
 
     // Initializes a new instance of the Spec class with a description, predicate, and functions for when the predicate is true or false.
-    internal Spec(
-        string description,
-        Func<TModel, bool> predicate,
+    internal Spec(Func<TModel, bool> predicate,
         Func<TModel, TMetadata> whenTrue,
-        Func<TModel, TMetadata> whenFalse)
+        Func<TModel, TMetadata> whenFalse,
+        string propositionalStatement)
     {
-        Description = description.ThrowIfNullOrWhitespace(nameof(description));
-        _specFactory = _ => new MetadataPropositionalSpec<TModel, TMetadata>(
-            description,
-            predicate,
+        propositionalStatement.ThrowIfNullOrWhitespace(nameof(propositionalStatement));
+        Proposition =  new Proposition(propositionalStatement);
+        _specFactory = _ => new MetadataSpec<TModel, TMetadata>(predicate,
             whenTrue,
-            whenFalse);
+            whenFalse,
+            propositionalStatement);
     }
 
     // Initializes a new instance of the Spec class with a specification factory.
-    internal Spec(string description, Func<TModel, SpecBase<TModel, TMetadata>> specFactory)
+    internal Spec(string proposition, Func<TModel, SpecBase<TModel, TMetadata>> specFactory)
     {
+        proposition.ThrowIfNullOrWhitespace(nameof(proposition));
         specFactory.ThrowIfNull(nameof(specFactory));
-        Description = description.ThrowIfNullOrWhitespace(nameof(description));
+        
+        Proposition = new Proposition(proposition);
         _specFactory = specFactory;
     }
 
     // Initializes a new instance of the Spec class with a SpecBase instance.
     protected Spec(SpecBase<TModel, TMetadata> spec)
     {
-        Description = spec.Description;
         spec.ThrowIfNull(nameof(spec));
+        Proposition = spec.Proposition;
         _specFactory = _ => spec;
     }
 
@@ -49,12 +50,13 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
         specificationFactory.ThrowIfNull(nameof(specificationFactory));
         var spec = specificationFactory();
         spec.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
-        Description = spec.Description;
+        
+        Proposition = spec.Proposition;
         _specFactory = _ => spec;
     }
 
     // Gets the description of the specification.
-    public override string Description { get; }
+    public override IProposition Proposition { get; }
 
     // Determines whether the specified model satisfies the specification.
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) =>
@@ -71,33 +73,10 @@ public class Spec<TModel> : SpecBase<TModel, string>
     // The base specification associated with the Spec instance.
     private readonly Func<TModel, SpecBase<TModel, string>> _specFactory;
 
-    // Initializes a new instance of the Spec class with a description, predicate, and functions for when the predicate is true or false.
-    internal Spec(
-        string description,
-        Func<TModel, bool> predicate,
-        Func<TModel, string> whenTrue,
-        Func<TModel, string> whenFalse)
-    {
-        Description = description.ThrowIfNullOrWhitespace(nameof(description));
-        _specFactory = _ => new PropositionalSpec<TModel>(
-            description,
-            predicate,
-            whenTrue,
-            whenFalse);
-    }
-
-    // Initializes a new instance of the Spec class with a specification factory.
-    internal Spec(string description, Func<TModel, SpecBase<TModel, string>> specFactory)
-    {
-        specFactory.ThrowIfNull(nameof(specFactory));
-        Description = description.ThrowIfNullOrWhitespace(nameof(description));
-        _specFactory = specFactory;
-    }
-
     // Initializes a new instance of the Spec class with a SpecBase instance.
     protected Spec(SpecBase<TModel, string> spec)
     {
-        Description = spec.Description;
+        Proposition = spec.Proposition;
         spec.ThrowIfNull(nameof(spec));
         _specFactory = _ => spec;
     }
@@ -107,12 +86,12 @@ public class Spec<TModel> : SpecBase<TModel, string>
     {
         specFactory.ThrowIfNull(nameof(specFactory));
         var spec = specFactory().ThrowIfFactoryOutputIsNull(nameof(specFactory));
-        Description = spec.Description;
+        Proposition = spec.Proposition;
         _specFactory = _ => spec;
     }
 
     // Gets the description of the specification.
-    public override string Description { get; }
+    public override IProposition Proposition { get; }
 
     // Determines whether the specified model satisfies the specification.
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model) => _specFactory(model).IsSatisfiedBy(model);
@@ -125,11 +104,6 @@ public static class Spec
     {
         predicate.ThrowIfNull(nameof(predicate));
         return new TrueFirstOrderSpecBuilder<TModel>(predicate);
-    }
-    public static TrueFirstOrderSpecBuilder<TModel> Build<TModel>(Func<bool> predicate)
-    {
-        predicate.ThrowIfNull(nameof(predicate));
-        return new TrueFirstOrderSpecBuilder<TModel>(_ => predicate());
     }
     
     public static TrueCompositeFactorySpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(

@@ -25,7 +25,7 @@ public abstract class SpecBase<TModel>
     }
 
     /// <summary>The description of the specification.  This is used for debugging/logging purposes.</summary>
-    public abstract string Description { get; }
+    public abstract IProposition Proposition { get; }
 
     public abstract SpecBase<TModel, string> ToReasonSpec();
 
@@ -54,7 +54,7 @@ public abstract class SpecBase<TModel>
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
     /// <returns>A string that represents the logical hierarchy of the specification.</returns>
-    public override string ToString() => Description;
+    public override string ToString() => Proposition.Name;
 
     /// <summary>Combines two specifications using the logical AND operator.</summary>
     /// <param name="left">The left operand of the AND operation.</param>
@@ -172,12 +172,12 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
         this switch
         {
             SpecBase<TModel, string> reasonSpec => reasonSpec,
-            _ => new ChangeToReasonSpec<TModel, TMetadata>(this)
+            _ => new MetadataToReasonAdapterSpec<TModel, TMetadata>(this)
         };
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
     /// <returns>A string that represents the logical hierarchy of the specification.</returns>
-    public override string ToString() => Description;
+    public override string ToString() => Proposition.Name;
 
     /// <summary>Combines two specifications using the logical AND operator.</summary>
     /// <param name="left">The left operand of the AND operation.</param>

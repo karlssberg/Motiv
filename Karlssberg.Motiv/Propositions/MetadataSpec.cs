@@ -7,18 +7,15 @@
 /// <typeparam name="T">The type of the input parameter.</typeparam>
 /// <typeparam name="TResult">The type of the return value.</typeparam>
 /// <returns>The return value.</returns>
-internal sealed class MetadataPropositionalSpec<TModel, TMetadata>(
-    string description,
+internal sealed class MetadataSpec<TModel, TMetadata>(
     Func<TModel, bool> predicate,
     Func<TModel, TMetadata> whenTrue,
-    Func<TModel, TMetadata> whenFalse) : SpecBase<TModel, TMetadata>
+    Func<TModel, TMetadata> whenFalse,
+    string propositionalStatement)
+    : SpecBase<TModel, TMetadata>, ICompositeSpec
 {
-    private readonly Func<TModel, bool> _predicate = predicate.ThrowIfNull(nameof(predicate));
-    private readonly Func<TModel, TMetadata> _whenFalse = whenFalse.ThrowIfNull(nameof(whenFalse));
-    private readonly Func<TModel, TMetadata> _whenTrue = whenTrue.ThrowIfNull(nameof(whenTrue));
-
     /// <summary>Gets or sets the description of the specification.</summary>
-    public override string Description => description.ThrowIfNullOrWhitespace(nameof(description));
+    public override IProposition Proposition => new Proposition(propositionalStatement);
 
     /// <summary>Determines if the specified model satisfies the specification.</summary>
     /// <param name="model">The model to be evaluated.</param>
@@ -36,25 +33,25 @@ internal sealed class MetadataPropositionalSpec<TModel, TMetadata>(
                     false => InvokeWhenFalseFunction(model)
                 };
 
-                return new BooleanResult<TMetadata>(isSatisfied, cause, description);
+                return new BooleanResult<TMetadata>(isSatisfied, cause, Proposition);
             });
     }
 
     private bool InvokePredicate(TModel model) =>
         WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
             this,
-            () => _predicate(model),
+            () => predicate(model),
             nameof(predicate));
 
     private TMetadata InvokeWhenTrueFunction(TModel model) =>
         WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
             this,
-            () => _whenTrue(model),
+            () => whenTrue(model),
             nameof(whenTrue));
 
     private TMetadata InvokeWhenFalseFunction(TModel model) =>
         WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
             this,
-            () => _whenFalse(model),
+            () => whenFalse(model),
             nameof(whenFalse));
 }

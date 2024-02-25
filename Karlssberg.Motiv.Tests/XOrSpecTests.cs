@@ -38,10 +38,10 @@ public class XOrSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, true, "('left' is true) XOR:false ('right' is true)")]
-    [InlineAutoData(true, false, "('left' is true) XOR:true ('right' is false)")]
-    [InlineAutoData(false, true, "('left' is false) XOR:true ('right' is true)")]
-    [InlineAutoData(false, false, "('left' is false) XOR:false ('right' is false)")]
+    [InlineAutoData(true, true, "left ^ right")]
+    [InlineAutoData(true, false, "left ^ !right")]
+    [InlineAutoData(false, true, "!left ^ right")]  
+    [InlineAutoData(false, false, "!left ^ !right")]
     public void Should_serialize_the_result_of_the_xor_operation(
         bool leftResult,
         bool rightResult,
@@ -64,14 +64,14 @@ public class XOrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Should().Be(expected);
+        result.Description.Reason.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(true, true, "(True) XOR:false (True)")]
-    [InlineAutoData(true, false, "(True) XOR:true (False)")]
-    [InlineAutoData(false, true, "(False) XOR:true (True)")]
-    [InlineAutoData(false, false, "(False) XOR:false (False)")]
+    [InlineAutoData(true, true, "True ^ True")]
+    [InlineAutoData(true, false, "True ^ False")]
+    [InlineAutoData(false, true, "False ^ True")]
+    [InlineAutoData(false, false, "False ^ False")]
     public void Should_serialize_the_result_of_the_xor_operation_when_metadata_is_a_string(
         bool leftResult,
         bool rightResult,
@@ -94,15 +94,15 @@ public class XOrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Should().Be(expected);
+        result.Description.Reason.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(true, true, "(True) XOR:false (True)")]
-    [InlineAutoData(true, false, "(True) XOR:true (False)")]
-    [InlineAutoData(false, true, "(False) XOR:true (True)")]
-    [InlineAutoData(false, false, "(False) XOR:false (False)")]
-    public void Should_serialize_the_result_of_the_xor_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
+    [InlineAutoData(true, true, "True ^ True")]
+    [InlineAutoData(true, false, "True ^ False")]
+    [InlineAutoData(false, true, "False ^ True")]
+    [InlineAutoData(false, false, "False ^ False")]
+    public void Should_serializeing_when_using_the_single_generic_specification_type(
         bool leftResult,
         bool rightResult,
         string expected,
@@ -124,7 +124,7 @@ public class XOrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Should().Be(expected);
+        result.Description.Reason.Should().Be(expected);
     }
 
     [Theory]
@@ -146,11 +146,11 @@ public class XOrSpecTests
             .WhenFalse(false)
             .CreateSpec("right");
 
-        var expected = $"({left.Description}) ^ ({right.Description})";
+        var expected = $"{left.Proposition} ^ {right.Proposition}";
 
         var sut = left ^ right;
 
-        sut.Description.Should().Be(expected);
+        sut.Proposition.Name.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -173,11 +173,11 @@ public class XOrSpecTests
             .WhenFalse(false.ToString())
             .CreateSpec();
 
-        var expected = $"({left.Description}) ^ ({right.Description})";
+        var expected = $"{left.Proposition} ^ {right.Proposition}";
 
         var sut = left ^ right;
 
-        sut.Description.Should().Be(expected);
+        sut.Proposition.Name.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 

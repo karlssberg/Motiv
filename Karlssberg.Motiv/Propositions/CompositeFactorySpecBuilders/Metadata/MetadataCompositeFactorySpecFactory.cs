@@ -5,11 +5,10 @@ public readonly ref struct MetadataCompositeFactorySpecFactory<TModel, TMetadata
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse)
 {
-    public SpecBase<TModel, TMetadata> CreateSpec(string description) =>
-        new CompositeSpecFactorySpec<TModel, TMetadata, TUnderlyingMetadata>(
+    public SpecBase<TModel, TMetadata> CreateSpec(string proposition) =>
+        new CompositeFactorySpec<TModel, TMetadata, TUnderlyingMetadata>(
             specPredicate,
             whenTrue,
             whenFalse,
-            description.ThrowIfNullOrWhitespace(nameof(description)));
-
+            proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

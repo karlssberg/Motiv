@@ -39,14 +39,38 @@ public class AllSpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "<all are true>{0/3}:false(false x3)")]
-    [InlineAutoData(false, false, true, "<all are true>{1/3}:false(false x2)")]
-    [InlineAutoData(false, true, false, "<all are true>{1/3}:false(false x2)")]
-    [InlineAutoData(false, true, true, "<all are true>{2/3}:false(false x1)")]
-    [InlineAutoData(true, false, false, "<all are true>{1/3}:false(false x2)")]
-    [InlineAutoData(true, false, true, "<all are true>{2/3}:false(false x1)")]
-    [InlineAutoData(true, true, false, "<all are true>{2/3}:false(false x1)")]
-    [InlineAutoData(true, true, true, "<all are true>{3/3}:true(true x3)")]
+    [InlineAutoData(false, false, false, """
+                                            !all are true
+                                                3x false
+                                            """)]
+    [InlineAutoData(false, false, true, """
+                                            !all are true
+                                                2x false
+                                            """)]
+    [InlineAutoData(false, true, false, """
+                                            !all are true
+                                                2x false
+                                            """)]
+    [InlineAutoData(false, true, true, """
+                                            !all are true
+                                                1x false
+                                            """)]
+    [InlineAutoData(true, false, false, """
+                                            !all are true
+                                                2x false
+                                            """)]
+    [InlineAutoData(true, false, true, """
+                                            !all are true
+                                                1x false
+                                            """)]
+    [InlineAutoData(true, true, false, """
+                                            !all are true
+                                                1x false
+                                            """)]
+    [InlineAutoData(true, true, true, """
+                                            all are true
+                                                3x true
+                                            """)]
     public void Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -64,21 +88,45 @@ public class AllSpecTests
             .WhenTrue(results => results.Metadata)
             .WhenFalse(results => results.Metadata)
             .CreateSpec("all are true");
-        
+
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Should().Be(expected);
+        result.Description.Details.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "<all are true>{0/3}:false(false x3)")]
-    [InlineAutoData(false, false, true, "<all are true>{1/3}:false(false x2)")]
-    [InlineAutoData(false, true, false, "<all are true>{1/3}:false(false x2)")]
-    [InlineAutoData(false, true, true, "<all are true>{2/3}:false(false x1)")]
-    [InlineAutoData(true, false, false, "<all are true>{1/3}:false(false x2)")]
-    [InlineAutoData(true, false, true, "<all are true>{2/3}:false(false x1)")]
-    [InlineAutoData(true, true, false, "<all are true>{2/3}:false(false x1)")]
-    [InlineAutoData(true, true, true, "<all are true>{3/3}:true(true x3)")]
+    [InlineAutoData(false, false, false, """
+                                            !all are true
+                                                3x false
+                                            """)]
+    [InlineAutoData(false, false, true, """
+                                            !all are true
+                                                2x false
+                                            """)]
+    [InlineAutoData(false, true, false, """
+                                            !all are true
+                                                2x false
+                                            """)]
+    [InlineAutoData(false, true, true, """
+                                            !all are true
+                                                1x false
+                                            """)]
+    [InlineAutoData(true, false, false, """
+                                            !all are true
+                                                2x false
+                                            """)]
+    [InlineAutoData(true, false, true, """
+                                            !all are true
+                                                1x false
+                                            """)]
+    [InlineAutoData(true, true, false, """
+                                            !all are true
+                                                1x false
+                                            """)]
+    [InlineAutoData(true, true, true, """
+                                            all are true
+                                                3x true
+                                            """)]
     public void
         Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
             bool first,
@@ -93,26 +141,51 @@ public class AllSpecTests
             .CreateSpec();
 
         var sut = Spec
-            .Build(underlyingSpec).AsAllSatisfied()
+            .Build(underlyingSpec)
+            .AsAllSatisfied()
             .WhenTrue(results => results.Metadata)
             .WhenFalse(results => results.Metadata)
             .CreateSpec("all are true");
-        
+
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Should().Be(expected);
+        result.Description.Details.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "<'all are true' is false>{0/3}('model' is false x3)")]
-    [InlineAutoData(false, false, true,  "<'all are true' is false>{1/3}('model' is false x2)")]
-    [InlineAutoData(false, true, false,  "<'all are true' is false>{1/3}('model' is false x2)")]
-    [InlineAutoData(false, true, true,   "<'all are true' is false>{2/3}('model' is false x1)")]
-    [InlineAutoData(true, false, false,  "<'all are true' is false>{1/3}('model' is false x2)")]
-    [InlineAutoData(true, false, true,   "<'all are true' is false>{2/3}('model' is false x1)")]
-    [InlineAutoData(true, true, false,   "<'all are true' is false>{2/3}('model' is false x1)")]
-    [InlineAutoData(true, true, true,    "<'all are true' is true>{3/3}('model' is true x3)")]
+    [InlineAutoData(false, false, false, """
+                                            !all are true
+                                                3x !is true
+                                            """)]
+    [InlineAutoData(false, false, true, """
+                                            !all are true
+                                                2x !is true
+                                            """)]
+    [InlineAutoData(false, true, false, """
+                                            !all are true
+                                                2x !is true
+                                            """)]
+    [InlineAutoData(false, true, true, """
+                                            !all are true
+                                                1x !is true
+                                            """)]
+    [InlineAutoData(true, false, false, """
+                                           !all are true
+                                               2x !is true
+                                           """)]
+    [InlineAutoData(true, false, true, """
+                                           !all are true
+                                               1x !is true
+                                           """)]
+    [InlineAutoData(true, true, false, """
+                                           !all are true
+                                               1x !is true
+                                           """)]
+    [InlineAutoData(true, true, true,"""
+                                           all are true
+                                               3x is true
+                                           """)]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
         bool second,
@@ -123,7 +196,7 @@ public class AllSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("model");
+            .CreateSpec("is true");
 
         var sut = Spec
             .Build(underlyingSpec)
@@ -131,22 +204,46 @@ public class AllSpecTests
             .WhenTrue(results => results.Metadata)
             .WhenFalse(results => results.Metadata)
             .CreateSpec("all are true");
-        
+
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.DebuggerDisplay().Should().Be(expected);
+        result.Description.Details.Should().Be(expected);
     }
 
 
     [Theory]
-    [InlineAutoData(false, false, false, "<'all are true' is false>{0/3}('left' is false x3, 'right' is false x3)")]
-    [InlineAutoData(false, false, true, "<'all are true' is false>{1/3}('left' is false x2, 'right' is false x2)")]
-    [InlineAutoData(false, true, false, "<'all are true' is false>{1/3}('left' is false x2, 'right' is false x2)")]
-    [InlineAutoData(false, true, true, "<'all are true' is false>{2/3}('left' is false x1, 'right' is false x1)")]
-    [InlineAutoData(true, false, false, "<'all are true' is false>{1/3}('left' is false x2, 'right' is false x2)")]
-    [InlineAutoData(true, false, true, "<'all are true' is false>{2/3}('left' is false x1, 'right' is false x1)")]
-    [InlineAutoData(true, true, false, "<'all are true' is false>{2/3}('left' is false x1, 'right' is false x1)")]
-    [InlineAutoData(true, true, true, "<'all are true' is true>{3/3}('left' is true x3, 'right' is true x3)")]
+    [InlineAutoData(false, false, false, """
+                                        !all are true
+                                            3x !left & !right
+                                        """)]
+    [InlineAutoData(false, false, true, """
+                                        !all are true
+                                            2x !left & !right
+                                        """)]
+    [InlineAutoData(false, true, false, """
+                                        !all are true
+                                            2x !left & !right
+                                        """)]
+    [InlineAutoData(false, true, true, """
+                                        !all are true
+                                            1x !left & !right
+                                        """)]
+    [InlineAutoData(true, false, false, """
+                                        !all are true
+                                            2x !left & !right
+                                        """)]
+    [InlineAutoData(true, false, true, """
+                                        !all are true
+                                            1x !left & !right
+                                        """)]
+    [InlineAutoData(true, true, false, """
+                                        !all are true
+                                            1x !left & !right
+                                        """)]
+    [InlineAutoData(true, true, true, """
+                                        all are true
+                                            3x left & right
+                                        """)]
     public void Should_serialize_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,
@@ -165,7 +262,7 @@ public class AllSpecTests
             .WhenFalse(false)
             .CreateSpec("right");
 
-        var sut = Spec 
+        var sut = Spec
             .Build(underlyingSpecLeft & underlyingSpecRight)
             .AsAllSatisfied()
             .WhenTrue(results => results.Metadata)
@@ -175,19 +272,19 @@ public class AllSpecTests
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
 
-        result.DebuggerDisplay().Should().Be(expected);
+        result.Description.Details.Should().Be(expected);
     }
 
 
     [Theory]
-    [InlineAutoData(false, false, false, "'all are true' is false")]
-    [InlineAutoData(false, false, true,  "'all are true' is false")]
-    [InlineAutoData(false, true, false,  "'all are true' is false")]
-    [InlineAutoData(false, true, true,   "'all are true' is false")]
-    [InlineAutoData(true, false, false,  "'all are true' is false")]
-    [InlineAutoData(true, false, true,   "'all are true' is false")]
-    [InlineAutoData(true, true, false,   "'all are true' is false")]
-    [InlineAutoData(true, true, true,    "'all are true' is true")]
+    [InlineAutoData(false, false, false, "!all are true")]
+    [InlineAutoData(false, false, true, "!all are true")]
+    [InlineAutoData(false, true, false, "!all are true")]
+    [InlineAutoData(false, true, true, "!all are true")]
+    [InlineAutoData(true, false, false, "!all are true")]
+    [InlineAutoData(true, false, true, "!all are true")]
+    [InlineAutoData(true, true, false, "!all are true")]
+    [InlineAutoData(true, true, true, "all are true")]
     public void Should_Describe_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,
@@ -206,7 +303,7 @@ public class AllSpecTests
             .WhenFalse(false)
             .CreateSpec("right");
 
-        var sut = Spec 
+        var sut = Spec
             .Build(underlyingSpecLeft & underlyingSpecRight)
             .AsAllSatisfied()
             .WhenTrue(results => results.Metadata)
@@ -216,19 +313,26 @@ public class AllSpecTests
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
 
-        result.Description.Should().Be(expected);
+        result.Description.Reason.Should().Be(expected);
         result.ToString().Should().Be(expected);
     }
+
 
     [Fact]
     public void Should_provide_a_description_of_the_specification()
     {
-        const string expected = "<all booleans are true>(is true or false)";
+        const string expectedSummary = "all booleans are true";
+        const string expectedFull = """
+                                    all booleans are true {
+                                        is true
+                                    }
+                                    """;
+        
         var underlyingSpec = Spec
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("is true or false");
+            .CreateSpec("is true");
 
         var sut = Spec
             .Build(underlyingSpec)
@@ -237,55 +341,20 @@ public class AllSpecTests
             .WhenFalse(results => $"{results.Count()} false")
             .CreateSpec("all booleans are true");
 
-        sut.Description.Should().Be(expected);
-        sut.ToString().Should().Be(expected);
-    }
-    
-
-    [Fact]
-    public void Should_provide_a_debugger_description_of_the_specification()
-    {
-        const string expected = "<all booleans are true>(is true or false)";
-        var underlyingSpec = Spec
-            .Build<bool>(m => m)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
-            .CreateSpec("is true or false");
-
-        var sut = Spec
-            .Build(underlyingSpec)
-            .AsAllSatisfied()
-            .WhenTrue(results => $"{results.Count()} true")
-            .WhenFalse(results => $"{results.Count()} false")
-            .CreateSpec("all booleans are true");
-
-        sut.Description.Should().Be(expected);
-        sut.ToString().Should().Be(expected);
-    }
-    [Fact]
-    public void Should_provide_a_high_level_description_of_the_specification_when_metadata_is_a_string()
-    {
-        const string expected = "<high-level description>(True)";
-        var underlyingSpec = Spec
-            .Build<bool>(m => m)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
-            .CreateSpec();
-
-        var sut = Spec
-            .Build(underlyingSpec).AsAllSatisfied()
-            .WhenTrue(true)
-            .WhenFalse(false)
-            .CreateSpec("high-level description");
-
-        sut.Description.Should().Be(expected);
-        sut.ToString().Should().Be(expected);
+        sut.Proposition.Name.Should().Be(expectedSummary);
+        sut.Proposition.Detailed.Should().Be(expectedFull);
+        sut.ToString().Should().Be(expectedSummary);
     }
 
     [Fact]
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
-        const string expected = "<all are true>(is true)";  
+        const string expectedSummary = "all are true";
+        const string expectedFull = """
+                                    all are true {
+                                        is true
+                                    }
+                                    """;
         var underlyingSpec = Spec
             .Build<bool>(m => m)
             .WhenTrue("is true")
@@ -299,8 +368,9 @@ public class AllSpecTests
             .WhenFalse(false)
             .CreateSpec("all are true");
 
-        sut.Description.Should().Be(expected);
-        sut.ToString().Should().Be(expected);
+        sut.Proposition.Name.Should().Be(expectedSummary);
+        sut.Proposition.Detailed.Should().Be(expectedFull);
+        sut.ToString().Should().Be(expectedSummary);
     }
 
     [Theory]

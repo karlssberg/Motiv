@@ -31,17 +31,17 @@ public class ElseIfSpecTests
     public void Should_describe_the_else_if_spec()
     {
         var antecedent = Spec.Build<bool>(m => m)
-            .WhenTrue("when true")
-            .WhenFalse("when false")
+            .WhenTrue("antecedent")
+            .WhenFalse("not antecedent")
             .CreateSpec();
 
         var consequent = Spec.Build<bool>(m => !m)
-            .WhenTrue("when false")
-            .WhenFalse("when true")
+            .WhenTrue("consequent")
+            .WhenFalse("not consequent")
             .CreateSpec();
 
         var sut = antecedent.ElseIf(consequent);
 
-        sut.Description.Should().Be("(when true) => (when false)");
+        sut.Proposition.Name.Should().Be("antecedent => consequent");
     }
 }

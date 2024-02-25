@@ -70,11 +70,7 @@ public static class EnumerableExtensions
             Underlying = underlying
         };
     }
-    /// <summary>Returns the source collection if it is not empty; otherwise, returns the specified alternative collection.</summary>
-    /// <typeparam name="T">The type of the elements in the collections.</typeparam>
-    /// <param name="source">The source collection.</param>
-    /// <param name="other">The alternative collection.</param>
-    /// <returns>The source collection if it is not empty; otherwise, the alternative collection.</returns>
+    
     internal static IEnumerable<T> IfEmptyThen<T>(this IEnumerable<T> source, IEnumerable<T> other)
     {
         var hasItems = false;
@@ -89,5 +85,22 @@ public static class EnumerableExtensions
 
         foreach (var item in other)
             yield return item;
+    }
+
+    internal static IEnumerable<T> ModifyFirst<T>(this IEnumerable<T> source, Func<T, T> modifier)
+    {
+        var modified = false;
+        foreach (var item in source)
+        {
+            if (!modified)
+            {
+                modified = true;
+                yield return modifier(item);
+            }
+            else
+            {
+                yield return item;
+            }
+        }
     }
 }

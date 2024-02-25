@@ -5,13 +5,13 @@ public readonly ref struct ReasonCompositeSpecFactory<TModel, TUnderlyingMetadat
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause)
 {
-    public SpecBase<TModel, string> CreateSpec(string description) =>
-        CreateSpecInternal(description.ThrowIfNullOrWhitespace(nameof(description)));
+    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+        CreateSpecInternal(proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
     
-    private SpecBase<TModel, string> CreateSpecInternal(string description) =>
+    private SpecBase<TModel, string> CreateSpecInternal(string name) =>
         new CompositeSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             trueBecause,
             falseBecause,
-            description);
+            name);
 }

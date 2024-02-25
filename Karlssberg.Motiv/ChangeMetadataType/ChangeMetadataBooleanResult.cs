@@ -6,36 +6,26 @@
 internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
     TMetadata metadata,
-    string description)
+    IProposition proposition)
     : BooleanResultBase<TMetadata>
 {
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
     public override bool Satisfied => booleanResult.Satisfied;
 
     /// <summary>Gets the description of the boolean result.</summary>
-    public override string Description =>
-        metadata switch
-        {
-            string reason => reason,
-            _ => description
-        };
-
-    internal override string DebuggerDisplay() => booleanResult.DebuggerDisplay();
+    public override IResultDescription Description =>
+        new ChangeMetadataBooleanResultDescription<TMetadata, TUnderlyingMetadata>(
+            booleanResult,
+            metadata,
+            proposition);
 
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override Explanation Explanation =>
-        metadata switch
+        new(Description)
         {
-            string reason => new Explanation(reason)
-            {
-                Underlying = [booleanResult.Explanation]
-            },
-            _ => new Explanation(Description)
-            {
-                Underlying = [booleanResult.Explanation]
-            }
+            Underlying = [booleanResult.Explanation]
         };
-
+    
     public override MetadataSet<TMetadata> Metadata => new(metadata);
 
     public override Cause<TMetadata> Cause => new(metadata, Description)

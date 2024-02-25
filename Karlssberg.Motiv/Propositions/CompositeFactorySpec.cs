@@ -2,23 +2,26 @@
 
 namespace Karlssberg.Motiv.Propositions;
 
-internal sealed class CompositeSpecFactorySpec<TModel, TMetadata, TUnderlyingMetadata>(
+internal sealed class CompositeFactorySpec<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> underlyingSpecFactory,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse,
-    string description)
+    string propositionalStatement)
     : SpecBase<TModel, TMetadata>
 {
-    internal CompositeSpecFactorySpec(
+    private readonly SpecBase<TModel, TUnderlyingMetadata>? _underlyingSpec;
+    
+    internal CompositeFactorySpec(
         SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
         Func<TModel, TMetadata> whenTrue,
         Func<TModel, TMetadata> whenFalse,
-        string description) : this(_ => underlyingSpec, whenTrue, whenFalse, description)
+        string propositionalStatement) : this(_ => underlyingSpec, whenTrue, whenFalse, propositionalStatement)
     {
+        _underlyingSpec = underlyingSpec;
     }
-    
+
     /// <summary>Gets the description of the specification.</summary>
-    public override string Description => description;
+    public override IProposition Proposition => new Proposition(propositionalStatement, _underlyingSpec?.Proposition);
 
     /// <summary>Determines if the specification is satisfied by the given model.</summary>
     /// <param name="model">The model to be evaluated.</param>
@@ -36,6 +39,6 @@ internal sealed class CompositeSpecFactorySpec<TModel, TMetadata, TUnderlyingMet
             false => whenFalse(model),
         };
 
-        return new ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadata, description);
+        return new ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadata, Proposition);
     }
 }

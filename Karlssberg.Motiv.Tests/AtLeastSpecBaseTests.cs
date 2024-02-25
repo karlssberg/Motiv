@@ -173,14 +173,38 @@ public class AtLeastSpecBaseTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "<at least one satisfied>{0/3}:false(received false x3)")]
-    [InlineAutoData(false, false, true,  "<at least one satisfied>{1/3}:true(received true x1)")]
-    [InlineAutoData(false, true,  false, "<at least one satisfied>{1/3}:true(received true x1)")]
-    [InlineAutoData(false, true,  true,  "<at least one satisfied>{2/3}:true(received true x2)")]
-    [InlineAutoData(true,  false, false, "<at least one satisfied>{1/3}:true(received true x1)")]
-    [InlineAutoData(true,  false, true,  "<at least one satisfied>{2/3}:true(received true x2)")]
-    [InlineAutoData(true,  true,  false, "<at least one satisfied>{2/3}:true(received true x2)")]
-    [InlineAutoData(true,  true,  true,  "<at least one satisfied>{3/3}:true(received true x3)")]
+    [InlineAutoData(false, false, false, """
+                                            none satisfied
+                                                3x received false
+                                            """)]
+    [InlineAutoData(false, false, true,  """
+                                            at least one satisfied
+                                                1x received true
+                                            """)]
+    [InlineAutoData(false, true,  false, """
+                                            at least one satisfied
+                                                1x received true
+                                            """)]
+    [InlineAutoData(false, true,  true,  """
+                                            at least one satisfied
+                                                2x received true
+                                            """)]
+    [InlineAutoData(true,  false, false, """
+                                            at least one satisfied
+                                                1x received true
+                                            """)]
+    [InlineAutoData(true,  false, true,  """
+                                            at least one satisfied
+                                                2x received true
+                                            """)]
+    [InlineAutoData(true,  true,  false, """
+                                            at least one satisfied
+                                                2x received true
+                                            """)]
+    [InlineAutoData(true,  true,  true,  """
+                                            at least one satisfied
+                                                3x received true
+                                            """)]
     public void Should_serialize_the_result_of_the_at_least_of_1_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -202,18 +226,42 @@ public class AtLeastSpecBaseTests
             
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Should().Be(expected);
+        result.Description.Details.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "<At least one satisfied>{0/3}:false(underlying not satisfied x3)")]
-    [InlineAutoData(false, false, true,  "<At least one satisfied>{1/3}:true(underlying satisfied x1)")]
-    [InlineAutoData(false, true, false,  "<At least one satisfied>{1/3}:true(underlying satisfied x1)")]
-    [InlineAutoData(false, true, true,   "<At least one satisfied>{2/3}:true(underlying satisfied x2)")]
-    [InlineAutoData(true, false, false,  "<At least one satisfied>{1/3}:true(underlying satisfied x1)")]
-    [InlineAutoData(true, false, true,   "<At least one satisfied>{2/3}:true(underlying satisfied x2)")]
-    [InlineAutoData(true, true, false,   "<At least one satisfied>{2/3}:true(underlying satisfied x2)")]
-    [InlineAutoData(true, true, true,    "<At least one satisfied>{3/3}:true(underlying satisfied x3)")]
+    [InlineAutoData(false, false, false, """
+                                            None satisfied
+                                                3x underlying not satisfied
+                                            """)]
+    [InlineAutoData(false, false, true,  """
+                                            At least one satisfied
+                                                1x underlying satisfied
+                                            """)]
+    [InlineAutoData(false, true, false,  """
+                                            At least one satisfied
+                                                1x underlying satisfied
+                                            """)]
+    [InlineAutoData(false, true, true,   """
+                                            At least one satisfied
+                                                2x underlying satisfied
+                                            """)]
+    [InlineAutoData(true, false, false,  """
+                                            At least one satisfied
+                                                1x underlying satisfied
+                                            """)]
+    [InlineAutoData(true, false, true,   """
+                                            At least one satisfied
+                                                2x underlying satisfied
+                                            """)]
+    [InlineAutoData(true, true, false,   """
+                                            At least one satisfied
+                                                2x underlying satisfied
+                                            """)]
+    [InlineAutoData(true, true, true,    """
+                                            At least one satisfied
+                                                3x underlying satisfied
+                                            """)]
     public void Should_serialize_the_result_of_the_at_least_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
         bool second,
@@ -235,18 +283,42 @@ public class AtLeastSpecBaseTests
             
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Should().Be(expected);
+        result.Description.Details.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "<at least one satisfied>{0/3}:false('underlying model' is false x3)")]
-    [InlineAutoData(false, false, true,  "<at least one satisfied>{1/3}:true('underlying model' is true x1)")]
-    [InlineAutoData(false, true, false,  "<at least one satisfied>{1/3}:true('underlying model' is true x1)")]
-    [InlineAutoData(false, true, true,   "<at least one satisfied>{2/3}:true('underlying model' is true x2)")]
-    [InlineAutoData(true, false, false,  "<at least one satisfied>{1/3}:true('underlying model' is true x1)")]
-    [InlineAutoData(true, false, true,   "<at least one satisfied>{2/3}:true('underlying model' is true x2)")]
-    [InlineAutoData(true, true, false,   "<at least one satisfied>{2/3}:true('underlying model' is true x2)")]
-    [InlineAutoData(true, true, true,    "<at least one satisfied>{3/3}:true('underlying model' is true x3)")]
+    [InlineAutoData(false, false, false, """
+                                            none satisfied
+                                                3x !is true
+                                            """)]
+    [InlineAutoData(false, false, true,  """
+                                            at least one satisfied
+                                                1x is true
+                                            """)]
+    [InlineAutoData(false, true, false,  """
+                                            at least one satisfied
+                                                1x is true
+                                            """)]
+    [InlineAutoData(false, true, true,   """
+                                            at least one satisfied
+                                                2x is true
+                                            """)]
+    [InlineAutoData(true, false, false,  """
+                                            at least one satisfied
+                                                1x is true
+                                            """)]
+    [InlineAutoData(true, false, true,   """
+                                            at least one satisfied
+                                                2x is true
+                                            """)]
+    [InlineAutoData(true, true, false,   """
+                                            at least one satisfied
+                                                2x is true
+                                            """)]
+    [InlineAutoData(true, true, true,    """
+                                            at least one satisfied
+                                                3x is true
+                                            """)]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
         bool second,
@@ -257,7 +329,7 @@ public class AtLeastSpecBaseTests
             .Build<bool>(m => m)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("underlying model");
+            .CreateSpec("is true");
 
         var sut = Spec
             .Build(underlyingSpec)
@@ -268,13 +340,13 @@ public class AtLeastSpecBaseTests
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Should().Be(expected);
+        result.Description.Details.Should().Be(expected);
     }
 
     [Fact]
-    public void Should_provide_a_description_of_the_specification()
+    public void Should_provide_a_proposition_statement_for_the_specification()
     {
-        const string expected = "<at least one satisfied>(underlying spec description)";
+        const string expected = "at least one satisfied";
         var underlyingSpec = Spec
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
@@ -288,28 +360,7 @@ public class AtLeastSpecBaseTests
             .WhenFalse("none satisfied")
             .CreateSpec();
 
-        sut.Description.Should().Be(expected);
-        sut.ToString().Should().Be(expected);
-    }
-
-    [Fact]
-    public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
-    {
-        const string expected = "<At least one satisfied>(True)";
-        var underlyingSpec = Spec
-            .Build<bool>(m => m)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
-            .CreateSpec();
-
-        var sut = Spec
-            .Build(underlyingSpec)
-            .AsAtLeastNSatisfied(1)
-            .WhenTrue("At least one satisfied")
-            .WhenFalse("None satisfied")
-            .CreateSpec();
-
-        sut.Description.Should().Be(expected);
+        sut.Proposition.Name.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 

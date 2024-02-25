@@ -36,10 +36,10 @@ public class OrSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, true, "('left' is true) OR:true ('right' is true)")]
-    [InlineAutoData(true, false, "('left' is true) OR:true ('right' is false)")]
-    [InlineAutoData(false, true, "('left' is false) OR:true ('right' is true)")]
-    [InlineAutoData(false, false, "('left' is false) OR:false ('right' is false)")]
+    [InlineAutoData(true, true, "left | right")]
+    [InlineAutoData(true, false, "left")]
+    [InlineAutoData(false, true, "right")]
+    [InlineAutoData(false, false, "!left | !right")]
     public void Should_serialize_the_result_of_the_or_operation(
         bool leftResult,
         bool rightResult,
@@ -62,15 +62,15 @@ public class OrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Should().Be(expected);
+        result.Description.Reason.Should().Be(expected);
     }
 
 
     [Theory]
-    [InlineAutoData(true, true, "(True) OR:true (True)")]
-    [InlineAutoData(true, false, "(True) OR:true (False)")]
-    [InlineAutoData(false, true, "(False) OR:true (True)")]
-    [InlineAutoData(false, false, "(False) OR:false (False)")]
+    [InlineAutoData(true, true, "True | True")]
+    [InlineAutoData(true, false, "True")]
+    [InlineAutoData(false, true, "True")]
+    [InlineAutoData(false, false, "False | False")]
     public void Should_serialize_the_result_of_the_or_operation_when_metadata_is_a_string(
         bool leftResult,
         bool rightResult,
@@ -94,14 +94,14 @@ public class OrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Should().Be(expected);
+        result.Description.Reason.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(true, true, "(True) OR:true (True)")]
-    [InlineAutoData(true, false, "(True) OR:true (False)")]
-    [InlineAutoData(false, true, "(False) OR:true (True)")]
-    [InlineAutoData(false, false, "(False) OR:false (False)")]
+    [InlineAutoData(true, true, "True | True")]
+    [InlineAutoData(true, false, "True")]
+    [InlineAutoData(false, true, "True")]
+    [InlineAutoData(false, false, "False | False")]
     public void Should_serialize_the_result_of_the_or_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool leftResult,
         bool rightResult,
@@ -124,7 +124,7 @@ public class OrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Should().Be(expected);
+        result.Description.Reason.Should().Be(expected);
     }
 
     [Theory]
@@ -146,11 +146,11 @@ public class OrSpecTests
             .WhenFalse(false)
             .CreateSpec("right");
 
-        var expected = $"({left.Description}) | ({right.Description})";
+        var expected = $"{left.Proposition} | {right.Proposition}";
 
         var sut = left | right;
 
-        sut.Description.Should().Be(expected);
+        sut.Proposition.Name.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -173,11 +173,11 @@ public class OrSpecTests
             .WhenFalse(false.ToString())
             .CreateSpec();
 
-        var expected = $"({left.Description}) | ({right.Description})";
+        var expected = $"{left.Proposition} | {right.Proposition}";
 
         var sut = left | right;
 
-        sut.Description.Should().Be(expected);
+        sut.Proposition.Name.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 

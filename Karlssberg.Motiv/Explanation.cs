@@ -4,7 +4,7 @@ namespace Karlssberg.Motiv;
 
 public sealed record Explanation(IEnumerable<string> Reasons)
 {
-    public Explanation(string reason) : this([reason])
+    public Explanation(IResultDescription description) : this([description.Reason])
     {
     }
 

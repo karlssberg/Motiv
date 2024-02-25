@@ -18,13 +18,13 @@ public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadat
         new(spec, higherOrderPredicate, whenTrue);
 
     public FalseReasonsWithDescriptionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
-        new(spec, higherOrderPredicate, _ => [trueBecause], trueBecause);
+        new(spec, higherOrderPredicate, _ => [trueBecause], trueBecause, ReasonSource.Metadata);
     
     public FalseReasonsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, string> trueBecause) =>
-        new(spec, higherOrderPredicate, results => [trueBecause(results)]);
+        new(spec, higherOrderPredicate, results => [trueBecause(results)], ReasonSource.Metadata);
 
     public FalseReasonsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
-        new(spec, higherOrderPredicate, trueBecause);
+        new(spec, higherOrderPredicate, trueBecause, ReasonSource.Proposition);
 }

@@ -4,17 +4,15 @@
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata"></typeparam>
 public readonly ref struct MetadataWithDescriptionFirstOrderSpecFactory<TModel, TMetadata>(
-    Func<TModel, bool> predicate, 
-    Func<TModel, TMetadata> whenTrue, 
+    Func<TModel, bool> predicate,
+    Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse)
 {
     /// <summary>Provide a human readable explanation for when the condition is false.</summary>
-    /// <param name="description">The description of the specification. If not specified, the description of the specification</param>
+    /// <param name="name">The name of the specification. Preferably this would be in predicate form eg "is even number".</param>
     /// <returns>A specification base.</returns>
-    public SpecBase<TModel, TMetadata> CreateSpec(string description) =>
-        new Spec<TModel, TMetadata>(
-            description.ThrowIfNullOrWhitespace(nameof(description)),
-            predicate,
+    public SpecBase<TModel, TMetadata> CreateSpec(string proposition) =>
+        new Spec<TModel, TMetadata>(predicate,
             whenTrue,
-            whenFalse);
+            whenFalse, proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

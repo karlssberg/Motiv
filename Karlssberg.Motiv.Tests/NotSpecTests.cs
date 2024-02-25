@@ -27,8 +27,8 @@ public class NotSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, "NOT:false('underlying spec' is true)")]
-    [InlineAutoData(false, "NOT:true('underlying spec' is false)")]
+    [InlineAutoData(true, "!is true")]
+    [InlineAutoData(false, "is true")]
     public void Should_serialize_the_result_of_the_not_operation(
         bool operand,
         string expected,
@@ -38,18 +38,18 @@ public class NotSpecTests
             .Build<object>(m => operand)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("underlying spec");
+            .CreateSpec("is true");
 
         var sut = !spec;
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Should().Be(expected);
+        result.Description.Reason.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(true, "NOT:false(True)")]
-    [InlineAutoData(false, "NOT:true(False)")]
+    [InlineAutoData(true, "!True")]
+    [InlineAutoData(false, "!False")]
     public void Should_serialize_the_result_of_the_not_operation_when_metadata_is_a_string(
         bool operand,
         string expected,
@@ -65,13 +65,13 @@ public class NotSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Should().Be(expected);
+        result.Description.Reason.Should().Be(expected);
 
     }
 
     [Theory]
-    [InlineAutoData(true, "NOT:false(True)")]
-    [InlineAutoData(false, "NOT:true(False)")]
+    [InlineAutoData(true, "!True")]
+    [InlineAutoData(false, "!False")]
     public void Should_serialize_the_result_of_the_not_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool operand,
         string expected,
@@ -87,8 +87,7 @@ public class NotSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Should().Be(expected);
-
+        result.Description.Reason.Should().Be(expected);
     }
 
     [Theory]
