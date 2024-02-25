@@ -3,17 +3,16 @@
 internal class NotBooleanResultDescription(BooleanResultBase operand) : IResultDescription
 {
     public int CausalOperandCount => 1;
-    public string Reason => operand.Description.Reason;
+    public string Reason => FormatDescription(operand.Description.Reason);
     
-    public string Details => operand.Description.Details;
+    public string Details => FormatDescription(operand.Description.Details);
     
     private string FormatDescription(string underlyingDescription)
     {
-        return (underlyingDescription.FirstOrDefault(), operand) switch
+        return operand switch
         {
-            (_, ICompositeBooleanResult) => $"!({underlyingDescription})",
-            ('!', _) => underlyingDescription.Substring(1),
-            _ => $"!{underlyingDescription}"
+           ICompositeBooleanResult => $"({underlyingDescription})",
+            _ => underlyingDescription
         };
     }
     

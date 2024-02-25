@@ -25,6 +25,7 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
         var isSatisfied = higherOrderPredicate(underlyingResults);
         var causes = GetCauses(isSatisfied, underlyingResults).ToArray();
         var booleanCollectionResults = new BooleanCollectionResult<TModel, TUnderlyingMetadata>(
+            isSatisfied,
             underlyingResults, 
             causes);
 

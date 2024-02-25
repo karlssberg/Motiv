@@ -18,18 +18,32 @@ internal class AndBooleanResultDescription<TMetadata>(
         };
 
     public string Details =>
-        $"""
-           {ExplainDetails(left).IndentAfterFirstLine()}
-         & {ExplainDetails(right).IndentAfterFirstLine()}
-         """;
-    
-    
-    private string ExplainDetails(BooleanResultBase<TMetadata> result)
+        GetDetails();
+
+    private string GetDetails()
+    {
+        var leftDetails = Explain(left);
+        var rightDetails = Explain(right);
+
+        var isBracketed = leftDetails.IsBracketed() || rightDetails.IsBracketed();
+        var isTooLong = leftDetails.IsLongExpression() || rightDetails.IsLongExpression();
+        if (isBracketed || isTooLong)
+            return $"""
+                    {leftDetails} &
+                    {rightDetails}
+                    """;
+        
+        return $"{leftDetails} & {rightDetails}";
+    }
+
+    private string Explain(BooleanResultBase<TMetadata> result)
     {
         return result switch 
         {
-            AndBooleanResult<TMetadata> andSpec => andSpec.Description.Details,
-            ICompositeBooleanResult compositeSpec => $"({compositeSpec.Description.Details})",
+            AndBooleanResult<TMetadata> andSpec =>
+                andSpec.Description.Details,
+            ICompositeBooleanResult compositeSpec =>
+                $"({compositeSpec.Description.Details})",
             _ => result.Description.Details
         };
     }
@@ -38,8 +52,10 @@ internal class AndBooleanResultDescription<TMetadata>(
     {
         return result switch 
         {
-            AndBooleanResult<TMetadata> andSpec => andSpec.Description.Reason,
-            ICompositeBooleanResult { Description.CausalOperandCount: > 1 } compositeSpec => $"({compositeSpec.Description.Reason})",
+            AndBooleanResult<TMetadata> andSpec =>
+                andSpec.Description.Reason,
+            ICompositeBooleanResult { Description.CausalOperandCount: > 1 } compositeSpec =>
+                $"({compositeSpec.Description.Reason})",
             _ => result.Description.Reason
         };
     }
