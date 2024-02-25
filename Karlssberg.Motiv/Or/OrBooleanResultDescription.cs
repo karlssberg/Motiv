@@ -15,7 +15,7 @@ internal class OrBooleanResultDescription<TMetadata>(
         {
             0 => "",
             1 => _causalResults.First().Description.Reason,
-            _ =>  string.Join(" & ", _causalResults.Select(ExplainReasons))
+            _ =>  string.Join(" | ", _causalResults.Select(ExplainReasons))
         };
 
     public string Details => GetDetails();
