@@ -1,18 +1,18 @@
 ﻿namespace Karlssberg.Motiv.XOr;
 
-internal class XOrBooleanResultDescription<TMetadata>(
+internal class XOrBooleanAssertion<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right,
     IEnumerable<BooleanResultBase<TMetadata>> causalResults) 
-    : IResultDescription
+    : IAssertion
 {
     private readonly BooleanResultBase<TMetadata>[] _causalResults = causalResults.ToArray();
     
     public int CausalOperandCount => _causalResults.Length;
     
-    public string Reason => string.Join(" ^ ", _causalResults.Select(result => result.Description.Reason));
+    public string Short => string.Join(" ^ ", _causalResults.Select(result => result.Assertion.Short));
 
-    public string Details => 
+    public string Detailed => 
         GetDetails();
 
     private string GetDetails()
@@ -36,13 +36,13 @@ internal class XOrBooleanResultDescription<TMetadata>(
     {
         return result switch 
         {
-            XOrBooleanResult<TMetadata> xOrSpec => 
-                xOrSpec.Description.Details,
-            ICompositeBooleanResult compositeSpec => 
-                $"({compositeSpec.Description.Details})",
-            _ => result.Description.Details
+            XOrAssertion<TMetadata> xOrSpec => 
+                xOrSpec.Assertion.Detailed,
+            ICompositeAssertion compositeSpec => 
+                $"({compositeSpec.Assertion.Detailed})",
+            _ => result.Assertion.Detailed
         };
     }
     
-    public override string ToString() => Reason;
+    public override string ToString() => Short;
 }

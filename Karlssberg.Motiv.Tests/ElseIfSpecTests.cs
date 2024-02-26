@@ -23,7 +23,7 @@ public class ElseIfSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Explanation.Reasons.Should().BeEquivalentTo(expected);
+        result.Reason.Assertions.Should().BeEquivalentTo(expected);
     }
 
 

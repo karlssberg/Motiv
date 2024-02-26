@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Humanizer;
 using Karlssberg.Motiv.And;
 using Karlssberg.Motiv.Not;
 using Karlssberg.Motiv.Or;
@@ -7,7 +8,7 @@ using Karlssberg.Motiv.XOr;
 namespace Karlssberg.Motiv;
 
 /// <summary>Represents a base class for boolean results.</summary>
-[DebuggerDisplay("{IsSatisfiedDisplayText()}: {Description.Reason}")]
+[DebuggerDisplay("{IsSatisfiedDisplayText()}: {ToString()}")]
 public abstract class BooleanResultBase
     : IEquatable<BooleanResultBase>,
         IEquatable<bool>
@@ -24,14 +25,14 @@ public abstract class BooleanResultBase
     public abstract bool Satisfied { get; }
 
     /// <summary>Gets a human readable description of the tree of conditions that make up this result.</summary>
-    public abstract IResultDescription Description { get; }
+    public abstract IAssertion Assertion { get; }
 
     /// <summary>
     /// Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the
     /// result at this stage to avoid excessive deduplication during intermediate steps.  Deduplication is performed during the
-    /// call to <see cref="Explanation" />.
+    /// call to <see cref="Reason" />.
     /// </summary>
-    public abstract Explanation Explanation { get; }
+    public abstract Reason Reason { get; }
 
     /// <summary>Determines whether the current BooleanResultBase object is equal to the specified boolean value.</summary>
     /// <param name="other">The boolean value to compare with the current BooleanResultBase object.</param>
@@ -54,7 +55,7 @@ public abstract class BooleanResultBase
 
     /// <summary>Returns a human readable description of the tree of conditions that make up this result.</summary>
     /// <returns>A string that describes the tree of conditions that make up this result.</returns>
-    public override string ToString() => Description.Reason;
+    public override string ToString() => Reason.Assertions.Humanize();
 
     /// <summary>Defines the true operator for the <see cref="BooleanResultBase{TMetadata}" /> class.</summary>
     /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
@@ -135,7 +136,7 @@ public abstract class BooleanResultBase<TMetadata>
 
     public abstract MetadataSet<TMetadata> Metadata { get; }
 
-    public abstract Cause<TMetadata> Cause { get; }
+    public abstract CausalMetadata<TMetadata> CausalMetadata { get; }
 
     /// <summary>Determines whether the current BooleanResultBase object is equal to another BooleanResultBase object.</summary>
     /// <param name="other">The BooleanResultBase object to compare with the current object.</param>
@@ -155,7 +156,7 @@ public abstract class BooleanResultBase<TMetadata>
     /// <param name="otherResult">The other BooleanResultBase instance to perform the logical AND operation with.</param>
     /// <returns>A new instance of AndBooleanResult representing the result of the logical AND operation.</returns>
     public BooleanResultBase<TMetadata> And(BooleanResultBase<TMetadata> otherResult) =>
-        new AndBooleanResult<TMetadata>(this, otherResult);
+        new AndAssertion<TMetadata>(this, otherResult);
 
     /// <summary>
     /// Performs a logical OR operation between the current BooleanResultBase instance and another BooleanResultBase
@@ -164,7 +165,7 @@ public abstract class BooleanResultBase<TMetadata>
     /// <param name="otherResult">The other BooleanResultBase instance to perform the OR operation with.</param>
     /// <returns>A new BooleanResultBase instance representing the result of the OR operation.</returns>
     public BooleanResultBase<TMetadata> Or(BooleanResultBase<TMetadata> otherResult) =>
-        new OrBooleanResult<TMetadata>(this, otherResult);
+        new OrAssertion<TMetadata>(this, otherResult);
 
     /// <summary>
     /// Performs a logical exclusive OR (XOR) operation between this BooleanResultBase instance and another
@@ -173,7 +174,7 @@ public abstract class BooleanResultBase<TMetadata>
     /// <param name="otherResult">The other BooleanResultBase instance to perform the XOR operation with.</param>
     /// <returns>A new XOrBooleanResult instance representing the result of the XOR operation.</returns>
     public BooleanResultBase<TMetadata> XOr(BooleanResultBase<TMetadata> otherResult) =>
-        new XOrBooleanResult<TMetadata>(this, otherResult);
+        new XOrAssertion<TMetadata>(this, otherResult);
 
     /// <summary>
     /// Returns a new instance of <see cref="NotBooleanResult{TMetadata}" /> that represents the logical negation of

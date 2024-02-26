@@ -23,14 +23,14 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     public TModel Model { get; }
 
     /// <summary>Gets the description of the result.</summary>
-    public override IResultDescription Description => _underlyingResult.Description;
+    public override IAssertion Assertion => _underlyingResult.Assertion;
 
-    public override Explanation Explanation => _underlyingResult.Explanation;
+    public override Reason Reason => _underlyingResult.Reason;
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
     public override bool Satisfied => _underlyingResult.Satisfied;
 
     public override MetadataSet<TMetadata> Metadata => _underlyingResult.Metadata;
     
-    public override Cause<TMetadata> Cause => _underlyingResult.Cause;
+    public override CausalMetadata<TMetadata> CausalMetadata => _underlyingResult.CausalMetadata;
 }

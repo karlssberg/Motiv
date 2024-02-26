@@ -9,18 +9,18 @@ public sealed class BooleanResult<TMetadata>(
     : BooleanResultBase<TMetadata>
 {
     public override MetadataSet<TMetadata> Metadata => new([metadata]);
-    public override Cause<TMetadata> Cause => new(Metadata, Explanation.Reasons);
+    public override CausalMetadata<TMetadata> CausalMetadata => new(Metadata, Reason.Assertions);
 
     /// <summary>Gets the reasons for the result.</summary>
-    public override Explanation Explanation => new(Description)
+    public override Reason Reason => new(Assertion)
     {
-        Underlying = Enumerable.Empty<Explanation>()
+        Underlying = Enumerable.Empty<Reason>()
     };
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
     public override bool Satisfied => value;
 
     /// <summary>Gets the description of the result.</summary>
-    public override IResultDescription Description =>
-        new ResultDescription<TMetadata>(value, proposition, metadata);
+    public override IAssertion Assertion =>
+        new Assertion<TMetadata>(value, proposition, metadata);
 }

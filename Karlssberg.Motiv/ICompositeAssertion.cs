@@ -1,7 +1,7 @@
 ﻿namespace Karlssberg.Motiv;
 
-internal interface ICompositeBooleanResult
+internal interface ICompositeAssertion
 {
     /// <summary>Gets the description of the XOR operation.</summary>
-    IResultDescription Description { get; }
+    IAssertion Assertion { get; }
 }

@@ -15,28 +15,28 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
 
     public override bool Satisfied => isSatisfied;
 
-    public override IResultDescription Description =>
-        new HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetadata>(
+    public override IAssertion Assertion =>
+        new HigherOrderAssertion<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
             metadataCollection,
             causes,
             proposition,
             reasonSource);
 
-    public override Explanation Explanation => 
-        new (Description)
+    public override Reason Reason => 
+        new (Assertion)
         {
             Underlying = causes
-                .Select(cause => cause.Explanation)
+                .Select(cause => cause.Reason)
         };
 
-    public override Cause<TMetadata> Cause =>
-        new(Metadata, Explanation.Reasons)
+    public override CausalMetadata<TMetadata> CausalMetadata =>
+        new(Metadata, Reason.Assertions)
         {
             Underlying = causes switch
             {
-                IEnumerable<BooleanResultBase<TMetadata>> results => results.Select(result => result.Cause),
-                _ => Enumerable.Empty<Cause<TMetadata>>()
+                IEnumerable<BooleanResultBase<TMetadata>> results => results.Select(result => result.CausalMetadata),
+                _ => Enumerable.Empty<CausalMetadata<TMetadata>>()
             }
         };
 }

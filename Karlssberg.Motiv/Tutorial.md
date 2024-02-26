@@ -7,31 +7,53 @@ specifications.
 
 ### Basic Specification
 
+At its most basic you can provide a predicate and a propositional statement.
 ```csharp
-SpecBase<int, string> isEven = Spec
+var isEven = Spec
     .Build<int>(n => n % 2 == 0)
-    .WhenTrue("the number is even")
-    .WhenFalse("the number is odd")
-    .CreateSpec();
+    .CreateSpec("even");
 
 isEven.IsSatisfiedBy(2).Satisfied; // returns true
-isEven.IsSatisfiedBy(2).Reasons; // returns ["the number is even"]
-isEven.IsSatisfiedBy(3).Reasons; // returns ["the number is odd"]
+isEven.IsSatisfiedBy(3).Satisfied; // returns false
+isEven.IsSatisfiedBy(2).Reasons; // returns ["even"]
+isEven.IsSatisfiedBy(3).Reasons; // returns ["!even"]
 ```
+
+However, the real power of the library comes from the ability to provide a reason for when either the result is true or false.
+
+```csharp
+var isEven = Spec
+    .Build<int>(n => n % 2 == 0)
+    .WhenTrue("number is even")
+    .WhenFalse("number is odd")
+    .CreateSpec();
+
+isEven.IsSatisfiedBy(2).Reasons; // returns ["number is even"]
+isEven.IsSatisfiedBy(3).Reasons; // returns ["number is odd"]
+```
+
+You can also provide a function that returns a description based on the value of the input.
+```csharp
+var isEven = Spec
+    .Build<int>(n => n % 2 == 0)
+    .WhenTrue(n => $"{n} is even")
+    .WhenFalse(n => $"{n} is odd")
+    .CreateSpec();
+
+isEven.IsSatisfiedBy(2).Reasons; // returns ["2 is even"]
+isEven.IsSatisfiedBy(3).Reasons; // returns ["3 is odd"]
+```
+
 
 ### Composite Specification
 ```csharp
-SpecBase<int, string> isPositive = Spec
+var isPositive = Spec
     .Build<int>(n => n > 0)
     .WhenTrue("the number is positive")
-    .WhenFalse(n => n switch 
-        {
-            0 => "the number is zero",
-            _ => "the number is negative"
-        })
+    .WhenFalse(n => $"the number is {n < 0 ? "negative" : "zero"}")
     .CreateSpec();
 
-SpecBase<int, string> isEven = Spec
+var isEven = Spec
     .Build<int>(n => n % 2 == 0)
     .WhenTrue("the number is even")
     .WhenFalse("the number is odd")

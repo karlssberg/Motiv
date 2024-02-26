@@ -35,37 +35,39 @@ public static class EnumerableExtensions
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results.Any(result => !result.Satisfied);
     
-    internal static Cause<TMetadata> CreateCause<TMetadata>(
+    internal static CausalMetadata<TMetadata> CreateCause<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> causalResults)
     {
         var causalResultsArray = causalResults.ToArray();
         var metadata = causalResultsArray
-            .SelectMany(cause => cause.Cause.Metadata);
+            .SelectMany(cause => cause.CausalMetadata.Metadata);
         
         var reasons = causalResultsArray
-            .SelectMany(cause => cause.Cause.Reasons);
+            .SelectMany(cause => cause.Reason.Assertions);
         
         var underlyingCauses = causalResultsArray
-            .SelectMany(cause => cause.Cause.Underlying);
+            .SelectMany(cause => cause.CausalMetadata.Underlying);
         
-        return new Cause<TMetadata>(metadata, reasons)
+        return new CausalMetadata<TMetadata>(metadata, reasons)
         {
             Underlying = underlyingCauses
         };
     }
     
-    internal static Explanation CreateExplanation(
+    internal static Reason CreateReason(
         this IEnumerable<BooleanResultBase> underlyingResults)
     {
         var resultArray = underlyingResults.ToArray();
 
         var reasons = resultArray
-            .SelectMany(result => result.Explanation.Reasons);
+            .SelectMany(result => result.Reason.Assertions)
+            .Distinct()
+            .OrderBy(d => d);
         
         var underlying = resultArray
-            .Select(result => result.Explanation);
+            .Select(result => result.Reason);
         
-        return new Explanation(reasons)
+        return new Reason(reasons)
         {
             Underlying = underlying
         };
@@ -102,5 +104,10 @@ public static class EnumerableExtensions
                 yield return item;
             }
         }
+    }
+    
+    internal static IEnumerable<T> ToEnumerable<T>(this T item)
+    {
+        yield return item;
     }
 }

@@ -62,7 +62,7 @@ public class OrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Reason.Should().Be(expected);
+        result.Assertion.Short.Should().Be(expected);
     }
 
 
@@ -94,7 +94,7 @@ public class OrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Reason.Should().Be(expected);
+        result.Assertion.Short.Should().Be(expected);
     }
 
     [Theory]
@@ -124,7 +124,7 @@ public class OrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Reason.Should().Be(expected);
+        result.Assertion.Short.Should().Be(expected);
     }
 
     [Theory]

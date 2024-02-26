@@ -42,7 +42,7 @@ public class SpecTests
 
         result.Satisfied.Should().Be(model);
         result.Metadata.Should().ContainSingle(expectedReason);
-        result.Explanation.Reasons.Should().BeEquivalentTo(expectedReason);
+        result.Reason.Assertions.Should().BeEquivalentTo(expectedReason);
     }
 
     [Fact]

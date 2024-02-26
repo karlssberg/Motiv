@@ -2,27 +2,27 @@
 
 namespace Karlssberg.Motiv.HigherOrder;
 
-internal class HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetadata>(
+internal class HigherOrderAssertion<TModel, TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
     IEnumerable<TMetadata> metadataCollection,
     IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes,
     IProposition proposition,
     ReasonSource reasonSource)
-    : IResultDescription
+    : IAssertion
 {
     private readonly BooleanResult<TModel, TUnderlyingMetadata>[] _causes = causes.ToArray();
     public int CausalOperandCount => _causes.Length;
-    public string Reason => proposition.ToReason(isSatisfied, metadataCollection.SingleOrDefault(), reasonSource);
-    public string Details => GetFullDescription();
+    public string Short => proposition.ToReason(isSatisfied, metadataCollection.SingleOrDefault(), reasonSource);
+    public string Detailed => GetFullDescription();
 
     private string GetFullDescription()
     {
         var details = GetDetails();
         return details switch
         {
-            "" => Reason,
+            "" => Short,
             _ => $"""
-                  {Reason}
+                  {Short}
                       {details.IndentAfterFirstLine()}
                   """
         };
@@ -31,7 +31,7 @@ internal class HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetada
         {
             var reasonFrequency = _causes
                 .OrderByDescending(result => result.Satisfied)
-                .Select(result => result.Description.Reason)
+                .Select(result => result.Assertion.Short)
                 .GroupBy(reason => reason)
                 .Select(grouping => (Reason: grouping.Key, Count: grouping.Count()))
                 .OrderByDescending(grouping => grouping.Count)
@@ -54,5 +54,5 @@ internal class HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetada
         }
     }
     
-    public override string ToString() => Reason;
+    public override string ToString() => Short;
 }

@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv.Tests;
 
-public class ResultDescriptionTests
+public class AssertionTests
 {
     [Theory]
     [InlineAutoData(true, "is true")]
@@ -17,7 +17,7 @@ public class ResultDescriptionTests
 
         var result = spec.IsSatisfiedBy(new object());
 
-        result.Description.Reason.Should().Be(expected);
+        result.Assertion.Short.Should().Be(expected);
     }  
     
     [Theory]
@@ -36,7 +36,7 @@ public class ResultDescriptionTests
 
         var result = spec.IsSatisfiedBy(model);
 
-        result.Description.Reason.Should().Be(expected);
+        result.Assertion.Short.Should().Be(expected);
     }
     
     [Theory]
@@ -62,7 +62,7 @@ public class ResultDescriptionTests
 
         var result = spec.IsSatisfiedBy(model);
 
-        result.Description.Reason.Should().Be(expected);
+        result.Assertion.Short.Should().Be(expected);
     }
     
     [Theory]
@@ -110,7 +110,7 @@ public class ResultDescriptionTests
         
         var result = spec.IsSatisfiedBy(model);
 
-        result.Description.Reason.Should().Be(expected);
+        result.Assertion.Short.Should().Be(expected);
     }
     
     [Theory]
@@ -166,7 +166,7 @@ public class ResultDescriptionTests
         
         var result = spec.IsSatisfiedBy(model);
 
-        result.Description.Reason.Should().Be(expected);
+        result.Assertion.Short.Should().Be(expected);
     }
     
     [Theory]
@@ -283,7 +283,7 @@ public class ResultDescriptionTests
         
         var result = spec.IsSatisfiedBy([true]);
 
-        result.Description.Details.Should().Be(expected);
+        result.Assertion.Detailed.Should().Be(expected);
     }
     
     [Theory]
@@ -393,7 +393,7 @@ public class ResultDescriptionTests
         var spec = (first | !second) & !(third | !forth);
         var result = spec.IsSatisfiedBy(true);
 
-        result.Description.Details.Should().Be(expected);
+        result.Assertion.Detailed.Should().Be(expected);
     }
     
 }

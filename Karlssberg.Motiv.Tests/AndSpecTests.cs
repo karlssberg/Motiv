@@ -62,7 +62,7 @@ public class AndSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Reason.Should().Be(expected);
+        result.Assertion.Short.Should().Be(expected);
     }
 
     [Theory]
@@ -92,7 +92,7 @@ public class AndSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Reason.Should().Be(expected);
+        result.Assertion.Short.Should().Be(expected);
     }
 
     [Theory]
@@ -122,7 +122,7 @@ public class AndSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Description.Reason.Should().Be(expected);
+        result.Assertion.Short.Should().Be(expected);
     }
 
     [Theory]

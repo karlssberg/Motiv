@@ -113,7 +113,7 @@ public class AnySpecTests
             
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Details.Should().Be(expected);
+        result.Assertion.Detailed.Should().Be(expected);
     }
 
     [Theory]
@@ -172,7 +172,7 @@ public class AnySpecTests
 
         var result = sut.IsSatisfiedBy(models);
 
-        result.Description.Details.Should().Be(expected);
+        result.Assertion.Detailed.Should().Be(expected);
     }
 
     [Theory]
@@ -228,7 +228,7 @@ public class AnySpecTests
             .CreateSpec("all true");
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Details.Should().Be(expected);
+        result.Assertion.Detailed.Should().Be(expected);
     }
 
     [Theory]
