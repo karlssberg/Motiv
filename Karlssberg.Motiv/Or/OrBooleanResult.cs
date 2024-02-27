@@ -2,12 +2,12 @@
 
 /// <summary>Represents a boolean result that is the logical OR of two operand results.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
-internal sealed class OrAssertion<TMetadata>(
+internal sealed class OrBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right)
-    : BooleanResultBase<TMetadata>, ICompositeAssertion
+    : BooleanResultBase<TMetadata>, ICompositeBooleanResult
 {
-    public override Reason Reason => GetCausalResults().CreateReason();
+    public override Explanation Explanation => GetCausalResults().CreateReason();
     
     public override MetadataSet<TMetadata> Metadata => new(GetCausalResults()
         .SelectMany(result => result.Metadata));
@@ -18,7 +18,7 @@ internal sealed class OrAssertion<TMetadata>(
     public override bool Satisfied { get; } = left.Satisfied || right.Satisfied;
 
     /// <inheritdoc />
-    public override IAssertion Assertion => new OrBooleanAssertion<TMetadata>(left, right, GetCausalResults());
+    public override ResultDescriptionBase Description => new OrBooleanResultDescription<TMetadata>(left, right, GetCausalResults());
     
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {

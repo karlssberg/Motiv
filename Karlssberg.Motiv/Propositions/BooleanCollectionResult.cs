@@ -26,7 +26,7 @@ public sealed record BooleanCollectionResult<TModel, TMetadata>(
         .SelectMany(result => result.Metadata);
     
     public IEnumerable<string> Reasons => CausalResults
-        .SelectMany(result => result.Reason.Assertions);
+        .SelectMany(result => result.Explanation.Assertions);
 
     public IEnumerable<BooleanResult<TModel, TMetadata>> WhereTrue() => AllResults
         .Where(result => result.Satisfied);

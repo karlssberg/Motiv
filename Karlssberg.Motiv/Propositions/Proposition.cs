@@ -2,7 +2,7 @@
 
 internal class Proposition(string name, IProposition? underlyingProposition = null) : IProposition
 {
-    public string Name => name;
+    public string Assertion => name;
 
     public string Detailed =>
         underlyingProposition switch
@@ -16,5 +16,5 @@ internal class Proposition(string name, IProposition? underlyingProposition = nu
         };
 
 
-    public override string ToString() => Name;
+    public override string ToString() => Assertion;
 }

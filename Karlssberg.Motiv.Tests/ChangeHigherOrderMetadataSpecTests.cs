@@ -27,7 +27,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
         
-        result.Reason.Assertions.Should().BeEquivalentTo(expected);
+        result.Explanation.Assertions.Should().BeEquivalentTo(expected);
     }
     
     [Fact]
@@ -46,7 +46,7 @@ public class ChangeHigherOrderMetadataSpecTests
             .WhenFalse("is not a pair of even numbers")
             .CreateSpec();
 
-        sut.Proposition.Name.Should().Be("is a pair of even numbers");
+        sut.Proposition.Assertion.Should().Be("is a pair of even numbers");
     }
 
     [Theory]
@@ -87,7 +87,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
-        result.Reason.Assertions.Should().BeEquivalentTo(expected);
+        result.Explanation.Assertions.Should().BeEquivalentTo(expected);
     }
     
     [Theory]
@@ -127,7 +127,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
-        result.Reason.DeepAssertions.Should().BeEquivalentTo(expected);
+        result.Explanation.DeepAssertions.Should().BeEquivalentTo(expected);
     }
     
     [Theory]
@@ -166,7 +166,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var act = sut.IsSatisfiedBy([first, second, third, forth]);
             
-        act.Reason.Assertions.Should().BeEquivalentTo(expectedReason);
+        act.Explanation.Assertions.Should().BeEquivalentTo(expectedReason);
         act.Satisfied.Should().Be(expected);
     }
 }

@@ -5,20 +5,20 @@
 ///     objects.
 /// </summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>
-internal sealed class AndAssertion<TMetadata>(
+internal sealed class AndBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right)
-    : BooleanResultBase<TMetadata>, ICompositeAssertion
+    : BooleanResultBase<TMetadata>, ICompositeBooleanResult
 {
     /// <inheritdoc />
     public override bool Satisfied { get; } = left.Satisfied && right.Satisfied;
 
     /// <inheritdoc />
-    public override IAssertion Assertion =>
-        new AndBooleanAssertion<TMetadata>(left, right, GetCausalResults());
+    public override ResultDescriptionBase Description =>
+        new AndBooleanResultDescription<TMetadata>(left, right, GetCausalResults());
 
     /// <inheritdoc />
-    public override Reason Reason => GetCausalResults().CreateReason();
+    public override Explanation Explanation => GetCausalResults().CreateReason();
 
     public override MetadataSet<TMetadata> Metadata => new(GetCausalResults()
         .SelectMany(result => result.Metadata));

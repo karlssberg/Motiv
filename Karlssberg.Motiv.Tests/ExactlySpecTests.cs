@@ -64,8 +64,8 @@ public class ExactlySpecTests
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
         result.Satisfied.Should().Be(expected);
-        result.Reason.Assertions.Humanize().Should().Be(expectedShallowReasons);
-        result.Reason.DeepAssertions.Humanize().Should().Be(expectedDeepReason);
+        result.Explanation.Assertions.Humanize().Should().Be(expectedShallowReasons);
+        result.Explanation.DeepAssertions.Humanize().Should().Be(expectedDeepReason);
     }
     
     [Theory]
@@ -105,7 +105,7 @@ public class ExactlySpecTests
         
         var result = sut.IsSatisfiedBy([first, second]);
 
-        result.Assertion.Detailed.Should().Be(expected);
+        result.Description.Detailed.Should().Be(expected);
     }
 
     private static string GenerateReason(bool allSatisfied, IEnumerable<BooleanResult<int, string>> results)
@@ -132,6 +132,6 @@ public class ExactlySpecTests
             .WhenFalse(false)
             .CreateSpec("a pair of even numbers");
 
-        sut.Proposition.Name.Should().Be("a pair of even numbers");
+        sut.Proposition.Assertion.Should().Be("a pair of even numbers");
     }
 }

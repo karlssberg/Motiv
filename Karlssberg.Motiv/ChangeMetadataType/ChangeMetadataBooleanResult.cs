@@ -13,22 +13,22 @@ internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata
     public override bool Satisfied => booleanResult.Satisfied;
 
     /// <summary>Gets the description of the boolean result.</summary>
-    public override IAssertion Assertion =>
-        new ChangeMetadataBooleanAssertion<TMetadata, TUnderlyingMetadata>(
+    public override ResultDescriptionBase Description =>
+        new ChangeMetadataBooleanResultDescription<TMetadata, TUnderlyingMetadata>(
             booleanResult,
             metadata,
             proposition);
 
     /// <summary>Gets the reasons for the boolean result.</summary>
-    public override Reason Reason =>
-        new(Assertion)
+    public override Explanation Explanation =>
+        new(Description)
         {
-            Underlying = [booleanResult.Reason]
+            Underlying = [booleanResult.Explanation]
         };
     
     public override MetadataSet<TMetadata> Metadata => new(metadata);
 
-    public override CausalMetadata<TMetadata> CausalMetadata => new(metadata, Assertion)
+    public override CausalMetadata<TMetadata> CausalMetadata => new(metadata, Description)
     {
         Underlying = booleanResult.CausalMetadata switch
         {

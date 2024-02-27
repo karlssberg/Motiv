@@ -1,13 +1,13 @@
 ﻿namespace Karlssberg.Motiv.Propositions;
 
-internal sealed class ReasonSpec<TModel>(
+internal sealed class ExplanationSpec<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,
     string propositionalStatement)
     : SpecBase<TModel, string>
 {
-    public ReasonSpec(Func<TModel, bool> predicate, string propositionalStatement) 
+    public ExplanationSpec(Func<TModel, bool> predicate, string propositionalStatement) 
         : this(
             predicate, 
             _ => ReasonFromProposition(true, propositionalStatement), 

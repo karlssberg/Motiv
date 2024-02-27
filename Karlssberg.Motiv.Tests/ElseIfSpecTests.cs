@@ -23,7 +23,7 @@ public class ElseIfSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Reason.Assertions.Should().BeEquivalentTo(expected);
+        result.Explanation.Assertions.Should().BeEquivalentTo(expected);
     }
 
 
@@ -42,6 +42,6 @@ public class ElseIfSpecTests
 
         var sut = antecedent.ElseIf(consequent);
 
-        sut.Proposition.Name.Should().Be("antecedent => consequent");
+        sut.Proposition.Assertion.Should().Be("antecedent => consequent");
     }
 }

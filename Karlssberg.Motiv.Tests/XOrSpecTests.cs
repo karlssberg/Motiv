@@ -64,7 +64,7 @@ public class XOrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Assertion.Short.Should().Be(expected);
+        result.Reason.Should().Be(expected);
     }
 
     [Theory]
@@ -94,7 +94,7 @@ public class XOrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Assertion.Short.Should().Be(expected);
+        result.Reason.Should().Be(expected);
     }
 
     [Theory]
@@ -124,7 +124,7 @@ public class XOrSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Assertion.Short.Should().Be(expected);
+        result.Reason.Should().Be(expected);
     }
 
     [Theory]
@@ -150,7 +150,7 @@ public class XOrSpecTests
 
         var sut = left ^ right;
 
-        sut.Proposition.Name.Should().Be(expected);
+        sut.Proposition.Assertion.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -177,7 +177,7 @@ public class XOrSpecTests
 
         var sut = left ^ right;
 
-        sut.Proposition.Name.Should().Be(expected);
+        sut.Proposition.Assertion.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 

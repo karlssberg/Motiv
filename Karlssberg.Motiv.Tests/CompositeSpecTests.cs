@@ -49,7 +49,7 @@ public class CompositeSpecTests
 
         var act = sut.IsSatisfiedBy("model");
 
-        act.Reason.Assertions.Should().BeEquivalentTo(expectation);
+        act.Explanation.Assertions.Should().BeEquivalentTo(expectation);
         act.Metadata.Should().BeEquivalentTo(expectation);
     }
 
@@ -100,7 +100,7 @@ public class CompositeSpecTests
 
         var act = sut.IsSatisfiedBy("model");
 
-        act.Reason.DeepAssertions.Should().BeEquivalentTo(act.Satisfied
+        act.Explanation.DeepAssertions.Should().BeEquivalentTo(act.Satisfied
             ? trueReason
             : falseReason);
         

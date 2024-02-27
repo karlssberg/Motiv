@@ -10,10 +10,10 @@ internal sealed class NotBooleanResult<TMetadata>(BooleanResultBase<TMetadata> o
     public override bool Satisfied => !operandResult.Satisfied;
 
     /// <summary>Gets the description of the negation result.</summary>
-    public override IAssertion Assertion => new NotBooleanAssertion(operandResult);
+    public override ResultDescriptionBase Description => new NotBooleanResultDescription(operandResult);
 
     /// <summary>Gets the reasons associated with the operand result.</summary>
-    public override Reason Reason => operandResult.Reason;
+    public override Explanation Explanation => operandResult.Explanation;
 
     public override MetadataSet<TMetadata> Metadata => operandResult.Metadata;
     public override CausalMetadata<TMetadata> CausalMetadata => operandResult.CausalMetadata;

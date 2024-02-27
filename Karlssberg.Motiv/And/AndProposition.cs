@@ -6,7 +6,7 @@ internal class AndProposition<TModel, TMetadata>(
     : IProposition
 {
 
-    public string Name => $"{Summarize(left)} & {Summarize(right)}";
+    public string Assertion => $"{Summarize(left)} & {Summarize(right)}";
     public string Detailed =>
         $"""
           {Explain(left).IndentAfterFirstLine()}
@@ -17,9 +17,9 @@ internal class AndProposition<TModel, TMetadata>(
     {
         return operand switch 
         {
-            AndSpec<TModel, TMetadata> andSpec => andSpec.Proposition.Name,
-            ICompositeSpec compositeSpec => $"({compositeSpec.Proposition.Name})",
-            _ => operand.Proposition.Name
+            AndSpec<TModel, TMetadata> andSpec => andSpec.Proposition.Assertion,
+            ICompositeSpec compositeSpec => $"({compositeSpec.Proposition.Assertion})",
+            _ => operand.Proposition.Assertion
         };
     }
     
@@ -33,5 +33,5 @@ internal class AndProposition<TModel, TMetadata>(
         };
     }
     
-    public override string ToString() => Name;
+    public override string ToString() => Assertion;
 }

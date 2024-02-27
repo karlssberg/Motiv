@@ -2,19 +2,19 @@
 
 /// <summary>Represents the result of a logical XOR (exclusive OR) operation.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the result.</typeparam>
-internal sealed class XOrAssertion<TMetadata>(
+internal sealed class XOrBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right)
-    : BooleanResultBase<TMetadata>, ICompositeAssertion
+    : BooleanResultBase<TMetadata>, ICompositeBooleanResult
 {
     /// <summary>Gets a value indicating whether the XOR operation is satisfied.</summary>
     public override bool Satisfied => left.Satisfied ^ right.Satisfied;
 
-    public override Reason Reason => GetCausalResults().CreateReason();
+    public override Explanation Explanation => GetCausalResults().CreateReason();
 
     /// <summary>Gets the description of the XOR operation.</summary>
-    public override IAssertion Assertion =>
-        new XOrBooleanAssertion<TMetadata>(left, right, GetCausalResults());
+    public override ResultDescriptionBase Description =>
+        new XOrBooleanResultDescription<TMetadata>(left, right, GetCausalResults());
 
     public override MetadataSet<TMetadata> Metadata => new(GetCausalResults()
         .SelectMany(result => result.Metadata));

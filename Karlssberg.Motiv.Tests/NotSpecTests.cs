@@ -44,7 +44,7 @@ public class NotSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Assertion.Short.Should().Be(expected);
+        result.Reason.Should().Be(expected);
     }
 
     [Theory]
@@ -65,7 +65,7 @@ public class NotSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Assertion.Short.Should().Be(expected);
+        result.Reason.Should().Be(expected);
     }
 
     [Theory]
@@ -86,7 +86,7 @@ public class NotSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Assertion.Short.Should().Be(expected);
+        result.Reason.Should().Be(expected);
     }
 
     [Theory]

@@ -91,7 +91,7 @@ public class AllSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Assertion.Detailed.Should().Be(expected);
+        result.Description.Detailed.Should().Be(expected);
     }
 
     [Theory]
@@ -150,7 +150,7 @@ public class AllSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Assertion.Detailed.Should().Be(expected);
+        result.Description.Detailed.Should().Be(expected);
     }
 
     [Theory]
@@ -207,7 +207,7 @@ public class AllSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Assertion.Detailed.Should().Be(expected);
+        result.Description.Detailed.Should().Be(expected);
     }
 
 
@@ -272,7 +272,7 @@ public class AllSpecTests
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
 
-        result.Assertion.Detailed.Should().Be(expected);
+        result.Description.Detailed.Should().Be(expected);
     }
 
 
@@ -313,7 +313,7 @@ public class AllSpecTests
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
 
-        result.Assertion.Short.Should().Be(expected);
+        result.Reason.Should().Be(expected);
         result.ToString().Should().Be(expected);
     }
 
@@ -341,7 +341,7 @@ public class AllSpecTests
             .WhenFalse(results => $"{results.Count()} false")
             .CreateSpec("all booleans are true");
 
-        sut.Proposition.Name.Should().Be(expectedSummary);
+        sut.Proposition.Assertion.Should().Be(expectedSummary);
         sut.Proposition.Detailed.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }
@@ -368,7 +368,7 @@ public class AllSpecTests
             .WhenFalse(false)
             .CreateSpec("all are true");
 
-        sut.Proposition.Name.Should().Be(expectedSummary);
+        sut.Proposition.Assertion.Should().Be(expectedSummary);
         sut.Proposition.Detailed.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }

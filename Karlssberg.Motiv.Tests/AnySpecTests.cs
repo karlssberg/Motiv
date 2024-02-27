@@ -55,7 +55,7 @@ public class AnySpecTests
             .WhenFalse(false)
             .CreateSpec("high-level description");
 
-        sut.Proposition.Name.Should().Be(expected);
+        sut.Proposition.Assertion.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -113,7 +113,7 @@ public class AnySpecTests
             
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Assertion.Detailed.Should().Be(expected);
+        result.Description.Detailed.Should().Be(expected);
     }
 
     [Theory]
@@ -172,7 +172,7 @@ public class AnySpecTests
 
         var result = sut.IsSatisfiedBy(models);
 
-        result.Assertion.Detailed.Should().Be(expected);
+        result.Description.Detailed.Should().Be(expected);
     }
 
     [Theory]
@@ -228,7 +228,7 @@ public class AnySpecTests
             .CreateSpec("all true");
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Assertion.Detailed.Should().Be(expected);
+        result.Description.Detailed.Should().Be(expected);
     }
 
     [Theory]

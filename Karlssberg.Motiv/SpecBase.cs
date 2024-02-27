@@ -54,7 +54,7 @@ public abstract class SpecBase<TModel>
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
     /// <returns>A string that represents the logical hierarchy of the specification.</returns>
-    public override string ToString() => Proposition.Name;
+    public override string ToString() => Proposition.Assertion;
 
     /// <summary>Combines two specifications using the logical AND operator.</summary>
     /// <param name="left">The left operand of the AND operation.</param>
@@ -177,7 +177,7 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
     /// <returns>A string that represents the logical hierarchy of the specification.</returns>
-    public override string ToString() => Proposition.Name;
+    public override string ToString() => Proposition.Assertion;
 
     /// <summary>Combines two specifications using the logical AND operator.</summary>
     /// <param name="left">The left operand of the AND operation.</param>

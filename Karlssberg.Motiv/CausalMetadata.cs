@@ -4,7 +4,7 @@ namespace Karlssberg.Motiv;
 
 public sealed class  CausalMetadata<TMetadata>(IEnumerable<TMetadata> metadata, IEnumerable<string> explanations)
 {
-    public CausalMetadata(TMetadata metadata, IAssertion description) : this([metadata], [description.Short])
+    public CausalMetadata(TMetadata metadata, ResultDescriptionBase description) : this([metadata], [description.Compact])
     {
     }
     

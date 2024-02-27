@@ -1,24 +1,24 @@
 ﻿namespace Karlssberg.Motiv.Or;
 
-internal class OrBooleanAssertion<TMetadata>(
+internal class OrBooleanResultDescription<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right,
     IEnumerable<BooleanResultBase<TMetadata>> causalResults) 
-    : IAssertion
+    : ResultDescriptionBase
 {
     private readonly BooleanResultBase<TMetadata>[] _causalResults = causalResults.ToArray();
     
-    public int CausalOperandCount => _causalResults.Length;
+    internal override int CausalOperandCount => _causalResults.Length;
     
-    public string Short => 
+    public override string Compact => 
         CausalOperandCount switch
         {
             0 => "",
-            1 => _causalResults.First().Assertion.Short,
+            1 => _causalResults.First().Description.Compact,
             _ =>  string.Join(" | ", _causalResults.Select(ExplainReasons))
         };
 
-    public string Detailed => GetDetails();
+    public override string Detailed => GetDetails();
 
     private string GetDetails()
     {
@@ -40,11 +40,11 @@ internal class OrBooleanAssertion<TMetadata>(
     {
         return result switch 
         {
-            OrAssertion<TMetadata> orSpec => 
-                orSpec.Assertion.Detailed,
-            ICompositeAssertion compositeSpec =>
-                $"({compositeSpec.Assertion.Detailed})",
-            _ => result.Assertion.Detailed
+            OrBooleanResult<TMetadata> orSpec => 
+                orSpec.Description.Detailed,
+            ICompositeBooleanResult compositeSpec =>
+                $"({compositeSpec.Description.Detailed})",
+            _ => result.Description.Detailed
         };
     }
     
@@ -52,13 +52,13 @@ internal class OrBooleanAssertion<TMetadata>(
     {
         return result switch 
         {
-            OrAssertion<TMetadata> orSpec => 
-                orSpec.Assertion.Short,
-            ICompositeAssertion { Assertion.CausalOperandCount: > 1 } compositeSpec =>
-                $"({compositeSpec.Assertion.Short})",
-            _ => result.Assertion.Short
+            OrBooleanResult<TMetadata> orSpec => 
+                orSpec.Description.Compact,
+            ICompositeBooleanResult { Description.CausalOperandCount: > 1 } compositeSpec =>
+                $"({compositeSpec.Description.Compact})",
+            _ => result.Description.Compact
         };
     }
     
-    public override string ToString() => Short;
+    public override string ToString() => Compact;
 }

@@ -2,27 +2,27 @@
 
 namespace Karlssberg.Motiv.HigherOrder;
 
-internal class HigherOrderAssertion<TModel, TMetadata, TUnderlyingMetadata>(
+internal class HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
     IEnumerable<TMetadata> metadataCollection,
     IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes,
     IProposition proposition,
     ReasonSource reasonSource)
-    : IAssertion
+    : ResultDescriptionBase
 {
     private readonly BooleanResult<TModel, TUnderlyingMetadata>[] _causes = causes.ToArray();
-    public int CausalOperandCount => _causes.Length;
-    public string Short => proposition.ToReason(isSatisfied, metadataCollection.SingleOrDefault(), reasonSource);
-    public string Detailed => GetFullDescription();
+    internal override int CausalOperandCount => _causes.Length;
+    public override string Compact => proposition.ToReason(isSatisfied, metadataCollection.SingleOrDefault(), reasonSource);
+    public override string Detailed => GetFullDescription();
 
     private string GetFullDescription()
     {
         var details = GetDetails();
         return details switch
         {
-            "" => Short,
+            "" => Compact,
             _ => $"""
-                  {Short}
+                  {Compact}
                       {details.IndentAfterFirstLine()}
                   """
         };
@@ -31,7 +31,7 @@ internal class HigherOrderAssertion<TModel, TMetadata, TUnderlyingMetadata>(
         {
             var reasonFrequency = _causes
                 .OrderByDescending(result => result.Satisfied)
-                .Select(result => result.Assertion.Short)
+                .Select(result => result.Description.Compact)
                 .GroupBy(reason => reason)
                 .Select(grouping => (Reason: grouping.Key, Count: grouping.Count()))
                 .OrderByDescending(grouping => grouping.Count)
@@ -53,6 +53,4 @@ internal class HigherOrderAssertion<TModel, TMetadata, TUnderlyingMetadata>(
                 .JoinLines();
         }
     }
-    
-    public override string ToString() => Short;
 }

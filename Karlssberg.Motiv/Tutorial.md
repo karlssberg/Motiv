@@ -15,8 +15,8 @@ var isEven = Spec
 
 isEven.IsSatisfiedBy(2).Satisfied; // returns true
 isEven.IsSatisfiedBy(3).Satisfied; // returns false
-isEven.IsSatisfiedBy(2).Reasons; // returns ["even"]
-isEven.IsSatisfiedBy(3).Reasons; // returns ["!even"]
+isEven.IsSatisfiedBy(2).Reason; // returns "even"
+isEven.IsSatisfiedBy(3).Reason; // returns "!even"
 ```
 
 However, the real power of the library comes from the ability to provide a reason for when either the result is true or false.
@@ -28,8 +28,8 @@ var isEven = Spec
     .WhenFalse("number is odd")
     .CreateSpec();
 
-isEven.IsSatisfiedBy(2).Reasons; // returns ["number is even"]
-isEven.IsSatisfiedBy(3).Reasons; // returns ["number is odd"]
+isEven.IsSatisfiedBy(2).Reason; // returns "number is even"
+isEven.IsSatisfiedBy(3).Reason; // returns "number is odd"
 ```
 
 You can also provide a function that returns a description based on the value of the input.
@@ -40,8 +40,8 @@ var isEven = Spec
     .WhenFalse(n => $"{n} is odd")
     .CreateSpec();
 
-isEven.IsSatisfiedBy(2).Reasons; // returns ["2 is even"]
-isEven.IsSatisfiedBy(3).Reasons; // returns ["3 is odd"]
+isEven.IsSatisfiedBy(2).Reason; // returns "2 is even"
+isEven.IsSatisfiedBy(3).Reason; // returns "3 is odd"
 ```
 
 
@@ -62,26 +62,28 @@ var isEven = Spec
 var isPositiveAndEven = isPositive & isEven;
 
 isPositiveAndEven.IsSatisfiedBy(2).Satisfied; // returns true
-isPositiveAndEven.IsSatisfiedBy(2).Reasons; // returns ["the number is even", "the number is positive"]
+isPositiveAndEven.IsSatisfiedBy(2).Reason; // returns "the number is even & the number is positive"
+isPositiveAndEven.IsSatisfiedBy(2).Assertions; // returns ["the number is even", "the number is positive"]
 
 isPositiveAndEven.IsSatisfiedBy(3).Satisfied; // returns false
-isPositiveAndEven.IsSatisfiedBy(3).Reasons; // returns ["the number is odd", "the number is positive"]
+isPositiveAndEven.IsSatisfiedBy(3).Assertions; // returns ["the number is odd", "the number is positive"]
 
 isPositiveAndEven.IsSatisfiedBy(-2).Satisfied; // returns false
-isPositiveAndEven.IsSatisfiedBy(-2).Reasons; // returns ["the number is even", "the number is negative"]
+isPositiveAndEven.IsSatisfiedBy(-2).Assertions; // returns ["the number is even", "the number is negative"]
 ```
 
-### Custom type specification
+### Handling multiple languages
+If you want to present the text to an international audience, you can provide a custom object instead of using a string.
+
 ```csharp
 var isEven = Spec
     .Build<int>(n => n % 2 == 0)
     .WhenTrue(n => new { English = "the number is even", Spanish = "el número es par" })
     .WhenFalse(n => new { English = "the number is odd", Spanish = "el número es impar" })
-    .CreateSpec("even number");
+    .CreateSpec("is even number");
 
 isEven.IsSatisfiedBy(2).Satisfied; // returns true
-isEven.IsSatisfiedBy(2).Reasons; // returns ["even number is true"]
+isEven.IsSatisfiedBy(2).Reason; // returns "is even number"
 isEven.IsSatisfiedBy(2).Metadata.Select(m => m.English); // returns ["the number is even"]
 isEven.IsSatisfiedBy(2).Metadata.Select(m => m.Spanish); // returns ["el número es par"]
 ```
-

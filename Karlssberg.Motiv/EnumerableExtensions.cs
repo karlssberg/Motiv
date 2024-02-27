@@ -1,4 +1,6 @@
-﻿namespace Karlssberg.Motiv;
+﻿using System.Collections;
+
+namespace Karlssberg.Motiv;
 
 /// <summary>Provides extension methods for working with enumerable collections.</summary>
 public static class EnumerableExtensions
@@ -43,7 +45,7 @@ public static class EnumerableExtensions
             .SelectMany(cause => cause.CausalMetadata.Metadata);
         
         var reasons = causalResultsArray
-            .SelectMany(cause => cause.Reason.Assertions);
+            .SelectMany(cause => cause.Explanation.Assertions);
         
         var underlyingCauses = causalResultsArray
             .SelectMany(cause => cause.CausalMetadata.Underlying);
@@ -54,60 +56,28 @@ public static class EnumerableExtensions
         };
     }
     
-    internal static Reason CreateReason(
+    internal static Explanation CreateReason(
         this IEnumerable<BooleanResultBase> underlyingResults)
     {
         var resultArray = underlyingResults.ToArray();
 
         var reasons = resultArray
-            .SelectMany(result => result.Reason.Assertions)
+            .SelectMany(result => result.Explanation.Assertions)
             .Distinct()
             .OrderBy(d => d);
         
         var underlying = resultArray
-            .Select(result => result.Reason);
+            .Select(result => result.Explanation);
         
-        return new Reason(reasons)
+        return new Explanation(reasons)
         {
             Underlying = underlying
         };
-    }
-    
-    internal static IEnumerable<T> IfEmptyThen<T>(this IEnumerable<T> source, IEnumerable<T> other)
-    {
-        var hasItems = false;
-        foreach (var item in source)
-        {
-            yield return item;
-            hasItems = true;
-        }
-
-        if (hasItems)
-            yield break;
-
-        foreach (var item in other)
-            yield return item;
-    }
-
-    internal static IEnumerable<T> ModifyFirst<T>(this IEnumerable<T> source, Func<T, T> modifier)
-    {
-        var modified = false;
-        foreach (var item in source)
-        {
-            if (!modified)
-            {
-                modified = true;
-                yield return modifier(item);
-            }
-            else
-            {
-                yield return item;
-            }
-        }
     }
     
     internal static IEnumerable<T> ToEnumerable<T>(this T item)
     {
         yield return item;
     }
+    internal static IEnumerable<T> ToEnumerable<T>(this IEnumerable<T> item) => item;
 }

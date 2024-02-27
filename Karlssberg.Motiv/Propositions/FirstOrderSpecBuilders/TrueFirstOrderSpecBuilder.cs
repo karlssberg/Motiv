@@ -48,7 +48,7 @@ public readonly ref struct TrueFirstOrderSpecBuilder<TModel>(Func<TModel, bool> 
     }
     
     public SpecBase<TModel, string> CreateSpec(string proposition) =>
-        new ReasonSpec<TModel>(
+        new ExplanationSpec<TModel>(
             predicate, 
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

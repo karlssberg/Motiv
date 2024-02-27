@@ -4,15 +4,15 @@ using Humanizer;
 namespace Karlssberg.Motiv;
 
 [DebuggerDisplay("{ToString()}")]
-public sealed class Reason(IEnumerable<string> assertions)
+public sealed class Explanation(IEnumerable<string> assertions)
 {
-    public Reason(IAssertion assertion) : this(assertion.Short.ToEnumerable())
+    public Explanation(ResultDescriptionBase resultDescription) : this(resultDescription.Compact.ToEnumerable())
     {
     }
  
     public IEnumerable<string> Assertions { get; } = assertions;
     
-    public IEnumerable<Reason> Underlying { get; internal set; } = Enumerable.Empty<Reason>();
+    public IEnumerable<Explanation> Underlying { get; internal set; } = Enumerable.Empty<Explanation>();
 
     public IEnumerable<string> DeepAssertions =>
         FindUnderlyingReasons(Underlying)
@@ -21,7 +21,7 @@ public sealed class Reason(IEnumerable<string> assertions)
 
     public override string ToString() => Assertions.Humanize();
 
-    private static IEnumerable<Reason> FindUnderlyingReasons(IEnumerable<Reason> reasons)
+    private static IEnumerable<Explanation> FindUnderlyingReasons(IEnumerable<Explanation> reasons)
     {
         foreach (var reason in reasons)
         {

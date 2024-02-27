@@ -47,12 +47,12 @@ internal static class PropositionExtensions
         return (isSatisfied, metadata, reasonSource) switch
         {
             (_, string reason, not ReasonSource.Proposition) => reason,
-            (true, _, _) when PropositionContains('!') => $"({proposition.Name})",
-            (true, _, _) => proposition.Name,
-            (false, _, _) when PropositionContains('!') => $"!({proposition.Name})",
-            (false, _, _) => $"!{proposition.Name}",
+            (true, _, _) when PropositionContains('!') => $"({proposition.Assertion})",
+            (true, _, _) => proposition.Assertion,
+            (false, _, _) when PropositionContains('!') => $"!({proposition.Assertion})",
+            (false, _, _) => $"!{proposition.Assertion}",
         };
         
-        bool PropositionContains(char ch) => proposition.Name.Contains(ch);
+        bool PropositionContains(char ch) => proposition.Assertion.Contains(ch);
     }
 }
