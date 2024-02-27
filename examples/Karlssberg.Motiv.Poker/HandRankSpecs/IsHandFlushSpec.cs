@@ -12,7 +12,8 @@ public class IsHandFlushSpec() : Spec<Hand, HandRank>(
             .OrTogether();
     
     private static SpecBase<Hand, string> HasFiveCardsWithSameSuit(Suit suit) =>
-        Spec.Build(IsSuit(suit)).AsNSatisfied(5)
+        Spec.Build(IsSuit(suit))
+            .AsNSatisfied(5)
             .WhenTrue($"a flush of {suit}")
             .WhenFalse($"not a flush of {suit}")
             .CreateSpec($"has 5 {suit} cards")

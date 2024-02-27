@@ -4,7 +4,7 @@ namespace Karlssberg.Motiv.Poker;
 
 public class DoesHandContainSpecifiedRanksSpec(ICollection<Rank> ranks) : Spec<Hand>(
     Spec.Build(UnderlyingSpec(ranks))
-        .As(results => results.AllTrue())
+        .AsAllSatisfied()
         .WhenTrue($"all cards are either {ranks.Humanize("or")}")
         .WhenFalse(results => results.SelectMany(r => r.Explanation.Assertions))
         .CreateSpec()
