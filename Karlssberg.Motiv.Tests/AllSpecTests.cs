@@ -322,11 +322,12 @@ public class AllSpecTests
     public void Should_provide_a_description_of_the_specification()
     {
         const string expectedSummary = "all booleans are true";
-        const string expectedFull = """
-                                    all booleans are true {
-                                        is true
-                                    }
-                                    """;
+        const string expectedFull = 
+            """
+            all booleans are true {
+                is true
+            }
+            """;
         
         var underlyingSpec = Spec
             .Build<bool>(m => m)
