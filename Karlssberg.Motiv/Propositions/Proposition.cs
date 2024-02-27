@@ -1,18 +1,17 @@
 ﻿namespace Karlssberg.Motiv.Propositions;
 
-internal class Proposition(string name, IProposition? underlyingProposition = null) : IProposition
+internal class Proposition(string assertion, IProposition? underlyingProposition = null) : IProposition
 {
-    public string Assertion => name;
+    public string Assertion => assertion;
 
     public string Detailed =>
         underlyingProposition switch
         {
-            null => name,
+            null => assertion,
             not null => $$"""
-                          {{name}} {
-                            {{underlyingProposition.Detailed.IndentAfterFirstLine()}}
-                          }
-                          """
+                {{assertion}}
+                    {{underlyingProposition.Detailed.IndentAfterFirstLine()}}
+                """
         };
 
 

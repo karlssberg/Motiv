@@ -6,11 +6,11 @@ internal sealed class CompositeSpec<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse,
-    string propositionalStatement)
+    string propositionalAssertion)
     : SpecBase<TModel, TMetadata>
 {
     /// <summary>Gets the description of the specification.</summary>
-    public override IProposition Proposition => new Proposition(propositionalStatement, UnderlyingSpec.Proposition);
+    public override IProposition Proposition => new Proposition(propositionalAssertion, UnderlyingSpec.Proposition);
 
     public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
 

@@ -32,5 +32,5 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
 
     public override MetadataSet<TMetadata> Metadata => _underlyingResult.Metadata;
     
-    public override CausalMetadata<TMetadata> CausalMetadata => _underlyingResult.CausalMetadata;
+    public override CausalMetadataCollection<TMetadata> CausalMetadata => _underlyingResult.CausalMetadata;
 }

@@ -37,7 +37,7 @@ public static class EnumerableExtensions
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results.Any(result => !result.Satisfied);
     
-    internal static CausalMetadata<TMetadata> CreateCause<TMetadata>(
+    internal static CausalMetadataCollection<TMetadata> CreateCause<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> causalResults)
     {
         var causalResultsArray = causalResults.ToArray();
@@ -50,7 +50,7 @@ public static class EnumerableExtensions
         var underlyingCauses = causalResultsArray
             .SelectMany(cause => cause.CausalMetadata.Underlying);
         
-        return new CausalMetadata<TMetadata>(metadata, reasons)
+        return new CausalMetadataCollection<TMetadata>(metadata, reasons)
         {
             Underlying = underlyingCauses
         };

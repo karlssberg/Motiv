@@ -8,23 +8,39 @@ public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadat
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate)
 {
     public FalseMetadataHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(TMetadata whenTrue) =>
-        new(spec, higherOrderPredicate, _ => [whenTrue]);
+        new(spec,
+            higherOrderPredicate, _ => whenTrue.ToEnumerable());
     
     public FalseMetadataHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, TMetadata> whenTrue) =>
-        new(spec, higherOrderPredicate, results => [whenTrue(results)]);
+        new(spec,
+            higherOrderPredicate,
+            results => whenTrue(results).ToEnumerable());
+    
     public FalseMetadataHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
-        new(spec, higherOrderPredicate, whenTrue);
+        new(spec,
+            higherOrderPredicate,
+            whenTrue);
 
     public FalseReasonsWithDescriptionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
-        new(spec, higherOrderPredicate, _ => [trueBecause], trueBecause, ReasonSource.Metadata);
+        new(spec,
+            higherOrderPredicate,
+            _ => trueBecause.ToEnumerable(),
+            trueBecause,
+            ReasonSource.Metadata);
     
     public FalseReasonsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, string> trueBecause) =>
-        new(spec, higherOrderPredicate, results => [trueBecause(results)], ReasonSource.Metadata);
+        new(spec,
+            higherOrderPredicate,
+            results => trueBecause(results).ToEnumerable(),
+            ReasonSource.Metadata);
 
     public FalseReasonsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
-        new(spec, higherOrderPredicate, trueBecause, ReasonSource.Proposition);
+        new(spec,
+            higherOrderPredicate,
+            trueBecause,
+            ReasonSource.Proposition);
 }

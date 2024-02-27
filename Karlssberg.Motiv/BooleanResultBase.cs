@@ -38,11 +38,6 @@ public abstract class BooleanResultBase
     /// </summary>
     public abstract Explanation Explanation { get; }
 
-    /// <summary>Determines whether the current BooleanResultBase object is equal to the specified boolean value.</summary>
-    /// <param name="other">The boolean value to compare with the current BooleanResultBase object.</param>
-    /// <returns>True if the current BooleanResultBase object is equal to the specified boolean value; otherwise, false.</returns>
-    public bool Equals(bool other) => Satisfied == other;
-
     /// <summary>Determines whether the current BooleanResultBase object is equal to another BooleanResultBase object.</summary>
     /// <param name="other">The BooleanResultBase object to compare with the current object.</param>
     /// <returns>true if the current object is equal to the other object; otherwise, false.</returns>
@@ -53,6 +48,11 @@ public abstract class BooleanResultBase
             _ when ReferenceEquals(this, other) => true,
             _ => Satisfied == other.Satisfied
         };
+
+    /// <summary>Determines whether the current BooleanResultBase object is equal to the specified boolean value.</summary>
+    /// <param name="other">The boolean value to compare with the current BooleanResultBase object.</param>
+    /// <returns>True if the current BooleanResultBase object is equal to the specified boolean value; otherwise, false.</returns>
+    public bool Equals(bool other) => other == Satisfied;
 
     /// <summary>Gets the lowercase display text for true or false states.</summary>
     protected string IsSatisfiedDisplayText() => Satisfied ? True : False;
@@ -140,7 +140,7 @@ public abstract class BooleanResultBase<TMetadata>
 
     public abstract MetadataSet<TMetadata> Metadata { get; }
 
-    public abstract CausalMetadata<TMetadata> CausalMetadata { get; }
+    public abstract CausalMetadataCollection<TMetadata> CausalMetadata { get; }
 
     /// <summary>Determines whether the current BooleanResultBase object is equal to another BooleanResultBase object.</summary>
     /// <param name="other">The BooleanResultBase object to compare with the current object.</param>

@@ -11,11 +11,11 @@ internal sealed class MetadataSpec<TModel, TMetadata>(
     Func<TModel, bool> predicate,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse,
-    string propositionalStatement)
+    string propositionalAssertion)
     : SpecBase<TModel, TMetadata>, ICompositeSpec
 {
     /// <summary>Gets or sets the description of the specification.</summary>
-    public override IProposition Proposition => new Proposition(propositionalStatement);
+    public override IProposition Proposition => new Proposition(propositionalAssertion);
 
     /// <summary>Determines if the specified model satisfies the specification.</summary>
     /// <param name="model">The model to be evaluated.</param>

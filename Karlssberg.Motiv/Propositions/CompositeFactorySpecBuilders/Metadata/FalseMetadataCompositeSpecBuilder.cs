@@ -5,8 +5,12 @@ public readonly ref struct FalseMetadataCompositeSpecBuilder<TModel, TMetadata, 
     Func<TModel, TMetadata> whenTrue)
 {
     public MetadataCompositeFactorySpecFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(TMetadata whenFalse) =>
-        new(specPredicate, whenTrue, _ => whenFalse);
+        new(specPredicate,
+            whenTrue,
+            _ => whenFalse);
 
     public MetadataCompositeFactorySpecFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(Func<TModel, TMetadata> whenFalse) =>
-        new(specPredicate, whenTrue, whenFalse);
+        new(specPredicate,
+            whenTrue,
+            whenFalse);
 }

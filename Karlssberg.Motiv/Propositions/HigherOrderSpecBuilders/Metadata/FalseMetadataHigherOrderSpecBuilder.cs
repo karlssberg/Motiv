@@ -6,13 +6,22 @@ public readonly ref struct FalseMetadataHigherOrderSpecBuilder<TModel, TMetadata
     Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue)
 {
     public MetadataHigherOrderSpecFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(TMetadata whenFalse) =>
-        new(spec, higherOrderPredicate, whenTrue, _ => [whenFalse]);
+        new(spec,
+            higherOrderPredicate,
+            whenTrue,
+            _ => whenFalse.ToEnumerable());
     
     public MetadataHigherOrderSpecFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(
         Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, TMetadata> whenFalse) =>
-        new(spec, higherOrderPredicate, whenTrue, results => [whenFalse(results)]);
+        new(spec,
+            higherOrderPredicate,
+            whenTrue,
+            results => whenFalse(results).ToEnumerable());
     
     public MetadataHigherOrderSpecFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(
         Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse) =>
-        new(spec, higherOrderPredicate, whenTrue, whenFalse);
+        new(spec,
+            higherOrderPredicate,
+            whenTrue,
+            whenFalse);
 }

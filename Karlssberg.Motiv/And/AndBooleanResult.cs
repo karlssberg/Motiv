@@ -23,7 +23,7 @@ internal sealed class AndBooleanResult<TMetadata>(
     public override MetadataSet<TMetadata> Metadata => new(GetCausalResults()
         .SelectMany(result => result.Metadata));
     
-    public override CausalMetadata<TMetadata> CausalMetadata => GetCausalResults().CreateCause();
+    public override CausalMetadataCollection<TMetadata> CausalMetadata => GetCausalResults().CreateCause();
 
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {

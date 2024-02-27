@@ -30,13 +30,13 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
                 .Select(cause => cause.Explanation)
         };
 
-    public override CausalMetadata<TMetadata> CausalMetadata =>
+    public override CausalMetadataCollection<TMetadata> CausalMetadata =>
         new(Metadata, Explanation.Assertions)
         {
             Underlying = causes switch
             {
                 IEnumerable<BooleanResultBase<TMetadata>> results => results.Select(result => result.CausalMetadata),
-                _ => Enumerable.Empty<CausalMetadata<TMetadata>>()
+                _ => Enumerable.Empty<CausalMetadataCollection<TMetadata>>()
             }
         };
 }

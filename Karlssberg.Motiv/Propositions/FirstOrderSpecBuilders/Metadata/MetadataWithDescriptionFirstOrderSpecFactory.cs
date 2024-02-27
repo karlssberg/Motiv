@@ -9,10 +9,11 @@ public readonly ref struct MetadataWithDescriptionFirstOrderSpecFactory<TModel, 
     Func<TModel, TMetadata> whenFalse)
 {
     /// <summary>Provide a human readable explanation for when the condition is false.</summary>
-    /// <param name="name">The name of the specification. Preferably this would be in predicate form eg "is even number".</param>
+    /// <param name="proposition">The name of the specification. Preferably this would be in predicate form eg "is even number".</param>
     /// <returns>A specification base.</returns>
     public SpecBase<TModel, TMetadata> CreateSpec(string proposition) =>
-        new Spec<TModel, TMetadata>(predicate,
+        new Spec<TModel, TMetadata>(
+            predicate,
             whenTrue,
             whenFalse, proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

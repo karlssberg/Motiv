@@ -6,7 +6,7 @@ internal sealed class CompositeFactorySpec<TModel, TMetadata, TUnderlyingMetadat
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> underlyingSpecFactory,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse,
-    string propositionalStatement)
+    string propositionalAssertion)
     : SpecBase<TModel, TMetadata>
 {
     private readonly SpecBase<TModel, TUnderlyingMetadata>? _underlyingSpec;
@@ -15,13 +15,13 @@ internal sealed class CompositeFactorySpec<TModel, TMetadata, TUnderlyingMetadat
         SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
         Func<TModel, TMetadata> whenTrue,
         Func<TModel, TMetadata> whenFalse,
-        string propositionalStatement) : this(_ => underlyingSpec, whenTrue, whenFalse, propositionalStatement)
+        string propositionalAssertion) : this(_ => underlyingSpec, whenTrue, whenFalse, propositionalAssertion)
     {
         _underlyingSpec = underlyingSpec;
     }
 
     /// <summary>Gets the description of the specification.</summary>
-    public override IProposition Proposition => new Proposition(propositionalStatement, _underlyingSpec?.Proposition);
+    public override IProposition Proposition => new Proposition(propositionalAssertion, _underlyingSpec?.Proposition);
 
     /// <summary>Determines if the specification is satisfied by the given model.</summary>
     /// <param name="model">The model to be evaluated.</param>

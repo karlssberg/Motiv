@@ -10,14 +10,19 @@ public readonly ref struct TrueCompositeFactorySpecBuilder<TModel, TUnderlyingMe
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate)
 {
     public FalseMetadataCompositeSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(TMetadata whenTrue) =>
-        new(specPredicate, _ => whenTrue);
+        new(specPredicate,
+            _ => whenTrue);
 
     public FalseMetadataCompositeSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(Func<TModel, TMetadata> whenTrue) =>
-        new(specPredicate, whenTrue);
+        new(specPredicate,
+            whenTrue);
     
     public FalseReasonsWithDescriptionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
-        new(specPredicate, _ => trueBecause, trueBecause);
+        new(specPredicate,
+            _ => trueBecause,
+            trueBecause);
 
     public FalseReasonsCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(Func<TModel, string> trueBecause) =>
-        new(specPredicate, trueBecause);
+        new(specPredicate,
+            trueBecause);
 }

@@ -5,7 +5,7 @@ namespace Karlssberg.Motiv;
 
 public sealed class MetadataSet<TMetadata>(IEnumerable<TMetadata> metadataCollection) : IEnumerable<TMetadata>
 {
-    public MetadataSet(TMetadata metadata) : this([metadata])
+    public MetadataSet(TMetadata metadata) : this(metadata.ToEnumerable())
     {
     }
     

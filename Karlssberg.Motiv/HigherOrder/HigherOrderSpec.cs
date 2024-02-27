@@ -8,12 +8,12 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate, 
     Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue, 
     Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
-    string propositionalStatement,
+    string propositionalAssertion,
     ReasonSource reasonSource)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
     public override IProposition Proposition =>
-        new HigherOrderProposition<TModel, TUnderlyingMetadata>(propositionalStatement, underlyingSpec);
+        new HigherOrderProposition<TModel, TUnderlyingMetadata>(propositionalAssertion, underlyingSpec);
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {

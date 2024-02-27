@@ -13,7 +13,10 @@ public readonly ref struct FalseMetadataFirstOrderSpecBuilder<TModel, TMetadata>
     public MetadataWithDescriptionFirstOrderSpecFactory<TModel, TMetadata> WhenFalse(TMetadata whenFalse)
     {
         whenFalse.ThrowIfNull(nameof(whenFalse));
-        return new MetadataWithDescriptionFirstOrderSpecFactory<TModel, TMetadata>(predicate, whenTrue, _ => whenFalse);
+        return new MetadataWithDescriptionFirstOrderSpecFactory<TModel, TMetadata>(
+            predicate,
+            whenTrue,
+            _ => whenFalse);
     }
 
     /// <summary>Supply a function that when executed generates a human readable explanation for when the condition is false.</summary>
@@ -22,6 +25,9 @@ public readonly ref struct FalseMetadataFirstOrderSpecBuilder<TModel, TMetadata>
     public MetadataWithDescriptionFirstOrderSpecFactory<TModel, TMetadata> WhenFalse(Func<TModel, TMetadata> whenFalse)
     {
         whenFalse.ThrowIfNull(nameof(whenFalse));
-        return new MetadataWithDescriptionFirstOrderSpecFactory<TModel, TMetadata>(predicate, whenTrue, whenFalse);
+        return new MetadataWithDescriptionFirstOrderSpecFactory<TModel, TMetadata>(
+            predicate,
+            whenTrue,
+            whenFalse);
     }
 }

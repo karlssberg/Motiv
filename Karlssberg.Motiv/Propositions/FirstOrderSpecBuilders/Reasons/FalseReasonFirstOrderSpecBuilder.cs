@@ -5,7 +5,7 @@
 public readonly ref struct FalseReasonFirstOrderSpecBuilder<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
-    string description)
+    string candidateProposition)
 {
     /// <summary>Specifies the behavior when the condition is false.</summary>
     /// <param name="falseBecause">The metadata associated with the condition.</param>
@@ -17,7 +17,7 @@ public readonly ref struct FalseReasonFirstOrderSpecBuilder<TModel>(
             predicate,
             trueBecause, 
             _ => falseBecause, 
-            description);
+            candidateProposition);
     }
 
     /// <summary>Supply a function that when executed generates a human readable explanation for when the condition is false.</summary>
@@ -33,6 +33,6 @@ public readonly ref struct FalseReasonFirstOrderSpecBuilder<TModel>(
             predicate, 
             trueBecause,
             falseBecause,
-            description);
+            candidateProposition);
     }
 }

@@ -16,14 +16,14 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     internal Spec(Func<TModel, bool> predicate,
         Func<TModel, TMetadata> whenTrue,
         Func<TModel, TMetadata> whenFalse,
-        string propositionalStatement)
+        string propositionalAssertion)
     {
-        propositionalStatement.ThrowIfNullOrWhitespace(nameof(propositionalStatement));
-        Proposition =  new Proposition(propositionalStatement);
+        propositionalAssertion.ThrowIfNullOrWhitespace(nameof(propositionalAssertion));
+        Proposition =  new Proposition(propositionalAssertion);
         _specFactory = _ => new MetadataSpec<TModel, TMetadata>(predicate,
             whenTrue,
             whenFalse,
-            propositionalStatement);
+            propositionalAssertion);
     }
 
     // Initializes a new instance of the Spec class with a specification factory.

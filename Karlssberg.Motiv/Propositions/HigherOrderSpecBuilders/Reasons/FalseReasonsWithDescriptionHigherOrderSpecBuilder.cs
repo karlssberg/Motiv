@@ -11,7 +11,7 @@ public readonly ref struct FalseReasonsWithDescriptionHigherOrderSpecBuilder<TMo
         new(spec,
             higherOrderPredicate,
             trueBecause,
-            _ => [falseBecause],
+            _ => falseBecause.ToEnumerable(),
             candidateName,
             reasonSource);
     
@@ -20,7 +20,7 @@ public readonly ref struct FalseReasonsWithDescriptionHigherOrderSpecBuilder<TMo
         new(spec,
             higherOrderPredicate,
             trueBecause,
-            results => [falseBecause(results)],
+            results => falseBecause(results).ToEnumerable(),
             candidateName,
             reasonSource);
     

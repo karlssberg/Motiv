@@ -8,23 +8,17 @@ public readonly ref struct TrueFirstOrderSpecBuilder<TModel>(Func<TModel, bool> 
     /// <summary>Sets the reason why the condition is true.</summary>
     /// <param name="trueBecause">The human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseReasonFirstOrderSpecBuilder{TModel}" />.</returns>
-    public FalseReasonFirstOrderSpecBuilder<TModel> WhenTrue(string trueBecause)
-    {
-        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
-        return new FalseReasonFirstOrderSpecBuilder<TModel>(
-            predicate, 
+    public FalseReasonFirstOrderSpecBuilder<TModel> WhenTrue(string trueBecause) =>
+        new(predicate, 
             _ => trueBecause,
-            trueBecause);
-    }
+            trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause)));
 
     /// <summary>Sets the reason why the condition is true.</summary>
     /// <param name="trueBecause">The human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseReasonFirstOrderSpecBuilder{TModel}" />.</returns>
-    public FalseReasonWithDescriptionUnresolvedFirstOrderSpecBuilder<TModel> WhenTrue(Func<TModel, string> trueBecause)
-    {
-        trueBecause.ThrowIfNull(nameof(trueBecause));
-        return new FalseReasonWithDescriptionUnresolvedFirstOrderSpecBuilder<TModel>(predicate, trueBecause);
-    }
+    public FalseReasonWithDescriptionUnresolvedFirstOrderSpecBuilder<TModel> WhenTrue(Func<TModel, string> trueBecause) =>
+        new(predicate,
+            trueBecause.ThrowIfNull(nameof(trueBecause)));
 
     /// <summary>Specifies the metadata to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
@@ -33,9 +27,10 @@ public readonly ref struct TrueFirstOrderSpecBuilder<TModel>(Func<TModel, bool> 
     public FalseMetadataFirstOrderSpecBuilder<TModel, TMetadata> WhenTrue<TMetadata>(TMetadata whenTrue)
     {
         whenTrue.ThrowIfNull(nameof(whenTrue));
-        return new FalseMetadataFirstOrderSpecBuilder<TModel, TMetadata>(predicate, _ => whenTrue);
+        return new FalseMetadataFirstOrderSpecBuilder<TModel, TMetadata>(
+            predicate, 
+            _ => whenTrue);
     }
-
 
     /// <summary>Specifies the behavior when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>

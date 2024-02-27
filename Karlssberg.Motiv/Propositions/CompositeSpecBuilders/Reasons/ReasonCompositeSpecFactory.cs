@@ -8,10 +8,10 @@ public readonly ref struct ReasonCompositeSpecFactory<TModel, TUnderlyingMetadat
     public SpecBase<TModel, string> CreateSpec(string proposition) =>
         CreateSpecInternal(proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
     
-    private SpecBase<TModel, string> CreateSpecInternal(string name) =>
+    private SpecBase<TModel, string> CreateSpecInternal(string proposition) =>
         new CompositeSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             trueBecause,
             falseBecause,
-            name);
+            proposition);
 }

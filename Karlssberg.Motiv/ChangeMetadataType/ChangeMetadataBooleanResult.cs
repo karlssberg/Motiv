@@ -28,12 +28,12 @@ internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata
     
     public override MetadataSet<TMetadata> Metadata => new(metadata);
 
-    public override CausalMetadata<TMetadata> CausalMetadata => new(metadata, Description)
+    public override CausalMetadataCollection<TMetadata> CausalMetadata => new(metadata, Description)
     {
         Underlying = booleanResult.CausalMetadata switch
         {
-            CausalMetadata<TMetadata> causes => causes.Underlying,
-            _ => Enumerable.Empty<CausalMetadata<TMetadata>>()
+            CausalMetadataCollection<TMetadata> causes => causes.Underlying,
+            _ => Enumerable.Empty<CausalMetadataCollection<TMetadata>>()
         }
     };
 }

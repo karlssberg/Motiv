@@ -4,18 +4,18 @@ public readonly ref struct ReasonWithDescriptionCompositeFactorySpecFactory<TMod
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate,
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,
-    string candidateName)
+    string candidateProposition)
 {
     public SpecBase<TModel, string> CreateSpec() =>
-        CreateSpecInternal(candidateName);
+        CreateSpecInternal(candidateProposition);
     
     public SpecBase<TModel, string> CreateSpec(string proposition) =>
         CreateSpecInternal(proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 
-    private SpecBase<TModel, string> CreateSpecInternal(string name) =>
+    private SpecBase<TModel, string> CreateSpecInternal(string proposition) =>
         new CompositeFactorySpec<TModel, string, TUnderlyingMetadata>(
             specPredicate,
             trueBecause,
             falseBecause,
-            name);
+            proposition);
 }

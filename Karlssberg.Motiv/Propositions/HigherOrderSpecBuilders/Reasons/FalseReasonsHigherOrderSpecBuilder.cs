@@ -10,7 +10,7 @@ public readonly ref struct FalseReasonsHigherOrderSpecBuilder<TModel, TUnderlyin
         new(spec,
             higherOrderPredicate,
             trueBecause,
-            _ => [falseBecause],
+            _ => falseBecause.ToEnumerable(),
             reasonSource);
 
     public ReasonHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
@@ -18,7 +18,7 @@ public readonly ref struct FalseReasonsHigherOrderSpecBuilder<TModel, TUnderlyin
         new(spec,
             higherOrderPredicate,
             trueBecause,
-            reasons => [falseBecause(reasons)],
+            reasons => falseBecause(reasons).ToEnumerable(),
             reasonSource);
 
     public ReasonHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
