@@ -71,7 +71,8 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
             .Where(result => result.Satisfied)
             .ToArray();
 
-    private IEnumerable<MetadataSet<TMetadata>> GetUnderlyingMetadataSets(BooleanResult<TModel, TUnderlyingMetadata>[] underlyingResults) =>
+    private static IEnumerable<MetadataSet<TMetadata>> GetUnderlyingMetadataSets(
+        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> underlyingResults) =>
         underlyingResults switch
         {
             IEnumerable<BooleanResult<TModel, TMetadata>> results => results.Select(result => result.Metadata),
