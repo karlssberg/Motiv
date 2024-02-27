@@ -4,21 +4,20 @@ namespace Karlssberg.Motiv.HigherOrder;
 
 internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
-    IEnumerable<TMetadata> metadataCollection,
+    MetadataSet<TMetadata> metadataSet,
     IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes,
     IProposition proposition,
     ReasonSource reasonSource)
     : BooleanResultBase<TMetadata>
 {
-    public override MetadataSet<TMetadata> Metadata => new(metadataCollection);
-
+    public override MetadataSet<TMetadata> Metadata => metadataSet;
 
     public override bool Satisfied => isSatisfied;
 
     public override ResultDescriptionBase Description =>
         new HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
-            metadataCollection,
+            metadataSet,
             causes,
             proposition,
             reasonSource);
@@ -28,15 +27,5 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
         {
             Underlying = causes
                 .Select(cause => cause.Explanation)
-        };
-
-    public override CausalMetadataCollection<TMetadata> CausalMetadata =>
-        new(Metadata, Explanation.Assertions)
-        {
-            Underlying = causes switch
-            {
-                IEnumerable<BooleanResultBase<TMetadata>> results => results.Select(result => result.CausalMetadata),
-                _ => Enumerable.Empty<CausalMetadataCollection<TMetadata>>()
-            }
         };
 }

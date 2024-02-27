@@ -20,10 +20,15 @@ internal sealed class AndBooleanResult<TMetadata>(
     /// <inheritdoc />
     public override Explanation Explanation => GetCausalResults().CreateReason();
 
-    public override MetadataSet<TMetadata> Metadata => new(GetCausalResults()
-        .SelectMany(result => result.Metadata));
-    
-    public override CausalMetadataCollection<TMetadata> CausalMetadata => GetCausalResults().CreateCause();
+    public override MetadataSet<TMetadata> Metadata =>
+        CreateMetadataSet();
+
+    private MetadataSet<TMetadata> CreateMetadataSet()
+    {
+        var metadataSets = GetCausalResults().Select(result => result.Metadata).ToArray();
+        return new(metadataSets.SelectMany(metadataSet => metadataSet),
+            metadataSets.SelectMany(metadataSet => metadataSet.Underlying));
+    }
 
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {

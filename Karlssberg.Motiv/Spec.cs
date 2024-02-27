@@ -13,7 +13,8 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     private readonly Func<TModel, SpecBase<TModel, TMetadata>> _specFactory;
 
     // Initializes a new instance of the Spec class with a description, predicate, and functions for when the predicate is true or false.
-    internal Spec(Func<TModel, bool> predicate,
+    internal Spec(
+        Func<TModel, bool> predicate,
         Func<TModel, TMetadata> whenTrue,
         Func<TModel, TMetadata> whenFalse,
         string propositionalAssertion)
@@ -24,16 +25,6 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
             whenTrue,
             whenFalse,
             propositionalAssertion);
-    }
-
-    // Initializes a new instance of the Spec class with a specification factory.
-    internal Spec(string proposition, Func<TModel, SpecBase<TModel, TMetadata>> specFactory)
-    {
-        proposition.ThrowIfNullOrWhitespace(nameof(proposition));
-        specFactory.ThrowIfNull(nameof(specFactory));
-        
-        Proposition = new Proposition(proposition);
-        _specFactory = specFactory;
     }
 
     // Initializes a new instance of the Spec class with a SpecBase instance.

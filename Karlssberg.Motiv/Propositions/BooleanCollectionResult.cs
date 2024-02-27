@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Karlssberg.Motiv.HigherOrder;
 
 namespace Karlssberg.Motiv.Propositions;
 

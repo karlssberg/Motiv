@@ -9,8 +9,7 @@ public sealed class BooleanResult<TMetadata>(
     : BooleanResultBase<TMetadata>
 {
     public override MetadataSet<TMetadata> Metadata => new(metadata.ToEnumerable());
-    public override CausalMetadataCollection<TMetadata> CausalMetadata => new(Metadata, Explanation.Assertions);
-
+    
     /// <summary>Gets the reasons for the result.</summary>
     public override Explanation Explanation => new(Description)
     {

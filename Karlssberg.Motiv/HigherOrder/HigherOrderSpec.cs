@@ -32,15 +32,16 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
         var metadata = isSatisfied
             ? whenTrue(booleanCollectionResults)
             : whenFalse(booleanCollectionResults);
-
+        var metadataSet = new MetadataSet<TMetadata>(metadata, GetUnderlyingMetadataSets(underlyingResults));
+        
         return new HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
-            metadata.Distinct(),
+            metadataSet,
             causes,
             Proposition,
             reasonSource);
     }
-    
+
     private IEnumerable<BooleanResult<TModel,TUnderlyingMetadata>> GetCauses(
         bool isSatisfied,
         ICollection<BooleanResult<TModel,TUnderlyingMetadata>> operandResults)
@@ -69,4 +70,11 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
         operandResults
             .Where(result => result.Satisfied)
             .ToArray();
+
+    private IEnumerable<MetadataSet<TMetadata>> GetUnderlyingMetadataSets(BooleanResult<TModel, TUnderlyingMetadata>[] underlyingResults) =>
+        underlyingResults switch
+        {
+            IEnumerable<BooleanResult<TModel, TMetadata>> results => results.Select(result => result.Metadata),
+            _ => Enumerable.Empty<MetadataSet<TMetadata>>()
+        };
 }

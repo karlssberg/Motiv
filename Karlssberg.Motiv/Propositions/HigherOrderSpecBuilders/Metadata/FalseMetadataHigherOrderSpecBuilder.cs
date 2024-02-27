@@ -1,4 +1,6 @@
-﻿namespace Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Metadata;
+﻿using Karlssberg.Motiv.HigherOrder;
+
+namespace Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Metadata;
 
 public readonly ref struct FalseMetadataHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,

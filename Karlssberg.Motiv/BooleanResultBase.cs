@@ -140,8 +140,6 @@ public abstract class BooleanResultBase<TMetadata>
 
     public abstract MetadataSet<TMetadata> Metadata { get; }
 
-    public abstract CausalMetadataCollection<TMetadata> CausalMetadata { get; }
-
     /// <summary>Determines whether the current BooleanResultBase object is equal to another BooleanResultBase object.</summary>
     /// <param name="other">The BooleanResultBase object to compare with the current object.</param>
     /// <returns>true if the current object is equal to the other object; otherwise, false.</returns>

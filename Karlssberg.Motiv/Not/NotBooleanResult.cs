@@ -16,5 +16,4 @@ internal sealed class NotBooleanResult<TMetadata>(BooleanResultBase<TMetadata> o
     public override Explanation Explanation => operandResult.Explanation;
 
     public override MetadataSet<TMetadata> Metadata => operandResult.Metadata;
-    public override CausalMetadataCollection<TMetadata> CausalMetadata => operandResult.CausalMetadata;
 }

@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv;
+﻿namespace Karlssberg.Motiv.HigherOrder;
 
 /// <summary>Represents a boolean result with an associated model and metadata.</summary>
 /// <typeparam name="TModel">The type of the associated model.</typeparam>
@@ -31,6 +31,4 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     public override bool Satisfied => _underlyingResult.Satisfied;
 
     public override MetadataSet<TMetadata> Metadata => _underlyingResult.Metadata;
-    
-    public override CausalMetadataCollection<TMetadata> CausalMetadata => _underlyingResult.CausalMetadata;
 }

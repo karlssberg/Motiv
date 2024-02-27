@@ -1,4 +1,6 @@
-﻿namespace Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Reasons;
+﻿using Karlssberg.Motiv.HigherOrder;
+
+namespace Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Reasons;
 
 public readonly ref struct FalseReasonsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,

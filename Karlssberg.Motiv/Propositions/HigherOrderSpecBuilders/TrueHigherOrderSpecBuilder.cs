@@ -1,4 +1,5 @@
-﻿using Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Metadata;
+﻿using Karlssberg.Motiv.HigherOrder;
+using Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Metadata;
 using Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Reasons;
 
 namespace Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders;

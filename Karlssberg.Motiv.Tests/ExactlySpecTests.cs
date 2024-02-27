@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Humanizer;
+using Karlssberg.Motiv.HigherOrder;
 
 namespace Karlssberg.Motiv.Tests;
 
