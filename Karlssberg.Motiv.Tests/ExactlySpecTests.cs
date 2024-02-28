@@ -71,20 +71,24 @@ public class ExactlySpecTests
     
     [Theory]
     [InlineAutoData(true, true, """
-                                            2 even
+                                            2 even {
                                                 2x true
+                                            }
                                             """)]
     [InlineAutoData(true, false, """
-                                            1 even and 1 odd
+                                            1 even and 1 odd {
                                                 1x true
+                                            }
                                             """)]
     [InlineAutoData(false, true, """
-                                            1 even and 1 odd
+                                            1 even and 1 odd {
                                                 1x true
+                                            }
                                             """)]
     [InlineAutoData(false, false, """
-                                            0 even and 2 odd
+                                            0 even and 2 odd {
                                                 2x false
+                                            }
                                             """)]
     public void Should_serialize_the_result_of_the_NSatisfied_operation_when_metadata_is_a_string(
         bool first,

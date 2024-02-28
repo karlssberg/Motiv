@@ -175,32 +175,39 @@ public class AtMostSpecTests
                                              at most one is satisfied
                                              """)]
     [InlineAutoData(false, false, true,  """
-                                            at most one is satisfied
+                                            at most one is satisfied {
                                                 1x is satisfied
+                                            }
                                             """)]
     [InlineAutoData(false, true,  false, """
-                                            at most one is satisfied
+                                            at most one is satisfied {
                                                 1x is satisfied
+                                            }
                                             """)]
     [InlineAutoData(false, true,  true,  """
-                                            more than one is satisfied
+                                            more than one is satisfied {
                                                 2x is satisfied
+                                            }
                                             """)]
     [InlineAutoData(true,  false, false, """
-                                            at most one is satisfied
+                                            at most one is satisfied {
                                                 1x is satisfied
+                                            }
                                             """)]
     [InlineAutoData(true,  false, true,  """
-                                            more than one is satisfied
+                                            more than one is satisfied {
                                                 2x is satisfied
+                                            }
                                             """)]
     [InlineAutoData(true,  true,  false, """
-                                            more than one is satisfied
+                                            more than one is satisfied {
                                                 2x is satisfied
+                                            }
                                             """)]
     [InlineAutoData(true,  true,  true,  """
-                                            more than one is satisfied
+                                            more than one is satisfied {
                                                 3x is satisfied
+                                            }
                                             """)]
     public void Should_serialize_the_result_of_the_at_most_of_1_operation_when_metadata_is_a_string(
         bool first,
@@ -231,32 +238,39 @@ public class AtMostSpecTests
                                             at most one is satisfied
                                             """)]
     [InlineAutoData(false, false, true, """
-                                            at most one is satisfied
+                                            at most one is satisfied {
                                                 1x True
+                                            }
                                             """)]
     [InlineAutoData(false, true,  false, """
-                                            at most one is satisfied
+                                            at most one is satisfied {
                                                 1x True
+                                            }
                                             """)]
     [InlineAutoData(false, true,  true, """
-                                            more than one is satisfied
+                                            more than one is satisfied {
                                                 2x True
+                                            }
                                             """)]
     [InlineAutoData(true,  false, false, """
-                                            at most one is satisfied
+                                            at most one is satisfied {
                                                 1x True
+                                            }
                                             """)]
     [InlineAutoData(true,  false, true, """
-                                            more than one is satisfied
+                                            more than one is satisfied {
                                                 2x True
+                                            }
                                             """)]
     [InlineAutoData(true,  true,  false, """
-                                            more than one is satisfied
+                                            more than one is satisfied {
                                                 2x True
+                                            }
                                             """)]
     [InlineAutoData(true,  true,  true, """
-                                            more than one is satisfied
+                                            more than one is satisfied {
                                                 3x True
+                                            }
                                             """)]
     public void Should_serialize_the_result_of_the_at_most_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
@@ -287,32 +301,39 @@ public class AtMostSpecTests
                                             at most one is satisfied
                                             """)]
     [InlineAutoData(false, false, true,  """
-                                            at most one is satisfied
+                                            at most one is satisfied {
                                                 1x is true
+                                            }
                                             """)]
     [InlineAutoData(false, true,  false, """
-                                            at most one is satisfied
+                                            at most one is satisfied {
                                                 1x is true
+                                            }
                                             """)]
     [InlineAutoData(false, true,  true,  """
-                                            more than one is satisfied
+                                            more than one is satisfied {
                                                 2x is true
+                                            }
                                             """)]
     [InlineAutoData(true,  false, false, """
-                                            at most one is satisfied
+                                            at most one is satisfied {
                                                 1x is true
+                                            }
                                             """)]
     [InlineAutoData(true,  false, true,  """
-                                            more than one is satisfied
+                                            more than one is satisfied {
                                                 2x is true
+                                            }
                                             """)]
     [InlineAutoData(true,  true,  false, """
-                                            more than one is satisfied
+                                            more than one is satisfied {
                                                 2x is true
+                                            }
                                             """)]
     [InlineAutoData(true,  true,  true,  """
-                                            more than one is satisfied
+                                            more than one is satisfied {
                                                 3x is true
+                                            }
                                             """)]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first, 

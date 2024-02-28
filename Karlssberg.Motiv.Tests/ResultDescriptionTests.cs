@@ -172,83 +172,99 @@ public class ResultDescriptionTests
     [Theory]
     [InlineAutoData(false, false, false, false, 
         """
-        some are false
+        some are false {
             1x (!first | !second) & (!third | !forth)
+        }
         """)]
     [InlineAutoData(false, false, false, true,
         """
-        some are false
+        some are false {
             1x !first | !second
+        }
         """)]
     [InlineAutoData(false, false, true, false,
         """
-        some are false
+        some are false {
             1x !first | !second
+        }
         """)]
     [InlineAutoData(false, false, true, true,
         """
-        some are false
+        some are false {
             1x !first | !second
+        }
         """)]
     [InlineAutoData(false, true, false, false,
         """
-        some are false
+        some are false {
             1x !third | !forth
+        }
         """)]
     [InlineAutoData(false, true, false, true,
         """
-        all are true
+        all are true {
             1x second & forth
+        }
         """)]
     [InlineAutoData(false, true, true, false,
         """
-        all are true
+        all are true {
             1x second & third
+        }
         """)]
     [InlineAutoData(false, true, true, true,
         """
-        all are true
+        all are true {
             1x second & (third | forth)
+        }
         """)]
     [InlineAutoData(true, false, false, false,
         """
-        some are false
+        some are false {
             1x !third | !forth
+        }
         """)]
     [InlineAutoData(true, false, false, true,
         """
-        all are true
+        all are true {
             1x first & forth
+        }
         """)]
     [InlineAutoData(true, false, true, false,
         """
-        all are true
+        all are true {
             1x first & third
+        }
         """)]
     [InlineAutoData(true, false, true, true,
         """
-        all are true
+        all are true {
             1x first & (third | forth)
+        }
         """)]
     [InlineAutoData(true, true, false, false,
         """
-        some are false
+        some are false {
             1x !third | !forth
+        }
         """)]
     [InlineAutoData(true, true, false, true,
         """
-        all are true
+        all are true {
             1x (first | second) & forth
+        }
         """)]
     [InlineAutoData(true, true, true, false,
         """
-        all are true
+        all are true {
             1x (first | second) & third
+        }
         """)]
     [InlineAutoData(true, true, true, true,
         """
-        all are true
+        all are true {
             1x (first | second) & (third | forth)
+        }
         """)]
     public void Should_generate_a_description_from_a_complicated_composition_of_higher_order_spec(
         bool firstValue,

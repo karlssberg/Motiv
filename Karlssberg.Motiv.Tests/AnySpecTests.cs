@@ -61,36 +61,44 @@ public class AnySpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            !any satisfied
+                                            !any satisfied {
                                                 3x !is true
+                                            }
                                             """)]
     [InlineAutoData(false, false, true,  """
-                                            any satisfied
+                                            any satisfied {
                                                 1x is true
+                                            }
                                             """)]
     [InlineAutoData(false, true, false,  """
-                                            any satisfied
+                                            any satisfied {
                                                 1x is true
+                                            }
                                             """)]
     [InlineAutoData(false, true, true,   """
-                                            any satisfied
+                                            any satisfied {
                                                 2x is true
+                                            }
                                             """)]
     [InlineAutoData(true, false, false,  """
-                                            any satisfied
+                                            any satisfied {
                                                 1x is true
+                                            }
                                             """)]
     [InlineAutoData(true, false, true,   """
-                                            any satisfied
+                                            any satisfied {
                                                 2x is true
+                                            }
                                             """)]
     [InlineAutoData(true, true, false,   """
-                                            any satisfied
+                                            any satisfied {
                                                 2x is true
+                                            }
                                             """)]
     [InlineAutoData(true, true, true,    """
-                                            any satisfied
+                                            any satisfied {
                                                 3x is true
+                                            }
                                             """)]
     public void Should_serialize_the_result_of_the_any_operation(
         bool first,
@@ -118,36 +126,44 @@ public class AnySpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            some false
+                                            some false {
                                                 3x False
+                                            }
                                             """)]
     [InlineAutoData(false, false, true,  """
-                                            all true
+                                            all true {
                                                 1x True
+                                            }
                                             """)]
     [InlineAutoData(false, true, false,  """
-                                            all true
+                                            all true {
                                                 1x True
+                                            }
                                             """)]
     [InlineAutoData(false, true, true,   """
-                                            all true
+                                            all true {
                                                 2x True
+                                            }
                                             """)]
     [InlineAutoData(true, false, false,  """
-                                            all true
+                                            all true {
                                                 1x True
+                                            }
                                             """)]
     [InlineAutoData(true, false, true,   """
-                                            all true
+                                            all true {
                                                 2x True
+                                            }
                                             """)]
     [InlineAutoData(true, true, false,   """
-                                            all true
+                                            all true {
                                                 2x True
+                                            }
                                             """)]
     [InlineAutoData(true, true, true,    """
-                                            all true
+                                            all true {
                                                 3x True
+                                            }
                                             """)]
     public void Should_serialize_the_result_of_the_any_operation_when_metadata_is_a_string(
         bool first,
@@ -177,36 +193,44 @@ public class AnySpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                           False
+                                           False {
                                                3x False
+                                           }
                                            """)]
     [InlineAutoData(false, false, true,  """
-                                           True
+                                           True {
                                                1x True
+                                           }
                                            """)]
     [InlineAutoData(false, true, false,  """
-                                           True
+                                           True {
                                                1x True
+                                           }
                                            """)]
     [InlineAutoData(false, true, true,   """
-                                           True
+                                           True {
                                                2x True
+                                           }
                                            """)]
     [InlineAutoData(true, false, false,  """
-                                           True
+                                           True {
                                                1x True
+                                           }
                                            """)]
     [InlineAutoData(true, false, true,   """
-                                           True
+                                           True {
                                                2x True
+                                           }
                                            """)]
     [InlineAutoData(true, true, false,   """
-                                           True
+                                           True {
                                                2x True
+                                           }
                                            """)]
     [InlineAutoData(true, true, true,    """
-                                           True
+                                           True {
                                                3x True
+                                           }
                                            """)]
     public void Should_serialize_the_result_of_the_any_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
