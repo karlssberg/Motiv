@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.XOr;
 
-internal class XOrBooleanResultDescription<TMetadata>(
+internal sealed class XOrBooleanResultDescription<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right,
     IEnumerable<BooleanResultBase<TMetadata>> causalResults) 

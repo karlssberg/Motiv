@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.Not;
 
-internal class NotBooleanResultDescription(BooleanResultBase operand) : ResultDescriptionBase
+internal sealed class NotBooleanResultDescription(BooleanResultBase operand) : ResultDescriptionBase
 {
     internal override int CausalOperandCount => 1;
     public override string Compact => FormatDescription(operand.Description.Compact);

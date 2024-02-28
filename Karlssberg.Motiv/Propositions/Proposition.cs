@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.Propositions;
 
-internal class Proposition(string assertion, IProposition? underlyingProposition = null) : IProposition
+internal sealed class Proposition(string assertion, IProposition? underlyingProposition = null) : IProposition
 {
     public string Assertion => assertion;
 
@@ -8,10 +8,12 @@ internal class Proposition(string assertion, IProposition? underlyingProposition
         underlyingProposition switch
         {
             null => assertion,
-            not null => $$"""
-                {{assertion}}
-                    {{underlyingProposition.Detailed.IndentAfterFirstLine()}}
-                """
+            not null =>
+                $$"""
+                  {{assertion}} {
+                      {{underlyingProposition.Detailed.IndentAfterFirstLine()}}
+                  }
+                  """
         };
 
 

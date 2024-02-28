@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.And;
 
-internal class AndBooleanResultDescription<TMetadata>(
+internal sealed class AndBooleanResultDescription<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right,
     IEnumerable<BooleanResultBase<TMetadata>> causalResults) 

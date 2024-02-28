@@ -351,11 +351,13 @@ public class AllSpecTests
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
         const string expectedSummary = "all are true";
-        const string expectedFull = """
-                                    all are true {
-                                        is true
-                                    }
-                                    """;
+        const string expectedFull =
+            """
+            all are true {
+                is true
+            }
+            """;
+        
         var underlyingSpec = Spec
             .Build<bool>(m => m)
             .WhenTrue("is true")

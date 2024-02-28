@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.XOr;
 
-internal class XOrProposition<TModel, TMetadata>(
+internal sealed class XOrProposition<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left, 
     SpecBase<TModel, TMetadata> right)
     : IProposition
@@ -9,9 +9,9 @@ internal class XOrProposition<TModel, TMetadata>(
     public string Assertion => $"{Summarize(left)} ^ {Summarize(right)}";
     public string Detailed =>
         $"""
-           {Explain(left).IndentAfterFirstLine()}
-         ^ {Explain(right).IndentAfterFirstLine()}
-         """;
+            {Explain(left).IndentAfterFirstLine()} ^
+            {Explain(right).IndentAfterFirstLine()}
+        """;
     
     private string Summarize(SpecBase<TModel, TMetadata> operand)
     {

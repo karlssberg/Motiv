@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.ChangeMetadataType;
 
-internal class ChangeMetadataBooleanResultDescription<TMetadata, TUnderlyingMetadata> (
+internal sealed class ChangeMetadataBooleanResultDescription<TMetadata, TUnderlyingMetadata> (
     BooleanResultBase<TUnderlyingMetadata> booleanResult, 
     TMetadata metadata,
     IProposition proposition)

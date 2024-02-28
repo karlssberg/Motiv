@@ -8,6 +8,7 @@ specifications.
 ### Basic Specification
 
 At its most basic you can provide a predicate and a propositional statement.
+
 ```csharp
 var isEven = Spec
     .Build<int>(n => n % 2 == 0)
@@ -19,7 +20,8 @@ isEven.IsSatisfiedBy(2).Reason; // returns "even"
 isEven.IsSatisfiedBy(3).Reason; // returns "!even"
 ```
 
-However, the real power of the library comes from the ability to provide a reason for when either the result is true or false.
+However, the real power of the library comes from the ability to provide a reason for when either the result is true or
+false.
 
 ```csharp
 var isEven = Spec
@@ -33,6 +35,7 @@ isEven.IsSatisfiedBy(3).Reason; // returns "number is odd"
 ```
 
 You can also provide a function that returns a description based on the value of the input.
+
 ```csharp
 var isEven = Spec
     .Build<int>(n => n % 2 == 0)
@@ -43,6 +46,29 @@ var isEven = Spec
 isEven.IsSatisfiedBy(2).Reason; // returns "2 is even"
 isEven.IsSatisfiedBy(3).Reason; // returns "3 is odd"
 ```
+
+### Handling multiple languages
+
+If you want to present the text to an international audience, you can provide a custom object for `.WhenTrue()` and
+`.WhenFalse()` instead of using a string.
+
+```csharp
+var isEven = Spec
+    .Build<int>(n => n % 2 == 0)
+    .WhenTrue(n => new { English = "the number is even", Spanish = "el número es par" })
+    .WhenFalse(n => new { English = "the number is odd", Spanish = "el número es impar" })
+    .CreateSpec("is even number");
+
+isEven.IsSatisfiedBy(2).Satisfied; // returns true
+isEven.IsSatisfiedBy(2).Reason; // returns "is even number"
+isEven.IsSatisfiedBy(2).Metadata.Select(m => m.English); // returns ["the number is even"]
+isEven.IsSatisfiedBy(2).Metadata.Select(m => m.Spanish); // returns ["el número es par"]
+```
+
+You can also provide a custom object to drive behv
+
+```csharp
+
 
 
 ### Composite Specification
@@ -57,7 +83,7 @@ var isEven = Spec
     .Build<int>(n => n % 2 == 0)
     .WhenTrue("the number is even")
     .WhenFalse("the number is odd")
-    .CreateSpec();
+    .CreateSpec(); 
 
 var isPositiveAndEven = isPositive & isEven;
 
@@ -72,18 +98,4 @@ isPositiveAndEven.IsSatisfiedBy(-2).Satisfied; // returns false
 isPositiveAndEven.IsSatisfiedBy(-2).Assertions; // returns ["the number is even", "the number is negative"]
 ```
 
-### Handling multiple languages
-If you want to present the text to an international audience, you can provide a custom object instead of using a string.
 
-```csharp
-var isEven = Spec
-    .Build<int>(n => n % 2 == 0)
-    .WhenTrue(n => new { English = "the number is even", Spanish = "el número es par" })
-    .WhenFalse(n => new { English = "the number is odd", Spanish = "el número es impar" })
-    .CreateSpec("is even number");
-
-isEven.IsSatisfiedBy(2).Satisfied; // returns true
-isEven.IsSatisfiedBy(2).Reason; // returns "is even number"
-isEven.IsSatisfiedBy(2).Metadata.Select(m => m.English); // returns ["the number is even"]
-isEven.IsSatisfiedBy(2).Metadata.Select(m => m.Spanish); // returns ["el número es par"]
-```

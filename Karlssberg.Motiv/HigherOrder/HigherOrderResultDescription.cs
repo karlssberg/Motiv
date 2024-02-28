@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv.HigherOrder;
 
-internal class HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetadata>(
+internal sealed class HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
     IEnumerable<TMetadata> metadataCollection,
     IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes,
@@ -10,26 +10,26 @@ internal class HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetada
     ReasonSource reasonSource)
     : ResultDescriptionBase
 {
-    private readonly BooleanResult<TModel, TUnderlyingMetadata>[] _causes = causes.ToArray();
-    internal override int CausalOperandCount => _causes.Length;
+    public ICollection<BooleanResult<TModel, TUnderlyingMetadata>> Causes { get; } = causes.ToArray();
+    internal override int CausalOperandCount => Causes.Count;
     public override string Compact => proposition.ToReason(isSatisfied, metadataCollection.SingleOrDefault(), reasonSource);
-    public override string Detailed => GetFullDescription();
+    public override string Detailed => GetDetails();
 
-    private string GetFullDescription()
+    private string GetDetails()
     {
-        var details = GetDetails();
-        return details switch
+        var causes = GetUnderlyingCauses();
+        return causes switch
         {
             "" => Compact,
             _ => $"""
                   {Compact}
-                      {details.IndentAfterFirstLine()}
+                      {causes.IndentAfterFirstLine()}
                   """
         };
         
-        string GetDetails()
+        string GetUnderlyingCauses()
         {
-            var reasonFrequency = _causes
+            var reasonFrequency = Causes
                 .OrderByDescending(result => result.Satisfied)
                 .Select(result => result.Description.Compact)
                 .GroupBy(reason => reason)
