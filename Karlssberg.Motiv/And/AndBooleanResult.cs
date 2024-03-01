@@ -18,7 +18,7 @@ internal sealed class AndBooleanResult<TMetadata>(
         new AndBooleanResultDescription<TMetadata>(left, right, GetCausalResults());
 
     /// <inheritdoc />
-    public override Explanation Explanation => GetCausalResults().CreateReason();
+    public override Explanation Explanation => GetCausalResults().CreateExplanation();
 
     public override MetadataSet<TMetadata> Metadata => CreateMetadataSet();
 

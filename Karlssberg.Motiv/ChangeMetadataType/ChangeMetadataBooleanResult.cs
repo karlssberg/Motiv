@@ -23,7 +23,7 @@ internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata
     public override Explanation Explanation =>
         new(Description)
         {
-            Underlying = [booleanResult.Explanation]
+            Underlying = booleanResult.Explanation.ToEnumerable()
         };
     
     public override MetadataSet<TMetadata> Metadata => new(metadata);

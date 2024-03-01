@@ -66,7 +66,7 @@ public class ExactlySpecTests
 
         result.Satisfied.Should().Be(expected);
         result.Explanation.Assertions.Humanize().Should().Be(expectedShallowReasons);
-        result.Explanation.DeepAssertions.Humanize().Should().Be(expectedDeepReason);
+        result.Explanation.Underlying.GetAssertions().Humanize().Should().Be(expectedDeepReason);
     }
     
     [Theory]

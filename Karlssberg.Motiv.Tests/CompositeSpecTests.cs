@@ -100,7 +100,7 @@ public class CompositeSpecTests
 
         var act = sut.IsSatisfiedBy("model");
 
-        act.Explanation.DeepAssertions.Should().BeEquivalentTo(act.Satisfied
+        act.GetRootAssertions().Should().BeEquivalentTo(act.Satisfied
             ? trueReason
             : falseReason);
         

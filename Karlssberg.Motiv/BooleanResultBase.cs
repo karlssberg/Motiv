@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using Humanizer;
 using Karlssberg.Motiv.And;
 using Karlssberg.Motiv.Not;
 using Karlssberg.Motiv.Or;
@@ -8,7 +7,7 @@ using Karlssberg.Motiv.XOr;
 namespace Karlssberg.Motiv;
 
 /// <summary>Represents a base class for boolean results.</summary>
-[DebuggerDisplay("{IsSatisfiedDisplayText()}: {ToString()}")]
+[DebuggerDisplay("{IsSatisfiedDisplayText()}: {Explanation.GetDebuggerDisplay()}")]
 public abstract class BooleanResultBase
     : IEquatable<BooleanResultBase>,
         IEquatable<bool>
@@ -30,6 +29,8 @@ public abstract class BooleanResultBase
     public string Reason => Description.Compact;
     
     public IEnumerable<string> Assertions => Explanation.Assertions;
+
+    public IEnumerable<string> SubAssertions => Explanation.Underlying.GetAssertions();
 
     /// <summary>
     /// Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the
@@ -59,7 +60,7 @@ public abstract class BooleanResultBase
 
     /// <summary>Returns a human readable description of the tree of conditions that make up this result.</summary>
     /// <returns>A string that describes the tree of conditions that make up this result.</returns>
-    public override string ToString() => Assertions.Humanize();
+    public override string ToString() => Explanation.ToString();
 
     /// <summary>Defines the true operator for the <see cref="BooleanResultBase{TMetadata}" /> class.</summary>
     /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance.</param>

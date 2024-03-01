@@ -10,7 +10,7 @@ internal sealed class XOrBooleanResult<TMetadata>(
     /// <summary>Gets a value indicating whether the XOR operation is satisfied.</summary>
     public override bool Satisfied => left.Satisfied ^ right.Satisfied;
 
-    public override Explanation Explanation => GetCausalResults().CreateReason();
+    public override Explanation Explanation => GetCausalResults().CreateExplanation();
 
     /// <summary>Gets the description of the XOR operation.</summary>
     public override ResultDescriptionBase Description =>

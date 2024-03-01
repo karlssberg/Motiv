@@ -127,7 +127,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
-        result.Explanation.DeepAssertions.Should().BeEquivalentTo(expected);
+        result.GetRootAssertions().Should().BeEquivalentTo(expected);
     }
     
     [Theory]
