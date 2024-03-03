@@ -18,22 +18,22 @@ var isProductSizeSmallSpec = Spec
     .WhenFalse("product is not easily stolen")
     .CreateSpec();
 
-var isHighRiskShelfItemSpec = expensiveProductSpec | isProductSizeSmallSpec;
+var isAtRiskShelfItemSpec = expensiveProductSpec | isProductSizeSmallSpec;
 
 var product = new Product("Laptop", 1500, true);
-var isHighRiskShelfItem = isHighRiskShelfItemSpec.IsSatisfiedBy(product);
+var isAtRiskShelfItem = isAtRiskShelfItemSpec.IsSatisfiedBy(product);
 
-isHighRiskShelfItem.Satisfied; // returns true
-isHighRiskShelfItem.Reason; // returns "product is expensive | product is easily stolen"
-isHighRiskShelfItem.Assertions; // returns ["product is expensive", "product is easily stolen"]
+isAtRiskShelfItem.Satisfied; // returns true
+isAtRiskShelfItem.Reason; // returns "product is expensive | product is easily stolen"
+isAtRiskShelfItem.Assertions; // returns ["product is expensive", "product is easily stolen"]
 ```
 
 If you want to give it a true or false reasons you can do so by wrapping it in a new specification.
 
 ```csharp
-var isProductAtHighRiskOfTheftSpec = Spec
+var isProductAtRiskOfTheftSpec = Spec
     .Build<Subscription>(expensiveProductSpec | isProductSizeSmallSpec)
-    .WhenTrue("the product is at high risk of theft")
+    .WhenTrue("the product is at risk of theft")
     .WhenFalse("the product is at low risk of theft")
     .CreateSpec();
 ```
@@ -45,18 +45,18 @@ so that you can still aggregate the results of specifications that interrogate d
 record Store(decimal ShopLiftingRatePercentage);
 var store = new Store(5);
 
-var isHighRiskLocationSpec = Spec
+var isAtRiskLocationSpec = Spec
     .Build<Store>(store => store.ShopLiftingRatePercentage > 3)
     .WhenTrue("the store has high incidents of shop lifting")
     .WhenFalse("the store has low incidents of shop lifting")
     .CreateSpec();
 
-var isHighRiskLocation = isHighRiskLocationSpec.IsSatisfiedBy(store);
-var isProductAtHighRiskOfTheft = isProductAtHighRiskOfTheftSpec.IsSatisfiedBy(store);
+var isAtRiskLocation = isAtRiskLocationSpec.IsSatisfiedBy(store);
+var isProductAtRiskOfTheft = isProductAtRiskOfTheftSpec.IsSatisfiedBy(store);
 
-var isExtaSecurityNeeded = isProductAtHighRiskOfTheft | isHighRiskLocation;
+var isExtaSecurityNeeded = isProductAtRiskOfTheft | isAtRiskLocation;
 
 isExtaSecurityNeeded.Satisfied; // returns true
-isExtaSecurityNeeded.Reason; // returns "the product is at high risk of theft | the store has high incidents of shop lifting"
-isExtaSecurityNeeded.Assertions; // returns ["the product is at high risk of theft", "the store has high incidents of shop lifting"]
+isExtaSecurityNeeded.Reason; // returns "the product is at risk of theft | the store has high incidents of shop lifting"
+isExtaSecurityNeeded.Assertions; // returns ["the product is at risk of theft", "the store has high incidents of shop lifting"]
 ```
