@@ -27,30 +27,30 @@ public abstract class SpecBase<TModel>
     /// <summary>The description of the specification.  This is used for debugging/logging purposes.</summary>
     public abstract IProposition Proposition { get; }
 
-    public abstract SpecBase<TModel, string> ToReasonSpec();
+    public abstract SpecBase<TModel, string> ToExplanationSpec();
 
     /// <summary>Combines this specification with another specification using the logical AND operator.</summary>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
     public SpecBase<TModel, string> And(SpecBase<TModel> spec) =>
-        new AndSpec<TModel, string>(ToReasonSpec(), spec.ToReasonSpec());
+        new AndSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
     /// <summary>Combines this specification with another specification using the logical OR operator.</summary>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical OR of this specification and the other specification.</returns>
     public SpecBase<TModel, string> Or(SpecBase<TModel> spec) =>
-        new OrSpec<TModel, string>(ToReasonSpec(), spec.ToReasonSpec());
+        new OrSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
     /// <summary>Combines this specification with another specification using the logical XOR operator.</summary>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical XOR of this specification and the other specification.</returns>
     public SpecBase<TModel, string> XOr(SpecBase<TModel> spec) =>
-        new XOrSpec<TModel, string>(ToReasonSpec(), spec.ToReasonSpec());
+        new XOrSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
     /// <summary>Negates this specification.</summary>
     /// <returns>A new specification that represents the logical NOT of this specification.</returns>
     public SpecBase<TModel, string> Not() =>
-        new NotSpec<TModel, string>(this.ToReasonSpec());
+        new NotSpec<TModel, string>(this.ToExplanationSpec());
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
     /// <returns>A string that represents the logical hierarchy of the specification.</returns>
@@ -168,10 +168,10 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
         where TDerivedModel : TModel =>
         new ChangeModelTypeSpec<TDerivedModel, TModel, TMetadata>(this, model => model);
     
-    public override SpecBase<TModel, string> ToReasonSpec() =>
+    public override SpecBase<TModel, string> ToExplanationSpec() =>
         this switch
         {
-            SpecBase<TModel, string> reasonSpec => reasonSpec,
+            SpecBase<TModel, string> explanationSpec => explanationSpec,
             _ => new MetadataToReasonAdapterSpec<TModel, TMetadata>(this)
         };
 

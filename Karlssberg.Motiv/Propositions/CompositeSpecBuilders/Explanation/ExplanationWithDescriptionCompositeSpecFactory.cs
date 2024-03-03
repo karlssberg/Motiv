@@ -1,7 +1,7 @@
-﻿namespace Karlssberg.Motiv.Propositions.CompositeFactorySpecBuilders.Reasons;
+﻿namespace Karlssberg.Motiv.Propositions.CompositeSpecBuilders.Explanation;
 
-public readonly ref struct ReasonWithDescriptionCompositeFactorySpecFactory<TModel, TUnderlyingMetadata>(
-    Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate,
+public readonly ref struct ExplanationWithDescriptionCompositeSpecFactory<TModel, TUnderlyingMetadata>(
+    SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,
     string candidateProposition)
@@ -14,7 +14,7 @@ public readonly ref struct ReasonWithDescriptionCompositeFactorySpecFactory<TMod
 
     private SpecBase<TModel, string> CreateSpecInternal(string proposition) =>
         new CompositeFactorySpec<TModel, string, TUnderlyingMetadata>(
-            specPredicate,
+            spec,
             trueBecause,
             falseBecause,
             proposition);

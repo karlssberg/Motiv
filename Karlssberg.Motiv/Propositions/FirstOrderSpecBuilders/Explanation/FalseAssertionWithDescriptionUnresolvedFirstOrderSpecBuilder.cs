@@ -1,10 +1,10 @@
 ﻿using Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders.Metadata;
 
-namespace Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders.Reasons;
+namespace Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders.Explanation;
 
 /// <summary>Represents an interface for asking for a false reason in a specification.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-public readonly ref struct FalseReasonWithDescriptionUnresolvedFirstOrderSpecBuilder<TModel>(
+public readonly ref struct FalseAssertionWithDescriptionUnresolvedFirstOrderSpecBuilder<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause)
 {

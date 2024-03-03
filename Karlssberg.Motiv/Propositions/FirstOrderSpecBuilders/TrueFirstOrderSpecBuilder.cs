@@ -1,5 +1,5 @@
-﻿using Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders.Metadata;
-using Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders.Reasons;
+﻿using Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders.Explanation;
+using Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders.Metadata;
 
 namespace Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders;
 
@@ -7,16 +7,16 @@ public readonly ref struct TrueFirstOrderSpecBuilder<TModel>(Func<TModel, bool> 
 {
     /// <summary>Sets the reason why the condition is true.</summary>
     /// <param name="trueBecause">The human-readable reason why the condition is true.</param>
-    /// <returns>An instance of <see cref="FalseReasonFirstOrderSpecBuilder{TModel}" />.</returns>
-    public FalseReasonFirstOrderSpecBuilder<TModel> WhenTrue(string trueBecause) =>
+    /// <returns>An instance of <see cref="FalseAssertionFirstOrderSpecBuilder{TModel}" />.</returns>
+    public FalseAssertionFirstOrderSpecBuilder<TModel> WhenTrue(string trueBecause) =>
         new(predicate, 
             _ => trueBecause,
             trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause)));
 
     /// <summary>Sets the reason why the condition is true.</summary>
     /// <param name="trueBecause">The human-readable reason why the condition is true.</param>
-    /// <returns>An instance of <see cref="FalseReasonFirstOrderSpecBuilder{TModel}" />.</returns>
-    public FalseReasonWithDescriptionUnresolvedFirstOrderSpecBuilder<TModel> WhenTrue(Func<TModel, string> trueBecause) =>
+    /// <returns>An instance of <see cref="FalseAssertionFirstOrderSpecBuilder{TModel}" />.</returns>
+    public FalseAssertionWithDescriptionUnresolvedFirstOrderSpecBuilder<TModel> WhenTrue(Func<TModel, string> trueBecause) =>
         new(predicate,
             trueBecause.ThrowIfNull(nameof(trueBecause)));
 
@@ -43,7 +43,7 @@ public readonly ref struct TrueFirstOrderSpecBuilder<TModel>(Func<TModel, bool> 
     }
     
     public SpecBase<TModel, string> CreateSpec(string proposition) =>
-        new ReasonSpec<TModel>(
+        new ExplanationSpec<TModel>(
             predicate, 
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

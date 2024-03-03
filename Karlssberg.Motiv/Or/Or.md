@@ -4,6 +4,8 @@ A logical OR operation can be performed on two specifications using the `|` oper
 specification instance that is the logical OR of the two specifications.
 
 ```csharp
+record Product(string Name, decimal Price, bool IsInStock);
+
 var expensiveProductSpec = Spec
     .Build<Product>(p => p.Price > 1000)
     .WhenTrue("product is expensive")

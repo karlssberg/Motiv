@@ -1,9 +1,9 @@
-﻿namespace Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders.Reasons;
+﻿namespace Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders.Explanation;
 
 /// <summary>Represents an interface for building a specifcation.</summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata"></typeparam>
-public readonly ref struct ReasonFirstOrderSpecFactory<TModel>(
+public readonly ref struct ExplanationFirstOrderSpecFactory<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,

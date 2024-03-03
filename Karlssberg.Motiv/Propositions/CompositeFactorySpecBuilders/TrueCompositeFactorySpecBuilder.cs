@@ -1,5 +1,5 @@
-﻿using Karlssberg.Motiv.Propositions.CompositeFactorySpecBuilders.Metadata;
-using Karlssberg.Motiv.Propositions.CompositeFactorySpecBuilders.Reasons;
+﻿using Karlssberg.Motiv.Propositions.CompositeFactorySpecBuilders.Explanation;
+using Karlssberg.Motiv.Propositions.CompositeFactorySpecBuilders.Metadata;
 
 namespace Karlssberg.Motiv.Propositions.CompositeFactorySpecBuilders;
 
@@ -17,12 +17,12 @@ public readonly ref struct TrueCompositeFactorySpecBuilder<TModel, TUnderlyingMe
         new(specPredicate,
             whenTrue);
     
-    public FalseReasonsWithDescriptionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
+    public FalseAssertionWithDescriptionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
         new(specPredicate,
             _ => trueBecause,
             trueBecause);
 
-    public FalseReasonsCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(Func<TModel, string> trueBecause) =>
+    public FalseAssertionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(Func<TModel, string> trueBecause) =>
         new(specPredicate,
             trueBecause);
 }

@@ -1,6 +1,6 @@
 ﻿using Karlssberg.Motiv.HigherOrder;
+using Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Explanation;
 using Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Metadata;
-using Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Reasons;
 
 namespace Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders;
 
@@ -24,21 +24,21 @@ public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadat
             higherOrderPredicate,
             whenTrue);
 
-    public FalseReasonsWithDescriptionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
+    public FalseAssertionsWithDescriptionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
         new(spec,
             higherOrderPredicate,
             _ => trueBecause.ToEnumerable(),
             trueBecause,
             ReasonSource.Metadata);
     
-    public FalseReasonsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+    public FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, string> trueBecause) =>
         new(spec,
             higherOrderPredicate,
             results => trueBecause(results).ToEnumerable(),
             ReasonSource.Metadata);
 
-    public FalseReasonsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+    public FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
         new(spec,
             higherOrderPredicate,

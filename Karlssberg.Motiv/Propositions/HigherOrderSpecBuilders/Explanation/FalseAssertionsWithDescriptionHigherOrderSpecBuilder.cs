@@ -1,15 +1,15 @@
 ﻿using Karlssberg.Motiv.HigherOrder;
 
-namespace Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Reasons;
+namespace Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Explanation;
 
-public readonly ref struct FalseReasonsWithDescriptionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
+public readonly ref struct FalseAssertionsWithDescriptionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
     string candidateName,
     ReasonSource reasonSource)
 {
-    public ReasonWithDescriptionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(string falseBecause) =>
+    public ExplanationWithDescriptionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(string falseBecause) =>
         new(spec,
             higherOrderPredicate,
             trueBecause,
@@ -17,7 +17,7 @@ public readonly ref struct FalseReasonsWithDescriptionHigherOrderSpecBuilder<TMo
             candidateName,
             reasonSource);
     
-    public ReasonWithDescriptionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
+    public ExplanationWithDescriptionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
         Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, string> falseBecause) =>
         new(spec,
             higherOrderPredicate,
@@ -26,7 +26,7 @@ public readonly ref struct FalseReasonsWithDescriptionHigherOrderSpecBuilder<TMo
             candidateName,
             reasonSource);
     
-    public ReasonWithDescriptionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
+    public ExplanationWithDescriptionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
         Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
         new(spec,
             higherOrderPredicate,
