@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using Humanizer;
 
 namespace Karlssberg.Motiv;
 
@@ -10,10 +9,10 @@ public sealed class MetadataSet<TMetadata>(
     public MetadataSet(TMetadata metadata) : this(metadata.ToEnumerable())
     {
     }
-    
-    public IEnumerable<MetadataSet<TMetadata>> Underlying { get; } = 
+
+    public IEnumerable<MetadataSet<TMetadata>> Underlying { get; } =
         underlying ?? Enumerable.Empty<MetadataSet<TMetadata>>();
-    
+
     private readonly ISet<TMetadata> _metadataCollection = metadataCollection switch
     {
         ISet<TMetadata> metadataSet => metadataSet,
@@ -28,8 +27,15 @@ public sealed class MetadataSet<TMetadata>(
     public override string ToString() =>
         _metadataCollection switch
         {
-            IEnumerable<string> reasons => reasons.Humanize(),
-            _ when typeof(TMetadata).IsPrimitive => _metadataCollection.Humanize(),
-            _ => base.ToString()
+            IEnumerable<string> reasons => string.Join(", ", reasons),
+            _ when typeof(TMetadata).IsPrimitive => SerializeMetadata(),
+            _ => base.ToString()!
         };
+
+    private string SerializeMetadata()
+    {
+        return string.Join(", ", _metadataCollection
+            .Select(m => m?.ToString())
+            .Where(m => !string.IsNullOrWhiteSpace(m)));
+    }
 }

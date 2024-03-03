@@ -81,7 +81,10 @@ public static class EnumerableExtensions
     
     public static IEnumerable<string> GetRootAssertions(
         this BooleanResultBase result) =>
-        result.Explanation.Underlying.GetRootAssertions().Distinct();
+        result.Explanation
+            .Underlying
+            .GetRootAssertions()
+            .Distinct();
     
     private static IEnumerable<string> GetRootAssertions(
         this IEnumerable<Explanation> explanations) =>

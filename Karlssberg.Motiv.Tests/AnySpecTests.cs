@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using Humanizer;
 
 namespace Karlssberg.Motiv.Tests;
 

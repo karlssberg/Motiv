@@ -344,7 +344,7 @@ public class AllSpecTests
 
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
-
+        
         result.Reason.Should().Be(expected);
         result.ToString().Should().Be(expected);
     }
