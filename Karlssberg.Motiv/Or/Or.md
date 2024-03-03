@@ -1,4 +1,4 @@
-﻿## OR operation
+﻿# OR operation
 
 A logical OR operation can be performed on two specifications using the `|` operator. This will produce a new
 specification instance that is the logical OR of the two specifications.

@@ -55,4 +55,11 @@ public readonly struct SpecBuilder<TModel, TUnderlyingMetadata>(
     public TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> As(
         Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, BooleanResult<TModel>> higherOrderPredicate) =>
         new(spec, results => higherOrderPredicate(results).Satisfied);
+    
+    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+        new CompositeFactorySpec<TModel, string, TUnderlyingMetadata>(
+            spec,
+            _ => proposition,
+            _ => $"!{proposition}",
+            proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

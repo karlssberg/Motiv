@@ -44,4 +44,13 @@ public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadat
             higherOrderPredicate,
             trueBecause,
             ReasonSource.Proposition);
+    
+    public SpecBase<IEnumerable<TModel>, string> CreateSpec(string proposition) =>
+        new HigherOrderSpec<TModel, string, TUnderlyingMetadata>(
+            spec,
+            higherOrderPredicate,
+            _ => proposition.ToEnumerable(),
+            _ => $"!{proposition}".ToEnumerable(),
+            proposition.ThrowIfNullOrWhitespace(nameof(proposition)),
+            ReasonSource.Proposition);
 }

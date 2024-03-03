@@ -28,9 +28,8 @@ public class AllSpecTests
         bool[] models = [first, second, third];
 
         var sut = Spec
-            .Build(underlyingSpec).AsAllSatisfied()
-            .WhenTrue(results => $"{results.Count()} are true")
-            .WhenFalse(results => $"{results.Count()} are false")
+            .Build(underlyingSpec)
+            .AsAllSatisfied()
             .CreateSpec("all are true");
 
         var result = sut.IsSatisfiedBy(models);

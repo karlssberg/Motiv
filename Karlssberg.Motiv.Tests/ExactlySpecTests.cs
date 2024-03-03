@@ -105,7 +105,7 @@ public class ExactlySpecTests
             .Build(isEven)
             .AsNSatisfied(2)
             .WhenTrue("2 even")
-            .WhenFalse(results => $"{results.TrueCount()} even and {results.FalseCount()} odd")
+            .WhenFalse(results => $"{results.TrueCount} even and {results.FalseCount} odd")
             .CreateSpec();
         
         var result = sut.IsSatisfiedBy([first, second]);

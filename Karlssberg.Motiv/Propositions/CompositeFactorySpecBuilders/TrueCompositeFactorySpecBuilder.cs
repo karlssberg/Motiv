@@ -25,4 +25,11 @@ public readonly ref struct TrueCompositeFactorySpecBuilder<TModel, TUnderlyingMe
     public FalseAssertionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(Func<TModel, string> trueBecause) =>
         new(specPredicate,
             trueBecause);
+    
+    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+        new CompositeFactorySpec<TModel, string, TUnderlyingMetadata>(
+            specPredicate,
+            _ => proposition,
+            _ => $"!{proposition}",
+            proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

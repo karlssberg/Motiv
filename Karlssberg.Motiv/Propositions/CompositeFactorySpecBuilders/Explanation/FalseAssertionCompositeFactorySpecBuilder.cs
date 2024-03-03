@@ -4,12 +4,12 @@ public readonly ref struct FalseAssertionCompositeFactorySpecBuilder<TModel, TUn
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate,
     Func<TModel, string> trueBecause)
 {
-    public ExplainationCompositeFactorySpecFactory<TModel, TUnderlyingMetadata> WhenFalse(string falseBecause) =>
+    public ExplanationCompositeFactorySpecFactory<TModel, TUnderlyingMetadata> WhenFalse(string falseBecause) =>
         new(specPredicate,
             trueBecause,
             _ => falseBecause);
 
-    public ExplainationCompositeFactorySpecFactory<TModel, TUnderlyingMetadata> WhenFalse(Func<TModel, string> falseBecause) =>
+    public ExplanationCompositeFactorySpecFactory<TModel, TUnderlyingMetadata> WhenFalse(Func<TModel, string> falseBecause) =>
         new(specPredicate,
             trueBecause,
             falseBecause);

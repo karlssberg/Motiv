@@ -1,4 +1,4 @@
-﻿## XOR operation
+﻿# XOR operation
 
 A logical XOR operation can be performed on two specifications using the `^` operator. This will produce a new
 specification instance that is the logical XOR of the two specifications.

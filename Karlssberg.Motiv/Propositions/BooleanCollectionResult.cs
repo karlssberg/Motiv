@@ -4,13 +4,16 @@ using Karlssberg.Motiv.HigherOrder;
 namespace Karlssberg.Motiv.Propositions;
 
 public sealed record BooleanCollectionResult<TModel, TMetadata>(
-    bool IsSatisfied,
+    bool Satisfied,
     ICollection<BooleanResult<TModel, TMetadata>> AllResults,
     ICollection<BooleanResult<TModel, TMetadata>> CausalResults)
     : IEnumerable<BooleanResult<TModel, TMetadata>>
 {
 
-    public bool IsSatisfied { get; } = IsSatisfied;
+    public bool Satisfied { get; } = Satisfied;
+    
+    public bool AllSatisfied => AllResults.All(result => result.Satisfied);
+    public bool NoneSatisfied => AllResults.All(result => !result.Satisfied);
     
     public ICollection<BooleanResult<TModel, TMetadata>> AllResults { get; } = AllResults;
     
@@ -35,12 +38,12 @@ public sealed record BooleanCollectionResult<TModel, TMetadata>(
     public IEnumerable<BooleanResult<TModel, TMetadata>> WhereFalse() => AllResults
         .Where(result => !result.Satisfied);
 
-    public int TrueCount() => WhereTrue().Count();
+    public int TrueCount => WhereTrue().Count();
 
-    public int FalseCount() => WhereFalse().Count();
-    
-    public int CauseCount() => CausalResults.Count;
-    
+    public int FalseCount => WhereFalse().Count();
+
+    public int CauseCount => CausalResults.Count;
+
     public IEnumerator<BooleanResult<TModel, TMetadata>> GetEnumerator() => CausalResults.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
