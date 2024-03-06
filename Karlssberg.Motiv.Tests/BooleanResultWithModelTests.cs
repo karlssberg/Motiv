@@ -3,7 +3,7 @@ using Karlssberg.Motiv.Propositions;
 
 namespace Karlssberg.Motiv.Tests;
 
-public class BooleanResultTests
+public class BooleanResultWithModelTests
 {
     [Theory]
     [InlineAutoData]
@@ -12,7 +12,7 @@ public class BooleanResultTests
         object metadata,
         IProposition proposition)
     {
-        var result = new BooleanResult<object>(isSatisfied, metadata, proposition);
+        var result = new BooleanResultWithModel<object>(isSatisfied, metadata, proposition);
 
         var act = (bool)result;
 
@@ -26,8 +26,8 @@ public class BooleanResultTests
     [InlineAutoData(true, true, true)]
     public void Should_support_and_operation(bool left, bool right, bool expected)
     {
-        var leftResult = new BooleanResult<object>(left, new object(), new Proposition(left.ToString()));
-        var rightResult = new BooleanResult<object>(right, new object(), new Proposition(right.ToString()));
+        var leftResult = new BooleanResultWithModel<object>(left, new object(), new Proposition(left.ToString()));
+        var rightResult = new BooleanResultWithModel<object>(right, new object(), new Proposition(right.ToString()));
 
         var act = leftResult & rightResult;
 
@@ -47,8 +47,8 @@ public class BooleanResultTests
     [InlineAutoData(true, true, true)]
     public void Should_support_or_operation(bool left, bool right, bool expected)
     {
-        var leftResult = new BooleanResult<object>(left, new object(), new Proposition(left.ToString()));
-        var rightResult = new BooleanResult<object>(right, new object(), new Proposition(right.ToString()));
+        var leftResult = new BooleanResultWithModel<object>(left, new object(), new Proposition(left.ToString()));
+        var rightResult = new BooleanResultWithModel<object>(right, new object(), new Proposition(right.ToString()));
 
         var act = leftResult | rightResult;
 
@@ -68,8 +68,8 @@ public class BooleanResultTests
     [InlineAutoData(true, true, false)]
     public void Should_support_xor_operation(bool left, bool right, bool expected)
     {
-        var leftResult = new BooleanResult<object>(left, new object(), new Proposition(left.ToString()));
-        var rightResult = new BooleanResult<object>(right, new object(), new Proposition(right.ToString()));
+        var leftResult = new BooleanResultWithModel<object>(left, new object(), new Proposition(left.ToString()));
+        var rightResult = new BooleanResultWithModel<object>(right, new object(), new Proposition(right.ToString()));
 
         var act = leftResult ^ rightResult;
 
@@ -87,7 +87,7 @@ public class BooleanResultTests
     [InlineAutoData(true, false)]
     public void Should_support_not_operation(bool operand, bool expected)
     {
-        var operandResult = new BooleanResult<object>(operand, new object(),  new Proposition(operand.ToString()));
+        var operandResult = new BooleanResultWithModel<object>(operand, new object(),  new Proposition(operand.ToString()));
 
         var act = !operandResult;
 

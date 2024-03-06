@@ -30,7 +30,7 @@ internal sealed class ExplanationSpec<TModel>(
                     false => InvokeFalseBecauseFunction(model)
                 };
 
-                return new BooleanResult<string>(isSatisfied, because, Proposition);
+                return new BooleanResultWithModel<string>(isSatisfied, because, Proposition);
             });
 
     private bool InvokePredicate(TModel model) =>

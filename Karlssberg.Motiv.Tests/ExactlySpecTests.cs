@@ -105,7 +105,7 @@ public class ExactlySpecTests
             .Build(isEven)
             .AsNSatisfied(2)
             .WhenTrue("2 even")
-            .WhenFalse(results => $"{results.TrueCount} even and {results.FalseCount} odd")
+            .WhenFalse(eval => $"{eval.TrueCount} even and {eval.FalseCount} odd")
             .CreateSpec();
         
         var result = sut.IsSatisfiedBy([first, second]);
@@ -113,7 +113,7 @@ public class ExactlySpecTests
         result.Description.Detailed.Should().Be(expected);
     }
 
-    private static string GenerateReason(bool allSatisfied, IEnumerable<BooleanResult<int, string>> results)
+    private static string GenerateReason(bool allSatisfied, IEnumerable<BooleanResultWithModel<int, string>> results)
     {
         var count = results.Count(r => r.Satisfied == allSatisfied);
         var trueOrFalse = allSatisfied.ToString().ToLowerInvariant();

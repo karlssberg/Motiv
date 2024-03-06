@@ -3,7 +3,7 @@
 /// <summary>Represents a boolean result with an associated model and metadata.</summary>
 /// <typeparam name="TModel">The type of the associated model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetadata>
+public sealed class BooleanResultWithModel<TModel, TMetadata> : BooleanResultBase<TMetadata>
 {
     /// <summary>Gets the underlying boolean result.</summary>
     private readonly BooleanResultBase<TMetadata> _underlyingResult;
@@ -11,7 +11,7 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     /// <summary>Initializes a new instance of the BooleanResultWithModel class.</summary>
     /// <param name="model">The associated model.</param>
     /// <param name="underlyingResult">The underlying boolean result.</param>
-    internal BooleanResult(
+    internal BooleanResultWithModel(
         TModel model,
         BooleanResultBase<TMetadata> underlyingResult)
     {

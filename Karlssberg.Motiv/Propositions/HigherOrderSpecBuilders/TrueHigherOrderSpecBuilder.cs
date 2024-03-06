@@ -6,20 +6,20 @@ namespace Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders;
 
 public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
-    Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate)
+    Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate)
 {
     public FalseMetadataHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(TMetadata whenTrue) =>
         new(spec,
             higherOrderPredicate, _ => whenTrue.ToEnumerable());
     
     public FalseMetadataHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
-        Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, TMetadata> whenTrue) =>
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue) =>
         new(spec,
             higherOrderPredicate,
             results => whenTrue(results).ToEnumerable());
     
     public FalseMetadataHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
-        Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
         new(spec,
             higherOrderPredicate,
             whenTrue);
@@ -32,14 +32,14 @@ public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadat
             ReasonSource.Metadata);
     
     public FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
-        Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, string> trueBecause) =>
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause) =>
         new(spec,
             higherOrderPredicate,
             results => trueBecause(results).ToEnumerable(),
             ReasonSource.Metadata);
 
     public FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
-        Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
         new(spec,
             higherOrderPredicate,
             trueBecause,

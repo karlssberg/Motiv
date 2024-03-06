@@ -19,7 +19,7 @@ public class HasNCardsWithTheSameRankSpec(int sameRankCount) : Spec<Hand>(
             .AsNSatisfied(sameRankCount)
             .WhenTrue(hand => $"has {sameRankCount.ToWords()} {rank}s")
             .WhenFalse(results =>
-                $"there are {results.CauseCount} {rank}s when there should be {sameRankCount}")
+                $"there are {results.CausalCount} cards with the same {rank} when there should be {sameRankCount}")
             .CreateSpec($"has {sameRankCount.ToWords()} {rank}s");
 
     private static SpecBase<Card, string> IsRank(Rank rank) =>

@@ -96,16 +96,19 @@ var allAreEven = Spec
     .CreateSpec("all are even");
 ```
 
-Things can get very nuanced with higher order propositions, but the library is designed to be as flexible as 
-possible in order to cope with this. With the higher-order specification builder you can access the individual 
-results of the first order operation on each model in the set.  This is useful if you want an informative breakdown of 
-the decision or conversely a simplified summary. For example, you may want to summarize how many models were 
-responsible for the proposition being satisfied or not.
+#### Higher order output
+When it come to higher-order propositions you will almost certainly want to describe how the set is composed in a 
+multitude of ways.  This library aims to support this by providing a result object that contains convenient properties 
+that assist with pattern matching. 
 ```csharp 
 var allAreEven = Spec
     .Build(isEven)
     .AsAllSatisfied()
-    .WhenTrue("all are true")
+    .WhenTrue(result => {
+        { 
+            { TrueCount: > 1 } => "all are true",
+            _ => "only one is true"
+        })
     .WhenFalse(result =>
         result switch
         {

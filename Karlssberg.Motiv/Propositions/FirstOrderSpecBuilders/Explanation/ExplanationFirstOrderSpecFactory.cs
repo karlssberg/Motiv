@@ -12,7 +12,7 @@ public readonly ref struct ExplanationFirstOrderSpecFactory<TModel>(
     /// <summary>Provide a human readable explanation for when the condition is false.</summary>
     /// <returns>A specification base.</returns>
     public SpecBase<TModel, string> CreateSpec() =>
-        new Spec<TModel, string>(
+        new MetadataSpec<TModel, string>(
             predicate,
             trueBecause,
             falseBecause,
@@ -22,8 +22,9 @@ public readonly ref struct ExplanationFirstOrderSpecFactory<TModel>(
     /// <param name="proposition">The description of the specification. If not specified, the description of the specification</param>
     /// <returns>A specification base.</returns>
     public SpecBase<TModel, string> CreateSpec(string proposition) =>
-        new Spec<TModel, string>(
+        new MetadataSpec<TModel, string>(
             predicate,
             trueBecause,
-            falseBecause, proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
+            falseBecause, 
+            proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

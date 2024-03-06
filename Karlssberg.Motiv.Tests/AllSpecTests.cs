@@ -369,8 +369,8 @@ public class AllSpecTests
         var sut = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
-            .WhenTrue(results => $"{results.Count()} true")
-            .WhenFalse(results => $"{results.Count()} false")
+            .WhenTrue("all  true")
+            .WhenFalse(eval => $"{eval.FalseCount} false")
             .CreateSpec("all booleans are true");
 
         sut.Proposition.Assertion.Should().Be(expectedSummary);
@@ -417,9 +417,10 @@ public class AllSpecTests
             new Exception("should be wrapped"));
 
         var sut = Spec
-            .Build(throwingSpec).AsAllSatisfied()
-            .WhenTrue(results => $"{results.Count()} true")
-            .WhenFalse(results => $"{results.Count()} false")
+            .Build(throwingSpec)
+            .AsAllSatisfied()
+            .WhenTrue(eval => $"{eval.TrueCount} true")
+            .WhenFalse(eval => $"{eval.FalseCount} false")
             .CreateSpec("all booleans are true");
 
         var act = () => sut.IsSatisfiedBy([model]);
@@ -428,7 +429,4 @@ public class AllSpecTests
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>()
             .Where(ex => ex.Message.Contains("should be wrapped"));
     }
-
-
-   
 }

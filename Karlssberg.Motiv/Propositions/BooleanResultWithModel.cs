@@ -2,7 +2,7 @@
 
 /// <summary>Represents a boolean result with associated metadata and description.</summary>
 /// <typeparam name="TMetadata">The type of the metadata associated with the result.</typeparam>
-public sealed class BooleanResult<TMetadata>(
+public sealed class BooleanResultWithModel<TMetadata>(
     bool value,
     TMetadata metadata,
     IProposition proposition)

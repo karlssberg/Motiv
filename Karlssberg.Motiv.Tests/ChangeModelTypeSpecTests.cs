@@ -59,7 +59,7 @@ public class ChangeModelTypeSpecTests
             Spec.Build(isLetter)
                 .As(result => result.AllTrue())
                 .WhenTrue("all characters are letters")
-                .WhenFalse(results => results.Reasons)
+                .WhenFalse(results => results.Assertions)
                 .CreateSpec() 
                 .ChangeModelTo<string>(m => m.ToCharArray());
 
@@ -81,9 +81,10 @@ public class ChangeModelTypeSpecTests
             .CreateSpec("is a letter");
 
         var isAllLetters = Spec
-            .Build(isLetter).AsAllSatisfied()
-            .WhenTrue(results => results.Reasons)
-            .WhenFalse(results => results.Reasons)
+            .Build(isLetter)
+            .AsAllSatisfied()
+            .WhenTrue(results => results.Assertions)
+            .WhenFalse(results => results.Assertions)
             .CreateSpec("has all letters")
             .ChangeModelTo<string>(m => m.ToCharArray());
 

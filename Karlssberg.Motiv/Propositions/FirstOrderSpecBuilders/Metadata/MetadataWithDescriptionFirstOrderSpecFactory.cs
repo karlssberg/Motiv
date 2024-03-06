@@ -12,8 +12,9 @@ public readonly ref struct MetadataWithDescriptionFirstOrderSpecFactory<TModel, 
     /// <param name="proposition">The name of the specification. Preferably this would be in predicate form eg "is even number".</param>
     /// <returns>A specification base.</returns>
     public SpecBase<TModel, TMetadata> CreateSpec(string proposition) =>
-        new Spec<TModel, TMetadata>(
+        new MetadataSpec<TModel, TMetadata>(
             predicate,
             whenTrue,
-            whenFalse, proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
+            whenFalse, 
+            proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

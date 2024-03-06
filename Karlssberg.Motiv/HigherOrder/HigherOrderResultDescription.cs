@@ -5,12 +5,12 @@ namespace Karlssberg.Motiv.HigherOrder;
 internal sealed class HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
     IEnumerable<TMetadata> metadataCollection,
-    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes,
+    IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> causes,
     IProposition proposition,
     ReasonSource reasonSource)
     : ResultDescriptionBase
 {
-    public ICollection<BooleanResult<TModel, TUnderlyingMetadata>> Causes { get; } = causes.ToArray();
+    public ICollection<BooleanResultWithModel<TModel, TUnderlyingMetadata>> Causes { get; } = causes.ToArray();
     internal override int CausalOperandCount => Causes.Count;
 
     public override string Compact =>

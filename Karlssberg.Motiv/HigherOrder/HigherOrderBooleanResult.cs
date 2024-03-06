@@ -5,7 +5,7 @@ namespace Karlssberg.Motiv.HigherOrder;
 internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
     MetadataSet<TMetadata> metadataSet,
-    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes,
+    IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> causes,
     IProposition proposition,
     ReasonSource reasonSource)
     : BooleanResultBase<TMetadata>

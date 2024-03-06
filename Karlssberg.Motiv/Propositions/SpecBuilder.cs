@@ -22,7 +22,7 @@ public readonly struct SpecBuilder<TModel, TUnderlyingMetadata>(
         new(spec, trueBecause);
     
     public TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> As(
-        Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate) =>
+        Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate) =>
         new(spec, higherOrderPredicate);
     
     public TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied() =>
@@ -53,7 +53,7 @@ public readonly struct SpecBuilder<TModel, TUnderlyingMetadata>(
     }
 
     public TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> As(
-        Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, BooleanResult<TModel>> higherOrderPredicate) =>
+        Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, BooleanResultWithModel<TModel>> higherOrderPredicate) =>
         new(spec, results => higherOrderPredicate(results).Satisfied);
     
     public SpecBase<TModel, string> CreateSpec(string proposition) =>

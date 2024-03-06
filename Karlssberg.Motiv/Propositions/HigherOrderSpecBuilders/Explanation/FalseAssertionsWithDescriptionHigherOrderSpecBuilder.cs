@@ -4,8 +4,8 @@ namespace Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders.Explanation;
 
 public readonly ref struct FalseAssertionsWithDescriptionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
-    Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
+    Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
+    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
     string candidateName,
     ReasonSource reasonSource)
 {
@@ -18,7 +18,7 @@ public readonly ref struct FalseAssertionsWithDescriptionHigherOrderSpecBuilder<
             reasonSource);
     
     public ExplanationWithDescriptionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
-        Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, string> falseBecause) =>
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause) =>
         new(spec,
             higherOrderPredicate,
             trueBecause,
@@ -27,7 +27,7 @@ public readonly ref struct FalseAssertionsWithDescriptionHigherOrderSpecBuilder<
             reasonSource);
     
     public ExplanationWithDescriptionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
-        Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
         new(spec,
             higherOrderPredicate,
             trueBecause,

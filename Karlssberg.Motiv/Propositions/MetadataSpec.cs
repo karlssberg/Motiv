@@ -4,15 +4,15 @@
 /// Represents a predicate that when evaluated returns a boolean result with associated metadata and description
 /// of the underlying specification that were responsible for the result.
 /// </summary>
-/// <typeparam name="T">The type of the input parameter.</typeparam>
-/// <typeparam name="TResult">The type of the return value.</typeparam>
+/// <typeparam name="TModel">The type of the input parameter.</typeparam>
+/// <typeparam name="TMetadata">The type of the return value.</typeparam>
 /// <returns>The return value.</returns>
 internal sealed class MetadataSpec<TModel, TMetadata>(
     Func<TModel, bool> predicate,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse,
     string propositionalAssertion)
-    : SpecBase<TModel, TMetadata>, ICompositeSpec
+    : SpecBase<TModel, TMetadata>
 {
     /// <summary>Gets or sets the description of the specification.</summary>
     public override IProposition Proposition => new Proposition(propositionalAssertion);
@@ -33,7 +33,7 @@ internal sealed class MetadataSpec<TModel, TMetadata>(
                     false => InvokeWhenFalseFunction(model)
                 };
 
-                return new BooleanResult<TMetadata>(isSatisfied, cause, Proposition);
+                return new BooleanResultWithModel<TMetadata>(isSatisfied, cause, Proposition);
             });
     }
 

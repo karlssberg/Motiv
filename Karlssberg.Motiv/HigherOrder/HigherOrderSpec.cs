@@ -5,9 +5,9 @@ namespace Karlssberg.Motiv.HigherOrder;
 
 internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec, 
-    Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate, 
-    Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue, 
-    Func<BooleanCollectionResult<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
+    Func<IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate, 
+    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue, 
+    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
     string propositionalAssertion,
     ReasonSource reasonSource)
     : SpecBase<IEnumerable<TModel>, TMetadata>
@@ -19,12 +19,12 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
     {
         var underlyingResults = models
             .Select(model => (model, result: underlyingSpec.IsSatisfiedByOrWrapException(model)))
-            .Select(tuple => new BooleanResult<TModel, TUnderlyingMetadata>(tuple.model, tuple.result))
+            .Select(tuple => new BooleanResultWithModel<TModel, TUnderlyingMetadata>(tuple.model, tuple.result))
             .ToArray();
         
         var isSatisfied = higherOrderPredicate(underlyingResults);
         var causes = GetCauses(isSatisfied, underlyingResults).ToArray();
-        var booleanCollectionResults = new BooleanCollectionResult<TModel, TUnderlyingMetadata>(
+        var booleanCollectionResults = new HigherOrderEvaluation<TModel, TUnderlyingMetadata>(
             isSatisfied,
             underlyingResults, 
             causes);
@@ -42,9 +42,9 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
             reasonSource);
     }
 
-    private IEnumerable<BooleanResult<TModel,TUnderlyingMetadata>> GetCauses(
+    private IEnumerable<BooleanResultWithModel<TModel,TUnderlyingMetadata>> GetCauses(
         bool isSatisfied,
-        ICollection<BooleanResult<TModel,TUnderlyingMetadata>> operandResults)
+        ICollection<BooleanResultWithModel<TModel,TUnderlyingMetadata>> operandResults)
     {
         var trueOperands = GetTrueOperands(operandResults);
         var falseOperands = GetFalseOperands(operandResults);
@@ -59,23 +59,23 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
         };
     }
 
-    private static ICollection<BooleanResult<TModel,TUnderlyingMetadata>> GetFalseOperands(
-        IEnumerable<BooleanResult<TModel,TUnderlyingMetadata>> operandResults) =>
+    private static ICollection<BooleanResultWithModel<TModel,TUnderlyingMetadata>> GetFalseOperands(
+        IEnumerable<BooleanResultWithModel<TModel,TUnderlyingMetadata>> operandResults) =>
         operandResults
             .Where(result => !result.Satisfied)
             .ToArray();
 
-    private static ICollection<BooleanResult<TModel,TUnderlyingMetadata>> GetTrueOperands(
-        IEnumerable<BooleanResult<TModel,TUnderlyingMetadata>> operandResults) =>
+    private static ICollection<BooleanResultWithModel<TModel,TUnderlyingMetadata>> GetTrueOperands(
+        IEnumerable<BooleanResultWithModel<TModel,TUnderlyingMetadata>> operandResults) =>
         operandResults
             .Where(result => result.Satisfied)
             .ToArray();
 
     private static IEnumerable<MetadataSet<TMetadata>> GetUnderlyingMetadataSets(
-        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> underlyingResults) =>
+        IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> underlyingResults) =>
         underlyingResults switch
         {
-            IEnumerable<BooleanResult<TModel, TMetadata>> results => results.Select(result => result.Metadata),
+            IEnumerable<BooleanResultWithModel<TModel, TMetadata>> results => results.Select(result => result.Metadata),
             _ => Enumerable.Empty<MetadataSet<TMetadata>>()
         };
 }
