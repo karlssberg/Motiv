@@ -1,20 +1,20 @@
-﻿using Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders;
+﻿using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
 
 namespace Karlssberg.Motiv.HigherOrder;
 
 internal sealed class HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
     IEnumerable<TMetadata> metadataCollection,
-    IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> causes,
+    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes,
     IProposition proposition,
-    ReasonSource reasonSource)
+    AssertionSource assertionSource)
     : ResultDescriptionBase
 {
-    public ICollection<BooleanResultWithModel<TModel, TUnderlyingMetadata>> Causes { get; } = causes.ToArray();
+    public ICollection<BooleanResult<TModel, TUnderlyingMetadata>> Causes { get; } = causes.ToArray();
     internal override int CausalOperandCount => Causes.Count;
 
     public override string Compact =>
-        proposition.ToReason(isSatisfied, metadataCollection.SingleOrDefault(), reasonSource);
+        proposition.ToReason(isSatisfied, metadataCollection.SingleOrDefault(), assertionSource);
 
     public override string Detailed => GetDetails();
 

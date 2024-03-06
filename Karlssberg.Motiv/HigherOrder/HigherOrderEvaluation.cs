@@ -4,8 +4,8 @@ namespace Karlssberg.Motiv.HigherOrder;
 
 public sealed class HigherOrderEvaluation<TModel, TMetadata>(
     bool satisfied,
-    IReadOnlyCollection<BooleanResultWithModel<TModel, TMetadata>> allResults,
-    IReadOnlyCollection<BooleanResultWithModel<TModel, TMetadata>> causalResults)
+    IReadOnlyCollection<BooleanResult<TModel, TMetadata>> allResults,
+    IReadOnlyCollection<BooleanResult<TModel, TMetadata>> causalResults)
 {
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyAllModels = new(() =>
         allResults.Select(result => result.Model).ToArray());
@@ -15,14 +15,12 @@ public sealed class HigherOrderEvaluation<TModel, TMetadata>(
     private readonly Lazy<bool> _lazyNoneSatisfied = new(() =>
         allResults.All(result => !result.Satisfied));
 
-
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyCausalModels = new(() =>
         causalResults.Select(result => result.Model).ToArray());
 
-
-    private readonly Lazy<IReadOnlyCollection<BooleanResultWithModel<TModel, TMetadata>>> _lazyTrueResults = new(() =>
+    private readonly Lazy<IReadOnlyCollection<BooleanResult<TModel, TMetadata>>> _lazyTrueResults = new(() =>
         allResults.Where(result => result.Satisfied).ToArray());
-    private readonly Lazy<IReadOnlyCollection<BooleanResultWithModel<TModel, TMetadata>>> _lazyFalseResults = new(() =>
+    private readonly Lazy<IReadOnlyCollection<BooleanResult<TModel, TMetadata>>> _lazyFalseResults = new(() =>
         allResults.Where(result => !result.Satisfied).ToArray());
     
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyTrueModels = new(() =>
@@ -47,12 +45,13 @@ public sealed class HigherOrderEvaluation<TModel, TMetadata>(
     public IEnumerable<TMetadata> Metadata => _lazyMetadata.Value;
     public IEnumerable<string> Assertions => _lazyAssertions.Value;
 
-    public IEnumerable<BooleanResultWithModel<TModel, TMetadata>> AllResults=>  allResults;
+    public IEnumerable<BooleanResult<TModel, TMetadata>> AllResults=>  allResults;
+    public IEnumerable<BooleanResult<TModel, TMetadata>> TrueResults => _lazyTrueResults.Value;
+    public IEnumerable<BooleanResult<TModel, TMetadata>> FalseResults => _lazyFalseResults.Value;
+    public IEnumerable<BooleanResult<TModel, TMetadata>> CausalResults { get; } = causalResults;
+    
     public int AllCount => allResults.Count;
-    public IEnumerable<BooleanResultWithModel<TModel, TMetadata>> TrueResults => _lazyTrueResults.Value;
     public int TrueCount => _lazyTrueResults.Value.Count;
-    public IEnumerable<BooleanResultWithModel<TModel, TMetadata>> FalseResults => _lazyFalseResults.Value;
     public int FalseCount => _lazyFalseResults.Value.Count;
-    public IEnumerable<BooleanResultWithModel<TModel, TMetadata>> CausalResults { get; } = causalResults;
     public int CausalCount => causalResults.Count;
 }

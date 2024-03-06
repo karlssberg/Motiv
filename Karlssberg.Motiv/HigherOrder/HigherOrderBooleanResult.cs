@@ -1,13 +1,13 @@
-﻿using Karlssberg.Motiv.Propositions.HigherOrderSpecBuilders;
+﻿using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
 
 namespace Karlssberg.Motiv.HigherOrder;
 
 internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
     MetadataSet<TMetadata> metadataSet,
-    IEnumerable<BooleanResultWithModel<TModel, TUnderlyingMetadata>> causes,
+    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes,
     IProposition proposition,
-    ReasonSource reasonSource)
+    AssertionSource assertionSource)
     : BooleanResultBase<TMetadata>
 {
     public override MetadataSet<TMetadata> Metadata => metadataSet;
@@ -20,7 +20,7 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
             metadataSet,
             causes,
             proposition,
-            reasonSource);
+            assertionSource);
 
     public override Explanation Explanation => 
         new (Description)

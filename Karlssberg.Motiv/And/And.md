@@ -1,7 +1,8 @@
 ﻿## AND operation
 
-A logical AND operation can be performed on two specifications using the `&` operator or alternatively using
-the `.And()` method. This will produce a new specification instance that is the logical AND of the two specifications.
+A logical AND operation can be performed on two specifications using the `&` operator 
+```leftSpec & rightSpec``` or alternatively using the And  method ```leftSpec.And(rightSpec)```. This will produce a new 
+specification instance that is the logical AND of the two specifications.  For example:
 
 ```csharp
 var now = DateTime.Now;

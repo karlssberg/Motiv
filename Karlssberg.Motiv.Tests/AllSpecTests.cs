@@ -92,8 +92,8 @@ public class AllSpecTests
 
         var sut = Spec
             .Build(underlyingSpec).AsAllSatisfied()
-            .WhenTrue(results => results.Metadata)
-            .WhenFalse(results => results.Metadata)
+            .WhenTrue(evaluation => evaluation.Metadata)
+            .WhenFalse(evaluation => evaluation.Metadata)
             .CreateSpec("all are true");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
@@ -158,8 +158,8 @@ public class AllSpecTests
         var sut = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
-            .WhenTrue(results => results.Metadata)
-            .WhenFalse(results => results.Metadata)
+            .WhenTrue(evaluation => evaluation.Metadata)
+            .WhenFalse(evaluation => evaluation.Metadata)
             .CreateSpec("all are true");
 
 
@@ -224,8 +224,8 @@ public class AllSpecTests
         var sut = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
-            .WhenTrue(results => results.Metadata)
-            .WhenFalse(results => results.Metadata)
+            .WhenTrue(evaluation => evaluation.Metadata)
+            .WhenFalse(evaluation => evaluation.Metadata)
             .CreateSpec("all are true");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
@@ -296,8 +296,8 @@ public class AllSpecTests
         var sut = Spec
             .Build(underlyingSpecLeft & underlyingSpecRight)
             .AsAllSatisfied()
-            .WhenTrue(results => results.Metadata)
-            .WhenFalse(results => results.Metadata)
+            .WhenTrue(evaluation => evaluation.Metadata)
+            .WhenFalse(evaluation => evaluation.Metadata)
             .CreateSpec("all are true");
 
         bool[] models = [first, second, third];
@@ -305,7 +305,6 @@ public class AllSpecTests
 
         result.Description.Detailed.Should().Be(expected);
     }
-
 
     [Theory]
     [InlineAutoData(false, false, false, "!all are true")]
@@ -337,8 +336,8 @@ public class AllSpecTests
         var sut = Spec
             .Build(underlyingSpecLeft & underlyingSpecRight)
             .AsAllSatisfied()
-            .WhenTrue(results => results.Metadata)
-            .WhenFalse(results => results.Metadata)
+            .WhenTrue(evaluation => evaluation.Metadata)
+            .WhenFalse(evaluation => evaluation.Metadata)
             .CreateSpec("all are true");
 
         bool[] models = [first, second, third];
@@ -370,7 +369,7 @@ public class AllSpecTests
             .Build(underlyingSpec)
             .AsAllSatisfied()
             .WhenTrue("all  true")
-            .WhenFalse(eval => $"{eval.FalseCount} false")
+            .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
             .CreateSpec("all booleans are true");
 
         sut.Proposition.Assertion.Should().Be(expectedSummary);
@@ -378,7 +377,7 @@ public class AllSpecTests
         sut.ToString().Should().Be(expectedSummary);
     }
 
-    [Fact]
+    [Fact]  
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
         const string expectedSummary = "all are true";
@@ -419,8 +418,8 @@ public class AllSpecTests
         var sut = Spec
             .Build(throwingSpec)
             .AsAllSatisfied()
-            .WhenTrue(eval => $"{eval.TrueCount} true")
-            .WhenFalse(eval => $"{eval.FalseCount} false")
+            .WhenTrue(evaluation => $"{evaluation.TrueCount} true")
+            .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
             .CreateSpec("all booleans are true");
 
         var act = () => sut.IsSatisfiedBy([model]);

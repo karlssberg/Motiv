@@ -1,6 +1,4 @@
-﻿using Karlssberg.Motiv.Propositions;
-
-namespace Karlssberg.Motiv.Tests;
+﻿namespace Karlssberg.Motiv.Tests;
 
 public class ThrowingSpec<TModel, TMetadata>(string description, Exception exception) : SpecBase<TModel, TMetadata>
 {

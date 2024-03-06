@@ -1,7 +1,8 @@
 ﻿# OR operation
 
-A logical OR operation can be performed on two specifications using the `|` operator. This will produce a new
-specification instance that is the logical OR of the two specifications.
+A logical OR operation can be performed on two specifications using the `|` operator ```leftSpec |  rightSpec```, or 
+alternative using the Or method ```leftSpec.Or(rightSpec)```. This 
+will produce a new specification instance that is the logical OR of the two specifications.  For example:
 
 ```csharp
 record Product(string Name, decimal Price, Size Size);

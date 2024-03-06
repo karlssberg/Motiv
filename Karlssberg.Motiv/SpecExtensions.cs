@@ -1,5 +1,5 @@
 ﻿using Karlssberg.Motiv.ElseIf;
-using Karlssberg.Motiv.Propositions.FirstOrderSpecBuilders;
+using Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders;
 
 namespace Karlssberg.Motiv;
 
