@@ -13,15 +13,19 @@ design-time or run-time.
 #### What can I use the metadata for?
 It's primary purpose is to provide human readable strings that explain exactly why a particular logical expression 
 resolved to a either `true` or `false` .  This can be useful in a number of scenarios, such as:
-* __User feedback__ - If your application needs to provide feedback to the user about why a certain operation succeeded 
-  or failed, tti-language explanations. For example, you could associate each logical expression with an object 
-  that contains explanations in multiple languages. 
-* __Debugging__ - When you're debugging your code he metadata can be used to generate these messages. This can be particularly useful in validation scenarios.
+* __User feedback__ - You require your application to provide detailed and accurate feedback to the user about why a 
+  certain decisions were  made. 
+* __Debugging__ - Quickly understand why a certain condition was met, or not. This can be especially useful in complex 
+  logical expressions where it might not be immediately clear which part of the expression was responsible for the final 
+  result.
 * __Multi-language Support__ - The metadata doesn't have to be a string. It can be any type, which means you could use
-  it to support muland trying to understand why a certain condition was met or not met, 
-  the metadata can provide a clear, human-readable explanation. This can be especially useful in complex logical 
-  expressions where it might not be immediately clear which part of the expression was responsible for the final result. 
-
+  it to support multi-lingual explanations.
+* Rules Engine - The metadata can be used to conditionally select stateful objects, which can be used to implement a 
+  rules engine. This can be useful in scenarios where you need to apply different rules to different objects based on 
+  their state.
+* Validation - The metadata can be used to provide human-readable explanations of why a certain validation rule was 
+  not met. This can be useful in scenarios where you need to provide feedback to the user about why a certain input 
+  was not valid.
 
 ### Usage
 
@@ -34,8 +38,8 @@ logical proposition
 
 ```csharp
 var isNegativeSpec = Spec
-    .Build<int>(n => n < 0)
-    .CreateSpec("is negative");
+        .Build<int>(n => n < 0)
+        .CreateSpec("is negative");
 
 var isNegative = isNegativeSpec.IsSatisfiedBy(3);
 
@@ -48,10 +52,10 @@ outcome is either `true` or `false`.
 
 ```csharp
 var isNegativeSpec = Spec
-    .Build<int>(n => n < 0)
-    .WhenTrue("the number is negative")
-    .WhenFalse("the number is not negative")
-    .CreateSpec();
+        .Build<int>(n => n < 0)
+        .WhenTrue("the number is negative")
+        .WhenFalse("the number is not negative")
+        .CreateSpec();
 
 var isNegative = isNegativeSpec.IsSatisfiedBy(3);
 
@@ -62,24 +66,32 @@ isNegative.Reason; // returns "the number is not negative"
 #### Combining specifications
 ```csharp
 var isNegativeSpec = Spec
-    .Build<int>(n => n < 0)
-    .WhenTrue("the number is negative")
-    .WhenFalse("the number is not negative")
-    .CreateSpec();
+        .Build<int>(n => n < 0)
+        .WhenTrue("the number is negative")
+        .WhenFalse(n => n switch 
+        {
+                0 => "the number is zero"
+                _ => "the number is positive"
+        })
+        .CreateSpec();
 
 var isEvenSpec = Spec
-    .Build<int>(n => n % 2 == 0)
-    .WhenTrue("the number is even")
-    .WhenFalse("the number is odd")
-    .CreateSpec(); 
+        .Build<int>(n => n % 2 == 0)
+        .WhenTrue(n => n switch 
+        {
+                0 => "the number is zero",
+                _ => "the number is even"
+        })
+        .WhenFalse("the number is odd")
+        .CreateSpec(); 
 
-var isNegativeAndEvenSpec = isNegativeSpec & isEvenSpec;
+var isPositiveAndOddSpec = !isNegativeSpec & !isEvenSpec;
 
-var isNegativeAndEven = isNegativeAndEvenSpec.IsSatisfiedBy(3);
+var isPositiveAndOdd = isPositiveAndOddSpec.IsSatisfiedBy(3);
 
-isNegativeAndEven.IsSatisfied; // returns false
-isNegativeAndEven.Reason; // returns "the number is not negative & the number is odd"
-isNegativeAndEven.Assertions; // returns ["the number is not negative", "the number is odd"]
+isPositiveAndOdd.IsSatisfied; // returns false
+isPositiveAndOdd.Reason; // returns "the number is not negative & the number is odd"
+isPositiveAndOdd.Assertions; // returns ["the number is not negative", "the number is odd"]
 ```
 
 ### Problem Statement
@@ -121,10 +133,10 @@ that helps you supplement validation-like metadata to your regular/vanilla if-st
    technical: only the metadata from _determinative operands_ are accumulated. For instance, with an _or_ operation, if
    one of the operands produces a `false` result and the other a _true_ result then only the operand that returned
    a `true` result will have its metadata accumulated and the other operand's metadata will be ignored.
-4. **Enhanced Debugging Experience**: This library has been designed to supercharge the developer around Boolean logic.
-   Specifications, whether composed of other Specifications or not, override the `ToString()` method so that it provides
+4. **Enhanced Debugging Experience**: This library has been designed to ease the developer experience around 
+   important and/or complex Boolean logic.  Specifications, whether composed of other Specifications or not, override the `ToString()` method so that it provides
    a human readable representation of its the logic tree. Furthermore, the generated result also accumulates a
-   human-readable list of reasons why the result was either `true` or `false`. This is primarily for debugging and
+   human-readable list of assertions why the result was either `true` or `false`. This is primarily for debugging and
    troubleshooting purposes, but it could also be surfaced to users if so desired.
 5. **Simplified Testing**: By extracting your logical expressions into separate classes you make it much easier to
    thoroughly test all the possible combinations that the parameters can be in. It also means the type from which the

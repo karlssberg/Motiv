@@ -7,7 +7,7 @@ internal sealed class ExplanationSpec<TModel>(
     string propositionalAssertion)
     : SpecBase<TModel, string>
 {
-    public ExplanationSpec(Func<TModel, bool> predicate, string propositionalAssertion) 
+    internal ExplanationSpec(Func<TModel, bool> predicate, string propositionalAssertion) 
         : this(
             predicate, 
             _ => ReasonFromProposition(true, propositionalAssertion), 
@@ -24,6 +24,7 @@ internal sealed class ExplanationSpec<TModel>(
             () =>
             {
                 var isSatisfied = InvokePredicate(model);
+                
                 var because = isSatisfied switch
                 {  
                     true => InvokeTrueBecauseFunction(model),

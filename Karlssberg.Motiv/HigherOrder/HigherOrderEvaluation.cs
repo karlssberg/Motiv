@@ -3,7 +3,6 @@
 namespace Karlssberg.Motiv.HigherOrder;
 
 public sealed class HigherOrderEvaluation<TModel, TMetadata>(
-    bool satisfied,
     IReadOnlyCollection<BooleanResult<TModel, TMetadata>> allResults,
     IReadOnlyCollection<BooleanResult<TModel, TMetadata>> causalResults)
 {
@@ -32,8 +31,6 @@ public sealed class HigherOrderEvaluation<TModel, TMetadata>(
         causalResults.SelectMany(result => result.Assertions).ToArray());
     private readonly Lazy<IReadOnlyCollection<TMetadata>> _lazyMetadata = new(() =>
         causalResults.SelectMany(result => result.Metadata).ToArray());
-
-    public bool Satisfied => satisfied;
     public bool AllSatisfied => _lazyAllSatisfied.Value;
     public bool NoneSatisfied => _lazyNoneSatisfied.Value;
 

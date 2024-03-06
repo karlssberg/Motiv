@@ -1,8 +1,6 @@
 ﻿namespace Karlssberg.Motiv;
 
-public class FirstOrderEvaluation<TModel, TMetadata>(
-    bool satisfied,
-    TModel model,
+public class Evaluation<TModel, TMetadata>(
     IReadOnlyCollection<BooleanResultBase<TMetadata>> allResults,
     IReadOnlyCollection<BooleanResultBase<TMetadata>> causalResults)
 {
@@ -22,21 +20,16 @@ public class FirstOrderEvaluation<TModel, TMetadata>(
     private readonly Lazy<IReadOnlyCollection<TMetadata>> _lazyMetadata = new(() =>
         causalResults.SelectMany(result => result.Metadata).ToArray());
     
-    public TModel Model => model;
+    public IEnumerable<TMetadata> Metadata => _lazyMetadata.Value;
+    public IEnumerable<string> Assertions => _lazyAssertions.Value;
 
-    public bool Satisfied => satisfied;
-    public bool AreAllSatisfied => _lazyAllSatisfied.Value;
-    public bool AreNoneSatisfied => _lazyNoneSatisfied.Value;
-    
-    public IReadOnlyCollection<TMetadata> Metadata => _lazyMetadata.Value;
-    public IReadOnlyCollection<string> Assertions => _lazyAssertions.Value;
+    public IEnumerable<BooleanResultBase<TMetadata>> AllResults=>  allResults;
+    public IEnumerable<BooleanResultBase<TMetadata>> TrueResults => _lazyTrueResults.Value;
+    public IEnumerable<BooleanResultBase<TMetadata>> FalseResults => _lazyFalseResults.Value;
+    public IEnumerable<BooleanResultBase<TMetadata>> CausalResults { get; } = causalResults;
 
-    public IReadOnlyCollection<BooleanResultBase<TMetadata>> All=>  allResults;
-    public IReadOnlyCollection<BooleanResultBase<TMetadata>> AllTrue => _lazyTrueResults.Value;
-    public IReadOnlyCollection<BooleanResultBase<TMetadata>> AllFalse => _lazyFalseResults.Value;
-    public IReadOnlyCollection<BooleanResultBase<TMetadata>> AllCauses { get; } = causalResults;
-
+    public int AllCount => allResults.Count;
     public int TrueCount => _lazyTrueResults.Value.Count;
     public int FalseCount => _lazyFalseResults.Value.Count;
-    public int Count => allResults.Count;
+    public int CausalCount => causalResults.Count;
 }

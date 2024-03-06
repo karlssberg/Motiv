@@ -271,7 +271,7 @@ public abstract class BooleanResultBase<TMetadata>
     /// <summary>Defines an explicit conversion from <see cref="BooleanResultBase{TMetadata}" /> to <see cref="bool" />.</summary>
     /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance to convert.</param>
     /// <returns>The boolean value indicating whether the result is satisfied.</returns>
-    public static explicit operator bool(BooleanResultBase<TMetadata> result) =>
+    public static implicit operator bool(BooleanResultBase<TMetadata> result) =>
         result.Satisfied;
 
     /// <summary>Determines whether the current object is equal to another object.</summary>

@@ -15,7 +15,7 @@ public readonly ref struct ExplanationWithDescriptionCompositeSpecFactory<TModel
         CreateSpecInternal(proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 
     private SpecBase<TModel, string> CreateSpecInternal(string proposition) =>
-        new CompositeFactorySpec<TModel, string, TUnderlyingMetadata>(
+        new CompositeSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             trueBecause,
             falseBecause,

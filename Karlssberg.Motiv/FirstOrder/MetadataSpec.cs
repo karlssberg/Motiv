@@ -20,9 +20,8 @@ internal sealed class MetadataSpec<TModel, TMetadata>(
     /// <summary>Determines if the specified model satisfies the specification.</summary>
     /// <param name="model">The model to be evaluated.</param>
     /// <returns>A BooleanResultBase object containing the result of the evaluation.</returns>
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
-    {
-        return WrapException.IfIsSatisfiedByMethodFails(this,
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) =>
+        WrapException.IfIsSatisfiedByMethodFails(this,
             () =>
             {
                 var isSatisfied = InvokePredicate(model);
@@ -35,7 +34,6 @@ internal sealed class MetadataSpec<TModel, TMetadata>(
 
                 return new BooleanResult<TMetadata>(isSatisfied, cause, Proposition);
             });
-    }
 
     private bool InvokePredicate(TModel model) =>
         WrapException.CatchPredicateExceptionOnBehalfOfSpecType(

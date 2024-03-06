@@ -8,7 +8,7 @@ public readonly ref struct MetadataCompositeSpecFactory<TModel, TMetadata, TUnde
     Func<TModel, TMetadata> whenFalse)
 {
     public SpecBase<TModel, TMetadata> CreateSpec(string proposition) =>
-        new CompositeFactorySpec<TModel, TMetadata, TUnderlyingMetadata>(
+        new CompositeSpec<TModel, TMetadata, TUnderlyingMetadata>(
             spec,
             whenTrue,
             whenFalse,
