@@ -113,7 +113,7 @@ public class CompositeSpecTests
     {
         var underlying = Spec
             .Build<string>(_ => true)
-            .CreateSpec("is true");
+            .CreateSpec("is underlying true");
         
         var spec = Spec
             .Build(underlying)
@@ -131,7 +131,7 @@ public class CompositeSpecTests
     {
         var underlying = Spec
             .Build<string>(_ => true)
-            .CreateSpec("is true");
+            .CreateSpec("is underlying true");
         
         var spec = Spec
             .Build(underlying)
@@ -213,7 +213,7 @@ public class CompositeSpecTests
     {
         var underlying = Spec
             .Build<Guid>(_ => true)
-            .CreateSpec("is true");
+            .CreateSpec("is underlying true");
         
         var spec = Spec
             .Build(underlying)
@@ -238,7 +238,7 @@ public class CompositeSpecTests
             .Build<Guid>(_ => true)
             .WhenTrue(underlyingTrueGuid)
             .WhenFalse(underlyingFalseGuid)
-            .CreateSpec("is true");
+            .CreateSpec("is underlying true");
         
         var spec = Spec
             .Build(underlying)
@@ -263,7 +263,7 @@ public class CompositeSpecTests
             .Build<Guid>(_ => true)
             .WhenTrue(underlyingTrueGuid)
             .WhenFalse(underlyingFalseGuid)
-            .CreateSpec("is true");
+            .CreateSpec("is underlying true");
         
         var spec = Spec
             .Build(underlying)
