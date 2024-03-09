@@ -54,6 +54,42 @@ public static class EnumerableExtensions
             Underlying = underlying
         };
     }
+    
+    public static IEnumerable<string> GetAssertions(
+        this IEnumerable<BooleanResultBase> results) =>
+        results.SelectMany(e => e.Assertions);
+    
+    public static IEnumerable<string> GetTrueAssertions(
+        this IEnumerable<BooleanResultBase> results) =>
+        results
+            .Where(r => r.Satisfied)
+            .SelectMany(e => e.Assertions);
+    
+    public static IEnumerable<string> GetFalseAssertions(
+        this IEnumerable<BooleanResultBase> results) =>
+        results
+            .Where(r => !r.Satisfied)
+            .SelectMany(e => e.Assertions);
+    
+    
+    public static IEnumerable<TMetadata> GetMetadata<TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
+        results.SelectMany(e => e.Metadata);
+    
+    public static IEnumerable<TMetadata> GetTrueMetadata<TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
+        results
+            .Where(r => r.Satisfied)
+            .SelectMany(e => e.Metadata);
+    
+    public static IEnumerable<TMetadata> GetFalseMetadata<TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
+        results
+            .Where(r => !r.Satisfied)
+            .SelectMany(e => e.Metadata);
+    
+    
+    
 
     public static IEnumerable<string> GetAssertions(
         this IEnumerable<Explanation> explanations) =>

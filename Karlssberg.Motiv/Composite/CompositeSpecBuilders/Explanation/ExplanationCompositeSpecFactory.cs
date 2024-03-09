@@ -4,8 +4,8 @@ namespace Karlssberg.Motiv.Composite.CompositeSpecBuilders.Explanation;
 
 public readonly ref struct ExplanationCompositeSpecFactory<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
-    Func<TModel, string> trueBecause,
-    Func<TModel, string> falseBecause)
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause)
 {
     public SpecBase<TModel, string> CreateSpec(string proposition) =>
         CreateSpecInternal(proposition.ThrowIfNullOrWhitespace(nameof(proposition)));

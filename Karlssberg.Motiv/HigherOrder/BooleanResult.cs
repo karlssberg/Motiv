@@ -31,4 +31,8 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     public override bool Satisfied => _underlyingResult.Satisfied;
 
     public override MetadataSet<TMetadata> Metadata => _underlyingResult.Metadata;
+    public override IEnumerable<BooleanResultBase> Underlying  => _underlyingResult.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => _underlyingResult.ToEnumerable();
+    public override IEnumerable<BooleanResultBase> Causes => _underlyingResult.Causes.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => _underlyingResult.CausesWithMetadata.ToEnumerable();
 }

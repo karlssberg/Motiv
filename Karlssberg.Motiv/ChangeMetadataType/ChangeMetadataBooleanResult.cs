@@ -27,4 +27,19 @@ internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata
         };
     
     public override MetadataSet<TMetadata> Metadata => new(metadata);
+    public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => 
+        booleanResult switch
+        {
+            BooleanResultBase<TMetadata> result=> result.ToEnumerable(),
+            _ => Enumerable.Empty<BooleanResultBase<TMetadata>>()
+        };
+    
+    public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
+        booleanResult.Causes switch
+        {
+            IEnumerable<BooleanResultBase<TMetadata>> results => results,
+            _ => Enumerable.Empty<BooleanResultBase<TMetadata>>()
+        };
 }

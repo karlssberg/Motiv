@@ -10,6 +10,10 @@ internal sealed class OrBooleanResult<TMetadata>(
     public override Explanation Explanation => GetCausalResults().CreateExplanation();
     
     public override MetadataSet<TMetadata> Metadata => CreateMetadataSet();
+    public override IEnumerable<BooleanResultBase> Underlying => GetResults();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
+    public override IEnumerable<BooleanResultBase> Causes => GetCausalResults();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => GetCausalResults();
 
     private MetadataSet<TMetadata> CreateMetadataSet()
     {
@@ -31,6 +35,11 @@ internal sealed class OrBooleanResult<TMetadata>(
             yield return left;
         
         if (right.Satisfied == Satisfied)
+            yield return right;
+    }
+    private IEnumerable<BooleanResultBase<TMetadata>> GetResults()
+    {
+            yield return left;
             yield return right;
     }
 }

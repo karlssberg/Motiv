@@ -6,21 +6,38 @@ using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
 
 namespace Karlssberg.Motiv;
 
-public readonly struct SpecBuilder<TModel, TUnderlyingMetadata>(
+public readonly  ref struct SpecBuilder<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec)
 {
     public FalseMetadataCompositeSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(TMetadata whenTrue) =>
-        new(spec, _ => whenTrue);
+        new(spec, (_, _) => whenTrue.ToEnumerable());
 
     public FalseMetadataCompositeSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<TModel, TMetadata> whenTrue) =>
+        new(spec, (model, _) => whenTrue(model).ToEnumerable());
+    
+    public FalseMetadataCompositeSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue) =>
+        new(spec, (model, result) => whenTrue(model, result).ToEnumerable());
+    
+    public FalseMetadataCompositeSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
         new(spec, whenTrue);
 
     public FalseAssertionWithDescriptionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
-        new(spec, _ => trueBecause, trueBecause);
+        new(spec, (_, _) => trueBecause.ToEnumerable(), trueBecause);
 
     public FalseAssertionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(Func<TModel, string> trueBecause) =>
+        new(spec, (model, _) => trueBecause(model).ToEnumerable());
+    
+    public FalseAssertionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause) =>
+        new(spec, (model, result) => trueBecause(model, result).ToEnumerable());
+    
+    public FalseAssertionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
         new(spec, trueBecause);
+    
     
     public TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> As(
         Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate) =>
@@ -56,7 +73,7 @@ public readonly struct SpecBuilder<TModel, TUnderlyingMetadata>(
     public SpecBase<TModel, string> CreateSpec(string proposition) =>
         new CompositeSpec<TModel, string, TUnderlyingMetadata>(
             spec,
-            _ => proposition,
-            _ => $"!{proposition}",
+            (_, _) => proposition.ToEnumerable(),
+            (_, _) => $"!{proposition}".ToEnumerable(),
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

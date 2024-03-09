@@ -16,13 +16,13 @@ public class OrSpecTests
         object model)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("left");
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("right");
@@ -47,13 +47,13 @@ public class OrSpecTests
         object model)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("left");
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("right");
@@ -135,13 +135,13 @@ public class OrSpecTests
     public void Should_provide_a_description_of_the_specification(bool leftResult, bool rightResult)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("left");
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("right");
@@ -187,7 +187,7 @@ public class OrSpecTests
         string model)
     {
         var normalSpec = Spec
-            .Build<object>(m => true)
+            .Build<object>(_ => true)
             .WhenTrue("true")
             .WhenFalse("false")
             .CreateSpec();

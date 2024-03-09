@@ -31,7 +31,7 @@ public abstract class BooleanResultBase
     public IEnumerable<string> Assertions => Explanation.Assertions;
 
     public IEnumerable<string> SubAssertions => Explanation.Underlying.GetAssertions();
-
+    
     /// <summary>
     /// Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the
     /// result at this stage to avoid excessive deduplication during intermediate steps.  Deduplication is performed during the
@@ -140,6 +140,14 @@ public abstract class BooleanResultBase<TMetadata>
     }
 
     public abstract MetadataSet<TMetadata> Metadata { get; }
+    
+    public abstract IEnumerable<BooleanResultBase> Underlying { get; }
+    
+    public abstract IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata { get; }
+    
+    public abstract IEnumerable<BooleanResultBase> Causes  { get; }
+    
+    public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata  { get; }
 
     /// <summary>Determines whether the current BooleanResultBase object is equal to another BooleanResultBase object.</summary>
     /// <param name="other">The BooleanResultBase object to compare with the current object.</param>

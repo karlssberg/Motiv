@@ -13,7 +13,7 @@ public class NotSpecTests
         object model)
     {
         var spec = Spec
-            .Build<object>(m => operand)
+            .Build<object>(_ => operand)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec($"is {operand}");
@@ -35,7 +35,7 @@ public class NotSpecTests
         object model)
     {
         var spec = Spec
-            .Build<object>(m => operand)
+            .Build<object>(_ => operand)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("is true");
@@ -56,7 +56,7 @@ public class NotSpecTests
         object model)
     {
         var spec = Spec
-            .Build<object>(m => operand)
+            .Build<object>(_ => operand)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
@@ -77,7 +77,7 @@ public class NotSpecTests
         object model)
     {
         var spec = Spec
-            .Build<object>(m => operand)
+            .Build<object>(_ => operand)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();

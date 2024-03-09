@@ -10,23 +10,27 @@ internal sealed class XOrBooleanResult<TMetadata>(
     /// <summary>Gets a value indicating whether the XOR operation is satisfied.</summary>
     public override bool Satisfied => left.Satisfied ^ right.Satisfied;
 
-    public override Explanation Explanation => GetCausalResults().CreateExplanation();
+    public override Explanation Explanation => GetResults().CreateExplanation();
 
     /// <summary>Gets the description of the XOR operation.</summary>
     public override ResultDescriptionBase Description =>
-        new XOrBooleanResultDescription<TMetadata>(left, right, GetCausalResults());
+        new XOrBooleanResultDescription<TMetadata>(left, right, GetResults());
 
     public override MetadataSet<TMetadata> Metadata => CreateMetadataSet();
-    
+    public override IEnumerable<BooleanResultBase> Underlying => GetResults();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
+    public override IEnumerable<BooleanResultBase> Causes => GetResults();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => GetResults();
+
     private MetadataSet<TMetadata> CreateMetadataSet()
     {
-        var metadataSets = GetCausalResults().Select(result => result.Metadata).ToArray();
+        var metadataSets = GetResults().Select(result => result.Metadata).ToArray();
         return new(
             metadataSets.SelectMany(metadataSet => metadataSet),
             metadataSets.SelectMany(metadataSet => metadataSet.Underlying));
     }
     
-    private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults() => 
+    private IEnumerable<BooleanResultBase<TMetadata>> GetResults() => 
         left.ToEnumerable()
             .Append(right);
 }

@@ -2,8 +2,8 @@
 
 public readonly ref struct ExplanationWithDescriptionCompositeFactorySpecFactory<TModel, TUnderlyingMetadata>(
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate,
-    Func<TModel, string> trueBecause,
-    Func<TModel, string> falseBecause,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause,
     string candidateProposition)
 {
     public SpecBase<TModel, string> CreateSpec() =>

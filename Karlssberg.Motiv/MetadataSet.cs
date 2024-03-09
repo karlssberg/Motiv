@@ -12,6 +12,8 @@ public sealed class MetadataSet<TMetadata>(
 
     public IEnumerable<MetadataSet<TMetadata>> Underlying { get; } =
         underlying ?? Enumerable.Empty<MetadataSet<TMetadata>>();
+    
+    public int Count => _metadataCollection.Count;
 
     private readonly ISet<TMetadata> _metadataCollection = metadataCollection switch
     {

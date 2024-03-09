@@ -18,13 +18,13 @@ public class AndSpecTests
         object model)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("left");
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("right");
@@ -49,13 +49,13 @@ public class AndSpecTests
         object model)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("left");
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("right");
@@ -79,13 +79,13 @@ public class AndSpecTests
         object model)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
@@ -110,13 +110,13 @@ public class AndSpecTests
             object model)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
@@ -136,13 +136,13 @@ public class AndSpecTests
     public void Should_provide_a_description_of_the_specification(bool leftResult, bool rightResult)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("left");
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("right");
@@ -164,13 +164,13 @@ public class AndSpecTests
         bool rightResult)
     {
 
-        var left = Spec.Build<object>(m => leftResult)
+        var left = Spec.Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
         ;
 
-        var right = Spec.Build<object>(m => rightResult)
+        var right = Spec.Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
@@ -189,7 +189,7 @@ public class AndSpecTests
     public void Should_wrap_thrown_exceptions_in_a_specification_exception(
         string model)
     {
-        Func<object, bool> predicate = m => true;
+        Func<object, bool> predicate = _ => true;
 
         var normalSpec = predicate.ToSpec()
             .WhenTrue("true")

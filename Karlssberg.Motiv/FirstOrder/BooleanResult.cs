@@ -9,7 +9,18 @@ public sealed class BooleanResult<TMetadata>(
     : BooleanResultBase<TMetadata>
 {
     public override MetadataSet<TMetadata> Metadata => new(metadata.ToEnumerable());
-    
+    public override IEnumerable<BooleanResultBase> Underlying =>
+        Enumerable.Empty<BooleanResultBase>();
+
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => 
+        Enumerable.Empty<BooleanResultBase<TMetadata>>();
+
+    public override IEnumerable<BooleanResultBase> Causes =>
+        Enumerable.Empty<BooleanResultBase>();
+
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
+        Enumerable.Empty<BooleanResultBase<TMetadata>>();
+
     /// <summary>Gets the reasons for the result.</summary>
     public override Explanation Explanation => new(Description)
     {

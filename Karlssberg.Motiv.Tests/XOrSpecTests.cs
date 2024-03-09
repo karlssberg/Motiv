@@ -16,13 +16,13 @@ public class XOrSpecTests
         object model)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("left");
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("right");
@@ -49,13 +49,13 @@ public class XOrSpecTests
         object model)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("left");
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("right");
@@ -65,6 +65,40 @@ public class XOrSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Reason.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineAutoData(true, true, "none")]
+    [InlineAutoData(true, false, "left")]
+    [InlineAutoData(false, true, "right")]  
+    [InlineAutoData(false, false, "none")]
+    public void Should_be_able_to_override_the_assertions_to_only_the_true_operand_has_its_output(
+        bool leftResult,
+        bool rightResult,
+        string expected,
+        object model)
+    {
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .CreateSpec("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .CreateSpec("right");
+
+        var sut = Spec
+            .Build(left ^ right)
+            .WhenTrue((_, result) => result.Causes.GetTrueAssertions())
+            .WhenFalse("none")
+            .CreateSpec("xor");
+
+        var result = sut.IsSatisfiedBy(model);
+
+        result.Assertions.Should().BeEquivalentTo(expected);
     }
 
     [Theory]
@@ -79,13 +113,13 @@ public class XOrSpecTests
         object model)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
@@ -109,13 +143,13 @@ public class XOrSpecTests
         object model)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
@@ -135,13 +169,13 @@ public class XOrSpecTests
     public void Should_provide_a_description_of_the_specification(bool leftResult, bool rightResult)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("left");
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .CreateSpec("right");
@@ -162,13 +196,13 @@ public class XOrSpecTests
     public void Should_provide_a_description_of_the_specification_when_using_convenience_specification(bool leftResult, bool rightResult)
     {
         var left = Spec
-            .Build<object>(m => leftResult)
+            .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
 
         var right = Spec
-            .Build<object>(m => rightResult)
+            .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();
@@ -187,7 +221,7 @@ public class XOrSpecTests
         string model)
     {
         var normalSpec = Spec
-            .Build<object>(m => true)
+            .Build<object>(_ => true)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .CreateSpec();

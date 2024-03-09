@@ -2,8 +2,8 @@
 
 internal sealed class CompositeFactorySpec<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> underlyingSpecFactory,
-    Func<TModel, TMetadata> whenTrue,
-    Func<TModel, TMetadata> whenFalse,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
     string propositionalAssertion)
     : SpecBase<TModel, TMetadata>
 {
@@ -22,10 +22,12 @@ internal sealed class CompositeFactorySpec<TModel, TMetadata, TUnderlyingMetadat
         
         var metadata = booleanResult.Satisfied switch
         {
-            true => whenTrue(model),
-            false => whenFalse(model),
+            true => whenTrue(model, booleanResult),
+            false => whenFalse(model, booleanResult),
         };
+        
+        var metadataSet = new MetadataSet<TMetadata>(metadata);
 
-        return new CompositeFactoryBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadata, Proposition);
+        return new CompositeFactoryBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadataSet, Proposition);
     }
 }

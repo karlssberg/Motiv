@@ -34,6 +34,7 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
         
         return new HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
+            underlyingResults,
             metadataSet,
             causes,
             Proposition,

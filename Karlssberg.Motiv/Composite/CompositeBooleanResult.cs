@@ -7,7 +7,7 @@ namespace Karlssberg.Motiv.Composite;
 /// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
 internal sealed class CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    TMetadata metadata,
+    MetadataSet<TMetadata> metadata,
     IProposition proposition)
     : BooleanResultBase<TMetadata>
 {
@@ -16,10 +16,17 @@ internal sealed class CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(
 
     /// <summary>Gets the description of the boolean result.</summary>
     public override ResultDescriptionBase Description =>
-        new ChangeMetadataBooleanResultDescription<TMetadata, TUnderlyingMetadata>(
-            booleanResult,
-            metadata,
-            proposition);
+        metadata.Count switch
+        {
+            1 => new CompositeBooleanResultDescription<TMetadata, TUnderlyingMetadata>(
+                booleanResult,
+                metadata.Single(),
+                proposition),
+            _ => new MultiMetadataCompositeBooleanResultDescription<TUnderlyingMetadata>(
+                booleanResult,
+                proposition)
+        };
+        
 
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override Explanation Explanation =>
@@ -27,6 +34,21 @@ internal sealed class CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
+
+    public override MetadataSet<TMetadata> Metadata => metadata;
+    public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
+        booleanResult switch
+        {
+            BooleanResultBase<TMetadata> result=> result.ToEnumerable(),
+            _ => Enumerable.Empty<BooleanResultBase<TMetadata>>()
+        };
     
-    public override MetadataSet<TMetadata> Metadata => new(metadata);
+    public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
+        booleanResult.Causes switch
+        {
+            IEnumerable<BooleanResultBase<TMetadata>> results => results,
+            _ => Enumerable.Empty<BooleanResultBase<TMetadata>>()
+        };
 }
