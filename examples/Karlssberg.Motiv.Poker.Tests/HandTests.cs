@@ -7,9 +7,9 @@ namespace Karlssberg.Motiv.Poker.Tests;
 public class HandTests
 {
     [Theory]
-    [InlineAutoData("A, A, A, A, 2", false, HandRank.HighCard)]
-    [InlineAutoData("K, A, A, 2, 2", false, HandRank.HighCard)]
-    [InlineAutoData("K, A, 2, 2, 2", false, HandRank.HighCard)]
+    [InlineAutoData("A, A, A, A, 2", false, HandRank.Unknown)]
+    [InlineAutoData("K, A, A, 2, 2", false, HandRank.Unknown)]
+    [InlineAutoData("K, A, 2, 2, 2", false, HandRank.Unknown)]
     [InlineAutoData("A, A, K, Q, 10", true, HandRank.Pair)]
     [InlineAutoData("A, K, K, Q, 10", true, HandRank.Pair)]
     [InlineAutoData("A, K, Q, Q, 10", true, HandRank.Pair)]
@@ -35,10 +35,10 @@ public class HandTests
     [InlineAutoData("K, K, 3, 2, 2", true, HandRank.TwoPair)]
     [InlineAutoData("K, K, A, A, 2", true, HandRank.TwoPair)]
     [InlineAutoData("4, K, A, A, 4", true, HandRank.TwoPair)]
-    [InlineAutoData("4, 4, 5, 6, 7", false, HandRank.HighCard)]
-    [InlineAutoData("A, A, 8, K, 2", false, HandRank.HighCard)]
-    [InlineAutoData("A, A, A, K, 2", false, HandRank.HighCard)]
-    [InlineAutoData("A, A, A, K, 2", false, HandRank.HighCard)]
+    [InlineAutoData("4, 4, 5, 6, 7", false, HandRank.Unknown)]
+    [InlineAutoData("A, A, 8, K, 2", false, HandRank.Unknown)]
+    [InlineAutoData("A, A, A, K, 2", false, HandRank.Unknown)]
+    [InlineAutoData("A, A, A, K, 2", false, HandRank.Unknown)]
     public void Should_evaluate_two_pairs(string handRanks, bool expected, HandRank expectedRank)
     {
         var cards = handRanks
