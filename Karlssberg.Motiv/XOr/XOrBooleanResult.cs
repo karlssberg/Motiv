@@ -16,15 +16,15 @@ internal sealed class XOrBooleanResult<TMetadata>(
     public override ResultDescriptionBase Description =>
         new XOrBooleanResultDescription<TMetadata>(left, right, GetResults());
 
-    public override MetadataSet<TMetadata> Metadata => CreateMetadataSet();
+    public override MetadataTree<TMetadata> MetadataTree => CreateMetadataSet();
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
     public override IEnumerable<BooleanResultBase> Causes => GetResults();
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => GetResults();
 
-    private MetadataSet<TMetadata> CreateMetadataSet()
+    private MetadataTree<TMetadata> CreateMetadataSet()
     {
-        var metadataSets = GetResults().Select(result => result.Metadata).ToArray();
+        var metadataSets = GetResults().Select(result => result.MetadataTree).ToArray();
         return new(
             metadataSets.SelectMany(metadataSet => metadataSet),
             metadataSets.SelectMany(metadataSet => metadataSet.Underlying));

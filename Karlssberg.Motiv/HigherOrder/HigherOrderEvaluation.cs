@@ -30,7 +30,7 @@ public sealed class HigherOrderEvaluation<TModel, TMetadata>(
     private readonly Lazy<IReadOnlyCollection<string>> _lazyAssertions = new(() =>
         causalResults.SelectMany(result => result.Assertions).ToArray());
     private readonly Lazy<IReadOnlyCollection<TMetadata>> _lazyMetadata = new(() =>
-        causalResults.SelectMany(result => result.Metadata).ToArray());
+        causalResults.SelectMany(result => result.MetadataTree).ToArray());
     public bool AllSatisfied => _lazyAllSatisfied.Value;
     public bool NoneSatisfied => _lazyNoneSatisfied.Value;
 

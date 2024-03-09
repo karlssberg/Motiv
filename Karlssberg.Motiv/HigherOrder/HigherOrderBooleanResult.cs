@@ -5,13 +5,13 @@ namespace Karlssberg.Motiv.HigherOrder;
 internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
     IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> underlyingResults,
-    MetadataSet<TMetadata> metadataSet,
+    MetadataTree<TMetadata> metadataTree,
     IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes,
     IProposition proposition,
     AssertionSource assertionSource)
     : BooleanResultBase<TMetadata>
 {
-    public override MetadataSet<TMetadata> Metadata => metadataSet;
+    public override MetadataTree<TMetadata> MetadataTree => metadataTree;
     public override IEnumerable<BooleanResultBase> Underlying => underlyingResults;
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
         underlyingResults switch
@@ -34,7 +34,7 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
     public override ResultDescriptionBase Description =>
         new HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
-            metadataSet,
+            metadataTree,
             causes,
             proposition,
             assertionSource);

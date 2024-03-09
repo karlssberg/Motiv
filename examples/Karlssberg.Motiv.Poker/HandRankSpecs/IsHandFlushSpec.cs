@@ -3,7 +3,7 @@
 public class IsHandFlushSpec() : Spec<Hand, HandRank>(
     Spec.Build(IsAFlush)
         .WhenTrue(HandRank.Flush)
-        .WhenFalse(HandRank.HighCard)
+        .WhenFalse(HandRank.Unknown)
         .CreateSpec("is a flush hand"))
 {
     private static SpecBase<Hand, string> IsAFlush =>

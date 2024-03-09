@@ -36,7 +36,7 @@ public class BooleanResultTests
             .ToList();
 
         act.Satisfied.Should().Be(expected);
-        act.Metadata.Should().HaveCount(operands.Count);
+        act.MetadataTree.Should().HaveCount(operands.Count);
         act.Explanation.Assertions.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
     }
 
@@ -57,7 +57,7 @@ public class BooleanResultTests
             .ToList();
 
         act.Satisfied.Should().Be(expected);
-        act.Metadata.Should().HaveCount(operands.Count);
+        act.MetadataTree.Should().HaveCount(operands.Count);
         act.Explanation.Assertions.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
     }
 
@@ -76,7 +76,7 @@ public class BooleanResultTests
         var operands = new[] { leftResult, rightResult };
 
         act.Satisfied.Should().Be(expected);
-        act.Metadata.Should().HaveCount(operands.Length);
+        act.MetadataTree.Should().HaveCount(operands.Length);
         act.Explanation.Assertions.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
     }
 
@@ -92,7 +92,7 @@ public class BooleanResultTests
         var act = !operandResult;
 
         act.Satisfied.Should().Be(expected);
-        act.Metadata.Should().HaveCount(1);
+        act.MetadataTree.Should().HaveCount(1);
         act.Explanation.Assertions.Should().Contain(operandResult.Explanation.Assertions);
     }
 }

@@ -28,7 +28,7 @@ internal sealed class CompositeSpec<TModel, TMetadata, TUnderlyingMetadata>(
             false => whenFalse(model, booleanResult),
         };
         
-        var metadataSet = new MetadataSet<TMetadata>(metadata);
+        var metadataSet = new MetadataTree<TMetadata>(metadata);
 
         return new CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadataSet, Proposition);
     }

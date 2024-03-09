@@ -50,7 +50,7 @@ public class CompositeSpecTests
         var act = sut.IsSatisfiedBy("model");
 
         act.Explanation.Assertions.Should().BeEquivalentTo(expectation);
-        act.Metadata.Should().BeEquivalentTo(expectation);
+        act.MetadataTree.Should().BeEquivalentTo(expectation);
     }
 
     [InlineAutoData(true, 1, 3, 5, 7)]
@@ -104,6 +104,6 @@ public class CompositeSpecTests
             ? trueReason
             : falseReason);
         
-        act.Metadata.Should().BeEquivalentTo(expectation);
+        act.MetadataTree.Should().BeEquivalentTo(expectation);
     }
 }

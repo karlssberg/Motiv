@@ -7,7 +7,7 @@ namespace Karlssberg.Motiv.Composite;
 /// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
 internal sealed class CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    MetadataSet<TMetadata> metadata,
+    MetadataTree<TMetadata> metadata,
     IProposition proposition)
     : BooleanResultBase<TMetadata>
 {
@@ -35,7 +35,7 @@ internal sealed class CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
 
-    public override MetadataSet<TMetadata> Metadata => metadata;
+    public override MetadataTree<TMetadata> MetadataTree => metadata;
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
         booleanResult switch

@@ -26,7 +26,7 @@ internal sealed class CompositeFactorySpec<TModel, TMetadata, TUnderlyingMetadat
             false => whenFalse(model, booleanResult),
         };
         
-        var metadataSet = new MetadataSet<TMetadata>(metadata);
+        var metadataSet = new MetadataTree<TMetadata>(metadata);
 
         return new CompositeFactoryBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadataSet, Proposition);
     }

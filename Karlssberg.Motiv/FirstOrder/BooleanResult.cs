@@ -8,7 +8,7 @@ public sealed class BooleanResult<TMetadata>(
     IProposition proposition)
     : BooleanResultBase<TMetadata>
 {
-    public override MetadataSet<TMetadata> Metadata => new(metadata.ToEnumerable());
+    public override MetadataTree<TMetadata> MetadataTree => new(metadata.ToEnumerable());
     public override IEnumerable<BooleanResultBase> Underlying =>
         Enumerable.Empty<BooleanResultBase>();
 

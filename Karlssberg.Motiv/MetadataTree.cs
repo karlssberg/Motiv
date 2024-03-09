@@ -2,16 +2,16 @@
 
 namespace Karlssberg.Motiv;
 
-public sealed class MetadataSet<TMetadata>(
+public sealed class MetadataTree<TMetadata>(
     IEnumerable<TMetadata> metadataCollection,
-    IEnumerable<MetadataSet<TMetadata>>? underlying = null) : IEnumerable<TMetadata>
+    IEnumerable<MetadataTree<TMetadata>>? underlying = null) : IEnumerable<TMetadata>
 {
-    public MetadataSet(TMetadata metadata) : this(metadata.ToEnumerable())
+    public MetadataTree(TMetadata metadata) : this(metadata.ToEnumerable())
     {
     }
 
-    public IEnumerable<MetadataSet<TMetadata>> Underlying { get; } =
-        underlying ?? Enumerable.Empty<MetadataSet<TMetadata>>();
+    public IEnumerable<MetadataTree<TMetadata>> Underlying { get; } =
+        underlying ?? Enumerable.Empty<MetadataTree<TMetadata>>();
     
     public int Count => _metadataCollection.Count;
 

@@ -7,7 +7,7 @@ namespace Karlssberg.Motiv.CompositeFactory;
 /// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
 internal sealed class CompositeFactoryBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    MetadataSet<TMetadata> metadataSet,
+    MetadataTree<TMetadata> metadataTree,
     IProposition proposition)
     : BooleanResultBase<TMetadata>
 {
@@ -16,11 +16,11 @@ internal sealed class CompositeFactoryBooleanResult<TMetadata, TUnderlyingMetada
 
     /// <summary>Gets the description of the boolean result.</summary>
     public override ResultDescriptionBase Description =>
-        metadataSet.Count switch
+        metadataTree.Count switch
         {
             1 => new ChangeMetadataBooleanResultDescription<TMetadata, TUnderlyingMetadata>(
                 booleanResult,
-                metadataSet.Single(),
+                metadataTree.Single(),
                 proposition),
             _ => new MultiMetadataCompositeFactoryBooleanResultDescription<TUnderlyingMetadata>(
                 booleanResult,
@@ -34,7 +34,7 @@ internal sealed class CompositeFactoryBooleanResult<TMetadata, TUnderlyingMetada
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
     
-    public override MetadataSet<TMetadata> Metadata => metadataSet;
+    public override MetadataTree<TMetadata> MetadataTree => metadataTree;
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
         booleanResult switch

@@ -139,7 +139,9 @@ public abstract class BooleanResultBase<TMetadata>
     {
     }
 
-    public abstract MetadataSet<TMetadata> Metadata { get; }
+    public abstract MetadataTree<TMetadata> MetadataTree { get; }
+    
+    public IEnumerable<TMetadata> Metadata => MetadataTree.AsEnumerable();
     
     public abstract IEnumerable<BooleanResultBase> Underlying { get; }
     

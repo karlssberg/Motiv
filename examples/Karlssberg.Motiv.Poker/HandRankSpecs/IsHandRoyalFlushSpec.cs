@@ -5,5 +5,5 @@ namespace Karlssberg.Motiv.Poker.HandRankSpecs;
 public class IsHandRoyalFlushSpec() : Spec<Hand, HandRank>(() => Spec
     .Build(new IsHandFlushSpec() & new IsAceHighStraightBroadwaySpec())
     .WhenTrue(HandRank.RoyalFlush)
-    .WhenFalse(HandRank.HighCard)
+    .WhenFalse(HandRank.Unknown)
     .CreateSpec("is a royal flush hand"));

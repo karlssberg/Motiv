@@ -3,12 +3,16 @@
 namespace Karlssberg.Motiv.Poker;
 
 public class IsWinningHandSpec() : Spec<Hand, HandRank>(
-    new IsHandPairSpec()
-    | new IsHandTwoPairSpec()
-    | new IsHandThreeOfAKindSpec()
-    | new IsHandStraightSpec()
-    | new IsHandFlushSpec()
-    | new IsHandFullHouseSpec()
-    | new IsHandFourOfAKindSpec()
-    | new IsHandStraightFlushSpec()
-    | new IsHandRoyalFlushSpec());
+    Spec
+        .Build(new IsHandPairSpec()
+             | new IsHandTwoPairSpec()
+             | new IsHandThreeOfAKindSpec()
+             | new IsHandStraightSpec()
+             | new IsHandFlushSpec()
+             | new IsHandFullHouseSpec()
+             | new IsHandFourOfAKindSpec()
+             | new IsHandStraightFlushSpec()
+             | new IsHandRoyalFlushSpec())
+        .WhenTrue((_, result) => result.Metadata)
+        .WhenFalse(HandRank.HighCard)
+        .CreateSpec("is a winning poker hand"));

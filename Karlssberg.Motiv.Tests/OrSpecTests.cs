@@ -32,7 +32,7 @@ public class OrSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(expected);
-        result.Metadata.Should().AllBeEquivalentTo(expected);
+        result.MetadataTree.Should().AllBeEquivalentTo(expected);
     }
 
     [Theory]

@@ -26,7 +26,7 @@ internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
     
-    public override MetadataSet<TMetadata> Metadata => new(metadata);
+    public override MetadataTree<TMetadata> MetadataTree => new(metadata);
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => 
         booleanResult switch

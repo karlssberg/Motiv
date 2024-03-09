@@ -9,7 +9,7 @@ internal sealed class MetadataToReasonAdapterSpec<TModel, TUnderlyingModel>(
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
     {
         var results = spec.IsSatisfiedBy(model);
-        var metadata = results.Metadata switch
+        var metadata = results.MetadataTree switch
         {
             string reason => reason,
             _ => spec.Proposition.Assertion

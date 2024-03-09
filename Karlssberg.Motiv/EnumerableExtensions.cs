@@ -74,19 +74,19 @@ public static class EnumerableExtensions
     
     public static IEnumerable<TMetadata> GetMetadata<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
-        results.SelectMany(e => e.Metadata);
+        results.SelectMany(e => e.MetadataTree);
     
     public static IEnumerable<TMetadata> GetTrueMetadata<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results
             .Where(r => r.Satisfied)
-            .SelectMany(e => e.Metadata);
+            .SelectMany(e => e.MetadataTree);
     
     public static IEnumerable<TMetadata> GetFalseMetadata<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results
             .Where(r => !r.Satisfied)
-            .SelectMany(e => e.Metadata);
+            .SelectMany(e => e.MetadataTree);
     
     
     
