@@ -172,8 +172,10 @@ public class AtMostNSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                             at most one is satisfied
-                                             """)]
+                                            at most one is satisfied {
+                                                3x is not satisfied
+                                            }
+                                            """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied {
                                                 1x is satisfied
@@ -235,7 +237,9 @@ public class AtMostNSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            at most one is satisfied
+                                            at most one is satisfied {
+                                                3x False
+                                            }
                                             """)]
     [InlineAutoData(false, false, true, """
                                             at most one is satisfied {
@@ -298,7 +302,9 @@ public class AtMostNSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            at most one is satisfied
+                                            at most one is satisfied {
+                                                3x !is true
+                                            }
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied {

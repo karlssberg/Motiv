@@ -50,13 +50,20 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
 
         return isSatisfied switch
         {
-            true when higherOrderPredicate(trueOperands) => trueOperands,
-            true when higherOrderPredicate(falseOperands) => falseOperands,
-            false when !higherOrderPredicate(trueOperands) && trueOperands.Any() => trueOperands,
-            false when !higherOrderPredicate(falseOperands) && falseOperands.Any() => falseOperands,
+            true when IsInfluencer(trueOperands) => trueOperands,
+            true when IsInfluencer(falseOperands) => falseOperands,
+            false when !IsInfluencer(trueOperands) && trueOperands.Any() => trueOperands,
+            false when !IsInfluencer(falseOperands) && falseOperands.Any() => falseOperands,
             _ => operandResults
         };
     }
+
+    private bool IsInfluencer(ICollection<BooleanResult<TModel, TUnderlyingMetadata>> operands) =>
+        operands.Count switch
+        {
+            0 => false,
+            _ => higherOrderPredicate(operands)
+        };
 
     private static ICollection<BooleanResult<TModel,TUnderlyingMetadata>> GetFalseOperands(
         IEnumerable<BooleanResult<TModel,TUnderlyingMetadata>> operandResults) =>

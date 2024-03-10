@@ -2,18 +2,18 @@
 
 namespace Karlssberg.Motiv.Tests;
 
-public class AllSatisfiedSpecTests
+public class NoneSatisfiedSpecTests
 {
     [Theory]
-    [InlineAutoData(false, false, false, false)]
+    [InlineAutoData(false, false, false, true)]
     [InlineAutoData(false, false, true, false)]
     [InlineAutoData(false, true, false, false)]
     [InlineAutoData(false, true, true, false)]
     [InlineAutoData(true, false, false, false)]
     [InlineAutoData(true, false, true, false)]
     [InlineAutoData(true, true, false, false)]
-    [InlineAutoData(true, true, true, true)]
-    public void Should_perform_the_logical_operation_All(
+    [InlineAutoData(true, true, true, false)]
+    public void Should_perform_a_none_satisfied_operation(
         bool first,
         bool second,
         bool third,
@@ -29,8 +29,8 @@ public class AllSatisfiedSpecTests
 
         var sut = Spec
             .Build(underlyingSpec)
-            .AsAllSatisfied()
-            .CreateSpec("all are true");
+            .AsNoneSatisfied()
+            .CreateSpec("none are true");
 
         var result = sut.IsSatisfiedBy(models);
 
@@ -39,42 +39,42 @@ public class AllSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         !all are true {
+                                         none are true {
                                              3x false
                                          }
                                          """)]
     [InlineAutoData(false, false, true, """
-                                        !all are true {
-                                            2x false
+                                        !none are true {
+                                            1x true
                                         }
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        !all are true {
-                                            2x false
+                                        !none are true {
+                                            1x true
                                         }
                                         """)]
     [InlineAutoData(false, true, true, """
-                                       !all are true {
-                                           1x false
+                                       !none are true {
+                                           2x true
                                        }
                                        """)]
     [InlineAutoData(true, false, false, """
-                                        !all are true {
-                                            2x false
+                                        !none are true {
+                                            1x true
                                         }
                                         """)]
     [InlineAutoData(true, false, true, """
-                                       !all are true {
-                                           1x false
+                                       !none are true {
+                                           2x true
                                        }
                                        """)]
     [InlineAutoData(true, true, false, """
-                                       !all are true {
-                                           1x false
+                                       !none are true {
+                                           2x true
                                        }
                                        """)]
     [InlineAutoData(true, true, true, """
-                                      all are true {
+                                      !none are true {
                                           3x true
                                       }
                                       """)]
@@ -92,10 +92,10 @@ public class AllSatisfiedSpecTests
 
         var sut = Spec
             .Build(underlyingSpec)
-            .AsAllSatisfied()
+            .AsNoneSatisfied()
             .WhenTrue(evaluation => evaluation.Metadata)
             .WhenFalse(evaluation => evaluation.Metadata)
-            .CreateSpec("all are true");
+            .CreateSpec("none are true");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
@@ -104,42 +104,42 @@ public class AllSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         !all are true {
+                                         none are true {
                                              3x false
                                          }
                                          """)]
     [InlineAutoData(false, false, true, """
-                                        !all are true {
-                                            2x false
+                                        !none are true {
+                                            1x true
                                         }
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        !all are true {
-                                            2x false
+                                        !none are true {
+                                            1x true
                                         }
                                         """)]
     [InlineAutoData(false, true, true, """
-                                       !all are true {
-                                           1x false
+                                       !none are true {
+                                           2x true
                                        }
                                        """)]
     [InlineAutoData(true, false, false, """
-                                        !all are true {
-                                            2x false
+                                        !none are true {
+                                            1x true
                                         }
                                         """)]
     [InlineAutoData(true, false, true, """
-                                       !all are true {
-                                           1x false
+                                       !none are true {
+                                           2x true
                                        }
                                        """)]
     [InlineAutoData(true, true, false, """
-                                       !all are true {
-                                           1x false
+                                       !none are true {
+                                           2x true
                                        }
                                        """)]
     [InlineAutoData(true, true, true, """
-                                      all are true {
+                                      !none are true {
                                           3x true
                                       }
                                       """)]
@@ -158,10 +158,10 @@ public class AllSatisfiedSpecTests
 
         var sut = Spec
             .Build(underlyingSpec)
-            .AsAllSatisfied()
+            .AsNoneSatisfied()
             .WhenTrue(evaluation => evaluation.Metadata)
             .WhenFalse(evaluation => evaluation.Metadata)
-            .CreateSpec("all are true");
+            .CreateSpec("none are true");
 
 
         var result = sut.IsSatisfiedBy([first, second, third]);
@@ -171,42 +171,42 @@ public class AllSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         !all are true {
+                                         none are true {
                                              3x !is true
                                          }
                                          """)]
     [InlineAutoData(false, false, true, """
-                                        !all are true {
-                                            2x !is true
+                                        !none are true {
+                                            1x is true
                                         }
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        !all are true {
-                                            2x !is true
+                                        !none are true {
+                                            1x is true
                                         }
                                         """)]
     [InlineAutoData(false, true, true, """
-                                       !all are true {
-                                           1x !is true
+                                       !none are true {
+                                           2x is true
                                        }
                                        """)]
     [InlineAutoData(true, false, false, """
-                                        !all are true {
-                                            2x !is true
+                                        !none are true {
+                                            1x is true
                                         }
                                         """)]
     [InlineAutoData(true, false, true, """
-                                       !all are true {
-                                           1x !is true
+                                       !none are true {
+                                           2x is true
                                        }
                                        """)]
     [InlineAutoData(true, true, false, """
-                                       !all are true {
-                                           1x !is true
+                                       !none are true {
+                                           2x is true
                                        }
                                        """)]
     [InlineAutoData(true, true, true, """
-                                      all are true {
+                                      !none are true {
                                           3x is true
                                       }
                                       """)]
@@ -224,55 +224,54 @@ public class AllSatisfiedSpecTests
 
         var sut = Spec
             .Build(underlyingSpec)
-            .AsAllSatisfied()
+            .AsNoneSatisfied()
             .WhenTrue(evaluation => evaluation.Metadata)
             .WhenFalse(evaluation => evaluation.Metadata)
-            .CreateSpec("all are true");
+            .CreateSpec("none are true");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
         result.Description.Detailed.Should().Be(expected);
     }
 
-
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         !all are true {
+                                         none are true {
                                              3x !left & !right
                                          }
                                          """)]
     [InlineAutoData(false, false, true, """
-                                        !all are true {
-                                            2x !left & !right
+                                        !none are true {
+                                            1x left & right
                                         }
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        !all are true {
-                                            2x !left & !right
+                                        !none are true {
+                                            1x left & right
                                         }
                                         """)]
     [InlineAutoData(false, true, true, """
-                                       !all are true {
-                                           1x !left & !right
+                                       !none are true {
+                                           2x left & right
                                        }
                                        """)]
     [InlineAutoData(true, false, false, """
-                                        !all are true {
-                                            2x !left & !right
+                                        !none are true {
+                                            1x left & right
                                         }
                                         """)]
     [InlineAutoData(true, false, true, """
-                                       !all are true {
-                                           1x !left & !right
+                                       !none are true {
+                                           2x left & right
                                        }
                                        """)]
     [InlineAutoData(true, true, false, """
-                                       !all are true {
-                                           1x !left & !right
+                                       !none are true {
+                                           2x left & right
                                        }
                                        """)]
     [InlineAutoData(true, true, true, """
-                                      all are true {
+                                      !none are true {
                                           3x left & right
                                       }
                                       """)]
@@ -296,10 +295,10 @@ public class AllSatisfiedSpecTests
 
         var sut = Spec
             .Build(underlyingSpecLeft & underlyingSpecRight)
-            .AsAllSatisfied()
+            .AsNoneSatisfied()
             .WhenTrue(evaluation => evaluation.Metadata)
             .WhenFalse(evaluation => evaluation.Metadata)
-            .CreateSpec("all are true");
+            .CreateSpec("none are true");
 
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
@@ -308,14 +307,14 @@ public class AllSatisfiedSpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "!all are true")]
-    [InlineAutoData(false, false, true, "!all are true")]
-    [InlineAutoData(false, true, false, "!all are true")]
-    [InlineAutoData(false, true, true, "!all are true")]
-    [InlineAutoData(true, false, false, "!all are true")]
-    [InlineAutoData(true, false, true, "!all are true")]
-    [InlineAutoData(true, true, false, "!all are true")]
-    [InlineAutoData(true, true, true, "all are true")]
+    [InlineAutoData(false, false, false, "none are true")]
+    [InlineAutoData(false, false, true, "!none are true")]
+    [InlineAutoData(false, true, false, "!none are true")]
+    [InlineAutoData(false, true, true, "!none are true")]
+    [InlineAutoData(true, false, false, "!none are true")]
+    [InlineAutoData(true, false, true, "!none are true")]
+    [InlineAutoData(true, true, false, "!none are true")]
+    [InlineAutoData(true, true, true, "!none are true")]
     public void Should_Describe_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,
@@ -336,10 +335,10 @@ public class AllSatisfiedSpecTests
 
         var sut = Spec
             .Build(underlyingSpecLeft & underlyingSpecRight)
-            .AsAllSatisfied()
+            .AsNoneSatisfied()
             .WhenTrue(evaluation => evaluation.Metadata)
             .WhenFalse(evaluation => evaluation.Metadata)
-            .CreateSpec("all are true");
+            .CreateSpec("none are true");
 
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
@@ -368,7 +367,7 @@ public class AllSatisfiedSpecTests
 
         var sut = Spec
             .Build(underlyingSpec)
-            .AsAllSatisfied()
+            .AsNoneSatisfied()
             .WhenTrue("all  true")
             .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
             .CreateSpec("all booleans are true");
@@ -381,10 +380,10 @@ public class AllSatisfiedSpecTests
     [Fact]  
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
-        const string expectedSummary = "all are true";
+        const string expectedSummary = "none are true";
         const string expectedFull =
             """
-            all are true {
+            none are true {
                 is true
             }
             """;
@@ -397,10 +396,10 @@ public class AllSatisfiedSpecTests
 
         var sut = Spec
             .Build(underlyingSpec)
-            .AsAllSatisfied()
+            .AsNoneSatisfied()
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("all are true");
+            .CreateSpec("none are true");
 
         sut.Proposition.Assertion.Should().Be(expectedSummary);
         sut.Proposition.Detailed.Should().Be(expectedFull);
@@ -418,7 +417,7 @@ public class AllSatisfiedSpecTests
 
         var sut = Spec
             .Build(throwingSpec)
-            .AsAllSatisfied()
+            .AsNoneSatisfied()
             .WhenTrue(evaluation => $"{evaluation.TrueCount} true")
             .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
             .CreateSpec("all booleans are true");

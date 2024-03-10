@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Humanizer;
-using Karlssberg.Motiv.HigherOrder;
 
 namespace Karlssberg.Motiv.Tests;
 
@@ -111,14 +110,6 @@ public class NSatisfiedSpecTests
         var result = sut.IsSatisfiedBy([first, second]);
 
         result.Description.Detailed.Should().Be(expected);
-    }
-
-    private static string GenerateReason(bool allSatisfied, IEnumerable<BooleanResult<int, string>> results)
-    {
-        var count = results.Count(r => r.Satisfied == allSatisfied);
-        var trueOrFalse = allSatisfied.ToString().ToLowerInvariant();
-
-        return $"{"is".ToQuantity(count)} {trueOrFalse}";
     }
     
     [Fact]
