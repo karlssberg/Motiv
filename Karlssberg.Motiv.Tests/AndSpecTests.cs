@@ -209,7 +209,11 @@ public class AndSpecTests
             .Where(ex => ex.Message.Contains("should be wrapped"));
     }
 
-    private record Subscription(DateTime Start, DateTime End, bool IsCancelled);
+    private record Subscription(DateTime Start, DateTime End)
+    {
+        public DateTime Start { get; } = Start;
+        public DateTime End { get; } = End;
+    }
 
     private class IsSubscriptionActive(DateTime now) : Spec<Subscription>(() =>
     {
@@ -239,7 +243,7 @@ public class AndSpecTests
         var now = DateTime.Now;
         var isActive = new IsSubscriptionActive(now);
 
-        var subscription = new Subscription(now.AddDays(-1), now.AddDays(1), false);
+        var subscription = new Subscription(now.AddDays(-1), now.AddDays(1));
 
         var result = isActive.IsSatisfiedBy(subscription);
 
@@ -254,12 +258,14 @@ public class AndSpecTests
 
     private enum Country
     {
-        USA,
-        Canada,
-        Mexico
+        Usa
     }
 
-    private record Device(Country Country);
+    private record Device(Country Country)
+    {
+        public Country Country { get; } = Country;
+    }
+    
 
     [Theory]
     [AutoData]
@@ -278,14 +284,14 @@ public class AndSpecTests
             .CreateSpec();
 
         var isLocationUsaSpec = Spec
-            .Build<Device>(device => device.Country == Country.USA)
+            .Build<Device>(device => device.Country == Country.Usa)
             .WhenTrue("the location is in the USA")
             .WhenFalse("the location is outside the USA")
             .CreateSpec();
 
         var isActiveSpec = hasSubscriptionStartedSpec & !hasSubscriptionEndedSpec;
-        var isActive = isActiveSpec.IsSatisfiedBy(new Subscription(now.AddDays(-1), now.AddDays(1), false));
-        var isUsa = isLocationUsaSpec.IsSatisfiedBy(new Device(Country.USA));
+        var isActive = isActiveSpec.IsSatisfiedBy(new Subscription(now.AddDays(-1), now.AddDays(1)));
+        var isUsa = isLocationUsaSpec.IsSatisfiedBy(new Device(Country.Usa));
 
         var result = isActive & isUsa;
 

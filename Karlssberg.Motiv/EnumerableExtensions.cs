@@ -88,9 +88,6 @@ public static class EnumerableExtensions
             .Where(r => !r.Satisfied)
             .SelectMany(e => e.MetadataTree);
     
-    
-    
-
     public static IEnumerable<string> GetAssertions(
         this IEnumerable<Explanation> explanations) =>
         explanations.SelectMany(e => e.Assertions);

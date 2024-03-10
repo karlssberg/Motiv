@@ -92,4 +92,28 @@ public class ChangeModelTypeSpecTests
 
         act.MetadataTree.Should().BeEquivalentTo(expected);
     }
+    
+    [Fact]
+    public void Should_delegate_toString_method_to_underlying_spec()
+    {
+        var isLetter = Spec
+            .Build<char>(char.IsLetter)
+            .WhenTrue(ch => $"'{ch}' is a letter")
+            .WhenFalse(ch => $"'{ch}' is not a letter")
+            .CreateSpec("is a letter");
+
+        var isAllLettersAsCharArray = Spec
+            .Build(isLetter)
+            .AsAllSatisfied()
+            .WhenTrue(evaluation => evaluation.Assertions)
+            .WhenFalse(evaluation => evaluation.Assertions)
+            .CreateSpec("has all letters");
+            
+        var isAllLetters = isAllLettersAsCharArray
+            .ChangeModelTo<string>(m => m.ToCharArray());
+
+        var act = isAllLetters.ToString();
+
+        act.Should().Be(isAllLetters.ToString());
+    }
 }

@@ -4,7 +4,7 @@ using Karlssberg.Motiv.HigherOrder;
 
 namespace Karlssberg.Motiv.Tests;
 
-public class ExactlySpecTests
+public class NSatisfiedSpecTests
 {
     [Theory]
     [InlineAutoData(2, 4, true)]

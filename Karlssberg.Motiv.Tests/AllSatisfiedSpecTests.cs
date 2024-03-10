@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv.Tests;
 
-public class AllSpecTests
+public class AllSatisfiedSpecTests
 {
     [Theory]
     [InlineAutoData(false, false, false, false)]

@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Humanizer;
 
 namespace Karlssberg.Motiv.Tests;
 
@@ -6,7 +7,7 @@ public class ElseIfSpecTests
 {
     [Theory]
     [InlineAutoData(true, "antecedent satisfied")]
-    [InlineAutoData(false, "consequent satisfied")]
+    [InlineAutoData(false, "antecedent not satisfied and consequent satisfied")]
     public void Should_return_an_antecedent_result_when_it_is_satisfied(bool model, string expected)
     {
         var antecedent = Spec.Build<bool>(m => m)
@@ -23,7 +24,7 @@ public class ElseIfSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Explanation.Assertions.Should().BeEquivalentTo(expected);
+        result.Explanation.Assertions.Humanize().Should().Be(expected);
     }
 
 
@@ -43,5 +44,30 @@ public class ElseIfSpecTests
         var sut = antecedent.ElseIf(consequent);
 
         sut.Proposition.Assertion.Should().Be("antecedent => consequent");
+    }
+    
+    [Fact]
+    public void Should_describe_in_detail_the_else_if_spec()
+    {
+        const string expected =
+            """
+            antecedent => {
+                consequent
+            }
+            """;
+        
+        var antecedent = Spec.Build<bool>(m => m)
+            .WhenTrue("antecedent")
+            .WhenFalse("not antecedent")
+            .CreateSpec();
+
+        var consequent = Spec.Build<bool>(m => !m)
+            .WhenTrue("consequent")
+            .WhenFalse("not consequent")
+            .CreateSpec();
+
+        var sut = antecedent.ElseIf(consequent);
+
+        sut.Proposition.Detailed.Should().Be(expected);
     }
 }
