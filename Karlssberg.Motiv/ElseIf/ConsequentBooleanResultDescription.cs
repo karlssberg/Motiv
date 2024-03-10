@@ -6,6 +6,7 @@ internal sealed class ConsequentBooleanResultDescription<TMetadata>(
     : ResultDescriptionBase
 {
     internal override int CausalOperandCount => 1;
+    
     public override string Compact =>
         $"{antecedentResult.Description.Compact} => {consequentResult.Description.Compact}";
 

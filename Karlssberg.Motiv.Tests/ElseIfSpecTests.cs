@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using AutoFixture.AutoNSubstitute;
+using FluentAssertions;
 using Humanizer;
 
 namespace Karlssberg.Motiv.Tests;
@@ -69,5 +70,56 @@ public class ElseIfSpecTests
         var sut = antecedent.ElseIf(consequent);
 
         sut.Proposition.Detailed.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineAutoData(true, "antecedent")]
+    [InlineAutoData(false, "not antecedent => consequent")]
+    public void Should_describe_consequent_result(bool model, string expected)
+    {
+        var antecedent = Spec.Build<bool>(m => m)
+            .WhenTrue("antecedent")
+            .WhenFalse("not antecedent")
+            .CreateSpec();
+
+        var consequent = Spec.Build<bool>(m => !m)
+            .WhenTrue("consequent")
+            .WhenFalse("not consequent")
+            .CreateSpec();
+
+        var sut = antecedent.ElseIf(consequent);
+        
+        var act = sut.IsSatisfiedBy(model);
+
+        act.Description.Compact.Should().Be(expected);
+    }
+    
+    
+    
+    [Theory]
+    [InlineAutoData(true, "antecedent")]
+    [InlineAutoData(false,
+        """
+        not antecedent => {
+            consequent
+        }
+        """)]
+    public void Should_describe_consequent_result_in_detail(bool model, string expected)
+    {
+        var antecedent = Spec.Build<bool>(m => m)
+            .WhenTrue("antecedent")
+            .WhenFalse("not antecedent")
+            .CreateSpec();
+
+        var consequent = Spec.Build<bool>(m => !m)
+            .WhenTrue("consequent")
+            .WhenFalse("not consequent")
+            .CreateSpec();
+
+        var sut = antecedent.ElseIf(consequent);
+        
+        var act = sut.IsSatisfiedBy(model);
+
+        act.Description.Detailed.Should().Be(expected);
     }
 }
