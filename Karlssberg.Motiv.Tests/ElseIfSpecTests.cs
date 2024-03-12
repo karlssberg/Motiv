@@ -1,5 +1,4 @@
-﻿using AutoFixture.AutoNSubstitute;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Humanizer;
 
 namespace Karlssberg.Motiv.Tests;

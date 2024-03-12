@@ -26,6 +26,10 @@ public abstract class BooleanResultBase
     /// <summary>Gets a set of human readable descriptions of the underlying causes.</summary>
     public abstract ResultDescriptionBase Description { get; }
     
+    public abstract IEnumerable<BooleanResultBase> Underlying { get; }
+    
+    public abstract IEnumerable<BooleanResultBase> Causes  { get; }
+    
     public string Reason => Description.Compact;
     
     public IEnumerable<string> Assertions => Explanation.Assertions;
@@ -142,11 +146,7 @@ public abstract class BooleanResultBase<TMetadata>
     
     public IEnumerable<TMetadata> Metadata => MetadataTree.AsEnumerable();
     
-    public abstract IEnumerable<BooleanResultBase> Underlying { get; }
-    
     public abstract IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata { get; }
-    
-    public abstract IEnumerable<BooleanResultBase> Causes  { get; }
     
     public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata  { get; }
 

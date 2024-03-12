@@ -2,12 +2,18 @@
 
 internal sealed class CompositeBooleanResultDescription<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    TMetadata metadata,
+    MetadataTree<TMetadata> metadata,
     IProposition proposition)
     : ResultDescriptionBase
 {
     internal override int CausalOperandCount => 1;
-    public override string Compact => proposition.ToReason(booleanResult.Satisfied, metadata);
+
+    public override string Compact =>
+        metadata.Count switch
+        {
+            1 => proposition.ToReason(booleanResult.Satisfied, metadata.Single()),
+            _ => proposition.ToReason(booleanResult.Satisfied)
+        };
 
     public override string Detailed =>
         $$"""

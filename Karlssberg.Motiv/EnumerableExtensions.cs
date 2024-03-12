@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace Karlssberg.Motiv;
+﻿namespace Karlssberg.Motiv;
 
 /// <summary>Provides extension methods for working with enumerable collections.</summary>
 public static class EnumerableExtensions

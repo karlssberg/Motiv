@@ -1,6 +1,4 @@
-﻿using Karlssberg.Motiv.FirstOrder;
-
-namespace Karlssberg.Motiv.Composite.CompositeSpecBuilders.Explanation;
+﻿namespace Karlssberg.Motiv.Composite.CompositeSpecBuilders.Explanation;
 
 public readonly ref struct ExplanationCompositeSpecFactory<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,

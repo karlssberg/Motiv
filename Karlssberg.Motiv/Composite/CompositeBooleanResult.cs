@@ -1,6 +1,4 @@
-﻿using Karlssberg.Motiv.ChangeMetadataType;
-
-namespace Karlssberg.Motiv.Composite;
+﻿namespace Karlssberg.Motiv.Composite;
 
 /// <summary>Represents a boolean result of changing the metadata type.</summary>
 /// <typeparam name="TMetadata">The type of the new metadata.</typeparam>
@@ -16,16 +14,10 @@ internal sealed class CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(
 
     /// <summary>Gets the description of the boolean result.</summary>
     public override ResultDescriptionBase Description =>
-        metadata.Count switch
-        {
-            1 => new CompositeBooleanResultDescription<TMetadata, TUnderlyingMetadata>(
-                booleanResult,
-                metadata.Single(),
-                proposition),
-            _ => new MultiMetadataCompositeBooleanResultDescription<TUnderlyingMetadata>(
-                booleanResult,
-                proposition)
-        };
+        new CompositeBooleanResultDescription<TMetadata, TUnderlyingMetadata>(
+            booleanResult,
+            metadata,
+            proposition);
         
 
     /// <summary>Gets the reasons for the boolean result.</summary>

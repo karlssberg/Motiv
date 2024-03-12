@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace Karlssberg.Motiv.HigherOrder;
+﻿namespace Karlssberg.Motiv.HigherOrder;
 
 public sealed class HigherOrderEvaluation<TModel, TMetadata>(
     IReadOnlyCollection<BooleanResult<TModel, TMetadata>> allResults,

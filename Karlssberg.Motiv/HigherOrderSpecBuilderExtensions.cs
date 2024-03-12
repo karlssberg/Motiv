@@ -1,5 +1,4 @@
-﻿using Karlssberg.Motiv.Composite;
-using Karlssberg.Motiv.Composite.CompositeSpecBuilders;
+﻿using Karlssberg.Motiv.Composite.CompositeSpecBuilders;
 using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
 
 namespace Karlssberg.Motiv;

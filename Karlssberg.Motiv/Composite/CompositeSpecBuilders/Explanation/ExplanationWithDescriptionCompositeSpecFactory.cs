@@ -1,6 +1,4 @@
-﻿using Karlssberg.Motiv.CompositeFactory;
-
-namespace Karlssberg.Motiv.Composite.CompositeSpecBuilders.Explanation;
+﻿namespace Karlssberg.Motiv.Composite.CompositeSpecBuilders.Explanation;
 
 public readonly ref struct ExplanationWithDescriptionCompositeSpecFactory<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,

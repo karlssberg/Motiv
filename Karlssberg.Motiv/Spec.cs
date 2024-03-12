@@ -1,5 +1,4 @@
-﻿using Karlssberg.Motiv.Composite;
-using Karlssberg.Motiv.Composite.CompositeSpecBuilders;
+﻿using Karlssberg.Motiv.Composite.CompositeSpecBuilders;
 using Karlssberg.Motiv.CompositeFactory.CompositeFactorySpecBuilders;
 using Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders;
 
