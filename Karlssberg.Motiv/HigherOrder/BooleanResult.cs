@@ -11,7 +11,7 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     /// <summary>Initializes a new instance of the BooleanResultWithModel class.</summary>
     /// <param name="model">The associated model.</param>
     /// <param name="underlyingResult">The underlying boolean result.</param>
-    internal BooleanResult(
+    public BooleanResult(
         TModel model,
         BooleanResultBase<TMetadata> underlyingResult)
     {

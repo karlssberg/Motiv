@@ -44,5 +44,6 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
         {
             Underlying = causes
                 .Select(cause => cause.Explanation)
+                .ElseIfEmpty(underlyingResults.Select(result => result.Explanation))
         };
 }

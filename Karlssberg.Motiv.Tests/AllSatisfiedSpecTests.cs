@@ -429,4 +429,33 @@ public class AllSatisfiedSpecTests
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>()
             .Where(ex => ex.Message.Contains("should be wrapped"));
     }
+    
+    [Theory]
+    [InlineAutoData(false, false, false, 3)]
+    [InlineAutoData(false, false, true, 2)]
+    [InlineAutoData(false, true, false, 2)]
+    [InlineAutoData(false, true, true, 1)]
+    [InlineAutoData(true, false, false, 2)]
+    [InlineAutoData(true, false, true, 1)]
+    [InlineAutoData(true, true, false, 1)]
+    [InlineAutoData(true, true, true, 3)]
+    public void Should_accurately_report_the_number_of_causal_operands(
+        bool firstModel,
+        bool secondModel,
+        bool thirdModel,
+        int expected)
+    {
+        var underlying = Spec
+            .Build<bool>(m => m)
+            .CreateSpec("underlying");
+        
+        var sut = Spec
+            .Build(underlying)
+            .AsAllSatisfied()
+            .CreateSpec("all are true");
+
+        var result = sut.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
+
+        result.Description.CausalOperandCount.Should().Be(expected);
+    }
 }

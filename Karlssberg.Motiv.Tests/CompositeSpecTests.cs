@@ -454,4 +454,23 @@ public class CompositeSpecTests
         
         act.Metadata.Should().BeEquivalentTo([(guidModel, underlyingFalseGuid)]);
     }
+
+    [Theory]
+    [InlineAutoData(true, "is true")]
+    [InlineAutoData(false, "!is true")]
+     public void Should_accept_minimally_defined_spec(bool model, string expectedReason)
+    {
+        var underlying = Spec
+            .Build<bool>(m => m)
+            .CreateSpec("is underlying true");
+        
+        var spec = Spec
+            .Build(underlying)
+            .CreateSpec("is true");
+
+        var act = spec.IsSatisfiedBy(model);
+            
+        act.Satisfied.Should().Be(model);
+        act.Reason.Should().Be(expectedReason);
+    }
 }

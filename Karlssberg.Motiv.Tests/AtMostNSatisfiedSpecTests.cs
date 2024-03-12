@@ -172,9 +172,7 @@ public class AtMostNSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            at most one is satisfied {
-                                                3x is not satisfied
-                                            }
+                                            at most one is satisfied
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied {
@@ -237,9 +235,7 @@ public class AtMostNSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            at most one is satisfied {
-                                                3x False
-                                            }
+                                            at most one is satisfied
                                             """)]
     [InlineAutoData(false, false, true, """
                                             at most one is satisfied {
@@ -302,9 +298,7 @@ public class AtMostNSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            at most one is satisfied {
-                                                3x !is true
-                                            }
+                                            at most one is satisfied
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied {
@@ -406,5 +400,34 @@ public class AtMostNSatisfiedSpecTests
 
         act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
+    }
+    
+    [Theory]
+    [InlineAutoData(false, false, false, 0)]
+    [InlineAutoData(false, false, true, 1)]
+    [InlineAutoData(false, true, false, 1)]
+    [InlineAutoData(false, true, true, 2)]
+    [InlineAutoData(true, false, false, 1)]
+    [InlineAutoData(true, false, true, 2)]
+    [InlineAutoData(true, true, false, 2)]
+    [InlineAutoData(true, true, true, 3)]
+    public void Should_accurately_report_the_number_of_causal_operands(
+        bool firstModel,
+        bool secondModel,
+        bool thirdModel,
+        int expected)
+    {
+        var underlying = Spec
+            .Build<bool>(m => m)
+            .CreateSpec("underlying");
+        
+        var sut = Spec
+            .Build(underlying)
+            .AsAtMostNSatisfied(2)
+            .CreateSpec("all are true");
+
+        var result = sut.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
+
+        result.Description.CausalOperandCount.Should().Be(expected);
     }
 }

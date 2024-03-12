@@ -34,7 +34,7 @@ internal sealed class HigherOrderResultDescription<TModel, TMetadata, TUnderlyin
 
         string GetUnderlyingCauses()
         {
-            var reasonFrequency = Causes
+            var reasonFrequencyPair = Causes
                 .OrderByDescending(result => result.Satisfied)
                 .Select(result => result.Description.Compact)
                 .GroupBy(reason => reason)
@@ -42,12 +42,12 @@ internal sealed class HigherOrderResultDescription<TModel, TMetadata, TUnderlyin
                 .OrderByDescending(grouping => grouping.Count)
                 .ToArray();
 
-            if (reasonFrequency.Length == 0)
+            if (reasonFrequencyPair.Length == 0)
                 return "";
 
-            var indentSize = reasonFrequency.First().Count.ToString().Length + 2;
+            var indentSize = reasonFrequencyPair.First().Count.ToString().Length + 2;
 
-            return reasonFrequency
+            return reasonFrequencyPair
                 .Select(item =>
                 {
                     var (reason, count) = item;

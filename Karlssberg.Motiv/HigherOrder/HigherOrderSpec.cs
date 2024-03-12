@@ -8,7 +8,8 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue, 
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
     string propositionalAssertion,
-    AssertionSource assertionSource)
+    AssertionSource assertionSource,
+    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
     public override IProposition Proposition =>
@@ -45,37 +46,29 @@ internal sealed class HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
         bool isSatisfied,
         ICollection<BooleanResult<TModel,TUnderlyingMetadata>> operandResults)
     {
+        if (causeSelector is not null)
+            return causeSelector(isSatisfied, operandResults);
+        
         var trueOperands = GetTrueOperands(operandResults);
         var falseOperands = GetFalseOperands(operandResults);
 
         return isSatisfied switch
         {
-            true when IsInfluencer(trueOperands) => trueOperands,
-            true when IsInfluencer(falseOperands) => falseOperands,
-            false when !IsInfluencer(trueOperands) && trueOperands.Any() => trueOperands,
-            false when !IsInfluencer(falseOperands) && falseOperands.Any() => falseOperands,
+            true when higherOrderPredicate(trueOperands) => trueOperands,
+            true when higherOrderPredicate(falseOperands) => falseOperands,
+            false when !higherOrderPredicate(trueOperands) && trueOperands.Count > 0 => trueOperands,
+            false when !higherOrderPredicate(falseOperands) && falseOperands.Count > 0 => falseOperands,
             _ => operandResults
         };
     }
-
-    private bool IsInfluencer(ICollection<BooleanResult<TModel, TUnderlyingMetadata>> operands) =>
-        operands.Count switch
-        {
-            0 => false,
-            _ => higherOrderPredicate(operands)
-        };
-
+    
     private static ICollection<BooleanResult<TModel,TUnderlyingMetadata>> GetFalseOperands(
         IEnumerable<BooleanResult<TModel,TUnderlyingMetadata>> operandResults) =>
-        operandResults
-            .Where(result => !result.Satisfied)
-            .ToArray();
+        operandResults.WhereFalse().ToArray();
 
     private static ICollection<BooleanResult<TModel,TUnderlyingMetadata>> GetTrueOperands(
         IEnumerable<BooleanResult<TModel,TUnderlyingMetadata>> operandResults) =>
-        operandResults
-            .Where(result => result.Satisfied)
-            .ToArray();
+        operandResults.WhereTrue().ToArray();
 
     private static IEnumerable<MetadataTree<TMetadata>> GetUnderlyingMetadataSets(
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> underlyingResults) =>

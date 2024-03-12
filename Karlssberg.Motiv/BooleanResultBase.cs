@@ -103,10 +103,10 @@ public abstract class BooleanResultBase
     public static bool operator !=(BooleanResultBase left, BooleanResultBase right) =>
         !(left == right);
 
-    /// <summary>Defines an explicit conversion from <see cref="BooleanResultBase{TMetadata}" /> to <see cref="bool" />.</summary>
+    /// <summary>Defines an implicit conversion from <see cref="BooleanResultBase{TMetadata}" /> to <see cref="bool" />.</summary>
     /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance to convert.</param>
     /// <returns>The boolean value indicating whether the result is satisfied.</returns>
-    public static explicit operator bool(BooleanResultBase result) =>
+    public static implicit operator bool(BooleanResultBase result) =>
         result.Satisfied;
 
     /// <summary>Determines whether the current object is equal to another object.</summary>
@@ -131,8 +131,7 @@ public abstract class BooleanResultBase
 /// <summary>Represents a base class for boolean results with metadata.</summary>
 /// <typeparam name="TMetadata">The type of the metadata associated with the boolean result.</typeparam>
 public abstract class BooleanResultBase<TMetadata>
-    : BooleanResultBase,
-        IEquatable<BooleanResultBase<TMetadata>>
+    : BooleanResultBase
 {
     /// <summary>Prevent inheritance from outside of this project/assembly.</summary>
     internal BooleanResultBase()
@@ -150,17 +149,6 @@ public abstract class BooleanResultBase<TMetadata>
     public abstract IEnumerable<BooleanResultBase> Causes  { get; }
     
     public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata  { get; }
-
-    /// <summary>Determines whether the current BooleanResultBase object is equal to another BooleanResultBase object.</summary>
-    /// <param name="other">The BooleanResultBase object to compare with the current object.</param>
-    /// <returns>true if the current object is equal to the other object; otherwise, false.</returns>
-    public bool Equals(BooleanResultBase<TMetadata>? other) =>
-        other switch
-        {
-            null => false,
-            _ when ReferenceEquals(this, other) => true,
-            _ => Satisfied == other.Satisfied
-        };
 
     /// <summary>
     /// Performs a logical AND operation between the current BooleanResultBase instance and another BooleanResultBase
@@ -233,69 +221,4 @@ public abstract class BooleanResultBase<TMetadata>
     public static BooleanResultBase<TMetadata> operator !(
         BooleanResultBase<TMetadata> result) =>
         result.Not();
-
-    /// <summary>Defines the true operator for the <see cref="BooleanResultBase{TMetadata}" /> class.</summary>
-    /// <param name="booleanResult">The <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
-    /// <returns><c>true</c> if the <paramref name="booleanResult" /> is satisfied; otherwise, <c>false</c>.</returns>
-    public static bool operator true(BooleanResultBase<TMetadata> booleanResult) =>
-        booleanResult.Satisfied;
-
-    /// <summary>Defines the false operator for the <see cref="BooleanResultBase{TMetadata}" /> class.</summary>
-    /// <param name="booleanResult">The <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
-    /// <returns><c>true</c> if the <paramref name="booleanResult" /> is not satisfied; otherwise, <c>false</c>.</returns>
-    public static bool operator false(BooleanResultBase<TMetadata> booleanResult) =>
-        !booleanResult.Satisfied;
-
-    /// <summary>Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are equal.</summary>
-    /// <param name="left">The first <see cref="BooleanResultBase{TMetadata}" /> to compare.</param>
-    /// <param name="right">The second <see cref="BooleanResultBase{TMetadata}" /> to compare.</param>
-    /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
-    public static bool operator ==(BooleanResultBase<TMetadata> left, BooleanResultBase<TMetadata> right) =>
-        left.Equals(right);
-
-    /// <summary>Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are equal.</summary>
-    /// <param name="left">The first <see cref="BooleanResultBase{TMetadata}" /> to compare.</param>
-    /// <param name="right">The second <see cref="bool" /> to compare.</param>
-    /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
-    public static bool operator ==(bool left, BooleanResultBase<TMetadata> right) =>
-        left == right.Satisfied;
-
-    public static bool operator !=(bool left, BooleanResultBase<TMetadata> right) => !(left == right);
-
-    /// <summary>Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are equal.</summary>
-    /// <param name="left">The first <see cref="BooleanResultBase{TMetadata}" /> to compare.</param>
-    /// <param name="right">The second <see cref="bool" /> to compare.</param>
-    /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
-    public static bool operator ==(BooleanResultBase<TMetadata> left, bool right) =>
-        left.Satisfied == right;
-
-    public static bool operator !=(BooleanResultBase<TMetadata> left, bool right) => !(left == right);
-
-    /// <summary>Implements the inequality operator for comparing two instances of <see cref="BooleanResultBase{TMetadata}" />.</summary>
-    /// <param name="left">The left-hand side <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
-    /// <param name="right">The right-hand side <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
-    /// <returns><c>true</c> if the two instances are not equal; otherwise, <c>false</c>.</returns>
-    public static bool operator !=(BooleanResultBase<TMetadata> left, BooleanResultBase<TMetadata> right) =>
-        !(left == right);
-
-    /// <summary>Defines an explicit conversion from <see cref="BooleanResultBase{TMetadata}" /> to <see cref="bool" />.</summary>
-    /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance to convert.</param>
-    /// <returns>The boolean value indicating whether the result is satisfied.</returns>
-    public static implicit operator bool(BooleanResultBase<TMetadata> result) =>
-        result.Satisfied;
-
-    /// <summary>Determines whether the current object is equal to another object.</summary>
-    /// <param name="obj">The object to compare with the current object.</param>
-    /// <returns>true if the specified object is equal to the current object; otherwise, false.</returns>
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(null, obj)) return false;
-        if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != GetType()) return false;
-        return Equals((BooleanResultBase<TMetadata>)obj);
-    }
-
-    /// <summary>Computes the hash code for the current BooleanResultBase object.</summary>
-    /// <returns>A hash code for the current object.</returns>
-    public override int GetHashCode() => Satisfied.GetHashCode();
 }

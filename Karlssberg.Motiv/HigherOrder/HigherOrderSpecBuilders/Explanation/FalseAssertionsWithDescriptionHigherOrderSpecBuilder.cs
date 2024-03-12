@@ -5,7 +5,8 @@ public readonly ref struct FalseAssertionsWithDescriptionHigherOrderSpecBuilder<
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
     string candidateName,
-    AssertionSource assertionSource)
+    AssertionSource assertionSource,
+    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
     public ExplanationWithDescriptionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(string falseBecause) =>
         new(spec,
@@ -13,7 +14,8 @@ public readonly ref struct FalseAssertionsWithDescriptionHigherOrderSpecBuilder<
             trueBecause,
             _ => falseBecause.ToEnumerable(),
             candidateName,
-            assertionSource);
+            assertionSource,
+            causeSelector);
     
     public ExplanationWithDescriptionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause) =>
@@ -22,7 +24,8 @@ public readonly ref struct FalseAssertionsWithDescriptionHigherOrderSpecBuilder<
             trueBecause,
             results => falseBecause(results).ToEnumerable(),
             candidateName,
-            assertionSource);
+            assertionSource,
+            causeSelector);
     
     public ExplanationWithDescriptionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
@@ -31,5 +34,6 @@ public readonly ref struct FalseAssertionsWithDescriptionHigherOrderSpecBuilder<
             trueBecause,
             falseBecause,
             candidateName,
-            AssertionSource.Proposition);
+            AssertionSource.Proposition,
+            causeSelector);
 }

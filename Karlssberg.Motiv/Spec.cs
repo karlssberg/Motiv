@@ -1,4 +1,6 @@
-﻿using Karlssberg.Motiv.CompositeFactory.CompositeFactorySpecBuilders;
+﻿using Karlssberg.Motiv.Composite;
+using Karlssberg.Motiv.Composite.CompositeSpecBuilders;
+using Karlssberg.Motiv.CompositeFactory.CompositeFactorySpecBuilders;
 using Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders;
 
 namespace Karlssberg.Motiv;
@@ -106,17 +108,11 @@ public static class Spec
         return new TrueCompositeFactorySpecBuilder<TModel, string>(_ => specFactory());
     }
     
-    public static SpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+    public static TrueCompositeSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         SpecBase<TModel, TMetadata> spec)
     {
         spec.ThrowIfNull(nameof(spec));
-        return new SpecBuilder<TModel, TMetadata>(spec);
-    }
-    public static SpecBuilder<TModel, string> Build<TModel>(
-        SpecBase<TModel, string> spec)
-    {
-        spec.ThrowIfNull(nameof(spec));
-        return new SpecBuilder<TModel, string>(spec);
+        return new TrueCompositeSpecBuilder<TModel, TMetadata>(spec);
     }
 }
 

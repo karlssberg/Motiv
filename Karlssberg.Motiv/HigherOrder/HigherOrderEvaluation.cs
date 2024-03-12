@@ -18,14 +18,14 @@ public sealed class HigherOrderEvaluation<TModel, TMetadata>(
         causalResults.Select(result => result.Model).ToArray());
 
     private readonly Lazy<IReadOnlyCollection<BooleanResult<TModel, TMetadata>>> _lazyTrueResults = new(() =>
-        allResults.Where(result => result.Satisfied).ToArray());
+        allResults.WhereTrue().ToArray());
     private readonly Lazy<IReadOnlyCollection<BooleanResult<TModel, TMetadata>>> _lazyFalseResults = new(() =>
-        allResults.Where(result => !result.Satisfied).ToArray());
+        allResults.WhereFalse().ToArray());
     
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyTrueModels = new(() =>
-        allResults.Where(result => result.Satisfied).Select(result => result.Model).ToArray());
+        allResults.WhereTrue().Select(result => result.Model).ToArray());
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyFalseModels = new(() =>
-        allResults.Where(result => !result.Satisfied).Select(result => result.Model).ToArray());
+        allResults.WhereFalse().Select(result => result.Model).ToArray());
 
     private readonly Lazy<IReadOnlyCollection<string>> _lazyAssertions = new(() =>
         causalResults.SelectMany(result => result.Assertions).ToArray());

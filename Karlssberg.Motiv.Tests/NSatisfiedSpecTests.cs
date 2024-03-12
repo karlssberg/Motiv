@@ -69,26 +69,10 @@ public class NSatisfiedSpecTests
     }
     
     [Theory]
-    [InlineAutoData(true, true, """
-                                            2 even {
-                                                2x true
-                                            }
-                                            """)]
-    [InlineAutoData(true, false, """
-                                            1 even and 1 odd {
-                                                1x true
-                                            }
-                                            """)]
-    [InlineAutoData(false, true, """
-                                            1 even and 1 odd {
-                                                1x true
-                                            }
-                                            """)]
-    [InlineAutoData(false, false, """
-                                            0 even and 2 odd {
-                                                2x false
-                                            }
-                                            """)]
+    [InlineAutoData(true, true, "2 even")]
+    [InlineAutoData(true, false, "1 even and 1 odd")]
+    [InlineAutoData(false, true, "1 even and 1 odd")]
+    [InlineAutoData(false, false, "0 even and 2 odd")]
     public void Should_serialize_the_result_of_the_NSatisfied_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -109,7 +93,7 @@ public class NSatisfiedSpecTests
         
         var result = sut.IsSatisfiedBy([first, second]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Description.Compact.Should().Be(expected);
     }
     
     [Fact]

@@ -12,6 +12,16 @@ public static class EnumerableExtensions
     public static SpecBase<TModel, TMetadata> OrTogether<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> specifications) =>
         specifications.Aggregate((leftSpec, rightSpec) => leftSpec | rightSpec);
+    
+    public static IEnumerable<TBooleanResult> WhereTrue<TBooleanResult>(
+        this IEnumerable<TBooleanResult> results)
+        where TBooleanResult : BooleanResultBase =>
+        results.Where(result => result.Satisfied);
+    
+    public static IEnumerable<TBooleanResult> WhereFalse<TBooleanResult>(
+        this IEnumerable<TBooleanResult> results)
+        where TBooleanResult : BooleanResultBase =>
+        results.Where(result => !result.Satisfied);
 
     public static int CountTrue<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>

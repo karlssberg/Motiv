@@ -6,7 +6,8 @@ public readonly ref struct ExplanationWithDescriptionHigherOrderSpecFactory<TMod
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause,
     string candidateProposition,
-    AssertionSource assertionSource)
+    AssertionSource assertionSource,
+    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
     public SpecBase<IEnumerable<TModel>, string> CreateSpec() =>
         new HigherOrderSpec<TModel, string, TUnderlyingMetadata>(
@@ -15,7 +16,8 @@ public readonly ref struct ExplanationWithDescriptionHigherOrderSpecFactory<TMod
             trueBecause,
             falseBecause,
             candidateProposition,
-            assertionSource);
+            assertionSource,
+            causeSelector);
 
     public SpecBase<IEnumerable<TModel>, string> CreateSpec(string proposition) =>
         new HigherOrderSpec<TModel, string, TUnderlyingMetadata>(
@@ -24,5 +26,6 @@ public readonly ref struct ExplanationWithDescriptionHigherOrderSpecFactory<TMod
             trueBecause,
             falseBecause,
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)),
-            assertionSource);
+            assertionSource,
+            causeSelector);
 }

@@ -16,11 +16,14 @@ public sealed class Explanation(IEnumerable<string> assertions)
     
     public override string ToString() => string.Join(", ", Assertions);
 
-    private string GetDebuggerDisplay() => HaveComprehensiveAssertions() || !Underlying.Any()
-        ? ToString()
-        : $$"""
-            {{ToString()}} { {{string.Join(", ", Underlying.GetAssertions())}} }
-            """;
-
-    private bool HaveComprehensiveAssertions() => Assertions.HasAtLeast(2);
+    private string GetDebuggerDisplay()
+    {
+        return HaveComprehensiveAssertions() || !Underlying.Any()
+            ? ToString()
+            : $$"""
+                {{ToString()}} { {{string.Join(", ", Underlying.GetAssertions())}} }
+                """;
+        
+        bool HaveComprehensiveAssertions() => Assertions.HasAtLeast(2);
+    }
 }

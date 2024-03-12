@@ -16,6 +16,5 @@ internal sealed class Proposition(string assertion, IProposition? underlyingProp
                   """
         };
 
-
     public override string ToString() => Assertion;
 }

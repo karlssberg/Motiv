@@ -39,9 +39,7 @@ public class NoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         none are true {
-                                             3x false
-                                         }
+                                         none are true
                                          """)]
     [InlineAutoData(false, false, true, """
                                         !none are true {
@@ -104,9 +102,7 @@ public class NoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         none are true {
-                                             3x false
-                                         }
+                                         none are true
                                          """)]
     [InlineAutoData(false, false, true, """
                                         !none are true {
@@ -171,9 +167,7 @@ public class NoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         none are true {
-                                             3x !is true
-                                         }
+                                         none are true
                                          """)]
     [InlineAutoData(false, false, true, """
                                         !none are true {
@@ -236,9 +230,7 @@ public class NoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         none are true {
-                                             3x !left & !right
-                                         }
+                                         none are true
                                          """)]
     [InlineAutoData(false, false, true, """
                                         !none are true {

@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using AutoFixture.Xunit2;
+using FluentAssertions;
 
 namespace Karlssberg.Motiv.Tests;
 
@@ -412,4 +413,18 @@ public class ResultDescriptionTests
         result.Description.Detailed.Should().Be(expected);
     }
     
+    [Theory]
+    [AutoData]
+    public void Should_use_the_compact_description_as_the_toString_method(object model)
+    {
+        var spec = Spec
+            .Build<object>(_ => true)
+            .WhenTrue("is true")
+            .WhenFalse("is false")
+            .CreateSpec("always true");
+
+        var result = spec.IsSatisfiedBy(model);
+
+        result.Description.ToString().Should().Be(result.Description.Compact);
+    }
 }

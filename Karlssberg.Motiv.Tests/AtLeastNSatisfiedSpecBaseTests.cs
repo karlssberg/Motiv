@@ -174,9 +174,7 @@ public class AtLeastNSatisfiedSpecBaseTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            none satisfied {
-                                                3x received false
-                                            }
+                                            none satisfied
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at least one satisfied {
@@ -239,9 +237,7 @@ public class AtLeastNSatisfiedSpecBaseTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            None satisfied {
-                                                3x underlying not satisfied
-                                            }
+                                            None satisfied
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             At least one satisfied {
@@ -304,9 +300,7 @@ public class AtLeastNSatisfiedSpecBaseTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            none satisfied {
-                                                3x !is true
-                                            }
+                                            none satisfied
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at least one satisfied {
@@ -343,7 +337,7 @@ public class AtLeastNSatisfiedSpecBaseTests
                                                 3x is true
                                             }
                                             """)]
-    public void Should_serialize_the_result_of_the_all_operation(
+    public void Should_serialize_the_result_of_the_at_least_n_satisified_operation(
         bool first,
         bool second,
         bool third,
@@ -408,5 +402,35 @@ public class AtLeastNSatisfiedSpecBaseTests
 
         act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
+    }
+    
+    
+    [Theory]
+    [InlineAutoData(false, false, false, 0)]
+    [InlineAutoData(false, false, true, 1)]
+    [InlineAutoData(false, true, false, 1)]
+    [InlineAutoData(false, true, true, 2)]
+    [InlineAutoData(true, false, false, 1)]
+    [InlineAutoData(true, false, true, 2)]
+    [InlineAutoData(true, true, false, 2)]
+    [InlineAutoData(true, true, true, 3)]
+    public void Should_accurately_report_the_number_of_causal_operands(
+        bool firstModel,
+        bool secondModel,
+        bool thirdModel,
+        int expected)
+    {
+        var underlying = Spec
+            .Build<bool>(m => m)
+            .CreateSpec("underlying");
+        
+        var sut = Spec
+            .Build(underlying)
+            .AsAtLeastNSatisfied(2)
+            .CreateSpec("all are true");
+
+        var result = sut.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
+
+        result.Description.CausalOperandCount.Should().Be(expected);
     }
 }

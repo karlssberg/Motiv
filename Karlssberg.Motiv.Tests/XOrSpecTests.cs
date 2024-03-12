@@ -236,4 +236,27 @@ public class XOrSpecTests
 
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }
+
+    [Theory]
+    [InlineAutoData(false, false, 2)]
+    [InlineAutoData(false, true, 2)]
+    [InlineAutoData(true, false, 2)]
+    [InlineAutoData(true, true, 2)]
+    public void Should_accurately_report_the_number_of_causal_operands(bool left, bool right, int expected,
+        object model)
+    {
+        var leftSpec = Spec
+            .Build<object>(_ => left)
+            .CreateSpec("left");
+
+        var rightSpec = Spec
+            .Build<object>(_ => right)
+            .CreateSpec("right");
+
+        var sut = leftSpec ^ rightSpec;
+
+        var result = sut.IsSatisfiedBy(model);
+
+        result.Description.CausalOperandCount.Should().Be(expected);
+    }
 }

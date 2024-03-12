@@ -185,4 +185,41 @@ public class SpecTests
         act.Should().Throw<SpecException>().WithMessage("*should be wrapped*");
         act.Should().Throw<SpecException>().WithMessage("*should throw*");
     }
+
+    [Fact]
+    public void Should_provide_detailed_proposition()
+    {
+        var sut = Spec
+            .Build<object?>(m => m is null)
+            .WhenTrue("is null")
+            .WhenFalse("is not null")
+            .CreateSpec();
+
+        var act = sut.Proposition.Detailed;
+
+        act.Should().Be("is null");
+    }
+
+    [Fact]
+    public void Should_provide_detailed_proposition_when_spec_is_composed_of_an_underlying_sepc()
+    {
+        var underlying = Spec
+            .Build<object?>(m => m is null)
+            .WhenTrue("is null")
+            .WhenFalse("is not null")
+            .CreateSpec();
+        
+        var sut = Spec
+            .Build(underlying)
+            .CreateSpec("top-level proposition");
+
+        var act = sut.Proposition.Detailed;
+
+        act.Should().Be(
+            """
+            top-level proposition {
+                is null
+            }
+            """);
+    }
 }
