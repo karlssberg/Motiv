@@ -44,11 +44,11 @@ public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadat
             causeSelector);
     
     public SpecBase<IEnumerable<TModel>, string> CreateSpec(string proposition) =>
-        new HigherOrderMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
+        new HigherOrderMetadataSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             higherOrderPredicate,
-            _ => proposition.ToEnumerable(),
-            _ => $"!{proposition}".ToEnumerable(),
+            _ => proposition,
+            _ => $"!{proposition}",
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)),
             causeSelector);
 }
