@@ -29,7 +29,7 @@ internal sealed class CompositeExplanationBooleanResult<TUnderlyingMetadata>(
     public override IEnumerable<BooleanResultBase<string>> UnderlyingWithMetadata =>
         booleanResult.ResolveUnderlyingWithMetadata<string, TUnderlyingMetadata>();
     
-    public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes.ToEnumerable();
+    public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes;
     public override IEnumerable<BooleanResultBase<string>> CausesWithMetadata =>
         booleanResult.ResolveCausesWithMetadata<string, TUnderlyingMetadata>();
 }

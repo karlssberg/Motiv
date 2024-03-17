@@ -31,7 +31,7 @@ internal sealed class CompositeFactoryMetadataBooleanResult<TMetadata, TUnderlyi
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
         booleanResult.ResolveUnderlyingWithMetadata<TMetadata, TUnderlyingMetadata>();
     
-    public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes.ToEnumerable();
+    public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes;
     
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
         booleanResult.ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();

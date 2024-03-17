@@ -155,12 +155,10 @@ public static class EnumerableExtensions
             yield return alternativeEnumerator.Current;
     }
 
-    internal static IEnumerable<T> ToEnumerable<T>(this T item)
+    public static IEnumerable<T> ToEnumerable<T>(this T item)
     {
         yield return item;
     }
-
-    internal static IEnumerable<T> ToEnumerable<T>(this IEnumerable<T> item) => item;
 
     internal static bool HasAtLeast<T>(this IEnumerable<T> source, int n)
     {
@@ -175,3 +173,4 @@ public static class EnumerableExtensions
         return true;
     }
 }
+

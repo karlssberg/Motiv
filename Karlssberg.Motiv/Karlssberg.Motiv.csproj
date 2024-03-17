@@ -66,10 +66,10 @@
           <DependentUpon>FalseAssertionsWithPropositionHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationMultiAssertionHigherOrderSpecFactory.cs">
-          <DependentUpon>FalseMultiAssertionsHigherOrderSpecBuilder.cs</DependentUpon>
+          <DependentUpon>FalseAssertionsHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationMultiAssertionWithPropositionHigherOrderSpecFactory.cs">
-          <DependentUpon>FalseMultiAssertionsHigherOrderSpecBuilder.cs</DependentUpon>
+          <DependentUpon>FalseAssertionsWithPropositionHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="Composite\CompositeSpecBuilders\Explanation\ExplanationWithPropositionCompositeSpecFactory.cs">
           <DependentUpon>FalseAssertionWithPropositionCompositeSpecBuilder.cs</DependentUpon>
@@ -86,12 +86,6 @@
         <Compile Update="Composite\CompositeSpecBuilders\Metadata\MetadataCompositeSpecFactory.cs">
           <DependentUpon>FalseMetadataCompositeSpecBuilder.cs</DependentUpon>
         </Compile>
-        <Compile Update="Composite\CompositeSpecBuilders\Explanation\ExplanationMultiAssertionCompositeSpecFactory.cs">
-          <DependentUpon>FalseMultiAssertionCompositeSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Composite\CompositeSpecBuilders\Explanation\ExplanationMultiAssertionWithPropositionCompositeSpecFactory.cs">
-          <DependentUpon>FalseMultiAssertionCompositeSpecBuilder.cs</DependentUpon>
-        </Compile>
         <Compile Update="CompositeFactory\CompositeFactorySpecBuilders\Explanation\ExplanationCompositeFactorySpecFactory.cs">
           <DependentUpon>FalseAssertionCompositeFactorySpecBuilder.cs</DependentUpon>
         </Compile>
@@ -102,13 +96,19 @@
           <DependentUpon>FalseMetadataCompositeSpecBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="CompositeFactory\CompositeFactorySpecBuilders\Explanation\ExplanationMultiAssertionWithPropositionCompositeFactorySpecFactory.cs">
-          <DependentUpon>FalseMultiAssertionCompositeFactorySpecBuilder.cs</DependentUpon>
+          <DependentUpon>FalseAssertionWithPropositionCompositeFactorySpecBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="CompositeFactory\CompositeFactorySpecBuilders\Explanation\ExplanationMultiAssertionCompositeFactorySpecFactory.cs">
-          <DependentUpon>FalseMultiAssertionCompositeFactorySpecBuilder.cs</DependentUpon>
+          <DependentUpon>FalseAssertionCompositeFactorySpecBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="FirstOrder\FirstOrderSpecBuilders\Explanation\ExplanationWithPropositionFirstOrderSpecFactory.cs">
           <DependentUpon>FalseAssertionWithPropositionUnresolvedFirstOrderSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Composite\CompositeSpecBuilders\Explanation\ExplanationMultiAssertionWithPropositionCompositeSpecFactory.cs">
+          <DependentUpon>FalseAssertionWithPropositionCompositeSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Composite\CompositeSpecBuilders\Explanation\ExplanationMultiAssertionCompositeSpecFactory.cs">
+          <DependentUpon>FalseAssertionCompositeSpecBuilder.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 

@@ -42,13 +42,6 @@ public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadat
             higherOrderPredicate,
             trueBecause,
             causeSelector);
-
-    public FalseMultiAssertionsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
-        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
-        new(spec,
-            higherOrderPredicate,
-            trueBecause,
-            causeSelector);
     
     public SpecBase<IEnumerable<TModel>, string> CreateSpec(string proposition) =>
         new HigherOrderMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(

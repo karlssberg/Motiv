@@ -44,11 +44,6 @@ public readonly ref struct TrueCompositeFactorySpecBuilder<TModel, TUnderlyingMe
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause) =>
         new(specPredicate,
             trueBecause);
-
-    public FalseMultiAssertionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
-        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
-        new(specPredicate,
-            trueBecause);
     
     public SpecBase<TModel, string> CreateSpec(string proposition) =>
         new CompositeFactoryMetadataSpec<TModel, string, TUnderlyingMetadata>(

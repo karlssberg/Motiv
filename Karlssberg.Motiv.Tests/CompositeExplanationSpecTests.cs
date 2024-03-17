@@ -3,7 +3,7 @@ using FluentAssertions;
 
 namespace Karlssberg.Motiv.Tests;
 
-public class CompositeMultiMetadataSpecTests
+public class CompositeExplanationSpecTests
 {
     [InlineAutoData(true, "true after - A", "true after + model - B", "true after - C", "true after + model - D")]
     [InlineAutoData(false, "false after - A", "false after - B", "false after + model - C", "false after + model - D")]
@@ -32,7 +32,7 @@ public class CompositeMultiMetadataSpecTests
             .Build(underlying)
             .WhenTrue(model => $"true after + {model} - B")
             .WhenFalse("false after - B")
-            .CreateSpec("true after + model - B");
+            .CreateSpec("is second true");
 
         var thirdSpec = Spec
             .Build(underlying)
@@ -189,102 +189,6 @@ public class CompositeMultiMetadataSpecTests
         act.Metadata.Should().BeEquivalentTo($"{model} - underlying true");
     }
 
-    [Theory]
-    [AutoData]
-    public void Should_accept_metadata_when_true_for_composite_specs(
-        Guid isTrueMetadata,
-        Guid isFalseMetadata)
-    {
-        var underlying = Spec
-            .Build<string>(_ => true)
-            .CreateSpec("is underlying true");
-
-        var spec = Spec
-            .Build(underlying)
-            .WhenTrue(isTrueMetadata)
-            .WhenFalse(isFalseMetadata)
-            .CreateSpec("is true");
-
-        var act = spec.IsSatisfiedBy("model");
-
-        act.Metadata.Should().BeEquivalentTo([isTrueMetadata]);
-    }
-
-    [Theory]
-    [AutoData]
-    public void Should_accept_single_parameter_metadata_factory_when_true_for_composite_specs(
-        Guid guidModel,
-        Guid isFalseMetadata)
-    {
-        var underlying = Spec
-            .Build<Guid>(_ => true)
-            .CreateSpec("is underlying true");
-
-        var spec = Spec
-            .Build(underlying)
-            .WhenTrue(model => model)
-            .WhenFalse(isFalseMetadata)
-            .CreateSpec("is true");
-
-        var act = spec.IsSatisfiedBy(guidModel);
-
-        act.Metadata.Should().BeEquivalentTo([guidModel]);
-    }
-
-    [Theory]
-    [AutoData]
-    public void Should_accept_double_parameter_metadata_factory_when_true_for_composite_specs(
-        Guid underlyingTrueGuid,
-        Guid underlyingFalseGuid,
-        Guid guidModel,
-        Guid isFalseMetadata)
-    {
-        var underlying = Spec
-            .Build<Guid>(_ => true)
-            .WhenTrue(underlyingTrueGuid)
-            .WhenFalse(underlyingFalseGuid)
-            .CreateSpec("is underlying true");
-
-        var spec = Spec
-            .Build(underlying)
-            .WhenTrue((model, result) => result.Metadata.Select(meta => (model, meta)).First())
-            .WhenFalse(model => (model, isFalseMetadata))
-            .CreateSpec("is true");
-
-        var act = spec.IsSatisfiedBy(guidModel);
-
-        act.Metadata.Should().BeEquivalentTo([(guidModel, underlyingTrueGuid)]);
-    }
-
-    [Theory]
-    [AutoData]
-    public void
-        Should_accept_double_parameter_metadata_factory_that_returns_a_collection_of_metadata_when_true_for_composite_specs(
-            Guid underlyingTrueGuid,
-            Guid underlyingFalseGuid,
-            Guid guidModel,
-            Guid isFalseMetadata)
-    {
-        var underlying = Spec
-            .Build<Guid>(_ => true)
-            .WhenTrue(underlyingTrueGuid)
-            .WhenFalse(underlyingFalseGuid)
-            .CreateSpec("is underlying true");
-
-        var spec = Spec
-            .Build(underlying)
-            .WhenTrue((model, result) => result.Metadata.Select(meta => (model, meta)))
-            .WhenFalse(model => (model, isFalseMetadata))
-            .CreateSpec("is true");
-
-        var act = spec.IsSatisfiedBy(guidModel);
-
-        act.Metadata.Should().BeEquivalentTo([(guidModel, underlyingTrueGuid)]);
-    }
-
-
-    ////////////////////////////////////////
-
 
     [Fact]
     public void Should_accept_assertion_when_false_for_composite_specs()
@@ -365,99 +269,6 @@ public class CompositeMultiMetadataSpecTests
         var act = spec.IsSatisfiedBy(model);
 
         act.Metadata.Should().BeEquivalentTo($"{model} - underlying false");
-    }
-
-    [Theory]
-    [AutoData]
-    public void Should_accept_metadata_when_false_for_composite_specs(
-        Guid isTrueMetadata,
-        Guid isFalseMetadata)
-    {
-        var underlying = Spec
-            .Build<string>(_ => false)
-            .CreateSpec("is underlying true");
-
-        var spec = Spec
-            .Build(underlying)
-            .WhenTrue(isTrueMetadata)
-            .WhenFalse(isFalseMetadata)
-            .CreateSpec("is true");
-
-        var act = spec.IsSatisfiedBy("model");
-
-        act.Metadata.Should().BeEquivalentTo([isFalseMetadata]);
-    }
-
-    [Theory]
-    [AutoData]
-    public void Should_accept_single_parameter_metadata_factory_when_false_for_composite_specs(
-        Guid guidModel,
-        Guid isTrueMetadata)
-    {
-        var underlying = Spec
-            .Build<Guid>(_ => false)
-            .CreateSpec("is underlying true");
-
-        var spec = Spec
-            .Build(underlying)
-            .WhenTrue(isTrueMetadata)
-            .WhenFalse(model => model)
-            .CreateSpec("is true");
-
-        var act = spec.IsSatisfiedBy(guidModel);
-
-        act.Metadata.Should().BeEquivalentTo([guidModel]);
-    }
-
-    [Theory]
-    [AutoData]
-    public void Should_accept_double_parameter_metadata_factory_when_false_for_composite_specs(
-        Guid underlyingTrueGuid,
-        Guid underlyingFalseGuid,
-        Guid guidModel,
-        Guid isTrueMetadata)
-    {
-        var underlying = Spec
-            .Build<Guid>(_ => false)
-            .WhenTrue(underlyingTrueGuid)
-            .WhenFalse(underlyingFalseGuid)
-            .CreateSpec("is underlying true");
-
-        var spec = Spec
-            .Build(underlying)
-            .WhenTrue(model => (model, isTrueMetadata))
-            .WhenFalse((model, result) => result.Metadata.Select(meta => (model, meta)).First())
-            .CreateSpec("is true");
-
-        var act = spec.IsSatisfiedBy(guidModel);
-
-        act.Metadata.Should().BeEquivalentTo([(guidModel, underlyingFalseGuid)]);
-    }
-
-    [Theory]
-    [AutoData]
-    public void
-        Should_accept_double_parameter_metadata_factory_that_returns_a_collection_of_metadata_when_false_for_composite_specs(
-            Guid underlyingTrueGuid,
-            Guid underlyingFalseGuid,
-            Guid guidModel,
-            Guid isFalseMetadata)
-    {
-        var underlying = Spec
-            .Build<Guid>(_ => false)
-            .WhenTrue(underlyingTrueGuid)
-            .WhenFalse(underlyingFalseGuid)
-            .CreateSpec("is underlying true");
-
-        var spec = Spec
-            .Build(underlying)
-            .WhenTrue(model => (model, isFalseMetadata))
-            .WhenFalse((model, result) => result.Metadata.Select(meta => (model, meta)))
-            .CreateSpec("is true");
-
-        var act = spec.IsSatisfiedBy(guidModel);
-
-        act.Metadata.Should().BeEquivalentTo([(guidModel, underlyingFalseGuid)]);
     }
 
     [Theory]

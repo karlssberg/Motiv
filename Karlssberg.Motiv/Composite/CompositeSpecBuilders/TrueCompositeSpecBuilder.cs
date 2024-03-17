@@ -33,10 +33,6 @@ public readonly ref struct TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata>
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause) =>
         new(spec, trueBecause);
     
-    public FalseMultiAssertionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
-        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
-        new(spec, trueBecause);
-    
     public TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> As(
         Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate) =>
         new(spec, higherOrderPredicate);
