@@ -5,12 +5,17 @@ namespace Karlssberg.Motiv;
 [DebuggerDisplay("{GetDebuggerDisplay()}")]
 public sealed class Explanation(IEnumerable<string> assertions)
 {
+    public Explanation(string assertion) 
+        : this(assertion.ToEnumerable())
+    {
+    }
+    
     public Explanation(ResultDescriptionBase resultDescription) 
         : this(resultDescription.Compact.ToEnumerable())
     {
     }
  
-    public IEnumerable<string> Assertions { get; } = assertions;
+    public IEnumerable<string> Assertions => assertions;
     
     public IEnumerable<Explanation> Underlying { get; internal set; } = Enumerable.Empty<Explanation>();
     

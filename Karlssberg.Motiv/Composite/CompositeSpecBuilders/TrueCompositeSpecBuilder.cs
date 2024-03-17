@@ -23,17 +23,17 @@ public readonly ref struct TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata>
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
         new(spec, whenTrue);
 
-    public FalseAssertionWithDescriptionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
-        new(spec, (_, _) => trueBecause.ToEnumerable(), trueBecause);
+    public FalseAssertionWithPropositionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
+        new(spec, (_, _) => trueBecause, trueBecause);
 
     public FalseAssertionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(Func<TModel, string> trueBecause) =>
-        new(spec, (model, _) => trueBecause(model).ToEnumerable());
+        new(spec, (model, _) => trueBecause(model));
     
     public FalseAssertionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause) =>
-        new(spec, (model, result) => trueBecause(model, result).ToEnumerable());
+        new(spec, trueBecause);
     
-    public FalseAssertionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+    public FalseMultiAssertionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
         new(spec, trueBecause);
     
@@ -46,9 +46,9 @@ public readonly ref struct TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata>
         new(spec, higherOrderPredicate, causeSelector);
     
     public SpecBase<TModel, string> CreateSpec(string proposition) =>
-        new CompositeSpec<TModel, string, TUnderlyingMetadata>(
+        new CompositeMetadataSpec<TModel, string, TUnderlyingMetadata>(
             spec,
-            (_, _) => proposition.ToEnumerable(),
-            (_, _) => $"!{proposition}".ToEnumerable(),
+            (_, _) => proposition,
+            (_, _) => $"!{proposition}",
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

@@ -1,6 +1,4 @@
-﻿using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
-
-namespace Karlssberg.Motiv;
+﻿namespace Karlssberg.Motiv;
 
 internal static class PropositionExtensions
 {
@@ -21,23 +19,7 @@ internal static class PropositionExtensions
     internal static string JoinLines(this IEnumerable<string> textCollection) =>
         string.Join(Environment.NewLine, textCollection);
 
-    internal static string ToReason<TMetadata>(
-        this IProposition proposition,
-        bool isSatisfied,
-        TMetadata metadata,
-        AssertionSource assertionSource = AssertionSource.Unknown)
-    {
-        return (isSatisfied, metadata, assertionSource) switch
-        {
-            (_, string reason, not AssertionSource.Proposition) => reason,
-            (true, _, _) when PropositionContains('!') => $"({proposition.Assertion})",
-            (true, _, _) => proposition.Assertion,
-            (false, _, _) when PropositionContains('!') => $"!({proposition.Assertion})",
-            (false, _, _) => $"!{proposition.Assertion}"
-        };
 
-        bool PropositionContains(char ch) => proposition.Assertion.Contains(ch);
-    }
     
     internal static string ToReason(
         this IProposition proposition,
@@ -45,12 +27,12 @@ internal static class PropositionExtensions
     {
         return isSatisfied switch
         {
-            true when PropositionContains('!') => $"({proposition.Assertion})",
-            true => proposition.Assertion,
-            false when PropositionContains('!') => $"!({proposition.Assertion})",
-            false => $"!{proposition.Assertion}"
+            true when PropositionContains('!') => $"({proposition.Statement})",
+            true => proposition.Statement,
+            false when PropositionContains('!') => $"!({proposition.Statement})",
+            false => $"!{proposition.Statement}"
         };
 
-        bool PropositionContains(char ch) => proposition.Assertion.Contains(ch);
+        bool PropositionContains(char ch) => proposition.Statement.Contains(ch);
     }
 }

@@ -4,19 +4,19 @@ internal sealed class ExplanationSpec<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,
-    string propositionalAssertion)
+    string propositionalStatement)
     : SpecBase<TModel, string>
 {
-    internal ExplanationSpec(Func<TModel, bool> predicate, string propositionalAssertion) 
+    internal ExplanationSpec(Func<TModel, bool> predicate, string propositionalStatement) 
         : this(
             predicate, 
-            _ => ReasonFromProposition(true, propositionalAssertion), 
-            _ => ReasonFromProposition(false, propositionalAssertion), 
-            propositionalAssertion)
+            _ => ReasonFromProposition(true, propositionalStatement), 
+            _ => ReasonFromProposition(false, propositionalStatement), 
+            propositionalStatement)
     {
     }
     
-    public override IProposition Proposition => new Proposition(propositionalAssertion);
+    public override IProposition Proposition => new Proposition(propositionalStatement);
 
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
         WrapException.IfIsSatisfiedByMethodFails(
@@ -31,7 +31,7 @@ internal sealed class ExplanationSpec<TModel>(
                     false => InvokeFalseBecauseFunction(model)
                 };
 
-                return new BooleanResult<string>(isSatisfied, because, Proposition);
+                return new ExplanationBooleanResult(isSatisfied, because);
             });
 
     private bool InvokePredicate(TModel model) =>

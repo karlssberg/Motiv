@@ -5,7 +5,7 @@ internal sealed class ElseIfProposition<TModel>(
     SpecBase<TModel> consequent)
     : IProposition
 {
-    public string Assertion => $"{antecedent.Proposition.Assertion} => {consequent.Proposition.Assertion}";
+    public string Statement => $"{antecedent.Proposition.Statement} => {consequent.Proposition.Statement}";
 
     public string Detailed =>
         $$"""
@@ -14,5 +14,5 @@ internal sealed class ElseIfProposition<TModel>(
           }
           """;
 
-    public override string ToString() => Assertion;
+    public override string ToString() => Statement;
 }

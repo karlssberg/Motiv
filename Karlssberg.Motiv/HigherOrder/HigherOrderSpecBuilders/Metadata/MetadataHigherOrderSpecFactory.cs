@@ -8,12 +8,11 @@ public readonly ref struct MetadataHigherOrderSpecFactory<TModel, TMetadata, TUn
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
     public SpecBase<IEnumerable<TModel>, TMetadata> CreateSpec(string proposition) =>
-        new HigherOrderSpec<TModel, TMetadata, TUnderlyingMetadata>(
+        new HigherOrderMultiMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
             spec,
             higherOrderPredicate,
             whenTrue,
             whenFalse,
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)),
-            AssertionSource.Proposition,
             causeSelector);
 }

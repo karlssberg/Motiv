@@ -6,7 +6,8 @@ public sealed class MetadataTree<TMetadata>(
     IEnumerable<TMetadata> metadataCollection,
     IEnumerable<MetadataTree<TMetadata>>? underlying = null) : IEnumerable<TMetadata>
 {
-    public MetadataTree(TMetadata metadata) : this(metadata.ToEnumerable())
+    public MetadataTree(TMetadata metadata, IEnumerable<MetadataTree<TMetadata>>? underlying = null)
+        : this(metadata.ToEnumerable(), underlying)
     {
     }
 

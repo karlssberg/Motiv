@@ -1,20 +1,14 @@
-﻿using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
+﻿namespace Karlssberg.Motiv.HigherOrder;
 
-namespace Karlssberg.Motiv.HigherOrder;
-
-internal sealed class HigherOrderResultDescription<TModel, TMetadata, TUnderlyingMetadata>(
-    bool isSatisfied,
-    IEnumerable<TMetadata> metadataCollection,
-    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes,
-    IProposition proposition,
-    AssertionSource assertionSource)
+internal sealed class HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
+    string because,
+    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes )
     : ResultDescriptionBase
 {
-    public ICollection<BooleanResult<TModel, TUnderlyingMetadata>> Causes { get; } = causes.ToArray();
-    internal override int CausalOperandCount => Causes.Count;
+    private readonly ICollection<BooleanResult<TModel, TUnderlyingMetadata>> _causes = causes.ToArray();
+    internal override int CausalOperandCount => _causes.Count;
 
-    public override string Compact =>
-        proposition.ToReason(isSatisfied, metadataCollection.SingleOrDefault(), assertionSource);
+    public override string Compact => because;
 
     public override string Detailed => GetDetails();
 
@@ -34,7 +28,7 @@ internal sealed class HigherOrderResultDescription<TModel, TMetadata, TUnderlyin
 
         string GetUnderlyingCauses()
         {
-            var reasonFrequencyPair = Causes
+            var reasonFrequencyPair = _causes
                 .OrderByDescending(result => result.Satisfied)
                 .Select(result => result.Description.Compact)
                 .GroupBy(reason => reason)
@@ -59,3 +53,5 @@ internal sealed class HigherOrderResultDescription<TModel, TMetadata, TUnderlyin
         }
     }
 }
+
+

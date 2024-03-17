@@ -364,7 +364,7 @@ public class NoneSatisfiedSpecTests
             .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
             .CreateSpec("all booleans are true");
 
-        sut.Proposition.Assertion.Should().Be(expectedSummary);
+        sut.Proposition.Statement.Should().Be(expectedSummary);
         sut.Proposition.Detailed.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }
@@ -393,7 +393,7 @@ public class NoneSatisfiedSpecTests
             .WhenFalse(false)
             .CreateSpec("none are true");
 
-        sut.Proposition.Assertion.Should().Be(expectedSummary);
+        sut.Proposition.Statement.Should().Be(expectedSummary);
         sut.Proposition.Detailed.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }

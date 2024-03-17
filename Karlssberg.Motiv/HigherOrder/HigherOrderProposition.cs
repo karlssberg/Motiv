@@ -5,7 +5,7 @@ internal sealed class HigherOrderProposition<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec)
     : IProposition
 {
-    public string Assertion => assertion;
+    public string Statement => assertion;
 
     public string Detailed =>
         $$"""
@@ -14,5 +14,5 @@ internal sealed class HigherOrderProposition<TModel, TUnderlyingMetadata>(
           }
           """;
 
-    public override string ToString() => Assertion;
+    public override string ToString() => Statement;
 }

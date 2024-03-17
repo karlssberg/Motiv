@@ -2,7 +2,7 @@
 
 internal sealed class NotProposition<TModel, TMetadata>(SpecBase<TModel, TMetadata> operand) : IProposition
 {
-    public string Assertion => FormatDescription(operand.Proposition.Assertion);
+    public string Statement => FormatDescription(operand.Proposition.Statement);
 
     public string Detailed => FormatDescription(operand.Proposition.Detailed);
     
@@ -16,5 +16,5 @@ internal sealed class NotProposition<TModel, TMetadata>(SpecBase<TModel, TMetada
         };
     }
     
-    public override string ToString() => Assertion;
+    public override string ToString() => Statement;
 }

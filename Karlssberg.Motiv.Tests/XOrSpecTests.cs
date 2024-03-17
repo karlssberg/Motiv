@@ -184,7 +184,7 @@ public class XOrSpecTests
 
         var sut = left ^ right;
 
-        sut.Proposition.Assertion.Should().Be(expected);
+        sut.Proposition.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -211,7 +211,7 @@ public class XOrSpecTests
 
         var sut = left ^ right;
 
-        sut.Proposition.Assertion.Should().Be(expected);
+        sut.Proposition.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 

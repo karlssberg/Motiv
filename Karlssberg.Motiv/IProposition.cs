@@ -2,6 +2,6 @@
 
 public interface IProposition
 {
-    string Assertion { get; }
+    string Statement { get; }
     string Detailed { get; }
 }

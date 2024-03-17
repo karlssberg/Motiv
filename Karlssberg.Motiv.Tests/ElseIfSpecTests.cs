@@ -43,7 +43,7 @@ public class ElseIfSpecTests
 
         var sut = antecedent.ElseIf(consequent);
 
-        sut.Proposition.Assertion.Should().Be("antecedent => consequent");
+        sut.Proposition.Statement.Should().Be("antecedent => consequent");
     }
     
     [Fact]

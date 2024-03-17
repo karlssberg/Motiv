@@ -22,9 +22,9 @@ public class SpecTests
     }
     
     [Theory]
-    [InlineAutoData(true, "underlying true")]
-    [InlineAutoData(false, "underlying false")]
-    public void Should_return_a_result_that_satisfies_the_spec(bool model, string expectedReason)
+    [InlineAutoData(true)]
+    [InlineAutoData(false)]
+    public void Should_return_a_result_that_satisfies_the_spec(bool model)
     {
         var underlyingSpec = Spec
             .Build<bool>(m => m)
@@ -36,13 +36,36 @@ public class SpecTests
             .Build(() => underlyingSpec)
             .WhenTrue("underlying true")
             .WhenFalse("underlying false")
-            .CreateSpec("returns model value");
+            .CreateSpec("is true");
 
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
-        result.MetadataTree.Should().ContainSingle(expectedReason);
-        result.Explanation.Assertions.Should().BeEquivalentTo(expectedReason);
+    }
+    
+    [Theory]
+    [InlineAutoData(true, "underlying true", "is true")]
+    [InlineAutoData(false, "underlying false", "!is true")]
+    public void Should_return_a_result_that_explains_the_result(bool model, string expectedAssertion, string expectedDescription)
+    {
+        var underlyingSpec = Spec
+            .Build<bool>(m => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .CreateSpec();
+        
+        var sut = Spec
+            .Build(() => underlyingSpec)
+            .WhenTrue("underlying true")
+            .WhenFalse("underlying false")
+            .CreateSpec("is true");
+
+        var result = sut.IsSatisfiedBy(model);
+        
+        result.MetadataTree.Should().ContainSingle(expectedAssertion);
+        result.MetadataTree.Underlying.SelectMany(metadataTree => metadataTree).Should().BeEquivalentTo(model.ToString());
+        result.Explanation.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        result.Description.Compact.Should().Be(expectedDescription);
     }
 
     [Fact]

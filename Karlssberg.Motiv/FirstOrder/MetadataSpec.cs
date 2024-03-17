@@ -11,11 +11,11 @@ internal sealed class MetadataSpec<TModel, TMetadata>(
     Func<TModel, bool> predicate,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse,
-    string propositionalAssertion)
+    string propositionalStatement)
     : SpecBase<TModel, TMetadata>
 {
     /// <summary>Gets or sets the description of the specification.</summary>
-    public override IProposition Proposition => new Proposition(propositionalAssertion);
+    public override IProposition Proposition => new Proposition(propositionalStatement);
 
     /// <summary>Determines if the specified model satisfies the specification.</summary>
     /// <param name="model">The model to be evaluated.</param>
@@ -26,13 +26,13 @@ internal sealed class MetadataSpec<TModel, TMetadata>(
             {
                 var isSatisfied = InvokePredicate(model);
 
-                var cause = isSatisfied switch
+                var metadata = isSatisfied switch
                 {
                     true => InvokeWhenTrueFunction(model),
                     false => InvokeWhenFalseFunction(model)
                 };
 
-                return new BooleanResult<TMetadata>(isSatisfied, cause, Proposition);
+                return new MetadataBooleanResult<TMetadata>(isSatisfied, metadata, Proposition);
             });
 
     private bool InvokePredicate(TModel model) =>

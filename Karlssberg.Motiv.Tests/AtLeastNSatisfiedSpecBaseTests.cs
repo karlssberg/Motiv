@@ -221,7 +221,7 @@ public class AtLeastNSatisfiedSpecBaseTests
             .Build<bool>(m => m)
             .WhenTrue("received true")
             .WhenFalse("received false")
-            .CreateSpec("returns the model");
+            .CreateSpec();
 
         var sut = Spec
             .Build(underlyingSpec)
@@ -378,7 +378,7 @@ public class AtLeastNSatisfiedSpecBaseTests
             .WhenFalse("none satisfied")
             .CreateSpec();
 
-        sut.Proposition.Assertion.Should().Be(expected);
+        sut.Proposition.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 

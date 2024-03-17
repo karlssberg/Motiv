@@ -16,7 +16,7 @@ public readonly ref struct TrueFirstOrderSpecBuilder<TModel>(Func<TModel, bool> 
     /// <summary>Sets the reason why the condition is true.</summary>
     /// <param name="trueBecause">The human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionFirstOrderSpecBuilder{TModel}" />.</returns>
-    public FalseAssertionWithDescriptionUnresolvedFirstOrderSpecBuilder<TModel> WhenTrue(Func<TModel, string> trueBecause) =>
+    public FalseAssertionWithPropositionUnresolvedFirstOrderSpecBuilder<TModel> WhenTrue(Func<TModel, string> trueBecause) =>
         new(predicate,
             trueBecause.ThrowIfNull(nameof(trueBecause)));
 

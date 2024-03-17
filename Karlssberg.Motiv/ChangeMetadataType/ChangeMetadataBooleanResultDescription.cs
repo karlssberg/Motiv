@@ -7,7 +7,7 @@ internal sealed class ChangeMetadataBooleanResultDescription<TMetadata, TUnderly
     : ResultDescriptionBase
 {
     internal override int CausalOperandCount => 1;
-    public override string Compact => proposition.ToReason(booleanResult.Satisfied, metadata);
+    public override string Compact => proposition.ToReason(booleanResult.Satisfied);
 
     public override string Detailed =>
         $$"""

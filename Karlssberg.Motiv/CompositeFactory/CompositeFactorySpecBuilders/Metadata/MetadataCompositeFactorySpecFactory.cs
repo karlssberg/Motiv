@@ -6,7 +6,7 @@ public readonly ref struct MetadataCompositeFactorySpecFactory<TModel, TMetadata
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse)
 {
     public SpecBase<TModel, TMetadata> CreateSpec(string proposition) =>
-        new CompositeFactorySpec<TModel, TMetadata, TUnderlyingMetadata>(
+        new CompositeFactoryMultiMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
             specPredicate,
             whenTrue,
             whenFalse,

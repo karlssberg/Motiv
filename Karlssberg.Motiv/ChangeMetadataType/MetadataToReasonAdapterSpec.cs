@@ -12,7 +12,7 @@ internal sealed class MetadataToReasonAdapterSpec<TModel, TUnderlyingModel>(
         var metadata = results.MetadataTree switch
         {
             string reason => reason,
-            _ => spec.Proposition.Assertion
+            _ => spec.Proposition.Statement
         };
         
         return new ChangeMetadataBooleanResult<string, TUnderlyingModel>(

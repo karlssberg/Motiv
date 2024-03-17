@@ -27,37 +27,35 @@ public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadat
             whenTrue,
             causeSelector);
 
-    public FalseAssertionsWithDescriptionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
+    
+    
+    public FalseAssertionsWithPropositionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) =>
         new(spec,
             higherOrderPredicate,
-            _ => trueBecause.ToEnumerable(),
+            _ => trueBecause,
             trueBecause,
-            AssertionSource.Metadata,
             causeSelector);
     
     public FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause) =>
         new(spec,
             higherOrderPredicate,
-            results => trueBecause(results).ToEnumerable(),
-            AssertionSource.Metadata,
+            trueBecause,
             causeSelector);
 
-    public FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+    public FalseMultiAssertionsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
         new(spec,
             higherOrderPredicate,
             trueBecause,
-            AssertionSource.Proposition,
             causeSelector);
     
     public SpecBase<IEnumerable<TModel>, string> CreateSpec(string proposition) =>
-        new HigherOrderSpec<TModel, string, TUnderlyingMetadata>(
+        new HigherOrderMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             higherOrderPredicate,
             _ => proposition.ToEnumerable(),
             _ => $"!{proposition}".ToEnumerable(),
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)),
-            AssertionSource.Proposition,
             causeSelector);
 }

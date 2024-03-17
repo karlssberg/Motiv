@@ -29,31 +29,31 @@ public readonly ref struct TrueCompositeFactorySpecBuilder<TModel, TUnderlyingMe
         new(specPredicate,
             whenTrue);
     
-    public FalseAssertionWithDescriptionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+    public FalseAssertionWithPropositionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         string trueBecause) =>
         new(specPredicate,
-            (_, _) => trueBecause.ToEnumerable(),
+            (_, _) => trueBecause,
             trueBecause);
 
     public FalseAssertionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<TModel, string> trueBecause) =>
         new(specPredicate,
-            (model, _) => trueBecause(model).ToEnumerable());
+            (model, _) => trueBecause(model));
 
     public FalseAssertionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause) =>
         new(specPredicate,
-            (model, result) => trueBecause(model, result).ToEnumerable());
+            trueBecause);
 
-    public FalseAssertionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+    public FalseMultiAssertionCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
         new(specPredicate,
             trueBecause);
     
     public SpecBase<TModel, string> CreateSpec(string proposition) =>
-        new CompositeFactorySpec<TModel, string, TUnderlyingMetadata>(
+        new CompositeFactoryMetadataSpec<TModel, string, TUnderlyingMetadata>(
             specPredicate,
-            (_, _) => proposition.ToEnumerable(),
-            (_, _) => $"!{proposition}".ToEnumerable(),
+            (_, _) => proposition,
+            (_, _) => $"!{proposition}",
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

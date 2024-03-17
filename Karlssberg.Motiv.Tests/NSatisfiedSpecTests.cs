@@ -112,6 +112,6 @@ public class NSatisfiedSpecTests
             .WhenFalse(false)
             .CreateSpec("a pair of even numbers");
 
-        sut.Proposition.Assertion.Should().Be("a pair of even numbers");
+        sut.Proposition.Statement.Should().Be("a pair of even numbers");
     }
 }

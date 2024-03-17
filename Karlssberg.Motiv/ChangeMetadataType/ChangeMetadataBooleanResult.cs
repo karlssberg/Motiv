@@ -37,9 +37,5 @@ internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata
     
     public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes.ToEnumerable();
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
-        booleanResult.Causes switch
-        {
-            IEnumerable<BooleanResultBase<TMetadata>> results => results,
-            _ => Enumerable.Empty<BooleanResultBase<TMetadata>>()
-        };
+        booleanResult.ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();
 }

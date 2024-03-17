@@ -1,20 +1,20 @@
 ﻿namespace Karlssberg.Motiv;
 
-internal sealed class Proposition(string assertion, IProposition? underlyingProposition = null) : IProposition
+internal sealed class Proposition(string statement, IProposition? underlyingProposition = null) : IProposition
 {
-    public string Assertion => assertion;
+    public string Statement => statement;
 
     public string Detailed =>
         underlyingProposition switch
         {
-            null => assertion,
+            null => statement,
             not null =>
                 $$"""
-                  {{assertion}} {
+                  {{statement}} {
                       {{underlyingProposition.Detailed.IndentAfterFirstLine()}}
                   }
                   """
         };
 
-    public override string ToString() => Assertion;
+    public override string ToString() => Statement;
 }

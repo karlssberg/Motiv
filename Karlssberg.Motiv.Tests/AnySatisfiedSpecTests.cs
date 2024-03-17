@@ -54,7 +54,7 @@ public class AnySatisfiedSpecTests
             .WhenFalse(false)
             .CreateSpec("high-level description");
 
-        sut.Proposition.Assertion.Should().Be(expected);
+        sut.Proposition.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -174,7 +174,7 @@ public class AnySatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("returns the model");
+            .CreateSpec();
 
         bool[] models = [first, second, third];
 
@@ -192,43 +192,43 @@ public class AnySatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                           False {
-                                               3x False
+                                           !all true {
+                                               3x !is true
                                            }
                                            """)]
     [InlineAutoData(false, false, true,  """
-                                           True {
-                                               1x True
+                                           all true {
+                                               1x is true
                                            }
                                            """)]
     [InlineAutoData(false, true, false,  """
-                                           True {
-                                               1x True
+                                           all true {
+                                               1x is true
                                            }
                                            """)]
     [InlineAutoData(false, true, true,   """
-                                           True {
-                                               2x True
+                                           all true {
+                                               2x is true
                                            }
                                            """)]
     [InlineAutoData(true, false, false,  """
-                                           True {
-                                               1x True
+                                           all true {
+                                               1x is true
                                            }
                                            """)]
     [InlineAutoData(true, false, true,   """
-                                           True {
-                                               2x True
+                                           all true {
+                                               2x is true
                                            }
                                            """)]
     [InlineAutoData(true, true, false,   """
-                                           True {
-                                               2x True
+                                           all true {
+                                               2x is true
                                            }
                                            """)]
     [InlineAutoData(true, true, true,    """
-                                           True {
-                                               3x True
+                                           all true {
+                                               3x is true
                                            }
                                            """)]
     public void Should_serialize_the_result_of_the_any_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
@@ -249,6 +249,7 @@ public class AnySatisfiedSpecTests
             .WhenTrue(_ => true.ToString())
             .WhenFalse(_ => false.ToString())
             .CreateSpec("all true");
+        
         var result = sut.IsSatisfiedBy([first, second, third]);
 
         result.Description.Detailed.Should().Be(expected);

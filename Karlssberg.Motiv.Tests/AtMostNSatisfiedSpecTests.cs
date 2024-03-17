@@ -219,7 +219,7 @@ public class AtMostNSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue("is satisfied")
             .WhenFalse("is not satisfied")
-            .CreateSpec("returns the model");;
+            .CreateSpec();;
 
         var sut = Spec
             .Build(underlyingSpec)
@@ -376,7 +376,7 @@ public class AtMostNSatisfiedSpecTests
             .WhenFalse("more than one is satisfied")
             .CreateSpec();
 
-        sut.Proposition.Assertion.Should().Be(expected);
+        sut.Proposition.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 

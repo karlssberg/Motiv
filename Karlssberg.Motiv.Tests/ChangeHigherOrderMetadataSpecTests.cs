@@ -46,44 +46,44 @@ public class ChangeHigherOrderMetadataSpecTests
             .WhenFalse("is not a pair of even numbers")
             .CreateSpec();
 
-        sut.Proposition.Assertion.Should().Be("is a pair of even numbers");
+        sut.Proposition.Statement.Should().Be("is a pair of even numbers");
     }
 
     [Theory]
-    [InlineAutoData(true, true, true, "third true yield")]
-    [InlineAutoData(true, true, false, "third false yield")]
-    [InlineAutoData(true, false, true, "third false yield")]
-    [InlineAutoData(true, false, false, "third false yield")]
-    [InlineAutoData(false, true, true, "third false yield")]
-    [InlineAutoData(false, true, false, "third false yield")]
-    [InlineAutoData(false, false, true, "third false yield")]
-    [InlineAutoData(false, false, false, "third false yield")]
+    [InlineAutoData(true, true, true, "third all true")]
+    [InlineAutoData(true, true, false, "third all false")]
+    [InlineAutoData(true, false, true, "third all false")]
+    [InlineAutoData(true, false, false, "third all false")]
+    [InlineAutoData(false, true, true, "third all false")]
+    [InlineAutoData(false, true, false, "third all false")]
+    [InlineAutoData(false, false, true, "third all false")]
+    [InlineAutoData(false, false, false, "third all false")]
     public void Should_only_yield_the_most_recent_when_multiple_yields_are_chained(bool first, bool second, bool third, string expected)
     {
         var underlying = Spec
             .Build<bool>(b => b)
-            .WhenTrue("is even")
-            .WhenFalse("is odd")
-            .CreateSpec("is even spec");
+            .WhenTrue("is true")
+            .WhenFalse("is false")
+            .CreateSpec();
 
         var firstSpec = Spec  
             .Build(underlying)
             .AsAllSatisfied()
-            .WhenTrue("first true yield")
-            .WhenFalse("first false yield")
-            .CreateSpec("first spec");
+            .WhenTrue("first all true")
+            .WhenFalse("first all false")
+            .CreateSpec();
             
         var secondSpec = Spec
             .Build(firstSpec)
-            .WhenTrue("second true yield")
-            .WhenFalse("second false yield")
-            .CreateSpec("second spec");
+            .WhenTrue("second all true")
+            .WhenFalse("second all false")
+            .CreateSpec();
             
         var sut = Spec
             .Build(secondSpec)
-            .WhenTrue("third true yield")
-            .WhenFalse("third false yield")
-            .CreateSpec("third spec");
+            .WhenTrue("third all true")
+            .WhenFalse("third all false")
+            .CreateSpec();
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
@@ -91,38 +91,38 @@ public class ChangeHigherOrderMetadataSpecTests
     }
     
     [Theory]
-    [InlineAutoData(true, true, true, "is even")]
-    [InlineAutoData(true, true, false, "is odd")]
-    [InlineAutoData(true, false, true, "is odd")]
-    [InlineAutoData(true, false, false, "is odd")]
-    [InlineAutoData(false, true, true, "is odd")]
-    [InlineAutoData(false, true, false, "is odd")]
-    [InlineAutoData(false, false, true, "is odd")]
-    [InlineAutoData(false, false, false, "is odd")]
+    [InlineAutoData(true, true, true, "is true")]
+    [InlineAutoData(true, true, false, "is false")]
+    [InlineAutoData(true, false, true, "is false")]
+    [InlineAutoData(true, false, false, "is false")]
+    [InlineAutoData(false, true, true, "is false")]
+    [InlineAutoData(false, true, false, "is false")]
+    [InlineAutoData(false, false, true, "is false")]
+    [InlineAutoData(false, false, false, "is false")]
     public void Should_yield_the_most_deeply_nested_reason_when_requested(bool first, bool second, bool third, string expected)
     {
         var underlyingSpec = Spec
             .Build<bool>(b => b)
-            .WhenTrue("is even")
-            .WhenFalse("is odd")
-            .CreateSpec("is even spec");
+            .WhenTrue("is true")
+            .WhenFalse("is false")
+            .CreateSpec();
 
         var firstSpec = Spec
             .Build(underlyingSpec).AsAllSatisfied()
-            .WhenTrue("first true yield")
-            .WhenFalse("first false yield")
+            .WhenTrue("first true")
+            .WhenFalse("first false")
             .CreateSpec("all even");
             
         var secondSpec = Spec
             .Build(firstSpec)
-            .WhenTrue("second true yield")
-            .WhenFalse("second false yield")
-            .CreateSpec("all even");
+            .WhenTrue("second true")
+            .WhenFalse("second false")
+            .CreateSpec();
             
         var sut = Spec
             .Build(secondSpec)
-            .WhenTrue("third true yield")
-            .WhenFalse("third false yield")
+            .WhenTrue("third true")
+            .WhenFalse("third false")
             .CreateSpec("all even");
 
         var result = sut.IsSatisfiedBy([first, second, third]);

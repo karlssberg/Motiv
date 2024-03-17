@@ -5,7 +5,7 @@ internal sealed class AndProposition<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> right)
     : IProposition
 {
-    public string Assertion => $"{Summarize(left)} & {Summarize(right)}";
+    public string Statement => $"{Summarize(left)} & {Summarize(right)}";
 
     public string Detailed =>
         $"""
@@ -17,9 +17,9 @@ internal sealed class AndProposition<TModel, TMetadata>(
     {
         return operand switch
         {
-            AndSpec<TModel, TMetadata> andSpec => andSpec.Proposition.Assertion,
-            ICompositeSpec compositeSpec => $"({compositeSpec.Proposition.Assertion})",
-            _ => operand.Proposition.Assertion
+            AndSpec<TModel, TMetadata> andSpec => andSpec.Proposition.Statement,
+            ICompositeSpec compositeSpec => $"({compositeSpec.Proposition.Statement})",
+            _ => operand.Proposition.Statement
         };
     }
 
@@ -33,5 +33,5 @@ internal sealed class AndProposition<TModel, TMetadata>(
         };
     }
 
-    public override string ToString() => Assertion;
+    public override string ToString() => Statement;
 }

@@ -6,7 +6,7 @@ internal sealed class XOrProposition<TModel, TMetadata>(
     : IProposition
 {
 
-    public string Assertion => $"{Summarize(left)} ^ {Summarize(right)}";
+    public string Statement => $"{Summarize(left)} ^ {Summarize(right)}";
     public string Detailed =>
         $"""
             {Explain(left).IndentAfterFirstLine()} ^
@@ -17,9 +17,9 @@ internal sealed class XOrProposition<TModel, TMetadata>(
     {
         return operand switch 
         {
-            XOrSpec<TModel, TMetadata> andSpec => andSpec.Proposition.Assertion,
-            ICompositeSpec compositeSpec => $"({compositeSpec.Proposition.Assertion})",
-            _ => operand.Proposition.Assertion
+            XOrSpec<TModel, TMetadata> andSpec => andSpec.Proposition.Statement,
+            ICompositeSpec compositeSpec => $"({compositeSpec.Proposition.Statement})",
+            _ => operand.Proposition.Statement
         };
     }
     
@@ -33,5 +33,5 @@ internal sealed class XOrProposition<TModel, TMetadata>(
         };
     }
     
-    public override string ToString() => Assertion;
+    public override string ToString() => Statement;
 }

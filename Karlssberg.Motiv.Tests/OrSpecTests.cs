@@ -67,10 +67,10 @@ public class OrSpecTests
 
 
     [Theory]
-    [InlineAutoData(true, true, "True | True")]
-    [InlineAutoData(true, false, "True")]
-    [InlineAutoData(false, true, "True")]
-    [InlineAutoData(false, false, "False | False")]
+    [InlineAutoData(true, true, "left | right")]
+    [InlineAutoData(true, false, "left")]
+    [InlineAutoData(false, true, "right")]
+    [InlineAutoData(false, false, "!left | !right")]
     public void Should_serialize_the_result_of_the_or_operation_when_metadata_is_a_string(
         bool leftResult,
         bool rightResult,
@@ -150,7 +150,7 @@ public class OrSpecTests
 
         var sut = left | right;
 
-        sut.Proposition.Assertion.Should().Be(expected);
+        sut.Proposition.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -177,7 +177,7 @@ public class OrSpecTests
 
         var sut = left | right;
 
-        sut.Proposition.Assertion.Should().Be(expected);
+        sut.Proposition.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
