@@ -5,7 +5,7 @@
 /// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
 internal sealed class CompositeMultiMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    MetadataTree<TMetadata> metadata,
+    MetadataTree<TMetadata> metadataTree,
     IProposition proposition)
     : BooleanResultBase<TMetadata>
 {
@@ -22,21 +22,12 @@ internal sealed class CompositeMultiMetadataBooleanResult<TMetadata, TUnderlying
 
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override Explanation Explanation =>
-        metadata switch
+        new(ResolveAssertions())
         {
-            MetadataTree<string> metadataTree =>
-                new Explanation(metadataTree)
-                {
-                    Underlying = booleanResult.Explanation.ToEnumerable()
-                },
-            _ =>
-                new(Description)
-                {
-                    Underlying = booleanResult.Explanation.ToEnumerable()
-                }
+            Underlying = booleanResult.Explanation.ToEnumerable()
         };
 
-    public override MetadataTree<TMetadata> MetadataTree => metadata;
+    public override MetadataTree<TMetadata> MetadataTree => metadataTree;
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
         booleanResult.ResolveUnderlyingWithMetadata<TMetadata, TUnderlyingMetadata>();
@@ -44,4 +35,10 @@ internal sealed class CompositeMultiMetadataBooleanResult<TMetadata, TUnderlying
     public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes.ToEnumerable();
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
         booleanResult.ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();
+    
+    private IEnumerable<string> ResolveAssertions() => 
+        metadataTree switch {
+            MetadataTree<string>  reasons => reasons,
+            _ => proposition.ToReason(booleanResult.Satisfied).ToEnumerable()
+        };
 }
