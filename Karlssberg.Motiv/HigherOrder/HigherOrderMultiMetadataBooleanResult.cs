@@ -26,10 +26,16 @@ internal sealed class HigherOrderMultiMetadataBooleanResult<TModel, TMetadata, T
             causes);
 
     public override Explanation Explanation => 
-        new (Description)
+        new (ResolveAssertions())
         {
             Underlying = causes
                 .Select(cause => cause.Explanation)
                 .ElseIfEmpty(underlyingResults.Select(result => result.Explanation))
+        };
+    
+    private IEnumerable<string> ResolveAssertions() => 
+        metadataTree switch {
+            MetadataTree<string>  reasons => reasons,
+            _ => proposition.ToReason(isSatisfied).ToEnumerable()
         };
 }

@@ -20,7 +20,7 @@ internal sealed class CompositeFactoryMultiMetadataBooleanResult<TMetadata, TUnd
 
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override Explanation Explanation =>
-        new(Description)
+        new(ResolveAssertions())
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
@@ -37,5 +37,9 @@ internal sealed class CompositeFactoryMultiMetadataBooleanResult<TMetadata, TUnd
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
         booleanResult.ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();
     
-    
+    private IEnumerable<string> ResolveAssertions() => 
+        metadataTree switch {
+            MetadataTree<string>  reasons => reasons,
+            _ => proposition.ToReason(booleanResult.Satisfied).ToEnumerable()
+        };
 }
