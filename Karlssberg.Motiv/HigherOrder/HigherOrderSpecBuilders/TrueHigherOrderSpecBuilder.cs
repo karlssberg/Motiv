@@ -37,11 +37,21 @@ public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadat
             results => whenTrue(results).ToEnumerable(),
             causeSelector);
 
+    /// <summary>Specifies the set of metadata to use when the condition is true.</summary>
+    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
+    /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataHigherOrderSpecBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
+        new(spec,
+            higherOrderPredicate,
+            whenTrue,
+            causeSelector);
+
     /// <summary>Specifies a reason why the condition is true.</summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
     /// <returns>
-    /// An instance of <see cref="FalseAssertionsWithPropositionHigherOrderSpecBuilder{TModel,TUnderlyingMetadata}" />
-    /// .
+    /// An instance of <see cref="FalseAssertionsWithPropositionHigherOrderSpecBuilder{TModel,TUnderlyingMetadata}" />.
     /// </returns>
     public FalseAssertionsWithPropositionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         string trueBecause) =>
