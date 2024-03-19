@@ -15,9 +15,18 @@ internal sealed class NotBooleanResult<TMetadata>(BooleanResultBase<TMetadata> o
     /// <summary>Gets the reasons associated with the operand result.</summary>
     public override Explanation Explanation => operandResult.Explanation;
 
+    /// <inheritdoc />
     public override MetadataTree<TMetadata> MetadataTree => operandResult.MetadataTree;
+    
+    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase> Underlying => operandResult.ToEnumerable();
+    
+    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => operandResult.ToEnumerable();
+    
+    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase> Causes => operandResult.ToEnumerable();
+    
+    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => operandResult.ToEnumerable();
 }

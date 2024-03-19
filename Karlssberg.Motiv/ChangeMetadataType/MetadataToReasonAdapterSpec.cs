@@ -4,8 +4,10 @@ internal sealed class MetadataToReasonAdapterSpec<TModel, TUnderlyingModel>(
     SpecBase<TModel, TUnderlyingModel> spec) 
     : SpecBase<TModel, string>
 {
+    /// <inheritdoc />
     public override IProposition Proposition => spec.Proposition;
 
+    /// <inheritdoc />
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
     {
         var results = spec.IsSatisfiedBy(model);

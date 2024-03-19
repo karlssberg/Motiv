@@ -5,9 +5,11 @@ internal sealed class ElseIfSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> consequent)
     : SpecBase<TModel, TMetadata>, ICompositeSpec
 {
+    /// <inheritdoc />
     public override IProposition Proposition => 
         new ElseIfProposition<TModel>(antecedent, consequent);
 
+    /// <inheritdoc />
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
         var antecedentResult = antecedent.IsSatisfiedByOrWrapException(model);
