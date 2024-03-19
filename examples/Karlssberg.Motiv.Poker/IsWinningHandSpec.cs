@@ -15,4 +15,4 @@ public class IsWinningHandSpec() : Spec<Hand, HandRank>(
              | new IsHandRoyalFlushSpec())
         .WhenTrue((_, result) => result.Metadata)
         .WhenFalse(HandRank.HighCard)
-        .CreateSpec("is a winning poker hand"));
+        .Create("is a winning poker hand"));

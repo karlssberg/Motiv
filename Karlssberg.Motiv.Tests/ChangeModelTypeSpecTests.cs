@@ -13,7 +13,7 @@ public class ChangeModelTypeSpecTests
             .Build<object?>(m => m is null)
             .WhenTrue("is null")
             .WhenFalse("is not null")
-            .CreateSpec();
+            .Create();
 
         var sut = isEmpty.ChangeModelTo<string?>();
 
@@ -34,7 +34,7 @@ public class ChangeModelTypeSpecTests
             .Build<Type>(t => t.IsValueType)
             .WhenTrue("is value-type")
             .WhenFalse("is not value-type")
-            .CreateSpec();
+            .Create();
 
         var sut = isValueType.ChangeModelTo<object>(m => m.GetType());
 
@@ -53,14 +53,14 @@ public class ChangeModelTypeSpecTests
             Spec.Build<char>(char.IsLetter)
                 .WhenTrue(ch => $"'{ch}' is a letter")
                 .WhenFalse(ch => $"'{ch}' is not a letter")
-                .CreateSpec("is a letter");
+                .Create("is a letter");
 
         var isAllLetters = 
             Spec.Build(isLetter)
                 .As(result => result.AllTrue())
                 .WhenTrue("all characters are letters")
                 .WhenFalse(evaluation => evaluation.Assertions)
-                .CreateSpec() 
+                .Create() 
                 .ChangeModelTo<string>(m => m.ToCharArray());
 
         var act = isAllLetters.IsSatisfiedBy(model);
@@ -78,14 +78,14 @@ public class ChangeModelTypeSpecTests
             .Build<char>(char.IsLetter)
             .WhenTrue(ch => $"'{ch}' is a letter")
             .WhenFalse(ch => $"'{ch}' is not a letter")
-            .CreateSpec("is a letter");
+            .Create("is a letter");
 
         var isAllLetters = Spec
             .Build(isLetter)
             .AsAllSatisfied()
             .WhenTrue(evaluation => evaluation.Assertions)
             .WhenFalse(evaluation => evaluation.Assertions)
-            .CreateSpec("has all letters")
+            .Create("has all letters")
             .ChangeModelTo<string>(m => m.ToCharArray());
 
         var act = isAllLetters.IsSatisfiedBy(model);
@@ -100,14 +100,14 @@ public class ChangeModelTypeSpecTests
             .Build<char>(char.IsLetter)
             .WhenTrue(ch => $"'{ch}' is a letter")
             .WhenFalse(ch => $"'{ch}' is not a letter")
-            .CreateSpec("is a letter");
+            .Create("is a letter");
 
         var isAllLettersAsCharArray = Spec
             .Build(isLetter)
             .AsAllSatisfied()
             .WhenTrue(evaluation => evaluation.Assertions)
             .WhenFalse(evaluation => evaluation.Assertions)
-            .CreateSpec("has all letters");
+            .Create("has all letters");
             
         var isAllLetters = isAllLettersAsCharArray
             .ChangeModelTo<string>(m => m.ToCharArray());

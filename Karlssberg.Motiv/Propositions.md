@@ -24,7 +24,7 @@ The most basic proposition can be created by providing a predicate and a proposi
 ```csharp
 var isEven = Spec
     .Build<int>(n => n % 2 == 0)
-    .CreateSpec("even");
+    .Create("even");
 ```
 In this case, when the predicate is true, the proposition is satisfied and the reason given is `"even"`. When the 
 predicate is false, the proposition is not satisfied and the reason given is `"!even"`.
@@ -37,7 +37,7 @@ var isEven = Spec
     .Build<int>(n => n % 2 == 0)
     .WhenTrue("number is even")
     .WhenFalse("number is odd")
-    .CreateSpec();
+    .Create();
 ```
 In this case, when the predicate is true, the proposition is satisfied and the reason given is `"number is even"`. 
 When the predicate is false, the proposition is not satisfied and the reason given is `"number is odd"`. However, 
@@ -47,7 +47,7 @@ var isEven = Spec
     .Build<int>(n => n % 2 == 0)
     .WhenTrue(n => $"{n} is even")
     .WhenFalse(n => $"{n} is odd")
-    .CreateSpec();
+    .Create();
 ```
 ### Advanced proposition
 There may be times when a string of text describing the result is not enough. For example, you may want to present 
@@ -58,9 +58,9 @@ var isEven = Spec
     .Build<int>(n => n % 2 == 0)
     .WhenTrue(new { English = "the number is even", Spanish = "el número es par" })
     .WhenFalse(new { English = "the number is odd", Spanish = "el número es impar" })
-    .CreateSpec("is even number");
+    .Create("is even number");
 ```
-Notice that here you have to provide a string argument for the `CreateSpec()` method. This is because it is not 
+Notice that here you have to provide a string argument for the `Create()` method. This is because it is not 
 clear to the library what the proposition is about. It is therefore necessary to solicit this form the caller to 
 ensure that it is still possible to provide a meaningful explanation. This does however mean that the explanation may 
 contain a `!`, but in this scenario the caller is not expected to surface explanation to the user and instead use the 
@@ -70,7 +70,7 @@ var isEvenSpec = Spec
     .Build<int>(n => n % 2 == 0)
     .WhenTrue(new { English = "the number is even", Spanish = "el número es par" })
     .WhenFalse(new { English = "the number is odd", Spanish = "el número es impar" })
-    .CreateSpec("even");
+    .Create("even");
 
 var isEven = isEvenSpec.IsSatisfiedBy(3);
 isEven.Satisfied; // returns true
@@ -88,12 +88,12 @@ results which are evaluated to determine if the higher order specification is sa
 ```csharp
 var isEven = Spec
     .Build<int>(n => n % 2 == 0)
-    .CreateSpec("even");
+    .Create("even");
 
 var allAreEven = Spec
     .Build(isEven)
     .AsAllSatisfied()
-    .CreateSpec("all are even");
+    .Create("all are even");
 ```
 
 #### Higher order output
@@ -116,5 +116,5 @@ var allAreEven = Spec
             { FalseCount: 1 } => "only one model caused the proposition to be false",
             _ => $"{result.CausalResults.Count} models caused the proposition to be false"
         })
-    .CreateSpec();
+    .Create();
 ```

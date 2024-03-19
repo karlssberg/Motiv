@@ -20,13 +20,13 @@ public class AndSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("left");
+            .Create("left");
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = left & right;
 
@@ -51,13 +51,13 @@ public class AndSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("left");
+            .Create("left");
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = left & right;
 
@@ -81,13 +81,13 @@ public class AndSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var sut = left & right;
 
@@ -112,13 +112,13 @@ public class AndSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var sut = left & right;
 
@@ -138,13 +138,13 @@ public class AndSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("left");
+            .Create("left");
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right");
+            .Create("right");
 
         var expected = $"{left.Proposition} & {right.Proposition}";
 
@@ -166,13 +166,13 @@ public class AndSpecTests
         var left = Spec.Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
         ;
 
         var right = Spec.Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
         ;
 
         var expected = $"{left.Proposition} & {right.Proposition}";
@@ -193,7 +193,7 @@ public class AndSpecTests
         var normalSpec = predicate.ToSpec()
             .WhenTrue("true")
             .WhenFalse("false")
-            .CreateSpec();
+            .Create();
 
         var throwingSpec = new ThrowingSpec<object, string>(
             "should always throw",
@@ -220,19 +220,19 @@ public class AndSpecTests
             .Build<Subscription>(s => s.Start < now)
             .WhenTrue("subscription has started")
             .WhenFalse("subscription has not started")
-            .CreateSpec();
+            .Create();
 
         var hasSubscriptionEnded = Spec
             .Build<Subscription>(s => s.End < now)
             .WhenTrue("subscription has ended")
             .WhenFalse("subscription has not ended")
-            .CreateSpec();
+            .Create();
 
         return Spec
             .Build(hasSubscriptionStarted & !hasSubscriptionEnded)
             .WhenTrue("subscription is active")
             .WhenFalse("subscription is inactive")
-            .CreateSpec();
+            .Create();
     });
 
 
@@ -274,19 +274,19 @@ public class AndSpecTests
             .Build<Subscription>(s => s.Start < now)
             .WhenTrue("subscription has started")
             .WhenFalse("subscription has not started")
-            .CreateSpec();
+            .Create();
 
         var hasSubscriptionEndedSpec = Spec
             .Build<Subscription>(s => s.End < now)
             .WhenTrue("subscription has ended")
             .WhenFalse("subscription has not ended")
-            .CreateSpec();
+            .Create();
 
         var isLocationUsaSpec = Spec
             .Build<Device>(device => device.Country == Country.Usa)
             .WhenTrue("the location is in the USA")
             .WhenFalse("the location is outside the USA")
-            .CreateSpec();
+            .Create();
 
         var isActiveSpec = hasSubscriptionStartedSpec & !hasSubscriptionEndedSpec;
         var isActive = isActiveSpec.IsSatisfiedBy(new Subscription(now.AddDays(-1), now.AddDays(1)));
@@ -314,11 +314,11 @@ public class AndSpecTests
     {
         var leftSpec = Spec
             .Build<object>(_ => left)
-            .CreateSpec("left");
+            .Create("left");
 
         var rightSpec = Spec
             .Build<object>(_ => right)
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = leftSpec & rightSpec;
 

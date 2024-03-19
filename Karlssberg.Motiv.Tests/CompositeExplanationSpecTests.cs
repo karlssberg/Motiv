@@ -20,31 +20,31 @@ public class CompositeExplanationSpecTests
             .Build<string>(m => isSatisfied)
             .WhenTrue("true before")
             .WhenFalse("false before")
-            .CreateSpec();
+            .Create();
 
         var firstSpec = Spec
             .Build(underlying)
             .WhenTrue("true after - A")
             .WhenFalse("false after - A")
-            .CreateSpec();
+            .Create();
 
         var secondSpec = Spec
             .Build(underlying)
             .WhenTrue(model => $"true after + {model} - B")
             .WhenFalse("false after - B")
-            .CreateSpec("is second true");
+            .Create("is second true");
 
         var thirdSpec = Spec
             .Build(underlying)
             .WhenTrue("true after - C")
             .WhenFalse(model => $"false after + {model} - C")
-            .CreateSpec();
+            .Create();
 
         var fourthSpec = Spec
             .Build(underlying)
             .WhenTrue(model => $"true after + {model} - D")
             .WhenFalse(model => $"false after + {model} - D")
-            .CreateSpec("true after + model - D");
+            .Create("true after + model - D");
 
         var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
@@ -71,31 +71,31 @@ public class CompositeExplanationSpecTests
             .Build<string>(m => isSatisfied)
             .WhenTrue(trueReason)
             .WhenFalse(falseReason)
-            .CreateSpec();
+            .Create();
 
         var firstSpec = Spec
             .Build(underlying)
             .WhenTrue(1)
             .WhenFalse(2)
-            .CreateSpec("first spec");
+            .Create("first spec");
 
         var secondSpec = Spec
             .Build(underlying)
             .WhenTrue(model => 3)
             .WhenFalse(4)
-            .CreateSpec("second spec");
+            .Create("second spec");
 
         var thirdSpec = Spec
             .Build(underlying)
             .WhenTrue(5)
             .WhenFalse(model => 6)
-            .CreateSpec("third spec");
+            .Create("third spec");
 
         var fourthSpec = Spec
             .Build(underlying)
             .WhenTrue(model => 7)
             .WhenFalse(model => 8)
-            .CreateSpec("fourth spec");
+            .Create("fourth spec");
 
         var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
@@ -113,13 +113,13 @@ public class CompositeExplanationSpecTests
     {
         var underlying = Spec
             .Build<string>(_ => true)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
             .WhenFalse("false")
-            .CreateSpec();
+            .Create();
 
         var act = spec.IsSatisfiedBy("model");
 
@@ -132,13 +132,13 @@ public class CompositeExplanationSpecTests
     {
         var underlying = Spec
             .Build<string>(_ => true)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue(m => m)
             .WhenFalse("false")
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -153,13 +153,13 @@ public class CompositeExplanationSpecTests
             .Build<string>(_ => true)
             .WhenTrue("underlying true")
             .WhenFalse("underlying false")
-            .CreateSpec();
+            .Create();
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue((trueModel, result) => result.Metadata.Select(meta => $"{trueModel} - {meta}"))
             .WhenFalse("false")
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -176,13 +176,13 @@ public class CompositeExplanationSpecTests
             .Build<string>(_ => true)
             .WhenTrue("underlying true")
             .WhenFalse("underlying false")
-            .CreateSpec();
+            .Create();
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue((trueModel, result) => result.Metadata.Select(meta => $"{trueModel} - {meta}").First())
             .WhenFalse("false")
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -195,13 +195,13 @@ public class CompositeExplanationSpecTests
     {
         var underlying = Spec
             .Build<string>(_ => false)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
             .WhenFalse("false")
-            .CreateSpec();
+            .Create();
 
         var act = spec.IsSatisfiedBy("model");
 
@@ -214,13 +214,13 @@ public class CompositeExplanationSpecTests
     {
         var underlying = Spec
             .Build<string>(_ => false)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
             .WhenFalse(m => m)
-            .CreateSpec("is false");
+            .Create("is false");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -235,13 +235,13 @@ public class CompositeExplanationSpecTests
             .Build<string>(_ => false)
             .WhenTrue("underlying true")
             .WhenFalse("underlying false")
-            .CreateSpec();
+            .Create();
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
             .WhenFalse((falseModel, result) => result.Metadata.Select(meta => $"{falseModel} - {meta}"))
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -258,13 +258,13 @@ public class CompositeExplanationSpecTests
             .Build<string>(_ => false)
             .WhenTrue("underlying true")
             .WhenFalse("underlying false")
-            .CreateSpec();
+            .Create();
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
             .WhenFalse((falseResult, result) => result.Metadata.Select(meta => $"{falseResult} - {meta}").First())
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -278,11 +278,11 @@ public class CompositeExplanationSpecTests
     {
         var underlying = Spec
             .Build<bool>(m => m)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -297,19 +297,19 @@ public class CompositeExplanationSpecTests
             .Build<string>(_ => true)
             .WhenTrue("left true")
             .WhenFalse("left false")
-            .CreateSpec("left");
+            .Create("left");
         
         var right = Spec
             .Build<string>(_ => true)
             .WhenTrue("right true")
             .WhenFalse("right false")
-            .CreateSpec("right");
+            .Create("right");
         
         var underlying = left | right;
         
         var spec = Spec
             .Build(underlying)
-            .CreateSpec("top-level proposition");
+            .Create("top-level proposition");
         
         var act = spec.IsSatisfiedBy("model");
         
@@ -324,11 +324,11 @@ public class CompositeExplanationSpecTests
     {
         var left = Spec 
             .Build<bool>(m => m)
-            .CreateSpec("left");
+            .Create("left");
         
         var right = Spec
             .Build<bool>(m => !m)
-            .CreateSpec("right");
+            .Create("right");
 
         var orSpec = left | right;
         
@@ -336,7 +336,7 @@ public class CompositeExplanationSpecTests
         
         var sut = Spec
             .Build(orSpec)
-            .CreateSpec("composite");
+            .Create("composite");
         
         var act = sut.IsSatisfiedBy(model);
 
@@ -350,11 +350,11 @@ public class CompositeExplanationSpecTests
     {
         var left = Spec 
             .Build<bool>(m => m)
-            .CreateSpec("left");
+            .Create("left");
         
         var right = Spec
             .Build<bool>(m => !m)
-            .CreateSpec("right");
+            .Create("right");
 
         var orSpec = left | right;
         
@@ -362,7 +362,7 @@ public class CompositeExplanationSpecTests
         
         var sut = Spec
             .Build(orSpec)
-            .CreateSpec("composite");
+            .Create("composite");
         
         var act = sut.IsSatisfiedBy(model);
         
@@ -376,17 +376,17 @@ public class CompositeExplanationSpecTests
     {
         var left = Spec 
             .Build<bool>(m => m)
-            .CreateSpec("left");
+            .Create("left");
         
         var right = Spec
             .Build<bool>(m => !m)
-            .CreateSpec("right");
+            .Create("right");
 
         var orSpec = left | right;
         
         var sut = Spec
             .Build(orSpec)
-            .CreateSpec("composite");
+            .Create("composite");
         
         var act = sut.IsSatisfiedBy(model);
 
@@ -400,11 +400,11 @@ public class CompositeExplanationSpecTests
     {
         var left = Spec 
             .Build<bool>(m => m)
-            .CreateSpec("left");
+            .Create("left");
         
         var right = Spec
             .Build<bool>(m => !m)
-            .CreateSpec("right");
+            .Create("right");
 
         var orSpec = left | right;
         
@@ -412,7 +412,7 @@ public class CompositeExplanationSpecTests
         
         var sut = Spec
             .Build(orSpec)
-            .CreateSpec("composite");
+            .Create("composite");
         
         var act = sut.IsSatisfiedBy(model);
 
@@ -426,11 +426,11 @@ public class CompositeExplanationSpecTests
     {
         var left = Spec 
             .Build<bool>(m => m)
-            .CreateSpec("left");
+            .Create("left");
         
         var right = Spec
             .Build<bool>(m => !m)
-            .CreateSpec("right");
+            .Create("right");
 
         var orSpec = left | right;
         
@@ -438,7 +438,7 @@ public class CompositeExplanationSpecTests
         
         var sut = Spec
             .Build(orSpec)
-            .CreateSpec("composite");
+            .Create("composite");
         
         var act = sut.IsSatisfiedBy(model);
         
@@ -454,13 +454,13 @@ public class CompositeExplanationSpecTests
             .Build<bool>(m => m)
             .WhenTrue("left true")
             .WhenFalse("left false")
-            .CreateSpec();
+            .Create();
         
         var right = Spec
             .Build<bool>(m => !m)
             .WhenTrue("right true")
             .WhenFalse("right false")
-            .CreateSpec();
+            .Create();
         
         var underlying = left ^ !right;
         
@@ -468,7 +468,7 @@ public class CompositeExplanationSpecTests
             .Build(underlying)
             .WhenTrue((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
             .WhenFalse((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
-            .CreateSpec("top-level proposition");
+            .Create("top-level proposition");
         
         var act = spec.IsSatisfiedBy(model);
         

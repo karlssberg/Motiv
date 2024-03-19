@@ -5,7 +5,7 @@ public readonly ref struct ExplanationCompositeFactorySpecFactory<TModel, TUnder
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> falseBecause)
 {
-    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+    public SpecBase<TModel, string> Create(string proposition) =>
         new CompositeFactoryExplanationSpec<TModel, TUnderlyingMetadata>(
             specPredicate,
             trueBecause,

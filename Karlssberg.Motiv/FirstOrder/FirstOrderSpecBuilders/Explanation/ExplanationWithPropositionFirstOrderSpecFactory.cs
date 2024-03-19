@@ -16,7 +16,7 @@ public readonly ref struct ExplanationWithPropositionFirstOrderSpecFactory<TMode
     /// <param name="proposition">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, string}" />.</returns>
-    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+    public SpecBase<TModel, string> Create(string proposition) =>
         new MetadataSpec<TModel, string>(
             predicate,
             whenTrue,

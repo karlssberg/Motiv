@@ -6,4 +6,4 @@ public class IsHandRoyalFlushSpec() : Spec<Hand, HandRank>(() => Spec
     .Build(new IsHandFlushSpec() & new IsAceHighStraightBroadwaySpec())
     .WhenTrue(HandRank.RoyalFlush)
     .WhenFalse(HandRank.Unknown)
-    .CreateSpec("is a royal flush hand"));
+    .Create("is a royal flush hand"));

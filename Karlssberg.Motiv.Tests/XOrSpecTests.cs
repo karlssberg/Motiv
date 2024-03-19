@@ -19,13 +19,13 @@ public class XOrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("left");
+            .Create("left");
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = left ^ right;
 
@@ -52,13 +52,13 @@ public class XOrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("left");
+            .Create("left");
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = left ^ right;
 
@@ -82,19 +82,19 @@ public class XOrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("left");
+            .Create("left");
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = Spec
             .Build(left ^ right)
             .WhenTrue((_, result) => result.Causes.GetTrueAssertions())
             .WhenFalse("none")
-            .CreateSpec("xor");
+            .Create("xor");
 
         var result = sut.IsSatisfiedBy(model);
 
@@ -116,13 +116,13 @@ public class XOrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var sut = left ^ right;
 
@@ -146,13 +146,13 @@ public class XOrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var sut = left ^ right;
 
@@ -172,13 +172,13 @@ public class XOrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("left");
+            .Create("left");
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right");
+            .Create("right");
 
         var expected = $"{left.Proposition} ^ {right.Proposition}";
 
@@ -199,13 +199,13 @@ public class XOrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var expected = $"{left.Proposition} ^ {right.Proposition}";
 
@@ -224,7 +224,7 @@ public class XOrSpecTests
             .Build<object>(_ => true)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var throwingSpec = new ThrowingSpec<object, string>(
             "should always throw",
@@ -247,11 +247,11 @@ public class XOrSpecTests
     {
         var leftSpec = Spec
             .Build<object>(_ => left)
-            .CreateSpec("left");
+            .Create("left");
 
         var rightSpec = Spec
             .Build<object>(_ => right)
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = leftSpec ^ rightSpec;
 

@@ -16,4 +16,4 @@ public class IsHandStraightSpec() : Spec<Hand, HandRank>(() =>
        | new IsFiveHighStraightWheelOrBicycleSpec())
     .WhenTrue(HandRank.Straight)
     .WhenFalse(HandRank.Unknown)
-    .CreateSpec("is a straight hand"));
+    .Create("is a straight hand"));

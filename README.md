@@ -39,7 +39,7 @@ logical proposition
 ```csharp
 var isNegativeSpec = Spec
         .Build<int>(n => n < 0)
-        .CreateSpec("is negative");
+        .Create("is negative");
 
 var isNegative = isNegativeSpec.IsSatisfiedBy(3);
 
@@ -55,7 +55,7 @@ var isNegativeSpec = Spec
         .Build<int>(n => n < 0)
         .WhenTrue("the number is negative")
         .WhenFalse("the number is not negative")
-        .CreateSpec();
+        .Create();
 
 var isNegative = isNegativeSpec.IsSatisfiedBy(3);
 
@@ -73,7 +73,7 @@ var isNegativeSpec = Spec
                 0 => "the number is zero"
                 _ => "the number is positive"
         })
-        .CreateSpec();
+        .Create();
 
 var isEvenSpec = Spec
         .Build<int>(n => n % 2 == 0)
@@ -83,7 +83,7 @@ var isEvenSpec = Spec
                 _ => "the number is even"
         })
         .WhenFalse("the number is odd")
-        .CreateSpec(); 
+        .Create(); 
 
 var isPositiveAndOddSpec = !isNegativeSpec & !isEvenSpec;
 

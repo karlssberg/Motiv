@@ -20,31 +20,31 @@ public class CompositeMetadataSpecTests
             .Build<string>(m => isSatisfied)
             .WhenTrue(100)
             .WhenFalse(-100)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var firstSpec = Spec
             .Build(underlying)
             .WhenTrue(200)
             .WhenFalse(-200)
-            .CreateSpec("is first true");
+            .Create("is first true");
 
         var secondSpec = Spec
             .Build(underlying)
             .WhenTrue(_ => 300)
             .WhenFalse(-300)
-            .CreateSpec("is second true");
+            .Create("is second true");
 
         var thirdSpec = Spec
             .Build(underlying)
             .WhenTrue(400)
             .WhenFalse(_ => -400)
-            .CreateSpec("is third true");
+            .Create("is third true");
 
         var fourthSpec = Spec
             .Build(underlying)
             .WhenTrue(_ => 500)
             .WhenFalse(_ => -500)
-            .CreateSpec("is fourth true");
+            .Create("is fourth true");
 
         var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
@@ -68,31 +68,31 @@ public class CompositeMetadataSpecTests
             .Build<string>(m => isSatisfied)
             .WhenTrue(100)
             .WhenFalse(-100)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var firstSpec = Spec
             .Build(underlying)
             .WhenTrue(200)
             .WhenFalse(-200)
-            .CreateSpec("is first true");
+            .Create("is first true");
 
         var secondSpec = Spec
             .Build(underlying)
             .WhenTrue(_ => 300)
             .WhenFalse(-300)
-            .CreateSpec("is second true");
+            .Create("is second true");
 
         var thirdSpec = Spec
             .Build(underlying)
             .WhenTrue(400)
             .WhenFalse(_ => -400)
-            .CreateSpec("is third true");
+            .Create("is third true");
 
         var fourthSpec = Spec
             .Build(underlying)
             .WhenTrue(_ => 500)
             .WhenFalse(_ => -500)
-            .CreateSpec("is fourth true");
+            .Create("is fourth true");
 
         var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
@@ -119,31 +119,31 @@ public class CompositeMetadataSpecTests
             .Build<string>(m => isSatisfied)
             .WhenTrue(trueReason)
             .WhenFalse(falseReason)
-            .CreateSpec();
+            .Create();
 
         var firstSpec = Spec
             .Build(underlying)
             .WhenTrue(1)
             .WhenFalse(2)
-            .CreateSpec("first spec");
+            .Create("first spec");
 
         var secondSpec = Spec
             .Build(underlying)
             .WhenTrue(_ => 3)
             .WhenFalse(4)
-            .CreateSpec("second spec");
+            .Create("second spec");
 
         var thirdSpec = Spec
             .Build(underlying)
             .WhenTrue(5)
             .WhenFalse(_ => 6)
-            .CreateSpec("third spec");
+            .Create("third spec");
 
         var fourthSpec = Spec
             .Build(underlying)
             .WhenTrue((_, _) => 7)
             .WhenFalse(_ => 8)
-            .CreateSpec("fourth spec");
+            .Create("fourth spec");
 
         var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
@@ -161,13 +161,13 @@ public class CompositeMetadataSpecTests
     {
         var underlying = Spec
             .Build<string>(_ => true)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue(Binary.On)
             .WhenFalse(Binary.Off)
-            .CreateSpec("is on");
+            .Create("is on");
 
         var act = spec.IsSatisfiedBy("model");
 
@@ -181,13 +181,13 @@ public class CompositeMetadataSpecTests
     {
         var underlying = Spec
             .Build<bool>(m => m)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue(_ => Binary.On)
             .WhenFalse(_ => Binary.Off)
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -203,13 +203,13 @@ public class CompositeMetadataSpecTests
             .Build<bool>(m=> m)
             .WhenTrue(Binary.On)
             .WhenFalse(Binary.Off)
-            .CreateSpec("is on");
+            .Create("is on");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue((m, r) => (Model: m, r.Metadata))
             .WhenFalse((m, r) => (Model: m, r.Metadata))
-            .CreateSpec("is outer on");
+            .Create("is outer on");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -227,13 +227,13 @@ public class CompositeMetadataSpecTests
             .Build<string>(_ => true)
             .WhenTrue("underlying true")
             .WhenFalse("underlying false")
-            .CreateSpec();
+            .Create();
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue((trueModel, result) => result.Metadata.Select(meta => $"{trueModel} - {meta}").First())
             .WhenFalse("false")
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -248,13 +248,13 @@ public class CompositeMetadataSpecTests
     {
         var underlying = Spec
             .Build<string>(_ => true)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue(isTrueMetadata)
             .WhenFalse(isFalseMetadata)
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy("model");
 
@@ -269,13 +269,13 @@ public class CompositeMetadataSpecTests
     {
         var underlying = Spec
             .Build<Guid>(_ => true)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue(model => model)
             .WhenFalse(isFalseMetadata)
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(guidModel);
 
@@ -294,13 +294,13 @@ public class CompositeMetadataSpecTests
             .Build<Guid>(_ => true)
             .WhenTrue(underlyingTrueGuid)
             .WhenFalse(underlyingFalseGuid)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue((model, result) => result.Metadata.Select(meta => (model, meta)).First())
             .WhenFalse(model => (model, isFalseMetadata))
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(guidModel);
 
@@ -320,13 +320,13 @@ public class CompositeMetadataSpecTests
             .Build<Guid>(_ => true)
             .WhenTrue(underlyingTrueGuid)
             .WhenFalse(underlyingFalseGuid)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue((model, result) => result.Metadata.Select(meta => (model, meta)))
             .WhenFalse(model => (model, isFalseMetadata))
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(guidModel);
 
@@ -342,13 +342,13 @@ public class CompositeMetadataSpecTests
     {
         var underlying = Spec
             .Build<string>(_ => false)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
             .WhenFalse("false")
-            .CreateSpec();
+            .Create();
 
         var act = spec.IsSatisfiedBy("model");
 
@@ -361,13 +361,13 @@ public class CompositeMetadataSpecTests
     {
         var underlying = Spec
             .Build<string>(_ => false)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
             .WhenFalse(m => m)
-            .CreateSpec("is false");
+            .Create("is false");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -382,13 +382,13 @@ public class CompositeMetadataSpecTests
             .Build<string>(_ => false)
             .WhenTrue("underlying true")
             .WhenFalse("underlying false")
-            .CreateSpec();
+            .Create();
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
             .WhenFalse((falseModel, result) => result.Metadata.Select(meta => $"{falseModel} - {meta}"))
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -405,13 +405,13 @@ public class CompositeMetadataSpecTests
             .Build<string>(_ => false)
             .WhenTrue("underlying true")
             .WhenFalse("underlying false")
-            .CreateSpec();
+            .Create();
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
             .WhenFalse((falseResult, result) => result.Metadata.Select(meta => $"{falseResult} - {meta}").First())
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -426,13 +426,13 @@ public class CompositeMetadataSpecTests
     {
         var underlying = Spec
             .Build<string>(_ => false)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue(isTrueMetadata)
             .WhenFalse(isFalseMetadata)
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy("model");
 
@@ -447,13 +447,13 @@ public class CompositeMetadataSpecTests
     {
         var underlying = Spec
             .Build<Guid>(_ => false)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue(isTrueMetadata)
             .WhenFalse(model => model)
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(guidModel);
 
@@ -472,13 +472,13 @@ public class CompositeMetadataSpecTests
             .Build<Guid>(_ => false)
             .WhenTrue(underlyingTrueGuid)
             .WhenFalse(underlyingFalseGuid)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue(model => (model, isTrueMetadata))
             .WhenFalse((model, result) => result.Metadata.Select(meta => (model, meta)).First())
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(guidModel);
 
@@ -498,13 +498,13 @@ public class CompositeMetadataSpecTests
             .Build<Guid>(_ => false)
             .WhenTrue(underlyingTrueGuid)
             .WhenFalse(underlyingFalseGuid)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
             .WhenTrue(model => (model, isFalseMetadata))
             .WhenFalse((model, result) => result.Metadata.Select(meta => (model, meta)))
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(guidModel);
 
@@ -518,11 +518,11 @@ public class CompositeMetadataSpecTests
     {
         var underlying = Spec
             .Build<bool>(m => m)
-            .CreateSpec("is underlying true");
+            .Create("is underlying true");
 
         var spec = Spec
             .Build(underlying)
-            .CreateSpec("is true");
+            .Create("is true");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -537,19 +537,19 @@ public class CompositeMetadataSpecTests
             .Build<string>(_ => true)
             .WhenTrue("left true")
             .WhenFalse("left false")
-            .CreateSpec("left");
+            .Create("left");
         
         var right = Spec
             .Build<string>(_ => true)
             .WhenTrue("right true")
             .WhenFalse("right false")
-            .CreateSpec("right");
+            .Create("right");
         
         var underlying = left | right;
         
         var spec = Spec
             .Build(underlying)
-            .CreateSpec("top-level proposition");
+            .Create("top-level proposition");
         
         var act = spec.IsSatisfiedBy("model");
         
@@ -564,11 +564,11 @@ public class CompositeMetadataSpecTests
     {
         var left = Spec 
             .Build<bool>(m => m)
-            .CreateSpec("left");
+            .Create("left");
         
         var right = Spec
             .Build<bool>(m => !m)
-            .CreateSpec("right");
+            .Create("right");
 
         var orSpec = left | right;
         
@@ -576,7 +576,7 @@ public class CompositeMetadataSpecTests
         
         var sut = Spec
             .Build(orSpec)
-            .CreateSpec("composite");
+            .Create("composite");
         
         var act = sut.IsSatisfiedBy(model);
 
@@ -590,11 +590,11 @@ public class CompositeMetadataSpecTests
     {
         var left = Spec 
             .Build<bool>(m => m)
-            .CreateSpec("left");
+            .Create("left");
         
         var right = Spec
             .Build<bool>(m => !m)
-            .CreateSpec("right");
+            .Create("right");
 
         var orSpec = left | right;
         
@@ -602,7 +602,7 @@ public class CompositeMetadataSpecTests
         
         var sut = Spec
             .Build(orSpec)
-            .CreateSpec("composite");
+            .Create("composite");
         
         var act = sut.IsSatisfiedBy(model);
         
@@ -616,17 +616,17 @@ public class CompositeMetadataSpecTests
     {
         var left = Spec 
             .Build<bool>(m => m)
-            .CreateSpec("left");
+            .Create("left");
         
         var right = Spec
             .Build<bool>(m => !m)
-            .CreateSpec("right");
+            .Create("right");
 
         var orSpec = left | right;
         
         var sut = Spec
             .Build(orSpec)
-            .CreateSpec("composite");
+            .Create("composite");
         
         var act = sut.IsSatisfiedBy(model);
 
@@ -640,11 +640,11 @@ public class CompositeMetadataSpecTests
     {
         var left = Spec 
             .Build<bool>(m => m)
-            .CreateSpec("left");
+            .Create("left");
         
         var right = Spec
             .Build<bool>(m => !m)
-            .CreateSpec("right");
+            .Create("right");
 
         var orSpec = left | right;
         
@@ -652,7 +652,7 @@ public class CompositeMetadataSpecTests
         
         var sut = Spec
             .Build(orSpec)
-            .CreateSpec("composite");
+            .Create("composite");
         
         var act = sut.IsSatisfiedBy(model);
 
@@ -666,11 +666,11 @@ public class CompositeMetadataSpecTests
     {
         var left = Spec 
             .Build<bool>(m => m)
-            .CreateSpec("left");
+            .Create("left");
         
         var right = Spec
             .Build<bool>(m => !m)
-            .CreateSpec("right");
+            .Create("right");
 
         var orSpec = left | right;
         
@@ -678,7 +678,7 @@ public class CompositeMetadataSpecTests
         
         var sut = Spec
             .Build(orSpec)
-            .CreateSpec("composite");
+            .Create("composite");
         
         var act = sut.IsSatisfiedBy(model);
         
@@ -694,13 +694,13 @@ public class CompositeMetadataSpecTests
             .Build<bool>(m => m)
             .WhenTrue("left true")
             .WhenFalse("left false")
-            .CreateSpec();
+            .Create();
         
         var right = Spec
             .Build<bool>(m => !m)
             .WhenTrue("right true")
             .WhenFalse("right false")
-            .CreateSpec();
+            .Create();
         
         var underlying = left ^ !right;
         
@@ -708,7 +708,7 @@ public class CompositeMetadataSpecTests
             .Build(underlying)
             .WhenTrue((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
             .WhenFalse((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
-            .CreateSpec("top-level proposition");
+            .Create("top-level proposition");
         
         var act = spec.IsSatisfiedBy(model);
         

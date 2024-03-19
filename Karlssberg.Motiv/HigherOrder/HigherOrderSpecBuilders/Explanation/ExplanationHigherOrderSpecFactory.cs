@@ -7,7 +7,7 @@ public readonly ref struct ExplanationHigherOrderSpecFactory<TModel, TUnderlying
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
-    public SpecBase<IEnumerable<TModel>, string> CreateSpec(string proposition) =>
+    public SpecBase<IEnumerable<TModel>, string> Create(string proposition) =>
         new HigherOrderMetadataSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             higherOrderPredicate,

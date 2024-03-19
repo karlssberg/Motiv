@@ -14,13 +14,13 @@ var hasSubscriptionStartedSpec = Spec
     .Build<Subscription>(s => s.Start < now)
     .WhenTrue("subscription has started")
     .WhenFalse("subscription has not started")
-    .CreateSpec();
+    .Create();
 
 var hasSubscriptionNotEndedSpec = Spec
     .Build<Subscription>(s => s.End >= now)
     .WhenTrue("subscription has not ended")
     .WhenFalse("subscription has ended")
-    .CreateSpec();
+    .Create();
 
 var isActiveSubscriptionSpec = hasSubscriptionStartedSpec & hasSubscriptionNotEndedSpec;
 var result = isActiveSubscriptionSpec.IsSatisfiedBy(subscription);
@@ -47,7 +47,7 @@ var isActiveSubscriptionSpec = Spec
     .Build<Subscription>(hasSubscriptionStarted & !hasSubscriptionEnded)
     .WhenTrue("subscription is active")
     .WhenFalse("subscription is not active")
-    .CreateSpec();
+    .Create();
 ```
 
 You can also use the `&` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy` method. This is
@@ -58,7 +58,7 @@ var isValidLocationSpec = Spec
     .Build<Device>(device => device.Country == Country.USA)
     .WhenTrue("device is permitted to play content within the USA")
     .WhenFalse("device not permitted to play content outside of the USA")
-    .CreateSpec();
+    .Create();
 
 var isValidLocationResult = isValidLocationSpec.IsSatisfiedBy(device);
 var isActiveSubscriptionResult = isActiveSubscriptionSpec.IsSatisfiedBy(subscription)

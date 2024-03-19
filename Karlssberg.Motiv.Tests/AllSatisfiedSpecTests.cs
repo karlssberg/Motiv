@@ -23,14 +23,14 @@ public class AllSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         bool[] models = [first, second, third];
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
-            .CreateSpec("all are true");
+            .Create("all are true");
 
         var result = sut.IsSatisfiedBy(models);
 
@@ -88,14 +88,14 @@ public class AllSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString().ToLowerInvariant())
             .WhenFalse(false.ToString().ToLowerInvariant())
-            .CreateSpec();
+            .Create();
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
             .WhenTrue(evaluation => evaluation.Metadata)
             .WhenFalse(evaluation => evaluation.Metadata)
-            .CreateSpec("all are true");
+            .Create("all are true");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
@@ -154,14 +154,14 @@ public class AllSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString().ToLowerInvariant())
             .WhenFalse(false.ToString().ToLowerInvariant())
-            .CreateSpec();
+            .Create();
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
             .WhenTrue(evaluation => evaluation.Metadata)
             .WhenFalse(evaluation => evaluation.Metadata)
-            .CreateSpec("all are true");
+            .Create("all are true");
 
 
         var result = sut.IsSatisfiedBy([first, second, third]);
@@ -220,14 +220,14 @@ public class AllSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("is true");
+            .Create("is true");
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
             .WhenTrue(evaluation => evaluation.Metadata)
             .WhenFalse(evaluation => evaluation.Metadata)
-            .CreateSpec("all are true");
+            .Create("all are true");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
@@ -286,20 +286,20 @@ public class AllSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("left");
+            .Create("left");
 
         var underlyingSpecRight = Spec
             .Build<bool>(m => m)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = Spec
             .Build(underlyingSpecLeft & underlyingSpecRight)
             .AsAllSatisfied()
             .WhenTrue(evaluation => evaluation.Metadata)
             .WhenFalse(evaluation => evaluation.Metadata)
-            .CreateSpec("all are true");
+            .Create("all are true");
 
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
@@ -326,20 +326,20 @@ public class AllSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("left");
+            .Create("left");
 
         var underlyingSpecRight = Spec
             .Build<bool>(m => m)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = Spec
             .Build(underlyingSpecLeft & underlyingSpecRight)
             .AsAllSatisfied()
             .WhenTrue(evaluation => evaluation.Metadata)
             .WhenFalse(evaluation => evaluation.Metadata)
-            .CreateSpec("all are true");
+            .Create("all are true");
 
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
@@ -364,14 +364,14 @@ public class AllSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("is true");
+            .Create("is true");
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
             .WhenTrue("all  true")
             .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
-            .CreateSpec("all booleans are true");
+            .Create("all booleans are true");
 
         sut.Proposition.Statement.Should().Be(expectedSummary);
         sut.Proposition.Detailed.Should().Be(expectedFull);
@@ -393,14 +393,14 @@ public class AllSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue("is true")
             .WhenFalse("is false")
-            .CreateSpec();
+            .Create();
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("all are true");
+            .Create("all are true");
 
         sut.Proposition.Statement.Should().Be(expectedSummary);
         sut.Proposition.Detailed.Should().Be(expectedFull);
@@ -421,7 +421,7 @@ public class AllSatisfiedSpecTests
             .AsAllSatisfied()
             .WhenTrue(evaluation => $"{evaluation.TrueCount} true")
             .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
-            .CreateSpec("all booleans are true");
+            .Create("all booleans are true");
 
         var act = () => sut.IsSatisfiedBy([model]);
 
@@ -447,12 +447,12 @@ public class AllSatisfiedSpecTests
     {
         var underlying = Spec
             .Build<bool>(m => m)
-            .CreateSpec("underlying");
+            .Create("underlying");
         
         var sut = Spec
             .Build(underlying)
             .AsAllSatisfied()
-            .CreateSpec("all are true");
+            .Create("all are true");
 
         var result = sut.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
 

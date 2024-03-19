@@ -60,7 +60,7 @@ public readonly ref struct TrueFirstOrderSpecBuilder<TModel>(Func<TModel, bool> 
     /// <param name="proposition">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
-    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+    public SpecBase<TModel, string> Create(string proposition) =>
         new ExplanationSpec<TModel>(
             predicate,
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));

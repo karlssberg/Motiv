@@ -7,7 +7,7 @@ public readonly ref struct MetadataHigherOrderSpecFactory<TModel, TMetadata, TUn
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
-    public SpecBase<IEnumerable<TModel>, TMetadata> CreateSpec(string proposition) =>
+    public SpecBase<IEnumerable<TModel>, TMetadata> Create(string proposition) =>
         new HigherOrderMultiMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
             spec,
             higherOrderPredicate,

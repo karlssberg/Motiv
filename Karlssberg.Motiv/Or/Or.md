@@ -11,13 +11,13 @@ var expensiveProductSpec = Spec
     .Build<Product>(p => p.Price > 1000)
     .WhenTrue("product is expensive")
     .WhenFalse("product is not expensive")
-    .CreateSpec();
+    .Create();
 
 var isProductSizeSmallSpec = Spec
     .Build<Product>(p => p.Size == Size.Small)
     .WhenTrue("product is easily stolen")
     .WhenFalse("product is not easily stolen")
-    .CreateSpec();
+    .Create();
 
 var isAtRiskShelfItemSpec = expensiveProductSpec | isProductSizeSmallSpec;
 
@@ -36,7 +36,7 @@ var isProductAtRiskOfTheftSpec = Spec
     .Build<Subscription>(expensiveProductSpec | isProductSizeSmallSpec)
     .WhenTrue("the product is at risk of theft")
     .WhenFalse("the product is at low risk of theft")
-    .CreateSpec();
+    .Create();
 ```
 
 You can also use the `|` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy` method. This is
@@ -50,7 +50,7 @@ var isAtRiskLocationSpec = Spec
     .Build<Store>(store => store.ShopLiftingRatePercentage > 3)
     .WhenTrue("the store has high incidents of shop lifting")
     .WhenFalse("the store has low incidents of shop lifting")
-    .CreateSpec();
+    .Create();
 
 var isAtRiskLocation = isAtRiskLocationSpec.IsSatisfiedBy(store);
 var isProductAtRiskOfTheft = isProductAtRiskOfTheftSpec.IsSatisfiedBy(store);

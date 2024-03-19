@@ -16,7 +16,7 @@ public class NotSpecTests
             .Build<object>(_ => operand)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec($"is {operand}");
+            .Create($"is {operand}");
 
         var sut = !spec;
 
@@ -38,7 +38,7 @@ public class NotSpecTests
             .Build<object>(_ => operand)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("is true");
+            .Create("is true");
 
         var sut = !spec;
 
@@ -59,7 +59,7 @@ public class NotSpecTests
             .Build<object>(_ => operand)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var sut = !spec;
 
@@ -80,7 +80,7 @@ public class NotSpecTests
             .Build<object>(_ => operand)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var sut = !spec;
 

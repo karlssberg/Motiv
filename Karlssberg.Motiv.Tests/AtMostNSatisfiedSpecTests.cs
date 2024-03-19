@@ -32,14 +32,14 @@ public class AtMostNSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("returns the model");
+            .Create("returns the model");
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAtMostNSatisfied(0)
             .WhenTrue("none are satisfied")
             .WhenFalse("one or more are satisfied")
-            .CreateSpec();
+            .Create();
         
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
@@ -74,13 +74,13 @@ public class AtMostNSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("returns the model");
+            .Create("returns the model");
 
         var sut = Spec.Build(underlyingSpec)
             .AsAtMostNSatisfied(1)
             .WhenTrue("one is satisfied")
             .WhenFalse("none or more than one is not satisfied")
-            .CreateSpec();
+            .Create();
         
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
@@ -115,13 +115,13 @@ public class AtMostNSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("returns the model");
+            .Create("returns the model");
 
         var sut = Spec.Build(underlyingSpec)
             .AsAtMostNSatisfied(2)
             .WhenTrue("at most two are satisfied")
             .WhenFalse("more than two are satisfied")
-            .CreateSpec();
+            .Create();
         
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
@@ -156,14 +156,14 @@ public class AtMostNSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("returns the model");
+            .Create("returns the model");
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAtMostNSatisfied(4)
             .WhenTrue("at most four are satisfied")
             .WhenFalse("more than four are satisfied")
-            .CreateSpec();
+            .Create();
         
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
@@ -219,14 +219,14 @@ public class AtMostNSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue("is satisfied")
             .WhenFalse("is not satisfied")
-            .CreateSpec();;
+            .Create();;
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAtMostNSatisfied(1)
             .WhenTrue("at most one is satisfied")
             .WhenFalse("more than one is satisfied")
-            .CreateSpec();
+            .Create();
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
@@ -282,14 +282,14 @@ public class AtMostNSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAtMostNSatisfied(1)
             .WhenTrue("at most one is satisfied")
             .WhenFalse("more than one is satisfied")
-            .CreateSpec();
+            .Create();
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
@@ -345,14 +345,14 @@ public class AtMostNSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("is true");
+            .Create("is true");
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAtMostNSatisfied(1)
             .WhenTrue("at most one is satisfied")
             .WhenFalse("more than one is satisfied")
-            .CreateSpec();
+            .Create();
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
@@ -367,14 +367,14 @@ public class AtMostNSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue("underlying model is true")
             .WhenFalse("underlying model is false")
-            .CreateSpec("underlying spec description");
+            .Create("underlying spec description");
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAtMostNSatisfied(1)
             .WhenTrue("at most one is satisfied")
             .WhenFalse("more than one is satisfied")
-            .CreateSpec();
+            .Create();
 
         sut.Proposition.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -394,7 +394,7 @@ public class AtMostNSatisfiedSpecTests
             .AsAtMostNSatisfied(1)
             .WhenTrue("at most one is satisfied")
             .WhenFalse("more than one is satisfied")
-            .CreateSpec();
+            .Create();
 
         var act = () => sut.IsSatisfiedBy([model]);
 
@@ -419,12 +419,12 @@ public class AtMostNSatisfiedSpecTests
     {
         var underlying = Spec
             .Build<bool>(m => m)
-            .CreateSpec("underlying");
+            .Create("underlying");
         
         var sut = Spec
             .Build(underlying)
             .AsAtMostNSatisfied(2)
-            .CreateSpec("all are true");
+            .Create("all are true");
 
         var result = sut.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
 

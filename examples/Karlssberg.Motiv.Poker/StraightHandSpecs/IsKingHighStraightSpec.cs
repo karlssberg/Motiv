@@ -4,7 +4,7 @@ public class IsKingHighStraightSpec() : Spec<Hand>(
     Spec.Build(new DoesHandContainSpecifiedRanksSpec(KingHighStraight))
         .WhenTrue("is King High Straight")
         .WhenFalse("is Not King High Straight")
-        .CreateSpec())
+        .Create())
 {
     private static readonly ICollection<Rank> KingHighStraight = [Rank.King, Rank.Queen, Rank.Jack, Rank.Ten, Rank.Nine];
 }

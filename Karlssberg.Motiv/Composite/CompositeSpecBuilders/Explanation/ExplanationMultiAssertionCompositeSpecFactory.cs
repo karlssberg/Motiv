@@ -5,7 +5,7 @@ public readonly ref struct ExplanationMultiAssertionCompositeSpecFactory<TModel,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause)
 {
-    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+    public SpecBase<TModel, string> Create(string proposition) =>
         new CompositeMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             trueBecause,

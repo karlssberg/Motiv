@@ -23,7 +23,7 @@ public class AnySatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         bool[] models = [first, second, third];
 
@@ -31,7 +31,7 @@ public class AnySatisfiedSpecTests
             .AsAnySatisfied()
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("any satisfied");
+            .Create("any satisfied");
         var result = sut.IsSatisfiedBy(models);
 
         result.Satisfied.Should().Be(expected);
@@ -45,14 +45,14 @@ public class AnySatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue("boolean is true")   
             .WhenFalse("boolean is false")
-            .CreateSpec();
+            .Create();
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAnySatisfied()   
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("high-level description");
+            .Create("high-level description");
 
         sut.Proposition.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
@@ -109,14 +109,14 @@ public class AnySatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("is true");
+            .Create("is true");
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAnySatisfied()
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("any satisfied");
+            .Create("any satisfied");
             
         var result = sut.IsSatisfiedBy([first, second, third]);
 
@@ -174,7 +174,7 @@ public class AnySatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         bool[] models = [first, second, third];
 
@@ -183,7 +183,7 @@ public class AnySatisfiedSpecTests
             .AsAnySatisfied()
             .WhenTrue("all true")
             .WhenFalse("some false")
-            .CreateSpec();
+            .Create();
 
         var result = sut.IsSatisfiedBy(models);
 
@@ -241,14 +241,14 @@ public class AnySatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("is true");
+            .Create("is true");
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsAnySatisfied()
             .WhenTrue(_ => true.ToString())
             .WhenFalse(_ => false.ToString())
-            .CreateSpec("all true");
+            .Create("all true");
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
@@ -269,7 +269,7 @@ public class AnySatisfiedSpecTests
                 .AsAnySatisfied()
                 .WhenTrue("any true")
                 .WhenFalse("all false")
-                .CreateSpec();
+                .Create();
 
         var act = () => sut.IsSatisfiedBy([model]);
 
@@ -294,12 +294,12 @@ public class AnySatisfiedSpecTests
     {
         var underlying = Spec
             .Build<bool>(m => m)
-            .CreateSpec("underlying");
+            .Create("underlying");
         
         var sut = Spec
             .Build(underlying)
             .AsAnySatisfied()
-            .CreateSpec("all are true");
+            .Create("all are true");
 
         var result = sut.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
 

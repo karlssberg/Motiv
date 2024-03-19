@@ -7,7 +7,7 @@ public readonly ref struct ExplanationMultiAssertionHigherOrderSpecFactory<TMode
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
-    public SpecBase<IEnumerable<TModel>, string> CreateSpec(string proposition) =>
+    public SpecBase<IEnumerable<TModel>, string> Create(string proposition) =>
         new HigherOrderMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             higherOrderPredicate,

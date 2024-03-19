@@ -13,12 +13,12 @@ public class ElseIfSpecTests
         var antecedent = Spec.Build<bool>(m => m)
             .WhenTrue("antecedent satisfied")
             .WhenFalse("antecedent not satisfied")
-            .CreateSpec();
+            .Create();
 
         var consequent = Spec.Build<bool>(m => !m)
             .WhenTrue("consequent satisfied")
             .WhenFalse("consequent not satisfied")
-            .CreateSpec();
+            .Create();
 
         var sut = antecedent.ElseIf(consequent);
 
@@ -34,12 +34,12 @@ public class ElseIfSpecTests
         var antecedent = Spec.Build<bool>(m => m)
             .WhenTrue("antecedent")
             .WhenFalse("not antecedent")
-            .CreateSpec();
+            .Create();
 
         var consequent = Spec.Build<bool>(m => !m)
             .WhenTrue("consequent")
             .WhenFalse("not consequent")
-            .CreateSpec();
+            .Create();
 
         var sut = antecedent.ElseIf(consequent);
 
@@ -59,12 +59,12 @@ public class ElseIfSpecTests
         var antecedent = Spec.Build<bool>(m => m)
             .WhenTrue("antecedent")
             .WhenFalse("not antecedent")
-            .CreateSpec();
+            .Create();
 
         var consequent = Spec.Build<bool>(m => !m)
             .WhenTrue("consequent")
             .WhenFalse("not consequent")
-            .CreateSpec();
+            .Create();
 
         var sut = antecedent.ElseIf(consequent);
 
@@ -79,12 +79,12 @@ public class ElseIfSpecTests
         var antecedent = Spec.Build<bool>(m => m)
             .WhenTrue("antecedent")
             .WhenFalse("not antecedent")
-            .CreateSpec();
+            .Create();
 
         var consequent = Spec.Build<bool>(m => !m)
             .WhenTrue("consequent")
             .WhenFalse("not consequent")
-            .CreateSpec();
+            .Create();
 
         var sut = antecedent.ElseIf(consequent);
         
@@ -108,12 +108,12 @@ public class ElseIfSpecTests
         var antecedent = Spec.Build<bool>(m => m)
             .WhenTrue("antecedent")
             .WhenFalse("not antecedent")
-            .CreateSpec();
+            .Create();
 
         var consequent = Spec.Build<bool>(m => !m)
             .WhenTrue("consequent")
             .WhenFalse("not consequent")
-            .CreateSpec();
+            .Create();
 
         var sut = antecedent.ElseIf(consequent);
         

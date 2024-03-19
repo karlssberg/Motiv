@@ -16,14 +16,14 @@ public class ChangeHigherOrderMetadataSpecTests
             .Build<int>(i => i % 2 == 0)
             .WhenTrue(i => $"{i} is even")
             .WhenFalse(i => $"{i} is odd")
-            .CreateSpec("is even spec");
+            .Create("is even spec");
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsNSatisfied(2)
             .WhenTrue("is a pair of even numbers")
             .WhenFalse("is not a pair of even numbers")
-            .CreateSpec();
+            .Create();
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
         
@@ -37,14 +37,14 @@ public class ChangeHigherOrderMetadataSpecTests
             .Build<int>(i => i % 2 == 0)
             .WhenTrue("is even")
             .WhenFalse("is odd")
-            .CreateSpec("is even spec");
+            .Create("is even spec");
 
         var sut = Spec
             .Build(underlyingSpec)
             .AsNSatisfied(2)
             .WhenTrue("is a pair of even numbers")
             .WhenFalse("is not a pair of even numbers")
-            .CreateSpec();
+            .Create();
 
         sut.Proposition.Statement.Should().Be("is a pair of even numbers");
     }
@@ -64,26 +64,26 @@ public class ChangeHigherOrderMetadataSpecTests
             .Build<bool>(b => b)
             .WhenTrue("is true")
             .WhenFalse("is false")
-            .CreateSpec();
+            .Create();
 
         var firstSpec = Spec  
             .Build(underlying)
             .AsAllSatisfied()
             .WhenTrue("first all true")
             .WhenFalse("first all false")
-            .CreateSpec();
+            .Create();
             
         var secondSpec = Spec
             .Build(firstSpec)
             .WhenTrue("second all true")
             .WhenFalse("second all false")
-            .CreateSpec();
+            .Create();
             
         var sut = Spec
             .Build(secondSpec)
             .WhenTrue("third all true")
             .WhenFalse("third all false")
-            .CreateSpec();
+            .Create();
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
@@ -105,25 +105,25 @@ public class ChangeHigherOrderMetadataSpecTests
             .Build<bool>(b => b)
             .WhenTrue("is true")
             .WhenFalse("is false")
-            .CreateSpec();
+            .Create();
 
         var firstSpec = Spec
             .Build(underlyingSpec).AsAllSatisfied()
             .WhenTrue("first true")
             .WhenFalse("first false")
-            .CreateSpec("all even");
+            .Create("all even");
             
         var secondSpec = Spec
             .Build(firstSpec)
             .WhenTrue("second true")
             .WhenFalse("second false")
-            .CreateSpec();
+            .Create();
             
         var sut = Spec
             .Build(secondSpec)
             .WhenTrue("third true")
             .WhenFalse("third false")
-            .CreateSpec("all even");
+            .Create("all even");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
         
@@ -148,7 +148,7 @@ public class ChangeHigherOrderMetadataSpecTests
             .Build<int>(i => i % 2 == 0)
             .WhenTrue(i => $"{i} is even")
             .WhenFalse(i => $"{i} is odd")
-            .CreateSpec("is even spec");
+            .Create("is even spec");
 
         var sut = Spec
             .Build(underlyingSpec)
@@ -162,7 +162,7 @@ public class ChangeHigherOrderMetadataSpecTests
                 
                 return $"not all even: {serializedModels} {isOrAre} odd";
             })
-            .CreateSpec();
+            .Create();
 
         var act = sut.IsSatisfiedBy([first, second, third, forth]);
             

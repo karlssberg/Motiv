@@ -6,14 +6,14 @@ public readonly ref struct ExplanationMultiAssertionWithPropositionCompositeSpec
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause,
     string candidateProposition)
 {
-    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+    public SpecBase<TModel, string> Create(string proposition) =>
         new CompositeMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             trueBecause,
             falseBecause,
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
     
-    public SpecBase<TModel, string> CreateSpec() =>
+    public SpecBase<TModel, string> Create() =>
         new CompositeMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             trueBecause,

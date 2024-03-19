@@ -4,4 +4,4 @@ public class IsHandPairSpec() : Spec<Hand, HandRank>(
     Spec.Build(new HasNPairsSpec(1))
         .WhenTrue(HandRank.Pair)
         .WhenFalse(HandRank.Unknown)
-        .CreateSpec("is a pair hand"));
+        .Create("is a pair hand"));

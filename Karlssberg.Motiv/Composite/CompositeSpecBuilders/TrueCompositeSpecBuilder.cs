@@ -41,7 +41,7 @@ public readonly ref struct TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata>
         Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector) =>
         new(spec, higherOrderPredicate, causeSelector);
     
-    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+    public SpecBase<TModel, string> Create(string proposition) =>
         new CompositeMetadataSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             (_, _) => proposition,

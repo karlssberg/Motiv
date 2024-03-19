@@ -12,7 +12,7 @@ public class ExplanationSpecTests
         var spec = Spec.Build<int>(i => i % 2 == 0)
             .WhenTrue("is even")
             .WhenFalse("is odd")
-            .CreateSpec();
+            .Create();
         
         var result = spec.IsSatisfiedBy(model);
         result.Assertions.Should().BeEquivalentTo(expected);
@@ -28,7 +28,7 @@ public class ExplanationSpecTests
         var spec = Spec.Build<int>(i => i % 2 == 0)
             .WhenTrue("even")
             .WhenFalse("odd")
-            .CreateSpec("is even");
+            .Create("is even");
         
         var result = spec.IsSatisfiedBy(model);
         result.Reason.Should().Be(expected);
@@ -42,7 +42,7 @@ public class ExplanationSpecTests
         var spec = Spec.Build<int>(i => i % 2 == 0)
             .WhenTrue("even")
             .WhenFalse("odd")
-            .CreateSpec();
+            .Create();
         
         var result = spec.IsSatisfiedBy(model);
         result.Reason.Should().Be(expected);

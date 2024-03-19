@@ -8,7 +8,7 @@ public readonly ref struct ExplanationMultiAssertionWithPropositionHigherOrderSp
     string candidateProposition,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
-    public SpecBase<IEnumerable<TModel>, string> CreateSpec(string proposition) =>
+    public SpecBase<IEnumerable<TModel>, string> Create(string proposition) =>
         new HigherOrderMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             higherOrderPredicate,
@@ -17,7 +17,7 @@ public readonly ref struct ExplanationMultiAssertionWithPropositionHigherOrderSp
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)),
             causeSelector);
     
-    public SpecBase<IEnumerable<TModel>, string> CreateSpec() =>
+    public SpecBase<IEnumerable<TModel>, string> Create() =>
         new HigherOrderMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             higherOrderPredicate,

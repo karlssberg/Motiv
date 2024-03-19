@@ -12,7 +12,7 @@ public class ExplanationTests
         var spec = Spec.Build<int>(i => i % 2 == 0)
             .WhenTrue("is even")
             .WhenFalse("is odd")
-            .CreateSpec();
+            .Create();
         
         var result = spec.IsSatisfiedBy(n);
         result.Explanation.Assertions.Should().ContainSingle(expected);

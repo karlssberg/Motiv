@@ -12,13 +12,13 @@ var isRedLightSpec = Spec
     .Build<TrafficLight>(t => t.Color == Color.Red)
     .WhenTrue("light is red")
     .WhenFalse("light is not red")
-    .CreateSpec();
+    .Create();
 
 var isGreenLightSpec = Spec
     .Build<TrafficLight>(t => t.Color == Color.Green)
     .WhenTrue("light is green")
     .WhenFalse("light is not green")
-    .CreateSpec();
+    .Create();
 
 var isOperationalTrafficLightSpec = isRedLightSpec ^ isGreenLightSpec;
 var isOperationalTrafficLight = isOperationalTrafficLightSpec.IsSatisfiedBy(trafficLight);
@@ -40,7 +40,7 @@ var isOperationalTrafficLightSpec = Spec
     .Build<TrafficLight>(isRedLightSpec ^ isGreenLightSpec)
     .WhenTrue("the traffic light is functioning correctly")
     .WhenFalse("the traffic light is faulty")
-    .CreateSpec();
+    .Create();
 ```
 
 You can also use the `^` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy` method. This is

@@ -99,11 +99,11 @@ public class ExplanationBooleanResultTests
             .Build<bool>(m => m)
             .WhenTrue("underlying is true")
             .WhenFalse("underlying is false")
-            .CreateSpec();
+            .Create();
 
         var spec = Spec
             .Build(underlyingSpec)
-            .CreateSpec("top-level proposition");
+            .Create("top-level proposition");
 
         var act = spec.IsSatisfiedBy(model);
 
@@ -122,12 +122,12 @@ public class ExplanationBooleanResultTests
     {
         var leftResult = Spec
             .Build<bool>(m => m)
-            .CreateSpec("left")
+            .Create("left")
             .IsSatisfiedBy(leftSatisfied);
         
         var rightResult= Spec
             .Build<bool>(m => m)
-            .CreateSpec("right")
+            .Create("right")
             .IsSatisfiedBy(rightSatisfied);
         
         var act = leftResult.Equals(rightResult);
@@ -147,14 +147,14 @@ public class ExplanationBooleanResultTests
     {
         var leftResult = Spec
             .Build<bool>(m => m)
-            .CreateSpec("left")
+            .Create("left")
             .IsSatisfiedBy(leftSatisfied);
         
         var rightResult= Spec
             .Build<bool>(m => m)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right")
+            .Create("right")
             .IsSatisfiedBy(rightSatisfied);
         
         var act = leftResult == rightResult;

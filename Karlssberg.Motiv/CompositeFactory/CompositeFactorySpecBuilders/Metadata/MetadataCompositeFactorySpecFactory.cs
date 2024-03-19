@@ -17,7 +17,7 @@ public readonly ref struct MetadataCompositeFactorySpecFactory<TModel, TMetadata
     /// <param name="proposition">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
-    public SpecBase<TModel, TMetadata> CreateSpec(string proposition) =>
+    public SpecBase<TModel, TMetadata> Create(string proposition) =>
         new CompositeFactoryMultiMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
             specPredicate,
             whenTrue,

@@ -12,7 +12,7 @@ At its most basic you can provide a predicate and a propositional statement.
 ```csharp
 var isEven = Spec
     .Build<int>(n => n % 2 == 0)
-    .CreateSpec("even");
+    .Create("even");
 
 isEven.IsSatisfiedBy(2).Satisfied; // returns true
 isEven.IsSatisfiedBy(3).Satisfied; // returns false
@@ -28,7 +28,7 @@ var isEven = Spec
     .Build<int>(n => n % 2 == 0)
     .WhenTrue("number is even")
     .WhenFalse("number is odd")
-    .CreateSpec();
+    .Create();
 
 isEven.IsSatisfiedBy(2).Reason; // returns "number is even"
 isEven.IsSatisfiedBy(3).Reason; // returns "number is odd"
@@ -41,7 +41,7 @@ var isEven = Spec
     .Build<int>(n => n % 2 == 0)
     .WhenTrue(n => $"{n} is even")
     .WhenFalse(n => $"{n} is odd")
-    .CreateSpec();
+    .Create();
 
 isEven.IsSatisfiedBy(2).Reason; // returns "2 is even"
 isEven.IsSatisfiedBy(3).Reason; // returns "3 is odd"
@@ -57,7 +57,7 @@ var isEven = Spec
     .Build<int>(n => n % 2 == 0)
     .WhenTrue(n => new { English = "the number is even", Spanish = "el número es par" })
     .WhenFalse(n => new { English = "the number is odd", Spanish = "el número es impar" })
-    .CreateSpec("is even number");
+    .Create("is even number");
 
 isEven.IsSatisfiedBy(2).Satisfied; // returns true
 isEven.IsSatisfiedBy(2).Reason; // returns "is even number"
@@ -77,13 +77,13 @@ var isPositive = Spec
     .Build<int>(n => n > 0)
     .WhenTrue("the number is positive")
     .WhenFalse(n => $"the number is {n < 0 ? "negative" : "zero"}")
-    .CreateSpec();
+    .Create();
 
 var isEven = Spec
     .Build<int>(n => n % 2 == 0)
     .WhenTrue("the number is even")
     .WhenFalse("the number is odd")
-    .CreateSpec(); 
+    .Create(); 
 
 var isPositiveAndEven = isPositive & isEven;
 

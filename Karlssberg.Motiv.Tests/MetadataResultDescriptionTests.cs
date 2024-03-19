@@ -14,7 +14,7 @@ public class MetadataResultDescriptionTests
             .Build<object>(m => isTrue)
             .WhenTrue("is true")
             .WhenFalse("is false")
-            .CreateSpec($"always {expected}");
+            .Create($"always {expected}");
 
         var result = spec.IsSatisfiedBy(new object());
 
@@ -33,7 +33,7 @@ public class MetadataResultDescriptionTests
             .Build<object>(m => isTrue)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec($"always true");
+            .Create($"always true");
 
         var result = spec.IsSatisfiedBy(model);
 
@@ -53,11 +53,11 @@ public class MetadataResultDescriptionTests
     {
         var left = Spec
             .Build<bool>(_ => leftResult)
-            .CreateSpec("left is true");
+            .Create("left is true");
         
         var right = Spec
             .Build<bool>(_ => rightResult)
-            .CreateSpec("right is true");
+            .Create("right is true");
         
         var spec = (left & !right) | (!left & right);
 
@@ -93,19 +93,19 @@ public class MetadataResultDescriptionTests
     {
         var first = Spec
             .Build<bool>(_ => firstValue)
-            .CreateSpec("first");
+            .Create("first");
         
         var second = Spec
             .Build<bool>(_ => secondValue)
-            .CreateSpec("second");
+            .Create("second");
         
         var third = Spec
             .Build<bool>(_ => thirdValue)
-            .CreateSpec("third");
+            .Create("third");
         
         var forth = Spec
             .Build<bool>(_ => forthValue)
-            .CreateSpec("forth");
+            .Create("forth");
         
         var spec = (first | second) & (third | forth);
         
@@ -143,25 +143,25 @@ public class MetadataResultDescriptionTests
             .Build<bool>(_ => firstValue)
             .WhenTrue("is first")
             .WhenFalse("not first")
-            .CreateSpec();
+            .Create();
         
         var second = Spec
             .Build<bool>(_ => secondValue)
             .WhenTrue("is second")
             .WhenFalse("not second")
-            .CreateSpec();
+            .Create();
         
         var third = Spec
             .Build<bool>(_ => thirdValue)
             .WhenTrue("is third")
             .WhenFalse("not third")
-            .CreateSpec();
+            .Create();
         
         var forth = Spec
             .Build<bool>(_ => forthValue)
             .WhenTrue("is forth")
             .WhenFalse("not forth")
-            .CreateSpec();
+            .Create();
         
         var spec = (first | second) & (third | forth);
         
@@ -276,19 +276,19 @@ public class MetadataResultDescriptionTests
     {
         var first = Spec
             .Build<bool>(val => firstValue & val)
-            .CreateSpec("first");
+            .Create("first");
         
         var second = Spec
             .Build<bool>(val => secondValue & val)
-            .CreateSpec("second");
+            .Create("second");
         
         var third = Spec
             .Build<bool>(val => thirdValue & val)
-            .CreateSpec("third");
+            .Create("third");
         
         var forth = Spec
             .Build<bool>(val => forthValue & val)
-            .CreateSpec("forth");
+            .Create("forth");
         
         var underlying = (first | second) & (third | forth);
         var spec = Spec
@@ -296,7 +296,7 @@ public class MetadataResultDescriptionTests
             .AsAllSatisfied()
             .WhenTrue("all are true")
             .WhenFalse("some are false")
-            .CreateSpec();
+            .Create();
         
         var result = spec.IsSatisfiedBy([true]);
 
@@ -393,19 +393,19 @@ public class MetadataResultDescriptionTests
     {
         var first = Spec
             .Build<bool>(val => firstValue & val)
-            .CreateSpec("first");
+            .Create("first");
         
         var second = Spec
             .Build<bool>(val => secondValue & val)
-            .CreateSpec("second");
+            .Create("second");
         
         var third = Spec
             .Build<bool>(val => thirdValue & val)
-            .CreateSpec("third");
+            .Create("third");
         
         var forth = Spec
             .Build<bool>(val => forthValue & val)
-            .CreateSpec("forth");
+            .Create("forth");
         
         var spec = (first | !second) & !(third | !forth);
         var result = spec.IsSatisfiedBy(true);
@@ -421,7 +421,7 @@ public class MetadataResultDescriptionTests
             .Build<object>(_ => true)
             .WhenTrue("is true")
             .WhenFalse("is false")
-            .CreateSpec("always true");
+            .Create("always true");
 
         var result = spec.IsSatisfiedBy(model);
 

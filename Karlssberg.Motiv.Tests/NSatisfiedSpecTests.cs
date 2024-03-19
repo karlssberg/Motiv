@@ -19,14 +19,14 @@ public class NSatisfiedSpecTests
             .Build<int>(i => i % 2 == 0)
             .WhenTrue(i => $"{i} is even")
             .WhenFalse(i => $"{i} is odd")
-            .CreateSpec("is even spec");
+            .Create("is even spec");
 
         var sut = Spec
             .Build(isEven)
             .AsNSatisfied(2)
             .WhenTrue("is a pair of even numbers")
             .WhenFalse("is not a pair of even numbers")
-            .CreateSpec();
+            .Create();
 
         var result = sut.IsSatisfiedBy([first, second]);
 
@@ -51,7 +51,7 @@ public class NSatisfiedSpecTests
             .Build<int>(n => n % 2 == 0)
             .WhenTrue(n => $"{n} is even")
             .WhenFalse(n => $"{n} is odd")
-            .CreateSpec("is even spec");
+            .Create("is even spec");
 
         var sut = Spec
             .Build(isEven)
@@ -59,7 +59,7 @@ public class NSatisfiedSpecTests
             .WhenTrue((results) =>
                 $"{results.CausalModels.Humanize()} are a pair of even numbers")
             .WhenFalse("The pack does not contain exactly a pair of even numbers")
-            .CreateSpec("a pair of even numbers");
+            .Create("a pair of even numbers");
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
@@ -82,14 +82,14 @@ public class NSatisfiedSpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString().ToLowerInvariant())
             .WhenFalse(false.ToString().ToLowerInvariant())
-            .CreateSpec();
+            .Create();
 
         var sut = Spec
             .Build(isEven)
             .AsNSatisfied(2)
             .WhenTrue("2 even")
             .WhenFalse(evaluation => $"{evaluation.TrueCount} even and {evaluation.FalseCount} odd")
-            .CreateSpec();
+            .Create();
         
         var result = sut.IsSatisfiedBy([first, second]);
 
@@ -103,14 +103,14 @@ public class NSatisfiedSpecTests
             .Build<int>(n => n % 2 == 0)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("is even");
+            .Create("is even");
 
         var sut = Spec
             .Build(isEven)
             .AsNSatisfied(2)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("a pair of even numbers");
+            .Create("a pair of even numbers");
 
         sut.Proposition.Statement.Should().Be("a pair of even numbers");
     }

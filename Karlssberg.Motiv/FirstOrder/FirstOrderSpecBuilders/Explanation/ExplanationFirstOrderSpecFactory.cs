@@ -10,7 +10,7 @@ public readonly ref struct ExplanationFirstOrderSpecFactory<TModel>(
 {
     /// <summary>Creates a specification with explanations for when the condition is true or false.</summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, string}" />.</returns>
-    public SpecBase<TModel, string> CreateSpec() =>
+    public SpecBase<TModel, string> Create() =>
         new ExplanationSpec<TModel>(
             predicate,
             trueBecause,
@@ -24,7 +24,7 @@ public readonly ref struct ExplanationFirstOrderSpecFactory<TModel>(
     /// <param name="proposition">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, string}" />.</returns>
-    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+    public SpecBase<TModel, string> Create(string proposition) =>
         new MetadataSpec<TModel, string>(
             predicate,
             trueBecause,

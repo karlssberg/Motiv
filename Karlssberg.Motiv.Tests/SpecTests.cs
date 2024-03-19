@@ -13,7 +13,7 @@ public class SpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("returns model value");
+            .Create("returns model value");
 
         var result = sut.IsSatisfiedBy(model);
 
@@ -30,13 +30,13 @@ public class SpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
         
         var sut = Spec
             .Build(() => underlyingSpec)
             .WhenTrue("underlying true")
             .WhenFalse("underlying false")
-            .CreateSpec("is true");
+            .Create("is true");
 
         var result = sut.IsSatisfiedBy(model);
 
@@ -52,13 +52,13 @@ public class SpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
         
         var sut = Spec
             .Build(() => underlyingSpec)
             .WhenTrue("underlying true")
             .WhenFalse("underlying false")
-            .CreateSpec("is true");
+            .Create("is true");
 
         var result = sut.IsSatisfiedBy(model);
         
@@ -75,7 +75,7 @@ public class SpecTests
             .Build<string?>(m => m is null)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("is null");
+            .Create("is null");
 
         var result = sut.IsSatisfiedBy(null);
 
@@ -92,7 +92,7 @@ public class SpecTests
             .Build<bool>(m => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var result = sut.IsSatisfiedBy(model);
 
@@ -109,13 +109,13 @@ public class SpecTests
             .Build<bool>(m => m)
             .WhenTrue("is true")
             .WhenFalse("is false")
-            .CreateSpec();
+            .Create();
         
         var sut = Spec
             .Build(underlyingSpec)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("new spec");
+            .Create("new spec");
 
         var result = sut.IsSatisfiedBy(model);
 
@@ -130,7 +130,7 @@ public class SpecTests
             .Build<string?>(m => m is null)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var result = sut.IsSatisfiedBy(null);
 
@@ -145,7 +145,7 @@ public class SpecTests
             .Build<string?>(default(Func<string, bool>)!)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         act.Should().Throw<ArgumentNullException>();
     }
@@ -159,7 +159,7 @@ public class SpecTests
             .Build<string?>(m => m is null)
             .WhenTrue(trueMetadata!)
             .WhenFalse(falseMetadata!)
-            .CreateSpec("is null");
+            .Create("is null");
 
         act.Should().Throw<ArgumentException>();
     }
@@ -173,7 +173,7 @@ public class SpecTests
             .Build<string?>(m => m is null)
             .WhenTrue(trueBecause!)
             .WhenFalse(falseBecause!)
-            .CreateSpec();
+            .Create();
 
         act.Should().Throw<ArgumentException>();
     }
@@ -185,7 +185,7 @@ public class SpecTests
             .Build((Func<string?, bool>)(_ => throw new Exception("should be wrapped")))
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec()
+            .Create()
             .IsSatisfiedBy(null);
 
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>();
@@ -200,7 +200,7 @@ public class SpecTests
             .Build((Func<string?, bool>)(_ => throw new Exception("should be wrapped")))
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("should throw");
+            .Create("should throw");
 
         var act = () => spec.IsSatisfiedBy(null);
 
@@ -216,7 +216,7 @@ public class SpecTests
             .Build<object?>(m => m is null)
             .WhenTrue("is null")
             .WhenFalse("is not null")
-            .CreateSpec();
+            .Create();
 
         var act = sut.Proposition.Detailed;
 
@@ -230,11 +230,11 @@ public class SpecTests
             .Build<object?>(m => m is null)
             .WhenTrue("is null")
             .WhenFalse("is not null")
-            .CreateSpec();
+            .Create();
         
         var sut = Spec
             .Build(underlying)
-            .CreateSpec("top-level proposition");
+            .Create("top-level proposition");
 
         var act = sut.Proposition.Detailed;
 

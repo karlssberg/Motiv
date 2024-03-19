@@ -19,13 +19,13 @@ public class OrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("left");
+            .Create("left");
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = left | right;
 
@@ -50,13 +50,13 @@ public class OrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("left");
+            .Create("left");
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = left | right;
 
@@ -81,14 +81,14 @@ public class OrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("left");
+            .Create("left");
 
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = left | right;
 
@@ -112,13 +112,13 @@ public class OrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var sut = left | right;
 
@@ -138,13 +138,13 @@ public class OrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("left");
+            .Create("left");
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true)
             .WhenFalse(false)
-            .CreateSpec("right");
+            .Create("right");
 
         var expected = $"{left.Proposition} | {right.Proposition}";
 
@@ -165,13 +165,13 @@ public class OrSpecTests
             .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var right = Spec
             .Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
-            .CreateSpec();
+            .Create();
 
         var expected = $"{left.Proposition} | {right.Proposition}";
 
@@ -190,7 +190,7 @@ public class OrSpecTests
             .Build<object>(_ => true)
             .WhenTrue("true")
             .WhenFalse("false")
-            .CreateSpec();
+            .Create();
 
         var throwingSpec = new ThrowingSpec<object, string>(
             "should always throw",
@@ -214,11 +214,11 @@ public class OrSpecTests
     {
         var leftSpec = Spec
             .Build<object>(_ => left)
-            .CreateSpec("left");
+            .Create("left");
 
         var rightSpec = Spec
             .Build<object>(_ => right)
-            .CreateSpec("right");
+            .Create("right");
 
         var sut = leftSpec | rightSpec;
 

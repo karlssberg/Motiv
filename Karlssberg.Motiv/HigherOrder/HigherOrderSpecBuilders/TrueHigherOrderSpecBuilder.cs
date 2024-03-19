@@ -43,7 +43,7 @@ public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadat
             trueBecause,
             causeSelector);
     
-    public SpecBase<IEnumerable<TModel>, string> CreateSpec(string proposition) =>
+    public SpecBase<IEnumerable<TModel>, string> Create(string proposition) =>
         new HigherOrderMetadataSpec<TModel, string, TUnderlyingMetadata>(
             spec,
             higherOrderPredicate,

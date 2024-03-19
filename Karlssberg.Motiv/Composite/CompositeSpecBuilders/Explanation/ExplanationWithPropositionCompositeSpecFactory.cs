@@ -6,14 +6,14 @@ public readonly ref struct ExplanationWithPropositionCompositeSpecFactory<TModel
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> falseBecause,
     string candidateProposition)
 {
-    public SpecBase<TModel, string> CreateSpec() =>
+    public SpecBase<TModel, string> Create() =>
         new CompositeExplanationSpec<TModel,TUnderlyingMetadata>(
             spec,
             trueBecause,
             falseBecause,
             candidateProposition);
     
-    public SpecBase<TModel, string> CreateSpec(string proposition) =>
+    public SpecBase<TModel, string> Create(string proposition) =>
         new CompositeExplanationSpec<TModel, TUnderlyingMetadata>(
             spec,
             trueBecause,
