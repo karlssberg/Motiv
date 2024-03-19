@@ -1,20 +1,25 @@
 ﻿namespace Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders.Metadata;
 
-/// <summary>Represents an interface for building a specification.</summary>
-/// <typeparam name="TModel">The type of the model.</typeparam>
-/// <typeparam name="TMetadata"></typeparam>
+/// <summary>
+/// A factory for creating specifications based on the supplied predicate and metadata factories.
+/// </summary>
+/// <typeparam name="TModel">The type of the model the specification is for.</typeparam>
+/// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
 public readonly ref struct MetadataWithPropositionFirstOrderSpecFactory<TModel, TMetadata>(
     Func<TModel, bool> predicate,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse)
 {
-    /// <summary>Provide a human readable explanation for when the condition is false.</summary>
-    /// <param name="proposition">The name of the specification. Preferably this would be in predicate form eg "is even number".</param>
-    /// <returns>A specification base.</returns>
+    /// <summary>
+    /// Creates a specification and names it with the propositional statement provided.
+    /// </summary>
+    /// <param name="proposition">The proposition statement of what the specification represents.</param>
+    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <returns>A specification for the model.</returns>
     public SpecBase<TModel, TMetadata> CreateSpec(string proposition) =>
         new MetadataSpec<TModel, TMetadata>(
             predicate,
             whenTrue,
-            whenFalse, 
+            whenFalse,
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

@@ -1,16 +1,15 @@
 ﻿namespace Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders.Explanation;
 
-/// <summary>Represents an interface for building a specifcation.</summary>
-/// <typeparam name="TModel">The type of the model.</typeparam>
-/// <typeparam name="TMetadata"></typeparam>
+/// <summary>A factory for creating specifications based on a predicate and explanations for true and false conditions.</summary>
+/// <typeparam name="TModel">The type of the model the specification is for.</typeparam>
 public readonly ref struct ExplanationFirstOrderSpecFactory<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,
     string candidateProposition)
 {
-    /// <summary>Provide a human readable explanation for when the condition is false.</summary>
-    /// <returns>A specification base.</returns>
+    /// <summary>Creates a specification with explanations for when the condition is true or false.</summary>
+    /// <returns>An instance of <see cref="SpecBase{TModel, string}" />.</returns>
     public SpecBase<TModel, string> CreateSpec() =>
         new ExplanationSpec<TModel>(
             predicate,
@@ -19,12 +18,12 @@ public readonly ref struct ExplanationFirstOrderSpecFactory<TModel>(
             candidateProposition);
 
     /// <summary>
-    /// Treats the true-because and false-because <c>string</c>s as metadata,and uses the
-    /// <paramref name="proposition" /> in the explanations.  This can be useful if the <c>string</c>s are particularly long
-    /// and you want to descibe them in a more succinct way for debugging/troubleshooting purposes.
+    /// Creates a specification with descriptive assertions, but using the supplied proposition to succinctly explain
+    /// the decision.
     /// </summary>
-    /// <param name="proposition">The description of the specification. If not specified, the description of the specification</param>
-    /// <returns>A specification base.</returns>
+    /// <param name="proposition">The proposition statement of what the specification represents.</param>
+    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <returns>An instance of <see cref="SpecBase{TModel, string}" />.</returns>
     public SpecBase<TModel, string> CreateSpec(string proposition) =>
         new MetadataSpec<TModel, string>(
             predicate,

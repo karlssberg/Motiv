@@ -1,16 +1,18 @@
-﻿using Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders.Metadata;
+﻿namespace Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders.Explanation;
 
-namespace Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders.Explanation;
-
-/// <summary>Represents an interface for asking for a false reason in a specification.</summary>
-/// <typeparam name="TModel">The type of the model.</typeparam>
+/// <summary>
+/// A builder for creating specifications based on a predicate and a true condition, or for further refining a specification.
+/// </summary>
+/// <typeparam name="TModel">The type of the model the specification is for.</typeparam>
 public readonly ref struct FalseAssertionWithPropositionUnresolvedFirstOrderSpecBuilder<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause)
 {
-    /// <summary>Provide a human readable explanation for when the condition is false.</summary>
-    /// <param name="falseBecause">A human readable explanation pf why the predicate returned false.</param>
-    /// <returns>A specification base.</returns>
+    /// <summary>
+    /// Specifies a reason why the condition is false.
+    /// </summary>
+    /// <param name="falseBecause">A human-readable reason why the condition is false.</param>
+    /// <returns>An instance of <see cref="ExplanationWithPropositionFirstOrderSpecFactory{TModel}" />.</returns>
     public ExplanationWithPropositionFirstOrderSpecFactory<TModel> WhenFalse(string falseBecause)
     {
         falseBecause.ThrowIfNullOrWhitespace(nameof(falseBecause));
@@ -20,12 +22,11 @@ public readonly ref struct FalseAssertionWithPropositionUnresolvedFirstOrderSpec
             _ => falseBecause);
     }
 
-    /// <summary>Supply a function that when executed generates a human readable explanation for when the condition is false.</summary>
-    /// <param name="falseBecause">
-    ///     The function that evaluates the model and returns a human readable explanation of why the
-    ///     predicate returned false.
-    /// </param>
-    /// <returns>A specification base.</returns>
+    /// <summary>
+    /// Specifies a reason why the condition is false.
+    /// </summary>
+    /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
+    /// <returns>An instance of <see cref="ExplanationWithPropositionFirstOrderSpecFactory{TModel}" />.</returns>
     public ExplanationWithPropositionFirstOrderSpecFactory<TModel> WhenFalse(Func<TModel, string> falseBecause)
     {
         falseBecause.ThrowIfNull(nameof(falseBecause));
