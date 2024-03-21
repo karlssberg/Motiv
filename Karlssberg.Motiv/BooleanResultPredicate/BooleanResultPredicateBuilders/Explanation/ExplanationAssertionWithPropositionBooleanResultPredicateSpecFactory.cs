@@ -18,7 +18,7 @@ public readonly ref struct ExplanationAssertionWithPropositionBooleanResultPredi
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
     public SpecBase<TModel, string> Create(string proposition) =>
-        new BooleanResultPredicateMetadataSpec<TModel, string, TUnderlyingMetadata>(
+        new BooleanResultPredicateMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
             predicate,
             trueBecause,
             falseBecause,
@@ -29,7 +29,7 @@ public readonly ref struct ExplanationAssertionWithPropositionBooleanResultPredi
     /// </summary>
     /// <returns>A specification for the model.</returns>
     public SpecBase<TModel, string> Create() =>
-        new BooleanResultPredicateMetadataSpec<TModel, string, TUnderlyingMetadata>(
+        new BooleanResultPredicateMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
             predicate,
             trueBecause,
             falseBecause,

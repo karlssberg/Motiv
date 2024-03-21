@@ -2,57 +2,52 @@
 
 namespace Karlssberg.Motiv.Tests;
 
-public class BooleanResultPredicateMetadataSpecTests
+public class CompositeFactoryMetadataSpecTests
 {
-    
+    [InlineAutoData(true, "is first true", "is second true", "is third true", "is fourth true")]
+    [InlineAutoData(false, "!is first true", "!is second true", "!is third true", "!is fourth true")]
     [Theory]
-    [InlineAutoData(false, false, true, "is first true", "is second true", "is third true", "is fourth true")]
-    [InlineAutoData(false, true, false, "!is first true", "!is second true", "!is third true", "!is fourth true")]
-    [InlineAutoData(true, false, false, "!is first true", "!is second true", "!is third true", "!is fourth true")]
-    [InlineAutoData(false, false, true, "is first true", "is second true", "is third true", "is fourth true")]
     public void Should_replace_the_assertion_with_new_assertion(
-        bool model,
-        bool other,
-        bool expected,
+        bool isSatisfied,
         string expectedA,
         string expectedB,
         string expectedC,
         string expectedD)
     {
-        string[] expectation = [expectedA, expectedB, expectedC, expectedD];;
+        string[] expectation = [expectedA, expectedB, expectedC, expectedD];
         var underlying = Spec
-            .Build((bool m) => m == other)
+            .Build<string>(m => isSatisfied)
             .WhenTrue(100)
             .WhenFalse(-100)
-            .Create($"are equal");
-        
+            .Create("is underlying true");
+
         var firstSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build(() => underlying)
             .WhenTrue(200)
             .WhenFalse(-200)
             .Create("is first true");
 
         var secondSpec = Spec
-            .Build(underlying)
+            .Build(() => underlying)
             .WhenTrue(_ => 300)
             .WhenFalse(-300)
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build(underlying)
+            .Build(() => underlying)
             .WhenTrue(400)
             .WhenFalse(_ => -400)
             .Create("is third true");
 
         var fourthSpec = Spec
-            .Build(underlying)
+            .Build(() => underlying)
             .WhenTrue(_ => 500)
             .WhenFalse(_ => -500)
             .Create("is fourth true");
 
         var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.IsSatisfiedBy("model");
 
         act.Assertions.Should().BeEquivalentTo(expectation);
     }

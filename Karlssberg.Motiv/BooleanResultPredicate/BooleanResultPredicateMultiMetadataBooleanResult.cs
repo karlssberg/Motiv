@@ -1,8 +1,10 @@
-﻿namespace Karlssberg.Motiv.BooleanResultPredicate;
+﻿using Karlssberg.Motiv.CompositeFactory;
 
-internal sealed class BooleanResultPredicateMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
+namespace Karlssberg.Motiv.BooleanResultPredicate;
+
+internal sealed class BooleanResultPredicateMultiMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    TMetadata metadata,
+    IEnumerable<TMetadata> metadata,
     IProposition proposition)
     : BooleanResultBase<TMetadata>
 {
@@ -17,7 +19,7 @@ internal sealed class BooleanResultPredicateMetadataBooleanResult<TMetadata, TUn
 
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override Explanation Explanation =>
-        new(Assertion)
+        new(GetAssertions())
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
@@ -36,10 +38,10 @@ internal sealed class BooleanResultPredicateMetadataBooleanResult<TMetadata, TUn
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
         booleanResult.ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();
 
-    private string Assertion =>
+    private IEnumerable<string> GetAssertions() =>
         metadata switch
         {
-            string reason => reason,
-            _ => proposition.ToReason(booleanResult.Satisfied)
+            IEnumerable<string> assertions => assertions,
+            _ => proposition.ToReason(booleanResult.Satisfied).ToEnumerable()
         };
 }

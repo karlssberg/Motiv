@@ -35,7 +35,7 @@ public class ExplanationBooleanResultTests
             .ToList();
 
         act.Satisfied.Should().Be(expected);
-        act.Explanation.Assertions.Should().Contain(operands.GetAssertions());
+        act.Assertions.Should().Contain(operands.GetAssertions());
     }
 
     [Theory]
@@ -55,7 +55,7 @@ public class ExplanationBooleanResultTests
             .ToList();
 
         act.Satisfied.Should().Be(expected);
-        act.Explanation.Assertions.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
+        act.Assertions.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
     }
 
     [Theory]
@@ -73,7 +73,7 @@ public class ExplanationBooleanResultTests
         var operands = new[] { leftResult, rightResult };
 
         act.Satisfied.Should().Be(expected);
-        act.Explanation.Assertions.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
+        act.Assertions.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
     }
 
     [Theory]
@@ -87,7 +87,7 @@ public class ExplanationBooleanResultTests
 
         act.Satisfied.Should().Be(expected);
         act.MetadataTree.Should().HaveCount(1);
-        act.Explanation.Assertions.Should().Contain(operandResult.Explanation.Assertions);
+        act.Assertions.Should().Contain(operandResult.Explanation.Assertions);
     }
 
     [Theory]
@@ -96,7 +96,7 @@ public class ExplanationBooleanResultTests
     public void Should_generate_sub_assertions(bool model, string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue("underlying is true")
             .WhenFalse("underlying is false")
             .Create();
@@ -121,12 +121,12 @@ public class ExplanationBooleanResultTests
         bool expected)
     {
         var leftResult = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("left")
             .IsSatisfiedBy(leftSatisfied);
         
         var rightResult= Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("right")
             .IsSatisfiedBy(rightSatisfied);
         
@@ -146,12 +146,12 @@ public class ExplanationBooleanResultTests
         bool expected)
     {
         var leftResult = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("left")
             .IsSatisfiedBy(leftSatisfied);
         
         var rightResult= Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("right")

@@ -69,8 +69,8 @@ public class TrueBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata>(
     public SpecBase<TModel, string> Create(string proposition) =>
         new BooleanResultPredicateMetadataSpec<TModel, string, TUnderlyingMetadata>(
             predicate,
-            (_, _) => proposition.ToEnumerable(),
-            (_, _) => $"!{proposition}".ToEnumerable(),
+            (_, _) => proposition,
+            (_, _) => $"!{proposition}",
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }
 

@@ -50,7 +50,7 @@ public class CompositeExplanationSpecTests
 
         var act = sut.IsSatisfiedBy("model");
 
-        act.Explanation.Assertions.Should().BeEquivalentTo(expectation);
+        act.Assertions.Should().BeEquivalentTo(expectation);
         act.MetadataTree.Should().BeEquivalentTo(expectation);
     }
 

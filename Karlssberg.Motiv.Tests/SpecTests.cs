@@ -10,7 +10,7 @@ public class SpecTests
     public void Should_return_a_result_that_satisfies_the_predicate(bool model)
     {
         var sut = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("returns model value");
@@ -27,7 +27,7 @@ public class SpecTests
     public void Should_return_a_result_that_satisfies_the_spec(bool model)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
@@ -49,7 +49,7 @@ public class SpecTests
     public void Should_return_a_result_that_explains_the_result(bool model, string expectedAssertion, string expectedDescription)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
@@ -89,7 +89,7 @@ public class SpecTests
     public void Should_return_a_result_that_satisfies_the_predicate_when_using_textual_specification(bool model)
     {
         var sut = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
@@ -106,7 +106,7 @@ public class SpecTests
     public void Should_allow_change_of_metadata_from_spec_creation_from_existing_spec(bool model)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue("is true")
             .WhenFalse("is false")
             .Create();

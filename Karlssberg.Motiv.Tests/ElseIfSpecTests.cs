@@ -10,12 +10,12 @@ public class ElseIfSpecTests
     [InlineAutoData(false, "antecedent not satisfied and consequent satisfied")]
     public void Should_return_an_antecedent_result_when_it_is_satisfied(bool model, string expected)
     {
-        var antecedent = Spec.Build<bool>(m => m)
+        var antecedent = Spec.Build((bool m) => m)
             .WhenTrue("antecedent satisfied")
             .WhenFalse("antecedent not satisfied")
             .Create();
 
-        var consequent = Spec.Build<bool>(m => !m)
+        var consequent = Spec.Build((bool m) => !m)
             .WhenTrue("consequent satisfied")
             .WhenFalse("consequent not satisfied")
             .Create();
@@ -31,12 +31,12 @@ public class ElseIfSpecTests
     [Fact]
     public void Should_describe_the_else_if_spec()
     {
-        var antecedent = Spec.Build<bool>(m => m)
+        var antecedent = Spec.Build((bool m) => m)
             .WhenTrue("antecedent")
             .WhenFalse("not antecedent")
             .Create();
 
-        var consequent = Spec.Build<bool>(m => !m)
+        var consequent = Spec.Build((bool m) => !m)
             .WhenTrue("consequent")
             .WhenFalse("not consequent")
             .Create();
@@ -56,12 +56,12 @@ public class ElseIfSpecTests
             }
             """;
         
-        var antecedent = Spec.Build<bool>(m => m)
+        var antecedent = Spec.Build((bool m) => m)
             .WhenTrue("antecedent")
             .WhenFalse("not antecedent")
             .Create();
 
-        var consequent = Spec.Build<bool>(m => !m)
+        var consequent = Spec.Build((bool m) => !m)
             .WhenTrue("consequent")
             .WhenFalse("not consequent")
             .Create();
@@ -76,12 +76,12 @@ public class ElseIfSpecTests
     [InlineAutoData(false, "not antecedent => consequent")]
     public void Should_describe_consequent_result(bool model, string expected)
     {
-        var antecedent = Spec.Build<bool>(m => m)
+        var antecedent = Spec.Build((bool m) => m)
             .WhenTrue("antecedent")
             .WhenFalse("not antecedent")
             .Create();
 
-        var consequent = Spec.Build<bool>(m => !m)
+        var consequent = Spec.Build((bool m) => !m)
             .WhenTrue("consequent")
             .WhenFalse("not consequent")
             .Create();
@@ -105,12 +105,12 @@ public class ElseIfSpecTests
         """)]
     public void Should_describe_consequent_result_in_detail(bool model, string expected)
     {
-        var antecedent = Spec.Build<bool>(m => m)
+        var antecedent = Spec.Build((bool m) => m)
             .WhenTrue("antecedent")
             .WhenFalse("not antecedent")
             .Create();
 
-        var consequent = Spec.Build<bool>(m => !m)
+        var consequent = Spec.Build((bool m) => !m)
             .WhenTrue("consequent")
             .WhenFalse("not consequent")
             .Create();

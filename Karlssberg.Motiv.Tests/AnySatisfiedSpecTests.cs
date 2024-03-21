@@ -20,7 +20,7 @@ public class AnySatisfiedSpecTests
         bool expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
@@ -42,7 +42,7 @@ public class AnySatisfiedSpecTests
     {
         const string expected = "high-level description";
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue("boolean is true")   
             .WhenFalse("boolean is false")
             .Create();
@@ -106,7 +106,7 @@ public class AnySatisfiedSpecTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("is true");
@@ -171,7 +171,7 @@ public class AnySatisfiedSpecTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
@@ -238,7 +238,7 @@ public class AnySatisfiedSpecTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("is true");
@@ -293,7 +293,7 @@ public class AnySatisfiedSpecTests
         int expected)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("underlying");
         
         var sut = Spec

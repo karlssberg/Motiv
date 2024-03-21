@@ -1,9 +1,11 @@
-﻿namespace Karlssberg.Motiv.BooleanResultPredicate;
+﻿using Karlssberg.Motiv.CompositeFactory;
 
-public class BooleanResultPredicateMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
+namespace Karlssberg.Motiv.BooleanResultPredicate;
+
+public class BooleanResultPredicateMultiMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> underlyingBooleanResultPredicate,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenFalse,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
     string propositionalAssertion)
     : SpecBase<TModel, TMetadata>
 {
@@ -26,6 +28,6 @@ public class BooleanResultPredicateMetadataSpec<TModel, TMetadata, TUnderlyingMe
             false => whenFalse(model, booleanResult),
         };
 
-        return new BooleanResultPredicateMetadataBooleanResult<TMetadata,TUnderlyingMetadata>(booleanResult, metadata, Proposition);
+        return new BooleanResultPredicateMultiMetadataBooleanResult<TMetadata,TUnderlyingMetadata>(booleanResult, metadata, Proposition);
     }
 }

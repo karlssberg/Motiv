@@ -29,7 +29,7 @@ public class AtLeastNSatisfiedSpecBaseTests
         bool expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("returns the model");
@@ -71,7 +71,7 @@ public class AtLeastNSatisfiedSpecBaseTests
         bool expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("returns the model");
@@ -113,7 +113,7 @@ public class AtLeastNSatisfiedSpecBaseTests
         bool expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("returns the model");
@@ -155,7 +155,7 @@ public class AtLeastNSatisfiedSpecBaseTests
         bool expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("returns the model");
@@ -218,7 +218,7 @@ public class AtLeastNSatisfiedSpecBaseTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue("received true")
             .WhenFalse("received false")
             .Create();

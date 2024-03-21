@@ -61,7 +61,7 @@ public class ChangeHigherOrderMetadataSpecTests
     public void Should_only_yield_the_most_recent_when_multiple_yields_are_chained(bool first, bool second, bool third, string expected)
     {
         var underlying = Spec
-            .Build<bool>(b => b)
+            .Build((bool b) => b)
             .WhenTrue("is true")
             .WhenFalse("is false")
             .Create();
@@ -166,7 +166,7 @@ public class ChangeHigherOrderMetadataSpecTests
 
         var act = sut.IsSatisfiedBy([first, second, third, forth]);
             
-        act.Explanation.Assertions.Should().BeEquivalentTo(expectedReason);
+        act.Assertions.Should().BeEquivalentTo(expectedReason);
         act.Satisfied.Should().Be(expected);
     }
 }

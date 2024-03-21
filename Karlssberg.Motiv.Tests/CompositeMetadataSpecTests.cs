@@ -50,7 +50,7 @@ public class CompositeMetadataSpecTests
 
         var act = sut.IsSatisfiedBy("model");
 
-        act.Explanation.Assertions.Should().BeEquivalentTo(expectation);
+        act.Assertions.Should().BeEquivalentTo(expectation);
     }
     
     [InlineAutoData(true, 200, 300, 400, 500)]
@@ -180,7 +180,7 @@ public class CompositeMetadataSpecTests
     public void Should_accept_single_parameter_assertion_factory_when_true_for_composite_specs(bool model, Binary expected)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("is underlying true");
 
         var spec = Spec
@@ -200,7 +200,7 @@ public class CompositeMetadataSpecTests
     public void Should_accept_double_parameter_assertion_factory_when_true_for_composite_specs(bool model, Binary expected)
     {
         var underlying = Spec
-            .Build<bool>(m=> m)
+            .Build((bool m) => m)
             .WhenTrue(Binary.On)
             .WhenFalse(Binary.Off)
             .Create("is on");

@@ -79,7 +79,7 @@ public class NSatisfiedSpecTests
         string expected)
     {
         var isEven = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString().ToLowerInvariant())
             .WhenFalse(false.ToString().ToLowerInvariant())
             .Create();

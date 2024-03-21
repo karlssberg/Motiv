@@ -29,7 +29,7 @@ public class AtMostNSatisfiedSpecTests
         bool expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("returns the model");
@@ -71,7 +71,7 @@ public class AtMostNSatisfiedSpecTests
         bool expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("returns the model");
@@ -112,7 +112,7 @@ public class AtMostNSatisfiedSpecTests
         bool expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("returns the model");
@@ -153,7 +153,7 @@ public class AtMostNSatisfiedSpecTests
         bool expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("returns the model");
@@ -216,7 +216,7 @@ public class AtMostNSatisfiedSpecTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue("is satisfied")
             .WhenFalse("is not satisfied")
             .Create();;
@@ -279,7 +279,7 @@ public class AtMostNSatisfiedSpecTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();

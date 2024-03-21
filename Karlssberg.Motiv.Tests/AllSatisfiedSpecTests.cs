@@ -20,7 +20,7 @@ public class AllSatisfiedSpecTests
         bool expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
@@ -85,7 +85,7 @@ public class AllSatisfiedSpecTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString().ToLowerInvariant())
             .WhenFalse(false.ToString().ToLowerInvariant())
             .Create();
@@ -151,7 +151,7 @@ public class AllSatisfiedSpecTests
             string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString().ToLowerInvariant())
             .WhenFalse(false.ToString().ToLowerInvariant())
             .Create();
@@ -217,7 +217,7 @@ public class AllSatisfiedSpecTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("is true");
@@ -283,13 +283,13 @@ public class AllSatisfiedSpecTests
         string expected)
     {
         var underlyingSpecLeft = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("left");
 
         var underlyingSpecRight = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("right");
@@ -323,13 +323,13 @@ public class AllSatisfiedSpecTests
         string expected)
     {
         var underlyingSpecLeft = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("left");
 
         var underlyingSpecRight = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("right");
@@ -361,7 +361,7 @@ public class AllSatisfiedSpecTests
             """;
 
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("is true");
@@ -390,7 +390,7 @@ public class AllSatisfiedSpecTests
             """;
 
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue("is true")
             .WhenFalse("is false")
             .Create();

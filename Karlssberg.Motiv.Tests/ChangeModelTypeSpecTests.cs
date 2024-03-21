@@ -10,7 +10,7 @@ public class ChangeModelTypeSpecTests
     public void Should_change_the_model(string? model, bool expected)
     {
         var isEmpty = Spec
-            .Build<object?>(m => m is null)
+            .Build((object? m) => m is null)
             .WhenTrue("is null")
             .WhenFalse("is not null")
             .Create();
@@ -31,7 +31,7 @@ public class ChangeModelTypeSpecTests
     public void Should_change_the_model_using_a_model_selector_function(object model, bool expected)
     {
         var isValueType = Spec
-            .Build<Type>(t => t.IsValueType)
+            .Build((Type t) => t.IsValueType)
             .WhenTrue("is value-type")
             .WhenFalse("is not value-type")
             .Create();
