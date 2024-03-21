@@ -11,9 +11,9 @@ internal sealed class CompositeFactoryMetadataBooleanResult<TMetadata, TUnderlyi
 
     /// <summary>Gets the description of the boolean result.</summary>
     public override ResultDescriptionBase Description =>
-        new CompositeFactoryMetadataBooleanResultDescription<TUnderlyingMetadata>(
+        new BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(
             booleanResult,
-            proposition);
+            proposition.ToReason(booleanResult.Satisfied));
 
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override Explanation Explanation =>

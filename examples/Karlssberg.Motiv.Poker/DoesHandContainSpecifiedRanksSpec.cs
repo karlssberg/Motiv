@@ -11,7 +11,7 @@ public class DoesHandContainSpecifiedRanksSpec(ICollection<Rank> ranks) : Spec<H
         .ChangeModelTo<Hand>(hand => hand.Cards))
 {
     private static SpecBase<Card, string> UnderlyingSpec(ICollection<Rank> ranks) =>
-        Spec.Build<Card>(card => ranks.Contains(card.Rank))
+        Spec.Build((Card card) => ranks.Contains(card.Rank))
             .WhenTrue($"Is one of {ranks.Humanize()}")
             .WhenFalse($"Is not one of {ranks.Humanize()}")
             .Create();

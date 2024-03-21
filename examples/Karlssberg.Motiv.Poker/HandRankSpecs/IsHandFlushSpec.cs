@@ -20,7 +20,7 @@ public class IsHandFlushSpec() : Spec<Hand, HandRank>(
             .ChangeModelTo<Hand>(hand => hand.Cards);
 
     private static SpecBase<Card, string> IsSuit(Suit suit) =>
-        Spec.Build<Card>(card => card.Suit == suit)
+        Spec.Build((Card card) => card.Suit == suit)
             .WhenTrue(card => $"{card} is a {suit}")
             .WhenFalse(card => $"{card} is not a {suit}")
             .Create($"is a {suit}");

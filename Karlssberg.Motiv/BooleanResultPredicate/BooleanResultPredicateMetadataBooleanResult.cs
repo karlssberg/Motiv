@@ -1,11 +1,10 @@
-﻿namespace Karlssberg.Motiv.ChangeMetadataType;
+﻿using Karlssberg.Motiv.CompositeFactory;
 
-/// <summary>Represents a boolean result of changing the metadata type.</summary>
-/// <typeparam name="TMetadata">The type of the new metadata.</typeparam>
-/// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
-internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
+namespace Karlssberg.Motiv.BooleanResultPredicate;
+
+internal sealed class BooleanResultPredicateMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    TMetadata metadata,
+    IEnumerable<TMetadata> metadata,
     IProposition proposition)
     : BooleanResultBase<TMetadata>
 {
@@ -20,29 +19,29 @@ internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata
 
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override Explanation Explanation =>
-        new(Description)
+        new(Assertion)
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
-    
-    /// <inheritdoc />
-    public override MetadataTree<TMetadata> MetadataTree => new(metadata);
-    
-    /// <inheritdoc />
+
+    public override MetadataTree<TMetadata> MetadataTree => new(
+        metadata,
+        booleanResult.ResolveMetadataSets<TMetadata, TUnderlyingMetadata>());
+
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
-    
-    /// <inheritdoc />
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => 
-        booleanResult switch
-        {
-            BooleanResultBase<TMetadata> result=> result.ToEnumerable(),
-            _ => Enumerable.Empty<BooleanResultBase<TMetadata>>()
-        };
-    
-    /// <inheritdoc />
+
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
+        booleanResult.ResolveUnderlyingWithMetadata<TMetadata, TUnderlyingMetadata>();
+
     public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes;
-    
-    /// <inheritdoc />
+
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
         booleanResult.ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();
+
+    private string Assertion =>
+        metadata switch
+        {
+            string reason => reason,
+            _ => proposition.ToReason(booleanResult.Satisfied)
+        };
 }

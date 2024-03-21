@@ -1,9 +1,9 @@
-﻿namespace Karlssberg.Motiv.Composite;
+﻿namespace Karlssberg.Motiv.BooleanResultPredicate;
 
 /// <summary>Represents a boolean result of changing the metadata type.</summary>
 /// <typeparam name="TMetadata">The type of the new metadata.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
-internal sealed class CompositeExplanationBooleanResult<TUnderlyingMetadata>(
+internal sealed class BooleanResultPredicateExplanationBooleanResult<TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
     string because)
     : BooleanResultBase<string>

@@ -1,9 +1,8 @@
-﻿namespace Karlssberg.Motiv.Composite;
+namespace Karlssberg.Motiv;
 
-internal sealed class CompositeMetadataBooleanResultDescription<TMetadata, TUnderlyingMetadata>(
+internal sealed class BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    string because,
-    IProposition proposition)
+    string because)
     : ResultDescriptionBase
 {
     internal override int CausalOperandCount => 1;

@@ -3,7 +3,7 @@
 namespace Karlssberg.Motiv.Poker;
 
 public class HasNCardsWithTheSameRankSpec(int sameRankCount) : Spec<Hand>(
-    Spec.Build<Hand>(hand => HandHasCardsWithTheSameRank(hand, sameRankCount))
+    Spec.Build((Hand hand) => HandHasCardsWithTheSameRank(hand, sameRankCount).IsSatisfiedBy(hand))
         .WhenTrue(hand => $"has {sameRankCount.ToWords()} cards with the same rank")
         .WhenFalse(hand => $"there are {hand.Ranks.Count()} ranks when there should be {sameRankCount}")
         .Create($"has {sameRankCount.ToWords()} cards with the same rank"))
@@ -23,7 +23,7 @@ public class HasNCardsWithTheSameRankSpec(int sameRankCount) : Spec<Hand>(
             .Create($"has {sameRankCount.ToWords()} {rank}s");
 
     private static SpecBase<Card, string> IsRank(Rank rank) =>
-        Spec.Build<Card>(card => card.Rank == rank)
+        Spec.Build((Card card) => card.Rank == rank)
             .WhenTrue(card => $"{card} is a {rank}")
             .WhenFalse(card => $"{card} is not a {rank}")
             .Create($"is a {rank}");

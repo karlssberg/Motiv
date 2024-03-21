@@ -10,7 +10,7 @@ internal sealed class CompositeFactoryExplanationBooleanResult<TUnderlyingMetada
 
     /// <summary>Gets the description of the boolean result.</summary>
     public override ResultDescriptionBase Description => 
-        new CompositeFactoryExplanationBooleanResultDescription<TUnderlyingMetadata>(booleanResult, because);
+        new BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(booleanResult, because);
 
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override Explanation Explanation =>

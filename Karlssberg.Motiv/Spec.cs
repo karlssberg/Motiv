@@ -1,4 +1,5 @@
-﻿using Karlssberg.Motiv.Composite.CompositeSpecBuilders;
+﻿using Karlssberg.Motiv.BooleanResultPredicate.BooleanResultPredicateBuilders;
+using Karlssberg.Motiv.Composite.CompositeSpecBuilders;
 using Karlssberg.Motiv.CompositeFactory.CompositeFactorySpecBuilders;
 using Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders;
 
@@ -114,7 +115,19 @@ public static class Spec
         predicate.ThrowIfNull(nameof(predicate));
         return new TrueFirstOrderSpecBuilder<TModel>(predicate);
     }
-
+    
+    /// <summary>
+    /// Commences the construction of a specification using a predicate function that returns a <see cref="BooleanResultBase{TMetadata}"/>.
+    /// </summary>
+    /// <param name="predicate">The predicate function to be used in the specification.</param>
+    /// <returns>A TrueFirstOrderSpecBuilder instance for further specification building.</returns>
+    public static TrueBooleanResultPredicateSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+        Func<TModel, BooleanResultBase<TMetadata>> predicate)
+    {
+        predicate.ThrowIfNull(nameof(predicate));
+        return new TrueBooleanResultPredicateSpecBuilder<TModel, TMetadata>(predicate);
+    }
+    
     /// <summary>
     /// Commences the construction of a specification using a specification factory function.
     /// </summary>

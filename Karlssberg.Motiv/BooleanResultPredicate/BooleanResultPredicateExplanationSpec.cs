@@ -1,16 +1,16 @@
-﻿namespace Karlssberg.Motiv.Composite;
+﻿using Karlssberg.Motiv.Composite;
 
-internal sealed class CompositeExplanationSpec<TModel, TUnderlyingMetadata>(
-    SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
+namespace Karlssberg.Motiv.BooleanResultPredicate;
+
+internal sealed class BooleanResultPredicateExplanationSpec<TModel, TUnderlyingMetadata>(
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>> predicate,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> whenTrue,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> whenFalse,
     string propositionalAssertion)
     : SpecBase<TModel, string>
 {
     /// <summary>Gets the description of the specification.</summary>
-    public override IProposition Proposition => new Proposition(propositionalAssertion, UnderlyingSpec.Proposition);
-
-    public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
+    public override IProposition Proposition => new Proposition(propositionalAssertion);
 
     /// <summary>Determines if the specification is satisfied by the given model.</summary>
     /// <param name="model">The model to be evaluated.</param>
@@ -20,7 +20,7 @@ internal sealed class CompositeExplanationSpec<TModel, TUnderlyingMetadata>(
     /// </returns>
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
     {
-        var booleanResult = UnderlyingSpec.IsSatisfiedBy(model);
+        var booleanResult = predicate(model);
         
         var because = booleanResult.Satisfied switch
         {
@@ -28,6 +28,6 @@ internal sealed class CompositeExplanationSpec<TModel, TUnderlyingMetadata>(
             false => whenFalse(model, booleanResult),
         };
 
-        return new CompositeExplanationBooleanResult<TUnderlyingMetadata>(booleanResult, because);
+        return new BooleanResultPredicateExplanationBooleanResult<TUnderlyingMetadata>(booleanResult, because);
     }
 }

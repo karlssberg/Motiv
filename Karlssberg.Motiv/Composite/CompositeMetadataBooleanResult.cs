@@ -11,11 +11,9 @@ internal sealed class CompositeMetadataBooleanResult<TMetadata, TUnderlyingMetad
 
     /// <summary>Gets the description of the boolean result.</summary>
     public override ResultDescriptionBase Description =>
-        new CompositeMetadataBooleanResultDescription<TMetadata, TUnderlyingMetadata>(
+        new BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(
             booleanResult,
-            Assertion,
-            proposition);
-
+            Assertion);
 
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override Explanation Explanation =>

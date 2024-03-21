@@ -110,6 +110,18 @@
         <Compile Update="Composite\CompositeSpecBuilders\Explanation\ExplanationMultiAssertionCompositeSpecFactory.cs">
           <DependentUpon>FalseAssertionCompositeSpecBuilder.cs</DependentUpon>
         </Compile>
+        <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Explanation\ExplanationAssertionWithPropositionBooleanResultPredicateSpecFactory.cs">
+          <DependentUpon>FalseAssertionWithPropositionCompositeSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Explanation\ExplanationMultiAssertionBooleanResultPredicateSpecFactory.cs">
+          <DependentUpon>FalseAssertionBooleanResultPredicateSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Explanation\ExplanationWithPropositionBooleanResultPredicateSpecFactory.cs">
+          <DependentUpon>FalseAssertionWithPropositionCompositeSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Explanation\ExplanationMultiBooleanResultPredicateSpecFactory.cs">
+          <DependentUpon>FalseAssertionBooleanResultPredicateSpecBuilder.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>
