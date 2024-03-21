@@ -11,7 +11,7 @@ public readonly ref struct FalseMultiAssertionBooleanResultPredicateSpecBuilder<
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause)
 {
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A human-readable reason why the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>
@@ -22,7 +22,7 @@ public readonly ref struct FalseMultiAssertionBooleanResultPredicateSpecBuilder<
             (_, _) => falseBecause.ToEnumerable());
 
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>
@@ -33,7 +33,7 @@ public readonly ref struct FalseMultiAssertionBooleanResultPredicateSpecBuilder<
             (model, _) => falseBecause(model).ToEnumerable());
 
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>
@@ -44,7 +44,7 @@ public readonly ref struct FalseMultiAssertionBooleanResultPredicateSpecBuilder<
             falseBecause.ToEnumerableReturn());
 
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a collection of human-readable reasons when the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>

@@ -12,7 +12,7 @@ public readonly ref struct FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderl
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A human-readable reason why the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationHigherOrderSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
@@ -24,7 +24,7 @@ public readonly ref struct FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderl
             causeSelector);
 
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationHigherOrderSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
@@ -37,7 +37,7 @@ public readonly ref struct FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderl
             causeSelector);
 
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationMultiAssertionHigherOrderSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>

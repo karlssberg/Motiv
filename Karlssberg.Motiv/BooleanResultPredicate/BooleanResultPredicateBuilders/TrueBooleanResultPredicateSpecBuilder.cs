@@ -11,7 +11,7 @@ public class TrueBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> predicate)
 {
     /// <summary>
-    /// Specifies a reason why the condition is true.
+    /// Specifies an assertion to yield when the condition is true.
     /// </summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMultiAssertionBooleanResultPredicateSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
@@ -21,7 +21,7 @@ public class TrueBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata>(
             trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause)));
 
     /// <summary>
-    /// Specifies a reason why the condition is true.
+    /// Specifies an assertion to yield when the condition is true.
     /// </summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionWithPropositionUnresolvedBooleanResultPredicateSpecBuilder{TModel}" />.</returns>

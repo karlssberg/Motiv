@@ -21,7 +21,7 @@ public readonly ref struct TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata>
         TMetadata whenTrue) =>
         new(spec, (_, _) => whenTrue.ToEnumerable());
 
-    /// <summary>Specifies a reason why the condition is true.</summary>
+    /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionWithPropositionCompositeSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public FalseMetadataCompositeSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
@@ -44,20 +44,20 @@ public readonly ref struct TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata>
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
         new(spec, whenTrue);
 
-    /// <summary>Specifies a reason why the condition is true.</summary>
+    /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionWithPropositionCompositeSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public FalseAssertionWithPropositionCompositeSpecBuilder<TModel, TUnderlyingMetadata>
         WhenTrue(string trueBecause) =>
         new(spec, (_, _) => trueBecause, trueBecause);
 
-    /// <summary>Specifies a reason why the condition is true.</summary>
+    /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionCompositeSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public FalseAssertionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(Func<TModel, string> trueBecause) =>
         new(spec, (model, _) => trueBecause(model));
 
-    /// <summary>Specifies a reason why the condition is true.</summary>
+    /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionCompositeSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public FalseAssertionCompositeSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(

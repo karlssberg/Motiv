@@ -56,7 +56,7 @@ public readonly ref struct TrueCompositeFactorySpecBuilder<TModel, TUnderlyingMe
             whenTrue);
 
     /// <summary>
-    /// Specifies a reason why the condition is true.
+    /// Specifies an assertion to yield when the condition is true.
     /// </summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionWithPropositionCompositeFactorySpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
@@ -67,7 +67,7 @@ public readonly ref struct TrueCompositeFactorySpecBuilder<TModel, TUnderlyingMe
             trueBecause);
 
     /// <summary>
-    /// Specifies a reason why the condition is true.
+    /// Specifies an assertion to yield when the condition is true.
     /// </summary>
     /// <param name="trueBecause">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionCompositeFactorySpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
@@ -77,7 +77,7 @@ public readonly ref struct TrueCompositeFactorySpecBuilder<TModel, TUnderlyingMe
             (model, _) => trueBecause(model));
 
     /// <summary>
-    /// Specifies a reason why the condition is true.
+    /// Specifies an assertion to yield when the condition is true.
     /// </summary>
     /// <param name="trueBecause">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionCompositeFactorySpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>

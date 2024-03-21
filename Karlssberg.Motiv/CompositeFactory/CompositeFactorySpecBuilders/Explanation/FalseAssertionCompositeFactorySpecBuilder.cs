@@ -10,7 +10,7 @@ public readonly ref struct FalseAssertionCompositeFactorySpecBuilder<TModel, TUn
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause)
 {
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A human-readable reason why the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationCompositeFactorySpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
@@ -20,7 +20,7 @@ public readonly ref struct FalseAssertionCompositeFactorySpecBuilder<TModel, TUn
             (_ ,_) => falseBecause);
 
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationCompositeFactorySpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
@@ -30,7 +30,7 @@ public readonly ref struct FalseAssertionCompositeFactorySpecBuilder<TModel, TUn
             (model, _) => falseBecause(model));
 
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationCompositeFactorySpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
@@ -41,7 +41,7 @@ public readonly ref struct FalseAssertionCompositeFactorySpecBuilder<TModel, TUn
             falseBecause);
 
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationMultiAssertionCompositeFactorySpecFactory{TModel,TUnderlyingMetadata}" />.</returns>

@@ -11,7 +11,7 @@ public readonly ref struct FalseAssertionWithPropositionCompositeSpecBuilder<TMo
     string candidateProposition)
 {
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A human-readable reason why the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationWithPropositionCompositeSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
@@ -23,7 +23,7 @@ public readonly ref struct FalseAssertionWithPropositionCompositeSpecBuilder<TMo
             candidateProposition);
 
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationWithPropositionCompositeSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
@@ -35,7 +35,7 @@ public readonly ref struct FalseAssertionWithPropositionCompositeSpecBuilder<TMo
             candidateProposition);
     
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationWithPropositionCompositeSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
@@ -47,7 +47,7 @@ public readonly ref struct FalseAssertionWithPropositionCompositeSpecBuilder<TMo
             candidateProposition);
     
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationMultiAssertionWithPropositionCompositeSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>

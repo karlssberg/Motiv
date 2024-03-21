@@ -11,7 +11,7 @@ public readonly ref struct FalseAssertionCompositeSpecBuilder<TModel, TUnderlyin
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause)
 {
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A human-readable reason why the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>
@@ -22,7 +22,7 @@ public readonly ref struct FalseAssertionCompositeSpecBuilder<TModel, TUnderlyin
             (_, _) => falseBecause);
 
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>
@@ -33,7 +33,7 @@ public readonly ref struct FalseAssertionCompositeSpecBuilder<TModel, TUnderlyin
             (model, _) => falseBecause(model));
 
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>
@@ -44,7 +44,7 @@ public readonly ref struct FalseAssertionCompositeSpecBuilder<TModel, TUnderlyin
             falseBecause);
 
     /// <summary>
-    /// Specifies a reason why the condition is false.
+    /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a collection of human-readable reasons when the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>
