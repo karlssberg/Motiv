@@ -23,9 +23,9 @@ var isGreenLightSpec = Spec
 var isOperationalTrafficLightSpec = isRedLightSpec ^ isGreenLightSpec;
 var isOperationalTrafficLight = isOperationalTrafficLightSpec.IsSatisfiedBy(trafficLight);
 
-isTrafficLightFunctioning.Satisfied; // returns true
-isTrafficLightFunctioning.Reason; // returns "light is red ^ light is not green"
-isTrafficLightFunctioning.Assertions; // returns ["light is red", "light is not green"]
+isTrafficLightFunctioning.Satisfied; // true
+isTrafficLightFunctioning.Reason; // "light is red ^ light is not green"
+isTrafficLightFunctioning.Assertions; // ["light is red", "light is not green"]
 ```
 
 Notice that XOr will always output assertions for both underlying operands - in other words, it will always return 

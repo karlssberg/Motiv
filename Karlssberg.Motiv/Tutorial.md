@@ -14,13 +14,13 @@ var isEven = Spec
     .Build<int>(n => n % 2 == 0)
     .Create("is even");
 
-isEven.IsSatisfiedBy(2).Satisfied; // returns true
-isEven.IsSatisfiedBy(2).Reason; // returns "is even"
-isEven.IsSatisfiedBy(2).Assertions; // returns ["is even"]
+isEven.IsSatisfiedBy(2).Satisfied; // true
+isEven.IsSatisfiedBy(2).Reason; // "is even"
+isEven.IsSatisfiedBy(2).Assertions; // ["is even"]
 
-isEven.IsSatisfiedBy(3).Satisfied; // returns false
-isEven.IsSatisfiedBy(3).Reason; // returns "!is even"
-isEven.IsSatisfiedBy(3).Assertions; // returns ["!is even"]
+isEven.IsSatisfiedBy(3).Satisfied; // false
+isEven.IsSatisfiedBy(3).Reason; // "!is even"
+isEven.IsSatisfiedBy(3).Assertions; // ["!is even"]
 ```
 
 However, the real power of the library comes from the ability to provide a reason for when either the result is true or
@@ -33,11 +33,11 @@ var isEven = Spec
     .WhenFalse("number is odd")
     .Create();
 
-isEven.IsSatisfiedBy(2).Reason; // returns "number is even"
-isEven.IsSatisfiedBy(2).Assertions; // returns ["number is even"]
+isEven.IsSatisfiedBy(2).Reason; // "number is even"
+isEven.IsSatisfiedBy(2).Assertions; // ["number is even"]
 
-isEven.IsSatisfiedBy(3).Reason; // returns "number is odd"
-isEven.IsSatisfiedBy(3).Assertions; // returns ["number is odd"]
+isEven.IsSatisfiedBy(3).Reason; // "number is odd"
+isEven.IsSatisfiedBy(3).Assertions; // ["number is odd"]
 ```
 
 You can also provide a function that returns a description based on the value of the input.
@@ -49,11 +49,11 @@ var isEven = Spec
     .WhenFalse(n => $"{n} is odd")
     .Create("is even");
 
-isEven.IsSatisfiedBy(2).Reason; // returns "is even"
-isEven.IsSatisfiedBy(2).Assertions; // returns ["2 is even"]
+isEven.IsSatisfiedBy(2).Reason; // "is even"
+isEven.IsSatisfiedBy(2).Assertions; // ["2 is even"]
 
-isEven.IsSatisfiedBy(3).Reason; // returns "!is even"
-isEven.IsSatisfiedBy(3).Assertions; // returns ["3 is odd"]
+isEven.IsSatisfiedBy(3).Reason; // "!is even"
+isEven.IsSatisfiedBy(3).Assertions; // ["3 is odd"]
 ```
 
 ### Handling multiple languages
@@ -68,10 +68,10 @@ var isEven = Spec
     .WhenFalse(n => new { English = "the number is odd", Spanish = "el número es impar" })
     .Create("is even number");
 
-isEven.IsSatisfiedBy(2).Satisfied; // returns true
-isEven.IsSatisfiedBy(2).Reason; // returns "is even number"
-isEven.IsSatisfiedBy(2).Metadata.Select(m => m.English); // returns ["the number is even"]
-isEven.IsSatisfiedBy(2).Metadata.Select(m => m.Spanish); // returns ["el número es par"]
+isEven.IsSatisfiedBy(2).Satisfied; // true
+isEven.IsSatisfiedBy(2).Reason; // "is even number"
+isEven.IsSatisfiedBy(2).Metadata.Select(m => m.English); // ["the number is even"]
+isEven.IsSatisfiedBy(2).Metadata.Select(m => m.Spanish); // ["el número es par"]
 ```
 ### Composite Specification
 ```csharp
@@ -89,21 +89,21 @@ var isEven = Spec
 
 var isPositiveAndEven = isPositive & isEven;
 
-isPositiveAndEven.IsSatisfiedBy(2).Satisfied; // returns true
-isPositiveAndEven.IsSatisfiedBy(2).Reason; // returns "the number is positive & the number is even"
-isPositiveAndEven.IsSatisfiedBy(2).Assertions; // returns ["the number is positive", "the number is even"]
+isPositiveAndEven.IsSatisfiedBy(2).Satisfied; // true
+isPositiveAndEven.IsSatisfiedBy(2).Reason; // "the number is positive & the number is even"
+isPositiveAndEven.IsSatisfiedBy(2).Assertions; // ["the number is positive", "the number is even"]
 
-isPositiveAndEven.IsSatisfiedBy(3).Satisfied; // returns false
-isPositiveAndEven.IsSatisfiedBy(3).Reason; // returns "the number is odd"
-isPositiveAndEven.IsSatisfiedBy(3).Assertions; // returns ["the number is odd"]
+isPositiveAndEven.IsSatisfiedBy(3).Satisfied; // false
+isPositiveAndEven.IsSatisfiedBy(3).Reason; // "the number is odd"
+isPositiveAndEven.IsSatisfiedBy(3).Assertions; // ["the number is odd"]
 
-isPositiveAndEven.IsSatisfiedBy(-2).Satisfied; // returns false
-isPositiveAndEven.IsSatisfiedBy(-2).Reason; // returns "the number is negative"
-isPositiveAndEven.IsSatisfiedBy(-2).Assertions; // returns ["the number is negative"]
+isPositiveAndEven.IsSatisfiedBy(-2).Satisfied; // false
+isPositiveAndEven.IsSatisfiedBy(-2).Reason; // "the number is negative"
+isPositiveAndEven.IsSatisfiedBy(-2).Assertions; // ["the number is negative"]
 
-isPositiveAndEven.IsSatisfiedBy(-5).Satisfied; // returns false
-isPositiveAndEven.IsSatisfiedBy(-5.Reason; // returns "the number is negative & the number is odd"
-isPositiveAndEven.IsSatisfiedBy(-5).Assertions; // returns ["the number is negative", "the number is odd"]
+isPositiveAndEven.IsSatisfiedBy(-5).Satisfied; // false
+isPositiveAndEven.IsSatisfiedBy(-5.Reason; // "the number is negative & the number is odd"
+isPositiveAndEven.IsSatisfiedBy(-5).Assertions; // ["the number is negative", "the number is odd"]
 ```
 
 

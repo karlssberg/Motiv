@@ -25,9 +25,9 @@ var hasSubscriptionNotEndedSpec = Spec
 var isActiveSubscriptionSpec = hasSubscriptionStartedSpec & hasSubscriptionNotEndedSpec;
 var result = isActiveSubscriptionSpec.IsSatisfiedBy(subscription);
 
-result.Satisfied; // returns true
-result.Reason; // returns "subscription has started & subscription has not ended"
-result.Assertions; // returns ["subscription has started", "subscription has not ended"]
+result.Satisfied; // true
+result.Reason; // "subscription has started & subscription has not ended"
+result.Assertions; // ["subscription has started", "subscription has not ended"]
 ```
 
 The `Reason` property of the result will contain descriptions of the underlying causes of the result. If the results was
@@ -37,7 +37,7 @@ responsible.
 
 ```csharp
 var result = isActiveSubscriptionResult.IsSatisfiedBy(lapsedSubscription);
-result.Reason; // returns "subscription has ended"
+result.Reason; // "subscription has ended"
 ```
 
 If you want to give it a true or false reasons you can do so by wrapping it in a new `Spec<T>` instance.
@@ -66,11 +66,11 @@ var isActiveSubscriptionResult = isActiveSubscriptionSpec.IsSatisfiedBy(subscrip
 BooleanResultBase<string> canViewContent = isActiveSubscriptionResult & isValidLocationResult;
 ```
 
-The results of the `&` operation being performed on two boolean results will be a new `BooleanResultBase<T>` instance that contains the results of the two.
-The `Result`
-property will therefore contain the assertions of both underlying specification.
+The results of the `&` operation being performed on two boolean results will be a new `BooleanResultBase<T>` 
+instance that contains the results of the two.The `Result` property will therefore contain the assertions of both 
+underlying specification.
 
 ```csharp
 var result = isActiveSubscriptionResult.IsSatisfiedBy(activeSubscription);
-result.Reason; // returns "subscription has started & subscription has not ended"
+result.Reason; // "subscription has started & subscription has not ended"
 ```

@@ -39,15 +39,4 @@ public readonly ref struct FalseAssertionCompositeFactorySpecBuilder<TModel, TUn
         new(specPredicate,
             trueBecause,
             falseBecause);
-
-    /// <summary>
-    /// Specifies an assertion to yield when the condition is false.
-    /// </summary>
-    /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
-    /// <returns>An instance of <see cref="ExplanationMultiAssertionCompositeFactorySpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
-    public ExplanationMultiAssertionCompositeFactorySpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
-        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
-        new(specPredicate,
-            trueBecause.ToEnumerableReturn(),
-            falseBecause);
 }

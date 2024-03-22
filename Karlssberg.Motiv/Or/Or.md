@@ -24,9 +24,9 @@ var isAtRiskShelfItemSpec = expensiveProductSpec | isProductSizeSmallSpec;
 var product = new Product("Laptop", 1500, true);
 var isAtRiskShelfItem = isAtRiskShelfItemSpec.IsSatisfiedBy(product);
 
-isAtRiskShelfItem.Satisfied; // returns true
-isAtRiskShelfItem.Reason; // returns "product is expensive | product is easily stolen"
-isAtRiskShelfItem.Assertions; // returns ["product is expensive", "product is easily stolen"]
+isAtRiskShelfItem.Satisfied; // true
+isAtRiskShelfItem.Reason; // "product is expensive | product is easily stolen"
+isAtRiskShelfItem.Assertions; // ["product is expensive", "product is easily stolen"]
 ```
 
 If you want to give it a true or false reasons you can do so by wrapping it in a new specification.
@@ -57,7 +57,7 @@ var isProductAtRiskOfTheft = isProductAtRiskOfTheftSpec.IsSatisfiedBy(store);
 
 var isExtaSecurityNeeded = isProductAtRiskOfTheft | isAtRiskLocation;
 
-isExtaSecurityNeeded.Satisfied; // returns true
-isExtaSecurityNeeded.Reason; // returns "the product is at risk of theft | the store has high incidents of shop lifting"
-isExtaSecurityNeeded.Assertions; // returns ["the product is at risk of theft", "the store has high incidents of shop lifting"]
+isExtaSecurityNeeded.Satisfied; // true
+isExtaSecurityNeeded.Reason; // "the product is at risk of theft | the store has high incidents of shop lifting"
+isExtaSecurityNeeded.Assertions; // ["the product is at risk of theft", "the store has high incidents of shop lifting"]
 ```

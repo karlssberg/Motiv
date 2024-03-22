@@ -98,9 +98,6 @@
         <Compile Update="CompositeFactory\CompositeFactorySpecBuilders\Explanation\ExplanationMultiAssertionWithPropositionCompositeFactorySpecFactory.cs">
           <DependentUpon>FalseAssertionWithPropositionCompositeFactorySpecBuilder.cs</DependentUpon>
         </Compile>
-        <Compile Update="CompositeFactory\CompositeFactorySpecBuilders\Explanation\ExplanationMultiAssertionCompositeFactorySpecFactory.cs">
-          <DependentUpon>FalseAssertionCompositeFactorySpecBuilder.cs</DependentUpon>
-        </Compile>
         <Compile Update="FirstOrder\FirstOrderSpecBuilders\Explanation\ExplanationWithPropositionFirstOrderSpecFactory.cs">
           <DependentUpon>FalseAssertionWithPropositionUnresolvedFirstOrderSpecBuilder.cs</DependentUpon>
         </Compile>

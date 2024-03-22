@@ -73,9 +73,9 @@ var isEvenSpec = Spec
     .Create("even");
 
 var isEven = isEvenSpec.IsSatisfiedBy(3);
-isEven.Satisfied; // returns true
-isEven.Reason; // returns "!even"
-isEven.Metadata.Select(m => m.English); // returns ["the number is odd"]
+isEven.Satisfied; // true
+isEven.Reason; // "!even"
+isEven.Metadata.Select(m => m.English); // ["the number is odd"]
 ```
 
 ### Higher order propositions
