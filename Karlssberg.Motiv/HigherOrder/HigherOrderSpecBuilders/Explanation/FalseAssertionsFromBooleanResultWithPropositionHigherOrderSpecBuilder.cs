@@ -5,8 +5,8 @@
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct FalseAssertionsWithPropositionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
-    SpecBase<TModel, TUnderlyingMetadata> spec,
+public readonly ref struct FalseAssertionsFromBooleanResultWithPropositionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause,
     IProposition candidateProposition,
@@ -17,8 +17,8 @@ public readonly ref struct FalseAssertionsWithPropositionHigherOrderSpecBuilder<
     /// </summary>
     /// <param name="falseBecause">A human-readable reason why the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationWithPropositionHigherOrderSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
-    public ExplanationWithPropositionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(string falseBecause) =>
-        new(spec,
+    public ExplanationFromBooleanResultWithPropositionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(string falseBecause) =>
+        new(resultResolver,
             higherOrderPredicate,
             trueBecause,
             _ => falseBecause,
@@ -30,9 +30,9 @@ public readonly ref struct FalseAssertionsWithPropositionHigherOrderSpecBuilder<
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationWithPropositionHigherOrderSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
-    public ExplanationWithPropositionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
+    public ExplanationFromBooleanResultWithPropositionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause) =>
-        new(spec,
+        new(resultResolver,
             higherOrderPredicate,
             trueBecause,
             falseBecause,
@@ -46,7 +46,7 @@ public readonly ref struct FalseAssertionsWithPropositionHigherOrderSpecBuilder<
     /// <returns>An instance of <see cref="ExplanationMultiAssertionWithPropositionHigherOrderSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
     public ExplanationMultiAssertionWithPropositionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
-        new (spec.IsSatisfiedByWithExceptionRethrowing,
+        new (resultResolver,
             higherOrderPredicate,
             trueBecause.ToEnumerableReturn(),
             falseBecause,

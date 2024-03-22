@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv.BooleanResultPredicate;
 
-public class BooleanResultPredicateMultiMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
+public sealed class BooleanResultPredicateMultiMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> underlyingBooleanResultPredicate,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,

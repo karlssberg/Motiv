@@ -7,10 +7,9 @@ internal sealed class CompositeMultiMetadataSpec<TModel, TMetadata, TUnderlyingM
     string propositionalAssertion)
     : SpecBase<TModel, TMetadata>
 {
+    
     /// <summary>Gets the description of the specification.</summary>
-    public override IProposition Proposition => new Proposition(propositionalAssertion, UnderlyingSpec.Proposition);
-
-    public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
+    public override IProposition Proposition => new Proposition(propositionalAssertion, underlyingSpec.Proposition);
 
     /// <summary>Determines if the specification is satisfied by the given model.</summary>
     /// <param name="model">The model to be evaluated.</param>
@@ -20,7 +19,7 @@ internal sealed class CompositeMultiMetadataSpec<TModel, TMetadata, TUnderlyingM
     /// </returns>
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var booleanResult = UnderlyingSpec.IsSatisfiedBy(model);
+        var booleanResult = underlyingSpec.IsSatisfiedBy(model);
         
         var metadata = booleanResult.Satisfied switch
         {

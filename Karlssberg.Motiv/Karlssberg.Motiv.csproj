@@ -119,6 +119,12 @@
         <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Explanation\ExplanationMultiBooleanResultPredicateSpecFactory.cs">
           <DependentUpon>FalseAssertionBooleanResultPredicateSpecBuilder.cs</DependentUpon>
         </Compile>
+        <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationFromBooleanResultWithPropositionHigherOrderSpecFactory.cs">
+          <DependentUpon>FalseAssertionsFromBooleanResultWithPropositionHigherOrderSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrder\HigherOrderSpecBuilders\Metadata\MetadataFromBooleanResultHigherOrderSpecFactory.cs">
+          <DependentUpon>FalseMetadataFromBooleanResultHigherOrderSpecBuilder.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>

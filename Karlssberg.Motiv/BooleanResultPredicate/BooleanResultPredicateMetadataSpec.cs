@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.BooleanResultPredicate;
 
-public class BooleanResultPredicateMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
+public sealed class BooleanResultPredicateMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> underlyingBooleanResultPredicate,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenFalse,

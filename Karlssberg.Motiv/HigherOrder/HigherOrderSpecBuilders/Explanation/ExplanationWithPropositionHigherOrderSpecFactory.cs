@@ -1,5 +1,6 @@
 ﻿namespace Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders.Explanation;
 
+
 /// <summary>
 /// A factory for creating specifications based on a predicate and explanations for true and false conditions.
 /// This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a
@@ -12,7 +13,7 @@ public readonly ref struct ExplanationWithPropositionHigherOrderSpecFactory<TMod
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
-    string candidateProposition,
+    IProposition candidateProposition,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
@@ -20,7 +21,7 @@ public readonly ref struct ExplanationWithPropositionHigherOrderSpecFactory<TMod
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create() =>
         new HigherOrderExplanationSpec<TModel, TUnderlyingMetadata>(
-            spec,
+            spec.IsSatisfiedByWithExceptionRethrowing,
             higherOrderPredicate,
             trueBecause,
             falseBecause,
@@ -34,12 +35,15 @@ public readonly ref struct ExplanationWithPropositionHigherOrderSpecFactory<TMod
     /// <param name="proposition">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create(string proposition) =>
-        new HigherOrderMetadataSpec<TModel, string, TUnderlyingMetadata>(
-            spec,
+    public SpecBase<IEnumerable<TModel>, string> Create(string proposition)
+    {
+        proposition.ThrowIfNullOrWhitespace(nameof(proposition));
+        return new HigherOrderMetadataSpec<TModel, string, TUnderlyingMetadata>(
+            spec.IsSatisfiedByWithExceptionRethrowing,
             higherOrderPredicate,
             trueBecause,
             falseBecause,
-            proposition.ThrowIfNullOrWhitespace(nameof(proposition)),
+            new HigherOrderProposition<TModel, TUnderlyingMetadata>(proposition, spec),
             causeSelector);
+    }
 }

@@ -6,11 +6,11 @@
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
 public readonly ref struct ExplanationMultiAssertionWithPropositionHigherOrderSpecFactory<TModel, TUnderlyingMetadata>(
-    SpecBase<TModel, TUnderlyingMetadata> spec,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause,
-    string candidateProposition,
+    IProposition candidateProposition,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
     /// <summary>
@@ -19,14 +19,17 @@ public readonly ref struct ExplanationMultiAssertionWithPropositionHigherOrderSp
     /// <param name="proposition">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create(string proposition) =>
-        new HigherOrderMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
-            spec,
+    public SpecBase<IEnumerable<TModel>, string> Create(string proposition)
+    {
+        proposition.ThrowIfNullOrWhitespace(nameof(proposition));
+        return new HigherOrderMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
+            resultResolver,
             higherOrderPredicate,
             trueBecause,
             falseBecause,
-            proposition.ThrowIfNullOrWhitespace(nameof(proposition)),
+            candidateProposition,
             causeSelector);
+    }
 
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false.
@@ -34,7 +37,7 @@ public readonly ref struct ExplanationMultiAssertionWithPropositionHigherOrderSp
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create() =>
         new HigherOrderMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(
-            spec,
+            resultResolver,
             higherOrderPredicate,
             trueBecause,
             falseBecause,

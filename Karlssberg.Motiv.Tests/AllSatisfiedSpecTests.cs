@@ -458,4 +458,18 @@ public class AllSatisfiedSpecTests
 
         result.Description.CausalOperandCount.Should().Be(expected);
     }
+
+    public void Should_surface_boolean_results_created_from_underlyingResult()
+    {
+        var underlying = Spec
+            .Build<bool>(m => m)
+            .Create("underlying");
+
+        var sut = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .AsAllSatisfied()
+            .WhenTrue("all are true")
+            .WhenFalse("not all are true")
+            .Create();
+    }
 }

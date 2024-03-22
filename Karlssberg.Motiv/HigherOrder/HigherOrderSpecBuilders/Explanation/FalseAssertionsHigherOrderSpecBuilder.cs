@@ -6,7 +6,7 @@
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
 public readonly ref struct FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
-    SpecBase<TModel, TUnderlyingMetadata> spec,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
@@ -17,7 +17,7 @@ public readonly ref struct FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderl
     /// <param name="falseBecause">A human-readable reason why the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationHigherOrderSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
     public ExplanationHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(string falseBecause) =>
-        new(spec,
+        new(resultResolver,
             higherOrderPredicate,
             trueBecause,
             _ => falseBecause,
@@ -30,7 +30,7 @@ public readonly ref struct FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderl
     /// <returns>An instance of <see cref="ExplanationHigherOrderSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
     public ExplanationHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause) =>
-        new(spec,
+        new(resultResolver,
             higherOrderPredicate,
             trueBecause,
             falseBecause,
@@ -43,7 +43,7 @@ public readonly ref struct FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderl
     /// <returns>An instance of <see cref="ExplanationMultiAssertionHigherOrderSpecFactory{TModel,TUnderlyingMetadata}" />.</returns>
     public ExplanationMultiAssertionHigherOrderSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
-        new(spec,
+        new(resultResolver,
             higherOrderPredicate,
             trueBecause.ToEnumerableReturn(),
             falseBecause,

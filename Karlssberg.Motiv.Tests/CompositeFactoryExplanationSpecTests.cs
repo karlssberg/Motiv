@@ -128,9 +128,9 @@ public class CompositeFactoryExplanationSpecTests
     }
     
     [Theory]
-    [InlineAutoData(true, "True")]
-    [InlineAutoData(false, "False")]
-    public void Should_map_underlying_assertions_to_new_ones(bool model, string expected)
+    [InlineAutoData(true, "True", "is true")]
+    [InlineAutoData(false, "False", "!is true")]
+    public void Should_map_underlying_true_assertions_to_new_ones(bool model, string expectedAssertion, string expectedReason)
     {
         var underlying = Spec
             .Build((bool m) => m)
@@ -141,11 +141,35 @@ public class CompositeFactoryExplanationSpecTests
         var sut = Spec
             .Build(() => underlying)
             .WhenTrue((boolModel, result) => result.Assertions.Append(boolModel.ToString()))
+            .WhenFalse("False")
+            .Create("is true");
+        
+        var act = sut.IsSatisfiedBy(model);
+        
+        act.Assertions.Should().BeEquivalentTo([expectedAssertion]);
+        act.Reason.Should().Be(expectedReason);
+    }
+    
+    [Theory]
+    [InlineAutoData(true, "True", "is true")]
+    [InlineAutoData(false, "False", "!is true")]
+    public void Should_map_underlying_false_assertions_to_new_ones(bool model, string expectedAssertion, string expectedReason)
+    {
+        var underlying = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("is underlying true");
+
+        var sut = Spec
+            .Build(() => underlying)
+            .WhenTrue("True")
             .WhenFalse((boolModel, result) => result.Assertions.Append(boolModel.ToString()))
             .Create("is true");
         
         var act = sut.IsSatisfiedBy(model);
         
-        act.Assertions.Should().BeEquivalentTo([expected]);
+        act.Assertions.Should().BeEquivalentTo([expectedAssertion]);
+        act.Reason.Should().Be(expectedReason);
     }
 }

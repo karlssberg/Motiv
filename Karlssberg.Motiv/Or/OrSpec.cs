@@ -12,8 +12,8 @@ internal sealed class OrSpec<TModel, TMetadata>(
     /// <inheritdoc />
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var leftResult =  left.IsSatisfiedByOrWrapException(model);
-        var rightResult = right.IsSatisfiedByOrWrapException(model);
+        var leftResult =  left.IsSatisfiedByWithExceptionRethrowing(model);
+        var rightResult = right.IsSatisfiedByWithExceptionRethrowing(model);
 
         return leftResult.Or(rightResult);
     }

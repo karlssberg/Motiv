@@ -10,8 +10,8 @@ internal sealed class XOrSpec<TModel, TMetadata>(
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var leftResult = right.IsSatisfiedByOrWrapException(model);
-        var rightResult = left.IsSatisfiedByOrWrapException(model);
+        var leftResult = right.IsSatisfiedByWithExceptionRethrowing(model);
+        var rightResult = left.IsSatisfiedByWithExceptionRethrowing(model);
 
         return leftResult.XOr(rightResult);
     }

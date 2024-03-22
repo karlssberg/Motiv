@@ -10,5 +10,5 @@ internal sealed class NotSpec<TModel, TMetadata>(
 
     /// <inheritdoc />
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => 
-        operand.IsSatisfiedByOrWrapException(model).Not();
+        operand.IsSatisfiedByWithExceptionRethrowing(model).Not();
 }

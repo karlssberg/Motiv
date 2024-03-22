@@ -20,7 +20,7 @@ internal static class WrapException
             return new SpecException(message, ex);
         });
     }
-    internal static BooleanResultBase<TMetadata> IsSatisfiedByOrWrapException<TModel, TMetadata>(
+    internal static BooleanResultBase<TMetadata> IsSatisfiedByWithExceptionRethrowing<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec,
         TModel model)
     {

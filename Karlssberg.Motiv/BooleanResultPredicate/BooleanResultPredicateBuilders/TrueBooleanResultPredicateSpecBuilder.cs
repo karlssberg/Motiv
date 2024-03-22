@@ -1,5 +1,8 @@
 ﻿using Karlssberg.Motiv.BooleanResultPredicate.BooleanResultPredicateBuilders.Explanation;
 using Karlssberg.Motiv.BooleanResultPredicate.BooleanResultPredicateBuilders.Metadata;
+using Karlssberg.Motiv.HigherOrder;
+using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
+
 namespace Karlssberg.Motiv.BooleanResultPredicate.BooleanResultPredicateBuilders;
 
 /// <summary>
@@ -7,7 +10,7 @@ namespace Karlssberg.Motiv.BooleanResultPredicate.BooleanResultPredicateBuilders
 /// </summary>
 /// <typeparam name="TModel">The type of the model the specification is for.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the metadata associated with the underlying boolean result.</typeparam>
-public class TrueBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata>(
+public readonly ref struct TrueBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> predicate)
 {
     /// <summary>
@@ -59,6 +62,24 @@ public class TrueBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata>(
             predicate,
             (model, _) => whenTrue(model).ToEnumerable());
     }
+    
+
+    /// <summary>Specifies a higher order predicate for the specification.</summary>
+    /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
+    /// <returns>An instance of <see cref="TrueHigherOrderSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
+    public TrueHigherOrderFromBooleanResultSpecBuilder<TModel, TUnderlyingMetadata> As(
+        Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate) =>
+        new(predicate, higherOrderPredicate);
+
+    /// <summary>Specifies a higher order predicate for the specification.</summary>
+    /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
+    /// <param name="causeSelector">A function that selects the causes of the boolean results.</param>
+    /// <returns>An instance of <see cref="TrueHigherOrderSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
+    public TrueHigherOrderFromBooleanResultSpecBuilder<TModel, TUnderlyingMetadata> As(
+        Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
+        Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
+            IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector) =>
+        new(predicate, higherOrderPredicate, causeSelector);
 
     /// <summary>
     /// Creates a specification and names it with the propositional statement provided.

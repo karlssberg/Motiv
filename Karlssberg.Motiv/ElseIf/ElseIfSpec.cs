@@ -12,13 +12,13 @@ internal sealed class ElseIfSpec<TModel, TMetadata>(
     /// <inheritdoc />
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var antecedentResult = antecedent.IsSatisfiedByOrWrapException(model);
+        var antecedentResult = antecedent.IsSatisfiedByWithExceptionRethrowing(model);
         return antecedentResult.Satisfied switch
         {
             true => antecedentResult,
             false => new ConsequentBooleanResult<TMetadata>(
                 antecedentResult,
-                consequent.IsSatisfiedByOrWrapException(model))
+                consequent.IsSatisfiedByWithExceptionRethrowing(model))
         };
     }
 }
