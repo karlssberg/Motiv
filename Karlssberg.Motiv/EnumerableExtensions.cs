@@ -45,19 +45,19 @@ public static class EnumerableExtensions
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results.Any(result => !result.Satisfied);
 
-    internal static Explanation CreateExplanation(
+    internal static ExplanationTree CreateExplanation(
         this IEnumerable<BooleanResultBase> underlyingResults)
     {
         var resultArray = underlyingResults.ToArray();
 
         var reasons = resultArray
-            .SelectMany(result => result.Explanation.Assertions)
+            .SelectMany(result => result.ExplanationTree.Assertions)
             .Distinct();
 
         var underlying = resultArray
-            .Select(result => result.Explanation);
+            .Select(result => result.ExplanationTree);
 
-        return new Explanation(reasons)
+        return new ExplanationTree(reasons)
         {
             Underlying = underlying
         };
@@ -97,21 +97,21 @@ public static class EnumerableExtensions
             .SelectMany(e => e.MetadataTree);
     
     public static IEnumerable<string> GetAssertions(
-        this IEnumerable<Explanation> explanations) =>
+        this IEnumerable<ExplanationTree> explanations) =>
         explanations.SelectMany(e => e.Assertions);
     
     public static IEnumerable<string> GetAssertionsAtDepth(
-        this Explanation explanation,
+        this ExplanationTree explanationTree,
         int atDepth) =>
         atDepth switch
         {
-            > 0 => explanation.Underlying.GetAssertionsAtDepth(atDepth - 1).Distinct(),
-            0 => explanation.Assertions,
+            > 0 => explanationTree.Underlying.GetAssertionsAtDepth(atDepth - 1).Distinct(),
+            0 => explanationTree.Assertions,
             _ => throw new ArgumentOutOfRangeException(nameof(atDepth), "Depth must be a non-negative integer.")
         };
     
     private static IEnumerable<string> GetAssertionsAtDepth(
-        this IEnumerable<Explanation> explanations,
+        this IEnumerable<ExplanationTree> explanations,
         int atDepth) =>
         atDepth switch
         {
@@ -122,13 +122,13 @@ public static class EnumerableExtensions
     
     public static IEnumerable<string> GetRootAssertions(
         this BooleanResultBase result) =>
-        result.Explanation
+        result.ExplanationTree
             .Underlying
             .GetRootAssertions()
             .Distinct();
     
     private static IEnumerable<string> GetRootAssertions(
-        this IEnumerable<Explanation> explanations) =>
+        this IEnumerable<ExplanationTree> explanations) =>
         explanations.SelectMany(explanation => explanation
             .Underlying
             .GetRootAssertions()

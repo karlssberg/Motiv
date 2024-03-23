@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv.Tests;
 
-public class ExplanationSpecTests
+public class ExplanationTreeSpecTests
 {
     [Theory]
     [InlineData(1, "is odd")]
@@ -17,7 +17,7 @@ public class ExplanationSpecTests
         var result = spec.IsSatisfiedBy(model);
         result.Assertions.Should().BeEquivalentTo(expected);
         result.Reason.Should().Be(expected);
-        result.Explanation.Assertions.Should().BeEquivalentTo(expected);
+        result.ExplanationTree.Assertions.Should().BeEquivalentTo(expected);
     }
     
     [Theory]

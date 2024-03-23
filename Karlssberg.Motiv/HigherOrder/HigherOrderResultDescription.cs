@@ -1,14 +1,14 @@
 ﻿namespace Karlssberg.Motiv.HigherOrder;
 
 internal sealed class HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
-    string because,
-    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes )
+    string reason,
+    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes)
     : ResultDescriptionBase
 {
     private readonly ICollection<BooleanResult<TModel, TUnderlyingMetadata>> _causes = causes.ToArray();
     internal override int CausalOperandCount => _causes.Count;
 
-    public override string Compact => because;
+    public override string Reason => reason;
 
     public override string Detailed => GetDetails();
 
@@ -17,10 +17,10 @@ internal sealed class HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
         var causes = GetUnderlyingCauses();
         return causes switch
         {
-            "" => Compact,
+            "" => Reason,
             _ =>
                 $$"""
-                  {{Compact}} {
+                  {{Reason}} {
                       {{causes.IndentAfterFirstLine()}}
                   }
                   """
@@ -30,7 +30,7 @@ internal sealed class HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
         {
             var reasonFrequencyPair = _causes
                 .OrderByDescending(result => result.Satisfied)
-                .Select(result => result.Description.Compact)
+                .Select(result => result.Description.Reason)
                 .GroupBy(reason => reason)
                 .Select(grouping => (Reason: grouping.Key, Count: grouping.Count()))
                 .OrderByDescending(grouping => grouping.Count)

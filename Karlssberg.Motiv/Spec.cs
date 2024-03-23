@@ -1,7 +1,4 @@
-﻿using Karlssberg.Motiv.BooleanResultPredicate.BooleanResultPredicateBuilders;
-using Karlssberg.Motiv.Composite.CompositeSpecBuilders;
-using Karlssberg.Motiv.CompositeFactory.CompositeFactorySpecBuilders;
-using Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders;
+﻿using Karlssberg.Motiv.Composite.CompositeSpecBuilders;
 
 namespace Karlssberg.Motiv;
 

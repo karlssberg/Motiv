@@ -18,11 +18,18 @@ internal sealed class CompositeMultiMetadataSpec<TModel, TMetadata, TUnderlyingM
         var metadata = booleanResult.Satisfied switch
         {
             true => whenTrue(model, booleanResult),
-            false => whenFalse(model, booleanResult),
+            false => whenFalse(model, booleanResult)
         };
         
-        var metadataSet = new MetadataTree<TMetadata>(metadata);
+        var assertions = metadata switch {
+            IEnumerable<string> because => because,
+            _ => Proposition.ToReason(booleanResult.Satisfied).ToEnumerable()
+        };
 
-        return new CompositeMultiMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadataSet, Proposition);
+        return new CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(
+            booleanResult,
+            metadata,
+            assertions,
+            Proposition.ToReason(booleanResult.Satisfied));
     }
 }

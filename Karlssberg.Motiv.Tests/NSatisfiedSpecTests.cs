@@ -64,8 +64,8 @@ public class NSatisfiedSpecTests
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
         result.Satisfied.Should().Be(expected);
-        result.Explanation.Assertions.Humanize().Should().Be(expectedShallowReasons);
-        result.Explanation.Underlying.GetAssertions().Humanize().Should().Be(expectedDeepReason);
+        result.ExplanationTree.Assertions.Humanize().Should().Be(expectedShallowReasons);
+        result.ExplanationTree.Underlying.GetAssertions().Humanize().Should().Be(expectedDeepReason);
     }
     
     [Theory]
@@ -93,7 +93,7 @@ public class NSatisfiedSpecTests
         
         var result = sut.IsSatisfiedBy([first, second]);
 
-        result.Description.Compact.Should().Be(expected);
+        result.Description.Reason.Should().Be(expected);
     }
     
     [Fact]

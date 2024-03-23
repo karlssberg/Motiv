@@ -1,15 +1,15 @@
 ﻿namespace Karlssberg.Motiv.HigherOrder;
 
 internal sealed class HigherOrderProposition<TModel, TUnderlyingMetadata>(
-    string assertion,
+    string statement,
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec)
     : IProposition
 {
-    public string Statement => assertion;
+    public string Statement => statement;
 
     public string Detailed =>
         $$"""
-          {{assertion}} {
+          {{statement}} {
               {{underlyingSpec.Proposition.Detailed}}
           }
           """;

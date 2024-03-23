@@ -21,13 +21,14 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationSpec<TModel>(
         var causes = Causes.Get(isSatisfied, underlyingResults, higherOrderPredicate, causeSelector).ToArray();
         var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
 
-        var metadata = isSatisfied
+        var assertion = isSatisfied
             ? trueBecause(evaluation)
             : falseBecause(evaluation);
 
         return new HigherOrderFromBooleanPredicateBooleanResult<string>(
             isSatisfied,
-            metadata,
-            metadata);
+            assertion,
+            assertion,
+            assertion);
     }
 }

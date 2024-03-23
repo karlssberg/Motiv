@@ -17,12 +17,16 @@ internal sealed class CompositeFactoryExplanationSpec<TModel, TUnderlyingMetadat
     {
         var booleanResult = underlyingSpecFactory(model).IsSatisfiedBy(model);
         
-        var because = booleanResult.Satisfied switch
+        var assertion = booleanResult.Satisfied switch
         {
             true => trueBecause(model, booleanResult),
             false => falseBecause(model, booleanResult),
         };
 
-        return new CompositeFactoryBooleanResult<string, TUnderlyingMetadata>(booleanResult, because, because);
+        return new CompositeFactoryBooleanResult<string, TUnderlyingMetadata>(
+            booleanResult, 
+            assertion.ToEnumerable(), 
+            assertion.ToEnumerable(),
+            Proposition.ToReason(booleanResult.Satisfied));
     }
 }

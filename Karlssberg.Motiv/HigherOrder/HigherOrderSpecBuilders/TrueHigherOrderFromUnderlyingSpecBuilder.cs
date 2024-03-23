@@ -10,7 +10,7 @@ namespace Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata>(
+public readonly ref struct TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,

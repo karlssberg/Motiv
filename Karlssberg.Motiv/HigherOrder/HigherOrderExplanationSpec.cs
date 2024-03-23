@@ -23,14 +23,16 @@ internal sealed class HigherOrderExplanationSpec<TModel, TUnderlyingMetadata>(
             underlyingResults, 
             causes);
 
-        var because = isSatisfied
+        var assertion = isSatisfied
             ? trueBecause(booleanCollectionResults)
             : falseBecause(booleanCollectionResults);
         
-        return new HigherOrderExplanationBooleanResult<TModel, TUnderlyingMetadata>(
+        return new HigherOrderBooleanResult<TModel, string, TUnderlyingMetadata>(
             isSatisfied,
+            assertion.ToEnumerable(),
             underlyingResults,
             causes,
-            because);
+            assertion.ToEnumerable(),
+            assertion);
     }
 }

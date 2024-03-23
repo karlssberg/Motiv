@@ -1,6 +1,4 @@
-﻿using Karlssberg.Motiv.Composite;
-
-namespace Karlssberg.Motiv.BooleanResultPredicate;
+﻿namespace Karlssberg.Motiv.BooleanResultPredicate;
 
 internal sealed class BooleanResultPredicateExplanationSpec<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> predicate,
@@ -22,12 +20,16 @@ internal sealed class BooleanResultPredicateExplanationSpec<TModel, TUnderlyingM
     {
         var booleanResult = predicate(model);
         
-        var because = booleanResult.Satisfied switch
+        var assertion = booleanResult.Satisfied switch
         {
             true => whenTrue(model, booleanResult),
             false => whenFalse(model, booleanResult),
         };
 
-        return new BooleanResultPredicateExplanationBooleanResult<TUnderlyingMetadata>(booleanResult, because);
+        return new BooleanResultPredicateBooleanResult<string, TUnderlyingMetadata>(
+            booleanResult,
+            assertion.ToEnumerable(),
+            assertion.ToEnumerable(),
+            Proposition.ToReason(booleanResult.Satisfied));
     }
 }

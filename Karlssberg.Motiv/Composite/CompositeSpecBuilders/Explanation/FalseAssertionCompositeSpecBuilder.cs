@@ -16,10 +16,14 @@ public readonly ref struct FalseAssertionCompositeSpecBuilder<TModel, TUnderlyin
     /// <param name="falseBecause">A human-readable reason why the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>
     public ExplanationCompositeSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
-        string falseBecause) =>
-        new(spec,
+        string falseBecause)
+    {
+        falseBecause.ThrowIfNullOrWhitespace(nameof(falseBecause));
+        return new ExplanationCompositeSpecFactory<TModel, TUnderlyingMetadata>(
+            spec,
             trueBecause,
             (_, _) => falseBecause);
+    }
 
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
@@ -27,10 +31,13 @@ public readonly ref struct FalseAssertionCompositeSpecBuilder<TModel, TUnderlyin
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>
     public ExplanationCompositeSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
-        Func<TModel, string> falseBecause) =>
-        new(spec,
+        Func<TModel, string> falseBecause)
+    {
+        return new ExplanationCompositeSpecFactory<TModel, TUnderlyingMetadata>(
+            spec,
             trueBecause,
             (model, _) => falseBecause(model));
+    }
 
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
@@ -38,10 +45,14 @@ public readonly ref struct FalseAssertionCompositeSpecBuilder<TModel, TUnderlyin
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>
     public ExplanationCompositeSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
-        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> falseBecause) =>
-        new(spec,
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> falseBecause)
+    {
+        falseBecause.ThrowIfNull(nameof(falseBecause));
+        return new ExplanationCompositeSpecFactory<TModel, TUnderlyingMetadata>(
+            spec,
             trueBecause,
             falseBecause);
+    }
 
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
@@ -49,8 +60,12 @@ public readonly ref struct FalseAssertionCompositeSpecBuilder<TModel, TUnderlyin
     /// <param name="falseBecause">A function that generates a collection of human-readable reasons when the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>
     public ExplanationMultiAssertionCompositeSpecFactory<TModel, TUnderlyingMetadata> WhenFalse(
-        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
-        new(spec,
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause)
+    {
+        falseBecause.ThrowIfNull(nameof(falseBecause));
+        return new ExplanationMultiAssertionCompositeSpecFactory<TModel, TUnderlyingMetadata>(
+            spec,
             trueBecause.ToEnumerableReturn(),
             falseBecause);
+    }
 }

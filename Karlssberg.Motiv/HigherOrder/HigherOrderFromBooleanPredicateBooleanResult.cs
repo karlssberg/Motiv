@@ -3,7 +3,8 @@
 internal sealed class HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
     bool isSatisfied,
     TMetadata metadata,
-    string because)
+    string assertion,
+    string reason)
     : BooleanResultBase<TMetadata>
 {
     public override MetadataTree<TMetadata> MetadataTree => new(metadata.ToEnumerable());
@@ -18,12 +19,10 @@ internal sealed class HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
     
     public override bool Satisfied => isSatisfied;
 
-    public override ResultDescriptionBase Description => new BooleanResultDescription(because);
+    public override ResultDescriptionBase Description => new BooleanResultDescription(reason);
 
-    public override Explanation Explanation => new(Assertion);
-    private string Assertion => 
-        metadata switch {
-            string reason => reason,
-            _ => because
-        };
+    public override ExplanationTree ExplanationTree => new(assertion)
+    {
+        Underlying = Enumerable.Empty<ExplanationTree>()
+    };
 }

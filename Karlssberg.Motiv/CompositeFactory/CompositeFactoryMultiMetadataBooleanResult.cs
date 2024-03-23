@@ -5,8 +5,9 @@
 /// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
 internal sealed class CompositeFactoryMultiMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    MetadataTree<TMetadata> metadataTree,
-    IProposition proposition)
+    IEnumerable<TMetadata> metadata,
+    IEnumerable<string> assertions,
+    string reason)
     : BooleanResultBase<TMetadata>
 {
     /// <inheritdoc />
@@ -16,17 +17,18 @@ internal sealed class CompositeFactoryMultiMetadataBooleanResult<TMetadata, TUnd
     public override ResultDescriptionBase Description =>
         new BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(
             booleanResult,
-            proposition.ToReason(booleanResult.Satisfied));
+            reason);
 
     /// <inheritdoc />
-    public override Explanation Explanation =>
-        new(ResolveAssertions())
+    public override ExplanationTree ExplanationTree =>
+        new(assertions)
         {
-            Underlying = booleanResult.Explanation.ToEnumerable()
+            Underlying = booleanResult.ExplanationTree.ToEnumerable()
         };
     
     /// <inheritdoc />
-    public override MetadataTree<TMetadata> MetadataTree => metadataTree;
+    public override MetadataTree<TMetadata> MetadataTree => new (metadata,
+        booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>());
     
     /// <inheritdoc />
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
@@ -41,10 +43,4 @@ internal sealed class CompositeFactoryMultiMetadataBooleanResult<TMetadata, TUnd
     /// <inheritdoc />
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
         booleanResult.ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();
-    
-    private IEnumerable<string> ResolveAssertions() => 
-        metadataTree switch {
-            MetadataTree<string>  reasons => reasons,
-            _ => proposition.ToReason(booleanResult.Satisfied).ToEnumerable()
-        };
 }

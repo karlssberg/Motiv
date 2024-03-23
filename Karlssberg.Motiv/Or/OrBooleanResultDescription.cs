@@ -10,11 +10,11 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
     
     internal override int CausalOperandCount => _causalResults.Length;
     
-    public override string Compact => 
+    public override string Reason => 
         CausalOperandCount switch
         {
             0 => "",
-            1 => _causalResults.First().Description.Compact,
+            1 => _causalResults.First().Description.Reason,
             _ =>  string.Join(" | ", _causalResults.Select(ExplainReasons))
         };
 
@@ -53,12 +53,12 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
         return result switch 
         {
             OrBooleanResult<TMetadata> orSpec => 
-                orSpec.Description.Compact,
+                orSpec.Description.Reason,
             ICompositeBooleanResult { Description.CausalOperandCount: > 1 } compositeSpec =>
-                $"({compositeSpec.Description.Compact})",
-            _ => result.Description.Compact
+                $"({compositeSpec.Description.Reason})",
+            _ => result.Description.Reason
         };
     }
     
-    public override string ToString() => Compact;
+    public override string ToString() => Reason;
 }

@@ -66,16 +66,16 @@ public readonly ref struct TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata>
 
     /// <summary>Specifies a higher order predicate for the specification.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
-    /// <returns>An instance of <see cref="TrueHigherOrderSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> As(
+    /// <returns>An instance of <see cref="TrueHigherOrderFromUnderlyingSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
+    public TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> As(
         Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate) =>
         new(spec, higherOrderPredicate);
 
     /// <summary>Specifies a higher order predicate for the specification.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
     /// <param name="causeSelector">A function that selects the causes of the boolean results.</param>
-    /// <returns>An instance of <see cref="TrueHigherOrderSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public TrueHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> As(
+    /// <returns>An instance of <see cref="TrueHigherOrderFromUnderlyingSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
+    public TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> As(
         Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
         Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
             IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector) =>

@@ -6,9 +6,9 @@ internal sealed class ExplanationResultDescription(
 {
     internal override int CausalOperandCount => 0;
     
-    public override string Compact => because;
+    public override string Reason => because;
     
     public override string Detailed => because;
     
-    public override string ToString() => Compact;
+    public override string ToString() => Reason;
 }

@@ -526,4 +526,30 @@ public class AllSatisfiedSpecTests
         act.Reason.Should().Be(expectedAssertion);
         act.Assertions.Should().BeEquivalentTo([expectedAssertion]);
     }
+    
+    [Theory]
+    [InlineAutoData(false, false, false, "not all are true", "!all true")]
+    [InlineAutoData(false, true, false, "not all are true", "!all true")]
+    [InlineAutoData(true, false, false, "not all are true", "!all true")]
+    [InlineAutoData(true, true, true, "all are true", "all true")]
+    public void Should_surface_boolean_results_created_from_predicate_when_a_proposition_is_specified(
+        bool modelA,
+        bool modelB,
+        bool expected,
+        string expectedAssertion,
+        string expectedReason)
+    {
+        var sut = Spec
+            .Build((bool m) => m)
+            .AsAllSatisfied()
+            .WhenTrue("all are true")
+            .WhenFalse("not all are true")
+            .Create("all true");
+        
+        var act = sut.IsSatisfiedBy([modelA, modelB]);
+        
+        act.Satisfied.Should().Be(expected);
+        act.Reason.Should().Be(expectedReason);
+        act.Assertions.Should().BeEquivalentTo([expectedAssertion]);
+    }
 }

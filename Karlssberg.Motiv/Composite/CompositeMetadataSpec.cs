@@ -27,7 +27,15 @@ internal sealed class CompositeMetadataSpec<TModel, TMetadata, TUnderlyingMetada
             string reason => reason,
             _ => Proposition.ToReason(booleanResult.Satisfied)
         };
+        
+        var metadataTree = new MetadataTree<TMetadata>(
+            metadata, 
+            booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>());
 
-        return new CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadata, because);
+        return new CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(
+            booleanResult,
+            metadataTree,
+            because.ToEnumerable(),
+            Proposition.ToReason(booleanResult.Satisfied));
     }
 }

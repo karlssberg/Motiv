@@ -10,29 +10,40 @@ namespace Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct TrueHigherOrderFromBooleanSpecBuilder<TModel>(
-    Func<TModel, bool> predicate,
-    Func<IEnumerable<(TModel, bool)>, bool> higherOrderPredicate,
-    Func<bool, IEnumerable<(TModel, bool)>, IEnumerable<(TModel, bool)>>? causeSelector = null)
+public readonly ref struct TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata>(
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
+    Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
+    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
+        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector = null)
 {
     /// <summary>Specifies the metadata to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">The metadata to use when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataHigherOrderSpecBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataFromBooleanHigherOrderSpecBuilder<TModel, TMetadata> WhenTrue<TMetadata>(
+    public FalseMetadataFromBooleanResultHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         TMetadata whenTrue) =>
-        new(predicate,
-            higherOrderPredicate, 
-            _ => whenTrue,
+        new(resultResolver,
+            higherOrderPredicate, _ => whenTrue.ToEnumerable(),
             causeSelector);
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataHigherOrderSpecBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataFromBooleanHigherOrderSpecBuilder<TModel, TMetadata> WhenTrue<TMetadata>(
-        Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenTrue) =>
-        new(predicate,
+    public FalseMetadataFromBooleanResultHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue) =>
+        new(resultResolver,
+            higherOrderPredicate,
+            results => whenTrue(results).ToEnumerable(),
+            causeSelector);
+
+    /// <summary>Specifies the set of metadata to use when the condition is true.</summary>
+    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
+    /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataHigherOrderSpecBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataFromBooleanResultHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
+        new(resultResolver,
             higherOrderPredicate,
             whenTrue,
             causeSelector);
@@ -42,9 +53,9 @@ public readonly ref struct TrueHigherOrderFromBooleanSpecBuilder<TModel>(
     /// <returns>
     /// An instance of <see cref="FalseAssertionsWithPropositionHigherOrderSpecBuilder{TModel,TUnderlyingMetadata}" />.
     /// </returns>
-    public FalseAssertionsFromBooleanPredicateWithPropositionHigherOrderSpecBuilder<TModel> WhenTrue(
+    public FalseAssertionsFromBooleanResultWithPropositionHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         string trueBecause) =>
-        new(predicate,
+        new(resultResolver,
             higherOrderPredicate,
             _ => trueBecause,
             new Proposition(trueBecause),
@@ -53,9 +64,9 @@ public readonly ref struct TrueHigherOrderFromBooleanSpecBuilder<TModel>(
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionsHigherOrderSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public FalseAssertionsFromBooleanPredicateHigherOrderSpecBuilder<TModel> WhenTrue(
-        Func<HigherOrderBooleanEvaluation<TModel>, string> trueBecause) =>
-        new(predicate,
+    public FalseAssertionsHigherOrderSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause) =>
+        new(resultResolver,
             higherOrderPredicate,
             trueBecause,
             causeSelector);
@@ -67,8 +78,8 @@ public readonly ref struct TrueHigherOrderFromBooleanSpecBuilder<TModel>(
     public SpecBase<IEnumerable<TModel>, string> Create(string proposition)
     {
         proposition.ThrowIfNullOrWhitespace(nameof(proposition));
-        return new HigherOrderFromBooleanPredicateMetadataSpec<TModel, string>(
-            predicate,
+        return new HigherOrderMetadataSpec<TModel, string, TUnderlyingMetadata>(
+            resultResolver,
             higherOrderPredicate,
             _ => proposition,
             _ => $"!{proposition}",

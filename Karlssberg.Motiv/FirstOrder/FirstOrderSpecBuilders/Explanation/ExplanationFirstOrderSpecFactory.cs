@@ -11,7 +11,7 @@ public readonly ref struct ExplanationFirstOrderSpecFactory<TModel>(
     /// <summary>Creates a specification with explanations for when the condition is true or false.</summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<TModel, string> Create() =>
-        new ExplanationSpec<TModel>(
+        new ExplanationTreeSpec<TModel>(
             predicate,
             trueBecause,
             falseBecause,

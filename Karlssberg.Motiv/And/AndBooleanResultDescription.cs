@@ -9,11 +9,11 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
     private readonly BooleanResultBase<TMetadata>[] _causalResults = causalResults.ToArray();
     internal override int CausalOperandCount => _causalResults.Length;
 
-    public override string Compact => 
+    public override string Reason => 
         CausalOperandCount switch
         {
             0 => "",
-            1 => _causalResults.First().Description.Compact,
+            1 => _causalResults.First().Description.Reason,
             _ =>  string.Join(" & ", _causalResults.Select(ExplainReasons))
         };
 
@@ -52,10 +52,10 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
         return result switch 
         {
             AndBooleanResult<TMetadata> andSpec =>
-                andSpec.Description.Compact,
+                andSpec.Description.Reason,
             ICompositeBooleanResult { Description.CausalOperandCount: > 1 } compositeSpec =>
-                $"({compositeSpec.Description.Compact})",
-            _ => result.Description.Compact
+                $"({compositeSpec.Description.Reason})",
+            _ => result.Description.Reason
         };
     }
 }

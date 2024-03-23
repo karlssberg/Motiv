@@ -248,7 +248,7 @@ public class AndSpecTests
 
         result.Satisfied.Should().BeTrue();
         result.Assertions.Should().BeEquivalentTo("subscription is active");
-        result.Explanation.Underlying.GetAssertions().Should().BeEquivalentTo(
+        result.ExplanationTree.Underlying.GetAssertions().Should().BeEquivalentTo(
         [
             "subscription has started",
             "subscription has not ended"

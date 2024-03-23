@@ -55,7 +55,7 @@ public class ExplanationBooleanResultTests
             .ToList();
 
         act.Satisfied.Should().Be(expected);
-        act.Assertions.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
+        act.Assertions.Should().Contain(operands.SelectMany(operand => operand.ExplanationTree.Assertions));
     }
 
     [Theory]
@@ -73,7 +73,7 @@ public class ExplanationBooleanResultTests
         var operands = new[] { leftResult, rightResult };
 
         act.Satisfied.Should().Be(expected);
-        act.Assertions.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
+        act.Assertions.Should().Contain(operands.SelectMany(operand => operand.ExplanationTree.Assertions));
     }
 
     [Theory]
@@ -87,7 +87,7 @@ public class ExplanationBooleanResultTests
 
         act.Satisfied.Should().Be(expected);
         act.MetadataTree.Should().HaveCount(1);
-        act.Assertions.Should().Contain(operandResult.Explanation.Assertions);
+        act.Assertions.Should().Contain(operandResult.ExplanationTree.Assertions);
     }
 
     [Theory]

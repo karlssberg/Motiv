@@ -25,7 +25,16 @@ public sealed class BooleanResultPredicateMetadataSpec<TModel, TMetadata, TUnder
             true => whenTrue(model, booleanResult),
             false => whenFalse(model, booleanResult),
         };
+        
+        var assertion = metadata switch {
+            string because => because,
+            _ => Proposition.ToReason(booleanResult.Satisfied)
+        };
 
-        return new BooleanResultPredicateMetadataBooleanResult<TMetadata,TUnderlyingMetadata>(booleanResult, metadata, Proposition);
+        return new BooleanResultPredicateBooleanResult<TMetadata, TUnderlyingMetadata>(
+            booleanResult,
+            metadata.ToEnumerable(),
+            assertion.ToEnumerable(),
+            Proposition.ToReason(booleanResult.Satisfied));
     }
 }

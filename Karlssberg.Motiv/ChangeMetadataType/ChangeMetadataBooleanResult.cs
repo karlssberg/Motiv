@@ -19,10 +19,10 @@ internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata
             because);
 
     /// <summary>Gets the reasons for the boolean result.</summary>
-    public override Explanation Explanation =>
+    public override ExplanationTree ExplanationTree =>
         new(Description)
         {
-            Underlying = booleanResult.Explanation.ToEnumerable()
+            Underlying = booleanResult.ExplanationTree.ToEnumerable()
         };
     
     /// <inheritdoc />

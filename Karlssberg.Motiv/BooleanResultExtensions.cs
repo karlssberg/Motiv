@@ -10,7 +10,7 @@ internal static class BooleanResultExtensions
             _ => Enumerable.Empty<MetadataTree<TMetadata>>()
         };
 
-    internal static IEnumerable<MetadataTree<TMetadata>> ResolveMetadataSets<TMetadata, TUnderlyingMetadata>(
+    internal static IEnumerable<MetadataTree<TMetadata>> ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>(
         this BooleanResultBase<TUnderlyingMetadata> underlyingResult) =>
         underlyingResult switch
         {

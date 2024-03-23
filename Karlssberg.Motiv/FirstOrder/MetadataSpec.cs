@@ -31,8 +31,18 @@ internal sealed class MetadataSpec<TModel, TMetadata>(
                     true => InvokeWhenTrueFunction(model),
                     false => InvokeWhenFalseFunction(model)
                 };
+                
+                var assertion = metadata switch
+                {
+                    string because => because,
+                    _ => Proposition.ToReason(isSatisfied)
+                };
 
-                return new MetadataBooleanResult<TMetadata>(isSatisfied, metadata, Proposition);
+                return new MetadataBooleanResult<TMetadata>(
+                    isSatisfied,
+                    metadata,
+                    assertion,
+                    Proposition.ToReason(isSatisfied));
             });
 
     private bool InvokePredicate(TModel model) =>

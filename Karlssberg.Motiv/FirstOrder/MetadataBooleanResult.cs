@@ -3,7 +3,8 @@
 public sealed class MetadataBooleanResult<TMetadata>(
     bool value,
     TMetadata metadata,
-    IProposition proposition)
+    string assertion,
+    string reason)
     : BooleanResultBase<TMetadata>
 {
     public override MetadataTree<TMetadata> MetadataTree => new(metadata.ToEnumerable());
@@ -21,16 +22,11 @@ public sealed class MetadataBooleanResult<TMetadata>(
         Enumerable.Empty<BooleanResultBase<TMetadata>>();
 
     /// <summary>Gets the reasons for the result.</summary>
-    public override Explanation Explanation => 
-        metadata switch {
-            string reason => new Explanation(reason.ToEnumerable()),
-            _ => new Explanation(Description),
-        };
+    public override ExplanationTree ExplanationTree => new (assertion);
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
     public override bool Satisfied => value;
 
     /// <summary>Gets the description of the result.</summary>
-    public override ResultDescriptionBase Description =>
-        new MetadataResultDescription(value, proposition);
+    public override ResultDescriptionBase Description => new MetadataResultDescription(reason);
 }

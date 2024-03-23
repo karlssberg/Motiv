@@ -6,7 +6,7 @@ public class DoesHandContainSpecifiedRanksSpec(ICollection<Rank> ranks) : Spec<H
     Spec.Build(UnderlyingSpec(ranks))
         .AsAllSatisfied()
         .WhenTrue($"all cards are either {ranks.Humanize("or")}")
-        .WhenFalse(evaluation => evaluation.CausalResults.SelectMany(r => r.Explanation.Assertions))
+        .WhenFalse(evaluation => evaluation.CausalResults.SelectMany(r => r.ExplanationTree.Assertions))
         .Create()
         .ChangeModelTo<Hand>(hand => hand.Cards))
 {

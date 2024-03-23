@@ -27,15 +27,17 @@ internal sealed class HigherOrderMultiMetadataSpec<TModel, TMetadata, TUnderlyin
             ? whenTrue(evaluation)
             : whenFalse(evaluation);
         
-        var metadataSet = new MetadataTree<TMetadata>(
-            metadata,
-            underlyingResults.ResolveMetadataSets<TMetadata, TUnderlyingMetadata>());
-        
-        return new HigherOrderMultiMetadataBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
+        var assertions = metadata switch {
+            IEnumerable<string>  reasons => reasons,
+            _ => proposition.ToReason(isSatisfied).ToEnumerable()
+        };
+
+        return new HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
+            metadata,
             underlyingResults,
-            metadataSet,
             causes,
-            Proposition);
+            assertions,
+            proposition.ToReason(isSatisfied));
     }
 }

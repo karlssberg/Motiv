@@ -25,7 +25,7 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     /// <summary>Gets the description of the result.</summary>
     public override ResultDescriptionBase Description => _underlyingResult.Description;
 
-    public override Explanation Explanation => _underlyingResult.Explanation;
+    public override ExplanationTree ExplanationTree => _underlyingResult.ExplanationTree;
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
     public override bool Satisfied => _underlyingResult.Satisfied;

@@ -1,13 +1,13 @@
 ﻿namespace Karlssberg.Motiv.FirstOrder;
 
-internal sealed class ExplanationSpec<TModel>(
+internal sealed class ExplanationTreeSpec<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,
     string propositionalStatement)
     : SpecBase<TModel, string>
 {
-    internal ExplanationSpec(Func<TModel, bool> predicate, string propositionalStatement) 
+    internal ExplanationTreeSpec(Func<TModel, bool> predicate, string propositionalStatement) 
         : this(
             predicate, 
             _ => ReasonFromProposition(true, propositionalStatement), 

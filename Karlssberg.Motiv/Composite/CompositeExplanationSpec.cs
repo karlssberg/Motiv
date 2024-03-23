@@ -17,13 +17,17 @@ internal sealed class CompositeExplanationSpec<TModel, TUnderlyingMetadata>(
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
     {
         var booleanResult = UnderlyingSpec.IsSatisfiedBy(model);
-        
+
         var because = booleanResult.Satisfied switch
         {
             true => trueBecause(model, booleanResult),
-            false => falseBecause(model, booleanResult),
+            false => falseBecause(model, booleanResult)
         };
-
-        return new CompositeBooleanResult<string, TUnderlyingMetadata>(booleanResult, because, because);
+        
+        return new CompositeBooleanResult<string, TUnderlyingMetadata>(
+            booleanResult, 
+            because.ToEnumerable(),
+            because.ToEnumerable(),
+            Proposition.ToReason(booleanResult.Satisfied));
     }
 }

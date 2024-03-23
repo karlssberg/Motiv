@@ -33,20 +33,20 @@ public abstract class BooleanResultBase
     public abstract IEnumerable<BooleanResultBase> Causes { get; }
 
     /// <summary>Gets the reason for the result, represented as a compact string.</summary>
-    public string Reason => Description.Compact;
+    public string Reason => Description.Reason;
 
     /// <summary>Gets the assertions that contribute to this result.</summary>
-    public IEnumerable<string> Assertions => Explanation.Assertions;
+    public IEnumerable<string> Assertions => ExplanationTree.Assertions;
 
     /// <summary>Gets the sub-assertions that contribute to this result.</summary>
-    public IEnumerable<string> SubAssertions => Explanation.Underlying.GetAssertions();
+    public IEnumerable<string> SubAssertions => ExplanationTree.Underlying.GetAssertions();
 
     /// <summary>
     /// Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the
     /// result at this stage to avoid excessive deduplication during intermediate steps.  Deduplication is performed during the
-    /// call to <see cref="Explanation" />.
+    /// call to <see cref="ExplanationTree" />.
     /// </summary>
-    public abstract Explanation Explanation { get; }
+    public abstract ExplanationTree ExplanationTree { get; }
 
     /// <summary>Determines whether the current BooleanResultBase object is equal to the specified boolean value.</summary>
     /// <param name="other">The boolean value to compare with the current BooleanResultBase object.</param>
@@ -66,7 +66,7 @@ public abstract class BooleanResultBase
 
     /// <summary>Returns a human readable description of the tree of conditions that make up this result.</summary>
     /// <returns>A string that describes the tree of conditions that make up this result.</returns>
-    public override string ToString() => Explanation.ToString();
+    public override string ToString() => ExplanationTree.ToString();
 
     /// <summary>Defines the true operator for the <see cref="BooleanResultBase{TMetadata}" /> class.</summary>
     /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance.</param>

@@ -24,10 +24,17 @@ internal sealed class HigherOrderFromBooleanPredicateMetadataSpec<TModel, TMetad
         var metadata = isSatisfied
             ? whenTrue(evaluation)
             : whenFalse(evaluation);
+        
+        var assertion = metadata switch
+        {
+            string because => because,
+            _ => proposition.ToReason(isSatisfied),
+        };
 
         return new HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
             isSatisfied,
             metadata,
+            assertion,
             proposition.ToReason(isSatisfied));
     }
 }

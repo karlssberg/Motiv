@@ -1,16 +1,14 @@
-﻿using Karlssberg.Motiv.CompositeFactory;
-
-namespace Karlssberg.Motiv.BooleanResultPredicate;
+﻿namespace Karlssberg.Motiv.BooleanResultPredicate;
 
 public sealed class BooleanResultPredicateMultiMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> underlyingBooleanResultPredicate,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
-    string propositionalAssertion)
+    string propositionalStatement)
     : SpecBase<TModel, TMetadata>
 {
     /// <summary>Gets the description of the specification.</summary>
-    public override IProposition Proposition => new Proposition(propositionalAssertion);
+    public override IProposition Proposition => new Proposition(propositionalStatement);
 
     /// <summary>Determines if the specification is satisfied by the given model.</summary>
     /// <param name="model">The model to be evaluated.</param>
@@ -28,6 +26,16 @@ public sealed class BooleanResultPredicateMultiMetadataSpec<TModel, TMetadata, T
             false => whenFalse(model, booleanResult),
         };
 
-        return new BooleanResultPredicateMultiMetadataBooleanResult<TMetadata,TUnderlyingMetadata>(booleanResult, metadata, Proposition);
+        var assertions = metadata switch
+        {
+            IEnumerable<string> because => because,
+            _ => Proposition.ToReason(booleanResult.Satisfied).ToEnumerable()
+        };
+        
+        return new BooleanResultPredicateBooleanResult<TMetadata,TUnderlyingMetadata>(
+            booleanResult,
+            metadata,
+            assertions,
+            Proposition.ToReason(booleanResult.Satisfied));
     }
 }

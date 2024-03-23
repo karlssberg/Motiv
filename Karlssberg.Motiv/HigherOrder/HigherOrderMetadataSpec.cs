@@ -26,12 +26,19 @@ internal sealed class HigherOrderMetadataSpec<TModel, TMetadata, TUnderlyingMeta
         var metadata = isSatisfied
             ? whenTrue(booleanCollectionResults)
             : whenFalse(booleanCollectionResults);
+
+        var assertion = metadata switch
+        {
+            string because => because,
+            _ => proposition.ToReason(isSatisfied),
+        };
         
-        return new HigherOrderMetadataBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
+        return new HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
+            metadata.ToEnumerable(),
             underlyingResults,
-            metadata,
             causes,
-            Proposition);
+            assertion.ToEnumerable(),
+            Proposition.ToReason(isSatisfied));
     }
 }

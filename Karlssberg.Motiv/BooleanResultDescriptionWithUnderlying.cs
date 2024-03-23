@@ -7,11 +7,11 @@ internal sealed class BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata
 {
     internal override int CausalOperandCount => 1;
 
-    public override string Compact => because;
+    public override string Reason => because;
     public override string Detailed =>
         $$"""
-          {{Compact}} {
-              {{booleanResult.Description.Compact.IndentAfterFirstLine()}}
+          {{Reason}} {
+              {{booleanResult.Description.Reason.IndentAfterFirstLine()}}
           }
           """;
 }

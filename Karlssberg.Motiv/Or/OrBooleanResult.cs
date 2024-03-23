@@ -8,7 +8,7 @@ internal sealed class OrBooleanResult<TMetadata>(
     : BooleanResultBase<TMetadata>, ICompositeBooleanResult
 {
     /// <inheritdoc />
-    public override Explanation Explanation => GetCausalResults().CreateExplanation();
+    public override ExplanationTree ExplanationTree => GetCausalResults().CreateExplanation();
     
     /// <inheritdoc />
     public override MetadataTree<TMetadata> MetadataTree => CreateMetadataSet();

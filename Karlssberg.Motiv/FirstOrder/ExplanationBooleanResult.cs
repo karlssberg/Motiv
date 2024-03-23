@@ -13,9 +13,9 @@ public sealed class ExplanationBooleanResult(
     public override IEnumerable<BooleanResultBase> Causes { get;  } = 
         Enumerable.Empty<BooleanResultBase>();
     /// <summary>Gets the reasons for the result.</summary>
-    public override Explanation Explanation => new(Description)
+    public override ExplanationTree ExplanationTree => new(Description)
     {
-        Underlying = Enumerable.Empty<Explanation>()
+        Underlying = Enumerable.Empty<ExplanationTree>()
     };
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>

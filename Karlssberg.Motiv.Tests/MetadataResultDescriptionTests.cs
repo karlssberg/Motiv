@@ -425,6 +425,6 @@ public class MetadataResultDescriptionTests
 
         var result = spec.IsSatisfiedBy(model);
 
-        result.Description.ToString().Should().Be(result.Description.Compact);
+        result.Description.ToString().Should().Be(result.Description.Reason);
     }
 }

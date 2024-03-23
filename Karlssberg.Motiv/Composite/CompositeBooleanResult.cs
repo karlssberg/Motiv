@@ -1,9 +1,13 @@
 ﻿namespace Karlssberg.Motiv.Composite;
 
+/// <summary>Represents a boolean result of changing the metadata type.</summary>
+/// <typeparam name="TMetadata">The type of the new metadata.</typeparam>
+/// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
 internal sealed class CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    TMetadata metadata,
-    string because)
+    IEnumerable<TMetadata> metadata,
+    IEnumerable<string> assertions,
+    string reason)
     : BooleanResultBase<TMetadata>
 {
     /// <inheritdoc />
@@ -13,19 +17,19 @@ internal sealed class CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(
     public override ResultDescriptionBase Description =>
         new BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(
             booleanResult,
-            because);
+            reason);
 
     /// <inheritdoc />
-    public override Explanation Explanation =>
-        new(because)
+    public override ExplanationTree ExplanationTree =>
+        new(assertions)
         {
-            Underlying = booleanResult.Explanation.ToEnumerable()
+            Underlying = booleanResult.ExplanationTree.ToEnumerable()
         };
 
     /// <inheritdoc />
-    public override MetadataTree<TMetadata> MetadataTree => new(
-        metadata, 
-        booleanResult.ResolveMetadataSets<TMetadata, TUnderlyingMetadata>());
+    public override MetadataTree<TMetadata> MetadataTree =>  new (
+        metadata,
+        booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>());
     
     /// <inheritdoc />
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();

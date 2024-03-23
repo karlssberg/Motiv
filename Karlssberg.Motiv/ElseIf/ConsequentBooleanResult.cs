@@ -8,7 +8,7 @@ internal sealed class ConsequentBooleanResult<TMetadata>(
     public override bool Satisfied => consequentResult.Satisfied;
     public override ResultDescriptionBase Description => 
         new ConsequentBooleanResultDescription<TMetadata>(antecedentResult, consequentResult);
-    public override Explanation Explanation => GetCauses().CreateExplanation();
+    public override ExplanationTree ExplanationTree => GetCauses().CreateExplanation();
     public override MetadataTree<TMetadata> MetadataTree => consequentResult.MetadataTree;
     public override IEnumerable<BooleanResultBase> Underlying => consequentResult.ToEnumerable();
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => consequentResult.ToEnumerable();

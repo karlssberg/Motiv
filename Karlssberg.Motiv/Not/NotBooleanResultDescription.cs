@@ -3,7 +3,7 @@
 internal sealed class NotBooleanResultDescription(BooleanResultBase operand) : ResultDescriptionBase
 {
     internal override int CausalOperandCount => 1;
-    public override string Compact => FormatDescription(operand.Description.Compact);
+    public override string Reason => FormatDescription(operand.Description.Reason);
     
     public override string Detailed => FormatDescription(operand.Description.Detailed);
     

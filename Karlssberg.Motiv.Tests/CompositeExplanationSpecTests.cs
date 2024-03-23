@@ -313,7 +313,7 @@ public class CompositeExplanationSpecTests
         
         var act = spec.IsSatisfiedBy("model");
         
-        act.Description.Compact.Should().NotContainAny("left true", "left false", "right true", "right false");
+        act.Description.Reason.Should().NotContainAny("left true", "left false", "right true", "right false");
         
     }
     

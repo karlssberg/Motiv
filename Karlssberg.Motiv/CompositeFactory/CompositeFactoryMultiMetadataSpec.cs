@@ -21,8 +21,15 @@ internal sealed class CompositeFactoryMultiMetadataSpec<TModel, TMetadata, TUnde
             false => whenFalse(model, booleanResult),
         };
         
-        var metadataSet = new MetadataTree<TMetadata>(metadata);
+        var assertions = metadata switch {
+            IEnumerable<string> reasons => reasons,
+            _ => Proposition.ToReason(booleanResult.Satisfied).ToEnumerable()
+        };
 
-        return new CompositeFactoryMultiMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadataSet, Proposition);
+        return new CompositeFactoryMultiMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
+            booleanResult,
+            metadata,
+            assertions,
+            Proposition.ToReason(booleanResult.Satisfied));
     }
 }

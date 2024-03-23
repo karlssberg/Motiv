@@ -24,7 +24,7 @@ public class ElseIfSpecTests
 
         var result = sut.IsSatisfiedBy(model);
 
-        result.Explanation.Assertions.Humanize().Should().Be(expected);
+        result.ExplanationTree.Assertions.Humanize().Should().Be(expected);
     }
 
 
@@ -90,7 +90,7 @@ public class ElseIfSpecTests
         
         var act = sut.IsSatisfiedBy(model);
 
-        act.Description.Compact.Should().Be(expected);
+        act.Description.Reason.Should().Be(expected);
     }
     
     
