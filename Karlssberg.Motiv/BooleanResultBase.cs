@@ -23,25 +23,35 @@ public abstract class BooleanResultBase
     /// <summary>Gets a value indicating whether the condition is satisfied.</summary>
     public abstract bool Satisfied { get; }
 
-    /// <summary>Gets a set of human readable descriptions of the underlying causes.</summary>
+    /// <summary>Gets a set of human-readable descriptions of the underlying causes.</summary>
     public abstract ResultDescriptionBase Description { get; }
-    
+
+    /// <summary>Gets the underlying <see cref="BooleanResultBase"/> that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase> Underlying { get; }
-    
-    public abstract IEnumerable<BooleanResultBase> Causes  { get; }
-    
+
+    /// <summary>Gets the underlying <see cref="BooleanResultBase"/>s that caused this .</summary>
+    public abstract IEnumerable<BooleanResultBase> Causes { get; }
+
+    /// <summary>Gets the reason for the result, represented as a compact string.</summary>
     public string Reason => Description.Compact;
-    
+
+    /// <summary>Gets the assertions that contribute to this result.</summary>
     public IEnumerable<string> Assertions => Explanation.Assertions;
 
+    /// <summary>Gets the sub-assertions that contribute to this result.</summary>
     public IEnumerable<string> SubAssertions => Explanation.Underlying.GetAssertions();
-    
+
     /// <summary>
     /// Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the
     /// result at this stage to avoid excessive deduplication during intermediate steps.  Deduplication is performed during the
     /// call to <see cref="Explanation" />.
     /// </summary>
     public abstract Explanation Explanation { get; }
+
+    /// <summary>Determines whether the current BooleanResultBase object is equal to the specified boolean value.</summary>
+    /// <param name="other">The boolean value to compare with the current BooleanResultBase object.</param>
+    /// <returns>True if the current BooleanResultBase object is equal to the specified boolean value; otherwise, false.</returns>
+    public bool Equals(bool other) => other == Satisfied;
 
     /// <summary>Determines whether the current BooleanResultBase object is equal to another BooleanResultBase object.</summary>
     /// <param name="other">The BooleanResultBase object to compare with the current object.</param>
@@ -53,11 +63,6 @@ public abstract class BooleanResultBase
             _ when ReferenceEquals(this, other) => true,
             _ => Satisfied == other.Satisfied
         };
-
-    /// <summary>Determines whether the current BooleanResultBase object is equal to the specified boolean value.</summary>
-    /// <param name="other">The boolean value to compare with the current BooleanResultBase object.</param>
-    /// <returns>True if the current BooleanResultBase object is equal to the specified boolean value; otherwise, false.</returns>
-    public bool Equals(bool other) => other == Satisfied;
 
     /// <summary>Returns a human readable description of the tree of conditions that make up this result.</summary>
     /// <returns>A string that describes the tree of conditions that make up this result.</returns>
@@ -142,13 +147,17 @@ public abstract class BooleanResultBase<TMetadata>
     {
     }
 
+    /// <summary>Gets the metadata tree associated with this result.</summary>
     public abstract MetadataTree<TMetadata> MetadataTree { get; }
-    
+
+    /// <summary>Gets the metadata associated with this result</summary>
     public IEnumerable<TMetadata> Metadata => MetadataTree;
-    
+
+    /// <summary>Gets the underlying boolean results with metadata that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata { get; }
-    
-    public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata  { get; }
+
+    /// <summary>Gets the underlying causes with metadata that contribute to this result.</summary>
+    public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata { get; }
 
     /// <summary>
     /// Performs a logical AND operation between the current BooleanResultBase instance and another BooleanResultBase

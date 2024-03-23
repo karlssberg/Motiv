@@ -7,17 +7,12 @@ internal sealed class CompositeMetadataSpec<TModel, TMetadata, TUnderlyingMetada
     string propositionalAssertion)
     : SpecBase<TModel, TMetadata>
 {
-    /// <summary>Gets the description of the specification.</summary>
+    /// <inheritdoc />
     public override IProposition Proposition => new Proposition(propositionalAssertion, UnderlyingSpec.Proposition);
 
     public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
 
-    /// <summary>Determines if the specification is satisfied by the given model.</summary>
-    /// <param name="model">The model to be evaluated.</param>
-    /// <returns>
-    ///     A <see cref="BooleanResultBase{TMetadata}" /> indicating if the specification is satisfied and the resulting
-    ///     metadata.
-    /// </returns>
+    /// <inheritdoc />
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
         var booleanResult = UnderlyingSpec.IsSatisfiedBy(model);
@@ -27,7 +22,12 @@ internal sealed class CompositeMetadataSpec<TModel, TMetadata, TUnderlyingMetada
             true => whenTrue(model, booleanResult),
             false => whenFalse(model, booleanResult),
         };
+        
+        var because = metadata switch {
+            string reason => reason,
+            _ => Proposition.ToReason(booleanResult.Satisfied)
+        };
 
-        return new CompositeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadata, Proposition);
+        return new CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(booleanResult, metadata, because);
     }
 }

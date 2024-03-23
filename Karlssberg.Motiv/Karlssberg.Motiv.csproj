@@ -59,7 +59,7 @@
         <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationHigherOrderSpecFactory.cs">
           <DependentUpon>FalseAssertionsHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>
-        <Compile Update="HigherOrder\HigherOrderSpecBuilders\Metadata\MetadataHigherOrderSpecFactory.cs">
+        <Compile Update="HigherOrder\HigherOrderSpecBuilders\Metadata\MetadataFromBooleanResultHigherOrderSpecFactory.cs">
           <DependentUpon>FalseMetadataHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationWithPropositionHigherOrderSpecFactory.cs">
@@ -122,8 +122,14 @@
         <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationFromBooleanResultWithPropositionHigherOrderSpecFactory.cs">
           <DependentUpon>FalseAssertionsFromBooleanResultWithPropositionHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>
-        <Compile Update="HigherOrder\HigherOrderSpecBuilders\Metadata\MetadataFromBooleanResultHigherOrderSpecFactory.cs">
+        <Compile Update="HigherOrder\HigherOrderSpecBuilders\Metadata\MetadataHigherOrderSpecFactory.cs">
           <DependentUpon>FalseMetadataFromBooleanResultHigherOrderSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationFromBooleanPredicateWithPropositionHigherOrderSpecFactory.cs">
+          <DependentUpon>FalseAssertionsFromBooleanWithPropositionHigherOrderSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationFromBooleanPredicateHigherOrderSpecFactory.cs">
+          <DependentUpon>FalseAssertionsFromBooleanPredicateHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 

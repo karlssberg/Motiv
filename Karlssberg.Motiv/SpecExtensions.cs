@@ -14,7 +14,7 @@ public static class SpecExtensions
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <param name="predicate">The predicate function.</param>
     /// <returns>A new instance of SpecBuilder initialized with the specified predicate.</returns>
-    public static TrueFirstOrderSpecBuilder<TModel> ToSpec<TModel>(this Func<TModel, bool> predicate) =>
+    public static BooleanPredicateSpecBuilder<TModel> ToSpec<TModel>(this Func<TModel, bool> predicate) =>
         new (predicate);
     
     public static SpecBase<TModel, TMetadata> ElseIf<TModel, TMetadata>(

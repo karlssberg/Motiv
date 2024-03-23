@@ -9,31 +9,36 @@ internal sealed class CompositeFactoryMultiMetadataBooleanResult<TMetadata, TUnd
     IProposition proposition)
     : BooleanResultBase<TMetadata>
 {
-    /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
+    /// <inheritdoc />
     public override bool Satisfied => booleanResult.Satisfied;
 
-    /// <summary>Gets the description of the boolean result.</summary>
+    /// <inheritdoc />
     public override ResultDescriptionBase Description =>
         new BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(
             booleanResult,
             proposition.ToReason(booleanResult.Satisfied));
 
-    /// <summary>Gets the reasons for the boolean result.</summary>
+    /// <inheritdoc />
     public override Explanation Explanation =>
         new(ResolveAssertions())
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
     
+    /// <inheritdoc />
     public override MetadataTree<TMetadata> MetadataTree => metadataTree;
     
+    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
 
+    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
         booleanResult.ResolveUnderlyingWithMetadata<TMetadata, TUnderlyingMetadata>();
     
+    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes;
 
+    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
         booleanResult.ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();
     

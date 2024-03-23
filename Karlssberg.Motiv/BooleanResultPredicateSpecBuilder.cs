@@ -1,16 +1,17 @@
-﻿using Karlssberg.Motiv.BooleanResultPredicate.BooleanResultPredicateBuilders.Explanation;
+﻿using Karlssberg.Motiv.BooleanResultPredicate;
+using Karlssberg.Motiv.BooleanResultPredicate.BooleanResultPredicateBuilders.Explanation;
 using Karlssberg.Motiv.BooleanResultPredicate.BooleanResultPredicateBuilders.Metadata;
 using Karlssberg.Motiv.HigherOrder;
 using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
 
-namespace Karlssberg.Motiv.BooleanResultPredicate.BooleanResultPredicateBuilders;
+namespace Karlssberg.Motiv;
 
 /// <summary>
 /// A builder for creating specifications using a predicate function that returns a <see cref="BooleanResultBase{TMetadata}"/>.
 /// </summary>
 /// <typeparam name="TModel">The type of the model the specification is for.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the metadata associated with the underlying boolean result.</typeparam>
-public readonly ref struct TrueBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata>(
+public readonly ref struct BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> predicate)
 {
     /// <summary>
@@ -63,7 +64,6 @@ public readonly ref struct TrueBooleanResultPredicateSpecBuilder<TModel, TUnderl
             (model, _) => whenTrue(model).ToEnumerable());
     }
     
-
     /// <summary>Specifies a higher order predicate for the specification.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
     /// <returns>An instance of <see cref="TrueHigherOrderSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>

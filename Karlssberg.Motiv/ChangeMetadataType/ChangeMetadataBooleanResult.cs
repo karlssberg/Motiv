@@ -6,7 +6,7 @@
 internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
     TMetadata metadata,
-    IProposition proposition)
+    string because)
     : BooleanResultBase<TMetadata>
 {
     /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
@@ -16,7 +16,7 @@ internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata
     public override ResultDescriptionBase Description =>
         new BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(
             booleanResult,
-            proposition.ToReason(booleanResult.Satisfied));
+            because);
 
     /// <summary>Gets the reasons for the boolean result.</summary>
     public override Explanation Explanation =>

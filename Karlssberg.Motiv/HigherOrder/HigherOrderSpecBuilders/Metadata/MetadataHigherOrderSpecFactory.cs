@@ -8,8 +8,8 @@
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct MetadataFromBooleanResultHigherOrderSpecFactory<TModel, TMetadata, TUnderlyingMetadata>(
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
+public readonly ref struct MetadataHigherOrderSpecFactory<TModel, TMetadata, TUnderlyingMetadata>(
+    SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
@@ -24,11 +24,11 @@ public readonly ref struct MetadataFromBooleanResultHigherOrderSpecFactory<TMode
     {
         proposition.ThrowIfNullOrWhitespace(nameof(proposition));
         return new HigherOrderMultiMetadataSpec<TModel, TMetadata, TUnderlyingMetadata>(
-            resultResolver,
+            spec.IsSatisfiedByWithExceptionRethrowing,
             higherOrderPredicate,
             whenTrue,
             whenFalse,
-            new Proposition(proposition),
+            new HigherOrderProposition<TModel, TUnderlyingMetadata>(proposition, spec),
             causeSelector);
     }
 }

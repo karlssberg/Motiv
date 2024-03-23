@@ -110,10 +110,10 @@ public static class Spec
     /// </summary>
     /// <param name="predicate">The predicate function to be used in the specification.</param>
     /// <returns>A TrueFirstOrderSpecBuilder instance for further specification building.</returns>
-    public static TrueFirstOrderSpecBuilder<TModel> Build<TModel>(Func<TModel, bool> predicate)
+    public static BooleanPredicateSpecBuilder<TModel> Build<TModel>(Func<TModel, bool> predicate)
     {
         predicate.ThrowIfNull(nameof(predicate));
-        return new TrueFirstOrderSpecBuilder<TModel>(predicate);
+        return new BooleanPredicateSpecBuilder<TModel>(predicate);
     }
     
     /// <summary>
@@ -121,11 +121,11 @@ public static class Spec
     /// </summary>
     /// <param name="predicate">The predicate function to be used in the specification.</param>
     /// <returns>A TrueFirstOrderSpecBuilder instance for further specification building.</returns>
-    public static TrueBooleanResultPredicateSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+    public static BooleanResultPredicateSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         Func<TModel, BooleanResultBase<TMetadata>> predicate)
     {
         predicate.ThrowIfNull(nameof(predicate));
-        return new TrueBooleanResultPredicateSpecBuilder<TModel, TMetadata>(predicate);
+        return new BooleanResultPredicateSpecBuilder<TModel, TMetadata>(predicate);
     }
     
     /// <summary>
@@ -133,11 +133,11 @@ public static class Spec
     /// </summary>
     /// <param name="specFactory">The specification factory function to be used in the specification.</param>
     /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
-    public static TrueCompositeFactorySpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+    public static CompositeFactorySpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         Func<TModel, SpecBase<TModel, TMetadata>> specFactory)
     {
         specFactory.ThrowIfNull(nameof(specFactory));
-        return new TrueCompositeFactorySpecBuilder<TModel, TMetadata>(specFactory);
+        return new CompositeFactorySpecBuilder<TModel, TMetadata>(specFactory);
     }
 
     /// <summary>
@@ -145,11 +145,11 @@ public static class Spec
     /// </summary>
     /// <param name="specFactory">The specification factory function to be used in the specification.</param>
     /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
-    public static TrueCompositeFactorySpecBuilder<TModel, string> Build<TModel>(
+    public static CompositeFactorySpecBuilder<TModel, string> Build<TModel>(
         Func<TModel, SpecBase<TModel, string>> specFactory)
     {
         specFactory.ThrowIfNull(nameof(specFactory));
-        return new TrueCompositeFactorySpecBuilder<TModel, string>(specFactory);
+        return new CompositeFactorySpecBuilder<TModel, string>(specFactory);
     }
 
     /// <summary>
@@ -157,11 +157,11 @@ public static class Spec
     /// </summary>
     /// <param name="specFactory">The specification factory function to be used in the specification.</param>
     /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
-    public static TrueCompositeFactorySpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+    public static CompositeFactorySpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         Func<SpecBase<TModel, TMetadata>> specFactory)
     {
         specFactory.ThrowIfNull(nameof(specFactory));
-        return new TrueCompositeFactorySpecBuilder<TModel, TMetadata>(_ => specFactory());
+        return new CompositeFactorySpecBuilder<TModel, TMetadata>(_ => specFactory());
     }
 
     /// <summary>
@@ -169,11 +169,11 @@ public static class Spec
     /// </summary>
     /// <param name="specFactory">The specification factory function to be used in the specification.</param>
     /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
-    public static TrueCompositeFactorySpecBuilder<TModel, string> Build<TModel>(
+    public static CompositeFactorySpecBuilder<TModel, string> Build<TModel>(
         Func<SpecBase<TModel, string>> specFactory)
     {
         specFactory.ThrowIfNull(nameof(specFactory));
-        return new TrueCompositeFactorySpecBuilder<TModel, string>(_ => specFactory());
+        return new CompositeFactorySpecBuilder<TModel, string>(_ => specFactory());
     }
 
     /// <summary>

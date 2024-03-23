@@ -19,13 +19,13 @@ internal sealed class HigherOrderMultiMetadataSpec<TModel, TMetadata, TUnderlyin
         
         var isSatisfied = higherOrderPredicate(underlyingResults);
         var causes = Causes.Get(isSatisfied, underlyingResults, higherOrderPredicate, causeSelector).ToArray();
-        var booleanCollectionResults = new HigherOrderEvaluation<TModel, TUnderlyingMetadata>(
+        var evaluation = new HigherOrderEvaluation<TModel, TUnderlyingMetadata>(
             underlyingResults, 
             causes);
 
         var metadata = isSatisfied
-            ? whenTrue(booleanCollectionResults)
-            : whenFalse(booleanCollectionResults);
+            ? whenTrue(evaluation)
+            : whenFalse(evaluation);
         
         var metadataSet = new MetadataTree<TMetadata>(
             metadata,
@@ -38,6 +38,4 @@ internal sealed class HigherOrderMultiMetadataSpec<TModel, TMetadata, TUnderlyin
             causes,
             Proposition);
     }
-
-    
 }

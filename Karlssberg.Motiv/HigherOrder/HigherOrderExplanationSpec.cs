@@ -3,8 +3,8 @@
 internal sealed class HigherOrderExplanationSpec<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver, 
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate, 
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> whenTrue, 
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> whenFalse,
+    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause, 
+    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
     IProposition proposition,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
     : SpecBase<IEnumerable<TModel>, string>
@@ -24,8 +24,8 @@ internal sealed class HigherOrderExplanationSpec<TModel, TUnderlyingMetadata>(
             causes);
 
         var because = isSatisfied
-            ? whenTrue(booleanCollectionResults)
-            : whenFalse(booleanCollectionResults);
+            ? trueBecause(booleanCollectionResults)
+            : falseBecause(booleanCollectionResults);
         
         return new HigherOrderExplanationBooleanResult<TModel, TUnderlyingMetadata>(
             isSatisfied,

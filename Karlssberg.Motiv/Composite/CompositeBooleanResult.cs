@@ -1,44 +1,43 @@
-﻿namespace Karlssberg.Motiv.CompositeFactory;
+﻿namespace Karlssberg.Motiv.Composite;
 
-internal sealed class CompositeFactoryMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
+internal sealed class CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
     TMetadata metadata,
-    IProposition proposition)
+    string because)
     : BooleanResultBase<TMetadata>
 {
-    /// <summary>Gets a value indicating whether the boolean result is satisfied.</summary>
+    /// <inheritdoc />
     public override bool Satisfied => booleanResult.Satisfied;
 
-    /// <summary>Gets the description of the boolean result.</summary>
+    /// <inheritdoc />
     public override ResultDescriptionBase Description =>
         new BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(
             booleanResult,
-            proposition.ToReason(booleanResult.Satisfied));
+            because);
 
-    /// <summary>Gets the reasons for the boolean result.</summary>
+    /// <inheritdoc />
     public override Explanation Explanation =>
-        new(Assertion)
+        new(because)
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
-    
+
+    /// <inheritdoc />
     public override MetadataTree<TMetadata> MetadataTree => new(
         metadata, 
         booleanResult.ResolveMetadataSets<TMetadata, TUnderlyingMetadata>());
     
+    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
     
+    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
         booleanResult.ResolveUnderlyingWithMetadata<TMetadata, TUnderlyingMetadata>();
     
+    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes;
     
+    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
         booleanResult.ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();
-    
-    private string Assertion => 
-        metadata switch {
-            string reason => reason,
-            _ => proposition.ToReason(booleanResult.Satisfied)
-        };
 }

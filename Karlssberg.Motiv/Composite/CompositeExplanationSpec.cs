@@ -2,32 +2,28 @@
 
 internal sealed class CompositeExplanationSpec<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> whenTrue,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> whenFalse,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> falseBecause,
     string propositionalAssertion)
     : SpecBase<TModel, string>
 {
-    /// <summary>Gets the description of the specification.</summary>
+    /// <inheritdoc />
     public override IProposition Proposition => new Proposition(propositionalAssertion, UnderlyingSpec.Proposition);
 
+    /// <inheritdoc />
     public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
 
-    /// <summary>Determines if the specification is satisfied by the given model.</summary>
-    /// <param name="model">The model to be evaluated.</param>
-    /// <returns>
-    ///     A <see cref="BooleanResultBase{TMetadata}" /> indicating if the specification is satisfied and the resulting
-    ///     metadata.
-    /// </returns>
+    /// <inheritdoc />
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
     {
         var booleanResult = UnderlyingSpec.IsSatisfiedBy(model);
         
         var because = booleanResult.Satisfied switch
         {
-            true => whenTrue(model, booleanResult),
-            false => whenFalse(model, booleanResult),
+            true => trueBecause(model, booleanResult),
+            false => falseBecause(model, booleanResult),
         };
 
-        return new CompositeExplanationBooleanResult<TUnderlyingMetadata>(booleanResult, because);
+        return new CompositeBooleanResult<string, TUnderlyingMetadata>(booleanResult, because, because);
     }
 }

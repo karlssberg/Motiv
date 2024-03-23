@@ -7,15 +7,10 @@ internal sealed class CompositeFactoryMultiMetadataSpec<TModel, TMetadata, TUnde
     string propositionalAssertion)
     : SpecBase<TModel, TMetadata>
 {
-    /// <summary>Gets the description of the specification.</summary>
+    /// <inheritdoc />
     public override IProposition Proposition => new Proposition(propositionalAssertion);
 
-    /// <summary>Determines if the specification is satisfied by the given model.</summary>
-    /// <param name="model">The model to be evaluated.</param>
-    /// <returns>
-    ///     A <see cref="BooleanResultBase{TMetadata}" /> indicating if the specification is satisfied and the resulting
-    ///     metadata.
-    /// </returns>
+    /// <inheritdoc />
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
         var booleanResult = underlyingSpecFactory(model).IsSatisfiedBy(model);

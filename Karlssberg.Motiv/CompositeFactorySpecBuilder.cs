@@ -1,14 +1,15 @@
-﻿using Karlssberg.Motiv.CompositeFactory.CompositeFactorySpecBuilders.Explanation;
+﻿using Karlssberg.Motiv.CompositeFactory;
+using Karlssberg.Motiv.CompositeFactory.CompositeFactorySpecBuilders.Explanation;
 using Karlssberg.Motiv.CompositeFactory.CompositeFactorySpecBuilders.Metadata;
 
-namespace Karlssberg.Motiv.CompositeFactory.CompositeFactorySpecBuilders;
+namespace Karlssberg.Motiv;
 
 /// <summary>
 /// Represents a builder for creating specifications based on a predicate. This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a specification that covers every possibility, so instead it is done on a case-by-case basis.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct TrueCompositeFactorySpecBuilder<TModel, TUnderlyingMetadata>(
+public readonly ref struct CompositeFactorySpecBuilder<TModel, TUnderlyingMetadata>(
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate)
 {
     /// <summary>
