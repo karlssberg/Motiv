@@ -4,15 +4,15 @@ namespace Karlssberg.Motiv;
 
 public sealed class MetadataTree<TMetadata>(
     IEnumerable<TMetadata> metadataCollection,
-    IEnumerable<MetadataTree<TMetadata>>? underlying = null) : IEnumerable<TMetadata>
+    IEnumerable<MetadataTree<TMetadata>>? underlying = null)
+    : IEnumerable<TMetadata>
 {
     public MetadataTree(TMetadata metadata, IEnumerable<MetadataTree<TMetadata>>? underlying = null)
         : this(metadata.ToEnumerable(), underlying)
     {
     }
 
-    public IEnumerable<MetadataTree<TMetadata>> Underlying { get; } =
-        underlying ?? Enumerable.Empty<MetadataTree<TMetadata>>();
+    public IEnumerable<MetadataTree<TMetadata>> Underlying => underlying?? Enumerable.Empty<MetadataTree<TMetadata>>();
     
     public int Count => _metadataCollection.Count;
 
@@ -30,15 +30,24 @@ public sealed class MetadataTree<TMetadata>(
     public override string ToString() =>
         _metadataCollection switch
         {
-            IEnumerable<string> reasons => string.Join(", ", reasons),
-            _ when typeof(TMetadata).IsPrimitive => SerializeMetadata(),
-            _ => base.ToString()!
-        };
+            IEnumerable<string> assertions => Serialize(assertions),
+            IEnumerable<byte> n => Serialize(n),
+            IEnumerable<sbyte> n => Serialize(n),
+            IEnumerable<short> n => Serialize(n),
+            IEnumerable<ushort> n => Serialize(n),
+            IEnumerable<int> n => Serialize(n),
+            IEnumerable<uint> n => Serialize(n),
+            IEnumerable<long> n => Serialize(n),
+            IEnumerable<ulong> n => Serialize(n),
+            IEnumerable<float> n => Serialize(n),
+            IEnumerable<double> n => Serialize(n),
+            IEnumerable<char> c => Serialize(c),
+            IEnumerable<decimal> n => Serialize(n),
+            IEnumerable<bool> b => Serialize(b),
+            IEnumerable<DateTime> dateTime => Serialize(dateTime),
+            IEnumerable<TimeSpan> timeSpans => Serialize(timeSpans),
+            _ => base.ToString()
+        } ?? string.Empty;
 
-    private string SerializeMetadata()
-    {
-        return string.Join(", ", _metadataCollection
-            .Select(m => m?.ToString())
-            .Where(m => !string.IsNullOrWhiteSpace(m)));
-    }
+    private static string Serialize<T>(IEnumerable<T> n) => string.Join(", ", n);
 }

@@ -23,8 +23,8 @@ internal sealed class CompositeMetadataSpec<TModel, TMetadata, TUnderlyingMetada
             false => whenFalse(model, booleanResult),
         };
         
-        var because = metadata switch {
-            string reason => reason,
+        var assertion = metadata switch {
+            string because => because,
             _ => Proposition.ToReason(booleanResult.Satisfied)
         };
         
@@ -35,7 +35,7 @@ internal sealed class CompositeMetadataSpec<TModel, TMetadata, TUnderlyingMetada
         return new CompositeBooleanResult<TMetadata, TUnderlyingMetadata>(
             booleanResult,
             metadataTree,
-            because.ToEnumerable(),
+            assertion.ToEnumerable(),
             Proposition.ToReason(booleanResult.Satisfied));
     }
 }

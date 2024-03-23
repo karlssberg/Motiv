@@ -25,13 +25,13 @@ internal sealed class ExplanationTreeSpec<TModel>(
             {
                 var isSatisfied = InvokePredicate(model);
                 
-                var because = isSatisfied switch
+                var assertion = isSatisfied switch
                 {  
                     true => InvokeTrueBecauseFunction(model),
                     false => InvokeFalseBecauseFunction(model)
                 };
 
-                return new ExplanationBooleanResult(isSatisfied, because);
+                return new ExplanationBooleanResult(isSatisfied, assertion);
             });
 
     private bool InvokePredicate(TModel model) =>

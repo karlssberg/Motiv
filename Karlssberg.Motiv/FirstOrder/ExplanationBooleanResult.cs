@@ -4,7 +4,7 @@
 /// <typeparam name="TMetadata">The type of the metadata associated with the result.</typeparam>
 public sealed class ExplanationBooleanResult(
     bool satisfied,
-    string because)
+    string assertion)
     : BooleanResultBase<string>
 {
     public override IEnumerable<BooleanResultBase> Underlying =>
@@ -23,9 +23,9 @@ public sealed class ExplanationBooleanResult(
 
     /// <summary>Gets the description of the result.</summary>
     public override ResultDescriptionBase Description { get;  } = 
-        new ExplanationResultDescription(because);
+        new ExplanationResultDescription(assertion);
 
-    public override MetadataTree<string> MetadataTree { get;  } = new (because.ToEnumerable());
+    public override MetadataTree<string> MetadataTree { get;  } = new (assertion.ToEnumerable());
     public override IEnumerable<BooleanResultBase<string>> UnderlyingWithMetadata { get; } = 
         Enumerable.Empty<BooleanResultBase<string>>();
     public override IEnumerable<BooleanResultBase<string>> CausesWithMetadata{ get; } = 

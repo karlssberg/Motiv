@@ -28,7 +28,7 @@ public sealed class BooleanResultPredicateMultiMetadataSpec<TModel, TMetadata, T
 
         var assertions = metadata switch
         {
-            IEnumerable<string> because => because,
+            IEnumerable<string> assertion => assertion,
             _ => Proposition.ToReason(booleanResult.Satisfied).ToEnumerable()
         };
         

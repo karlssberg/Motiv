@@ -1,11 +1,11 @@
 ﻿namespace Karlssberg.Motiv;
 
 internal sealed class BooleanResultDescription(
-    string because)
+    string reason)
     : ResultDescriptionBase
 {
     internal override int CausalOperandCount => 0;
 
-    public override string Reason => because;
-    public override string Detailed => because;
+    public override string Reason => reason;
+    public override string Detailed => reason;
 }

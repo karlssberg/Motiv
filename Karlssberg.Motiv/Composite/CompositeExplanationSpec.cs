@@ -18,7 +18,7 @@ internal sealed class CompositeExplanationSpec<TModel, TUnderlyingMetadata>(
     {
         var booleanResult = UnderlyingSpec.IsSatisfiedBy(model);
 
-        var because = booleanResult.Satisfied switch
+        var assertion = booleanResult.Satisfied switch
         {
             true => trueBecause(model, booleanResult),
             false => falseBecause(model, booleanResult)
@@ -26,8 +26,8 @@ internal sealed class CompositeExplanationSpec<TModel, TUnderlyingMetadata>(
         
         return new CompositeBooleanResult<string, TUnderlyingMetadata>(
             booleanResult, 
-            because.ToEnumerable(),
-            because.ToEnumerable(),
+            assertion.ToEnumerable(),
+            assertion.ToEnumerable(),
             Proposition.ToReason(booleanResult.Satisfied));
     }
 }
