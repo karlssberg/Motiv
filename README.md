@@ -85,23 +85,21 @@ var isNegativeSpec = Spec
         .WhenFalse(n => n == 0 
             ? "the number is zero"
             : "the number is positive")
-        .Create();
+        .Create("is negative");
 
 var isEvenSpec = Spec
         .Build((int n) => n % 2 == 0)
-        .WhenTrue(n => n == 0
-            ? "the number is zero"
-            : "the number is even")
+        .WhenTrue(n => "the number is even")
         .WhenFalse("the number is odd")
-        .Create(); 
+        .Create("is even"); 
 
 var isPositiveAndOddSpec = !isNegativeSpec & !isEvenSpec;
 
 var isPositiveAndOdd = isPositiveAndOddSpec.IsSatisfiedBy(3);
 
 isPositiveAndOdd.IsSatisfied; // returns false
-isPositiveAndOdd.Reason; // "the number is not negative & the number is odd"
-isPositiveAndOdd.Assertions; // ["the number is not negative", "the number is odd"]
+isPositiveAndOdd.Reason; // "!is negative & !is even"
+isPositiveAndOdd.Assertions; // ["the number is positive", "the number is odd"]
 ```
 
 ### Problem Statement
