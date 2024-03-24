@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv.Tests;
 
-public class ExplanationTreeSpecTests
+public class ExplanationSpecTests
 {
     [Theory]
     [InlineData(1, "is odd")]

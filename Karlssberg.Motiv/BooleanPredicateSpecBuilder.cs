@@ -79,7 +79,7 @@ public readonly ref struct BooleanPredicateSpecBuilder<TModel>(Func<TModel, bool
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
     public SpecBase<TModel, string> Create(string proposition) =>
-        new ExplanationTreeSpec<TModel>(
+        new ExplanationSpec<TModel>(
             predicate,
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }
