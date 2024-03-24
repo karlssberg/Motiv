@@ -73,7 +73,8 @@ var isNegativeSpec = Spec
 var isNegative = isNegativeSpec.IsSatisfiedBy(3);
 
 isNegative.Satisfied; // false
-isNegative.Reason; // "the number is not negative"
+isNegative.Reason; // "!is negative"
+isNegative.Metadata; // [{ Message = "the number is not negative" }]
 ````
 
 #### Combining specifications
