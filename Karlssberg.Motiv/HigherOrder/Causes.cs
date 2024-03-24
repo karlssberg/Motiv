@@ -24,17 +24,17 @@ internal static class Causes
         };
     }
     
-    internal static IEnumerable<(TModel, bool)> Get<TModel>(
+    internal static IEnumerable<ModelResult<TModel>> Get<TModel>(
         bool isSatisfied,
-        ICollection<(TModel model, bool satisfied)> operandResults,
-        Func<IEnumerable<(TModel, bool)>, bool> higherOrderPredicate, 
-        Func<bool, IEnumerable<(TModel, bool)>, IEnumerable<(TModel, bool)>>? causeSelector)
+        ICollection<ModelResult<TModel>> operandResults,
+        Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
+        Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector)
     {
         if (causeSelector is not null)
             return causeSelector(isSatisfied, operandResults);
             
-        var trueOperands = operandResults.Where(m => m.satisfied).ToArray();
-        var falseOperands = operandResults.Where(m => !m.satisfied).ToArray();
+        var trueOperands = operandResults.Where(m => m.Satisfied).ToArray();
+        var falseOperands = operandResults.Where(m => !m.Satisfied).ToArray();
 
         return isSatisfied switch
         {

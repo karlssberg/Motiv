@@ -12,8 +12,8 @@ namespace Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
 public readonly ref struct TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel>(
     Func<TModel, bool> predicate,
-    Func<IEnumerable<(TModel, bool)>, bool> higherOrderPredicate,
-    Func<bool, IEnumerable<(TModel, bool)>, IEnumerable<(TModel, bool)>>? causeSelector = null)
+    Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,
+    Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector = null)
 {
     /// <summary>Specifies the metadata to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>

@@ -9,11 +9,11 @@
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
 public readonly ref struct ExplanationFromBooleanPredicateWithPropositionHigherOrderSpecFactory<TModel>(
     Func<TModel, bool> predicate,
-    Func<IEnumerable<(TModel, bool)>, bool> higherOrderPredicate, 
+    Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
     Func<HigherOrderBooleanEvaluation<TModel>, string> trueBecause, 
     Func<HigherOrderBooleanEvaluation<TModel>, string> falseBecause,
     IProposition candidateProposition,
-    Func<bool, IEnumerable<(TModel, bool)>, IEnumerable<(TModel, bool)>>? causeSelector)
+    Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector)
 {
     /// <summary>Creates a specification with explanations for when the condition is true or false.</summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>

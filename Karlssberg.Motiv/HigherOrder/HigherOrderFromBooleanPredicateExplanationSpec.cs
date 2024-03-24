@@ -2,11 +2,11 @@
 
 internal sealed class HigherOrderFromBooleanPredicateExplanationSpec<TModel>(
     Func<TModel,bool> predicate, 
-    Func<IEnumerable<(TModel, bool)>, bool> higherOrderPredicate, 
+    Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
     Func<HigherOrderBooleanEvaluation<TModel>, string> trueBecause, 
     Func<HigherOrderBooleanEvaluation<TModel>, string> falseBecause,
     IProposition proposition,
-    Func<bool, IEnumerable<(TModel, bool)>, IEnumerable<(TModel, bool)>>? causeSelector)
+    Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector)
     : SpecBase<IEnumerable<TModel>, string>
 {
     public override IProposition Proposition => proposition;
@@ -14,7 +14,7 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationSpec<TModel>(
     public override BooleanResultBase<string> IsSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
-            .Select(model => (model, predicate(model)))
+            .Select(model => new ModelResult<TModel>(model, predicate(model)))
             .ToArray();
         
         var isSatisfied = higherOrderPredicate(underlyingResults);

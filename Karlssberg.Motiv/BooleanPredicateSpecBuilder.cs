@@ -1,6 +1,7 @@
 ﻿using Karlssberg.Motiv.FirstOrder;
 using Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders.Explanation;
 using Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders.Metadata;
+using Karlssberg.Motiv.HigherOrder;
 using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
 
 namespace Karlssberg.Motiv;
@@ -60,7 +61,7 @@ public readonly ref struct BooleanPredicateSpecBuilder<TModel>(Func<TModel, bool
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
     /// <returns>An instance of <see cref="TrueHigherOrderFromUnderlyingSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> As(
-        Func<IEnumerable<(TModel Model, bool Satisfied)>, bool> higherOrderPredicate) =>
+        Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate) =>
         new(predicate, higherOrderPredicate);
 
     /// <summary>Specifies a higher order predicate for the specification.</summary>
@@ -68,8 +69,8 @@ public readonly ref struct BooleanPredicateSpecBuilder<TModel>(Func<TModel, bool
     /// <param name="causeSelector">A function that selects the causes of the boolean results.</param>
     /// <returns>An instance of <see cref="TrueHigherOrderFromUnderlyingSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> As(
-        Func<IEnumerable<(TModel Model, bool Satisfied)>, bool> higherOrderPredicate,
-        Func<bool, IEnumerable<(TModel Model, bool Satisfied)>, IEnumerable<(TModel Model, bool Satisfied)>>? causeSelector) =>
+        Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,
+        Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector) =>
         new(predicate, higherOrderPredicate, causeSelector);
 
     /// <summary>

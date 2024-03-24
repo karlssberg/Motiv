@@ -1,30 +1,30 @@
 ﻿namespace Karlssberg.Motiv.HigherOrder;
 
 public sealed class HigherOrderBooleanEvaluation<TModel>(
-    IReadOnlyCollection<(TModel model, bool satisfied)> allResults,
-    IReadOnlyCollection<(TModel model, bool satisfied)> causalResults)
+    IReadOnlyCollection<ModelResult<TModel>> allResults,
+    IReadOnlyCollection<ModelResult<TModel>> causalResults)
 {
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyAllModels = new(() =>
-        allResults.Select(result => result.model).ToArray());
+        allResults.Select(result => result.Model).ToArray());
 
     private readonly Lazy<bool> _lazyAllSatisfied = new(() =>
-        allResults.All(result => result.satisfied));
+        allResults.All(result => result.Satisfied));
     private readonly Lazy<bool> _lazyNoneSatisfied = new(() =>
-        allResults.All(result => !result.satisfied));
+        allResults.All(result => !result.Satisfied));
 
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyCausalModels = new(() =>
-        causalResults.Select(result => result.model).ToArray());
+        causalResults.Select(result => result.Model).ToArray());
     
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyTrueModels = new(() =>
         allResults
-            .Where(r => r.satisfied)
-            .Select(result => result.model)
+            .Where(r => r.Satisfied)
+            .Select(result => result.Model)
             .ToArray());
     
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyFalseModels = new(() =>
         allResults
-            .Where(r => !r.satisfied)
-            .Select(result => result.model)
+            .Where(r => !r.Satisfied)
+            .Select(result => result.Model)
             .ToArray());
     public bool AllSatisfied => _lazyAllSatisfied.Value;
     public bool NoneSatisfied => _lazyNoneSatisfied.Value;

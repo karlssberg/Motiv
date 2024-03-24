@@ -126,7 +126,7 @@
           <DependentUpon>FalseMetadataFromBooleanResultHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationFromBooleanPredicateWithPropositionHigherOrderSpecFactory.cs">
-          <DependentUpon>FalseAssertionsFromBooleanWithPropositionHigherOrderSpecBuilder.cs</DependentUpon>
+          <DependentUpon>FalseAssertionsFromBooleanPredicateWithPropositionHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationFromBooleanPredicateHigherOrderSpecFactory.cs">
           <DependentUpon>FalseAssertionsFromBooleanPredicateHigherOrderSpecBuilder.cs</DependentUpon>

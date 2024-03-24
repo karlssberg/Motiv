@@ -6,10 +6,10 @@
 /// <typeparam name="TModel">The type of the model.</typeparam>
 public readonly ref struct ExplanationFromBooleanPredicateHigherOrderSpecFactory<TModel>(
     Func<TModel,bool> predicate, 
-    Func<IEnumerable<(TModel, bool)>, bool> higherOrderPredicate, 
+    Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
     Func<HigherOrderBooleanEvaluation<TModel>, string> trueBecause,
     Func<HigherOrderBooleanEvaluation<TModel>, string> falseBecause,
-    Func<bool, IEnumerable<(TModel, bool)>, IEnumerable<(TModel, bool)>>? causeSelector)
+    Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector)
 {
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.
