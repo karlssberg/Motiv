@@ -15,7 +15,10 @@ public readonly ref struct ExplanationFromBooleanPredicateWithPropositionHigherO
     IProposition candidateProposition,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector)
 {
-    /// <summary>Creates a specification with explanations for when the condition is true or false.</summary>
+    /// <summary>
+    /// Creates a specification with explanations for when the condition is true or false. The propositional statement
+    /// will be obtained from the .WhenTrue() assertion.
+    /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create() =>
         new HigherOrderFromBooleanPredicateExplanationSpec<TModel>(

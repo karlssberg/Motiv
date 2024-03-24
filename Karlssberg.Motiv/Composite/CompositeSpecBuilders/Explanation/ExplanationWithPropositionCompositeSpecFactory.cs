@@ -12,7 +12,8 @@ public readonly ref struct ExplanationWithPropositionCompositeSpecFactory<TModel
     string candidateProposition)
 {
     /// <summary>
-    /// Creates a specification with explanations for when the condition is true or false.
+    /// Creates a specification with explanations for when the condition is true or false. The propositional statement
+    /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>A specification for the model.</returns>
     public SpecBase<TModel, string> Create() =>

@@ -14,7 +14,10 @@ public readonly ref struct ExplanationMultiAssertionWithPropositionCompositeFact
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause,
     string candidateProposition)
 {
-    /// <summary>Creates a specification with explanations for when the condition is true or false.</summary>
+    /// <summary>
+    /// Creates a specification with explanations for when the condition is true or false. The propositional statement
+    /// will be obtained from the .WhenTrue() assertion.
+    /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<TModel, string> Create() =>
         new CompositeFactoryMultiMetadataSpec<TModel, string, TUnderlyingMetadata>(

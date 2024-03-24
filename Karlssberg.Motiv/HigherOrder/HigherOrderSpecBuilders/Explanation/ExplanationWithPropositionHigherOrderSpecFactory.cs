@@ -17,7 +17,10 @@ public readonly ref struct ExplanationWithPropositionHigherOrderSpecFactory<TMod
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
-    /// <summary>Creates a specification with explanations for when the condition is true or false.</summary>
+    /// <summary>
+    /// Creates a specification with explanations for when the condition is true or false. The propositional statement
+    /// will be obtained from the .WhenTrue() assertion.
+    /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create() =>
         new HigherOrderExplanationSpec<TModel, TUnderlyingMetadata>(
