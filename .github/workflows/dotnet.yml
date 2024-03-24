@@ -13,7 +13,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        framework: [netstandard2.0, net8.0]
     steps:
     - uses: actions/checkout@v3
     - name: Setup .NET
@@ -22,8 +24,8 @@ jobs:
         dotnet-version: 8.0.x
     - name: Restore dependencies
       run: dotnet restore
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
+    - name: Build with ${{ matrix.framework }}
+      run: dotnet build --configuration Release --no-restore -f ${{ matrix.framework }}
     - name: Test
       run: dotnet test --no-restore --no-build --verbosity normal
     - name: Pack
