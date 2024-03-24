@@ -6,6 +6,15 @@
         <LangVersion>12</LangVersion>
         <Authors>Daniel Karlsson</Authors>
         <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Title>Motiv</Title>
+        <Description>Motiv lets you explain to users (and other stakeholders including devs) what is going on with your boolean logic.  It can also be used to model meaningful domain logic (like with DDD), or even as a way to construct stateful objects based on conditional logic </Description>
+        <Copyright>Copyright (c) 2024 karlssberg</Copyright>
+        <PackageProjectUrl>https://github.com/karlssberg/Motiv</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/karlssberg/Motiv/blob/main/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/karlssberg/Motiv</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>SpecificationPattern, DecisionMaking, Explanations, DesignPatterns, RulesEngine, BusinessLogic, Compliance, AuditTrails, RiskManagement, CSharp, .NET,  Developers, Architects, ProductManagement, Advanced, Intermediate</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>

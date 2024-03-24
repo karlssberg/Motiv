@@ -19,10 +19,15 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 8.0.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --no-restore --no-build --verbosity normal
+    - name: Pack
+      run: dotnet pack --configuration Release --no-restore --no-build --output nupkgs
+    - name: Publish to NuGet
+      run: dotnet nuget push "nupkgs/**/*.nupkg" --api-key ${{secrets.motiv-api-key}} --source https://api.nuget.org/v3/index.json
+      if: github.ref == 'refs/heads/main'
