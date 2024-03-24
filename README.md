@@ -38,7 +38,7 @@ logical proposition
 
 ```csharp
 var isNegativeSpec = Spec
-        .Build<int>(n => n < 0)
+        .Build((int n) => n < 0)
         .Create("is negative");
 
 var isNegative = isNegativeSpec.IsSatisfiedBy(3);
@@ -51,7 +51,7 @@ you can also use the `WhenTrue` and `WhenFalse` methods to provide a more human-
 
 ```csharp
 var isNegativeSpec = Spec
-        .Build<int>(n => n < 0)
+        .Build((int n) => n < 0)
         .WhenTrue("the number is negative")
         .WhenFalse("the number is not negative")
         .Create();
@@ -65,7 +65,7 @@ isNegative.Reason; // "the number is not negative"
 You are also not limited to string.  You can equally supply any POCO object and it will be yielded when appropriate.
 ```csharp
 var isNegativeSpec = Spec
-        .Build<int>(n => n < 0)
+        .Build((int n) => n < 0)
         .WhenTrue(new MyClass { Message = "the number is negative" })
         .WhenFalse(new MyClass { Message = "the number is not negative" }
         .Create("is negative")
@@ -80,22 +80,18 @@ isNegative.Metadata; // [{ Message = "the number is not negative" }]
 #### Combining specifications
 ```csharp
 var isNegativeSpec = Spec
-        .Build<int>(n => n < 0)
+        .Build((int n) => n < 0)
         .WhenTrue("the number is negative")
-        .WhenFalse(n => n switch 
-        {
-                0 => "the number is zero"
-                _ => "the number is positive"
-        })
+        .WhenFalse(n => n == 0 
+            ? "the number is zero"
+            : "the number is positive")
         .Create();
 
 var isEvenSpec = Spec
-        .Build<int>(n => n % 2 == 0)
-        .WhenTrue(n => n switch 
-        {
-                0 => "the number is zero",
-                _ => "the number is even"
-        })
+        .Build((int n) => n % 2 == 0)
+        .WhenTrue(n => n == 0
+            ? "the number is zero"
+            : "the number is even")
         .WhenFalse("the number is odd")
         .Create(); 
 
