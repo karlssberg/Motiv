@@ -26,7 +26,7 @@ internal sealed class CompositeFactoryMultiMetadataSpec<TModel, TMetadata, TUnde
             _ => Proposition.ToReason(booleanResult.Satisfied).ToEnumerable()
         };
 
-        return new CompositeFactoryMultiMetadataBooleanResult<TMetadata, TUnderlyingMetadata>(
+        return new CompositeFactoryBooleanResult<TMetadata, TUnderlyingMetadata>(
             booleanResult,
             metadata,
             assertions,
