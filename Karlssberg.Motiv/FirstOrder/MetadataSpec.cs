@@ -38,7 +38,7 @@ internal sealed class MetadataSpec<TModel, TMetadata>(
                     _ => Proposition.ToReason(isSatisfied)
                 };
 
-                return new MetadataBooleanResult<TMetadata>(
+                return new FirstOrderBooleanResult<TMetadata>(
                     isSatisfied,
                     metadata,
                     assertion,

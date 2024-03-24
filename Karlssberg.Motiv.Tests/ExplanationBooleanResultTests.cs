@@ -11,7 +11,7 @@ public class ExplanationBooleanResultTests
         bool isSatisfied,
         string because)
     {
-        var result = new ExplanationBooleanResult(isSatisfied, because);
+        var result = new FirstOrderBooleanResult<string>(isSatisfied, because, because);
 
         var act = (bool)result;
 
@@ -25,8 +25,8 @@ public class ExplanationBooleanResultTests
     [InlineAutoData(true, true, true)]
     public void Should_support_and_operation(bool left, bool right, bool expected)
     {
-        var leftResult = new ExplanationBooleanResult(left, left.ToString());
-        var rightResult = new ExplanationBooleanResult(right, right.ToString());
+        var leftResult = new FirstOrderBooleanResult<string>(left, left.ToString(), left.ToString());
+        var rightResult = new  FirstOrderBooleanResult<string>(right, right.ToString(), right.ToString());
 
         var act = leftResult & rightResult;
 
@@ -45,8 +45,8 @@ public class ExplanationBooleanResultTests
     [InlineAutoData(true, true, true)]
     public void Should_support_or_operation(bool left, bool right, bool expected)
     {
-        var leftResult = new ExplanationBooleanResult(left, left.ToString());
-        var rightResult = new ExplanationBooleanResult(right, right.ToString());
+        var leftResult = new  FirstOrderBooleanResult<string>(left, left.ToString(), left.ToString());
+        var rightResult = new  FirstOrderBooleanResult<string>(right, right.ToString(), right.ToString());
 
         var act = leftResult | rightResult;
 
@@ -65,8 +65,8 @@ public class ExplanationBooleanResultTests
     [InlineAutoData(true, true, false)]
     public void Should_support_xor_operation(bool left, bool right, bool expected)
     {
-        var leftResult = new ExplanationBooleanResult(left, left.ToString());
-        var rightResult = new ExplanationBooleanResult(right, right.ToString());
+        var leftResult = new  FirstOrderBooleanResult<string>(left, left.ToString(), left.ToString());
+        var rightResult = new  FirstOrderBooleanResult<string>(right, right.ToString(), right.ToString());
 
         var act = leftResult ^ rightResult;
 
@@ -81,7 +81,7 @@ public class ExplanationBooleanResultTests
     [InlineAutoData(true, false)]
     public void Should_support_not_operation(bool operand, bool expected)
     {
-        var operandResult = new ExplanationBooleanResult(operand, operand.ToString());
+        var operandResult = new  FirstOrderBooleanResult<string>(operand, operand.ToString(), operand.ToString());
 
         var act = !operandResult;
 

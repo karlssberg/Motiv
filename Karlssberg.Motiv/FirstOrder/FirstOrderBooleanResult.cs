@@ -1,12 +1,19 @@
 ﻿namespace Karlssberg.Motiv.FirstOrder;
 
-public sealed class MetadataBooleanResult<TMetadata>(
+public sealed class FirstOrderBooleanResult<TMetadata>(
     bool value,
     TMetadata metadata,
     string assertion,
     string reason)
     : BooleanResultBase<TMetadata>
 {
+    public FirstOrderBooleanResult(
+        bool value,
+        TMetadata metadata,
+        string because) : this(value, metadata, because, because)
+    {
+    }
+    
     public override MetadataTree<TMetadata> MetadataTree => new(metadata.ToEnumerable());
     
     public override IEnumerable<BooleanResultBase> Underlying =>

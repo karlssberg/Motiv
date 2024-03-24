@@ -31,7 +31,7 @@ internal sealed class ExplanationSpec<TModel>(
                     false => InvokeFalseBecauseFunction(model)
                 };
 
-                return new MetadataBooleanResult<string>(
+                return new FirstOrderBooleanResult<string>(
                     isSatisfied,
                     assertion,
                     assertion,
