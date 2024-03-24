@@ -43,8 +43,8 @@ var isNegativeSpec = Spec
 
 var isNegative = isNegativeSpec.IsSatisfiedBy(3);
 
-isNegative.Satisfied; // returns false
-isNegative.Reason; // returns "!is negative"
+isNegative.Satisfied; // false
+isNegative.Reason; // "!is negative"
 ```
 
 you can also use the `WhenTrue` and `WhenFalse` methods to provide a more human-readable description for when the outcome is either `true` or `false`. 
@@ -58,8 +58,8 @@ var isNegativeSpec = Spec
 
 var isNegative = isNegativeSpec.IsSatisfiedBy(3);
 
-isNegative.Satisfied; // returns false
-isNegative.Reason; // returns "the number is not negative"
+isNegative.Satisfied; // false
+isNegative.Reason; // "the number is not negative"
 ```
 
 You are also not limited to string.  You can equally supply any POCO object and it will be yielded when appropriate.
@@ -72,8 +72,8 @@ var isNegativeSpec = Spec
 
 var isNegative = isNegativeSpec.IsSatisfiedBy(3);
 
-isNegative.Satisfied; // returns false
-isNegative.Reason; // returns instance of Myclass with the Message property set to"the number is not negative"
+isNegative.Satisfied; // false
+isNegative.Reason; // "the number is not negative"
 ````
 
 #### Combining specifications
@@ -103,8 +103,8 @@ var isPositiveAndOddSpec = !isNegativeSpec & !isEvenSpec;
 var isPositiveAndOdd = isPositiveAndOddSpec.IsSatisfiedBy(3);
 
 isPositiveAndOdd.IsSatisfied; // returns false
-isPositiveAndOdd.Reason; // returns "the number is not negative & the number is odd"
-isPositiveAndOdd.Assertions; // returns ["the number is not negative", "the number is odd"]
+isPositiveAndOdd.Reason; // "the number is not negative & the number is odd"
+isPositiveAndOdd.Assertions; // ["the number is not negative", "the number is odd"]
 ```
 
 ### Problem Statement
