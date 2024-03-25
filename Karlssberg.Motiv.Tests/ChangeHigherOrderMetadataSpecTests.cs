@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using Humanizer;
 
 namespace Karlssberg.Motiv.Tests;
 
@@ -133,9 +132,9 @@ public class ChangeHigherOrderMetadataSpecTests
     [Theory]
     [InlineAutoData(2, 4, 6, 8, true, "all even")]
     [InlineAutoData(2, 4, 6, 9, false, "not all even: 9 is odd")]
-    [InlineAutoData(1, 4, 6, 9, false, "not all even: 1 and 9 are odd")]
-    [InlineAutoData(1, 3, 6, 9, false, "not all even: 1, 3, and 9 are odd")]
-    [InlineAutoData(1, 3, 5, 9, false, "not all even: 1, 3, 5, and 9 are odd")]
+    [InlineAutoData(1, 4, 6, 9, false, "not all even: 1, 9 are odd")]
+    [InlineAutoData(1, 3, 6, 9, false, "not all even: 1, 3, 9 are odd")]
+    [InlineAutoData(1, 3, 5, 9, false, "not all even: 1, 3, 5, 9 are odd")]
     public void Should_allow_regular_true_yield_to_be_used_with_a_higher_order_yield_false(
         int first, 
         int second, 
@@ -156,9 +155,9 @@ public class ChangeHigherOrderMetadataSpecTests
             .WhenTrue("all even")
             .WhenFalse(results =>
             {
-                var serializedModels = results.CausalModels.Humanize();
-                var modelCount = results.CausalModels.Count();
-                var isOrAre = "is".ToQuantity(modelCount, ShowQuantityAs.None);
+                var serializedModels = string.Join(", ", results.CausalModels);
+                var modelCount = results.CausalModels.Count;
+                var isOrAre = modelCount == 1 ? "is" : "are";
                 
                 return $"not all even: {serializedModels} {isOrAre} odd";
             })
