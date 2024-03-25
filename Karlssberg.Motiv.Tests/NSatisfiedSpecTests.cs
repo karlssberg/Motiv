@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using Humanizer;
 
 namespace Karlssberg.Motiv.Tests;
 
@@ -34,19 +33,21 @@ public class NSatisfiedSpecTests
     }
     
     [Theory]
-    [InlineAutoData(1, 3, 5, 7, false, "The pack does not contain exactly a pair of even numbers", "1 is odd, 3 is odd, 5 is odd, and 7 is odd")]
+    [InlineAutoData(1, 3, 5, 7, false, "The pack does not contain exactly a pair of even numbers", "1 is odd, 3 is odd, 5 is odd, 7 is odd")]
     [InlineAutoData(1, 3, 5, 6, false, "The pack does not contain exactly a pair of even numbers", "6 is even")]
-    [InlineAutoData(1, 3, 4, 6, true, "4 and 6 are a pair of even numbers", "4 is even and 6 is even")]
-    [InlineAutoData(1, 4, 6, 8, false, "The pack does not contain exactly a pair of even numbers", "4 is even, 6 is even, and 8 is even")]
+    [InlineAutoData(1, 3, 4, 6, true, "4, 6 are a pair of even numbers", "4 is even, 6 is even")]
+    [InlineAutoData(1, 4, 6, 8, false, "The pack does not contain exactly a pair of even numbers", "4 is even, 6 is even, 8 is even")]
     public void Should_mirror_the_outcome_of_an_all_satisfied_spec_metadata(
         int first,
         int second,
         int third,
         int fourth,
         bool expected,
-        string expectedShallowReasons,
-        string expectedDeepReason)
+        string expectedShallowAssertionSerialized,
+        string expectedDeepAssertionsSerialized)
     {
+        var expectedShallowAssertion = expectedShallowAssertionSerialized.Split(", ").Select(x => x.Trim());
+        var expectedDeepAssertions = expectedDeepAssertionsSerialized.Split(", ").Select(x => x.Trim());
         var isEven = Spec
             .Build<int>(n => n % 2 == 0)
             .WhenTrue(n => $"{n} is even")
@@ -57,15 +58,15 @@ public class NSatisfiedSpecTests
             .Build(isEven)
             .AsNSatisfied(2)
             .WhenTrue((results) =>
-                $"{results.CausalModels.Humanize()} are a pair of even numbers")
+                $"{string.Join(", ", results.CausalModels)} are a pair of even numbers")
             .WhenFalse("The pack does not contain exactly a pair of even numbers")
             .Create("a pair of even numbers");
 
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
         result.Satisfied.Should().Be(expected);
-        result.ExplanationTree.Assertions.Humanize().Should().Be(expectedShallowReasons);
-        result.ExplanationTree.Underlying.GetAssertions().Humanize().Should().Be(expectedDeepReason);
+        result.ExplanationTree.Assertions.Should().BeEquivalentTo(expectedShallowAssertionSerialized);
+        result.ExplanationTree.Underlying.GetAssertions().Should().BeEquivalentTo(expectedDeepAssertions);
     }
     
     [Theory]
