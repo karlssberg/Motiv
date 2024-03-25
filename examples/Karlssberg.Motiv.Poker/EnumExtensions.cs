@@ -21,7 +21,12 @@ public static class EnumExtensions
             from field in typeof(T).GetFields()
             let descriptionAttribute = field.GetCustomAttribute<DescriptionAttribute>()
             where description == (descriptionAttribute?.Description ?? field.Name)
-            select (T)field.GetValue(null);
+            let value = field.GetValue(null)
+            select value switch
+            {
+                T enumValue => enumValue,
+                _ => default
+            };
 
         return enumValues.Single();
     }
