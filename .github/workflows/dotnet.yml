@@ -24,7 +24,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore -f ${{ matrix.framework }}
+      run: dotnet build Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-restore -f ${{ matrix.framework }}
     - name: Test
       run: dotnet test --verbosity normal
     - name: Pack
