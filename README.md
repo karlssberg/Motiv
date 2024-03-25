@@ -6,12 +6,12 @@ Motiv is a .NET library lets you decompose your logical expressions into _logica
 mean a logical statement that can be either `true` or `false`, such as _sun is shining_ or _is even number_. However,
 this library goes a step further by allowing you to associate metadata with the proposition for when it is either 
 `true` or `false` and have it returned when resolved.  The power from this library comes from the ease with which 
-you can combine and reuse these propositions, and without compromising on visibility of the logic at either 
+you can combine and reuse these propositions, all without compromising on visibility of the logic at either 
 design-time or run-time.
 
 
 #### What can I use the metadata for?
-It's primary purpose is to provide human readable strings that explain exactly why a particular logical expression 
+It's primary purpose is to provide human-readable strings that explain exactly why a particular logical expression 
 resolved to a either `true` or `false` .  This can be useful in a number of scenarios, such as:
 * __User feedback__ - You require your application to provide detailed and accurate feedback to the user about why a 
   certain decisions were  made. 
@@ -132,7 +132,7 @@ that helps you supplement validation-like metadata to your regular/vanilla if-st
    logic in various places. This often means wrapping it in a function and moving it somewhere else. Motiv provides a
    framework for doing this and and the means to recombine them afterwards.
 2. **Metadata association**: Associate metadata for both `true` and `false` outcomes. By default the metadata is a
-   string - so that human readable explanations of the logic can be defined alongside the actual logical expression.
+   string - so that human-readable explanations of the logic can be defined alongside the actual logical expression.
    However, this doesn't have to be a string and can in fact be any type, which means that it can be used to support
    multi-lingual explanations, or even be used to conditionally select stateful objects.
 3. **Metadata accumulation**: With complex logical expressions different underlying logic may (or may not) be
@@ -143,7 +143,7 @@ that helps you supplement validation-like metadata to your regular/vanilla if-st
    a `true` result will have its metadata accumulated and the other operand's metadata will be ignored.
 4. **Enhanced Debugging Experience**: This library has been designed to ease the developer experience around 
    important and/or complex Boolean logic.  Specifications, whether composed of other Specifications or not, override the `ToString()` method so that it provides
-   a human readable representation of its the logic tree. Furthermore, the generated result also accumulates a
+   a human-readable representation of its the logic tree. Furthermore, the generated result also accumulates a
    human-readable list of assertions why the result was either `true` or `false`. This is primarily for debugging and
    troubleshooting purposes, but it could also be surfaced to users if so desired.
 5. **Simplified Testing**: By extracting your logical expressions into separate classes you make it much easier to

@@ -16,16 +16,6 @@ public  class SpecException : Exception
     }
 
     /// <summary>
-    /// Initializes a new instance of the SpecException class with serialized data.
-    /// </summary>
-    /// <param name="info">The object that holds the serialized object data.</param>
-    /// <param name="context">The contextual information about the source or destination.</param>
-    protected SpecException(SerializationInfo info, StreamingContext context)
-        : base(info, context)
-    {
-    }
-
-    /// <summary>
     /// Initializes a new instance of the SpecException class with a specified error message.
     /// </summary>
     /// <param name="message">The message that describes the error.</param>
