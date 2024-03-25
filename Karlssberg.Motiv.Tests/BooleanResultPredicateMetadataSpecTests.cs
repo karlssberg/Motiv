@@ -54,6 +54,7 @@ public class BooleanResultPredicateMetadataSpecTests
 
         var act = sut.IsSatisfiedBy(model);
 
+        act.Satisfied.Should().Be(expected);
         act.Assertions.Should().BeEquivalentTo(expectation);
     }
 }

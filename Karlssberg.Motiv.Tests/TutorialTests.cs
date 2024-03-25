@@ -5,8 +5,7 @@ namespace Karlssberg.Motiv.Tests;
 
 public class TutorialTests
 {
-    [Theory]
-    [AutoData]
+    [Fact]
     public void Should_deomo_a_basic_spec()
     {
         var isEven = Spec
@@ -22,8 +21,7 @@ public class TutorialTests
         isEven.IsSatisfiedBy(3).Assertions.Should().BeEquivalentTo("!is even");
     }
 
-    [Theory]
-    [AutoData]
+    [Fact]
     public void Should_deomo_a_basic_spec_using_strings_as_assertions()
     {
         var isEven = Spec
@@ -39,8 +37,7 @@ public class TutorialTests
         isEven.IsSatisfiedBy(3).Assertions.Should().BeEquivalentTo("number is odd");
     }
 
-    [Theory]
-    [AutoData]
+    [Fact]
     public void Should_demo_a_basic_spec_using_functions_as_assertion_functions()
     {
         var isEven = Spec
@@ -56,8 +53,7 @@ public class TutorialTests
         isEven.IsSatisfiedBy(3).Assertions.Should().BeEquivalentTo("3 is odd");
     }
 
-    [Theory]
-    [AutoData]
+    [Fact]
     public void Should_demo_handling_multiple_languages_spec()
     {
         var isEven = Spec
@@ -72,8 +68,7 @@ public class TutorialTests
         isEven.IsSatisfiedBy(2).Metadata.Select(m => m.Spanish).Should().BeEquivalentTo("el número es par");
     }
     
-    [Theory]
-    [AutoData]
+    [Fact]
     public void Should_demo_composite_spec()
     {
         var isPositive = Spec
