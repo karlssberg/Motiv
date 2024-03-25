@@ -89,7 +89,7 @@ var isNegativeSpec = Spec
 
 var isEvenSpec = Spec
         .Build((int n) => n % 2 == 0)
-        .WhenTrue(n => "the number is even")
+        .WhenTrue("the number is even")
         .WhenFalse("the number is odd")
         .Create("is even"); 
 
