@@ -23,7 +23,7 @@ of these overloads can be used to create a new proposition with varying levels o
 The most basic proposition can be created by providing a predicate and a propositional statement.
 ```csharp
 var isEven = Spec
-    .Build<int>(n => n % 2 == 0)
+    .Build((int n) => n % 2 == 0)
     .Create("even");
 ```
 In this case, when the predicate is true, the proposition is satisfied and the reason given is `"even"`. When the 
@@ -79,12 +79,12 @@ isEven.Metadata.Select(m => m.English); // ["the number is odd"]
 ```
 
 ### Higher order propositions
-From an mathematical viewpoint, higher order logic operations are applied to sets of propositions rather than 
-individual (first order) propositions (they can also be applied to functions, but that is not relevant here). This 
-library 
-supports higher order logic by allowing you to promote a first order specification to a higher order equivalent.  
-This means that instead of accepting a single model, it accepts a set of models from which it generates a set of 
-results which are evaluated to determine if the higher order specification is satisfied.
+The propositions we have mentioned thus far are known as first-order propositions since they apply to a single 
+entity.  However, this is incomplete since it does not propose the state of a set of entities.  This is 
+where higher order propositions come in. This library supports higher order logic by allowing you to promote a first 
+order specification to its higher order equivalent.  This means that instead of accepting a single model, it accepts a 
+set of models from which it internally generates a set of results which are evaluated to determine if the higher order 
+specification is satisfied.
 ```csharp
 var isEven = Spec
     .Build<int>(n => n % 2 == 0)
@@ -99,12 +99,12 @@ var allAreEven = Spec
 #### Higher order output
 When it come to higher-order propositions you will almost certainly want to describe how the set is composed in a 
 multitude of ways.  This library aims to support this by providing a result object that contains convenient properties 
-that assist with pattern matching. 
+that work seamlessly with pattern matching. 
 ```csharp 
 var allAreEven = Spec
     .Build(isEven)
     .AsAllSatisfied()
-    .WhenTrue(result => {
+    .WhenTrue(result => result switch {
         { 
             { TrueCount: > 1 } => "all are true",
             _ => "only one is true"
@@ -116,5 +116,5 @@ var allAreEven = Spec
             { FalseCount: 1 } => "only one model caused the proposition to be false",
             _ => $"{result.CausalResults.Count} models caused the proposition to be false"
         })
-    .Create();
+    .Create("all are even");
 ```
