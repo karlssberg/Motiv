@@ -12,6 +12,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        framework: ['netstandard2.0', 'net8.0']
     steps:
     - uses: actions/checkout@v3
     - name: Setup .NET
@@ -22,16 +25,12 @@ jobs:
       run: dotnet restore
     - name: Test
       run: dotnet test --verbosity normal
-    - name: Build for netstandard2.0
-      run: dotnet build Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --framework netstandard2.0 --no-restore -o ./Karlssberg.Motiv/bin/Release/netstandard2.0/
-    - name: Build for net8.0
-      run: dotnet build Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --framework net8.0 --no-restore -o ./Karlssberg.Motiv/bin/Release/net8.0/
+    - name: Build for ${{ matrix.framework }}
+      run: dotnet build Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --framework ${{ matrix.framework }} --no-restore -o ./Karlssberg.Motiv/bin/Release/${{ matrix.framework }}/
     - name: List Build Artifacts
       run: find "$(pwd)/Karlssberg.Motiv/bin/Release" -type f
-    - name: Pack for netstandard2.0
-      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-build -p:TargetFrameworks=netstandard2.0 --output nupkgs/netstandard2.0
-    - name: Pack for net8.0
-      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-build -p:TargetFrameworks=net8.0 --output nupkgs/net8.0
+    - name: Pack for ${{ matrix.framework }}
+      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-build -p:TargetFrameworks=${{ matrix.framework }} --output nupkgs/${{ matrix.framework }}
     - name: Publish to NuGet
-      run: dotnet nuget push "nupkgs/**/*.nupkg" --api-key ${{secrets.MOTIV_API_KEY}} --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push **/*.nupkg --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
       if: github.ref == 'refs/heads/main'
