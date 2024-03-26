@@ -20,14 +20,18 @@ jobs:
         dotnet-version: 8.0.x
     - name: Restore dependencies
       run: dotnet restore
-    - name: Build
-      run: dotnet build Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-restore -o ./bin/Release
     - name: Test
       run: dotnet test --verbosity normal
+    - name: Build for netstandard2.0
+      run: dotnet build Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --framework netstandard2.0 --no-restore -o ./bin/Release/netstandard2.0/
+    - name: Build for net8.0
+      run: dotnet build Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --framework net8.0 --no-restore -o ./bin/Release/net8.0/
     - name: List Build Artifacts
       run: ls -R ./bin/Release
-    - name: Pack
-      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --output nupkgs -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+    - name: Pack for netstandard2.0
+      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-build -p:TargetFrameworks=netstandard2.0 --output nupkgs/netstandard2.0
+    - name: Pack for net8.0
+      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-build -p:TargetFrameworks=net8.0 --output nupkgs/net8.0
     - name: Publish to NuGet
       run: dotnet nuget push "nupkgs/**/*.nupkg" --api-key ${{secrets.MOTIV_API_KEY}} --source https://api.nuget.org/v3/index.json
       if: github.ref == 'refs/heads/main'
