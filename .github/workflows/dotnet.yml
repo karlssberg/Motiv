@@ -30,7 +30,7 @@ jobs:
     - name: List Build Artifacts
       run: ls -R ./bin/Release/${{ matrix.framework }}
     - name: Pack
-      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --output nupkgs -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg --no-build  -no-restore
+      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --output nupkgs -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg --no-build
     - name: Publish to NuGet
       run: dotnet nuget push "nupkgs/**/*.nupkg" --api-key ${{secrets.MOTIV_API_KEY}} --source https://api.nuget.org/v3/index.json
       if: github.ref == 'refs/heads/main'
