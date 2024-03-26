@@ -27,7 +27,7 @@ jobs:
     - name: Build for net8.0
       run: dotnet build Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --framework net8.0 --no-restore -o ./bin/Release/net8.0/
     - name: List Build Artifacts
-      run: ls -R ./bin/Release
+      run: find "$(pwd)/bin/Release" -type f
     - name: Pack for netstandard2.0
       run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-build -p:TargetFrameworks=netstandard2.0 --output nupkgs/netstandard2.0
     - name: Pack for net8.0
