@@ -24,11 +24,11 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build Karlssberg.Motiv/Karlssberg.Motiv.csproj  --configuration Release --no-restore -f ${{ matrix.framework }}
+      run: dotnet build Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-restore -f ${{ matrix.framework }} -o ./bin/Release/${{ matrix.framework }}
     - name: Test
       run: dotnet test --verbosity normal
     - name: Pack
-      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --output nupkgs
+      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --output nupkgs -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg --no-build
     - name: Publish to NuGet
       run: dotnet nuget push "nupkgs/**/*.nupkg" --api-key ${{secrets.MOTIV_API_KEY}} --source https://api.nuget.org/v3/index.json
       if: github.ref == 'refs/heads/main'
