@@ -28,7 +28,7 @@ jobs:
     - name: Test
       run: dotnet test --verbosity normal
     - name: Pack
-      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-restore --no-build --output nupkgs
+      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --output nupkgs
     - name: Publish to NuGet
-      run: dotnet nuget push "nupkgs/**/*.nupkg" --api-key ${{secrets.motiv-api-key}} --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push "nupkgs/**/*.nupkg" --api-key ${{secrets.MOTIV_API_KEY}} --source https://api.nuget.org/v3/index.json
       if: github.ref == 'refs/heads/main'
