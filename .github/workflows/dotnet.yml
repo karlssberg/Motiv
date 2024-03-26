@@ -32,5 +32,5 @@ jobs:
     - name: Pack for ${{ matrix.framework }}
       run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-build -p:TargetFrameworks=${{ matrix.framework }} --output nupkgs/${{ matrix.framework }}
     - name: Publish to NuGet
-      run: dotnet nuget push "nupkgs/**/*.nupkg" --api-key ${{secrets.MOTIV_API_KEY}} --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push **/*.nupkg --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
       if: github.ref == 'refs/heads/main'
