@@ -45,9 +45,20 @@ var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
 
 isNegative.Satisfied; // true
 isNegative.Reason; // "is negative"
+isNegative.Assertions; // ["is negative"]
+```
+When negated, a proposition will return a reason prefixed with a `!` character.  This is useful for debugging 
+purposes.
+```csharp
+var isNegative = isNegativeSpec.IsSatisfiedBy(3);
+
+isNegative.Satisfied; // false
+isNegative.Reason; // "!is negative"
+isNegative.Assertions; // ["!is negative"]
 ```
 
-you can also use the `WhenTrue` and `WhenFalse` methods to provide a more human-readable description for when the outcome is either `true` or `false`. 
+you can also use the `WhenTrue` and `WhenFalse` methods to provide a more human-readable description for when the 
+outcome is either `true` or `false`.  These values will be used in the `Reason` and `Assertions` properties of the result.
 
 ```csharp
 var isNegativeSpec = Spec
@@ -60,6 +71,25 @@ var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
 
 isNegative.Satisfied; // true
 isNegative.Reason; // "the number is negative"
+isNegative.Assertions; // ["the number is negative"]
+```
+
+If for whatever reason it is not appropriate to use the strings supplied to the `WhenTrue` and `WhenFalse` methods 
+to explain the outcome, you can instead provide a proposition, that will subsequently be used as a reason.  This 
+can be useful when you want to provide a more detailed
+
+```csharp
+var isNegativeSpec = Spec
+        .Build((int n) => n < 0)
+        .WhenTrue("the number is negative")
+        .WhenFalse("the number is not negative")
+        .Create("is negative");
+
+var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
+
+isNegative.Satisfied; // true
+isNegative.Reason; // "is negative"
+isNegative.Assertions; // ["the number is negative"]
 ```
 
 You are also not limited to string.  You can equally supply any POCO object and it will be yielded when appropriate.
@@ -74,7 +104,8 @@ var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
 
 isNegative.Satisfied; // true
 isNegative.Reason; // "is negative"
-isNegative.Metadata; // [{ Message = "the number is not negative" }]
+isNegative.Assertions; // ["is negative"]
+isNegative.Metadata; // [{ Message = "the number is negative" }]
 ````
 
 #### Combining specifications
