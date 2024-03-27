@@ -97,7 +97,7 @@ You are also not limited to strings.  You can equally supply any POCO object and
 var isNegativeSpec = Spec
         .Build((int n) => n < 0)
         .WhenTrue(new MyClass { Message = "the number is negative" })
-        .WhenFalse(new MyClass { Message = "the number is not negative" }
+        .WhenFalse(new MyClass { Message = "the number is not negative" })
         .Create("is negative")
 
 var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
