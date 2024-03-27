@@ -92,7 +92,7 @@ isNegative.Reason; // "is negative"
 isNegative.Assertions; // ["the number is negative"]
 ```
 
-You are also not limited to string.  You can equally supply any POCO object and it will be yielded when appropriate.
+You are also not limited to strings.  You can equally supply any POCO object and it will be yielded when appropriate.
 ```csharp
 var isNegativeSpec = Spec
         .Build((int n) => n < 0)
