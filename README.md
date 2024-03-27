@@ -41,10 +41,10 @@ var isNegativeSpec = Spec
         .Build((int n) => n < 0)
         .Create("is negative");
 
-var isNegative = isNegativeSpec.IsSatisfiedBy(3);
+var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
 
-isNegative.Satisfied; // false
-isNegative.Reason; // "!is negative"
+isNegative.Satisfied; // true
+isNegative.Reason; // "is negative"
 ```
 
 you can also use the `WhenTrue` and `WhenFalse` methods to provide a more human-readable description for when the outcome is either `true` or `false`. 
@@ -56,10 +56,10 @@ var isNegativeSpec = Spec
         .WhenFalse("the number is not negative")
         .Create();
 
-var isNegative = isNegativeSpec.IsSatisfiedBy(3);
+var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
 
-isNegative.Satisfied; // false
-isNegative.Reason; // "the number is not negative"
+isNegative.Satisfied; // true
+isNegative.Reason; // "the number is negative"
 ```
 
 You are also not limited to string.  You can equally supply any POCO object and it will be yielded when appropriate.
@@ -70,10 +70,10 @@ var isNegativeSpec = Spec
         .WhenFalse(new MyClass { Message = "the number is not negative" }
         .Create("is negative")
 
-var isNegative = isNegativeSpec.IsSatisfiedBy(3);
+var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
 
-isNegative.Satisfied; // false
-isNegative.Reason; // "!is negative"
+isNegative.Satisfied; // true
+isNegative.Reason; // "is negative"
 isNegative.Metadata; // [{ Message = "the number is not negative" }]
 ````
 
