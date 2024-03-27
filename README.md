@@ -97,7 +97,7 @@ var isPositiveAndOddSpec = !isNegativeSpec & !isEvenSpec;
 
 var isPositiveAndOdd = isPositiveAndOddSpec.IsSatisfiedBy(3);
 
-isPositiveAndOdd.IsSatisfied; // returns false
+isPositiveAndOdd.IsSatisfied; // returns true
 isPositiveAndOdd.Reason; // "!is negative & !is even"
 isPositiveAndOdd.Assertions; // ["the number is positive", "the number is odd"]
 ```
