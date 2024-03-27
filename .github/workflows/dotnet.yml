@@ -33,5 +33,5 @@ jobs:
     - name: Pack for net8.0
       run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-build -p:TargetFrameworks=net8.0 --output nupkgs/net8.0
     - name: Publish to NuGet
-      run: dotnet nuget push **/*.nupkg --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push "**/*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
       if: github.ref == 'refs/heads/main'
