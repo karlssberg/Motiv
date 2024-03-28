@@ -133,6 +133,15 @@ isPositiveAndOdd.Reason; // "!is negative & !is even"
 isPositiveAndOdd.Assertions; // ["the number is positive", "the number is odd"]
 ```
 
+When you combine specifications to form new ones, only the specifications that helped determine the final result 
+will be included in the `Assertions` property and `Reason` property.  This is useful when you want to provide a
+```csharp
+var isPositiveAndOdd = isPositiveAndOddSpec.IsSatisfiedBy(-3);
+
+isPositiveAndOdd.IsSatisfied; // returns false
+isPositiveAndOdd.Reason; // "is negative"
+isPositiveAndOdd.Assertions; // ["the number is negative"]
+```
 ### Problem Statement
 
 This library deals with vexing issues from working with logic. Such as...
