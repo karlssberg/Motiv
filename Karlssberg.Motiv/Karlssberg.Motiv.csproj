@@ -18,62 +18,19 @@
         <PackageTags>SpecificationPattern, DecisionMaking, Explanations, DesignPatterns, RulesEngine, BusinessLogic, Compliance, AuditTrails, RiskManagement, CSharp, .NET,  Developers, Architects, ProductManagement, Advanced, Intermediate</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.0.5</Version>
+        <Version>1.0.6</Version>
     </PropertyGroup>
     
     <ItemGroup>
         <None Include="..\README.md" Pack="true" PackagePath="\" />
         <None Include="..\LICENSE" Pack="true" PackagePath="\" />
     </ItemGroup>
-
+    
     <ItemGroup>
         <InternalsVisibleTo Include="$(AssemblyName).Tests"/>
-        <Compile Update="ChangeDescriptionSpec.cs">
-            <DependentUpon>Spec.cs</DependentUpon>
-        </Compile>
-        <Compile Update="SpecBuilder\Step1\IRequireTrueReason.cs">
-            <DependentUpon>IRequireTrueReasonOrMetadata.cs</DependentUpon>
-        </Compile>
-        <Compile Update="SpecBuilder\Step1\IRequireTrueMetadata.cs">
-            <DependentUpon>IRequireTrueReasonOrMetadata.cs</DependentUpon>
-        </Compile>
-        <Compile Update="SpecBuilder\Phase1\IYieldMetadataWhenTrue.cs" />
-        <Compile Update="Proposition\NestedMetadataSpecBuilder\NestedFalseMetadataSpecBuilder.cs">
-          <DependentUpon>NestedTrueSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Proposition\NestedMetadataSpecBuilder\NestedMetadataSpecFactory.cs">
-          <DependentUpon>NestedFalseMetadataSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Proposition\NestedMetadataSpecBuilder\NestedFalseReasonsWithDescriptionSpecBuilder.cs">
-          <DependentUpon>NestedTrueSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Proposition\NestedMetadataSpecBuilder\NestedFalseReasonsSpecBuilder.cs">
-          <DependentUpon>NestedTrueSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Proposition\NestedMetadataSpecBuilder\FalseReasonsWithDescriptionSpecBuilder.cs">
-          <DependentUpon>TrueSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Proposition\NestedMetadataSpecBuilder\FalseReasonsSpecBuilder.cs">
-          <DependentUpon>TrueSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Proposition\NestedMetadataSpecBuilder\FalseMetadataSpecBuilder.cs">
-          <DependentUpon>TrueSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Proposition\NestedMetadataSpecBuilder\ReasonWithDescriptionSpecFactory.cs">
-          <DependentUpon>FalseReasonsWithDescriptionSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Proposition\NestedMetadataSpecBuilder\ReasonSpecFactory.cs">
-          <DependentUpon>FalseReasonsSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Proposition\NestedMetadataSpecBuilder\MetadataSpecFactory.cs">
-          <DependentUpon>FalseMetadataSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Proposition\NestedMetadataSpecBuilder\NestedReasonWithDescriptionSpecFactory.cs">
-          <DependentUpon>NestedFalseReasonsWithDescriptionSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Proposition\NestedMetadataSpecBuilder\NestedReasonSpecFactory.cs">
-          <DependentUpon>NestedFalseReasonsSpecBuilder.cs</DependentUpon>
-        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
         <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationHigherOrderSpecFactory.cs">
           <DependentUpon>FalseAssertionsHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>

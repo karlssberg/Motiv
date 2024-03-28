@@ -92,12 +92,12 @@ isNegative.Reason; // "is negative"
 isNegative.Assertions; // ["the number is negative"]
 ```
 
-You are also not limited to string.  You can equally supply any POCO object and it will be yielded when appropriate.
+You are also not limited to strings.  You can equally supply any POCO object and it will be yielded when appropriate.
 ```csharp
 var isNegativeSpec = Spec
         .Build((int n) => n < 0)
         .WhenTrue(new MyClass { Message = "the number is negative" })
-        .WhenFalse(new MyClass { Message = "the number is not negative" }
+        .WhenFalse(new MyClass { Message = "the number is not negative" })
         .Create("is negative")
 
 var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
@@ -133,6 +133,15 @@ isPositiveAndOdd.Reason; // "!is negative & !is even"
 isPositiveAndOdd.Assertions; // ["the number is positive", "the number is odd"]
 ```
 
+When you combine specifications to form new ones, only the specifications that helped determine the final result 
+will be included in the `Assertions` property and `Reason` property.  This is useful when you want to provide a
+```csharp
+var isPositiveAndOdd = isPositiveAndOddSpec.IsSatisfiedBy(-3);
+
+isPositiveAndOdd.IsSatisfied; // returns false
+isPositiveAndOdd.Reason; // "is negative"
+isPositiveAndOdd.Assertions; // ["the number is negative"]
+```
 ### Problem Statement
 
 This library deals with vexing issues from working with logic. Such as...
