@@ -5,27 +5,27 @@
 Motiv is a .NET library lets you decompose your logical expressions into _logical propositions_.  By propositions we 
 mean a logical statement that can be either `true` or `false`, such as _sun is shining_ or _is even number_. However,
 this library goes a step further by allowing you to associate metadata with the proposition for when it is either 
-`true` or `false` and have it returned when resolved.  The power from this library comes from the ease with which 
-you can combine and reuse these propositions, all without compromising on visibility of the logic at either 
-design-time or run-time.
-
+`true` or `false` and have it returned when resolved.  The power that this library delivers is in the ability to 
+combine propositions to form new ones, and have the assertions (and optionally metadata) from the underlying 
+propositions filtered and aggregated so that the final result is a human-readable list of assertions (and optionally 
+metadata) that explain why the final result was either `true` or `false`.
 
 #### What can I use the metadata for?
-It's primary purpose is to provide human-readable strings that explain exactly why a particular logical expression 
-resolved to a either `true` or `false` .  This can be useful in a number of scenarios, such as:
-* __User feedback__ - You require your application to provide detailed and accurate feedback to the user about why a 
+* **User feedback** - You require your application to provide detailed and accurate feedback to the user about why a 
   certain decisions were  made. 
-* __Debugging__ - Quickly understand why a certain condition was met, or not. This can be especially useful in complex 
+* **Debugging** - Quickly understand why a certain condition was met, or not. This can be especially useful in complex 
   logical expressions where it might not be immediately clear which part of the expression was responsible for the final 
   result.
-* __Multi-language Support__ - The metadata doesn't have to be a string. It can be any type, which means you could use
+* **Multi-language Support** - The metadata doesn't have to be a string. It can be any type, which means you could use
   it to support multi-lingual explanations.
-* Rules Engine - The metadata can be used to conditionally select stateful objects, which can be used to implement a 
+* **Rules Engine** - The metadata can be used to conditionally select stateful objects, which can be used to implement a 
   rules engine. This can be useful in scenarios where you need to apply different rules to different objects based on 
   their state.
-* Validation - The metadata can be used to provide human-readable explanations of why a certain validation rule was 
+* **Validation** - The metadata can be used to provide human-readable explanations of why a certain validation rule was 
   not met. This can be useful in scenarios where you need to provide feedback to the user about why a certain input 
   was not valid.
+* **Parsing CLI arguments** - The metadata can be used to conditionally map command-line arguments to collections of 
+  custom objects, which can then be used to drive different behaviors in your application.
 
 ### Usage
 
@@ -37,8 +37,8 @@ A basic specification can be created using the `Spec` class. This class provides
 logical proposition
 
 ```csharp
-var isNegativeSpec = Spec
-        .Build((int n) => n < 0)
+var isNegativeSpec =
+    Spec.Build((int n) => n < 0)
         .Create("is negative");
 
 var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
@@ -61,8 +61,8 @@ you can also use the `WhenTrue` and `WhenFalse` methods to provide a more human-
 outcome is either `true` or `false`.  These values will be used in the `Reason` and `Assertions` properties of the result.
 
 ```csharp
-var isNegativeSpec = Spec
-        .Build((int n) => n < 0)
+var isNegativeSpec =
+    Spec.Build((int n) => n < 0)
         .WhenTrue("the number is negative")
         .WhenFalse("the number is not negative")
         .Create();
@@ -79,8 +79,8 @@ to explain the outcome, you can instead provide a proposition, that will subsequ
 can be useful when you want to provide a more detailed
 
 ```csharp
-var isNegativeSpec = Spec
-        .Build((int n) => n < 0)
+var isNegativeSpec =
+    Spec.Build((int n) => n < 0)
         .WhenTrue("the number is negative")
         .WhenFalse("the number is not negative")
         .Create("is negative");
@@ -94,8 +94,8 @@ isNegative.Assertions; // ["the number is negative"]
 
 You are also not limited to strings.  You can equally supply any POCO object and it will be yielded when appropriate.
 ```csharp
-var isNegativeSpec = Spec
-        .Build((int n) => n < 0)
+var isNegativeSpec =
+    Spec.Build((int n) => n < 0)
         .WhenTrue(new MyClass { Message = "the number is negative" })
         .WhenFalse(new MyClass { Message = "the number is not negative" })
         .Create("is negative")
@@ -109,17 +109,20 @@ isNegative.Metadata; // [{ Message = "the number is negative" }]
 ````
 
 #### Combining specifications
+The real power of Motiv comes from combining specifications to form new ones. The library will take care of 
+collating the underlying causes and filter out irrelevant and inconsequential assertions and metadata from the final 
+result.  Specifications can be combined using the `&`,`|` and `^` operators as well as the `.ElseIf()` method.
 ```csharp
-var isNegativeSpec = Spec
-        .Build((int n) => n < 0)
+var isNegativeSpec =
+    Spec.Build((int n) => n < 0)
         .WhenTrue("the number is negative")
         .WhenFalse(n => n == 0 
             ? "the number is zero"
             : "the number is positive")
         .Create("is negative");
 
-var isEvenSpec = Spec
-        .Build((int n) => n % 2 == 0)
+var isEvenSpec =
+    Spec.Build((int n) => n % 2 == 0)
         .WhenTrue("the number is even")
         .WhenFalse("the number is odd")
         .Create("is even"); 
@@ -144,6 +147,29 @@ isPositiveAndOdd.IsSatisfied; // returns false
 isPositiveAndOdd.Reason; // "is negative"
 isPositiveAndOdd.Assertions; // ["the number is negative"]
 ```
+
+### Encapsulation and Re-use
+You will likely want to encapsulate specifications for reuse across your application. For this typically have two 
+options, which is to either return specification instances from members of POCO objects, or to derive from the 
+`Spec<TModel>` or `Spec<TModel, TMetadata>` class (the former being merely syntactic sugar for `Spec<TModel, 
+string>`). Using these classes will help you to maintain a separation of concerns and raise the conspicuity of 
+important logic. 
+```csharp
+public class IsNegativeSpec : Spec<int>(
+    Spec.Build((int n) => n < 0)
+        .WhenTrue("the number is negative")
+        .WhenFalse("the number is not negative")
+        .Create());
+
+public class IsNegativeMultiLingualSpec : Spec<int, MyClass>(
+    Spec.Build((int n) => n < 0)
+        .WhenTrue(new MyClass { Spanish = "el número es negativo" })
+        .WhenFalse(new MyClass { Spanish = "el número no es negativo" })
+        .Create("is negative"));
+```
+
+### 
+
 ### Problem Statement
 
 This library deals with vexing issues from working with logic. Such as...
@@ -184,10 +210,11 @@ that helps you supplement validation-like metadata to your regular/vanilla if-st
    one of the operands produces a `false` result and the other a _true_ result then only the operand that returned
    a `true` result will have its metadata accumulated and the other operand's metadata will be ignored.
 4. **Enhanced Debugging Experience**: This library has been designed to ease the developer experience around 
-   important and/or complex Boolean logic.  Specifications, whether composed of other Specifications or not, override the `ToString()` method so that it provides
-   a human-readable representation of its the logic tree. Furthermore, the generated result also accumulates a
-   human-readable list of assertions why the result was either `true` or `false`. This is primarily for debugging and
-   troubleshooting purposes, but it could also be surfaced to users if so desired.
+   important and/or complex Boolean logic.  Specifications, whether composed of other Specifications or not, 
+   override the `ToString()` method so that it  provides a human-readable representation of its the logic tree. 
+   Furthermore, the generated result also accumulates a human-readable list of assertions why the result was either 
+   `true` or `false`. This is primarily for debugging and troubleshooting purposes, but it could also be surfaced to 
+   users if so desired. 
 5. **Simplified Testing**: By extracting your logical expressions into separate classes you make it much easier to
    thoroughly test all the possible combinations that the parameters can be in. It also means the type from which the
    expressions were extracted now has potentially mock-able dependencies, which should make testing code-paths simpler.
