@@ -134,7 +134,9 @@ isPositiveAndOdd.Assertions; // ["the number is positive", "the number is odd"]
 ```
 
 When you combine specifications to form new ones, only the specifications that helped determine the final result 
-will be included in the `Assertions` property and `Reason` property.  This is useful when you want to provide a
+will be included in the `Assertions` property and `Reason` property.  Whereas the `Assertions` property will simply 
+collect facts about evaluations, the `Reason` property will preserve the expression by retaining the logical symbols 
+(e.g. `&`, `|`), but whilst also excluding any sub-expressions that played no part in determining the final result.
 ```csharp
 var isPositiveAndOdd = isPositiveAndOddSpec.IsSatisfiedBy(-3);
 
