@@ -1,18 +1,22 @@
 # Motiv
+### Turn your if-statements into _why_ statements
 
-### Turn your if-statements into _why did it do that_ statements
+Motiv is a .NET library that supercharges your boolean logic.
 
-Motiv is a .NET library lets you decompose your logical expressions into _logical propositions_.  By propositions we 
-mean a logical statement that can be either `true` or `false`, such as _sun is shining_ or _is even number_. However,
-this library goes a step further by allowing you to associate metadata with the proposition for when it is either 
-`true` or `false` and have it returned when resolved.  The power that this library delivers is in the ability to 
-combine propositions to form new ones, and have the assertions (and optionally metadata) from the underlying 
-propositions filtered and aggregated so that the final result is a human-readable list of assertions (and optionally 
-metadata) that explain why the final result was either `true` or `false`.
+It allows you to package your boolean expressions into strongly typed propositions which can then be re-used, 
+re-combined and then queried to determine if they are satisfied by a given model—thus simplifying the deduplication 
+of your domain logic.
+
+Optionally, custom objects (referred to here as _metadata_) can be associated with propositions so that when models are 
+evaluated, only those propositions that actually influenced the final boolean result have their metadata yielded.
+
+Typically, the metadata is a human-readable `string` that explains why a proposition was satisfied or not (referred 
+to here as an _assertion_), but it could equally be a POCO object that contains explanations in different languages, or 
+even a stateful object to drive behavior elsewhere in an application.
 
 #### What can I use the metadata for?
-* **User feedback** - You require your application to provide detailed and accurate feedback to the user about why a 
-  certain decisions were  made. 
+* **User feedback** - You require an application to provide detailed and accurate feedback to the user about why a 
+  certain decisions were made. 
 * **Debugging** - Quickly understand why a certain condition was met, or not. This can be especially useful in complex 
   logical expressions where it might not be immediately clear which part of the expression was responsible for the final 
   result.
@@ -25,15 +29,15 @@ metadata) that explain why the final result was either `true` or `false`.
   not met. This can be useful in scenarios where you need to provide feedback to the user about why a certain input 
   was not valid.
 * **Parsing CLI arguments** - The metadata can be used to conditionally map command-line arguments to collections of 
-  custom objects, which can then be used to drive different behaviors in your application.
+  custom objects, which can then be used compose different behaviours.
 
-### Usage
+## Usage
 
-The following example is a basic demonstration of how to use Motiv. It shows how to create a basic specification and
-then use it to determine if a number (3 in this case) is negative or not.
+The following example is a basic demonstration of how to use Motiv.
+It shows how to create a basic proposition and then use it to determine if a number (3 in this case) is negative or not.
 
-#### Basic specification
-A basic specification can be created using the `Spec` class. This class provides a fluent API for creating a 
+### Basic proposition
+A basic proposition can be created using the `Spec` class. This class provides a fluent API for creating a 
 logical proposition
 
 ```csharp
@@ -47,8 +51,10 @@ isNegative.Satisfied; // true
 isNegative.Reason; // "is negative"
 isNegative.Assertions; // ["is negative"]
 ```
-When negated, a proposition will return a reason prefixed with a `!` character.  This is useful for debugging 
-purposes.
+
+When negated, a basic proposition will return a reason prefixed with a `!` character.
+This is useful for debugging purposes.
+
 ```csharp
 var isNegative = isNegativeSpec.IsSatisfiedBy(3);
 
@@ -57,8 +63,9 @@ isNegative.Reason; // "!is negative"
 isNegative.Assertions; // ["!is negative"]
 ```
 
-you can also use the `WhenTrue` and `WhenFalse` methods to provide a more human-readable description for when the 
-outcome is either `true` or `false`.  These values will be used in the `Reason` and `Assertions` properties of the result.
+You can also use the `WhenTrue()` and `WhenFalse()` methods to provide a more human-readable description for when the 
+outcome is either `true` or `false`.
+These values will be used in the `Reason` and `Assertions` properties of the result.
 
 ```csharp
 var isNegativeSpec =
@@ -74,9 +81,10 @@ isNegative.Reason; // "the number is negative"
 isNegative.Assertions; // ["the number is negative"]
 ```
 
-If for whatever reason it is not appropriate to use the strings supplied to the `WhenTrue` and `WhenFalse` methods 
-to explain the outcome, you can instead provide a proposition, that will subsequently be used as a reason.  This 
-can be useful when you want to provide a more detailed
+If for whatever reason it is not convenient to use the strings supplied to the `WhenTrue()` and `WhenFalse()` as a 
+`Reason`, you can instead provide a propositional statement to the `Create()` method.
+This will then be used in the `Reason` property.  This can be useful if the text supplied to the `WhenTrue()` and 
+`WhenFalse()` is particularly verbose, or doesn't make sense as a `Reason`.
 
 ```csharp
 var isNegativeSpec =
@@ -92,7 +100,9 @@ isNegative.Reason; // "is negative"
 isNegative.Assertions; // ["the number is negative"]
 ```
 
-You are also not limited to strings.  You can equally supply any POCO object and it will be yielded when appropriate.
+You are also not limited to strings.
+You can equally supply any POCO object and it will be yielded when appropriate.
+
 ```csharp
 var isNegativeSpec =
     Spec.Build((int n) => n < 0)
@@ -108,10 +118,13 @@ isNegative.Assertions; // ["is negative"]
 isNegative.Metadata; // [{ Message = "the number is negative" }]
 ````
 
-#### Combining specifications
-The real power of Motiv comes from combining specifications to form new ones. The library will take care of 
-collating the underlying causes and filter out irrelevant and inconsequential assertions and metadata from the final 
-result.  Specifications can be combined using the `&`,`|` and `^` operators as well as the `.ElseIf()` method.
+### Combining propositions
+The real power of Motiv comes from combining propositions to form new ones.
+The library will take care of collating the underlying causes and filter out irrelevant and inconsequential 
+assertions and metadata from the final result.
+propositions can be combined using the `&`,`|` and `^` operators as well as the supplemental `.OrElse()` and
+`.AndAlso()` methods.
+
 ```csharp
 var isNegativeSpec =
     Spec.Build((int n) => n < 0)
@@ -136,8 +149,9 @@ isPositiveAndOdd.Reason; // "!is negative & !is even"
 isPositiveAndOdd.Assertions; // ["the number is positive", "the number is odd"]
 ```
 
-When you combine specifications to form new ones, only the specifications that helped determine the final result 
-will be included in the `Assertions` property and `Reason` property.  This is useful when you want to provide a
+When combining propositions to form new ones, only the propositions that helped determine the final result 
+will be included in the `Assertions` property and `Reason` property.
+
 ```csharp
 var isPositiveAndOdd = isPositiveAndOddSpec.IsSatisfiedBy(-3);
 
@@ -147,85 +161,136 @@ isPositiveAndOdd.Assertions; // ["the number is negative"]
 ```
 
 ### Encapsulation and Re-use
-You will likely want to encapsulate specifications for reuse across your application. For this typically have two 
-options, which is to either return specification instances from members of POCO objects, or to derive from the 
-`Spec<TModel>` or `Spec<TModel, TMetadata>` class (the former being merely syntactic sugar for `Spec<TModel, 
-string>`). Using these classes will help you to maintain a separation of concerns and raise the conspicuity of 
-important logic. 
+
+#### Redefining propositions
+Sometimes an existing propositions do not produce the desired assertions or metadata.
+In this case, you will need to wrap the existing proposition in a new one.
+
+```csharp
+var underlying = 
+    Spec.Build((int n) => n < 0)
+        .WhenTrue(new MyClass { Message = "the number is negative" })
+        .WhenFalse(new MyClass { Message = "the number is not negative" })
+        .Create("is negative (metadata)");
+
+var isNegative =
+    Spec.Build(underlying)
+        .WhenTrue("the number is negative")
+        .WhenFalse("the number is not negative")
+        .Create("is negative (explanation)");
+```
+
+#### Strongly typed proposition
+You will likely want to encapsulate propositions for reuse across an application.
+For this you typically have two options, which is to either return `Spec` instances from members of POCO 
+objects, or to derive from the `Spec<TModel>` or `Spec<TModel, TMetadata>` class (the former being merely syntactic 
+sugar for `Spec<TModel, string>`).
+Using these classes will help you to maintain a separation of concerns and also raise the conspicuity of important 
+logic within an application. 
+
 ```csharp
 public class IsNegativeSpec : Spec<int>(
     Spec.Build((int n) => n < 0)
         .WhenTrue("the number is negative")
         .WhenFalse("the number is not negative")
-        .Create());
+        .Create();
 
 public class IsNegativeMultiLingualSpec : Spec<int, MyClass>(
     Spec.Build((int n) => n < 0)
         .WhenTrue(new MyClass { Spanish = "el número es negativo" })
         .WhenFalse(new MyClass { Spanish = "el número no es negativo" })
-        .Create("is negative"));
+        .Create("is negative");
 ```
 
-### 
+If you require (or prefer) your proposition to be expressed as multiple statements you can define them within a 
+factory method.
 
-### Problem Statement
+```csharp
+public class IsPositiveAndOddSpec : Spec<int>(() => 
+    {
+        var isNegativeSpec =
+            Spec.Build((int n) => n < 0)
+                .Create("is negative");+
 
-This library deals with vexing issues from working with logic. Such as...
+        var isEvenSpec =
+            Spec.Build((int n) => n % 2 == 0)
+                .Create("is even"); 
 
-- **Not knowing why your application did that** After releasing an application and getting feedback from users it can be
-  difficult trying figure out the specific reasons _why_ an unexpected decision was arrived at, especially when there
-  are numerous parameters involved. The more complex the overall logical expression, the more error-prone the solution
-  is to supplement it with metadata/additional-functionality in order to answer this question.
-- **Unreadable blob of Logic**  When faced with the _logical expression from hell_ it can be challenging to understand
-  what bits of the logic played a pivotal role in producing the final result. Sure you can inspect the values but
-  this is onerous, error-prone and slows you down.
-- **Blackbox Logic** If you have gone down the laudable path of decomposing your logic into bite-sized chunks then you
-  are faced with a new conundrum, which is comprehending what your logic is actually doing when revisiting it. Logic can
-  be just as easily decomposed as easily as it can be composed, and this can lead to _gotchas_ in your logic that are
-  hard to stumble upon. This exacerbates the first problem _Not knowing why your application did that_.
+        return !isNegativeSpec & !isEvenSpec;
+    });
+```
 
-### Solution
+### Higher Order Logic
+To perform logic over collections of models, higher order logical operations are required.
+This library provides a `.As()` builder method that allows you to define your own higher order logical operations.
+Some built-in higher order logical operations are provided for popular operations, but you can also add your own using
+extension methods.
 
-Motiv addresses these challenges by extending the [Specification Pattern](https://en.wikipedia.
-org/wiki/Specification_pattern) so it can embed metadata along with logical statements. By following the same rules
-that govern traditional logical operators, the metadata is filtered and aggregated with metadata from adjacent
-logcal statements to form a list of metadata representing the underlying causes. You can think of it as a library
-that helps you supplement validation-like metadata to your regular/vanilla if-statements.
+The current built-in higher order logical operations are:
+- `AsAllSatisfied()`: Creates a proposition that yields a true boolean-result object if all the models in a 
+  collection satisfy the proposition, otherwise a false boolean-result object is returned.
+- `AsAnySatisfied()`: Creates a proposition that yields a true boolean-result object if any of the models in a 
+  collection satisfy the proposition, otherwise a false boolean-result object is returned.
+- `AsNoneSatisfied()`: Creates a proposition that yields a true boolean-result object if none of the models in a 
+  collection satisfy the proposition, otherwise a false boolean-result object is returned.
+- `AsNSatisfied()`: Creates a proposition that yields a true boolean-result object if exactly N models in a 
+  collection satisfy the proposition, otherwise a false boolean-result object is returned.
+- `AsAtLeastNSatisfied()`: Creates a proposition that yields a true boolean-result object if at least N models in a 
+  collection satisfy the proposition, otherwise a false boolean-result object is returned.
+- `AsAtMostNSatisfied()`: Creates a proposition that yields a true boolean-result object if at most N models in a 
+  collection satisfy the proposition, otherwise a false boolean-result object is returned.
+- 
+```csharp
+Spec.Build((int n) => n < 0)
+    .AsAllSatisfied()
+    .WhenTrue("all are negative")
+    .WhenFalse("some are not negative")
+    .Create();
+```
 
-### Benefits
+You can also use an existing proposition instead of a predicate to create a higher order logical operation.
+This will give you access to each result and model pair, which can be used to customize the output to a 
+particular use-case.
 
-1. **Decomposing Logic**: In any non-trivial application there is a high chance that you will find a need to re-use
-   logic in various places. This often means wrapping it in a function and moving it somewhere else. Motiv provides a
-   framework for doing this and and the means to recombine them afterwards.
-2. **Metadata association**: Associate metadata for both `true` and `false` outcomes. By default the metadata is a
-   string - so that human-readable explanations of the logic can be defined alongside the actual logical expression.
-   However, this doesn't have to be a string and can in fact be any type, which means that it can be used to support
-   multi-lingual explanations, or even be used to conditionally select stateful objects.
-3. **Metadata accumulation**: With complex logical expressions different underlying logic may (or may not) be
-   responsible producing the final result. This means that in order to be useful, the metadata needs to be selectively
-   filtered so that only the metadata from logic that contributed to the final result is accumulated, or to be more
-   technical: only the metadata from _determinative operands_ are accumulated. For instance, with an _or_ operation, if
-   one of the operands produces a `false` result and the other a _true_ result then only the operand that returned
-   a `true` result will have its metadata accumulated and the other operand's metadata will be ignored.
-4. **Enhanced Debugging Experience**: This library has been designed to ease the developer experience around 
-   important and/or complex Boolean logic.  Specifications, whether composed of other Specifications or not, 
-   override the `ToString()` method so that it  provides a human-readable representation of its the logic tree. 
-   Furthermore, the generated result also accumulates a human-readable list of assertions why the result was either 
-   `true` or `false`. This is primarily for debugging and troubleshooting purposes, but it could also be surfaced to 
-   users if so desired. 
-5. **Simplified Testing**: By extracting your logical expressions into separate classes you make it much easier to
-   thoroughly test all the possible combinations that the parameters can be in. It also means the type from which the
-   expressions were extracted now has potentially mock-able dependencies, which should make testing code-paths simpler.
+```csharp
+Spec.Build(new IsNegativeSpec<int>())
+    .AsAllSatisfied()
+    .WhenTrue("all are negative")
+    .WhenFalse(evaluation => evaluation.FalseModels.Select(n => $"{n} is not negative"))
+    .Create();
+```
+When dynamically generating assertions/metadata, you are provided with an _evaluation_ object that contains 
+pre-defined properties that can be used to customize the output (such as `TrueModels`, `FalseModels`, `TrueCount`, 
+`FalseCount` etc.).
+This is to facilitate pattern matching using switch expressions, which results in more readable inline conditional 
+checks.
 
-### Tradeoffs
+```csharp
+Spec.Build(new IsNegativeSpec<int>())
+    .AsAllSatisfied()
+    .WhenTrue("all are negative")
+    .WhenFalse(evaluation => evaluation switch
+    {
+        { FalseCount: 1 } => $"{evaluation.FalseModels.First()} is not negative",
+        { Count: > 10 } => $"{evaluation.FalseCount} of {evaluation.Count} are not negative" ,
+        _ => $"{string.Join(", ", evaluation.FalseModels)} are not negative"
+    })
+    .Create();
+```
+
+## Tradeoffs
+There are inevitably potential tradeoffs to consider when using this library.
 1. **Performance**: This library is designed to be as performant as possible, but it is still a layer of abstraction
-   over the top of your logic. This means that there is a measurable performance cost to using it. However, 
-   this cost is negligible in most cases and are eclipsed by the benefits it provides.
-2. **Dependency**: This library is a dependency that you will have to manage,although it is as unobtrusive as possible 
-   and should not interfere with your other dependencies.
-3. **Learning Curve**: This library is a new concept and will nonetheless require some familiarization. That being said,
-   it has been deliberately designed to be as intuitive and easy to use as possible - there is very little to learn, 
-   but a lot that can be expressed.
+   over the top of your logic.
+   This means that there is a measurable performance cost to using it.
+   However, this cost is negligible in most cases and is generally eclipsed by the benefits it provides.
+2. **Dependency**: This library is a dependency that you will have to manage.
+   Once embedded in your codebase it will be challenging to remove. 
+   However, this library does not itself depend on any third-party libraries, so it does not bring any unexpected 
+   baggage with it. 
+3. **Learning Curve**: For many, this library is a new approach and will nonetheless require a bit of familiarization.
+   That being said, it has been deliberately designed to be as intuitive and easy to use as possible - there is 
+   relatively little to learn.
 
 ## Getting Started with CLI
 

@@ -4,12 +4,12 @@ using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders.Metadata;
 namespace Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
 
 /// <summary>
-/// A builder for creating specifications based on a predicate and explanations for true and false conditions.
+/// A builder for creating propositions based on a predicate and explanations for true and false conditions.
 /// This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a
-/// specification that covers every possibility, so instead it is done on a case-by-case basis.
+/// proposition that covers every possibility, so instead it is done on a case-by-case basis.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-/// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
+/// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
 public readonly ref struct TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel>(
     Func<TModel, bool> predicate,
     Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,
@@ -60,7 +60,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel
             trueBecause,
             causeSelector);
 
-    /// <summary>Creates a specification and names it with the propositional statement provided.</summary>
+    /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="proposition">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>

@@ -4,12 +4,12 @@
 public static class EnumerableExtensions
 {
     public static SpecBase<TModel, TMetadata> AndTogether<TModel, TMetadata>(
-        this IEnumerable<SpecBase<TModel, TMetadata>> specifications) =>
-        specifications.Aggregate((leftSpec, rightSpec) => leftSpec & rightSpec);
+        this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
+        propositions.Aggregate((leftSpec, rightSpec) => leftSpec & rightSpec);
 
     public static SpecBase<TModel, TMetadata> OrTogether<TModel, TMetadata>(
-        this IEnumerable<SpecBase<TModel, TMetadata>> specifications) =>
-        specifications.Aggregate((leftSpec, rightSpec) => leftSpec | rightSpec);
+        this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
+        propositions.Aggregate((leftSpec, rightSpec) => leftSpec | rightSpec);
     
     public static IEnumerable<TBooleanResult> WhereTrue<TBooleanResult>(
         this IEnumerable<TBooleanResult> results)

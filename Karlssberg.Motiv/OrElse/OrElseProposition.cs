@@ -1,18 +1,18 @@
-﻿using Karlssberg.Motiv.OrElse;
+﻿using Karlssberg.Motiv.Or;
 
-namespace Karlssberg.Motiv.Or;
+namespace Karlssberg.Motiv.OrElse;
 
-internal sealed class OrProposition<TModel, TMetadata>(
+internal sealed class OrElseProposition<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
     SpecBase<TModel, TMetadata> right)
     : IProposition
 {
-    public string Statement => $"{Summarize(left)} | {Summarize(right)}";
+    public string Statement => $"{Summarize(left)} || {Summarize(right)}";
 
     public string Detailed =>
         $"""
-             {Explain(left).IndentAfterFirstLine()} |
-             {Explain(right).IndentAfterFirstLine()}
+         {Explain(left).IndentAfterFirstLine()} ||
+         {Explain(right).IndentAfterFirstLine()}
          """;
 
     private string Summarize(SpecBase<TModel, TMetadata> operand)

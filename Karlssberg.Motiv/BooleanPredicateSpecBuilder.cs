@@ -7,9 +7,9 @@ using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
 namespace Karlssberg.Motiv;
 
 /// <summary>
-/// A builder for creating specifications based on a predicate, or for further refining a specification.
+/// A builder for creating propositions based on a predicate, or for further refining a proposition.
 /// </summary>
-/// <typeparam name="TModel">The type of the model the specification is for.</typeparam>
+/// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 public readonly ref struct BooleanPredicateSpecBuilder<TModel>(Func<TModel, bool> predicate)
 {
     /// <summary>
@@ -57,14 +57,14 @@ public readonly ref struct BooleanPredicateSpecBuilder<TModel>(Func<TModel, bool
         return new FalseMetadataFirstOrderSpecBuilder<TModel, TMetadata>(predicate, whenTrue);
     }
     
-    /// <summary>Specifies a higher order predicate for the specification.</summary>
+    /// <summary>Specifies a higher order predicate for the proposition.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
     /// <returns>An instance of <see cref="TrueHigherOrderFromUnderlyingSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> As(
         Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate) =>
         new(predicate, higherOrderPredicate);
 
-    /// <summary>Specifies a higher order predicate for the specification.</summary>
+    /// <summary>Specifies a higher order predicate for the proposition.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
     /// <param name="causeSelector">A function that selects the causes of the boolean results.</param>
     /// <returns>An instance of <see cref="TrueHigherOrderFromUnderlyingSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
@@ -74,11 +74,11 @@ public readonly ref struct BooleanPredicateSpecBuilder<TModel>(Func<TModel, bool
         new(predicate, higherOrderPredicate, causeSelector);
 
     /// <summary>
-    /// Creates a specification and names it with the propositional statement provided.
+    /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>
-    /// <param name="proposition">The proposition statement of what the specification represents.</param>
+    /// <param name="proposition">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
-    /// <returns>A specification for the model.</returns>
+    /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, string> Create(string proposition) =>
         new ExplanationSpec<TModel>(
             predicate,

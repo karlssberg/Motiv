@@ -1,22 +1,22 @@
 ﻿using Karlssberg.Motiv.AndAlso;
+using Karlssberg.Motiv.Or;
 
-namespace Karlssberg.Motiv.And;
+namespace Karlssberg.Motiv.OrElse;
 
-internal sealed class AndBooleanResultDescription<TMetadata>(
+internal sealed class OrElseBooleanResultDescription<TMetadata>(
     BooleanResultBase<TMetadata> left,
-    BooleanResultBase<TMetadata> right,
+    BooleanResultBase<TMetadata>? right,
     IEnumerable<BooleanResultBase<TMetadata>> causalResults) 
     : ResultDescriptionBase
 {
-    private readonly BooleanResultBase<TMetadata>[] _causalResults = causalResults.ToArray();
-    internal override int CausalOperandCount => _causalResults.Length;
+    internal override int CausalOperandCount => causalResults.Count();
 
     public override string Reason => 
         CausalOperandCount switch
         {
             0 => "",
-            1 => _causalResults.First().Description.Reason,
-            _ =>  string.Join(" & ", _causalResults.Select(ExplainReasons))
+            1 => causalResults.First().Description.Reason,
+            _ =>  string.Join(" || ", causalResults.Select(ExplainReasons))
         };
 
     public override string Detailed => GetDetails();
@@ -24,27 +24,31 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
     private string GetDetails()
     {
         var leftDetails = Explain(left);
+        
+        if (right is null)
+            return leftDetails;
+        
         var rightDetails = Explain(right);
 
         var isBracketed = leftDetails.IsBracketed() || rightDetails.IsBracketed();
         var isTooLong = leftDetails.IsLongExpression() || rightDetails.IsLongExpression();
         if (isBracketed || isTooLong)
             return $"""
-                    {leftDetails} &
+                    {leftDetails} ||
                     {rightDetails}
                     """;
         
-        return $"{leftDetails} & {rightDetails}";
+        return $"{leftDetails} || {rightDetails}";
     }
 
     private string Explain(BooleanResultBase<TMetadata> result)
     {
         return result switch 
         {
-            AndBooleanResult<TMetadata> andSpec =>
-                andSpec.Description.Detailed,
-            AndAlsoBooleanResult<TMetadata> andAlsoSpec =>
-                andAlsoSpec.Description.Detailed,
+            OrBooleanResult<TMetadata> orSpec =>
+                orSpec.Description.Detailed,
+            OrElseBooleanResult<TMetadata> orElseSpec =>
+                orElseSpec.Description.Detailed,
             ICompositeBooleanResult compositeSpec =>
                 $"({compositeSpec.Description.Detailed})",
             _ => result.Description.Detailed
@@ -55,10 +59,10 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
     {
         return result switch 
         {
-            AndBooleanResult<TMetadata> andSpec =>
-                andSpec.Description.Reason,
-            AndAlsoBooleanResult<TMetadata> andAlsoSpec =>
-                andAlsoSpec.Description.Reason,
+            OrBooleanResult<TMetadata> orSpec =>
+                orSpec.Description.Reason,
+            OrElseBooleanResult<TMetadata> orElseSpec =>
+                orElseSpec.Description.Reason,
             ICompositeBooleanResult { Description.CausalOperandCount: > 1 } compositeSpec =>
                 $"({compositeSpec.Description.Reason})",
             _ => result.Description.Reason

@@ -29,12 +29,12 @@ public sealed class HigherOrderBooleanEvaluation<TModel>(
     public bool AllSatisfied => _lazyAllSatisfied.Value;
     public bool NoneSatisfied => _lazyNoneSatisfied.Value;
 
-    public IReadOnlyCollection<TModel> AllModels => _lazyAllModels.Value;
+    public IReadOnlyCollection<TModel> Models => _lazyAllModels.Value;
     public IReadOnlyCollection<TModel> TrueModels => _lazyTrueModels.Value;
     public IReadOnlyCollection<TModel> FalseModels => _lazyFalseModels.Value;
     public IReadOnlyCollection<TModel> CausalModels => _lazyCausalModels.Value;
     
-    public int AllCount => allResults.Count;
+    public int Count => allResults.Count;
     public int TrueCount => _lazyTrueModels.Value.Count;
     public int FalseCount => _lazyFalseModels.Value.Count;
     public int CausalCount => causalResults.Count;

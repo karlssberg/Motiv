@@ -1,4 +1,6 @@
-﻿namespace Karlssberg.Motiv.Or;
+﻿using Karlssberg.Motiv.OrElse;
+
+namespace Karlssberg.Motiv.Or;
 
 internal sealed class OrBooleanResultDescription<TMetadata>(
     BooleanResultBase<TMetadata> left,
@@ -42,6 +44,8 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
         {
             OrBooleanResult<TMetadata> orSpec => 
                 orSpec.Description.Detailed,
+            OrElseBooleanResult<TMetadata> orElseSpec =>
+                orElseSpec.Description.Detailed,
             ICompositeBooleanResult compositeSpec =>
                 $"({compositeSpec.Description.Detailed})",
             _ => result.Description.Detailed
@@ -54,6 +58,8 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
         {
             OrBooleanResult<TMetadata> orSpec => 
                 orSpec.Description.Reason,
+            OrElseBooleanResult<TMetadata> orElseSpec =>
+                orElseSpec.Description.Reason,
             ICompositeBooleanResult { Description.CausalOperandCount: > 1 } compositeSpec =>
                 $"({compositeSpec.Description.Reason})",
             _ => result.Description.Reason

@@ -7,13 +7,13 @@ public sealed class BooleanResultPredicateMetadataSpec<TModel, TMetadata, TUnder
     string propositionalAssertion)
     : SpecBase<TModel, TMetadata>
 {
-    /// <summary>Gets the description of the specification.</summary>
+    /// <summary>Gets the name of the proposition.</summary>
     public override IProposition Proposition => new Proposition(propositionalAssertion);
 
-    /// <summary>Determines if the specification is satisfied by the given model.</summary>
+    /// <summary>Determines if the proposition is satisfied by the given model.</summary>
     /// <param name="model">The model to be evaluated.</param>
     /// <returns>
-    ///     A <see cref="BooleanResultBase{TMetadata}" /> indicating if the specification is satisfied and the resulting
+    ///     A <see cref="BooleanResultBase{TMetadata}" /> indicating if the proposition is satisfied and the resulting
     ///     metadata.
     /// </returns>
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)

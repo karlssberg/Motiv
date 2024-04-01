@@ -1,9 +1,9 @@
 ﻿namespace Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders.Explanation;
 
 /// <summary>
-/// A builder for creating specifications based on a predicate and a true condition, or for further refining a specification.
+/// A builder for creating propositions based on a predicate and a true condition, or for further refining a proposition.
 /// </summary>
-/// <typeparam name="TModel">The type of the model the specification is for.</typeparam>
+/// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 public readonly ref struct FalseAssertionWithPropositionUnresolvedFirstOrderSpecBuilder<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause)

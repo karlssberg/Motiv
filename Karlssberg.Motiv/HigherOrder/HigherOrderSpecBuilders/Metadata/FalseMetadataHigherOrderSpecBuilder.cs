@@ -1,12 +1,12 @@
 ﻿namespace Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders.Metadata;
 
 /// <summary>
-/// A builder for creating specifications based on a predicate and metadata factories. This is particularly useful
-/// for handling edge-case scenarios where it would be impossible or impractical to create a specification that covers
+/// A builder for creating propositions based on a predicate and metadata factories. This is particularly useful
+/// for handling edge-case scenarios where it would be impossible or impractical to create a proposition that covers
 /// every possibility, so instead it is done on a case-by-case basis.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-/// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
+/// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
 public readonly ref struct FalseMetadataHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
