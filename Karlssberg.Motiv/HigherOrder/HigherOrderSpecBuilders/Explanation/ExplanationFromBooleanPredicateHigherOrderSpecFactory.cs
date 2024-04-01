@@ -1,7 +1,7 @@
 ﻿namespace Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders.Explanation;
 
 /// <summary>
-/// A factory for creating specifications based on a predicate and explanations for true and false conditions. This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a specification that covers every possibility, so instead it is done on a case-by-case basis.
+/// A factory for creating specifications based on a predicate and explanations for true and false conditions. This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a proposition that covers every possibility, so instead it is done on a case-by-case basis.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 public readonly ref struct ExplanationFromBooleanPredicateHigherOrderSpecFactory<TModel>(

@@ -1,22 +1,21 @@
-﻿using Karlssberg.Motiv.AndAlso;
+﻿using Karlssberg.Motiv.And;
 
-namespace Karlssberg.Motiv.And;
+namespace Karlssberg.Motiv.AndAlso;
 
-internal sealed class AndBooleanResultDescription<TMetadata>(
+internal sealed class AndAlsoBooleanResultDescription<TMetadata>(
     BooleanResultBase<TMetadata> left,
-    BooleanResultBase<TMetadata> right,
+    BooleanResultBase<TMetadata>? right,
     IEnumerable<BooleanResultBase<TMetadata>> causalResults) 
     : ResultDescriptionBase
 {
-    private readonly BooleanResultBase<TMetadata>[] _causalResults = causalResults.ToArray();
-    internal override int CausalOperandCount => _causalResults.Length;
+    internal override int CausalOperandCount => causalResults.Count();
 
     public override string Reason => 
         CausalOperandCount switch
         {
             0 => "",
-            1 => _causalResults.First().Description.Reason,
-            _ =>  string.Join(" & ", _causalResults.Select(ExplainReasons))
+            1 => causalResults.First().Description.Reason,
+            _ =>  string.Join(" && ", causalResults.Select(ExplainReasons))
         };
 
     public override string Detailed => GetDetails();
@@ -24,17 +23,21 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
     private string GetDetails()
     {
         var leftDetails = Explain(left);
+        
+        if (right is null)
+            return leftDetails;
+        
         var rightDetails = Explain(right);
 
         var isBracketed = leftDetails.IsBracketed() || rightDetails.IsBracketed();
         var isTooLong = leftDetails.IsLongExpression() || rightDetails.IsLongExpression();
         if (isBracketed || isTooLong)
             return $"""
-                    {leftDetails} &
+                    {leftDetails} &&
                     {rightDetails}
                     """;
         
-        return $"{leftDetails} & {rightDetails}";
+        return $"{leftDetails} && {rightDetails}";
     }
 
     private string Explain(BooleanResultBase<TMetadata> result)
