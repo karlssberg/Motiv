@@ -97,4 +97,25 @@ public class TutorialTests
         isPositiveAndEven.IsSatisfiedBy(-2).Reason.Should().Be("the number is negative");
         isPositiveAndEven.IsSatisfiedBy(-2).Assertions.Should().BeEquivalentTo("the number is negative");
     }
+
+    [Fact]
+    public void Should_demonstrate_higher_order_factory_methods()
+    {
+        var isNegative = 
+            Spec.Build((int n) => n < 0)
+                .WhenTrue("the number is negative")
+                .WhenFalse("the number is not negative")
+                .Create();
+        
+        Spec.Build(isNegative)
+            .AsAllSatisfied()
+            .WhenTrue("all are negative")
+            .WhenFalse(evaluation => evaluation switch
+            {
+                { FalseCount: 1 } => $"{evaluation.FalseModels.First()} is not negative",
+                { Count: > 10 } => $"{evaluation.FalseCount} of {evaluation.Count} are not negative" ,
+                _ => $"{string.Join(", ", evaluation.FalseModels)} are not negative"
+            })
+            .Create();
+    }
 }

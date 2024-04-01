@@ -15,10 +15,10 @@
         <PackageLicense>LICENSE</PackageLicense>
         <RepositoryUrl>https://github.com/karlssberg/Motiv</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <PackageTags>SpecificationPattern, DecisionMaking, Explanations, DesignPatterns, RulesEngine, BusinessLogic, Compliance, AuditTrails, RiskManagement, CSharp, .NET,  Developers, Architects, ProductManagement, Advanced, Intermediate</PackageTags>
+        <PackageTags>SpecificationPattern, DecisionMaking, Explanations, DesignPatterns, RulesEngine, BusinessLogic, Compliance, AuditTrails, RiskManagement, CSharp, .NET,  Developers, Architects, ProductManagement, Advanced, Intermediate, Propositions</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.0.7</Version>
+        <Version>2.0.0</Version>
     </PropertyGroup>
     
     <ItemGroup>

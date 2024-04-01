@@ -1,9 +1,9 @@
-﻿## Creating a composite specification
+﻿## Creating a composite proposition
 
-A composite specification is a specification that is composed of other specifications. The composite specification can
+A composite proposition is a proposition composed of other propositions. The composite proposition can
 be created by using the `&` operator, which is the logical AND operator. The `&` operator is overloaded for
 the `Spec<T>` class. The `&` operator returns a new `Spec<T>` instance that represents the logical AND of the two
-specifications.
+propositions.
 
 ### Basic Specification
 

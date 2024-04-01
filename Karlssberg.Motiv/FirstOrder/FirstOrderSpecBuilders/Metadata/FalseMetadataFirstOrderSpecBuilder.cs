@@ -1,10 +1,10 @@
 ﻿namespace Karlssberg.Motiv.FirstOrder.FirstOrderSpecBuilders.Metadata;
 
 /// <summary>
-/// A builder for creating specifications based on a predicate and metadata, or for further refining a specification.
+/// A builder for creating propositions based on a predicate and metadata, or for further refining a proposition.
 /// </summary>
-/// <typeparam name="TModel">The type of the model the specification is for.</typeparam>
-/// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
+/// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
+/// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
 public readonly ref struct FalseMetadataFirstOrderSpecBuilder<TModel, TMetadata>(
     Func<TModel, bool> predicate,
     Func<TModel, TMetadata> whenTrue)

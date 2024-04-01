@@ -1,25 +1,26 @@
 ﻿using Karlssberg.Motiv.And;
+using Karlssberg.Motiv.AndAlso;
 using Karlssberg.Motiv.ChangeMetadataType;
 using Karlssberg.Motiv.ChangeModelType;
 using Karlssberg.Motiv.Not;
 using Karlssberg.Motiv.Or;
+using Karlssberg.Motiv.OrElse;
 using Karlssberg.Motiv.XOr;
 
 namespace Karlssberg.Motiv;
 
 /// <summary>
-///     The base class for all specifications. A specification is an encapsulated predicate that can be evaluated
-///     against a model.  When the predicate is evaluated, it returns a result that contains the Boolean result of the
-///     predicate as well as metadata that captures the meaning behind the predicate.  By encapsulating the predicate we
-///     can supply methods to assist with combining specifications together to form more complex specifications.
+/// The base class for all specifications. At its most basic, a 'Spec' is an encapsulated predicate function that can
+/// be evaluated against a model.  When the predicate is evaluated, it returns a result that contains the Boolean
+/// result of the predicate as well as metadata that captures the meaning behind the predicate.  By encapsulating the
+/// predicate we can supply methods to assist with combining specifications together to form more complex
+/// specifications, which together ultimately model the desired logical proposition.
 /// </summary>
 /// <typeparam name="TModel">The model type that the specification will evaluate against</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata to associate with the predicate</typeparam>
 public abstract class SpecBase<TModel>
 {
-    /// <summary>
-    ///     Prevents the external instantiation of the <see cref="SpecBase{TModel,TMetadata}" /> class.
-    /// </summary>
+    /// <summary>Prevents the external instantiation of the <see cref="SpecBase{TModel,TMetadata}" /> class.</summary>
     internal SpecBase()
     {
     }
@@ -35,11 +36,17 @@ public abstract class SpecBase<TModel>
     public SpecBase<TModel, string> And(SpecBase<TModel> spec) =>
         new AndSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
+    public SpecBase<TModel, string> AndAlso(SpecBase<TModel> spec) =>
+        new AndAlsoSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
+
     /// <summary>Combines this specification with another specification using the logical OR operator.</summary>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical OR of this specification and the other specification.</returns>
     public SpecBase<TModel, string> Or(SpecBase<TModel> spec) =>
         new OrSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
+
+    public SpecBase<TModel, string> OrElse(SpecBase<TModel> spec) =>
+        new OrElseSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
     /// <summary>Combines this specification with another specification using the logical XOR operator.</summary>
     /// <param name="spec">The specification to combine with this specification.</param>
@@ -50,7 +57,7 @@ public abstract class SpecBase<TModel>
     /// <summary>Negates this specification.</summary>
     /// <returns>A new specification that represents the logical NOT of this specification.</returns>
     public SpecBase<TModel, string> Not() =>
-        new NotSpec<TModel, string>(this.ToExplanationSpec());
+        new NotSpec<TModel, string>(ToExplanationSpec());
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
     /// <returns>A string that represents the logical hierarchy of the specification.</returns>
@@ -92,41 +99,62 @@ public abstract class SpecBase<TModel>
 }
 
 /// <summary>
-///     The base class for all specifications. A specification is an encapsulated predicate that can be evaluated
-///     against a model.  When the predicate is evaluated, it returns a result that contains the Boolean result of the
-///     predicate as well as metadata that captures the meaning behind the predicate.  By encapsulating the predicate we
-///     can supply methods to assist with combining specifications together to form more complex specifications.
+/// The base class for all specifications. A specification is an encapsulated predicate that can be evaluated
+/// against a model.  When the predicate is evaluated, it returns a result that contains the Boolean result of the
+/// predicate as well as metadata that captures the meaning behind the predicate.  By encapsulating the predicate we can
+/// supply methods to assist with combining specifications together to form more complex specifications.
 /// </summary>
 /// <typeparam name="TModel">The model type that the specification will evaluate against</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata to associate with the predicate</typeparam>
 public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
 {
-    /// <summary>
-    ///     Prevents the external instantiation of the <see cref="SpecBase{TModel,TMetadata}" /> class.
-    /// </summary>
+    /// <summary>Prevents the external instantiation of the <see cref="SpecBase{TModel,TMetadata}" /> class.</summary>
     internal SpecBase()
     {
     }
 
     /// <summary>
-    ///     Evaluates the specification against the model and returns a result that contains the Boolean result of the
-    ///     predicate in addition to the metadata.
+    /// Evaluates the specification against the model and returns a result that contains the Boolean result of the
+    /// predicate in addition to the metadata.
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
     public abstract BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model);
 
-    /// <summary>Combines this specification with another specification using the logical AND operator.</summary>
+    /// <summary>
+    /// Combines this specification with another specification using the logical AND operator. Both operands will be
+    /// evaluated, regardless of whether the left operand evaluated to <c>false</c>
+    /// </summary>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
     public SpecBase<TModel, TMetadata> And(SpecBase<TModel, TMetadata> spec) =>
         new AndSpec<TModel, TMetadata>(this, spec);
+
+    /// <summary>
+    /// Combines this specification with another specification using the logical AND operator. The operands are
+    /// short-circuted, meaning that if the left operand resolves to <c>false</c> then it is not possible for the AND
+    /// operation to return <c>true</c>.  Therefore the compiler does not bother evaluating the right operand.
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
+    public SpecBase<TModel, TMetadata> AndAlso(SpecBase<TModel, TMetadata> spec) =>
+        new AndAlsoSpec<TModel, TMetadata>(this, spec);
 
     /// <summary>Combines this specification with another specification using the logical OR operator.</summary>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical OR of this specification and the other specification.</returns>
     public SpecBase<TModel, TMetadata> Or(SpecBase<TModel, TMetadata> spec) =>
         new OrSpec<TModel, TMetadata>(this, spec);
+
+    /// <summary>
+    /// Combines this specification with another specification using the logical OR operator. The operands are
+    /// short-circuted, meaning that if the left operand resolves to <c>false</c> then it is not possible for the OR
+    /// operation to return <c>true</c>.  Therefore the compiler does not bother evaluating the right operand.
+    /// </summary>
+    /// <param name="spec">The right operand.</param>
+    /// <returns>A new specification that represents the logical PR of this specification and the other specification.</returns>
+    public SpecBase<TModel, TMetadata> OrElse(SpecBase<TModel, TMetadata> spec) =>
+        new OrElseSpec<TModel, TMetadata>(this, spec);
 
     /// <summary>Combines this specification with another specification using the logical XOR operator.</summary>
     /// <param name="spec">The specification to combine with this specification.</param>
@@ -139,15 +167,16 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     public new SpecBase<TModel, TMetadata> Not() =>
         new NotSpec<TModel, TMetadata>(this);
 
+
     /// <summary>Changes the <typeparamref name="TModel" /> <see cref="Type" /> of the specification.</summary>
     /// <param name="childModelSelector">
-    ///     A function that takes the model and returns the child model to evaluate the
-    ///     specification against.
+    /// A function that takes the model and returns the child model to evaluate the
+    /// specification against.
     /// </param>
     /// <typeparam name="TNewModel"></typeparam>
     /// <returns>
-    ///     A new specification that represents the same specification but with a different <typeparamref name="TModel" />
-    ///     .
+    /// A new specification that represents the same specification but with a different <typeparamref name="TModel" />
+    /// .
     /// </returns>
     public SpecBase<TNewModel, TMetadata> ChangeModelTo<TNewModel>(
         Func<TNewModel, TModel> childModelSelector) =>
@@ -157,22 +186,22 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
 
     /// <summary>Changes the <typeparamref name="TModel" /> <see cref="Type" /> of the specification.</summary>
     /// <typeparam name="TDerivedModel">
-    ///     The type to change the <typeparamref name="TModel" /> to. This type must be a subclass
-    ///     of <typeparamref name="TModel" />.
+    /// The type to change the <typeparamref name="TModel" /> to. This type must be a subclass
+    /// of <typeparamref name="TModel" />.
     /// </typeparam>
     /// <returns>
-    ///     A new specification that represents the same specification but with a different <typeparamref name="TModel" />
-    ///     .
+    /// A new specification that represents the same specification but with a different <typeparamref name="TModel" />
+    /// .
     /// </returns>
     public SpecBase<TDerivedModel, TMetadata> ChangeModelTo<TDerivedModel>()
         where TDerivedModel : TModel =>
         new ChangeModelTypeSpec<TDerivedModel, TModel, TMetadata>(this, model => model);
-    
+
     public override SpecBase<TModel, string> ToExplanationSpec() =>
         this switch
         {
             SpecBase<TModel, string> explanationSpec => explanationSpec,
-            _ => new MetadataToReasonAdapterSpec<TModel, TMetadata>(this)
+            _ => new MetadataToExplnationAdapterSpec<TModel, TMetadata>(this)
         };
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>

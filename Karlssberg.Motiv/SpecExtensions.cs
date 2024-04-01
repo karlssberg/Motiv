@@ -1,9 +1,7 @@
-﻿using Karlssberg.Motiv.ElseIf;
-
-namespace Karlssberg.Motiv;
+﻿namespace Karlssberg.Motiv;
 
 /// <summary>
-/// Provides extension methods for predicates. These methods convert predicates into specifications.
+/// Provides extension methods for predicates. These methods convert predicates into propositions.
 /// </summary>
 public static class SpecExtensions
 {
@@ -15,9 +13,4 @@ public static class SpecExtensions
     /// <returns>A new instance of SpecBuilder initialized with the specified predicate.</returns>
     public static BooleanPredicateSpecBuilder<TModel> ToSpec<TModel>(this Func<TModel, bool> predicate) =>
         new (predicate);
-    
-    public static SpecBase<TModel, TMetadata> ElseIf<TModel, TMetadata>(
-        this SpecBase<TModel, TMetadata> antecedent,
-        SpecBase<TModel, TMetadata> consequent) =>
-        new ElseIfSpec<TModel, TMetadata>(antecedent, consequent);
 }

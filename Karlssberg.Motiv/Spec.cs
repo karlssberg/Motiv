@@ -3,19 +3,19 @@
 namespace Karlssberg.Motiv;
 
 /// <summary>
-/// Represents a specification that yields custom metadata based on the outcome of the underlying spec/predicate.
+/// Represents a proposition that yields custom metadata based on the outcome of the underlying spec/predicate.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
 {
-    // The base specification associated with the Spec instance.
+    // The base proposition associated with the Spec instance.
     private readonly Func<TModel, SpecBase<TModel, TMetadata>> _specFactory;
 
     /// <summary>
     /// Initializes a new instance of the Spec class with a SpecBase instance.
     /// </summary>
-    /// <param name="spec">The base specification associated with the Spec instance.</param>
+    /// <param name="spec">The base proposition associated with the Spec instance.</param>
     protected Spec(SpecBase<TModel, TMetadata> spec)
     {
         spec.ThrowIfNull(nameof(spec));
@@ -38,33 +38,33 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     }
 
     /// <summary>
-    /// Gets the description of the specification.
+    /// Gets the description of the proposition.
     /// </summary>
     public override IProposition Proposition { get; }
 
     /// <summary>
-    /// Determines whether the specified model satisfies the specification.
+    /// Determines whether the specified model satisfies the proposition.
     /// </summary>
-    /// <param name="model">The model to be checked against the specification.</param>
-    /// <returns>A BooleanResultBase containing the result of the specification check and the associated metadata.</returns>
+    /// <param name="model">The model to be checked against the proposition.</param>
+    /// <returns>A BooleanResultBase containing the result of the proposition check and the associated metadata.</returns>
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) =>
         _specFactory(model).IsSatisfiedBy(model);
 }
 
 /// <summary>
-/// Represents a specification that defines a condition for a model of type TModel. This specification is
+/// Represents a proposition that defines a condition for a model of type TModel. This proposition is
 /// associated with a string metadata.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 public class Spec<TModel> : SpecBase<TModel, string>
 {
-    // The base specification associated with the Spec instance.
+    // The base proposition associated with the Spec instance.
     private readonly Func<TModel, SpecBase<TModel, string>> _specFactory;
 
     /// <summary>
     /// Initializes a new instance of the Spec class with a SpecBase instance.
     /// </summary>
-    /// <param name="spec">The base specification associated with the Spec instance.</param>
+    /// <param name="spec">The base proposition associated with the Spec instance.</param>
     protected Spec(SpecBase<TModel, string> spec)
     {
         Proposition = spec.Proposition;
@@ -85,28 +85,30 @@ public class Spec<TModel> : SpecBase<TModel, string>
     }
 
     /// <summary>
-    /// Gets the description of the specification.
+    /// Gets the description of the proposition.
     /// </summary>
     public override IProposition Proposition { get; }
 
     /// <summary>
-    /// Determines whether the specified model satisfies the specification.
+    /// Determines whether the specified model satisfies the proposition.
     /// </summary>
-    /// <param name="model">The model to be checked against the specification.</param>
-    /// <returns>A BooleanResultBase containing the result of the specification check and the associated metadata.</returns>
+    /// <param name="model">The model to be checked against the proposition.</param>
+    /// <returns>
+    /// A BooleanResultBase containing the result of the proposition being applied to a moel and the associated metadata.
+    /// </returns>
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model) => _specFactory(model).IsSatisfiedBy(model);
 }
 
 /// <summary>
-/// Creates specifications using a fluent API.
+/// Creates propositions using a fluent API.
 /// </summary>
 public static class Spec
 {
     /// <summary>
-    /// Commences the construction of a specification using a predicate function.
+    /// Commences the construction of a proposition using a predicate function.
     /// </summary>
-    /// <param name="predicate">The predicate function to be used in the specification.</param>
-    /// <returns>A TrueFirstOrderSpecBuilder instance for further specification building.</returns>
+    /// <param name="predicate">The predicate function to be used in the proposition.</param>
+    /// <returns>A TrueFirstOrderSpecBuilder instance for further proposition building.</returns>
     public static BooleanPredicateSpecBuilder<TModel> Build<TModel>(Func<TModel, bool> predicate)
     {
         predicate.ThrowIfNull(nameof(predicate));
@@ -114,10 +116,10 @@ public static class Spec
     }
     
     /// <summary>
-    /// Commences the construction of a specification using a predicate function that returns a <see cref="BooleanResultBase{TMetadata}"/>.
+    /// Commences the construction of a proposition using a predicate function that returns a <see cref="BooleanResultBase{TMetadata}"/>.
     /// </summary>
-    /// <param name="predicate">The predicate function to be used in the specification.</param>
-    /// <returns>A TrueFirstOrderSpecBuilder instance for further specification building.</returns>
+    /// <param name="predicate">The predicate function to be used in the proposition.</param>
+    /// <returns>A TrueFirstOrderSpecBuilder instance for further proposition building.</returns>
     public static BooleanResultPredicateSpecBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         Func<TModel, BooleanResultBase<TMetadata>> predicate)
     {
@@ -126,7 +128,7 @@ public static class Spec
     }
     
     /// <summary>
-    /// Commences the construction of a specification using a specification factory function.
+    /// Commences the construction of a proposition using a specification factory function.
     /// </summary>
     /// <param name="specFactory">The specification factory function to be used in the specification.</param>
     /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
