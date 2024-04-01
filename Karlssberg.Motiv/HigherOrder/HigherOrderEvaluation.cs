@@ -1,29 +1,29 @@
 ﻿namespace Karlssberg.Motiv.HigherOrder;
 
 public sealed class HigherOrderEvaluation<TModel, TMetadata>(
-    IReadOnlyCollection<BooleanResult<TModel, TMetadata>> allResults,
+    IReadOnlyCollection<BooleanResult<TModel, TMetadata>> results,
     IReadOnlyCollection<BooleanResult<TModel, TMetadata>> causalResults)
 {
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyAllModels = new(() =>
-        allResults.Select(result => result.Model).ToArray());
+        results.Select(result => result.Model).ToArray());
 
     private readonly Lazy<bool> _lazyAllSatisfied = new(() =>
-        allResults.All(result => result.Satisfied));
+        results.All(result => result.Satisfied));
     private readonly Lazy<bool> _lazyNoneSatisfied = new(() =>
-        allResults.All(result => !result.Satisfied));
+        results.All(result => !result.Satisfied));
 
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyCausalModels = new(() =>
         causalResults.Select(result => result.Model).ToArray());
 
     private readonly Lazy<IReadOnlyCollection<BooleanResult<TModel, TMetadata>>> _lazyTrueResults = new(() =>
-        allResults.WhereTrue().ToArray());
+        results.WhereTrue().ToArray());
     private readonly Lazy<IReadOnlyCollection<BooleanResult<TModel, TMetadata>>> _lazyFalseResults = new(() =>
-        allResults.WhereFalse().ToArray());
+        results.WhereFalse().ToArray());
     
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyTrueModels = new(() =>
-        allResults.WhereTrue().Select(result => result.Model).ToArray());
+        results.WhereTrue().Select(result => result.Model).ToArray());
     private readonly Lazy<IReadOnlyCollection<TModel>> _lazyFalseModels = new(() =>
-        allResults.WhereFalse().Select(result => result.Model).ToArray());
+        results.WhereFalse().Select(result => result.Model).ToArray());
 
     private readonly Lazy<IReadOnlyCollection<string>> _lazyAssertions = new(() =>
         causalResults.SelectMany(result => result.Assertions).ToArray());
@@ -32,7 +32,7 @@ public sealed class HigherOrderEvaluation<TModel, TMetadata>(
     public bool AllSatisfied => _lazyAllSatisfied.Value;
     public bool NoneSatisfied => _lazyNoneSatisfied.Value;
 
-    public IReadOnlyCollection<TModel> AllModels => _lazyAllModels.Value;
+    public IReadOnlyCollection<TModel> Models => _lazyAllModels.Value;
     public IReadOnlyCollection<TModel> TrueModels => _lazyTrueModels.Value;
     public IReadOnlyCollection<TModel> FalseModels => _lazyFalseModels.Value;
     public IReadOnlyCollection<TModel> CausalModels => _lazyCausalModels.Value;
@@ -40,12 +40,12 @@ public sealed class HigherOrderEvaluation<TModel, TMetadata>(
     public IEnumerable<TMetadata> Metadata => _lazyMetadata.Value;
     public IEnumerable<string> Assertions => _lazyAssertions.Value;
 
-    public IEnumerable<BooleanResult<TModel, TMetadata>> AllResults=>  allResults;
+    public IEnumerable<BooleanResult<TModel, TMetadata>> Results=>  results;
     public IEnumerable<BooleanResult<TModel, TMetadata>> TrueResults => _lazyTrueResults.Value;
     public IEnumerable<BooleanResult<TModel, TMetadata>> FalseResults => _lazyFalseResults.Value;
     public IEnumerable<BooleanResult<TModel, TMetadata>> CausalResults { get; } = causalResults;
     
-    public int AllCount => allResults.Count;
+    public int Count => results.Count;
     public int TrueCount => _lazyTrueResults.Value.Count;
     public int FalseCount => _lazyFalseResults.Value.Count;
     public int CausalCount => causalResults.Count;

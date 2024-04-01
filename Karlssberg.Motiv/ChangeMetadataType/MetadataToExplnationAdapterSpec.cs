@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.ChangeMetadataType;
 
-internal sealed class MetadataToReasonAdapterSpec<TModel, TUnderlyingModel>(
+internal sealed class MetadataToExplnationAdapterSpec<TModel, TUnderlyingModel>(
     SpecBase<TModel, TUnderlyingModel> spec) 
     : SpecBase<TModel, string>
 {

@@ -1,23 +1,30 @@
 ﻿# Propositions
 
-In logic, a proposition is a statement that can be either true or false. In the context of this library, a 
-proposition is represented as a `Spec` that, when evaluated,  is either satisfied (true) or not satisfied (false).
+In logic, a proposition is a statement that can be either true or false.
+In the context of this library, a proposition is formed from one or more _specifications_.
+In most case, the terms _proposition_ and _specification_ are interchangeable, but the subtle difference is that 
+_propositions_ are the things we are trying to model using _specifications_.
+As such, a proposition can be considered as a syntax tree of specifications—with a name associated with it and 
+possibly some metadata.
 
-A proposition can be constructed by using the fluent builder methods available on the `Spec` class. It accepts 
-predicates (i.e. `Func<TModel, bool>`) which can be used to form the foundations of a complex proposition.  Propositions
-can also be formed from combining existing specifications using the `&`, `|`, and `^` operators, which itself can be 
-wrapped in a new specification and supplied a high-level reason for when either the result is true or false.  The 
-underlying reasons for the result can nonetheless be interrogated by the caller to provide a detailed breakdown of 
-the decision.  A few different types of propositions are available, but one thing they all have in common is the 
-ability to provide an explanation/information about the decision. The form this information takes is entirely left 
-up to the user, but it is typically a string that describes the result.
+A proposition can be constructed by using the fluent builder methods available on the `Spec` class.
+It accepts predicates (e.g. `Func<TModel, bool>`) which can be used to form the foundations of a complex proposition.
+Propositions can also be formed from combining existing propositions using the `&`, `|`, and `^` operators, which 
+itself can be wrapped in a new proposition and supplied a high-level reason for when either the result is true or 
+false.
+The caller can nonetheless interrogate the underlying reasons for the result to provide a detailed breakdown of 
+the decision.
+A few different types of propositions are available, but one thing they all have in common is the ability to provide 
+an explanation/information about the decision.
+The form this information takes is entirely left up to the user, but it is typically a string that describes the result.
 
 ## Creating a proposition
 
-A proposition can be built by using the `Spec.Build()` method. This method is overloaded and takes either a regular 
-predicate (i.e. `Func<TModel, bool>`), a specification (i.e. `Spec<TModel,TMetadata>`), a specification-predicate
-(i.e. `Func<TModel, Spec<TModel,TMetdata>>`), or a specification factory (i.e. `Func<Spec<TModel, TMetadata>>`.  All 
-of these overloads can be used to create a new proposition with varying levels of expressiveness.
+A proposition can be built by using the `Spec.Build()` method.
+This method is overloaded and takes either a regular predicate (i.e. `Func<TModel, bool>`), a proposition (i.e. 
+`Spec<TModel,TMetadata>`), a proposition-predicate (i.e. `Func<TModel, Spec<TModel,TMetdata>>`), or a proposition 
+factory (i.e. `Func<Spec<TModel, TMetadata>>`.
+All of these overloads can be used to create a new proposition with varying levels of expressiveness.
 
 ### Basic proposition
 The most basic proposition can be created by providing a predicate and a propositional statement.
@@ -26,8 +33,8 @@ var isEven = Spec
     .Build((int n) => n % 2 == 0)
     .Create("even");
 ```
-In this case, when the predicate is true, the proposition is satisfied and the reason given is `"even"`. When the 
-predicate is false, the proposition is not satisfied and the reason given is `"!even"`.
+In this case, when the predicate is true, the proposition is satisfied and the reason given is `"even"`.
+When the predicate is false, the proposition is not satisfied and the reason given is `"!even"`.
 
 Whilst this is useful for debugging purposes (and surfacing to logicians), it is not suitable for most end users.  
 Therefore, there are builder methods that can be used to provide human-readable reasons for when either the result is 
@@ -82,9 +89,9 @@ isEven.Metadata.Select(m => m.English); // ["the number is odd"]
 The propositions we have mentioned thus far are known as first-order propositions since they apply to a single 
 entity.  However, this is incomplete since it does not propose the state of a set of entities.  This is 
 where higher order propositions come in. This library supports higher order logic by allowing you to promote a first 
-order specification to its higher order equivalent.  This means that instead of accepting a single model, it accepts a 
+order proposition to its higher order equivalent.  This means that instead of accepting a single model, it accepts a 
 set of models from which it internally generates a set of results which are evaluated to determine if the higher order 
-specification is satisfied.
+proposition is satisfied.
 ```csharp
 var isEven = Spec
     .Build<int>(n => n % 2 == 0)

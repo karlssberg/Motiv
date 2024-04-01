@@ -1,4 +1,6 @@
-﻿namespace Karlssberg.Motiv.And;
+﻿using Karlssberg.Motiv.AndAlso;
+
+namespace Karlssberg.Motiv.And;
 
 internal sealed class AndProposition<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
@@ -17,8 +19,12 @@ internal sealed class AndProposition<TModel, TMetadata>(
     {
         return operand switch
         {
-            AndSpec<TModel, TMetadata> andSpec => andSpec.Proposition.Statement,
-            ICompositeSpec compositeSpec => $"({compositeSpec.Proposition.Statement})",
+            AndSpec<TModel, TMetadata> andSpec =>
+                andSpec.Proposition.Statement,
+            AndAlsoSpec<TModel, TMetadata> andAlsoSpec =>
+                andAlsoSpec.Proposition.Statement,
+            ICompositeSpec compositeSpec =>
+                $"({compositeSpec.Proposition.Statement})",
             _ => operand.Proposition.Statement
         };
     }
@@ -27,8 +33,12 @@ internal sealed class AndProposition<TModel, TMetadata>(
     {
         return operand switch
         {
-            AndSpec<TModel, TMetadata> andSpec => andSpec.Proposition.Detailed,
-            ICompositeSpec compositeSpec => $"({compositeSpec.Proposition.Detailed})",
+            AndSpec<TModel, TMetadata> andSpec =>
+                andSpec.Proposition.Detailed,
+            AndAlsoSpec<TModel, TMetadata> andAlsoSpec =>
+                andAlsoSpec.Proposition.Detailed,
+            ICompositeSpec compositeSpec =>
+                $"({compositeSpec.Proposition.Detailed})",
             _ => operand.Proposition.Detailed
         };
     }
