@@ -3,16 +3,16 @@
 
 Motiv is a .NET library that supercharges your boolean logic.
 
-It allows you to package your boolean expressions into strongly typed propositions which can then be re-used, 
-re-combined and then queried to determine if they are satisfied by a given model—thus simplifying the deduplication 
-of your domain logic.
+It allows you to package your boolean expressions into strongly typed propositions which can then be conveniently 
+re-used, re-combined and then queried to determine if they are satisfied by a given model.
+And if so required, it will also give an explanation as to _why_.
 
 Optionally, custom objects (referred to here as _metadata_) can be associated with propositions so that when models are 
 evaluated, only those propositions that actually influenced the final boolean result have their metadata yielded.
 
-Typically, the metadata is a human-readable `string` that explains why a proposition was satisfied or not (referred 
+Typically, the metadata is a human-readable `string` that explains why a proposition was satisfied, or not (referred 
 to here as an _assertion_), but it could equally be a POCO object that contains explanations in different languages, or 
-even a stateful object to drive behavior elsewhere in an application.
+even a stateful object to drive behavior elsewhere in the application.
 
 #### What can I use the metadata for?
 * **User feedback** - You require an application to provide detailed and accurate feedback to the user about why a 
@@ -28,8 +28,8 @@ even a stateful object to drive behavior elsewhere in an application.
 * **Validation** - The metadata can be used to provide human-readable explanations of why a certain validation rule was 
   not met. This can be useful in scenarios where you need to provide feedback to the user about why a certain input 
   was not valid.
-* **Parsing CLI arguments** - The metadata can be used to conditionally map command-line arguments to collections of 
-  custom objects, which can then be used compose different behaviours.
+* **Parsing CLI arguments** - The command line arguments array can be interrogated and mapped to state 
+  objects (metadata) to help conditionally drive behavior in the application.
 
 ## Usage
 
