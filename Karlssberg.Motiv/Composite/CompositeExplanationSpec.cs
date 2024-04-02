@@ -28,6 +28,6 @@ internal sealed class CompositeExplanationSpec<TModel, TUnderlyingMetadata>(
             booleanResult, 
             assertion.ToEnumerable(),
             assertion.ToEnumerable(),
-            Proposition.ToReason(booleanResult.Satisfied));
+            assertion);
     }
 }
