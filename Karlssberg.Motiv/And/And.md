@@ -1,29 +1,34 @@
-﻿## AND operation
+﻿# Logical AND operation
 
 A logical AND operation can be performed on two specifications using the `&` operator 
 ```leftSpec & rightSpec``` or alternatively using the And  method ```leftSpec.And(rightSpec)```. This will produce a new 
-specification instance that is the logical AND of the two specifications.  For example:
+specification instance that is the logical AND of the two specifications.
+When evaluated, both operands will be evaluated, regardless of the outcome of the left operand—in other words, it 
+is not short-circuited.
+
+For example:
 
 ```csharp
 var now = DateTime.Now;
 
 record Subscription(DateTime Start, DateTime End, bool IsCancelled);
-var subscription = new Subscription(now.AddDays(-1), now.AddDays(1), false);
+var activeSubscription = new Subscription(now.AddDays(-1), now.AddDays(1), false);
 
-var hasSubscriptionStartedSpec = Spec
-    .Build<Subscription>(s => s.Start < now)
-    .WhenTrue("subscription has started")
-    .WhenFalse("subscription has not started")
-    .Create();
+var hasSubscriptionStartedSpec =
+    Spec.Build((Subscription s) => s.Start < now)
+        .WhenTrue("subscription has started")
+        .WhenFalse("subscription has not started")
+        .Create();
 
-var hasSubscriptionNotEndedSpec = Spec
-    .Build<Subscription>(s => s.End >= now)
-    .WhenTrue("subscription has not ended")
-    .WhenFalse("subscription has ended")
-    .Create();
+var hasSubscriptionNotEndedSpec =
+    Spec.Build((Subscription s) => s.End >= now)
+        .WhenTrue("subscription has not ended")
+        .WhenFalse("subscription has ended")
+        .Create();
 
 var isActiveSubscriptionSpec = hasSubscriptionStartedSpec & hasSubscriptionNotEndedSpec;
-var result = isActiveSubscriptionSpec.IsSatisfiedBy(subscription);
+
+var result = showShippingPageButton.IsSatisfiedBy(activeSubscription);
 
 result.Satisfied; // true
 result.Reason; // "subscription has started & subscription has not ended"

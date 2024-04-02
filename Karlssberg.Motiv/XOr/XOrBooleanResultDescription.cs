@@ -10,7 +10,9 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
     
     internal override int CausalOperandCount => _causalResults.Length;
     
-    public override string Reason => string.Join(" ^ ", _causalResults.Select(result => result.Description.Reason));
+    public override string Reason => _causalResults
+        .Select(result => result.Description.Reason)
+        .Serialize(" ^ ");
 
     public override string Detailed => GetDetails();
 

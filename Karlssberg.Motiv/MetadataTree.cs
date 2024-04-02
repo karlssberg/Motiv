@@ -30,24 +30,22 @@ public sealed class MetadataTree<TMetadata>(
     public override string ToString() =>
         _metadataCollection switch
         {
-            IEnumerable<string> assertions => Serialize(assertions),
-            IEnumerable<byte> n => Serialize(n),
-            IEnumerable<sbyte> n => Serialize(n),
-            IEnumerable<short> n => Serialize(n),
-            IEnumerable<ushort> n => Serialize(n),
-            IEnumerable<int> n => Serialize(n),
-            IEnumerable<uint> n => Serialize(n),
-            IEnumerable<long> n => Serialize(n),
-            IEnumerable<ulong> n => Serialize(n),
-            IEnumerable<float> n => Serialize(n),
-            IEnumerable<double> n => Serialize(n),
-            IEnumerable<char> c => Serialize(c),
-            IEnumerable<decimal> n => Serialize(n),
-            IEnumerable<bool> b => Serialize(b),
-            IEnumerable<DateTime> dateTime => Serialize(dateTime),
-            IEnumerable<TimeSpan> timeSpans => Serialize(timeSpans),
+            IEnumerable<string> assertions => assertions.Serialize(),
+            IEnumerable<byte> numerics => numerics.Serialize(),
+            IEnumerable<sbyte> numerics =>  numerics.Serialize(),
+            IEnumerable<short> numerics =>  numerics.Serialize(),
+            IEnumerable<ushort> numerics =>  numerics.Serialize(),
+            IEnumerable<int> numerics =>  numerics.Serialize(),
+            IEnumerable<uint> numerics =>  numerics.Serialize(),
+            IEnumerable<long> numerics =>  numerics.Serialize(),
+            IEnumerable<ulong> numerics =>  numerics.Serialize(),
+            IEnumerable<float> numerics =>  numerics.Serialize(),
+            IEnumerable<double> numerics =>  numerics.Serialize(),
+            IEnumerable<char> characters =>  characters.Serialize(),
+            IEnumerable<decimal> numerics =>  numerics.Serialize(),
+            IEnumerable<bool> booleans =>  booleans.Serialize(),
+            IEnumerable<DateTime> dateTimes => dateTimes.Serialize(),
+            IEnumerable<TimeSpan> timeSpans => timeSpans.Serialize(),
             _ => base.ToString()
         } ?? string.Empty;
-
-    private static string Serialize<T>(IEnumerable<T> n) => string.Join(", ", n);
 }

@@ -41,5 +41,9 @@ internal static class StringExtensions
 
         return currentLevel != 0;
     }
-        
+    
+    internal static string Serialize<T>(
+        this IEnumerable<T> n,
+        string delimiter = ", ") =>
+        string.Join(delimiter, n);
 }
