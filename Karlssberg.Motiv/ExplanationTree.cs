@@ -21,14 +21,14 @@ public sealed class ExplanationTree(IEnumerable<string> assertions)
     
     public IEnumerable<ExplanationTree> Underlying { get; internal set; } = Enumerable.Empty<ExplanationTree>();
     
-    public override string ToString() => string.Join(", ", Assertions);
+    public override string ToString() => Assertions.Serialize();
 
     private string GetDebuggerDisplay()
     {
         return HaveComprehensiveAssertions() || !Underlying.Any()
             ? ToString()
             : $$"""
-                {{ToString()}} { {{string.Join(", ", Underlying.GetAssertions())}} }
+                {{ToString()}} { {{Underlying.GetAssertions().Serialize()}} }
                 """;
         
         bool HaveComprehensiveAssertions() => Assertions.HasAtLeast(2);

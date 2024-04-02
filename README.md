@@ -239,7 +239,7 @@ The current built-in higher order logical operations are:
   collection satisfy the proposition, otherwise a false boolean-result object is returned.
 - `AsAtMostNSatisfied()`: Creates a proposition that yields a true boolean-result object if at most N models in a 
   collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- 
+
 ```csharp
 Spec.Build((int n) => n < 0)
     .AsAllSatisfied()
@@ -266,16 +266,18 @@ This is to facilitate pattern matching using switch expressions, which results i
 checks.
 
 ```csharp
-Spec.Build(new IsNegativeSpec<int>())
-    .AsAllSatisfied()
-    .WhenTrue("all are negative")
-    .WhenFalse(evaluation => evaluation switch
-    {
-        { FalseCount: 1 } => $"{evaluation.FalseModels.First()} is not negative",
-        { Count: > 10 } => $"{evaluation.FalseCount} of {evaluation.Count} are not negative" ,
-        _ => $"{string.Join(", ", evaluation.FalseModels)} are not negative"
-    })
-    .Create();
+var allAreNegativeSpec =
+    Spec.Build(new IsNegativeSpec<int>())
+        .AsAllSatisfied()
+        .WhenTrue("all are negative")
+        .WhenFalse(evaluation => evaluation switch
+        {
+            { FalseCount: <= 10 } => evaluation.FalseModels.Select(n => $"{n}  is not negative"),
+            _ => $"{evaluation.FalseCount} of {evaluation.Count} are not negative".ToEnumerable()
+        })
+        .Create();
+    
+allAreNegativeSpec.IsSatisfiedBy([-2, -1, 0, 1, 2]).Assertions; // ["0 is not negative", "1 is not negative", "2 is not negative"]
 ```
 
 ## Tradeoffs
@@ -289,7 +291,7 @@ There are inevitably potential tradeoffs to consider when using this library.
    However, this library does not itself depend on any third-party libraries, so it does not bring any unexpected 
    baggage with it. 
 3. **Learning Curve**: For many, this library is a new approach and will nonetheless require a bit of familiarization.
-   That being said, it has been deliberately designed to be as intuitive and easy to use as possible - there is 
+   That being said, it has been deliberately designed to be as intuitive and easy to use as possible—there is 
    relatively little to learn.
 
 ## Getting Started with CLI
@@ -324,29 +326,21 @@ dotnet test
 
 Your contributions to Motiv are greatly appreciated:
 
-**Branching Strategy**:
+### Branching Strategy
 
-Main Branches
+     main
+        This is the primary branch of the repository. It should always be stable and deployable. 
 
-    main: This is the primary branch of the repository. It should always be stable and deployable. All development 
-branches are created from main, and features are merged back into it once they are complete and tested.
+     develop
+        Merged into: main
+        Purpose: This branch serves as an integration branch for features. Once a feature is complete, it is merged 
+        into develop.  When develop is stable and ready for a release, its contents are merged into main.
 
-    develop: This branch serves as an integration branch for features. Once a feature is complete, it is merged into 
-develop. When develop is stable and ready for a release, its contents are merged into main.
-
-Supporting Branches
-
-    Feature Branches (feature/):
+     feature/
         Created from: develop
         Merged back into: develop
         Naming convention: feature/ followed by a descriptive name (e.g., feature/add-login)
         Purpose: Used for developing new features. Each feature should have its own branch.
-
-    Release Branches (release/):
-        Created from: develop
-        Merged back into: main and develop
-        Naming convention: release/ followed by the version number (e.g., release/v1.0.0)
-        Purpose: Used for preparing a new production release. Allows for last-minute dotting of i's and crossing of t's.
 
 Workflow Summary
 

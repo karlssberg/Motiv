@@ -1,14 +1,17 @@
 ﻿# Propositions
 
-In logic, a proposition is a statement that can be either true or false.
-In the context of this library, a proposition is formed from one or more _specifications_.
-In most case, the terms _proposition_ and _specification_ are interchangeable, but the subtle difference is that 
-_propositions_ are the things we are trying to model using _specifications_.
-As such, a proposition can be considered as a syntax tree of specifications—with a name associated with it and 
-possibly some metadata.
+In logic, a proposition is a statement that can be either _true_ or _false_.
+In the context of this library, a proposition is formed from one or more specifications, by using the `Spec.Build()`
+method.
+In most cases, the terms _proposition_ and _specification_ are used interchangeably, but there is a subtle 
+difference.
+Logical _propositions_ are what we are  trying to model here, whereas _specifications_ are the building blocks with 
+which we achieve this.
+Or to put it another way, _specifications_ are to _propositions_ what  _words_ are to _semantics_.
 
 A proposition can be constructed by using the fluent builder methods available on the `Spec` class.
-It accepts predicates (e.g. `Func<TModel, bool>`) which can be used to form the foundations of a complex proposition.
+They accept predicates (e.g. `Func<TModel, bool>`) and existing specifications which can be used to form the 
+foundations of a more complex proposition.
 Propositions can also be formed from combining existing propositions using the `&`, `|`, and `^` operators, which 
 itself can be wrapped in a new proposition and supplied a high-level reason for when either the result is true or 
 false.
@@ -19,7 +22,6 @@ an explanation/information about the decision.
 The form this information takes is entirely left up to the user, but it is typically a string that describes the result.
 
 ## Creating a proposition
-
 A proposition can be built by using the `Spec.Build()` method.
 This method is overloaded and takes either a regular predicate (i.e. `Func<TModel, bool>`), a proposition (i.e. 
 `Spec<TModel,TMetadata>`), a proposition-predicate (i.e. `Func<TModel, Spec<TModel,TMetdata>>`), or a proposition 
