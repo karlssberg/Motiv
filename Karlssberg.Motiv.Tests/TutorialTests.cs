@@ -179,4 +179,56 @@ public class TutorialTests
         result.Reason.Should().Be("basket is empty");
         result.Reason.Should().BeEquivalentTo("basket is empty");
     }
+
+    [Fact]
+    public void Should_demonstrate_is_even_spec_as_an_all_satisfied_higher_order_logic()
+    {
+        var isEven =
+            Spec.Build<int>(n => n % 2 == 0)
+                .WhenTrue("even")
+                .WhenFalse("odd")
+                .Create();
+        
+        var allAreEven =
+            Spec.Build(isEven)
+                .AsAllSatisfied()
+                .WhenTrue(evaluation =>
+                    evaluation switch 
+                    { 
+                        { NoneSatisfied: true } => "the collection is empty",
+                        { TrueCount: 1 } => $"{evaluation.TrueModels.Serialize()} is even and is the only item",
+                        _ => "all are even"
+                    })
+                .WhenFalse(evaluation =>
+                    evaluation switch
+                    {
+                        { Count: 1 } => [$"{evaluation.FalseModels.Serialize()} is odd and is the only item"],
+                        { FalseCount: 1 } => [$"only {evaluation.FalseModels.Serialize()} is odd"],
+                        { NoneSatisfied: true } => ["all are odd"],
+                        _ => evaluation.FalseModels.Select(n => $"{n} is odd")
+                    })
+                .Create("all are even");
+        
+        allAreEven.IsSatisfiedBy([2, 4, 6, 8]).Satisfied.Should().BeTrue();
+        allAreEven.IsSatisfiedBy([2, 4, 6, 8]).Assertions.Should().BeEquivalentTo("all are even");
+        
+        allAreEven.IsSatisfiedBy([10]).Satisfied.Should().BeTrue();
+        allAreEven.IsSatisfiedBy([10]).Assertions.Should().BeEquivalentTo("10 is even and is the only item");
+        
+        
+        allAreEven.IsSatisfiedBy([11]).Satisfied.Should().BeFalse();
+        allAreEven.IsSatisfiedBy([11]).Assertions.Should().BeEquivalentTo("11 is odd and is the only item");
+        
+        allAreEven.IsSatisfiedBy([2, 4, 6, 9]).Satisfied.Should().BeFalse();
+        allAreEven.IsSatisfiedBy([2, 4, 6, 9]).Assertions.Should().BeEquivalentTo("only 9 is odd");
+        
+        allAreEven.IsSatisfiedBy([]).Satisfied.Should().BeTrue();
+        allAreEven.IsSatisfiedBy([]).Assertions.Should().BeEquivalentTo("the collection is empty");
+        
+        allAreEven.IsSatisfiedBy([1, 3, 5, 7]).Satisfied.Should().BeFalse();
+        allAreEven.IsSatisfiedBy([1, 3, 5, 7]).Assertions.Should().BeEquivalentTo("all are odd");
+        
+        allAreEven.IsSatisfiedBy([2, 4, 5, 7]).Satisfied.Should().BeFalse();
+        allAreEven.IsSatisfiedBy([2, 4, 5, 7]).Assertions.Should().BeEquivalentTo("5 is odd", "7 is odd");
+    }
 }
