@@ -36,7 +36,7 @@ explanations in different languages, or even a stateful object to drive behavior
 ## Usage
 
 The following example is a basic demonstration of how to use Motiv.
-It shows how to create a basic proposition and then use it to determine if a number (3 in this case) is negative or not.
+It shows how to create a basic proposition and then use it to determine if a number is negative or not.
 
 ### Basic proposition
 A basic proposition can be created using the `Spec` class. This class provides a fluent API for creating a 
