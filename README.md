@@ -6,8 +6,8 @@ Motiv is a .NET library that supercharges your boolean logic.
 At its core, it allows you to package your boolean expressions into strongly typed propositions which can then be 
 conveniently re-used, re-combined and then queried to determine if they are satisfied by a given model.
 
-You also get, for free, a concise reason for why a proposition was satisfied or not, which is especially useful for 
-debugging and/or logging purposes.
+You also get, for free, a concise reason explaining why a proposition was satisfied or not, which is especially useful 
+for debugging and/or logging purposes.
 
 You can optionally provide custom objects (referred to here as _metadata_) to propositions so that when models are 
 evaluated, only those propositions that actually influenced the final boolean result have their metadata yielded.
