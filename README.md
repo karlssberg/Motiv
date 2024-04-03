@@ -3,16 +3,18 @@
 
 Motiv is a .NET library that supercharges your boolean logic.
 
-It allows you to package your boolean expressions into strongly typed propositions which can then be conveniently 
-re-used, re-combined and then queried to determine if they are satisfied by a given model.
-And if so required, it will also give an explanation as to _why_.
+At its core, it allows you to package your boolean expressions into strongly typed propositions which can then be 
+conveniently re-used, re-combined and then queried to determine if they are satisfied by a given model.
 
-Optionally, custom objects (referred to here as _metadata_) can be associated with propositions so that when models are 
+You also get, for free, a concise reason for why a proposition was satisfied or not, which is especially useful for 
+debugging and/or logging purposes.
+
+You can optionally provide custom objects (referred to here as _metadata_) to propositions so that when models are 
 evaluated, only those propositions that actually influenced the final boolean result have their metadata yielded.
 
-Typically, the metadata is a human-readable `string` that explains why a proposition was satisfied, or not (referred 
-to here as an _assertion_), but it could equally be a POCO object that contains explanations in different languages, or 
-even a stateful object to drive behavior elsewhere in the application.
+The metadata can be any type, but is normally a human-readable `string` that explains why a proposition was 
+satisfied, or not (referred to here as an _assertion_), but it could equally be a POCO object that contains 
+explanations in different languages, or even a stateful object to drive behavior elsewhere in the application.
 
 #### What can I use the metadata for?
 * **User feedback** - You require an application to provide detailed and accurate feedback to the user about why a 
