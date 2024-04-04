@@ -1,4 +1,5 @@
-﻿using AutoFixture.Xunit2;
+﻿using System.Numerics;
+using AutoFixture.Xunit2;
 using FluentAssertions;
 
 namespace Karlssberg.Motiv.Tests;
@@ -179,6 +180,12 @@ public class TutorialTests
         result.Reason.Should().Be("basket is empty");
         result.Reason.Should().BeEquivalentTo("basket is empty");
     }
+
+    private class IsNegativeIntegerSpec() : Spec<int>(
+        Spec.Build((int n) => n < 0)
+            .WhenTrue("negative")
+            .WhenFalse("not negative")
+            .Create());
     
     [Fact]
     public void Should_demonstrate_is_even_spec_as_an_all_satisfied_higher_order_logic()
@@ -196,14 +203,14 @@ public class TutorialTests
                     evaluation switch 
                     { 
                         { Count: 0 } => "the collection is empty",
-                        { Count: 1 } => $"{evaluation.TrueModels.Serialize()} is even and is the only item",
+                        { Models: [var n] } => $"{n} is even and is the only item",
                         _ => "all are even"
                     })
                 .WhenFalse(evaluation =>
                     evaluation switch
                     {
-                        { Count: 1 } => [$"{evaluation.FalseModels.Serialize()} is odd and is the only item"],
-                        { FalseCount: 1 } => [$"only {evaluation.FalseModels.Serialize()} is odd"],
+                        { Models: [var n] } => [$"{n} is odd and is the only item"],
+                        { FalseModels: [var n] } => [$"only {n} is odd"],
                         { NoneSatisfied: true } => ["all are odd"],
                         _ => evaluation.FalseModels.Select(n => $"{n} is odd")
                     })
@@ -235,29 +242,24 @@ public class TutorialTests
     [Fact]
     public void Should_demonstrate_is_negative_spec_as_an_all_satisfied_higher_order_logic()
     {
-        var isNegative =
-            Spec.Build<int>(n => n < 0)
-                .WhenTrue("negative")
-                .WhenFalse("not negative")
-                .Create();
 
         var allAreNegative =
-            Spec.Build(isNegative)
+            Spec.Build(new IsNegativeIntegerSpec())
                 .AsAllSatisfied()
                 .WhenTrue(eval => eval switch
                 {
                     { Count: 0 } => "there is an absence of numbers",
-                    { Models: [< 0] } => $"{eval.TrueModels.Serialize()} is negative and is the only number",
+                    { Models: [< 0 and var n] } => $"{n} is negative and is the only number",
                     _ => "all are negative numbers"
                 })
                 .WhenFalse(eval => eval switch
                 {
                     { Models: [0] } => ["the number is 0 and is the only number"],
-                    { Models: [> 0] } => [$"{eval.Models.Serialize()} is positive and is the only number"],
-                    { NoneSatisfied: true } when eval.Models.All(m => m == 0) => ["all are 0"],
+                    { Models: [> 0 and var n] } => [$"{n} is positive and is the only number"],
+                    { NoneSatisfied: true } when eval.Models.All(m => m is 0) => ["all are 0"],
                     { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
                     { NoneSatisfied: true } =>  ["none are negative numbers"],
-                    _ => eval.FalseModels.Select(n => n == 0
+                    _ => eval.FalseModels.Select(n => n is 0
                             ? "0 is neither positive or negative"
                             : $"{n} is positive")
                 })

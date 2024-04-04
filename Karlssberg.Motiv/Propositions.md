@@ -116,22 +116,22 @@ This library aims to support this by providing a result object that contains con
 seamlessly with pattern matching. 
 ```csharp 
 var allAreNegative =
-    Spec.Build(isNegative)
+    Spec.Build(new IsNegativeIntegerSpec())
         .AsAllSatisfied()
         .WhenTrue(eval => eval switch
         {
-            { Models.Count: 0 } => "there is an absence of numbers",
-            { Models.Count: 1 } => $"{eval.TrueModels.Serialize()} is negative and is the only number",
+            { Count: 0 } => "there is an absence of numbers",
+            { Models: [< 0 and var n] } => $"{n} is negative and is the only number",
             _ => "all are negative numbers"
         })
         .WhenFalse(eval => eval switch
         {
             { Models: [0] } => ["the number is 0 and is the only number"],
-            { Models: [> 0] } => [$"{eval.Models.Serialize()} is positive and is the only number"],
-            { NoneSatisfied: true } when eval.Models.All(m => m == 0) => ["all are 0"],
+            { Models: [> 0 and var n] } => [$"{n} is positive and is the only number"],
+            { NoneSatisfied: true } when eval.Models.All(m => m is 0) => ["all are 0"],
             { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
             { NoneSatisfied: true } =>  ["none are negative numbers"],
-            _ => eval.FalseModels.Select(n => n == 0
+            _ => eval.FalseModels.Select(n => n is 0
                     ? "0 is neither positive or negative"
                     : $"{n} is positive")
         })

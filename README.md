@@ -279,7 +279,7 @@ This will give you access to each result and model pair, which can be used to cu
 particular use-case.
 
 ```csharp
-Spec.Build(new IsNegativeSpec<int>())
+Spec.Build(new IsNegativeIntegerSpec())
     .AsAllSatisfied()
     .WhenTrue("all are negative")
     .WhenFalse(evaluation => evaluation.FalseModels.Select(n => $"{n} is not negative"))
@@ -292,23 +292,23 @@ This is to facilitate pattern matching using switch expressions, which results i
 checks.
 
 ```csharp
-var allAreNegativeSpec =
-    Spec.Build(isNegative)
+var allAreNegative =
+    Spec.Build(new IsNegativeIntegerSpec())
         .AsAllSatisfied()
         .WhenTrue(eval => eval switch
         {
             { Count: 0 } => "there is an absence of numbers",
-            { Models: [< 0] } => $"{eval.TrueModels.Serialize()} is negative and is the only number",
+            { Models: [< 0 and var n] } => $"{n} is negative and is the only number",
             _ => "all are negative numbers"
         })
         .WhenFalse(eval => eval switch
         {
             { Models: [0] } => ["the number is 0 and is the only number"],
-            { Models: [> 0] } => [$"{eval.Models.Serialize()} is positive and is the only number"],
-            { NoneSatisfied: true } when eval.Models.All(m => m == 0) => ["all are 0"],
+            { Models: [> 0 and var n] } => [$"{n} is positive and is the only number"],
+            { NoneSatisfied: true } when eval.Models.All(m => m is 0) => ["all are 0"],
             { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
             { NoneSatisfied: true } =>  ["none are negative numbers"],
-            _ => eval.FalseModels.Select(n => n == 0
+            _ => eval.FalseModels.Select(n => n is 0
                     ? "0 is neither positive or negative"
                     : $"{n} is positive")
         })
