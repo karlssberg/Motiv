@@ -3,18 +3,41 @@
 
 Motiv is a .NET library that supercharges your boolean logic.
 
-At its core, it allows you to package your boolean expressions into strongly typed propositions which can then be 
+At its core, it allows you to package your boolean expressions into strongly typed _propositions_ which can then be 
 conveniently re-used, re-combined and then queried to determine if they are satisfied by a given model.
+```csharp
+var isUsefulLibrary = new HasExplanations() & new HasCustomMetadata() & new IsReusable() & new IsComposable();
 
-You also get, for free, a concise reason explaining why a proposition was satisfied or not, which is especially useful 
-for debugging and/or logging purposes.
+if (isUsefulLibrary.IsSatisfiedBy(new MyCriteria()))
+{
+    ...
+```
+It also explains why a proposition was satisfied, or not.
+```csharp
+var result = isUsefulLibrary.IsSatisfiedBy(new MyInferiorAlternative());
 
-You can optionally provide custom objects (referred to here as _metadata_) to propositions so that when models are 
-evaluated, only those propositions that actually influenced the final boolean result have their metadata yielded.
+result.Satisfied; // false
+result.Assertions; // ["no support for explanations", "no support for custom metadata"]
+```
+Only those propositions that determined the outcome of the result will have their `Assertions` yielded.
 
-The metadata can be any type, but is normally a human-readable `string` that explains why a proposition was 
-satisfied, or not (referred to here as an _assertion_), but it could equally be a POCO object that contains 
-explanations in different languages, or even a stateful object to drive behavior elsewhere in the application.
+Propositions are simple to construct and are not limited to strings—you can optionally provide custom objects to 
+propositions (referred to as `Metadata`). 
+
+```csharp
+var isEvenSpec =
+    Spec.Build((int n) => n % 2 == 0)
+        .WhenTrue(new MyMetadata { Message = "is even" })
+        .WhenFalse(new MyMetadata { Message = "is odd" })
+        .Create("is even");
+
+isEvenSpec.IsSatisfiedBy(2).Metadata; // [{ Message = "is even" }]
+```
+
+Observe the `Spec` type.
+This is a _specification_ and is the starting point for most operations _Propositions_ are formed from _specifications_.
+`Spec` objects are composed into trees of logical expressions, which we refer to as _propositions_.
+It is common for the two terms to be used interchangeably, but it is useful to understand the distinction.
 
 #### What can I use the metadata for?
 * **User feedback** - You require an application to provide detailed and accurate feedback to the user about why a 
@@ -23,9 +46,10 @@ explanations in different languages, or even a stateful object to drive behavior
   logical expressions where it might not be immediately clear which part of the expression was responsible for the final 
   result.
 * **Multi-language Support** - The metadata doesn't have to be a string. It can be any type, which means you could use
-  it to support multi-lingual explanations.
-* **Rules Engine** - The metadata can be used to conditionally select stateful objects, which can be used to implement a 
-  rules engine. This can be useful in scenarios where you need to apply different rules to different objects based on 
+  it to support multilingual explanations.
+* **Rules-engine** - The metadata can be used to conditionally select stateful objects, which can be used to 
+  implement a 
+  rules-engine. This can be useful in scenarios where you need to apply different rules to different objects based on 
   their state.
 * **Validation** - The metadata can be used to provide human-readable explanations of why a certain validation rule was 
   not met. This can be useful in scenarios where you need to provide feedback to the user about why a certain input 
@@ -195,13 +219,13 @@ public class IsNegativeSpec : Spec<int>(
     Spec.Build((int n) => n < 0)
         .WhenTrue("the number is negative")
         .WhenFalse("the number is not negative")
-        .Create();
+        .Create());
 
 public class IsNegativeMultiLingualSpec : Spec<int, MyClass>(
     Spec.Build((int n) => n < 0)
         .WhenTrue(new MyClass { Spanish = "el número es negativo" })
         .WhenFalse(new MyClass { Spanish = "el número no es negativo" })
-        .Create("is negative");
+        .Create("is negative"));
 ```
 
 If you require (or prefer) your proposition to be expressed as multiple statements you can define them within a 
@@ -269,18 +293,24 @@ checks.
 
 ```csharp
 var allAreNegativeSpec =
-    Spec.Build(new IsNegativeSpec<int>())
+    Spec.Build(isNegative)
         .AsAllSatisfied()
-        .WhenTrue(evaluation => evaluation switch
+        .WhenTrue(eval => eval switch
         {
-            { NoneSatisfied: true } => "there are no numbers to evaluate",
+            { Count: 0 } => "there is an absence of numbers",
+            { Models: [< 0] } => $"{eval.TrueModels.Serialize()} is negative and is the only number",
+            _ => "all are negative numbers"
         })
-        .WhenFalse(evaluation => evaluation switch
+        .WhenFalse(eval => eval switch
         {
-            { NoneSatisfied: true } => "the collection is empty",
-            { FalseCount: 1 } => $"{evaluation.FalseModels.Serialize()} is negative and is the only item",
-            { FalseCount: <= 10 } => evaluation.FalseModels.Select(n => $"{n}  is not negative"),
-            _ => $"{evaluation.FalseCount} of {evaluation.Count} are not negative".ToEnumerable()
+            { Models: [0] } => ["the number is 0 and is the only number"],
+            { Models: [> 0] } => [$"{eval.Models.Serialize()} is positive and is the only number"],
+            { NoneSatisfied: true } when eval.Models.All(m => m == 0) => ["all are 0"],
+            { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
+            { NoneSatisfied: true } =>  ["none are negative numbers"],
+            _ => eval.FalseModels.Select(n => n == 0
+                    ? "0 is neither positive or negative"
+                    : $"{n} is positive")
         })
         .Create("all are negative");
 

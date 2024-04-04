@@ -195,8 +195,8 @@ public class TutorialTests
                 .WhenTrue(evaluation =>
                     evaluation switch 
                     { 
-                        { NoneSatisfied: true } => "the collection is empty",
-                        { TrueCount: 1 } => $"{evaluation.TrueModels.Serialize()} is even and is the only item",
+                        { Count: 0 } => "the collection is empty",
+                        { Count: 1 } => $"{evaluation.TrueModels.Serialize()} is even and is the only item",
                         _ => "all are even"
                     })
                 .WhenFalse(evaluation =>
@@ -246,8 +246,8 @@ public class TutorialTests
                 .AsAllSatisfied()
                 .WhenTrue(eval => eval switch
                 {
-                    { Models.Count: 0 } => "there is an absence of numbers",
-                    { Models.Count: 1 } => $"{eval.TrueModels.Serialize()} is negative and is the only number",
+                    { Count: 0 } => "there is an absence of numbers",
+                    { Models: [< 0] } => $"{eval.TrueModels.Serialize()} is negative and is the only number",
                     _ => "all are negative numbers"
                 })
                 .WhenFalse(eval => eval switch

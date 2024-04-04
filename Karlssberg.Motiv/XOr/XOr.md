@@ -9,13 +9,13 @@ record TrafficLight(Color Color);
 var trafficLight = new TrafficLight(Color.Red);
 
 var isRedLightSpec = Spec
-    .Build<TrafficLight>(t => t.Color == Color.Red)
+    .Build((TrafficLight t) => t.Color == Color.Red)
     .WhenTrue("light is red")
     .WhenFalse("light is not red")
     .Create();
 
 var isGreenLightSpec = Spec
-    .Build<TrafficLight>(t => t.Color == Color.Green)
+    .Build((TrafficLight t) => t.Color == Color.Green)
     .WhenTrue("light is green")
     .WhenFalse("light is not green")
     .Create();

@@ -13,13 +13,13 @@ For example:
 record Product(string Name, decimal Price, Size Size);
 
 var expensiveProductSpec = Spec
-    .Build<Product>(p => p.Price > 1000)
+    .Build((Product p) => p.Price > 1000)
     .WhenTrue("product is expensive")
     .WhenFalse("product is not expensive")
     .Create();
 
 var isProductSizeSmallSpec = Spec
-    .Build<Product>(p => p.Size == Size.Small)
+    .Build((Product p) => p.Size == Size.Small)
     .WhenTrue("product is easily stolen")
     .WhenFalse("product is not easily stolen")
     .Create();
@@ -52,7 +52,7 @@ record Store(decimal ShopLiftingRatePercentage);
 var store = new Store(5);
 
 var isAtRiskLocationSpec = Spec
-    .Build<Store>(store => store.ShopLiftingRatePercentage > 3)
+    .Build((Store store) => store.ShopLiftingRatePercentage > 3)
     .WhenTrue("the store has high incidents of shop lifting")
     .WhenFalse("the store has low incidents of shop lifting")
     .Create();

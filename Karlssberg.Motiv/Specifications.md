@@ -1,7 +1,7 @@
 ﻿# Specifications
-Specifications are the building blocks of propositions.
-There are three ways to create a specification, one is by using the logical operators (such as `&`, `|`,  `^` etc.) 
-another is by using the `Spec.Build()` method, and lastly by deriving from the `Spec<TModel>` or `Spec<TModel, 
+Specifications combine to form logical syntax trees, which we call _propositions_.
+There are three main ways to create a specification, one is by using the logical operators (such as `&`, `|`,  `^` 
+etc.) another is by using the `Spec.Build()` method, and lastly by deriving from the `Spec<TModel>` or `Spec<TModel, 
 TMetadata>` types (where the `Spec<TModel>` type is a syntactic sugar for the `Spec<TModel, string>` type).
 
 ### The `Spec` type
@@ -53,7 +53,7 @@ This can be useful when you want to provide additional information about the sta
 
 ```csharp
 public class EqualsSpec<TModel>(TMode value) : Spec<TModel>(
-    Spec.Build<TModel>(model => model.Equals(value))
+    Spec.Build((TModel model) => model.Equals(value))
         .WhenTrue("model equals value")
         .WhenFalse("model does not equal value")
         .Create());

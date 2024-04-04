@@ -2,8 +2,8 @@
 
 ## Introduction
 At the heart of Motiv is the Specification Pattern—a well-established pattern for modelling domain propositions.
-As with everything in software development, there are inevitable trade-offs to be made when choosing the 
-Specification pattern.
+As with everything in software development, there are inevitable trade-offs to be made when choosing any technical 
+approach, and the same is true with the Specification pattern.
 These include extra verbose code, additional complexity when debugging, and the explainability of the results.
 This library aims to mitigate these trade-offs by providing a more succinct and API surface (by making it more 
 functional than OO), providing detailed and reliable human-readable explanations for the results at various levels 
@@ -24,12 +24,13 @@ This makes for a much more intuitive developer experience, with less cognitive o
 occur are much easier to diagnose since they are typically isolated to a builder method.
 
 ### Spec
-The `Spec` class and its generic counterparts are the primary classes in this library that developers will use.
-To ease the cognitive burden for the developer, the `Spec` classes were all deliberately named `Spec`,
-so in effect this is the cognitive entry-point for the developer.
-The `Spec` class is used to fluently build new propositions, whereas the generic counterparts are there to create 
-strongly typed propositions (that, for instance, can be used to seamlessly integrate with dependency injection 
-frameworks).
+The `Spec` class and its generic counterparts are the primary classes in this library that developers will use to 
+create propositions.
+To simplify the experience for developers, the `Spec` classes were all uniformly named `Spec`, to provide a 
+cognitive entry-point.
+The generic-less `Spec` class is used to fluently build new propositions.
+In contrast, the generic `Spec` classes are there to create strongly typed propositions that can be easily 
+instantiated and re-used across the application.
 
 ### Composition
 The main way propositions can be composed is by using the `&`, `|`, `^`, operators (know in C# as the _boolean 
@@ -44,6 +45,8 @@ the operator overloads `&&` and `||` are not available since C# does not permit 
 they only work with `bool` types.
 However, in most cases you will want to use the _boolean logical operators_ over the _conditional boolean operators_ 
 since they ensure that all propositions are evaluated, and therefore the explanations will be complete.
+However, there may be occasions to use the _conditional boolean operators_, such as to filter out superfluous
+assertions/metadata from results.
 
 Although the usage of this library is outwardly functional, for pragmatic reasons a couple of classes are 
 nonetheless provided for sub-typing (`Spec<TMode>` and `Spec<TModel,TMetadata>`).

@@ -11,7 +11,7 @@ At its most basic you can provide a predicate and a propositional statement.
 
 ```csharp
 var isEven = Spec
-    .Build<int>(n => n % 2 == 0)
+    .Build((int n) => n % 2 == 0)
     .Create("is even");
 
 isEven.IsSatisfiedBy(2).Satisfied; // true
@@ -28,7 +28,7 @@ false.
 
 ```csharp
 var isEven = Spec
-    .Build<int>(n => n % 2 == 0)
+    .Build((int n) => n % 2 == 0)
     .WhenTrue("number is even")
     .WhenFalse("number is odd")
     .Create();
@@ -44,7 +44,7 @@ You can also provide a function that returns a description based on the value of
 
 ```csharp
 var isEven = Spec
-    .Build<int>(n => n % 2 == 0)
+    .Build((int n) => n % 2 == 0)
     .WhenTrue(n => $"{n} is even")
     .WhenFalse(n => $"{n} is odd")
     .Create("is even");
@@ -63,7 +63,7 @@ If you want to present the text to an international audience, you can provide a 
 
 ```csharp
 var isEven = Spec
-    .Build<int>(n => n % 2 == 0)
+    .Build((int n) => n % 2 == 0)
     .WhenTrue(n => new { English = "the number is even", Spanish = "el número es par" })
     .WhenFalse(n => new { English = "the number is odd", Spanish = "el número es impar" })
     .Create("is even number");
@@ -76,13 +76,13 @@ isEven.IsSatisfiedBy(2).Metadata.Select(m => m.Spanish); // ["el número es par"
 ### Composite Specification
 ```csharp
 var isPositive = Spec
-    .Build<int>(n => n > 0)
+    .Build((int n) => n > 0)
     .WhenTrue("the number is positive")
     .WhenFalse(n => $"the number is {n < 0 ? "negative" : "zero"}")
     .Create();
 
 var isEven = Spec
-    .Build<int>(n => n % 2 == 0)
+    .Build((int n) => n % 2 == 0)
     .WhenTrue("the number is even")
     .WhenFalse("the number is odd")
     .Create(); 

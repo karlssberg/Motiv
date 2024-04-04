@@ -57,7 +57,7 @@ method. This is so that you can aggregate the results of multiple specifications
 
 ```csharp
 var isValidLocationSpec =
-    Spec.Build<Device>(device => device.Country == Country.USA)
+    Spec.Build((Device device) => device.Country == Country.USA)
         .WhenTrue("device is permitted to play content within the USA")
         .WhenFalse("device not permitted to play content outside of the USA")
         .Create();
