@@ -76,16 +76,17 @@ internal static class StringExtensions
         
         var builder = new StringBuilder();
         builder.Append(currentItem);
-        while (enumerator.MoveNext())
+        do
         {
             currentItem = enumerator.Current;
+            noMoreItems = !enumerator.MoveNext();
             var currentDelimiter = noMoreItems
                 ? lastDelimiter
                 : delimiter;
-            
+
             builder.Append(currentDelimiter);
             builder.Append(currentItem);
-        }
+        } while (!noMoreItems);
         
         return builder.ToString();
     }
