@@ -1,8 +1,8 @@
-﻿# XOR operation
+﻿# Logical XOR
 
-A logical XOR operation can be performed on two specifications using the `^` operator `leftSpec ^ rightSpec`, or the 
-alternative XOr method `leftSpec.XOr(rightSpec)`. This will produce a new specification instance that is the logical 
-XOR of the two specifications.
+A logical XOR operation can be performed on two specifications using the `^` operator `left ^ right`,
+or the alternative XOr method `left.XOr(right)`.
+This will produce a new specification instance that is the logical XOR of the two specifications.
 
 ```csharp
 record TrafficLight(Color Color);
@@ -28,7 +28,7 @@ isTrafficLightFunctioning.Reason; // "light is red ^ light is not green"
 isTrafficLightFunctioning.Assertions; // ["light is red", "light is not green"]
 ```
 
-Notice that XOr will always output assertions for both underlying operands - in other words, it will always return 
+Notice that XOr will always output assertions for both underlying operands—in other words, it will always return 
 two assertions (or possibly more it is used in conjunction with other specifications). This is because with the XOr 
 operation it is not possible to determine the result of the operation without knowing the outcome of both operands = 
 they are both causes.
@@ -37,7 +37,7 @@ If you want to give it a true or false reasons you can do so by wrapping it in a
 
 ```csharp
 var isOperationalTrafficLightSpec = Spec
-    .Build<TrafficLight>(isRedLightSpec ^ isGreenLightSpec)
+    .Build(isRedLightSpec ^ isGreenLightSpec)
     .WhenTrue("the traffic light is functioning correctly")
     .WhenFalse("the traffic light is faulty")
     .Create();

@@ -5,9 +5,12 @@ In the context of this library, a proposition is formed from one or more specifi
 method.
 In most cases, the terms _proposition_ and _specification_ are used interchangeably, but there is a subtle 
 difference.
-Logical _propositions_ are what we are  trying to model here, whereas _specifications_ are the building blocks with 
+Logical _propositions_ are what we are trying to model here, whereas _specifications_ are the building blocks with 
 which we achieve this.
-Or to put it another way, _specifications_ are to _propositions_ what  _words_ are to _semantics_.
+
+Or to put it another way:
+
+>_specifications are to propositions as words are to semantics_.
 
 A proposition can be constructed by using the fluent builder methods available on the `Spec` class.
 They accept predicates (e.g. `Func<TModel, bool>`) and existing specifications which can be used to form the 
@@ -31,9 +34,8 @@ All of these overloads can be used to create a new proposition with varying leve
 ### Basic proposition
 The most basic proposition can be created by providing a predicate and a propositional statement.
 ```csharp
-var isEven = Spec
-    .Build((int n) => n % 2 == 0)
-    .Create("even");
+Spec.Build((int n) => n % 2 == 0)
+    .Create("even"
 ```
 In this case, when the predicate is true, the proposition is satisfied and the reason given is `"even"`.
 When the predicate is false, the proposition is not satisfied and the reason given is `"!even"`.
@@ -42,44 +44,44 @@ Whilst this is useful for debugging purposes (and surfacing to logicians), it is
 Therefore, there are builder methods that can be used to provide human-readable reasons for when either the result is 
 true or false.
 ```csharp
-var isEven = Spec
-    .Build<int>(n => n % 2 == 0)
+Spec.Build((int n) => n % 2 == 0)
     .WhenTrue("number is even")
     .WhenFalse("number is odd")
     .Create();
 ```
 In this case, when the predicate is true, the proposition is satisfied and the reason given is `"number is even"`. 
 When the predicate is false, the proposition is not satisfied and the reason given is `"number is odd"`. However, 
-you may wish to describe some aspect of the input value in the reason. This can be done by providing a function.
+you may wish to describe some aspect of the input value in the reason.
+This can be done by providing a function.
 ```csharp
-var isEven = Spec
-    .Build<int>(n => n % 2 == 0)
+Spec.Build((int n)n => n % 2 == 0)
     .WhenTrue(n => $"{n} is even")
     .WhenFalse(n => $"{n} is odd")
     .Create();
 ```
 ### Advanced proposition
-There may be times when a string of text describing the result is not enough. For example, you may want to present 
-the text to an international audience. In this case, you can provide a custom object for `.WhenTrue()` and `.WhenFalse()`
-instead of using a string.
+There may be times when a string of text describing the result is not enough.
+For example, you may want to present the text to an international audience.
+In this case, you can provide a custom object for `.WhenTrue()` and `.WhenFalse()` instead of using a string.
 ```csharp
-var isEven = Spec
-    .Build<int>(n => n % 2 == 0)
+Spec.Build((int n) => n % 2 == 0)
     .WhenTrue(new { English = "the number is even", Spanish = "el número es par" })
     .WhenFalse(new { English = "the number is odd", Spanish = "el número es impar" })
-    .Create("is even number");
+    .Create("is even number"
 ```
-Notice that here you have to provide a string argument for the `Create()` method. This is because it is not 
-clear to the library what the proposition is about. It is therefore necessary to solicit this form the caller to 
-ensure that it is still possible to provide a meaningful explanation. This does however mean that the explanation may 
-contain a `!`, but in this scenario the caller is not expected to surface explanation to the user and instead use the 
-`Metadata` property to custom information about the outcome.
+Notice that here you have to provide a string argument for the `Create()` method.
+This is because it is not clear to the library what the proposition is about.
+It is therefore necessary to solicit this form the caller to ensure that it is still possible to provide a 
+meaningful explanation. 
+This does however mean that the explanation may contain a `!`, but in this scenario the caller is not expected to 
+surface explanation to the user and instead use the `Metadata` property to custom information about the outcome.
+
 ```csharp
-var isEvenSpec = Spec
-    .Build<int>(n => n % 2 == 0)
-    .WhenTrue(new { English = "the number is even", Spanish = "el número es par" })
-    .WhenFalse(new { English = "the number is odd", Spanish = "el número es impar" })
-    .Create("even");
+var isEvenSpec =
+    Spec.Build((int n) => n % 2 == 0)
+        .WhenTrue(new { English = "the number is even", Spanish = "el número es par" })
+        .WhenFalse(new { English = "the number is odd", Spanish = "el número es impar" })
+        .Create("even"
 
 var isEven = isEvenSpec.IsSatisfiedBy(3);
 isEven.Satisfied; // true
@@ -89,41 +91,55 @@ isEven.Metadata.Select(m => m.English); // ["the number is odd"]
 
 ### Higher order propositions
 The propositions we have mentioned thus far are known as first-order propositions since they apply to a single 
-entity.  However, this is incomplete since it does not propose the state of a set of entities.  This is 
-where higher order propositions come in. This library supports higher order logic by allowing you to promote a first 
-order proposition to its higher order equivalent.  This means that instead of accepting a single model, it accepts a 
-set of models from which it internally generates a set of results which are evaluated to determine if the higher order 
-proposition is satisfied.
+entity.
+However, this is incomplete since it does not propose the state of a set of entities.
+This is where higher order propositions come in.
+This library supports higher order logic by allowing you to promote a first order proposition to its higher order 
+equivalent.
+This means that instead of accepting a single model, it accepts a set of models from which it internally generates a 
+set of results which are evaluated to determine if the higher order proposition is satisfied.
 ```csharp
-var isEven = Spec
-    .Build<int>(n => n % 2 == 0)
-    .Create("even");
+var isEven =
+    Spec.Build((int n) => n % 2 == 0)
+        .Create("even"
 
-var allAreEven = Spec
-    .Build(isEven)
-    .AsAllSatisfied()
-    .Create("all are even");
+var allAreEven =
+    Spec.Build(isEven)
+        .AsAllSatisfied()
+        .Create("all are even"
 ```
 
 #### Higher order output
-When it come to higher-order propositions you will almost certainly want to describe how the set is composed in a 
-multitude of ways.  This library aims to support this by providing a result object that contains convenient properties 
-that work seamlessly with pattern matching. 
+When it comes to higher-order propositions, you will almost certainly want to describe how sets are composed in 
+arbitrary ways.
+This library aims to support this by providing a result object that contains convenient properties that work 
+seamlessly with pattern matching. 
 ```csharp 
-var allAreEven = Spec
-    .Build(isEven)
-    .AsAllSatisfied()
-    .WhenTrue(result => result switch {
-        { 
-            { TrueCount: > 1 } => "all are true",
-            _ => "only one is true"
-        })
-    .WhenFalse(result =>
-        result switch
-        {
-            { NoneSatisfied: true } => "none of the models are true",
-            { FalseCount: 1 } => "only one model caused the proposition to be false",
-            _ => $"{result.CausalResults.Count} models caused the proposition to be false"
-        })
-    .Create("all are even");
+var allAreEven =
+    Spec.Build(isEven)
+        .AsAllSatisfied()
+        .WhenTrue(evaluation =>
+            evaluation switch 
+            { 
+                { NoneSatisfied: true } => "the collection is empty",
+                { TrueCount: 1 } => $"{evaluation.TrueModels.Serialize()} is even and is the only item",
+                _ => "all are even"
+            })
+        .WhenFalse(evaluation =>
+            evaluation switch
+            {
+                { Count: 1 } => [$"{evaluation.FalseModels.Serialize()} is odd and is the only item"],
+                { FalseCount: 1 } => [$"only {evaluation.FalseModels.Serialize()} is odd"],
+                { NoneSatisfied: true } => ["all are odd"],
+                _ => evaluation.FalseModels.Select(n => $"{n} is odd")
+            })
+        .Create("all are even");
+
+allAreEven.IsSatisfiedBy([2, 4, 6, 8]).Assertions; // ["all are even"]
+allAreEven.IsSatisfiedBy([10]).Assertions;         // ["10 is even and is the only item"]
+allAreEven.IsSatisfiedBy([11]).Assertions;         // ["11 is odd and is the only item"]
+allAreEven.IsSatisfiedBy([2, 4, 6, 9]).Assertions; // ["only 9 is odd"]
+allAreEven.IsSatisfiedBy([]).Assertions;           // ["the collection is empty"]
+allAreEven.IsSatisfiedBy([1, 3, 5, 7]).Assertions; // ["all are odd"]
+allAreEven.IsSatisfiedBy([2, 4, 5, 7]).Assertions; // ["5 is odd", "7 is odd"]
 ```

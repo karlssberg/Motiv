@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
 using Karlssberg.Motiv.And;
+using Karlssberg.Motiv.AndAlso;
 using Karlssberg.Motiv.Not;
 using Karlssberg.Motiv.Or;
+using Karlssberg.Motiv.OrElse;
 using Karlssberg.Motiv.XOr;
 
 namespace Karlssberg.Motiv;
@@ -167,6 +169,16 @@ public abstract class BooleanResultBase<TMetadata>
     /// <returns>A new instance of AndBooleanResult representing the result of the logical AND operation.</returns>
     public BooleanResultBase<TMetadata> And(BooleanResultBase<TMetadata> right) =>
         new AndBooleanResult<TMetadata>(this, right);
+    
+    /// <summary>
+    /// Performs a conditional AND operation between the current BooleanResultBase instance and another BooleanResultBase
+    /// instance. This will short-circuit the evaluation of the right operand if the left operand is not satisfied.
+    /// </summary>
+    /// <param name="right">The other BooleanResultBase instance to perform the logical AND operation with.</param>
+    /// <returns>A new instance of AndBooleanResult representing the result of the logical AND operation.</returns>
+    public BooleanResultBase<TMetadata> AndAlso(BooleanResultBase<TMetadata> right) => Satisfied
+        ? new AndAlsoBooleanResult<TMetadata>(this, right)
+        : new AndAlsoBooleanResult<TMetadata>(this);
 
     /// <summary>
     /// Performs a logical OR operation between the current BooleanResultBase instance and another BooleanResultBase
@@ -176,6 +188,16 @@ public abstract class BooleanResultBase<TMetadata>
     /// <returns>A new BooleanResultBase instance representing the result of the OR operation.</returns>
     public BooleanResultBase<TMetadata> Or(BooleanResultBase<TMetadata> right) =>
         new OrBooleanResult<TMetadata>(this, right);
+    
+    /// <summary>
+    /// Performs a conditional OR operation between the current BooleanResultBase instance and another BooleanResultBase
+    /// instance. This will short-circuit the evaluation of the right operand if the left operand is satisfied.
+    /// </summary>
+    /// <param name="right">The other BooleanResultBase instance to perform the OR operation with.</param>
+    /// <returns>A new BooleanResultBase instance representing the result of the OR operation.</returns>
+    public BooleanResultBase<TMetadata> OrElse(BooleanResultBase<TMetadata> right) => Satisfied
+        ? new OrElseBooleanResult<TMetadata>(this)
+        : new OrElseBooleanResult<TMetadata>(this, right);    
 
     /// <summary>
     /// Performs a logical exclusive OR (XOR) operation between this BooleanResultBase instance and another

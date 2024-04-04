@@ -1,4 +1,4 @@
-﻿# Logical AND operation
+﻿# Logical AND
 
 A logical AND operation can be performed on two specifications using the `&` operator 
 ```leftSpec & rightSpec``` or alternatively using the And  method ```leftSpec.And(rightSpec)```. This will produce a new 
@@ -9,10 +9,10 @@ is not short-circuited.
 For example:
 
 ```csharp
-var now = DateTime.Now;
-
 record Subscription(DateTime Start, DateTime End, bool IsCancelled);
-var activeSubscription = new Subscription(now.AddDays(-1), now.AddDays(1), false);
+var activeSubscription = new Subscription(DateTime.Today, DateTime.Today.AddDays(1), false);
+
+var now = DateTime.Now;
 
 var hasSubscriptionStartedSpec =
     Spec.Build((Subscription s) => s.Start < now)
@@ -48,22 +48,22 @@ result.Reason; // "subscription has ended"
 If you want to give it a true or false reasons you can do so by wrapping it in a new `Spec<T>` instance.
 
 ```csharp
-var isActiveSubscriptionSpec = Spec
-    .Build<Subscription>(hasSubscriptionStarted & !hasSubscriptionEnded)
-    .WhenTrue("subscription is active")
-    .WhenFalse("subscription is not active")
-    .Create();
+var isActiveSubscriptionSpec =
+    Spec.Build(hasSubscriptionStarted & !hasSubscriptionEnded)
+        .WhenTrue("subscription is active")
+        .WhenFalse("subscription is not active")
+        .Create();
 ```
 
 You can also use the `&` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy` method. This is
 so that you can aggregate the results of multiple specifications of different models.
 
 ```csharp
-var isValidLocationSpec = Spec
-    .Build<Device>(device => device.Country == Country.USA)
-    .WhenTrue("device is permitted to play content within the USA")
-    .WhenFalse("device not permitted to play content outside of the USA")
-    .Create();
+var isValidLocationSpec =
+    Spec.Build<Device>(device => device.Country == Country.USA)
+        .WhenTrue("device is permitted to play content within the USA")
+        .WhenFalse("device not permitted to play content outside of the USA")
+        .Create();
 
 var isValidLocationResult = isValidLocationSpec.IsSatisfiedBy(device);
 var isActiveSubscriptionResult = isActiveSubscriptionSpec.IsSatisfiedBy(subscription)
@@ -73,7 +73,7 @@ BooleanResultBase<string> canViewContent = isActiveSubscriptionResult & isValidL
 
 The results of the `&` operation being performed on two boolean results will be a new `BooleanResultBase<T>` 
 instance that contains the results of the two.The `Result` property will therefore contain the assertions of both 
-underlying specification.
+underlying specifications.
 
 ```csharp
 var result = isActiveSubscriptionResult.IsSatisfiedBy(activeSubscription);
