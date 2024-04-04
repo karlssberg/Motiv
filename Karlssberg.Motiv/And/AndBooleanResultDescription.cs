@@ -16,7 +16,7 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
         {
             0 => "",
             1 => _causalResults.First().Description.Reason,
-            _ =>   _causalResults.Select(ExplainReasons).Serialize(" & ")
+            _ => _causalResults.Select(ExplainReasons).Serialize(" & ")
         };
 
     public override string Detailed => GetDetails();

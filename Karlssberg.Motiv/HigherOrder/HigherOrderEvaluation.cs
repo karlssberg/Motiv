@@ -1,10 +1,10 @@
 ﻿namespace Karlssberg.Motiv.HigherOrder;
 
 public sealed class HigherOrderEvaluation<TModel, TMetadata>(
-    IReadOnlyCollection<BooleanResult<TModel, TMetadata>> results,
-    IReadOnlyCollection<BooleanResult<TModel, TMetadata>> causalResults)
+    IReadOnlyList<BooleanResult<TModel, TMetadata>> results,
+    IReadOnlyList<BooleanResult<TModel, TMetadata>> causalResults)
 {
-    private readonly Lazy<IReadOnlyCollection<TModel>> _lazyAllModels = new(() =>
+    private readonly Lazy<IReadOnlyList<TModel>> _lazyAllModels = new(() =>
         results.Select(result => result.Model).ToArray());
 
     private readonly Lazy<bool> _lazyAllSatisfied = new(() =>
@@ -12,30 +12,30 @@ public sealed class HigherOrderEvaluation<TModel, TMetadata>(
     private readonly Lazy<bool> _lazyNoneSatisfied = new(() =>
         results.All(result => !result.Satisfied));
 
-    private readonly Lazy<IReadOnlyCollection<TModel>> _lazyCausalModels = new(() =>
+    private readonly Lazy<IReadOnlyList<TModel>> _lazyCausalModels = new(() =>
         causalResults.Select(result => result.Model).ToArray());
 
-    private readonly Lazy<IReadOnlyCollection<BooleanResult<TModel, TMetadata>>> _lazyTrueResults = new(() =>
+    private readonly Lazy<IReadOnlyList<BooleanResult<TModel, TMetadata>>> _lazyTrueResults = new(() =>
         results.WhereTrue().ToArray());
-    private readonly Lazy<IReadOnlyCollection<BooleanResult<TModel, TMetadata>>> _lazyFalseResults = new(() =>
+    private readonly Lazy<IReadOnlyList<BooleanResult<TModel, TMetadata>>> _lazyFalseResults = new(() =>
         results.WhereFalse().ToArray());
     
-    private readonly Lazy<IReadOnlyCollection<TModel>> _lazyTrueModels = new(() =>
+    private readonly Lazy<IReadOnlyList<TModel>> _lazyTrueModels = new(() =>
         results.WhereTrue().Select(result => result.Model).ToArray());
-    private readonly Lazy<IReadOnlyCollection<TModel>> _lazyFalseModels = new(() =>
+    private readonly Lazy<IReadOnlyList<TModel>> _lazyFalseModels = new(() =>
         results.WhereFalse().Select(result => result.Model).ToArray());
 
-    private readonly Lazy<IReadOnlyCollection<string>> _lazyAssertions = new(() =>
+    private readonly Lazy<IReadOnlyList<string>> _lazyAssertions = new(() =>
         causalResults.SelectMany(result => result.Assertions).ToArray());
-    private readonly Lazy<IReadOnlyCollection<TMetadata>> _lazyMetadata = new(() =>
+    private readonly Lazy<IReadOnlyList<TMetadata>> _lazyMetadata = new(() =>
         causalResults.SelectMany(result => result.MetadataTree).ToArray());
     public bool AllSatisfied => _lazyAllSatisfied.Value;
     public bool NoneSatisfied => _lazyNoneSatisfied.Value;
 
-    public IReadOnlyCollection<TModel> Models => _lazyAllModels.Value;
-    public IReadOnlyCollection<TModel> TrueModels => _lazyTrueModels.Value;
-    public IReadOnlyCollection<TModel> FalseModels => _lazyFalseModels.Value;
-    public IReadOnlyCollection<TModel> CausalModels => _lazyCausalModels.Value;
+    public IReadOnlyList<TModel> Models => _lazyAllModels.Value;
+    public IReadOnlyList<TModel> TrueModels => _lazyTrueModels.Value;
+    public IReadOnlyList<TModel> FalseModels => _lazyFalseModels.Value;
+    public IReadOnlyList<TModel> CausalModels => _lazyCausalModels.Value;
     
     public IEnumerable<TMetadata> Metadata => _lazyMetadata.Value;
     public IEnumerable<string> Assertions => _lazyAssertions.Value;

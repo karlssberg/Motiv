@@ -242,7 +242,7 @@ public class AndSpecTests
         var now = DateTime.Now;
         var isActive = new IsSubscriptionActive(now);
 
-        var subscription = new Subscription(DateTime.Today, DateTime.Today.AddDays(1));
+        var subscription = new Subscription(now.Date, now.AddDays(1));
 
         var result = isActive.IsSatisfiedBy(subscription);
 
@@ -289,7 +289,7 @@ public class AndSpecTests
             .Create();
 
         var isActiveSpec = hasSubscriptionStartedSpec & !hasSubscriptionEndedSpec;
-        var isActive = isActiveSpec.IsSatisfiedBy(new Subscription(DateTime.Today, now.AddDays(1)));
+        var isActive = isActiveSpec.IsSatisfiedBy(new Subscription(now.Date, now.AddDays(1)));
         var isUsa = isLocationUsaSpec.IsSatisfiedBy(new Device(Country.Usa));
 
         var result = isActive & isUsa;
