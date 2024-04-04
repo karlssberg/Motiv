@@ -115,31 +115,35 @@ arbitrary ways.
 This library aims to support this by providing a result object that contains convenient properties that work 
 seamlessly with pattern matching. 
 ```csharp 
-var allAreEven =
-    Spec.Build(isEven)
+var allAreNegative =
+    Spec.Build(isNegative)
         .AsAllSatisfied()
-        .WhenTrue(evaluation =>
-            evaluation switch 
-            { 
-                { NoneSatisfied: true } => "the collection is empty",
-                { TrueCount: 1 } => $"{evaluation.TrueModels.Serialize()} is even and is the only item",
-                _ => "all are even"
-            })
-        .WhenFalse(evaluation =>
-            evaluation switch
-            {
-                { Count: 1 } => [$"{evaluation.FalseModels.Serialize()} is odd and is the only item"],
-                { FalseCount: 1 } => [$"only {evaluation.FalseModels.Serialize()} is odd"],
-                { NoneSatisfied: true } => ["all are odd"],
-                _ => evaluation.FalseModels.Select(n => $"{n} is odd")
-            })
-        .Create("all are even");
+        .WhenTrue(eval => eval switch
+        {
+            { Models.Count: 0 } => "there is an absence of numbers",
+            { Models.Count: 1 } => $"{eval.TrueModels.Serialize()} is negative and is the only number",
+            _ => "all are negative numbers"
+        })
+        .WhenFalse(eval => eval switch
+        {
+            { Models: [0] } => ["the number is 0 and is the only number"],
+            { Models: [> 0] } => [$"{eval.Models.Serialize()} is positive and is the only number"],
+            { NoneSatisfied: true } when eval.Models.All(m => m == 0) => ["all are 0"],
+            { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
+            { NoneSatisfied: true } =>  ["none are negative numbers"],
+            _ => eval.FalseModels.Select(n => n == 0
+                    ? "0 is neither positive or negative"
+                    : $"{n} is positive")
+        })
+        .Create("all are negative");
 
-allAreEven.IsSatisfiedBy([2, 4, 6, 8]).Assertions; // ["all are even"]
-allAreEven.IsSatisfiedBy([10]).Assertions;         // ["10 is even and is the only item"]
-allAreEven.IsSatisfiedBy([11]).Assertions;         // ["11 is odd and is the only item"]
-allAreEven.IsSatisfiedBy([2, 4, 6, 9]).Assertions; // ["only 9 is odd"]
-allAreEven.IsSatisfiedBy([]).Assertions;           // ["the collection is empty"]
-allAreEven.IsSatisfiedBy([1, 3, 5, 7]).Assertions; // ["all are odd"]
-allAreEven.IsSatisfiedBy([2, 4, 5, 7]).Assertions; // ["5 is odd", "7 is odd"]
+allAreNegative.IsSatisfiedBy([]).Assertions; // ["there is an absence of numbers"]
+allAreNegative.IsSatisfiedBy([-10]).Assertions; // ["-10 is negative and is the only number"]
+allAreNegative.IsSatisfiedBy([-2, -4, -6, -8]).Assertions; // ["all are negative numbers"]
+allAreNegative.IsSatisfiedBy([0]).Assertions; // ["the number is 0 and is the only number"]
+allAreNegative.IsSatisfiedBy([11]).Assertions; // ["11 is positive and is the only number"]
+allAreNegative.IsSatisfiedBy([0, 0, 0, 0]).Assertions; // ["all are 0"]
+allAreNegative.IsSatisfiedBy([2, 4, 6, 8]).Assertions; // ["all are positive numbers"]
+allAreNegative.IsSatisfiedBy([0, 1, 2, 3]).Assertions; // ["none are negative numbers"]
+allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions; // ["9 is positive", "0 is neither positive or negative"]
 ```

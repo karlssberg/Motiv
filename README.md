@@ -271,14 +271,20 @@ checks.
 var allAreNegativeSpec =
     Spec.Build(new IsNegativeSpec<int>())
         .AsAllSatisfied()
-        .WhenTrue("all are negative")
+        .WhenTrue(evaluation => evaluation switch
+        {
+            { NoneSatisfied: true } => "there are no numbers to evaluate",
+        })
         .WhenFalse(evaluation => evaluation switch
         {
+            { NoneSatisfied: true } => "the collection is empty",
+            { FalseCount: 1 } => $"{evaluation.FalseModels.Serialize()} is negative and is the only item",
             { FalseCount: <= 10 } => evaluation.FalseModels.Select(n => $"{n}  is not negative"),
             _ => $"{evaluation.FalseCount} of {evaluation.Count} are not negative".ToEnumerable()
         })
-        .Create();
-    
+        .Create("all are negative");
+
+allAreNegativeSpec.IsSatisfiedBy([]).Assertions; // ["0 is not negative", "1 is not negative", "2 is not negative"]
 allAreNegativeSpec.IsSatisfiedBy([-2, -1, 0, 1, 2]).Assertions; // ["0 is not negative", "1 is not negative", "2 is not negative"]
 ```
 

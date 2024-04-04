@@ -179,7 +179,7 @@ public class TutorialTests
         result.Reason.Should().Be("basket is empty");
         result.Reason.Should().BeEquivalentTo("basket is empty");
     }
-
+    
     [Fact]
     public void Should_demonstrate_is_even_spec_as_an_all_satisfied_higher_order_logic()
     {
@@ -230,5 +230,69 @@ public class TutorialTests
         
         allAreEven.IsSatisfiedBy([2, 4, 5, 7]).Satisfied.Should().BeFalse();
         allAreEven.IsSatisfiedBy([2, 4, 5, 7]).Assertions.Should().BeEquivalentTo("5 is odd", "7 is odd");
+    }
+
+    [Fact]
+    public void Should_demonstrate_is_negative_spec_as_an_all_satisfied_higher_order_logic()
+    {
+        var isNegative =
+            Spec.Build<int>(n => n < 0)
+                .WhenTrue("negative")
+                .WhenFalse("not negative")
+                .Create();
+
+        var allAreNegative =
+            Spec.Build(isNegative)
+                .AsAllSatisfied()
+                .WhenTrue(eval => eval switch
+                {
+                    { Models.Count: 0 } => "there is an absence of numbers",
+                    { Models.Count: 1 } => $"{eval.TrueModels.Serialize()} is negative and is the only number",
+                    _ => "all are negative numbers"
+                })
+                .WhenFalse(eval => eval switch
+                {
+                    { Models: [0] } => ["the number is 0 and is the only number"],
+                    { Models: [> 0] } => [$"{eval.Models.Serialize()} is positive and is the only number"],
+                    { NoneSatisfied: true } when eval.Models.All(m => m == 0) => ["all are 0"],
+                    { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
+                    { NoneSatisfied: true } =>  ["none are negative numbers"],
+                    _ => eval.FalseModels.Select(n => n == 0
+                            ? "0 is neither positive or negative"
+                            : $"{n} is positive")
+                })
+                .Create("all are negative");
+
+
+        allAreNegative.IsSatisfiedBy([]).Satisfied.Should().BeTrue();
+        allAreNegative.IsSatisfiedBy([]).Assertions.Should().BeEquivalentTo("there is an absence of numbers");
+
+        allAreNegative.IsSatisfiedBy([-10]).Satisfied.Should().BeTrue();
+        allAreNegative.IsSatisfiedBy([-10]).Assertions.Should()
+            .BeEquivalentTo("-10 is negative and is the only number");
+        
+        allAreNegative.IsSatisfiedBy([-2, -4, -6, -8]).Satisfied.Should().BeTrue();
+        allAreNegative.IsSatisfiedBy([-2, -4, -6, -8]).Assertions.Should().BeEquivalentTo("all are negative numbers");
+
+        allAreNegative.IsSatisfiedBy([0]).Satisfied.Should().BeFalse();
+        allAreNegative.IsSatisfiedBy([0]).Assertions.Should()
+            .BeEquivalentTo("the number is 0 and is the only number");
+
+        allAreNegative.IsSatisfiedBy([11]).Satisfied.Should().BeFalse();
+        allAreNegative.IsSatisfiedBy([11]).Assertions.Should()
+            .BeEquivalentTo("11 is positive and is the only number");
+        
+        allAreNegative.IsSatisfiedBy([0, 0, 0, 0]).Satisfied.Should().BeFalse();
+        allAreNegative.IsSatisfiedBy([0, 0, 0, 0]).Assertions.Should().BeEquivalentTo("all are 0");
+        
+        allAreNegative.IsSatisfiedBy([2, 4, 6, 8]).Satisfied.Should().BeFalse();
+        allAreNegative.IsSatisfiedBy([2, 4, 6, 8]).Assertions.Should().BeEquivalentTo("all are positive numbers");
+        
+        allAreNegative.IsSatisfiedBy([0, 1, 2, 3]).Satisfied.Should().BeFalse();
+        allAreNegative.IsSatisfiedBy([0, 1, 2, 3]).Assertions.Should().BeEquivalentTo("none are negative numbers");
+
+
+        allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Satisfied.Should().BeFalse();
+        allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions.Should().BeEquivalentTo("9 is positive", "0 is neither positive or negative");
     }
 }
