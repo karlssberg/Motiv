@@ -23,15 +23,17 @@ var isFreeShippingSpec =
         .WhenFalse("shipping payment required")
         .Create();
 
-var showShippingPageButton = (!isBasketEmptySpec).AndAlso(!isFreeShippingSpec);
+var chooseShippingOptions = (!isBasketEmptySpec).AndAlso(!isFreeShippingSpec);
 
-var result = showShippingPageButton.IsSatisfiedBy(emptyBasket);
+var result = chooseShippingOptions.IsSatisfiedBy(emptyBasket);
 
 result.Satisfied; // false
 result.Reason; // "basket is empty"
 result.Assertions; // ["basket is empty"]
 ```
-
+```csharp
+var isUserLoggedIn = new Spec<UserPrin>(true);
+```
 The `Reason` property of the result will contain human-readable descriptions of the causes.
 If the results were caused by both operands, then the `Reason` property will contain both assertions separated by the 
 `&&` operator to indicate that both operands were responsible for the result, otherwise it will contain the single 

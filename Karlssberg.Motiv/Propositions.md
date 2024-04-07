@@ -35,7 +35,7 @@ All of these overloads can be used to create a new proposition with varying leve
 The most basic proposition can be created by providing a predicate and a propositional statement.
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
-    .Create("even"
+    .Create("even");
 ```
 In this case, when the predicate is true, the proposition is satisfied and the reason given is `"even"`.
 When the predicate is false, the proposition is not satisfied and the reason given is `"!even"`.
@@ -50,8 +50,8 @@ Spec.Build((int n) => n % 2 == 0)
     .Create();
 ```
 In this case, when the predicate is true, the proposition is satisfied and the reason given is `"number is even"`. 
-When the predicate is false, the proposition is not satisfied and the reason given is `"number is odd"`. However, 
-you may wish to describe some aspect of the input value in the reason.
+When the predicate is false, the proposition is not satisfied and the reason given is `"number is odd"`.
+However, you may wish to describe some aspect of the input value in the reason.
 This can be done by providing a function.
 ```csharp
 Spec.Build((int n)n => n % 2 == 0)
@@ -67,7 +67,7 @@ In this case, you can provide a custom object for `.WhenTrue()` and `.WhenFalse(
 Spec.Build((int n) => n % 2 == 0)
     .WhenTrue(new { English = "the number is even", Spanish = "el número es par" })
     .WhenFalse(new { English = "the number is odd", Spanish = "el número es impar" })
-    .Create("is even number"
+    .Create("is even number");
 ```
 Notice that here you have to provide a string argument for the `Create()` method.
 This is because it is not clear to the library what the proposition is about.
@@ -81,10 +81,10 @@ var isEvenSpec =
     Spec.Build((int n) => n % 2 == 0)
         .WhenTrue(new { English = "the number is even", Spanish = "el número es par" })
         .WhenFalse(new { English = "the number is odd", Spanish = "el número es impar" })
-        .Create("even"
+        .Create("even");
 
 var isEven = isEvenSpec.IsSatisfiedBy(3);
-isEven.Satisfied; // true
+isEven.Satisfied; // false
 isEven.Reason; // "!even"
 isEven.Metadata.Select(m => m.English); // ["the number is odd"]
 ```
@@ -101,12 +101,12 @@ set of results which are evaluated to determine if the higher order proposition 
 ```csharp
 var isEven =
     Spec.Build((int n) => n % 2 == 0)
-        .Create("even"
+        .Create("even");
 
 var allAreEven =
     Spec.Build(isEven)
         .AsAllSatisfied()
-        .Create("all are even"
+        .Create("all are even");
 ```
 
 #### Higher order output

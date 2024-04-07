@@ -3,8 +3,12 @@
 
 Motiv is a .NET library that supercharges your boolean logic.
 
-At its core, it allows you to package your boolean expressions into strongly typed _propositions_ which can then be 
-conveniently re-used, re-combined and then queried to determine if they are satisfied by a given model.
+At its core, it allows you to package your boolean expressions into strongly typed _propositions_.
+By _propositions_, we mean a declarative statement that can be either true or false, such as _the sun is shining_,
+or _email address is missing an @ symbol_.
+
+A proposition can be combined with other propositions to form new ones, or it can be used to evaluate models to 
+determine if they are satisfied by it.
 ```csharp
 var isUsefulLibrary = new HasExplanations() & new HasCustomMetadata() & new IsReusable() & new IsComposable();
 
@@ -12,14 +16,16 @@ if (isUsefulLibrary.IsSatisfiedBy(new MyCriteria()))
 {
     ...
 ```
-It also explains why a proposition was satisfied, or not.
+When you evaluate a proposition, you get back a _result_ object that tells you whether the proposition was satisfied,
+or not and also provides you with a `Reason`.
 ```csharp
-var result = isUsefulLibrary.IsSatisfiedBy(new MyInferiorAlternative());
+var result = isUsefulLibrary.IsSatisfiedBy(new InferiorAlternative());
 
 result.Satisfied; // false
+result.Reason; // "no support for explanations & no support for custom metadata"
 result.Assertions; // ["no support for explanations", "no support for custom metadata"]
 ```
-Only those propositions that determined the outcome of the result will have their `Assertions` yielded.
+Only those propositions that helped determine the outcome will be used to generate the `Reason`.
 
 Propositions are simple to construct and are not limited to strings—you can optionally provide custom objects to 
 propositions (referred to as `Metadata`). 
@@ -31,12 +37,17 @@ var isEvenSpec =
         .WhenFalse(new MyMetadata { Message = "is odd" })
         .Create("is even");
 
-isEvenSpec.IsSatisfiedBy(2).Metadata; // [{ Message = "is even" }]
+var result = isEvenSpec.IsSatisfiedBy(3);
+result.Metadata; // [{ Message = "is odd" }]
+result.Reason; // "!is even"
+result.Assertions; // ["!is even"]
 ```
 
 Observe the `Spec` type.
 This is a _specification_ and is the starting point for most operations _Propositions_ are formed from _specifications_.
-`Spec` objects are composed into trees of logical expressions, which we refer to as _propositions_.
+These `Spec` objects are composed into trees of logical expressions, which we refer to as _propositions_.
+So in effect, a _proposition_ is the root 'Spec' on a tree of 'Spec' objects.
+
 It is common for the two terms to be used interchangeably, but it is useful to understand the distinction.
 
 #### What can I use the metadata for?
