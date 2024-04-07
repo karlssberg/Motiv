@@ -19,7 +19,8 @@ public readonly ref struct BooleanResultPredicateSpecBuilder<TModel, TUnderlying
     /// </summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMultiAssertionBooleanResultPredicateSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public FalseAssertionWithPropositionBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(string trueBecause) => 
+    public FalseAssertionWithPropositionBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+        string trueBecause) => 
         new(predicate,
             (_, _) => trueBecause,
             trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause)));
@@ -29,7 +30,8 @@ public readonly ref struct BooleanResultPredicateSpecBuilder<TModel, TUnderlying
     /// </summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionWithPropositionUnresolvedBooleanResultPredicateSpecBuilder{TModel}" />.</returns>
-    public FalseMultiAssertionBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(Func<TModel, string> trueBecause)
+    public FalseMultiAssertionBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+        Func<TModel, string> trueBecause)
     {
         trueBecause.ThrowIfNull(nameof(trueBecause));
         return new FalseMultiAssertionBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata>(predicate,
@@ -42,7 +44,8 @@ public readonly ref struct BooleanResultPredicateSpecBuilder<TModel, TUnderlying
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">The metadata to use when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataBooleanResultPredicateSpecBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataBooleanResultPredicateSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(TMetadata whenTrue)
+    public FalseMetadataBooleanResultPredicateSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+        TMetadata whenTrue)
     {
         whenTrue.ThrowIfNull(nameof(whenTrue));
         return new FalseMetadataBooleanResultPredicateSpecBuilder<TModel, TMetadata, TUnderlyingMetadata>(
@@ -56,7 +59,8 @@ public readonly ref struct BooleanResultPredicateSpecBuilder<TModel, TUnderlying
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataBooleanResultPredicateSpecBuilder{TModel, TMetadata, TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataBooleanResultPredicateSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(Func<TModel, TMetadata> whenTrue)
+    public FalseMetadataBooleanResultPredicateSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+        Func<TModel, TMetadata> whenTrue)
     {
         whenTrue.ThrowIfNull(nameof(whenTrue));
         return new FalseMetadataBooleanResultPredicateSpecBuilder<TModel, TMetadata, TUnderlyingMetadata>(
@@ -64,6 +68,16 @@ public readonly ref struct BooleanResultPredicateSpecBuilder<TModel, TUnderlying
             (model, _) => whenTrue(model).ToEnumerable());
     }
     
+    /// <summary>
+    /// Specifies a metadata factory function to use when the condition is true.
+    /// </summary>
+    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
+    /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataBooleanResultPredicateSpecBuilder{TModel, TMetadata, TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataBooleanResultPredicateSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>>  whenTrue) =>
+        new(predicate, whenTrue.ThrowIfNull(nameof(whenTrue)));
+
     /// <summary>Specifies a higher order predicate for the proposition.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
     /// <returns>An instance of <see cref="TrueHigherOrderFromUnderlyingSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>

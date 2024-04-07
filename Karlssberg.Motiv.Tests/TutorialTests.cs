@@ -144,7 +144,7 @@ public class TutorialTests
         var isEvenAndPositiveSpec =
             Spec.Build(isEvenSpec & isPositiveSpec)
                 .WhenTrue("the number is even and positive")
-                .WhenFalse((_,evaluation) => $"the number is {string.Join(" and ", evaluation.Assertions)}")
+                .WhenFalse((_,evaluation) => $"the number is {evaluation.Assertions.Serialize()}")
                 .Create();
         
         isEvenAndPositiveSpec.IsSatisfiedBy(2).Satisfied.Should().BeTrue();
@@ -296,5 +296,32 @@ public class TutorialTests
 
         allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Satisfied.Should().BeFalse();
         allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions.Should().BeEquivalentTo("9 is positive", "0 is neither positive or negative");
+    }
+    
+    [Fact]
+    public void Should_harvest_assertions_from_a_boolean_result_predicate()
+    {
+        var isEvenSpec = 
+            Spec.Build((long n) => n % 2 == 0)
+                .WhenTrue("even")
+                .WhenFalse("odd")
+                .Create();
+
+        var isPositiveSpec =
+            Spec.Build((decimal n) => n > 0)
+                .WhenTrue("positive")
+                .WhenFalse("not positive")
+                .Create();
+
+        var isEvenAndPositiveSpec = 
+            Spec.Build((int n) => isEvenSpec.IsSatisfiedBy(n) & isPositiveSpec.IsSatisfiedBy(n))
+                .WhenTrue((_, result) => result.Underlying.GetAssertions())
+                .WhenFalse((_, result) => result.Underlying.GetAssertions())
+                .Create("even and positive");
+        
+        isEvenAndPositiveSpec.IsSatisfiedBy(2).Assertions.Should().BeEquivalentTo("even", "positive");
+        isEvenAndPositiveSpec.IsSatisfiedBy(3).Assertions.Should().BeEquivalentTo("odd", "positive");
+        isEvenAndPositiveSpec.IsSatisfiedBy(0).Assertions.Should().BeEquivalentTo("even", "not positive");
+        isEvenAndPositiveSpec.IsSatisfiedBy(-3).Assertions.Should().BeEquivalentTo("odd", "not positive");
     }
 }

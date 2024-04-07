@@ -25,15 +25,6 @@ public abstract class BooleanResultBase
     /// <summary>Gets a value indicating whether the condition is satisfied.</summary>
     public abstract bool Satisfied { get; }
 
-    /// <summary>Gets a set of human-readable descriptions of the underlying causes.</summary>
-    public abstract ResultDescriptionBase Description { get; }
-
-    /// <summary>Gets the underlying <see cref="BooleanResultBase"/> that contribute to this result.</summary>
-    public abstract IEnumerable<BooleanResultBase> Underlying { get; }
-
-    /// <summary>Gets the underlying <see cref="BooleanResultBase"/>s that caused this .</summary>
-    public abstract IEnumerable<BooleanResultBase> Causes { get; }
-
     /// <summary>Gets the reason for the result, represented as a compact string.</summary>
     public string Reason => Description.Reason;
 
@@ -43,32 +34,25 @@ public abstract class BooleanResultBase
     /// <summary>Gets the sub-assertions that contribute to this result.</summary>
     public IEnumerable<string> SubAssertions => ExplanationTree.Underlying.GetAssertions();
 
+    /// <summary>Gets a set of human-readable descriptions of the underlying causes.</summary>
+    public abstract ResultDescriptionBase Description { get; }
+
     /// <summary>
     /// Gets the specific underlying reasons why the condition is satisfied or not. Duplicates are permitted in the
-    /// result at this stage to avoid excessive deduplication during intermediate steps.  Deduplication is performed during the
+    /// result at this stage to avoid excessive de-duplication during intermediate steps.  Deduplication is performed during the
     /// call to <see cref="ExplanationTree" />.
     /// </summary>
     public abstract ExplanationTree ExplanationTree { get; }
-
-    /// <summary>Determines whether the current BooleanResultBase object is equal to the specified boolean value.</summary>
-    /// <param name="other">The boolean value to compare with the current BooleanResultBase object.</param>
-    /// <returns>True if the current BooleanResultBase object is equal to the specified boolean value; otherwise, false.</returns>
-    public bool Equals(bool other) => other == Satisfied;
-
-    /// <summary>Determines whether the current BooleanResultBase object is equal to another BooleanResultBase object.</summary>
-    /// <param name="other">The BooleanResultBase object to compare with the current object.</param>
-    /// <returns>true if the current object is equal to the other object; otherwise, false.</returns>
-    public bool Equals(BooleanResultBase? other) =>
-        other switch
-        {
-            null => false,
-            _ when ReferenceEquals(this, other) => true,
-            _ => Satisfied == other.Satisfied
-        };
-
-    /// <summary>Returns a human readable description of the tree of conditions that make up this result.</summary>
+    
+    /// <summary>Returns a human-readable description of the tree of conditions that make up this result.</summary>
     /// <returns>A string that describes the tree of conditions that make up this result.</returns>
     public override string ToString() => ExplanationTree.ToString();
+
+    /// <summary>Gets the underlying <see cref="BooleanResultBase"/>s that caused this .</summary>
+    public abstract IEnumerable<BooleanResultBase> Causes { get; }
+
+    /// <summary>Gets the underlying <see cref="BooleanResultBase"/> that contribute to this result.</summary>
+    public abstract IEnumerable<BooleanResultBase> Underlying { get; }
 
     /// <summary>Defines the true operator for the <see cref="BooleanResultBase{TMetadata}" /> class.</summary>
     /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
@@ -123,13 +107,24 @@ public abstract class BooleanResultBase
     /// <summary>Determines whether the current object is equal to another object.</summary>
     /// <param name="obj">The object to compare with the current object.</param>
     /// <returns>true if the specified object is equal to the current object; otherwise, false.</returns>
-    public override bool Equals(object? obj)
-    {
-        if (obj is null) return false;
-        if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != GetType()) return false;
-        return Equals((BooleanResultBase)obj);
-    }
+    public override bool Equals(object? obj) =>
+        obj switch
+        {
+            null => false,
+            bool b => Equals(b),
+            BooleanResultBase r => Equals(r),
+            _ => false
+        };
+
+    /// <summary>Determines whether the <see cref="Satisfied"/> Property is equal to the specified boolean value.</summary>
+    /// <param name="other">The boolean value to compare with the current BooleanResultBase object.</param>
+    /// <returns>True if the current BooleanResultBase object is equal to the specified boolean value; otherwise, false.</returns>
+    public bool Equals(bool other) => Satisfied == other;
+
+    /// <summary>Determines whether the this object is equal to another BooleanResultBase object.</summary>
+    /// <param name="other">The BooleanResultBase object to compare with the current object.</param>
+    /// <returns>true if the current object is equal to the other object; otherwise, false.</returns>
+    public bool Equals(BooleanResultBase other) => Satisfied == other.Satisfied;
 
     /// <summary>Computes the hash code for the current BooleanResultBase object.</summary>
     /// <returns>A hash code for the current object.</returns>
@@ -149,18 +144,18 @@ public abstract class BooleanResultBase<TMetadata>
     {
     }
 
-    /// <summary>Gets the metadata tree associated with this result.</summary>
-    public abstract MetadataTree<TMetadata> MetadataTree { get; }
-
     /// <summary>Gets the metadata associated with this result</summary>
     public IEnumerable<TMetadata> Metadata => MetadataTree;
 
-    /// <summary>Gets the underlying boolean results with metadata that contribute to this result.</summary>
-    public abstract IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata { get; }
+    /// <summary>Gets the metadata tree associated with this result.</summary>
+    public abstract MetadataTree<TMetadata> MetadataTree { get; }
 
     /// <summary>Gets the underlying causes with metadata that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata { get; }
 
+
+    /// <summary>Gets the underlying boolean results with metadata that contribute to this result.</summary>
+    public abstract IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata { get; }
     /// <summary>
     /// Performs a logical AND operation between the current BooleanResultBase instance and another BooleanResultBase
     /// instance.
