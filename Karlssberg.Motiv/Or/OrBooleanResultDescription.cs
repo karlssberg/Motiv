@@ -8,16 +8,15 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
     IEnumerable<BooleanResultBase<TMetadata>> causalResults) 
     : ResultDescriptionBase
 {
-    private readonly BooleanResultBase<TMetadata>[] _causalResults = causalResults.ToArray();
     
-    internal override int CausalOperandCount => _causalResults.Length;
+    internal override int CausalOperandCount => causalResults.Count();
     
     public override string Reason => 
         CausalOperandCount switch
         {
             0 => "",
-            1 => _causalResults.First().Description.Reason,
-            _ =>  _causalResults.Select(ExplainReasons).Serialize(" | ")
+            1 => causalResults.First().Description.Reason,
+            _ =>  string.Join(" | ", causalResults.Select(ExplainReasons))
         };
 
     public override string Detailed => GetDetails();

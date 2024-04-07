@@ -16,7 +16,7 @@ internal sealed class OrElseBooleanResultDescription<TMetadata>(
         {
             0 => "",
             1 => causalResults.First().Description.Reason,
-            _ => causalResults.Select(ExplainReasons).Serialize(" || ")
+            _ => string.Join(" || ", causalResults.Select(ExplainReasons))
         };
 
     public override string Detailed => GetDetails();
