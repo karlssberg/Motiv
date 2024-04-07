@@ -22,7 +22,7 @@ internal sealed class CompositeFactoryMultiMetadataSpec<TModel, TMetadata, TUnde
         };
         
         var assertions = metadata switch {
-            IEnumerable<string> reasons => reasons,
+            IEnumerable<string> because => because,
             _ => Proposition.ToReason(booleanResult.Satisfied).ToEnumerable()
         };
 
