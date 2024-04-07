@@ -88,16 +88,18 @@ public class TutorialTests
 
         isPositiveAndEven.IsSatisfiedBy(2).Satisfied.Should().BeTrue();
         isPositiveAndEven.IsSatisfiedBy(2).Reason.Should().Be("the number is positive & the number is even");
-        isPositiveAndEven.IsSatisfiedBy(2).Assertions.Should()
-            .BeEquivalentTo("the number is positive", "the number is even");
-
+        isPositiveAndEven.IsSatisfiedBy(2).Assertions.Should().BeEquivalentTo("the number is positive", "the number is even");
+        isPositiveAndEven.IsSatisfiedBy(2).AllAssertions.Should().BeEquivalentTo("the number is positive", "the number is even");
+        
         isPositiveAndEven.IsSatisfiedBy(3).Satisfied.Should().BeFalse();
         isPositiveAndEven.IsSatisfiedBy(3).Reason.Should().Be("the number is odd");
         isPositiveAndEven.IsSatisfiedBy(3).Assertions.Should().BeEquivalentTo("the number is odd");
+        isPositiveAndEven.IsSatisfiedBy(3).AllAssertions.Should().BeEquivalentTo("the number is positive", "the number is odd");
 
         isPositiveAndEven.IsSatisfiedBy(-2).Satisfied.Should().BeFalse();
         isPositiveAndEven.IsSatisfiedBy(-2).Reason.Should().Be("the number is negative");
         isPositiveAndEven.IsSatisfiedBy(-2).Assertions.Should().BeEquivalentTo("the number is negative");
+        isPositiveAndEven.IsSatisfiedBy(-2).AllAssertions.Should().BeEquivalentTo("the number is negative", "the number is even");
     }
 
     [Fact]
@@ -315,13 +317,11 @@ public class TutorialTests
 
         var isEvenAndPositiveSpec = 
             Spec.Build((int n) => isEvenSpec.IsSatisfiedBy(n) & isPositiveSpec.IsSatisfiedBy(n))
-                .WhenTrue((_, result) => result.Underlying.GetAssertions())
-                .WhenFalse((_, result) => result.Underlying.GetAssertions())
                 .Create("even and positive");
         
-        isEvenAndPositiveSpec.IsSatisfiedBy(2).Assertions.Should().BeEquivalentTo("even", "positive");
-        isEvenAndPositiveSpec.IsSatisfiedBy(3).Assertions.Should().BeEquivalentTo("odd", "positive");
-        isEvenAndPositiveSpec.IsSatisfiedBy(0).Assertions.Should().BeEquivalentTo("even", "not positive");
-        isEvenAndPositiveSpec.IsSatisfiedBy(-3).Assertions.Should().BeEquivalentTo("odd", "not positive");
+        isEvenAndPositiveSpec.IsSatisfiedBy(2).AllRootAssertions.Should().BeEquivalentTo("even", "positive");
+        isEvenAndPositiveSpec.IsSatisfiedBy(3).AllRootAssertions.Should().BeEquivalentTo("odd", "positive");
+        isEvenAndPositiveSpec.IsSatisfiedBy(0).AllRootAssertions.Should().BeEquivalentTo("even", "not positive");
+        isEvenAndPositiveSpec.IsSatisfiedBy(-3).AllRootAssertions.Should().BeEquivalentTo("odd", "not positive");
     }
 }

@@ -16,8 +16,8 @@ if (isUsefulLibrary.IsSatisfiedBy(new MyCriteria()))
 {
     ...
 ```
-When you evaluate a proposition, you get back a _result_ object that tells you whether the proposition was satisfied,
-or not and also provides you with a `Reason`.
+When you evaluate a proposition, you get back a _boolean result_ object that tells you whether the proposition was 
+satisfied, or not and also provides you with a `Reason`.
 ```csharp
 var result = isUsefulLibrary.IsSatisfiedBy(new InferiorAlternative());
 

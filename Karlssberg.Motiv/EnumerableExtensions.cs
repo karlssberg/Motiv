@@ -82,19 +82,19 @@ public static class EnumerableExtensions
     
     public static IEnumerable<TMetadata> GetMetadata<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
-        results.SelectMany(e => e.MetadataTree);
+        results.SelectMany(e => e.Metadata);
     
     public static IEnumerable<TMetadata> GetTrueMetadata<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results
             .Where(r => r.Satisfied)
-            .SelectMany(e => e.MetadataTree);
+            .SelectMany(e => e.Metadata);
     
     public static IEnumerable<TMetadata> GetFalseMetadata<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results
             .Where(r => !r.Satisfied)
-            .SelectMany(e => e.MetadataTree);
+            .SelectMany(e => e.Metadata);
     
     public static IEnumerable<string> GetAssertions(
         this IEnumerable<ExplanationTree> explanations) =>
@@ -125,7 +125,8 @@ public static class EnumerableExtensions
         result.ExplanationTree
             .Underlying
             .GetRootAssertions()
-            .Distinct();
+            .Distinct()
+            .ElseIfEmpty(result.Assertions);
     
     private static IEnumerable<string> GetRootAssertions(
         this IEnumerable<ExplanationTree> explanations) =>
@@ -133,6 +134,45 @@ public static class EnumerableExtensions
             .Underlying
             .GetRootAssertions()
             .ElseIfEmpty(explanation.Assertions));
+    
+    public static IEnumerable<string> GetAllRootAssertions(
+        this BooleanResultBase result) =>
+        result.Underlying
+            .GetAllRootAssertions()
+            .Distinct()
+            .ElseIfEmpty(result.Assertions);
+    
+    private static IEnumerable<string> GetAllRootAssertions(
+        this IEnumerable<BooleanResultBase> results) =>
+        results.SelectMany(result => result
+            .GetAllRootAssertions()
+            .ElseIfEmpty(result.Assertions));
+    
+    private static IEnumerable<TMetadata> GetMetadataAtDepth<TMetadata>(
+        this IEnumerable<MetadataTree<TMetadata>> metadataTrees,
+        int atDepth) =>
+        atDepth switch
+        {
+            > 0 => metadataTrees.GetMetadataAtDepth(atDepth - 1),
+            0 => metadataTrees.SelectMany(metadataTree => metadataTree),
+            _ => throw new ArgumentOutOfRangeException(nameof(atDepth), "Depth must be a non-negative integer.")
+        };
+    
+    public static IEnumerable<TMetadata> GetRootMetadata<TMetadata>(
+        this BooleanResultBase<TMetadata> result) =>
+        result.MetadataTree
+            .Underlying
+            .GetRootMetadata()
+            .Distinct();
+    
+    private static IEnumerable<TMetadata> GetRootMetadata<TMetadata>(
+        this IEnumerable<MetadataTree<TMetadata>> metadataTrees) =>
+        metadataTrees.SelectMany(metadata => metadata
+            .Underlying
+            .GetRootMetadata()
+            .ElseIfEmpty(metadata));
+    
+    
 
     internal static IEnumerable<T> ElseIfEmpty<T>(
         this IEnumerable<T> source,

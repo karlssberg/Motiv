@@ -18,12 +18,10 @@ var isPositiveSpec =
 
 var isEvenAndPositiveSpec = 
     Spec.Build((int n) => isEvenSpec.IsSatisfiedBy(n) & isPositiveSpec.IsSatisfiedBy(n))
-        .WhenTrue((_, result) => result.Underlying.GetAssertions())
-        .WhenFalse((_, result) => result.Underlying.GetAssertions())
         .Create("even and positive");
 
-isEvenAndPositiveSpec.IsSatisfiedBy(2).Assertions;  // ["even", "positive"]
-isEvenAndPositiveSpec.IsSatisfiedBy(3).Assertions;  // ["odd", "positive"]
-isEvenAndPositiveSpec.IsSatisfiedBy(0).Assertions;  // ["even", "not positive"]
-isEvenAndPositiveSpec.IsSatisfiedBy(-3).Assertions; // ["odd", "not positive"]
+isEvenAndPositiveSpec.IsSatisfiedBy(2).AllRootAssertions;  // ["even", "positive"]
+isEvenAndPositiveSpec.IsSatisfiedBy(3).AllRootAssertions;  // ["odd", "positive"]
+isEvenAndPositiveSpec.IsSatisfiedBy(0).AllRootAssertions;  // ["even", "not positive"]
+isEvenAndPositiveSpec.IsSatisfiedBy(-3).AllRootAssertions; // ["odd", "not positive"]
 ```
