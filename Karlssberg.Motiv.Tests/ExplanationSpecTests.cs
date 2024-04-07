@@ -9,7 +9,7 @@ public class ExplanationSpecTests
     [InlineData(2, "is even")]
     public void Should_allow_the_creation_of_specs_with_custom_textual_metadata(int model, string expected)
     {
-        var spec = Spec.Build<int>(i => i % 2 == 0)
+        var spec = Spec.Build((int i) => i % 2 == 0)
             .WhenTrue("is even")
             .WhenFalse("is odd")
             .Create();
@@ -25,7 +25,7 @@ public class ExplanationSpecTests
     [InlineData(2, "is even")]
     public void Should_allow_a_proposition_that_provides_a_reason_for_a_spec_result(int model, string expected)
     {
-        var spec = Spec.Build<int>(i => i % 2 == 0)
+        var spec = Spec.Build((int i) => i % 2 == 0)
             .WhenTrue("even")
             .WhenFalse("odd")
             .Create("is even");
@@ -39,7 +39,7 @@ public class ExplanationSpecTests
     [InlineData(2, "even")]
     public void Should_use_string_metadata_as_a_proposition_that_provides_a_reason_for_a_spec_result(int model, string expected)
     {
-        var spec = Spec.Build<int>(i => i % 2 == 0)
+        var spec = Spec.Build((int i) => i % 2 == 0)
             .WhenTrue("even")
             .WhenFalse("odd")
             .Create();

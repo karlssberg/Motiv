@@ -342,7 +342,7 @@ public class AtMostNSatisfiedSpecTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("is true");
@@ -364,7 +364,7 @@ public class AtMostNSatisfiedSpecTests
     {
         const string expected = "at most one is satisfied";
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue("underlying model is true")
             .WhenFalse("underlying model is false")
             .Create("underlying spec description");
@@ -418,7 +418,7 @@ public class AtMostNSatisfiedSpecTests
         int expected)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("underlying");
         
         var sut = Spec

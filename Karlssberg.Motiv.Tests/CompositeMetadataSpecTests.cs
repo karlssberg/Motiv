@@ -517,7 +517,7 @@ public class CompositeMetadataSpecTests
     public void Should_accept_minimally_defined_spec(bool model, string expectedReason)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("is underlying true");
 
         var spec = Spec
@@ -563,11 +563,11 @@ public class CompositeMetadataSpecTests
     public void Should_create_a_boolean_result_that_contains_the_underlying_result(bool model)
     {
         var left = Spec 
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("left");
         
         var right = Spec
-            .Build<bool>(m => !m)
+            .Build((bool m) => !m)
             .Create("right");
 
         var orSpec = left | right;
@@ -589,11 +589,11 @@ public class CompositeMetadataSpecTests
     public void Should_create_a_boolean_result_that_contains_the_underlying_with_metadata_result(bool model)
     {
         var left = Spec 
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("left");
         
         var right = Spec
-            .Build<bool>(m => !m)
+            .Build((bool m) => !m)
             .Create("right");
 
         var orSpec = left | right;
@@ -615,11 +615,11 @@ public class CompositeMetadataSpecTests
     public void Should_have_a_description_that_has_a_causal_count_value_of_1(bool model)
     {
         var left = Spec 
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("left");
         
         var right = Spec
-            .Build<bool>(m => !m)
+            .Build((bool m) => !m)
             .Create("right");
 
         var orSpec = left | right;
@@ -639,11 +639,11 @@ public class CompositeMetadataSpecTests
     public void Should_create_a_boolean_result_that_contains_the_causal_result(bool model)
     {
         var left = Spec 
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("left");
         
         var right = Spec
-            .Build<bool>(m => !m)
+            .Build((bool m) => !m)
             .Create("right");
 
         var orSpec = left | right;
@@ -665,11 +665,11 @@ public class CompositeMetadataSpecTests
     public void Should_create_a_boolean_result_that_contains_the_causal_with_metadata_result(bool model)
     {
         var left = Spec 
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("left");
         
         var right = Spec
-            .Build<bool>(m => !m)
+            .Build((bool m) => !m)
             .Create("right");
 
         var orSpec = left | right;
@@ -691,13 +691,13 @@ public class CompositeMetadataSpecTests
     public void Should_permit_metadata_generated_using_underlying_results(bool model, string expectedLeft, string expectedRight)
     {
         var left = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue("left true")
             .WhenFalse("left false")
             .Create();
         
         var right = Spec
-            .Build<bool>(m => !m)
+            .Build((bool m) => !m)
             .WhenTrue("right true")
             .WhenFalse("right false")
             .Create();

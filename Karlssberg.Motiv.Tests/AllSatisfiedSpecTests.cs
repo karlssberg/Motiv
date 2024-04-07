@@ -446,7 +446,7 @@ public class AllSatisfiedSpecTests
         int expected)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("underlying");
         
         var sut = Spec
@@ -467,7 +467,7 @@ public class AllSatisfiedSpecTests
     public void Should_surface_boolean_results_created_from_underlyingResult(bool modelA, bool modelB, bool expected, string expectedAssertion)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("underlying");
 
         var sut = Spec
@@ -489,7 +489,7 @@ public class AllSatisfiedSpecTests
     public void Should_surface_boolean_results_with_custom_assertions_created_from_underlyingResult(bool modelA, bool modelB, bool expected, string expectedAssertion)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("underlying");
 
         var sut = Spec

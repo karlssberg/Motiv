@@ -217,13 +217,13 @@ public class AndSpecTests
     private class IsSubscriptionActive(DateTime now) : Spec<Subscription>(() =>
     {
         var hasSubscriptionStarted = Spec
-            .Build<Subscription>(s => s.Start < now)
+            .Build((Subscription s) => s.Start < now)
             .WhenTrue("subscription has started")
             .WhenFalse("subscription has not started")
             .Create();
 
         var hasSubscriptionEnded = Spec
-            .Build<Subscription>(s => s.End < now)
+            .Build((Subscription s) => s.End < now)
             .WhenTrue("subscription has ended")
             .WhenFalse("subscription has not ended")
             .Create();

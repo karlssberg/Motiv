@@ -281,7 +281,7 @@ public class AtLeastNSatisfiedSpecBaseTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue("underlying satisfied")
             .WhenFalse("underlying not satisfied")
             .Create();
@@ -344,7 +344,7 @@ public class AtLeastNSatisfiedSpecBaseTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("is true");
@@ -366,7 +366,7 @@ public class AtLeastNSatisfiedSpecBaseTests
     {
         const string expected = "at least one satisfied";
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("underlying spec description");
@@ -421,7 +421,7 @@ public class AtLeastNSatisfiedSpecBaseTests
         int expected)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("underlying");
         
         var sut = Spec
