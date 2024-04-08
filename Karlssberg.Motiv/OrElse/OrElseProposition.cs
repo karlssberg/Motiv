@@ -23,7 +23,7 @@ internal sealed class OrElseProposition<TModel, TMetadata>(
                 orSpec.Proposition.Statement,
             OrElseSpec<TModel, TMetadata> orElseSpec =>
                 orElseSpec.Proposition.Statement,
-            ICompositeSpec compositeSpec =>
+            IBinaryOperationSpec compositeSpec =>
                 $"({compositeSpec.Proposition.Statement})",
             _ => operand.Proposition.Statement
         };
@@ -37,7 +37,7 @@ internal sealed class OrElseProposition<TModel, TMetadata>(
                 orSpec.Proposition.Detailed,
             OrElseSpec<TModel, TMetadata> orElseSpec =>
                 orElseSpec.Proposition.Detailed,
-            ICompositeSpec compositeSpec =>
+            IBinaryOperationSpec compositeSpec =>
                 $"({compositeSpec.Proposition.Detailed})",
             _ => operand.Proposition.Detailed
         };

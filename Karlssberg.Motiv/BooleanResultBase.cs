@@ -36,7 +36,7 @@ public abstract class BooleanResultBase
     public IEnumerable<string> AllAssertions =>
         this switch
         {
-            ICompositeBooleanResult result => result.Underlying.SelectMany(r => r.AllAssertions),
+            IBinaryOperationBooleanResult result => result.Underlying.SelectMany(r => r.AllAssertions),
             _ => Assertions
         };
 

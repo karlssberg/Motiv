@@ -3,7 +3,7 @@
 internal sealed class AndAlsoSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
     SpecBase<TModel, TMetadata> right)
-    : SpecBase<TModel, TMetadata>, ICompositeSpec
+    : SpecBase<TModel, TMetadata>, IBinaryOperationSpec
 {
     public override IProposition Proposition => 
         new AndAlsoProposition<TModel, TMetadata>(left, right);

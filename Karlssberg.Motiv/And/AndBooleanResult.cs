@@ -8,7 +8,7 @@
 internal sealed class AndBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right)
-    : BooleanResultBase<TMetadata>, ICompositeBooleanResult
+    : BooleanResultBase<TMetadata>, IBinaryOperationBooleanResult
 {
     public override bool Satisfied { get; } = left.Satisfied && right.Satisfied;
 

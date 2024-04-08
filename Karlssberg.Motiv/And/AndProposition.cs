@@ -23,8 +23,8 @@ internal sealed class AndProposition<TModel, TMetadata>(
                 andSpec.Proposition.Statement,
             AndAlsoSpec<TModel, TMetadata> andAlsoSpec =>
                 andAlsoSpec.Proposition.Statement,
-            ICompositeSpec compositeSpec =>
-                $"({compositeSpec.Proposition.Statement})",
+            IBinaryOperationSpec binarySpec =>
+                $"({binarySpec.Proposition.Statement})",
             _ => operand.Proposition.Statement
         };
     }
@@ -37,8 +37,8 @@ internal sealed class AndProposition<TModel, TMetadata>(
                 andSpec.Proposition.Detailed,
             AndAlsoSpec<TModel, TMetadata> andAlsoSpec =>
                 andAlsoSpec.Proposition.Detailed,
-            ICompositeSpec compositeSpec =>
-                $"({compositeSpec.Proposition.Detailed})",
+            IBinaryOperationSpec binarySpec =>
+                $"({binarySpec.Proposition.Detailed})",
             _ => operand.Proposition.Detailed
         };
     }

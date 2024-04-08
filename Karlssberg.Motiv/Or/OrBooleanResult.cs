@@ -5,7 +5,7 @@
 internal sealed class OrBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right)
-    : BooleanResultBase<TMetadata>, ICompositeBooleanResult
+    : BooleanResultBase<TMetadata>, IBinaryOperationBooleanResult
 {
     public override Explanation Explanation => GetCausalResults().CreateExplanation();
     

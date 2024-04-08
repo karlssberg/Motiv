@@ -238,7 +238,7 @@ public static class EnumerableExtensions
         result.Underlying.SelectMany(underlyingResult => 
             underlyingResult switch
             {
-                ICompositeBooleanResult => underlyingResult.GetUnderlyingPropositions(atDepth),
+                IBinaryOperationBooleanResult => underlyingResult.GetUnderlyingPropositions(atDepth),
                 _ when atDepth > 0 => underlyingResult.GetUnderlyingPropositions(atDepth - 1),
                 _ when atDepth <= 0 => result.Underlying,
             });
@@ -251,7 +251,7 @@ public static class EnumerableExtensions
         this BooleanResultBase<TMetadata> result) =>
         result switch
         {
-            ICompositeBooleanResult => result.UnderlyingWithMetadata.GetUnderlyingPropositions(),
+            IBinaryOperationBooleanResult => result.UnderlyingWithMetadata.GetUnderlyingPropositions(),
             _ => result.UnderlyingWithMetadata
         };
 }

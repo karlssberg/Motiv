@@ -3,7 +3,7 @@
 internal sealed class AndAlsoBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata>? right = null)
-    : BooleanResultBase<TMetadata>, ICompositeBooleanResult
+    : BooleanResultBase<TMetadata>, IBinaryOperationBooleanResult
 {
     public override bool Satisfied { get; } = left.Satisfied && (right?.Satisfied ?? false);
 

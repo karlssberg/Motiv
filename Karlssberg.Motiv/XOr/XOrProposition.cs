@@ -18,7 +18,7 @@ internal sealed class XOrProposition<TModel, TMetadata>(
         return operand switch 
         {
             XOrSpec<TModel, TMetadata> xOrSpec => xOrSpec.Proposition.Statement,
-            ICompositeSpec compositeSpec => $"({compositeSpec.Proposition.Statement})",
+            IBinaryOperationSpec binarySpec => $"({binarySpec.Proposition.Statement})",
             _ => operand.Proposition.Statement
         };
     }
@@ -28,7 +28,7 @@ internal sealed class XOrProposition<TModel, TMetadata>(
         return operand switch 
         {
             XOrSpec<TModel, TMetadata> xOrSpec => xOrSpec.Proposition.Detailed,
-            ICompositeSpec compositeSpec => $"({compositeSpec.Proposition.Detailed})",
+            IBinaryOperationSpec binarySpec => $"({binarySpec.Proposition.Detailed})",
             _ => operand.Proposition.Detailed
         };
     }

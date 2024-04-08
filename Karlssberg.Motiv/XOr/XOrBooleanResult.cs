@@ -5,7 +5,7 @@
 internal sealed class XOrBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right)
-    : BooleanResultBase<TMetadata>, ICompositeBooleanResult
+    : BooleanResultBase<TMetadata>, IBinaryOperationBooleanResult
 {
     /// <summary>Gets a value indicating whether the XOR operation is satisfied.</summary>
     public override bool Satisfied { get; } = left.Satisfied ^ right.Satisfied;

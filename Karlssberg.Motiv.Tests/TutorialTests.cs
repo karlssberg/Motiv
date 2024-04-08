@@ -70,7 +70,7 @@ public class TutorialTests
     }
 
     [Fact]
-    public void Should_demo_composite_spec()
+    public void Should_demo_spec_decorator()
     {
         var isPositive = Spec
             .Build<int>(n => n > 0)

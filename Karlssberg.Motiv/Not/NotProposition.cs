@@ -10,8 +10,8 @@ internal sealed class NotProposition<TModel, TMetadata>(SpecBase<TModel, TMetada
     {
         return (operand, underlyingSummary.FirstOrDefault()) switch
         {
-            (not ICompositeSpec, '!') => underlyingSummary.Substring(1),
-            (not ICompositeSpec, '(') => $"!{underlyingSummary}",
+            (not IBinaryOperationSpec, '!') => underlyingSummary.Substring(1),
+            (not IBinaryOperationSpec, '(') => $"!{underlyingSummary}",
             _ => $"!({underlyingSummary})"
         };
     }

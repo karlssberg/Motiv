@@ -11,7 +11,7 @@ internal sealed class NotBooleanResultDescription(BooleanResultBase operand) : R
     {
         return operand switch
         {
-           ICompositeBooleanResult => $"({underlyingDescription})",
+           IBinaryOperationBooleanResult => $"({underlyingDescription})",
             _ => underlyingDescription
         };
     }

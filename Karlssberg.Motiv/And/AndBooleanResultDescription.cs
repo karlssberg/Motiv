@@ -44,8 +44,8 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
                 andSpec.Description.Detailed,
             AndAlsoBooleanResult<TMetadata> andAlsoSpec =>
                 andAlsoSpec.Description.Detailed,
-            ICompositeBooleanResult compositeSpec =>
-                $"({compositeSpec.Description.Detailed})",
+            IBinaryOperationBooleanResult binaryResult =>
+                $"({binaryResult.Description.Detailed})",
             _ => result.Description.Detailed
         };
     }
@@ -58,8 +58,8 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
                 andSpec.Description.Reason,
             AndAlsoBooleanResult<TMetadata> andAlsoSpec =>
                 andAlsoSpec.Description.Reason,
-            ICompositeBooleanResult { Description.CausalOperandCount: > 1 } compositeSpec =>
-                $"({compositeSpec.Description.Reason})",
+            IBinaryOperationBooleanResult { Description.CausalOperandCount: > 1 } binaryResult =>
+                $"({binaryResult.Description.Reason})",
             _ => result.Description.Reason
         };
     }
