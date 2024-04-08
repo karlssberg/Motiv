@@ -30,15 +30,19 @@ public sealed class BooleanResultPredicateMetadataSpec<TModel, TMetadata, TUnder
             string because => because,
             _ => Proposition.ToReason(booleanResult.Satisfied)
         };
+        
+        var metadataTree = new MetadataTree<TMetadata>(
+            metadata,
+            booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>());
 
         var explanation = new Explanation(assertion)
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
         
-        return new BooleanResultPredicateBooleanResult<TMetadata, TUnderlyingMetadata>(
+        return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,
-            metadata.ToEnumerable(),
+            metadataTree,
             explanation,
             Proposition.ToReason(booleanResult.Satisfied));
     }

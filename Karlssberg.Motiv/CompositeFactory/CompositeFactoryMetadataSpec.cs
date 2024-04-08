@@ -35,7 +35,7 @@ internal sealed class CompositeFactoryMetadataSpec<TModel, TMetadata, TUnderlyin
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
 
-        return new BooleanResult<TMetadata, TUnderlyingMetadata>(
+        return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,
             metadataTree,
             explanation,

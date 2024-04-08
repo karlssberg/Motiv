@@ -25,15 +25,19 @@ internal sealed class BooleanResultPredicateExplanationSpec<TModel, TUnderlyingM
             true => whenTrue(model, booleanResult),
             false => whenFalse(model, booleanResult),
         };
-
+        
+        var metadataTree = new MetadataTree<string>(
+            assertion,
+            booleanResult.ResolveMetadataTrees<string, TUnderlyingMetadata>());
+        
         var explanation = new Explanation(assertion)
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
 
-        return new BooleanResultPredicateBooleanResult<string, TUnderlyingMetadata>(
+        return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
             booleanResult,
-            assertion.ToEnumerable(),
+            metadataTree,
             explanation,
             Proposition.ToReason(booleanResult.Satisfied));
     }
