@@ -21,14 +21,18 @@ internal sealed class CompositeFactoryExplanationSpec<TModel, TUnderlyingMetadat
             false => falseBecause(model, booleanResult),
         };
         
+        var metadataTree = new MetadataTree<string>(
+            assertion,
+            booleanResult.ResolveMetadataTrees<string, TUnderlyingMetadata>());
+        
         var explanation = new Explanation(assertion)
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
 
-        return new CompositeFactoryBooleanResult<string, TUnderlyingMetadata>(
+        return new BooleanResult<string, TUnderlyingMetadata>(
             booleanResult, 
-            assertion.ToEnumerable(), 
+            metadataTree, 
             explanation,
             Proposition.ToReason(booleanResult.Satisfied));
     }

@@ -301,25 +301,25 @@ public class TutorialTests
     [Fact]
     public void Should_harvest_assertions_from_a_boolean_result_predicate()
     {
-        var isEvenSpec = 
+        var isLongEvenSpec = 
             Spec.Build((long n) => n % 2 == 0)
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
 
-        var isPositiveSpec =
+        var isDecimalPositiveSpec =
             Spec.Build((decimal n) => n > 0)
                 .WhenTrue("positive")
                 .WhenFalse("not positive")
                 .Create();
 
-        var isEvenAndPositiveSpec = 
-            Spec.Build((int n) => isEvenSpec.IsSatisfiedBy(n) & isPositiveSpec.IsSatisfiedBy(n))
+        var isIntegerPositiveAndEvenSpec = 
+            Spec.Build((int n) => isLongEvenSpec.IsSatisfiedBy(n) & isDecimalPositiveSpec.IsSatisfiedBy(n))
                 .Create("even and positive");
         
-        isEvenAndPositiveSpec.IsSatisfiedBy(2).AllRootAssertions.Should().BeEquivalentTo("even", "positive");
-        isEvenAndPositiveSpec.IsSatisfiedBy(3).AllRootAssertions.Should().BeEquivalentTo("odd", "positive");
-        isEvenAndPositiveSpec.IsSatisfiedBy(0).AllRootAssertions.Should().BeEquivalentTo("even", "not positive");
-        isEvenAndPositiveSpec.IsSatisfiedBy(-3).AllRootAssertions.Should().BeEquivalentTo("odd", "not positive");
+        isIntegerPositiveAndEvenSpec.IsSatisfiedBy(2).AllRootAssertions.Should().BeEquivalentTo("even", "positive");
+        isIntegerPositiveAndEvenSpec.IsSatisfiedBy(3).AllRootAssertions.Should().BeEquivalentTo("odd", "positive");
+        isIntegerPositiveAndEvenSpec.IsSatisfiedBy(0).AllRootAssertions.Should().BeEquivalentTo("even", "not positive");
+        isIntegerPositiveAndEvenSpec.IsSatisfiedBy(-3).AllRootAssertions.Should().BeEquivalentTo("odd", "not positive");
     }
 }

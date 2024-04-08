@@ -1,8 +1,11 @@
-﻿namespace Karlssberg.Motiv.CompositeFactory;
+﻿namespace Karlssberg.Motiv;
 
-internal sealed class CompositeFactoryBooleanResult<TMetadata, TUnderlyingMetadata>(
+/// <summary>Represents a boolean result of changing the metadata type.</summary>
+/// <typeparam name="TMetadata">The type of the new metadata.</typeparam>
+/// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
+internal sealed class BooleanResult<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    IEnumerable<TMetadata> metadata,
+    MetadataTree<TMetadata> metadataTree,
     Explanation explanation,
     string reason)
     : BooleanResultBase<TMetadata>
@@ -15,10 +18,8 @@ internal sealed class CompositeFactoryBooleanResult<TMetadata, TUnderlyingMetada
             reason);
 
     public override Explanation Explanation => explanation;
-    
-    public override MetadataTree<TMetadata> MetadataTree => new(
-        metadata, 
-        booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>());
+
+    public override MetadataTree<TMetadata> MetadataTree =>  metadataTree;
     
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
     

@@ -82,7 +82,7 @@ public readonly ref struct BooleanResultPredicateSpecBuilder<TModel, TUnderlying
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
     /// <returns>An instance of <see cref="TrueHigherOrderFromUnderlyingSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> As(
-        Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate) =>
+        Func<IEnumerable<HigherOrder.BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate) =>
         new(predicate, higherOrderPredicate);
 
     /// <summary>Specifies a higher order predicate for the proposition.</summary>
@@ -90,9 +90,9 @@ public readonly ref struct BooleanResultPredicateSpecBuilder<TModel, TUnderlying
     /// <param name="causeSelector">A function that selects the causes of the boolean results.</param>
     /// <returns>An instance of <see cref="TrueHigherOrderFromUnderlyingSpecBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> As(
-        Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-        Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
-            IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector) =>
+        Func<IEnumerable<HigherOrder.BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
+        Func<bool, IEnumerable<HigherOrder.BooleanResult<TModel, TUnderlyingMetadata>>,
+            IEnumerable<HigherOrder.BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector) =>
         new(predicate, higherOrderPredicate, causeSelector);
 
     /// <summary>

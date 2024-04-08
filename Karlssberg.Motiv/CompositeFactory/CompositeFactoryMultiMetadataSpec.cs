@@ -24,14 +24,18 @@ internal sealed class CompositeFactoryMultiMetadataSpec<TModel, TMetadata, TUnde
             _ => [Proposition.ToReason(booleanResult.Satisfied)]
         };
         
+        var metadataTree = new MetadataTree<TMetadata>(
+            metadata,
+            booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>());
+        
         var explanation = new Explanation(assertions, assertions)
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
 
-        return new CompositeFactoryBooleanResult<TMetadata, TUnderlyingMetadata>(
+        return new BooleanResult<TMetadata, TUnderlyingMetadata>(
             booleanResult,
-            metadata,
+            metadataTree,
             explanation,
             Proposition.ToReason(booleanResult.Satisfied));
     }
