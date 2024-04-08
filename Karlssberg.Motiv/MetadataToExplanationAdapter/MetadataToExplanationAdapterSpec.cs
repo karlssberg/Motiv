@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.ChangeMetadataType;
+﻿namespace Karlssberg.Motiv.MetadataToExplanationAdapter;
 
 internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>(
     SpecBase<TModel, TUnderlyingModel> spec) 
@@ -9,15 +9,17 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
     {
         var result = spec.IsSatisfiedBy(model);
-        var metadata = result.MetadataTree switch
+        
+        var newMetadata = result.MetadataTree switch
         {
-            string reason => reason,
-            _ => spec.Proposition.Statement
+            IEnumerable<string> because => because,
+            _ => result.Assertions
         };
         
-        return new ChangeMetadataBooleanResult<string, TUnderlyingModel>(
+        return new BooleanResultWithUnderlying<string, TUnderlyingModel>(
             result,
-            metadata,
+            new MetadataTree<string>(newMetadata),
+            result.Explanation,
             spec.Proposition.ToReason(result.Satisfied));
     }
 }

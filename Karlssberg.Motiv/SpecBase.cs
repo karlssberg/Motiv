@@ -1,7 +1,7 @@
 ﻿using Karlssberg.Motiv.And;
 using Karlssberg.Motiv.AndAlso;
-using Karlssberg.Motiv.ChangeMetadataType;
 using Karlssberg.Motiv.ChangeModelType;
+using Karlssberg.Motiv.MetadataToExplanationAdapter;
 using Karlssberg.Motiv.Not;
 using Karlssberg.Motiv.Or;
 using Karlssberg.Motiv.OrElse;

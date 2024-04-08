@@ -22,7 +22,7 @@ internal sealed class SpecFactoryDecoratorMetadataSpec<TModel, TMetadata, TUnder
         };
         
         var assertion = metadata switch {
-            string reason => reason,
+            string because => because,
             _ => Proposition.ToReason(booleanResult.Satisfied)
         };
         
