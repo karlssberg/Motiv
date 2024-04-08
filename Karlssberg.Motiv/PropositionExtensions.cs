@@ -23,16 +23,21 @@ internal static class PropositionExtensions
     
     internal static string ToReason(
         this IProposition proposition,
+        bool isSatisfied) =>
+        proposition.Statement.ToReason(isSatisfied);
+
+    internal static string ToReason(
+        this string propositionStatement,
         bool isSatisfied)
     {
         return isSatisfied switch
         {
-            true when PropositionContains('!') => $"({proposition.Statement})",
-            true => proposition.Statement,
-            false when PropositionContains('!') => $"!({proposition.Statement})",
-            false => $"!{proposition.Statement}"
+            true when PropositionContains('!') => $"({propositionStatement})",
+            true => propositionStatement,
+            false when PropositionContains('!') => $"!({propositionStatement})",
+            false => $"!{propositionStatement}"
         };
 
-        bool PropositionContains(char ch) => proposition.Statement.Contains(ch);
+        bool PropositionContains(char ch) => propositionStatement.Contains(ch);
     }
 }

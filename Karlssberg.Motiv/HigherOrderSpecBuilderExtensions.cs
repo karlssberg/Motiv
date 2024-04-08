@@ -1,46 +1,47 @@
-﻿using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
-using Karlssberg.Motiv.SpecDecorator.SpecDecoratorSpecBuilders;
+﻿using Karlssberg.Motiv.BooleanResultPredicateProposition;
+using Karlssberg.Motiv.HigherOrderProposition.PropositionBuilders;
+using Karlssberg.Motiv.SpecDecoratorProposition.PropositionBuilders;
 
 namespace Karlssberg.Motiv;
 
 public static class HigherOrderSpecBuilderExtensions
 {
-    public static TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
-        this TrueSpecDecoratorSpecBuilder<TModel, TUnderlyingMetadata> builder) =>
+    public static TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
+        this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AllTrue());
-    public static TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
-        this BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> builder) =>
+    public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
+        this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AllTrue());
-    public static TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> AsAllSatisfied<TModel>(
-            this BooleanPredicateSpecBuilder<TModel> builder) =>
+    public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAllSatisfied<TModel>(
+            this BooleanPredicatePropositionBuilder<TModel> builder) =>
             builder.As(results => results.All(tuple => tuple.Satisfied));
     
     
-    public static TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> AsAnySatisfied<TModel, TUnderlyingMetadata>(
-        this TrueSpecDecoratorSpecBuilder<TModel, TUnderlyingMetadata> builder) =>
+    public static TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> AsAnySatisfied<TModel, TUnderlyingMetadata>(
+        this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AnyTrue());
-    public static TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> AsAnySatisfied<TModel, TUnderlyingMetadata>(
-        this BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> builder) =>
+    public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAnySatisfied<TModel, TUnderlyingMetadata>(
+        this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AnyTrue());
-    public static  TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> AsAnySatisfied<TModel>(
-        this BooleanPredicateSpecBuilder<TModel> builder) =>
+    public static  TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAnySatisfied<TModel>(
+        this BooleanPredicatePropositionBuilder<TModel> builder) =>
         builder.As(booleanResults => booleanResults.Any(result => result.Satisfied));
     
     
-    public static TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> AsNoneSatisfied<TModel, TUnderlyingMetadata>(
-        this TrueSpecDecoratorSpecBuilder<TModel, TUnderlyingMetadata> builder) =>
+    public static TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> AsNoneSatisfied<TModel, TUnderlyingMetadata>(
+        this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AllFalse());
-    public static TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> AsNoneSatisfied<TModel, TUnderlyingMetadata>(
-        this BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> builder) =>
+    public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsNoneSatisfied<TModel, TUnderlyingMetadata>(
+        this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AllFalse());
 
-    public static TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> AsNoneSatisfied<TModel>(
-        this BooleanPredicateSpecBuilder<TModel> builder) =>
+    public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsNoneSatisfied<TModel>(
+        this BooleanPredicatePropositionBuilder<TModel> builder) =>
         builder.As(booleanResults => booleanResults.All(result => !result.Satisfied));
     
     
-    public static TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> AsNSatisfied<TModel, TUnderlyingMetadata>(
-        this TrueSpecDecoratorSpecBuilder<TModel, TUnderlyingMetadata> builder,
+    public static TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> AsNSatisfied<TModel, TUnderlyingMetadata>(
+        this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
@@ -48,8 +49,8 @@ public static class HigherOrderSpecBuilderExtensions
             booleanResults => booleanResults.CountTrue() == n,
             (_, booleanResults) => booleanResults.WhereTrue());
     }
-    public static TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> AsNSatisfied<TModel, TUnderlyingMetadata>(
-        this BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> builder,
+    public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsNSatisfied<TModel, TUnderlyingMetadata>(
+        this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
@@ -57,8 +58,8 @@ public static class HigherOrderSpecBuilderExtensions
             booleanResults => booleanResults.CountTrue() == n,
             (_, booleanResults) => booleanResults.WhereTrue());
     }
-    public static TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> AsNSatisfied<TModel>(
-        this BooleanPredicateSpecBuilder<TModel> builder,
+    public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsNSatisfied<TModel>(
+        this BooleanPredicatePropositionBuilder<TModel> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
@@ -68,8 +69,8 @@ public static class HigherOrderSpecBuilderExtensions
     }
     
     
-    public static TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> AsAtLeastNSatisfied<TModel, TUnderlyingMetadata>(
-        this TrueSpecDecoratorSpecBuilder<TModel, TUnderlyingMetadata> builder,
+    public static TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> AsAtLeastNSatisfied<TModel, TUnderlyingMetadata>(
+        this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
@@ -77,8 +78,8 @@ public static class HigherOrderSpecBuilderExtensions
             booleanResults => booleanResults.CountTrue() >= n,
             (_, booleanResults) => booleanResults.WhereTrue());
     }
-    public static TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> AsAtLeastNSatisfied<TModel, TUnderlyingMetadata>(
-        this BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> builder,
+    public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAtLeastNSatisfied<TModel, TUnderlyingMetadata>(
+        this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
@@ -86,8 +87,8 @@ public static class HigherOrderSpecBuilderExtensions
             booleanResults => booleanResults.CountTrue() >= n,
             (_, booleanResults) => booleanResults.WhereTrue());
     }
-    public static TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> AsAtLeastNSatisfied<TModel>(
-        this BooleanPredicateSpecBuilder<TModel> builder,
+    public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAtLeastNSatisfied<TModel>(
+        this BooleanPredicatePropositionBuilder<TModel> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
@@ -97,8 +98,8 @@ public static class HigherOrderSpecBuilderExtensions
     }
     
 
-    public static TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
-        this TrueSpecDecoratorSpecBuilder<TModel, TUnderlyingMetadata> builder,
+    public static TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
+        this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
@@ -106,8 +107,8 @@ public static class HigherOrderSpecBuilderExtensions
             booleanResults => booleanResults.CountTrue() <= n,
             (_, booleanResults) => booleanResults.WhereTrue());
     }
-    public static TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
-        this BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> builder,
+    public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
+        this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
@@ -115,8 +116,8 @@ public static class HigherOrderSpecBuilderExtensions
             booleanResults => booleanResults.CountTrue() <= n,
             (_, booleanResults) => booleanResults.WhereTrue());
     }
-    public static TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> AsAtMostNSatisfied<TModel>(
-        this BooleanPredicateSpecBuilder<TModel> builder,
+    public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAtMostNSatisfied<TModel>(
+        this BooleanPredicatePropositionBuilder<TModel> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));

@@ -20,7 +20,7 @@
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Version>2.0.1</Version>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <None Include="..\README.md" Pack="true" PackagePath="\" />
         <None Include="..\LICENSE" Pack="true" PackagePath="\" />
@@ -82,17 +82,8 @@
         <Compile Update="Composite\CompositeSpecBuilders\Explanation\ExplanationMultiAssertionCompositeSpecFactory.cs">
           <DependentUpon>FalseAssertionCompositeSpecBuilder.cs</DependentUpon>
         </Compile>
-        <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Explanation\ExplanationAssertionWithPropositionBooleanResultPredicateSpecFactory.cs">
-          <DependentUpon>FalseAssertionWithPropositionCompositeSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Explanation\ExplanationMultiAssertionBooleanResultPredicateSpecFactory.cs">
-          <DependentUpon>FalseAssertionBooleanResultPredicateSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Explanation\ExplanationWithPropositionBooleanResultPredicateSpecFactory.cs">
-          <DependentUpon>FalseAssertionWithPropositionCompositeSpecBuilder.cs</DependentUpon>
-        </Compile>
-        <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Explanation\ExplanationMultiBooleanResultPredicateSpecFactory.cs">
-          <DependentUpon>FalseAssertionBooleanResultPredicateSpecBuilder.cs</DependentUpon>
+        <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Explanation\MultiAssertionExplanationPropositionFactory.cs">
+          <DependentUpon>FalseMultiAssertionBooleanResultPredicateSpecBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationFromBooleanResultWithPropositionHigherOrderSpecFactory.cs">
           <DependentUpon>FalseAssertionsFromBooleanResultWithPropositionHigherOrderSpecBuilder.cs</DependentUpon>
@@ -105,6 +96,48 @@
         </Compile>
         <Compile Update="HigherOrder\HigherOrderSpecBuilders\Explanation\ExplanationFromBooleanPredicateHigherOrderSpecFactory.cs">
           <DependentUpon>FalseAssertionsFromBooleanPredicateHigherOrderSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecFactoryDecorator\SpecFactoryDecoratorSpecBuilders\Explanation\ExplanationMultiAssertionWithPropositionSpecFactoryDecoratorSpecFactory.cs">
+          <DependentUpon>FalseAssertionWithPropositionSpecFactoryDecoratorSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecFactoryDecorator\SpecFactoryDecoratorSpecBuilders\Explanation\ExplanationWithPropositionSpecFactoryDecoratorSpecFactory.cs">
+          <DependentUpon>FalseAssertionWithPropositionSpecFactoryDecoratorSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecFactoryDecorator\SpecFactoryDecoratorSpecBuilders\Explanation\ExplanationSpecFactoryDecoratorSpecFactory.cs">
+          <DependentUpon>FalseAssertionSpecFactoryDecoratorSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecFactoryDecorator\SpecFactoryDecoratorSpecBuilders\Explanation\ExplanationMultiAssertionSpecFactoryDecoratorSpecFactory.cs">
+          <DependentUpon>FalseAssertionSpecFactoryDecoratorSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecDecorator\SpecDecoratorSpecBuilders\Explanation\ExplanationWithPropositionSpecDecoratorSpecFactory.cs">
+          <DependentUpon>FalseAssertionWithPropositionSpecDecoratorSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecDecorator\SpecDecoratorSpecBuilders\Explanation\ExplanationMultiAssertionWithPropositionSpecDecoratorSpecFactory.cs">
+          <DependentUpon>FalseAssertionWithPropositionSpecDecoratorSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecDecorator\SpecDecoratorSpecBuilders\Explanation\ExplanationMultiAssertionSpecDecoratorSpecFactory.cs">
+          <DependentUpon>FalseAssertionSpecDecoratorSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecDecorator\SpecDecoratorSpecBuilders\Explanation\ExplanationSpecDecoratorSpecFactory.cs">
+          <DependentUpon>FalseAssertionSpecDecoratorSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecDecorator\SpecDecoratorSpecBuilders\Metadata\MetadataSpecDecoratorSpecFactory.cs">
+          <DependentUpon>FalseMetadataSpecDecoratorSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecFactoryDecorator\SpecFactoryDecoratorSpecBuilders\Metadata\MetadataSpecFactoryDecoratorSpecFactory.cs">
+          <DependentUpon>FalseMetadataSpecFactoryDecoratorSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Metadata\MetadataPropositionFactory.cs">
+          <DependentUpon>FalseMetadataCompositeSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Explanation\MultiAssertionExplanationWithNamePropositionFactory.cs">
+          <DependentUpon>FalseAssertionWithPropositionBooleanResultPredicateSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicate\BooleanResultPredicateBuilders\Explanation\ExplanationWithNamePropositionFactory.cs">
+          <DependentUpon>FalseAssertionWithPropositionBooleanResultPredicateSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecFactoryDecorator\PropositionBuilders\Explanation\ExplanationPropositionFactory.cs">
+          <DependentUpon>FalseAssertionSpecFactoryDecoratorPropositionBuilder.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 
