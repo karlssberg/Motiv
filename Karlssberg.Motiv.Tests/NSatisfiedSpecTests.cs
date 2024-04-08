@@ -65,8 +65,8 @@ public class NSatisfiedSpecTests
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
         result.Satisfied.Should().Be(expected);
-        result.ExplanationTree.Assertions.Should().BeEquivalentTo(expectedShallowAssertionSerialized);
-        result.ExplanationTree.Underlying.GetAssertions().Should().BeEquivalentTo(expectedDeepAssertions);
+        result.Explanation.Assertions.Should().BeEquivalentTo(expectedShallowAssertionSerialized);
+        result.Explanation.Underlying.GetAssertions().Should().BeEquivalentTo(expectedDeepAssertions);
     }
     
     [Theory]

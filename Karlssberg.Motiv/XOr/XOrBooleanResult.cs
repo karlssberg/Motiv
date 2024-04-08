@@ -8,9 +8,9 @@ internal sealed class XOrBooleanResult<TMetadata>(
     : BooleanResultBase<TMetadata>, ICompositeBooleanResult
 {
     /// <summary>Gets a value indicating whether the XOR operation is satisfied.</summary>
-    public override bool Satisfied => left.Satisfied ^ right.Satisfied;
+    public override bool Satisfied { get; } = left.Satisfied ^ right.Satisfied;
 
-    public override ExplanationTree ExplanationTree => GetResults().CreateExplanation();
+    public override Explanation Explanation => GetResults().CreateExplanation();
 
     /// <summary>Gets the description of the XOR operation.</summary>
     public override ResultDescriptionBase Description =>

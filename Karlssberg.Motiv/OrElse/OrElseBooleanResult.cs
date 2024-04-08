@@ -10,7 +10,7 @@ internal sealed class OrElseBooleanResult<TMetadata>(
     public override ResultDescriptionBase Description => 
         new OrElseBooleanResultDescription<TMetadata>(left, right, GetCauses());
     
-    public override ExplanationTree ExplanationTree => GetCauses().CreateExplanation();
+    public override Explanation Explanation => GetCauses().CreateExplanation();
     
     public override MetadataTree<TMetadata> MetadataTree => new(GetCauses().GetMetadata());
 

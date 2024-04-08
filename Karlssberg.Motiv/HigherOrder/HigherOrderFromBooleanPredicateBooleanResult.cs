@@ -17,12 +17,12 @@ internal sealed class HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => 
         Enumerable.Empty<BooleanResultBase<TMetadata>>();
     
-    public override bool Satisfied => isSatisfied;
+    public override bool Satisfied { get; } = isSatisfied;
 
     public override ResultDescriptionBase Description => new BooleanResultDescription(reason);
 
-    public override ExplanationTree ExplanationTree => new(assertion)
+    public override Explanation Explanation => new(assertion)
     {
-        Underlying = Enumerable.Empty<ExplanationTree>()
+        Underlying = Enumerable.Empty<Explanation>()
     };
 }

@@ -17,7 +17,7 @@ public class ExplanationSpecTests
         var result = spec.IsSatisfiedBy(model);
         result.Assertions.Should().BeEquivalentTo(expected);
         result.Reason.Should().Be(expected);
-        result.ExplanationTree.Assertions.Should().BeEquivalentTo(expected);
+        result.Explanation.Assertions.Should().BeEquivalentTo(expected);
     }
     
     [Theory]

@@ -45,19 +45,19 @@ public static class EnumerableExtensions
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results.Any(result => !result.Satisfied);
 
-    internal static ExplanationTree CreateExplanation(
+    internal static Explanation CreateExplanation(
         this IEnumerable<BooleanResultBase> underlyingResults)
     {
         var resultArray = underlyingResults.ToArray();
 
         var reasons = resultArray
-            .SelectMany(result => result.ExplanationTree.Assertions)
+            .SelectMany(result => result.Explanation.Assertions)
             .Distinct();
 
         var underlying = resultArray
-            .Select(result => result.ExplanationTree);
+            .Select(result => result.Explanation);
 
-        return new ExplanationTree(reasons)
+        return new Explanation(reasons)
         {
             Underlying = underlying
         };
@@ -97,39 +97,54 @@ public static class EnumerableExtensions
             .SelectMany(e => e.Metadata);
     
     public static IEnumerable<string> GetAssertions(
-        this IEnumerable<ExplanationTree> explanations) =>
+        this IEnumerable<Explanation> explanations) =>
         explanations.SelectMany(e => e.Assertions);
     
     public static IEnumerable<string> GetAssertionsAtDepth(
-        this ExplanationTree explanationTree,
+        this Explanation explanation,
         int atDepth) =>
         atDepth switch
         {
-            > 0 => explanationTree.Underlying.GetAssertionsAtDepth(atDepth - 1).Distinct(),
-            0 => explanationTree.Assertions,
+            0 => explanation.Assertions,
+            > 0 => explanation.Underlying.GetAssertionsAtDepth(atDepth - 1).Distinct(),
             _ => throw new ArgumentOutOfRangeException(nameof(atDepth), "Depth must be a non-negative integer.")
         };
     
     private static IEnumerable<string> GetAssertionsAtDepth(
-        this IEnumerable<ExplanationTree> explanations,
+        this IEnumerable<Explanation> explanations,
         int atDepth) =>
         atDepth switch
         {
-            > 0 => explanations.GetAssertionsAtDepth(atDepth - 1),
             0 => explanations.SelectMany(e => e.Assertions),
+            > 0 => explanations.GetAssertionsAtDepth(atDepth - 1),
             _ => throw new ArgumentOutOfRangeException(nameof(atDepth), "Depth must be a non-negative integer.")
         };
     
+    public static IEnumerable<string> GetAllAssertionsAtDepth(
+        this BooleanResultBase result,
+        int atDepth) =>
+        atDepth switch
+        {
+            0 => result.AllAssertions,
+            > 0 => result.GetUnderlyingPropositions().GetAllAssertionsAtDepth(atDepth - 1).Distinct(),
+            _ => throw new ArgumentOutOfRangeException(nameof(atDepth), "Depth must be a non-negative integer.")
+        };
+    
+    private static IEnumerable<string> GetAllAssertionsAtDepth(
+        this IEnumerable<BooleanResultBase> results,
+        int atDepth) =>
+        results.SelectMany(result => result.GetAllAssertionsAtDepth(atDepth));
+    
     public static IEnumerable<string> GetRootAssertions(
         this BooleanResultBase result) =>
-        result.ExplanationTree
+        result.Explanation
             .Underlying
             .GetRootAssertions()
             .Distinct()
             .ElseIfEmpty(result.Assertions);
     
     private static IEnumerable<string> GetRootAssertions(
-        this IEnumerable<ExplanationTree> explanations) =>
+        this IEnumerable<Explanation> explanations) =>
         explanations.SelectMany(explanation => explanation
             .Underlying
             .GetRootAssertions()
@@ -212,5 +227,32 @@ public static class EnumerableExtensions
 
         return true;
     }
+    
+    internal static IEnumerable<BooleanResultBase> GetUnderlyingPropositions(
+        this IEnumerable<BooleanResultBase> results) =>
+        results.SelectMany(GetUnderlyingPropositions);
+
+    internal static IEnumerable<BooleanResultBase> GetUnderlyingPropositions(
+        this BooleanResultBase result,
+        int atDepth = 0) =>
+        result.Underlying.SelectMany(underlyingResult => 
+            underlyingResult switch
+            {
+                ICompositeBooleanResult => underlyingResult.GetUnderlyingPropositions(atDepth),
+                _ when atDepth > 0 => underlyingResult.GetUnderlyingPropositions(atDepth - 1),
+                _ when atDepth <= 0 => result.Underlying,
+            });
+
+    internal static IEnumerable<BooleanResultBase<TMetadata>> GetUnderlyingPropositions<TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
+        results.SelectMany(GetUnderlyingPropositions);
+
+    internal static IEnumerable<BooleanResultBase<TMetadata>> GetUnderlyingPropositions<TMetadata>(
+        this BooleanResultBase<TMetadata> result) =>
+        result switch
+        {
+            ICompositeBooleanResult => result.UnderlyingWithMetadata.GetUnderlyingPropositions(),
+            _ => result.UnderlyingWithMetadata
+        };
 }
 

@@ -1,13 +1,11 @@
 ﻿namespace Karlssberg.Motiv.ChangeMetadataType;
 
-internal sealed class MetadataToExplnationAdapterSpec<TModel, TUnderlyingModel>(
+internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>(
     SpecBase<TModel, TUnderlyingModel> spec) 
     : SpecBase<TModel, string>
 {
-    /// <inheritdoc />
     public override IProposition Proposition => spec.Proposition;
 
-    /// <inheritdoc />
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
     {
         var result = spec.IsSatisfiedBy(model);

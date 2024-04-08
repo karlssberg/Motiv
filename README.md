@@ -319,14 +319,19 @@ var allAreNegative =
             { NoneSatisfied: true } when eval.Models.All(m => m is 0) => ["all are 0"],
             { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
             { NoneSatisfied: true } =>  ["none are negative numbers"],
-            _ => eval.FalseModels.Select(n => n is 0
-                    ? "0 is neither positive or negative"
-                    : $"{n} is positive")
+            _ => eval.FalseResults.GetAssertions()
         })
         .Create("all are negative");
 
-allAreNegativeSpec.IsSatisfiedBy([]).Assertions; // ["0 is not negative", "1 is not negative", "2 is not negative"]
-allAreNegativeSpec.IsSatisfiedBy([-2, -1, 0, 1, 2]).Assertions; // ["0 is not negative", "1 is not negative", "2 is not negative"]
+allAreNegative.IsSatisfiedBy([]).Assertions; // ["there is an absence of numbers"]
+allAreNegative.IsSatisfiedBy([-10]).Assertions; // ["-10 is negative and is the only number"]
+allAreNegative.IsSatisfiedBy([-2, -4, -6, -8]).Assertions; // ["all are negative numbers"]
+allAreNegative.IsSatisfiedBy([0]).Assertions; // ["the number is 0 and is the only number"]
+allAreNegative.IsSatisfiedBy([11]).Assertions; // ["11 is positive and is the only number"]
+allAreNegative.IsSatisfiedBy([0, 0, 0, 0]).Assertions; // ["all are 0"]
+allAreNegative.IsSatisfiedBy([2, 4, 6, 8]).Assertions; // ["all are positive numbers"]
+allAreNegative.IsSatisfiedBy([0, 1, 2, 3]).Assertions; // ["none are negative numbers"]
+allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions; // ["0 is not negative", "9 is not negative"]
 ```
 
 ## Tradeoffs

@@ -5,10 +5,8 @@ internal sealed class ChangeModelTypeSpec<TParentModel, TModel, TMetadata>(
     Func<TParentModel, TModel> modelSelector)
     : SpecBase<TParentModel, TMetadata>
 {
-    /// <inheritdoc />
     public override IProposition Proposition => spec.Proposition;
 
-    /// <inheritdoc />
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TParentModel model)
     {
         return WrapException.IfIsSatisfiedByMethodFails(
@@ -16,6 +14,5 @@ internal sealed class ChangeModelTypeSpec<TParentModel, TModel, TMetadata>(
             () => spec.IsSatisfiedBy(modelSelector(model)));
     }
 
-    /// <inheritdoc />
     public override string ToString() => spec.ToString();
 }

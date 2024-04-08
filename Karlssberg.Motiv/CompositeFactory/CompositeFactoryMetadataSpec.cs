@@ -8,11 +8,9 @@ internal sealed class CompositeFactoryMetadataSpec<TModel, TMetadata, TUnderlyin
     : SpecBase<TModel, TMetadata>
 {
     
-    /// <inheritdoc />
     public override IProposition Proposition => new Proposition(propositionalAssertion);
 
     
-    /// <inheritdoc />
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
         var booleanResult = underlyingSpecFactory(model).IsSatisfiedBy(model);
@@ -23,15 +21,20 @@ internal sealed class CompositeFactoryMetadataSpec<TModel, TMetadata, TUnderlyin
             false => whenFalse(model, booleanResult),
         };
         
-        var assertions = metadata switch {
+        var assertion = metadata switch {
             string reason => reason,
             _ => Proposition.ToReason(booleanResult.Satisfied)
+        };
+        
+        var explanation = new Explanation(assertion)
+        {
+            Underlying = booleanResult.Explanation.ToEnumerable()
         };
 
         return new CompositeFactoryBooleanResult<TMetadata, TUnderlyingMetadata>(
             booleanResult,
             metadata.ToEnumerable(),
-            assertions.ToEnumerable(),
+            explanation,
             Proposition.ToReason(booleanResult.Satisfied));
     }
 }

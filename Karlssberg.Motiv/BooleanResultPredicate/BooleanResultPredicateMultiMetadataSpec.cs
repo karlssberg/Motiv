@@ -28,14 +28,19 @@ public sealed class BooleanResultPredicateMultiMetadataSpec<TModel, TMetadata, T
 
         var assertions = metadata switch
         {
-            IEnumerable<string> assertion => assertion,
-            _ => Proposition.ToReason(booleanResult.Satisfied).ToEnumerable()
+            IEnumerable<string> assertion => assertion.ToArray(),
+            _ => [Proposition.ToReason(booleanResult.Satisfied)]
+        };
+        
+        var explanation = new Explanation(assertions, assertions)
+        {
+            Underlying = booleanResult.Explanation.ToEnumerable()
         };
         
         return new BooleanResultPredicateBooleanResult<TMetadata,TUnderlyingMetadata>(
             booleanResult,
             metadata,
-            assertions,
+            explanation,
             Proposition.ToReason(booleanResult.Satisfied));
     }
 }

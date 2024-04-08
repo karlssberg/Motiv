@@ -10,29 +10,21 @@ internal sealed class AndBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> right)
     : BooleanResultBase<TMetadata>, ICompositeBooleanResult
 {
-    /// <inheritdoc />
     public override bool Satisfied { get; } = left.Satisfied && right.Satisfied;
 
-    /// <inheritdoc />
     public override ResultDescriptionBase Description =>
         new AndBooleanResultDescription<TMetadata>(left, right, GetCausalResults());
 
-    /// <inheritdoc />
-    public override ExplanationTree ExplanationTree => GetCausalResults().CreateExplanation();
+    public override Explanation Explanation => GetCausalResults().CreateExplanation();
 
-    /// <inheritdoc />
     public override MetadataTree<TMetadata> MetadataTree => CreateMetadataSet();
     
-    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
 
-    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
 
-    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase> Causes => GetCausalResults();
 
-    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => GetCausalResults();
 
     private MetadataTree<TMetadata> CreateMetadataSet()
@@ -52,7 +44,7 @@ internal sealed class AndBooleanResult<TMetadata>(
     
     private IEnumerable<BooleanResultBase<TMetadata>> GetResults()
     {
-            yield return left;
-            yield return right;
+        yield return left;
+        yield return right;
     }
 }

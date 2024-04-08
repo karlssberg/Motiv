@@ -31,10 +31,15 @@ public sealed class BooleanResultPredicateMetadataSpec<TModel, TMetadata, TUnder
             _ => Proposition.ToReason(booleanResult.Satisfied)
         };
 
+        var explanation = new Explanation(assertion)
+        {
+            Underlying = booleanResult.Explanation.ToEnumerable()
+        };
+        
         return new BooleanResultPredicateBooleanResult<TMetadata, TUnderlyingMetadata>(
             booleanResult,
             metadata.ToEnumerable(),
-            assertion.ToEnumerable(),
+            explanation,
             Proposition.ToReason(booleanResult.Satisfied));
     }
 }

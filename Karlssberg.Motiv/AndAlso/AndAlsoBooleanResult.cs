@@ -10,7 +10,7 @@ internal sealed class AndAlsoBooleanResult<TMetadata>(
     public override ResultDescriptionBase Description =>
         new AndAlsoBooleanResultDescription<TMetadata>(left, right, GetCauses());
     
-    public override ExplanationTree ExplanationTree => GetCauses().CreateExplanation();
+    public override Explanation Explanation => GetCauses().CreateExplanation();
     
     public override MetadataTree<TMetadata> MetadataTree => new(GetCauses().GetMetadata());
     

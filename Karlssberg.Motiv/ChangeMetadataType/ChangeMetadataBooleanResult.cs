@@ -9,21 +9,18 @@ internal sealed class ChangeMetadataBooleanResult<TMetadata, TUnderlyingMetadata
     string assertion)
     : BooleanResultBase<TMetadata>
 {
-    public override bool Satisfied => booleanResult.Satisfied;
+    public override bool Satisfied { get; } = booleanResult.Satisfied;
 
     public override ResultDescriptionBase Description =>
         new BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(
             booleanResult,
             assertion);
 
-    public override ExplanationTree ExplanationTree =>
-        new(Description)
-        {
-            Underlying = booleanResult.ExplanationTree.ToEnumerable()
-        };
-    public override MetadataTree<TMetadata> MetadataTree => new(metadata);
+    public override Explanation Explanation => booleanResult.Explanation;
     
-    public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
+    public override MetadataTree<TMetadata> MetadataTree => new(metadata);
+
+    public override IEnumerable<BooleanResultBase> Underlying => booleanResult.Underlying;
     
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => 
         booleanResult switch

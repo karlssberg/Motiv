@@ -26,10 +26,15 @@ internal sealed class BooleanResultPredicateExplanationSpec<TModel, TUnderlyingM
             false => whenFalse(model, booleanResult),
         };
 
+        var explanation = new Explanation(assertion)
+        {
+            Underlying = booleanResult.Explanation.ToEnumerable()
+        };
+
         return new BooleanResultPredicateBooleanResult<string, TUnderlyingMetadata>(
             booleanResult,
             assertion.ToEnumerable(),
-            assertion.ToEnumerable(),
+            explanation,
             Proposition.ToReason(booleanResult.Satisfied));
     }
 }

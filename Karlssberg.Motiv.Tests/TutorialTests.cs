@@ -185,9 +185,9 @@ public class TutorialTests
 
     private class IsNegativeIntegerSpec() : Spec<int>(
         Spec.Build((int n) => n < 0)
-            .WhenTrue("negative")
-            .WhenFalse("not negative")
-            .Create());
+            .WhenTrue(n => $"{n} is negative")
+            .WhenFalse(n => $"{n} is not negative")
+            .Create("is negative"));
     
     [Fact]
     public void Should_demonstrate_is_even_spec_as_an_all_satisfied_higher_order_logic()
@@ -261,9 +261,7 @@ public class TutorialTests
                     { NoneSatisfied: true } when eval.Models.All(m => m is 0) => ["all are 0"],
                     { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
                     { NoneSatisfied: true } =>  ["none are negative numbers"],
-                    _ => eval.FalseModels.Select(n => n is 0
-                            ? "0 is neither positive or negative"
-                            : $"{n} is positive")
+                    _ => eval.FalseResults.GetAssertions()
                 })
                 .Create("all are negative");
 
@@ -297,7 +295,7 @@ public class TutorialTests
 
 
         allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Satisfied.Should().BeFalse();
-        allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions.Should().BeEquivalentTo("9 is positive", "0 is neither positive or negative");
+        allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions.Should().BeEquivalentTo("0 is not negative", "9 is not negative");
     }
     
     [Fact]

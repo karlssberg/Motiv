@@ -17,6 +17,7 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     {
         Model = model ?? throw new ArgumentNullException(nameof(model));
         _underlyingResult = underlyingResult ?? throw new ArgumentNullException(nameof(underlyingResult));
+        Satisfied = underlyingResult.Satisfied;
     }
 
     /// <summary>Gets the associated model.</summary>
@@ -25,14 +26,18 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     /// <summary>Gets the description of the result.</summary>
     public override ResultDescriptionBase Description => _underlyingResult.Description;
 
-    public override ExplanationTree ExplanationTree => _underlyingResult.ExplanationTree;
+    public override Explanation Explanation => _underlyingResult.Explanation;
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
-    public override bool Satisfied => _underlyingResult.Satisfied;
+    public override bool Satisfied { get; }
 
     public override MetadataTree<TMetadata> MetadataTree => _underlyingResult.MetadataTree;
+    
     public override IEnumerable<BooleanResultBase> Underlying  => _underlyingResult.ToEnumerable();
+    
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => _underlyingResult.ToEnumerable();
+    
     public override IEnumerable<BooleanResultBase> Causes => _underlyingResult.Causes;
+    
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => _underlyingResult.CausesWithMetadata;
 }

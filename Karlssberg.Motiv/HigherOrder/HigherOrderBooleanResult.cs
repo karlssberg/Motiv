@@ -19,18 +19,18 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
         causes.ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();
     
-    public override bool Satisfied => isSatisfied;
+    public override bool Satisfied { get; } = isSatisfied;
 
     public override ResultDescriptionBase Description =>
         new HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
             reason,
             causes);
 
-    public override ExplanationTree ExplanationTree => 
+    public override Explanation Explanation => 
         new (assertions)
         {
             Underlying = causes
-                .Select(cause => cause.ExplanationTree)
-                .ElseIfEmpty(underlyingResults.Select(result => result.ExplanationTree))
+                .Select(cause => cause.Explanation)
+                .ElseIfEmpty(underlyingResults.Select(result => result.Explanation))
         };
 }

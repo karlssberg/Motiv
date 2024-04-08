@@ -40,3 +40,27 @@ In real-world scenarios, you will probably want to describe edge cases in a more
 operations will most likely require special language about empty or full sets, regardless of the logic being 
 evaluated.  To assist with this, there is a _result_ object that captures the state of the evaluation and has 
 convenient properties that work seamlessly with pattern matching.
+
+```csharp
+var allAreNegative =
+    Spec.Build(new IsNegativeIntegerSpec())
+        .AsAllSatisfied()
+        .WhenTrue(eval => eval switch
+        {
+            { Count: 0 } => "there is an absence of numbers",
+            { Models: [< 0 and var n] } => $"{n} is negative and is the only number",
+            _ => "all are negative numbers"
+        })
+        .WhenFalse(eval => eval switch
+        {
+            { Models: [0] } => ["the number is 0 and is the only number"],
+            { Models: [> 0 and var n] } => [$"{n} is positive and is the only number"],
+            { NoneSatisfied: true } when eval.Models.All(m => m is 0) => ["all are 0"],
+            { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
+            { NoneSatisfied: true } =>  ["none are negative numbers"],
+            _ => eval.FalseModels.Select(n => n is 0
+                    ? "0 is neither positive or negative"
+                    : $"{n} is positive")
+        })
+        .Create("all are negative");
+```

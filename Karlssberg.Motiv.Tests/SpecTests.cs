@@ -64,7 +64,7 @@ public class SpecTests
         
         result.MetadataTree.Should().ContainSingle(expectedAssertion);
         result.MetadataTree.Underlying.SelectMany(metadataTree => metadataTree).Should().BeEquivalentTo(model.ToString());
-        result.ExplanationTree.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        result.Explanation.Assertions.Should().BeEquivalentTo(expectedAssertion);
         result.Description.Reason.Should().Be(expectedDescription);
     }
 

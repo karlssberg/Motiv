@@ -4,7 +4,7 @@ public class DoesHandContainSpecifiedRanksSpec(ICollection<Rank> ranks) : Spec<H
     Spec.Build(UnderlyingSpec(ranks))
         .AsAllSatisfied()
         .WhenTrue($"all cards are either {string.Join(", or ", ranks)}")
-        .WhenFalse(evaluation => evaluation.CausalResults.SelectMany(r => r.ExplanationTree.Assertions))
+        .WhenFalse(evaluation => evaluation.CausalResults.SelectMany(r => r.Explanation.Assertions))
         .Create()
         .ChangeModelTo<Hand>(hand => hand.Cards))
 {

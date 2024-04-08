@@ -29,10 +29,10 @@ public sealed class FirstOrderBooleanResult<TMetadata>(
         Enumerable.Empty<BooleanResultBase<TMetadata>>();
 
     /// <summary>Gets the reasons for the result.</summary>
-    public override ExplanationTree ExplanationTree => new (assertion);
+    public override Explanation Explanation => new (assertion);
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
-    public override bool Satisfied => value;
+    public override bool Satisfied { get; } = value;
 
     /// <summary>Gets the description of the result.</summary>
     public override ResultDescriptionBase Description => new MetadataResultDescription(reason);

@@ -201,7 +201,7 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
         this switch
         {
             SpecBase<TModel, string> explanationSpec => explanationSpec,
-            _ => new MetadataToExplnationAdapterSpec<TModel, TMetadata>(this)
+            _ => new MetadataToExplanationAdapterSpec<TModel, TMetadata>(this)
         };
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
