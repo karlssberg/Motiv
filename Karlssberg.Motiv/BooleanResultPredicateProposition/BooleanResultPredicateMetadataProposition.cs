@@ -26,7 +26,8 @@ public sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata,
             false => whenFalse(model, booleanResult),
         };
         
-        var assertion = metadata switch {
+        var assertion = metadata switch
+        {
             string because => because,
             _ => Description.ToReason(booleanResult.Satisfied)
         };
