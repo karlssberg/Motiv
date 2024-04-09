@@ -1,4 +1,4 @@
-﻿# BooleanResult Predicate
+﻿# BooleanResult Predicate Proposition
 A BooleanResult predicate is a predicate that returns a `BooleanResult` instance, instead of a `bool` value.
 Semantically they perform the same function, but by returning a `BooleanResult` instance.
 This if for when you want to evaluate specifications within a predicate, but don't want to lose 

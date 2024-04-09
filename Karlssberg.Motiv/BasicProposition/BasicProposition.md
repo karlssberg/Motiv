@@ -1,4 +1,4 @@
-﻿# Propositions
+﻿# Basic Proposition
 
 In logic, a proposition is a declarative statement that can be either _true_ or _false_.
 In the context of this library, a proposition is formed from one or more specifications, by using the `Spec.Build()`
@@ -31,11 +31,11 @@ This method is overloaded and takes either a regular predicate (i.e. `Func<TMode
 factory (i.e. `Func<Spec<TModel, TMetadata>>`.
 All of these overloads can be used to create a new proposition with varying levels of expressiveness.
 
-### Basic proposition
-The most basic proposition can be created by providing a predicate and a propositional statement.
+### Minimal proposition
+The most terse proposition can be created by providing a predicate and a propositional statement.
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
-    .Create("even");
+    .Create("is even");
 ```
 In this case, when the predicate is true, the proposition is satisfied and the reason given is `"even"`.
 When the predicate is false, the proposition is not satisfied and the reason given is `"!even"`.
@@ -59,7 +59,7 @@ Spec.Build((int n)n => n % 2 == 0)
     .WhenFalse(n => $"{n} is odd")
     .Create();
 ```
-### Advanced proposition
+### Advanced usage
 There may be times when a string of text describing the result is not enough.
 For example, you may want to present the text to an international audience.
 In this case, you can provide a custom object for `.WhenTrue()` and `.WhenFalse()` instead of using a string.
@@ -88,63 +88,4 @@ isEven.Satisfied; // false
 isEven.Reason; // "!Television is in stock"
 isEven.Assertions; // ["!Television is in stock"]
 isEven.Metadata.Select(m => m.English); // ["Television is out of stock"]
-```
-
-### Higher order propositions
-The propositions we have mentioned thus far are known as first-order propositions since they apply to a single 
-entity.
-However, this is incomplete since it does not propose the state of a set of entities.
-This is where higher order propositions come in.
-This library supports higher order logic by allowing you to promote a first order proposition to its higher order 
-equivalent.
-This means that instead of accepting a single model, it accepts a set of models from which it internally generates a 
-set of results which are evaluated to determine if the higher order proposition is satisfied.
-```csharp
-var isEven =
-    Spec.Build((int n) => n % 2 == 0)
-        .Create("even");
-
-var allAreEven =
-    Spec.Build(isEven)
-        .AsAllSatisfied()
-        .Create("all are even");
-```
-
-#### Higher order output
-When it comes to higher-order propositions, you will almost certainly want to describe how sets are composed in 
-arbitrary ways.
-This library aims to support this by providing a result object that contains convenient properties that work 
-seamlessly with pattern matching. 
-```csharp 
-var allAreNegative =
-    Spec.Build(new IsNegativeIntegerSpec())
-        .AsAllSatisfied()
-        .WhenTrue(eval => eval switch
-        {
-            { Count: 0 } => "there is an absence of numbers",
-            { Models: [< 0 and var n] } => $"{n} is negative and is the only number",
-            _ => "all are negative numbers"
-        })
-        .WhenFalse(eval => eval switch
-        {
-            { Models: [0] } => ["the number is 0 and is the only number"],
-            { Models: [> 0 and var n] } => [$"{n} is positive and is the only number"],
-            { NoneSatisfied: true } when eval.Models.All(m => m is 0) => ["all are 0"],
-            { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
-            { NoneSatisfied: true } =>  ["none are negative numbers"],
-            _ => eval.FalseModels.Select(n => n is 0
-                    ? "0 is neither positive or negative"
-                    : $"{n} is positive")
-        })
-        .Create("all are negative");
-
-allAreNegative.IsSatisfiedBy([]).Assertions; // ["there is an absence of numbers"]
-allAreNegative.IsSatisfiedBy([-10]).Assertions; // ["-10 is negative and is the only number"]
-allAreNegative.IsSatisfiedBy([-2, -4, -6, -8]).Assertions; // ["all are negative numbers"]
-allAreNegative.IsSatisfiedBy([0]).Assertions; // ["the number is 0 and is the only number"]
-allAreNegative.IsSatisfiedBy([11]).Assertions; // ["11 is positive and is the only number"]
-allAreNegative.IsSatisfiedBy([0, 0, 0, 0]).Assertions; // ["all are 0"]
-allAreNegative.IsSatisfiedBy([2, 4, 6, 8]).Assertions; // ["all are positive numbers"]
-allAreNegative.IsSatisfiedBy([0, 1, 2, 3]).Assertions; // ["none are negative numbers"]
-allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions; // ["9 is positive", "0 is neither positive or negative"]
 ```

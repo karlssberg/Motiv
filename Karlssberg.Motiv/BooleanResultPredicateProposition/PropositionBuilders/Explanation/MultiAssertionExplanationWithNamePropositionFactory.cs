@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.BooleanResultPredicateProposition.BooleanResultPredicateBuilders.Explanation;
+﻿namespace Karlssberg.Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanation;
 
 /// <summary>
 /// A factory for creating propositions based on the supplied proposition and explanation factories.

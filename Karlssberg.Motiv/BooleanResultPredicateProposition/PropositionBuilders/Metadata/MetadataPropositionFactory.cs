@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.BooleanResultPredicateProposition.BooleanResultPredicateBuilders.Metadata;
+﻿namespace Karlssberg.Motiv.BooleanResultPredicateProposition.PropositionBuilders.Metadata;
 
 /// <summary>
 /// A builder for creating propositions using a predicate function that returns a <see cref="BooleanResultBase{TMetadata}"/>.

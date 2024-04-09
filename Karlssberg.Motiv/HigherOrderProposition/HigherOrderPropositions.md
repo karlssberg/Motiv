@@ -1,4 +1,4 @@
-﻿# Higher Order Logic
+﻿# Higher Order Propositions
 
 The propositions we have mentioned thus far are known as first-order propositions since they apply to a single entity.
 However, this is incomplete since it does not propose the state of a set of entities.
@@ -11,7 +11,7 @@ a higher-order predicate, and optionally a collection of results that should be 
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
-    .As((results) => results.AllTrue())
+    .As((results) => results.AllTrue())  // custom higher order predicate
     .WhenTrue("all are even")
     .WhenFalse("some are odd")
     .Create();
@@ -44,6 +44,36 @@ convenient properties that work seamlessly with pattern matching.
 ```csharp
 var allAreNegative =
     Spec.Build(new IsNegativeIntegerSpec())
+        .AsAllSatisfied()                       // switch to higher order proposition
+        .WhenTrue(eval => eval switch
+        {
+            { Count: 0 } => "there is an absence of numbers",
+            { Models: [< 0 and var n] } => $"{n} is negative and is the only number",
+            _ => "all are negative numbers"
+        })
+        .WhenFalse(eval => eval switch
+        {
+            { Models: [0] } => ["the number is 0 and is the only number"],
+            { Models: [> 0 and var n] } => [$"{n} is positive and is the only number"],
+            { NoneSatisfied: true } when eval.Models.All(m => m is 0) => ["all are 0"],
+            { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
+            { NoneSatisfied: true } =>  ["none are negative numbers"],
+            _ => eval.FalseModels.Select(n => n is 0
+                    ? "0 is neither positive or negative"
+                    : $"{n} is positive")
+        })
+        .Create("all are negative");
+```
+
+#### Higher order output
+Higher order propositions have more nuanced demands on the output.
+To sweeten the syntactic sugar, the evaluation object presents a set of properties to make it easier to pattern match 
+the underlying state. 
+
+For example:
+```csharp 
+var allAreNegative =
+    Spec.Build(new IsNegativeIntegerSpec())
         .AsAllSatisfied()
         .WhenTrue(eval => eval switch
         {
@@ -63,4 +93,14 @@ var allAreNegative =
                     : $"{n} is positive")
         })
         .Create("all are negative");
+
+allAreNegative.IsSatisfiedBy([]).Assertions; // ["there is an absence of numbers"]
+allAreNegative.IsSatisfiedBy([-10]).Assertions; // ["-10 is negative and is the only number"]
+allAreNegative.IsSatisfiedBy([-2, -4, -6, -8]).Assertions; // ["all are negative numbers"]
+allAreNegative.IsSatisfiedBy([0]).Assertions; // ["the number is 0 and is the only number"]
+allAreNegative.IsSatisfiedBy([11]).Assertions; // ["11 is positive and is the only number"]
+allAreNegative.IsSatisfiedBy([0, 0, 0, 0]).Assertions; // ["all are 0"]
+allAreNegative.IsSatisfiedBy([2, 4, 6, 8]).Assertions; // ["all are positive numbers"]
+allAreNegative.IsSatisfiedBy([0, 1, 2, 3]).Assertions; // ["none are negative numbers"]
+allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions; // ["9 is positive", "0 is neither positive or negative"]
 ```

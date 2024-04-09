@@ -1,5 +1,5 @@
-﻿using Karlssberg.Motiv.BooleanResultPredicateProposition.BooleanResultPredicateBuilders.Explanation;
-using Karlssberg.Motiv.BooleanResultPredicateProposition.BooleanResultPredicateBuilders.Metadata;
+﻿using Karlssberg.Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanation;
+using Karlssberg.Motiv.BooleanResultPredicateProposition.PropositionBuilders.Metadata;
 using Karlssberg.Motiv.HigherOrderProposition;
 using Karlssberg.Motiv.HigherOrderProposition.PropositionBuilders;
 
