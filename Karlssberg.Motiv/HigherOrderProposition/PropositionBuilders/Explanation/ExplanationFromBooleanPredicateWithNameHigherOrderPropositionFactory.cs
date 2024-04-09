@@ -12,7 +12,7 @@ public readonly ref struct ExplanationFromBooleanPredicateWithNameHigherOrderPro
     Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
     Func<HigherOrderBooleanEvaluation<TModel>, string> trueBecause, 
     Func<HigherOrderBooleanEvaluation<TModel>, string> falseBecause,
-    IProposition candidateProposition,
+    ISpecDescription candidateSpecDescription,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector)
 {
     /// <summary>
@@ -26,7 +26,7 @@ public readonly ref struct ExplanationFromBooleanPredicateWithNameHigherOrderPro
             higherOrderPredicate,
             trueBecause,
             falseBecause,
-            candidateProposition,
+            candidateSpecDescription,
             causeSelector);
 
     /// <summary>
@@ -44,7 +44,7 @@ public readonly ref struct ExplanationFromBooleanPredicateWithNameHigherOrderPro
             higherOrderPredicate,
             trueBecause,
             falseBecause,
-            new Proposition(proposition),
+            new SpecDescription(proposition),
             causeSelector);
     }
 }

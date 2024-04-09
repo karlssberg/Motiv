@@ -2,5 +2,5 @@
 
 internal interface IBinaryOperationSpec
 {
-    IProposition Proposition { get; }
+    ISpecDescription Description { get; }
 }

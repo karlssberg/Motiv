@@ -2,6 +2,6 @@
 
 public class ThrowingSpec<TModel, TMetadata>(string description, Exception exception) : SpecBase<TModel, TMetadata>
 {
-    public override IProposition Proposition => new Proposition(description);
+    public override ISpecDescription Description => new SpecDescription(description);
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => throw exception;
 }

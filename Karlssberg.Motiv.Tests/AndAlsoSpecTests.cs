@@ -76,7 +76,7 @@ public class AndAlsoSpecTests
 
         var sut = left.AndAlso(right);
 
-        sut.Proposition.Statement.Should().Be("left && right");
+        sut.Description.Statement.Should().Be("left && right");
     }
     
     [Fact]
@@ -102,7 +102,7 @@ public class AndAlsoSpecTests
 
         var sut = left.AndAlso(right);
 
-        sut.Proposition.Detailed.Should().Be(expected);
+        sut.Description.Detailed.Should().Be(expected);
     }
     
     [Theory]

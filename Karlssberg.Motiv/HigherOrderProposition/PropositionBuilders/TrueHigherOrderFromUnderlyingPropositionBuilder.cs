@@ -60,7 +60,7 @@ public readonly ref struct TrueHigherOrderFromUnderlyingPropositionBuilder<TMode
             spec,
             higherOrderPredicate,
             _ => trueBecause,
-            new HigherOrderProposition<TModel, TUnderlyingMetadata>(trueBecause, spec),
+            new HigherOrderSpecDescription<TModel, TUnderlyingMetadata>(trueBecause, spec),
             causeSelector);
     }
 
@@ -78,13 +78,13 @@ public readonly ref struct TrueHigherOrderFromUnderlyingPropositionBuilder<TMode
     /// <param name="proposition">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create(string proposition) =>
-        new HigherOrderMetadataProposition<TModel, string, TUnderlyingMetadata>(
+    public SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> Create(string proposition) =>
+        new HigherOrderMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             spec.IsSatisfiedByWithExceptionRethrowing,
             higherOrderPredicate,
-            _ => proposition,
-            _ => $"!{proposition}",
-            new HigherOrderProposition<TModel, TUnderlyingMetadata>(
+            eval => eval.Metadata,
+            eval => eval.Metadata,
+            new HigherOrderSpecDescription<TModel, TUnderlyingMetadata>(
                 proposition.ThrowIfNullOrWhitespace(nameof(proposition)),
                 spec),
             causeSelector);

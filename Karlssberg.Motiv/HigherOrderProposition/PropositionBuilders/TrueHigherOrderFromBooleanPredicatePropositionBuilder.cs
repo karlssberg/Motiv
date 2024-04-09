@@ -47,7 +47,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
         new(predicate,
             higherOrderPredicate,
             _ => trueBecause,
-            new Proposition(trueBecause),
+            new SpecDescription(trueBecause),
             causeSelector);
 
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
@@ -72,7 +72,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
             higherOrderPredicate,
             _ => proposition,
             _ => $"!{proposition}",
-            new Proposition(proposition),
-                causeSelector);
+            new SpecDescription(proposition),
+            causeSelector);
     }
 }

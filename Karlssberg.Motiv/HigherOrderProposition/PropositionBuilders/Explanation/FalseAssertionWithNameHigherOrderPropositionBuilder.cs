@@ -9,7 +9,7 @@ public readonly ref struct FalseAssertionWithNameHigherOrderPropositionBuilder<T
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause,
-    IProposition candidateProposition,
+    ISpecDescription candidateSpecDescription,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
     /// <summary>
@@ -22,7 +22,7 @@ public readonly ref struct FalseAssertionWithNameHigherOrderPropositionBuilder<T
             higherOrderPredicate,
             trueBecause,
             _ => falseBecause,
-            candidateProposition,
+            candidateSpecDescription,
             causeSelector);
 
     /// <summary>
@@ -36,7 +36,7 @@ public readonly ref struct FalseAssertionWithNameHigherOrderPropositionBuilder<T
             higherOrderPredicate,
             trueBecause,
             falseBecause,
-            candidateProposition,
+            candidateSpecDescription,
             causeSelector);
 
     /// <summary>
@@ -50,6 +50,6 @@ public readonly ref struct FalseAssertionWithNameHigherOrderPropositionBuilder<T
             higherOrderPredicate,
             trueBecause.ToEnumerableReturn(),
             falseBecause,
-            candidateProposition,
+            candidateSpecDescription,
             causeSelector);
 }

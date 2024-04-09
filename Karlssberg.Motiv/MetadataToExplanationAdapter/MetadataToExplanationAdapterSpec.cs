@@ -4,7 +4,7 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>
     SpecBase<TModel, TUnderlyingModel> spec) 
     : SpecBase<TModel, string>
 {
-    public override IProposition Proposition => spec.Proposition;
+    public override ISpecDescription Description => spec.Description;
 
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
     {
@@ -20,6 +20,6 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>
             result,
             new MetadataTree<string>(newMetadata),
             result.Explanation,
-            spec.Proposition.ToReason(result.Satisfied));
+            spec.Description.ToReason(result.Satisfied));
     }
 }

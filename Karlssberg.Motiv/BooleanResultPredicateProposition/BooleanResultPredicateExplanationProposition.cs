@@ -8,7 +8,7 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
     : SpecBase<TModel, string>
 {
     /// <summary>Gets the name of the proposition.</summary>
-    public override IProposition Proposition => new Proposition(propositionalAssertion);
+    public override ISpecDescription Description => new SpecDescription(propositionalAssertion);
 
     /// <summary>Determines if the proposition is satisfied by the given model.</summary>
     /// <param name="model">The model to be evaluated.</param>
@@ -39,6 +39,6 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
             booleanResult,
             metadataTree,
             explanation,
-            Proposition.ToReason(booleanResult.Satisfied));
+            Description.ToReason(booleanResult.Satisfied));
     }
 }

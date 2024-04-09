@@ -373,8 +373,8 @@ public class AllSatisfiedSpecTests
             .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
             .Create("all booleans are true");
 
-        sut.Proposition.Statement.Should().Be(expectedSummary);
-        sut.Proposition.Detailed.Should().Be(expectedFull);
+        sut.Description.Statement.Should().Be(expectedSummary);
+        sut.Description.Detailed.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }
 
@@ -402,8 +402,8 @@ public class AllSatisfiedSpecTests
             .WhenFalse(false)
             .Create("all are true");
 
-        sut.Proposition.Statement.Should().Be(expectedSummary);
-        sut.Proposition.Detailed.Should().Be(expectedFull);
+        sut.Description.Statement.Should().Be(expectedSummary);
+        sut.Description.Detailed.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }
 

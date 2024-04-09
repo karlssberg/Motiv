@@ -54,7 +54,7 @@ public class AnySatisfiedSpecTests
             .WhenFalse(false)
             .Create("high-level description");
 
-        sut.Proposition.Statement.Should().Be(expected);
+        sut.Description.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 

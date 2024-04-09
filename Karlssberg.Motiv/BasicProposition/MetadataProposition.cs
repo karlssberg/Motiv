@@ -15,7 +15,7 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
     : SpecBase<TModel, TMetadata>
 {
     /// <summary>Gets or sets the description of the proposition.</summary>
-    public override IProposition Proposition => new Proposition(propositionalStatement);
+    public override ISpecDescription Description => new SpecDescription(propositionalStatement);
 
     /// <summary>Determines if the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be evaluated.</param>
@@ -35,14 +35,14 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
                 var assertion = metadata switch
                 {
                     string because => because,
-                    _ => Proposition.ToReason(isSatisfied)
+                    _ => Description.ToReason(isSatisfied)
                 };
 
                 return new PropositionBooleanResult<TMetadata>(
                     isSatisfied,
                     metadata,
                     assertion,
-                    Proposition.ToReason(isSatisfied));
+                    Description.ToReason(isSatisfied));
             });
 
     private bool InvokePredicate(TModel model) =>

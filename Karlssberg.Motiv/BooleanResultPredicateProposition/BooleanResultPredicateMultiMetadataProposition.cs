@@ -8,7 +8,7 @@ public sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMeta
     : SpecBase<TModel, TMetadata>
 {
     /// <summary>Gets the name of the proposition.</summary>
-    public override IProposition Proposition => new Proposition(propositionalStatement);
+    public override ISpecDescription Description => new SpecDescription(propositionalStatement);
 
     /// <summary>Determines if the proposition is satisfied by the given model.</summary>
     /// <param name="model">The model to be evaluated.</param>
@@ -29,7 +29,7 @@ public sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMeta
         var assertions = metadata switch
         {
             IEnumerable<string> assertion => assertion.ToArray(),
-            _ => [Proposition.ToReason(booleanResult.Satisfied)]
+            _ => [Description.ToReason(booleanResult.Satisfied)]
         };
         
         var metadataTree = new MetadataTree<TMetadata>(
@@ -45,6 +45,6 @@ public sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMeta
             booleanResult,
             metadataTree,
             explanation,
-            Proposition.ToReason(booleanResult.Satisfied));
+            Description.ToReason(booleanResult.Satisfied));
     }
 }

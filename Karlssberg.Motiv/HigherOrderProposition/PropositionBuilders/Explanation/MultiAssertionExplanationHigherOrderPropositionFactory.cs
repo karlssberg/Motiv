@@ -27,7 +27,7 @@ public readonly ref struct MultiAssertionExplanationHigherOrderPropositionFactor
             higherOrderPredicate,
             trueBecause,
             falseBecause,
-            new Proposition(proposition),
+            new SpecDescription(proposition),
             causeSelector);
     }
 }

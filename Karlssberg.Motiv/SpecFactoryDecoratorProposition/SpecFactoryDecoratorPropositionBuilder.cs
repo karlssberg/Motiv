@@ -92,10 +92,10 @@ public readonly ref struct SpecFactoryDecoratorPropositionBuilder<TModel, TUnder
     /// <param name="proposition">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create(string proposition) =>
-        new SpecFactoryDecoratorMetadataProposition<TModel, string, TUnderlyingMetadata>(
+    public SpecBase<TModel, TUnderlyingMetadata> Create(string proposition) =>
+        new SpecFactoryDecoratorMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             specPredicate,
-            (_, _) => proposition,
-            (_, _) => $"!{proposition}",
+            (_, results) => results.Metadata,
+            (_, results) => results.Metadata,
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

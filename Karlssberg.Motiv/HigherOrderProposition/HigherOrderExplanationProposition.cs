@@ -5,11 +5,11 @@ internal sealed class HigherOrderExplanationProposition<TModel, TUnderlyingMetad
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate, 
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause, 
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
-    IProposition proposition,
+    ISpecDescription specDescription,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
     : SpecBase<IEnumerable<TModel>, string>
 {
-    public override IProposition Proposition => proposition;
+    public override ISpecDescription Description => specDescription;
 
     public override BooleanResultBase<string> IsSatisfiedBy(IEnumerable<TModel> models)
     {

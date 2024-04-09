@@ -5,8 +5,8 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> right)
     : SpecBase<TModel, TMetadata>, IBinaryOperationSpec
 {
-    public override IProposition Proposition => 
-        new OrElseProposition<TModel, TMetadata>(left, right);
+    public override ISpecDescription Description => 
+        new OrElseSpecDescription<TModel, TMetadata>(left, right);
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {

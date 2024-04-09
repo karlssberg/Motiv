@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv;
 
-public interface IProposition
+public interface ISpecDescription
 {
     string Statement { get; }
     string Detailed { get; }

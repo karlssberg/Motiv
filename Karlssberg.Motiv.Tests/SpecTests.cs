@@ -218,7 +218,7 @@ public class SpecTests
             .WhenFalse("is not null")
             .Create();
 
-        var act = sut.Proposition.Detailed;
+        var act = sut.Description.Detailed;
 
         act.Should().Be("is null");
     }
@@ -236,7 +236,7 @@ public class SpecTests
             .Build(underlying)
             .Create("top-level proposition");
 
-        var act = sut.Proposition.Detailed;
+        var act = sut.Description.Detailed;
 
         act.Should().Be(
             """

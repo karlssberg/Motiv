@@ -7,7 +7,7 @@ internal sealed class SpecFactoryDecoratorMultiMetadataProposition<TModel, TMeta
     string propositionalAssertion)
     : SpecBase<TModel, TMetadata>
 {
-    public override IProposition Proposition => new Proposition(propositionalAssertion);
+    public override ISpecDescription Description => new SpecDescription(propositionalAssertion);
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
@@ -21,7 +21,7 @@ internal sealed class SpecFactoryDecoratorMultiMetadataProposition<TModel, TMeta
         
         var assertions = metadata switch {
             IEnumerable<string> because => because.ToArray(),
-            _ => [Proposition.ToReason(booleanResult.Satisfied)]
+            _ => [Description.ToReason(booleanResult.Satisfied)]
         };
         
         var metadataTree = new MetadataTree<TMetadata>(
@@ -37,6 +37,6 @@ internal sealed class SpecFactoryDecoratorMultiMetadataProposition<TModel, TMeta
             booleanResult,
             metadataTree,
             explanation,
-            Proposition.ToReason(booleanResult.Satisfied));
+            Description.ToReason(booleanResult.Satisfied));
     }
 }

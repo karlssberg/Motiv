@@ -376,7 +376,7 @@ public class AtMostNSatisfiedSpecTests
             .WhenFalse("more than one is satisfied")
             .Create();
 
-        sut.Proposition.Statement.Should().Be(expected);
+        sut.Description.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 

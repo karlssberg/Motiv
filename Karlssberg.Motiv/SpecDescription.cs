@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv;
 
-internal sealed class Proposition(string statement, IProposition? underlyingProposition = null) : IProposition
+internal sealed class SpecDescription(string statement, ISpecDescription? underlyingProposition = null) : ISpecDescription
 {
     public string Statement => statement;
 

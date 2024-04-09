@@ -5,7 +5,7 @@ internal sealed class ChangeModelTypeSpec<TParentModel, TModel, TMetadata>(
     Func<TParentModel, TModel> modelSelector)
     : SpecBase<TParentModel, TMetadata>
 {
-    public override IProposition Proposition => spec.Proposition;
+    public override ISpecDescription Description => spec.Description;
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TParentModel model)
     {

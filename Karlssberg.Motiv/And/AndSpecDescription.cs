@@ -2,10 +2,10 @@
 
 namespace Karlssberg.Motiv.And;
 
-internal sealed class AndProposition<TModel, TMetadata>(
+internal sealed class AndSpecDescription<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
     SpecBase<TModel, TMetadata> right)
-    : IProposition
+    : ISpecDescription
 {
     public string Statement => $"{Summarize(left)} & {Summarize(right)}";
 
@@ -20,12 +20,12 @@ internal sealed class AndProposition<TModel, TMetadata>(
         return operand switch
         {
             AndSpec<TModel, TMetadata> andSpec =>
-                andSpec.Proposition.Statement,
+                andSpec.Description.Statement,
             AndAlsoSpec<TModel, TMetadata> andAlsoSpec =>
-                andAlsoSpec.Proposition.Statement,
+                andAlsoSpec.Description.Statement,
             IBinaryOperationSpec binarySpec =>
-                $"({binarySpec.Proposition.Statement})",
-            _ => operand.Proposition.Statement
+                $"({binarySpec.Description.Statement})",
+            _ => operand.Description.Statement
         };
     }
 
@@ -34,12 +34,12 @@ internal sealed class AndProposition<TModel, TMetadata>(
         return operand switch
         {
             AndSpec<TModel, TMetadata> andSpec =>
-                andSpec.Proposition.Detailed,
+                andSpec.Description.Detailed,
             AndAlsoSpec<TModel, TMetadata> andAlsoSpec =>
-                andAlsoSpec.Proposition.Detailed,
+                andAlsoSpec.Description.Detailed,
             IBinaryOperationSpec binarySpec =>
-                $"({binarySpec.Proposition.Detailed})",
-            _ => operand.Proposition.Detailed
+                $"({binarySpec.Description.Detailed})",
+            _ => operand.Description.Detailed
         };
     }
 

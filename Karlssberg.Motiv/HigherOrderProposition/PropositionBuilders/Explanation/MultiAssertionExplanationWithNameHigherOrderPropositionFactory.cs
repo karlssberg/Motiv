@@ -10,7 +10,7 @@ public readonly ref struct MultiAssertionExplanationWithNameHigherOrderPropositi
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause,
-    IProposition candidateProposition,
+    ISpecDescription candidateSpecDescription,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
     /// <summary>
@@ -27,7 +27,7 @@ public readonly ref struct MultiAssertionExplanationWithNameHigherOrderPropositi
             higherOrderPredicate,
             trueBecause,
             falseBecause,
-            candidateProposition,
+            candidateSpecDescription,
             causeSelector);
     }
 
@@ -42,6 +42,6 @@ public readonly ref struct MultiAssertionExplanationWithNameHigherOrderPropositi
             higherOrderPredicate,
             trueBecause,
             falseBecause,
-            candidateProposition,
+            candidateSpecDescription,
             causeSelector);
 }

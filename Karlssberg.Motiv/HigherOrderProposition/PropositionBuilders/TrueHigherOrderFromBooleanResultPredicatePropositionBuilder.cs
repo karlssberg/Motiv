@@ -58,7 +58,7 @@ public readonly ref struct TrueHigherOrderFromBooleanResultPredicatePropositionB
         new(resultResolver,
             higherOrderPredicate,
             _ => trueBecause,
-            new Proposition(trueBecause),
+            new SpecDescription(trueBecause),
             causeSelector);
 
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
@@ -75,15 +75,15 @@ public readonly ref struct TrueHigherOrderFromBooleanResultPredicatePropositionB
     /// <param name="proposition">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create(string proposition)
+    public SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> Create(string proposition)
     {
         proposition.ThrowIfNullOrWhitespace(nameof(proposition));
-        return new HigherOrderMetadataProposition<TModel, string, TUnderlyingMetadata>(
+        return new HigherOrderMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             resultResolver,
             higherOrderPredicate,
-            _ => proposition,
-            _ => $"!{proposition}",
-            new Proposition(proposition),
+            eval => eval.Metadata,
+            eval => eval.Metadata,
+            new SpecDescription(proposition),
                 causeSelector);
     }
 }

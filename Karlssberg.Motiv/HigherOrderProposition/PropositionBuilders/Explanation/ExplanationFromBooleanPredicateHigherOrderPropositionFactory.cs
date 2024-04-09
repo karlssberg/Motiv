@@ -25,7 +25,7 @@ public readonly ref struct ExplanationFromBooleanPredicateHigherOrderProposition
             higherOrderPredicate,
             trueBecause,
             falseBecause,
-            new Proposition(proposition),
+            new SpecDescription(proposition),
             causeSelector);
     }
 }

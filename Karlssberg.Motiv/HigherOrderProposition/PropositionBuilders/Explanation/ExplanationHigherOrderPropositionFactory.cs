@@ -26,7 +26,7 @@ public readonly ref struct ExplanationHigherOrderPropositionFactory<TModel, TUnd
             higherOrderPredicate,
             trueBecause,
             falseBecause,
-            new Proposition(proposition),
+            new SpecDescription(proposition),
             causeSelector);
     }
 }

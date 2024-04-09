@@ -9,7 +9,7 @@ public readonly ref struct FalseAssertionFromBooleanPredicateWithNameHigherOrder
     Func<TModel, bool> predicate,
     Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
     Func<HigherOrderBooleanEvaluation<TModel>, string> trueBecause,
-    IProposition candidateProposition,
+    ISpecDescription candidateSpecDescription,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector)
 {
     /// <summary>
@@ -22,7 +22,7 @@ public readonly ref struct FalseAssertionFromBooleanPredicateWithNameHigherOrder
             higherOrderPredicate,
             trueBecause,
             _ => falseBecause,
-            candidateProposition,
+            candidateSpecDescription,
             causeSelector);
 
     /// <summary>
@@ -36,6 +36,6 @@ public readonly ref struct FalseAssertionFromBooleanPredicateWithNameHigherOrder
             higherOrderPredicate,
             trueBecause,
             falseBecause,
-            candidateProposition,
+            candidateSpecDescription,
             causeSelector);
 }

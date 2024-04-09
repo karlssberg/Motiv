@@ -16,7 +16,7 @@ internal sealed class ExplanationProposition<TModel>(
     {
     }
     
-    public override IProposition Proposition => new Proposition(propositionalStatement);
+    public override ISpecDescription Description => new SpecDescription(propositionalStatement);
 
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
         WrapException.IfIsSatisfiedByMethodFails(

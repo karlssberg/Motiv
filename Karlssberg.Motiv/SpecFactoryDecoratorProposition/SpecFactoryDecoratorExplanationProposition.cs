@@ -8,7 +8,7 @@ internal sealed class SpecFactoryDecoratorExplanationProposition<TModel, TUnderl
     : SpecBase<TModel, string>
 {
     
-    public override IProposition Proposition => new Proposition(propositionalAssertion);
+    public override ISpecDescription Description => new SpecDescription(propositionalAssertion);
 
     
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
@@ -34,6 +34,6 @@ internal sealed class SpecFactoryDecoratorExplanationProposition<TModel, TUnderl
             booleanResult, 
             metadataTree, 
             explanation,
-            Proposition.ToReason(booleanResult.Satisfied));
+            Description.ToReason(booleanResult.Satisfied));
     }
 }

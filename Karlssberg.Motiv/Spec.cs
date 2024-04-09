@@ -21,7 +21,7 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     protected Spec(SpecBase<TModel, TMetadata> spec)
     {
         spec.ThrowIfNull(nameof(spec));
-        Proposition = spec.Proposition;
+        Description = spec.Description;
         _specFactory = _ => spec;
     }
 
@@ -35,14 +35,14 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
         var spec = specificationFactory();
         spec.ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
 
-        Proposition = spec.Proposition;
+        Description = spec.Description;
         _specFactory = _ => spec;
     }
 
     /// <summary>
     /// Gets the description of the proposition.
     /// </summary>
-    public override IProposition Proposition { get; }
+    public override ISpecDescription Description { get; }
 
     /// <summary>
     /// Determines whether the specified model satisfies the proposition.
@@ -69,7 +69,7 @@ public class Spec<TModel> : SpecBase<TModel, string>
     /// <param name="spec">The base proposition associated with the Spec instance.</param>
     protected Spec(SpecBase<TModel, string> spec)
     {
-        Proposition = spec.Proposition;
+        Description = spec.Description;
         spec.ThrowIfNull(nameof(spec));
         _specFactory = _ => spec;
     }
@@ -82,14 +82,14 @@ public class Spec<TModel> : SpecBase<TModel, string>
     {
         specFactory.ThrowIfNull(nameof(specFactory));
         var spec = specFactory().ThrowIfFactoryOutputIsNull(nameof(specFactory));
-        Proposition = spec.Proposition;
+        Description = spec.Description;
         _specFactory = _ => spec;
     }
 
     /// <summary>
     /// Gets the description of the proposition.
     /// </summary>
-    public override IProposition Proposition { get; }
+    public override ISpecDescription Description { get; }
 
     /// <summary>
     /// Determines whether the specified model satisfies the proposition.

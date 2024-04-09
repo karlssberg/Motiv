@@ -2,10 +2,10 @@
 
 namespace Karlssberg.Motiv.Or;
 
-internal sealed class OrProposition<TModel, TMetadata>(
+internal sealed class OrSpecDescription<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
     SpecBase<TModel, TMetadata> right)
-    : IProposition
+    : ISpecDescription
 {
     public string Statement => $"{Summarize(left)} | {Summarize(right)}";
 
@@ -20,12 +20,12 @@ internal sealed class OrProposition<TModel, TMetadata>(
         return operand switch
         {
             OrSpec<TModel, TMetadata> orSpec =>
-                orSpec.Proposition.Statement,
+                orSpec.Description.Statement,
             OrElseSpec<TModel, TMetadata> orElseSpec =>
-                orElseSpec.Proposition.Statement,
+                orElseSpec.Description.Statement,
             IBinaryOperationSpec binarySpec =>
-                $"({binarySpec.Proposition.Statement})",
-            _ => operand.Proposition.Statement
+                $"({binarySpec.Description.Statement})",
+            _ => operand.Description.Statement
         };
     }
 
@@ -34,12 +34,12 @@ internal sealed class OrProposition<TModel, TMetadata>(
         return operand switch
         {
             OrSpec<TModel, TMetadata> orSpec =>
-                orSpec.Proposition.Detailed,
+                orSpec.Description.Detailed,
             OrElseSpec<TModel, TMetadata> orElseSpec =>
-                orElseSpec.Proposition.Detailed,
+                orElseSpec.Description.Detailed,
             IBinaryOperationSpec binarySpec =>
-                $"({binarySpec.Proposition.Detailed})",
-            _ => operand.Proposition.Detailed
+                $"({binarySpec.Description.Detailed})",
+            _ => operand.Description.Detailed
         };
     }
 

@@ -22,9 +22,9 @@ internal static class PropositionExtensions
 
     
     internal static string ToReason(
-        this IProposition proposition,
+        this ISpecDescription specDescription,
         bool isSatisfied) =>
-        proposition.Statement.ToReason(isSatisfied);
+        specDescription.Statement.ToReason(isSatisfied);
 
     internal static string ToReason(
         this string propositionStatement,

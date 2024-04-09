@@ -83,8 +83,8 @@ internal static class WrapException
         var genericParams = SerializedGenericArguments(underlyingSpec.GetType());
 
         return string.IsNullOrWhiteSpace(ex.Message)
-            ? $"{article} '{exceptionTypeName}' was thrown while evaluating the '{callerName}' parameter that was supplied to Spec<{genericParams}> (aka '{underlyingSpec.Proposition}')."
-            : $"{article} '{exceptionTypeName}' was thrown with the message '{ex.Message}' while evaluating the '{callerName}' parameter that was supplied to Spec<{genericParams}> (aka '{underlyingSpec.Proposition}').";
+            ? $"{article} '{exceptionTypeName}' was thrown while evaluating the '{callerName}' parameter that was supplied to Spec<{genericParams}> (aka '{underlyingSpec.Description}')."
+            : $"{article} '{exceptionTypeName}' was thrown with the message '{ex.Message}' while evaluating the '{callerName}' parameter that was supplied to Spec<{genericParams}> (aka '{underlyingSpec.Description}').";
     }
 
     private static string GetDescriptionPhrase<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata>(
@@ -94,7 +94,7 @@ internal static class WrapException
         return underlyingSpecification switch
         {
             null => DescribeType(spec),
-            not null => $"{DescribeType(underlyingSpecification)}. The specification is expressed as '{spec.Proposition}'"
+            not null => $"{DescribeType(underlyingSpecification)}. The specification is expressed as '{spec.Description}'"
         };
     }
 

@@ -1,10 +1,10 @@
 ﻿namespace Karlssberg.Motiv.Not;
 
-internal sealed class NotProposition<TModel, TMetadata>(SpecBase<TModel, TMetadata> operand) : IProposition
+internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMetadata> operand) : ISpecDescription
 {
-    public string Statement => FormatDescription(operand.Proposition.Statement);
+    public string Statement => FormatDescription(operand.Description.Statement);
 
-    public string Detailed => FormatDescription(operand.Proposition.Detailed);
+    public string Detailed => FormatDescription(operand.Description.Detailed);
     
     private string FormatDescription(string underlyingSummary)
     {

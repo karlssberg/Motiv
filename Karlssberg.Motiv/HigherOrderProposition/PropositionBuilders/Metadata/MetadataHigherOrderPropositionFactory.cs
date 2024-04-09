@@ -28,7 +28,7 @@ public readonly ref struct MetadataHigherOrderPropositionFactory<TModel, TMetada
             higherOrderPredicate,
             whenTrue,
             whenFalse,
-            new HigherOrderProposition<TModel, TUnderlyingMetadata>(proposition, spec),
+            new HigherOrderSpecDescription<TModel, TUnderlyingMetadata>(proposition, spec),
             causeSelector);
     }
 }

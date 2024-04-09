@@ -28,7 +28,7 @@ public readonly ref struct MetadataFromBooleanResultHigherOrderPropositionFactor
             higherOrderPredicate,
             whenTrue,
             whenFalse,
-            new Proposition(proposition),
+            new SpecDescription(proposition),
             causeSelector);
     }
 }

@@ -78,7 +78,7 @@ public class OrElseSpecTests
 
         var sut = left.OrElse(right);
 
-        sut.Proposition.Statement.Should().Be("left || right");
+        sut.Description.Statement.Should().Be("left || right");
     }
     
     [Fact]
@@ -104,7 +104,7 @@ public class OrElseSpecTests
 
         var sut = left.OrElse(right);
 
-        sut.Proposition.Detailed.Should().Be(expected);
+        sut.Description.Detailed.Should().Be(expected);
     }
     
     [Theory]

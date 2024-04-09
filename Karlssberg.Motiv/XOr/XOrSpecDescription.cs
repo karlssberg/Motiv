@@ -1,9 +1,9 @@
 ﻿namespace Karlssberg.Motiv.XOr;
 
-internal sealed class XOrProposition<TModel, TMetadata>(
+internal sealed class XOrSpecDescription<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left, 
     SpecBase<TModel, TMetadata> right)
-    : IProposition
+    : ISpecDescription
 {
 
     public string Statement => $"{Summarize(left)} ^ {Summarize(right)}";
@@ -17,9 +17,9 @@ internal sealed class XOrProposition<TModel, TMetadata>(
     {
         return operand switch 
         {
-            XOrSpec<TModel, TMetadata> xOrSpec => xOrSpec.Proposition.Statement,
-            IBinaryOperationSpec binarySpec => $"({binarySpec.Proposition.Statement})",
-            _ => operand.Proposition.Statement
+            XOrSpec<TModel, TMetadata> xOrSpec => xOrSpec.Description.Statement,
+            IBinaryOperationSpec binarySpec => $"({binarySpec.Description.Statement})",
+            _ => operand.Description.Statement
         };
     }
     
@@ -27,9 +27,9 @@ internal sealed class XOrProposition<TModel, TMetadata>(
     {
         return operand switch 
         {
-            XOrSpec<TModel, TMetadata> xOrSpec => xOrSpec.Proposition.Detailed,
-            IBinaryOperationSpec binarySpec => $"({binarySpec.Proposition.Detailed})",
-            _ => operand.Proposition.Detailed
+            XOrSpec<TModel, TMetadata> xOrSpec => xOrSpec.Description.Detailed,
+            IBinaryOperationSpec binarySpec => $"({binarySpec.Description.Detailed})",
+            _ => operand.Description.Detailed
         };
     }
     

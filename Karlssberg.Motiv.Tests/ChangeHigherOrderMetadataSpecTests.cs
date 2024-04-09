@@ -45,7 +45,7 @@ public class ChangeHigherOrderMetadataSpecTests
             .WhenFalse("is not a pair of even numbers")
             .Create();
 
-        sut.Proposition.Statement.Should().Be("is a pair of even numbers");
+        sut.Description.Statement.Should().Be("is a pair of even numbers");
     }
 
     [Theory]

@@ -101,11 +101,11 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     /// <param name="proposition">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create(string proposition) =>
-        new BooleanResultPredicateMetadataProposition<TModel, string, TUnderlyingMetadata>(
+    public SpecBase<TModel, TUnderlyingMetadata> Create(string proposition) =>
+        new BooleanResultPredicateMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             predicate,
-            (_, _) => proposition,
-            (_, _) => $"!{proposition}",
+            (_, result) => result.Metadata,
+            (_, result) => result.Metadata,
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }
 

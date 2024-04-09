@@ -5,11 +5,11 @@ internal sealed class HigherOrderFromBooleanPredicateMetadataProposition<TModel,
     Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
     Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenTrue, 
     Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenFalse,
-    IProposition proposition,
+    ISpecDescription specDescription,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    public override IProposition Proposition => proposition;
+    public override ISpecDescription Description => specDescription;
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
@@ -28,13 +28,13 @@ internal sealed class HigherOrderFromBooleanPredicateMetadataProposition<TModel,
         var assertion = metadata switch
         {
             string because => because,
-            _ => proposition.ToReason(isSatisfied),
+            _ => specDescription.ToReason(isSatisfied),
         };
 
         return new HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
             isSatisfied,
             metadata,
             assertion,
-            proposition.ToReason(isSatisfied));
+            specDescription.ToReason(isSatisfied));
     }
 }

@@ -146,11 +146,11 @@ public class OrSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var expected = $"{left.Proposition} | {right.Proposition}";
+        var expected = $"{left.Description} | {right.Description}";
 
         var sut = left | right;
 
-        sut.Proposition.Statement.Should().Be(expected);
+        sut.Description.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -173,11 +173,11 @@ public class OrSpecTests
             .WhenFalse(false.ToString())
             .Create();
 
-        var expected = $"{left.Proposition} | {right.Proposition}";
+        var expected = $"{left.Description} | {right.Description}";
 
         var sut = left | right;
 
-        sut.Proposition.Statement.Should().Be(expected);
+        sut.Description.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 

@@ -27,7 +27,7 @@ public readonly ref struct MetadataFromBooleanHigherOrderPropositionFactory<TMod
             higherOrderPredicate,
             whenTrue,
             whenFalse,
-            new Proposition(proposition),
+            new SpecDescription(proposition),
             causeSelector);
     }
 }
