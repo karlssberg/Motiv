@@ -64,8 +64,10 @@ public class BooleanResultPredicateMetadataPropositionTests
     [InlineData(false, "!propositional statement")]
     public void Should_use_the_propositional_statement_in_the_reason(
         bool model,
-        string expectedReason)
+        string expectedReasonStatement)
     { 
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        
         var underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
@@ -91,7 +93,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue(Metadata.True)
-                .WhenFalse((_, _) => Metadata.False.ToEnumerable())
+                .WhenFalse((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -101,7 +103,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         
         var act = spec.IsSatisfiedBy(model);
         
-        act.Reason.Split(" & ").Should().AllBeEquivalentTo(expectedReason);
+        act.Reason.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -109,8 +111,10 @@ public class BooleanResultPredicateMetadataPropositionTests
     [InlineData(false, "!propositional statement")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback(
         bool model,
-        string expectedReason)
+        string expectedReasonStatement)
     { 
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        
         var underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
@@ -136,7 +140,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue(_ => Metadata.True)
-                .WhenFalse((_, _) => Metadata.False.ToEnumerable())
+                .WhenFalse((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -146,7 +150,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         
         var act = spec.IsSatisfiedBy(model);
         
-        act.Reason.Split(" & ").Should().AllBeEquivalentTo(expectedReason);
+        act.Reason.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -154,8 +158,10 @@ public class BooleanResultPredicateMetadataPropositionTests
     [InlineData(false, "!propositional statement")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback(
         bool model,
-        string expectedReason)
+        string expectedReasonStatement)
     { 
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        
         var underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
@@ -181,7 +187,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue((_, _) => Metadata.True)
-                .WhenFalse((_, _) => Metadata.False.ToEnumerable())
+                .WhenFalse((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -191,7 +197,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         
         var act = spec.IsSatisfiedBy(model);
         
-        act.Reason.Split(" & ").Should().AllBeEquivalentTo(expectedReason);
+        act.Reason.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -199,8 +205,10 @@ public class BooleanResultPredicateMetadataPropositionTests
     [InlineData(false, "!propositional statement")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection(
         bool model,
-        string expectedReason)
+        string because)
     { 
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(because, 4));
+        
         var underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
@@ -226,7 +234,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue((_, _) => Metadata.True.ToEnumerable())
-                .WhenFalse((_, _) => Metadata.False.ToEnumerable())
+                .WhenFalse((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -236,6 +244,6 @@ public class BooleanResultPredicateMetadataPropositionTests
         
         var act = spec.IsSatisfiedBy(model);
         
-        act.Reason.Split(" & ").Should().AllBeEquivalentTo(expectedReason);
+        act.Reason.Should().Be(expectedReason);
     }
 }
