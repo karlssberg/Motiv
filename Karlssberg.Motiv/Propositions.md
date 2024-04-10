@@ -1,4 +1,4 @@
-﻿# Basic Proposition
+﻿# Propositions
 
 In logic, a proposition is a declarative statement that can be either _true_ or _false_.
 In the context of this library, a proposition is formed from one or more specifications, by using the `Spec.Build()`
