@@ -8,9 +8,8 @@
 public readonly ref struct MultiAssertionExplanationWithNameHigherOrderPropositionFactory<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
+    string trueBecause,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause,
-    ISpecDescription candidateSpecDescription,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
     /// <summary>
@@ -22,12 +21,14 @@ public readonly ref struct MultiAssertionExplanationWithNameHigherOrderPropositi
     public SpecBase<IEnumerable<TModel>, string> Create(string proposition)
     {
         proposition.ThrowIfNullOrWhitespace(nameof(proposition));
-        return new HigherOrderMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
+        return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
             resultResolver,
             higherOrderPredicate,
-            trueBecause,
+            trueBecause
+                .ToEnumerable()
+                .ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>>(),
             falseBecause,
-            candidateSpecDescription,
+            new SpecDescription(proposition),
             causeSelector);
     }
 
@@ -37,11 +38,13 @@ public readonly ref struct MultiAssertionExplanationWithNameHigherOrderPropositi
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
+        new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
             resultResolver,
             higherOrderPredicate,
-            trueBecause,
+            trueBecause
+                .ToEnumerable()
+                .ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>>(),
             falseBecause,
-            candidateSpecDescription,
+            new SpecDescription(trueBecause),
             causeSelector);
 }

@@ -14,7 +14,7 @@ public sealed class PropositionBooleanResult<TMetadata>(
     {
     }
     
-    public override MetadataTree<TMetadata> MetadataTree => new(metadata.ToEnumerable());
+    public override MetadataTree<TMetadata> MetadataTree => new(metadata);
     
     public override IEnumerable<BooleanResultBase> Underlying =>
         Enumerable.Empty<BooleanResultBase>();

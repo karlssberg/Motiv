@@ -1,5 +1,4 @@
-﻿using Karlssberg.Motiv.AndAlso;
-using Karlssberg.Motiv.Or;
+﻿using Karlssberg.Motiv.Or;
 
 namespace Karlssberg.Motiv.OrElse;
 

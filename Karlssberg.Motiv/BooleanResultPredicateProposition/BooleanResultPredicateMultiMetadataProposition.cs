@@ -4,11 +4,11 @@ public sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMeta
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> underlyingBooleanResultPredicate,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
-    string propositionalStatement)
+    ISpecDescription specDescription)
     : SpecBase<TModel, TMetadata>
 {
     /// <summary>Gets the name of the proposition.</summary>
-    public override ISpecDescription Description => new SpecDescription(propositionalStatement);
+    public override ISpecDescription Description => specDescription;
 
     /// <summary>Determines if the proposition is satisfied by the given model.</summary>
     /// <param name="model">The model to be evaluated.</param>
@@ -48,3 +48,4 @@ public sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMeta
             Description.ToReason(booleanResult.Satisfied));
     }
 }
+

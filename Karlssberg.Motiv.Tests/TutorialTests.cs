@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-using AutoFixture.Xunit2;
-using FluentAssertions;
+﻿using FluentAssertions;
 
 namespace Karlssberg.Motiv.Tests;
 
@@ -118,7 +116,7 @@ public class TutorialTests
                 .WhenFalse(evaluation => evaluation switch
                 {
                     { FalseCount: <= 10 } => evaluation.FalseModels.Select(n => $"{n}  is not negative"),
-                    _ => $"{evaluation.FalseCount} of {evaluation.Count} are not negative".ToEnumerable()
+                    _ => [$"{evaluation.FalseCount} of {evaluation.Count} are not negative"]
                 })
                 .Create();
 

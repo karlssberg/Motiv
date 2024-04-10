@@ -9,8 +9,7 @@
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
 public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause,
-    string candidateProposition)
+    string trueBecause)
 {
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
@@ -21,8 +20,7 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnd
         string falseBecause) =>
         new(spec,
             trueBecause,
-            (_, _) => falseBecause,
-            candidateProposition);
+            (_, _) => falseBecause);
 
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
@@ -33,8 +31,7 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnd
         Func<TModel, string> falseBecause) =>
         new(spec,
             trueBecause,
-            (model, _) => falseBecause(model),
-            candidateProposition);
+            (model, _) => falseBecause(model));
     
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
@@ -45,8 +42,7 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnd
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> falseBecause) =>
         new(spec,
             trueBecause,
-            falseBecause,
-            candidateProposition);
+            falseBecause);
     
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
@@ -56,7 +52,6 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnd
     public MultiAssertionExplanationWithNamePropositionFactory<TModel, TUnderlyingMetadata> WhenFalse(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
         new(spec,
-            trueBecause.ToEnumerableReturn(),
-            falseBecause,
-            candidateProposition);
+            trueBecause,
+            falseBecause);
 }

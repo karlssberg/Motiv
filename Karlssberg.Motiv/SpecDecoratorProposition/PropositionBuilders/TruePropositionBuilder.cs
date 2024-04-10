@@ -47,14 +47,15 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionWithNamePropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public FalseAssertionWithNamePropositionBuilder<TModel, TUnderlyingMetadata>
-        WhenTrue(string trueBecause) =>
-        new(spec, (_, _) => trueBecause, trueBecause);
+    public FalseAssertionWithNamePropositionBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+        string trueBecause) =>
+        new(spec, trueBecause);
 
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public FalseAssertionPropositionBuilder<TModel, TUnderlyingMetadata> WhenTrue(Func<TModel, string> trueBecause) =>
+    public FalseAssertionPropositionBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+        Func<TModel, string> trueBecause) =>
         new(spec, (model, _) => trueBecause(model));
 
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
@@ -63,19 +64,26 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
     public FalseAssertionPropositionBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause) =>
         new(spec, trueBecause);
+    
+    /// <summary>Specifies an assertion to yield when the condition is true.</summary>
+    /// <param name="trueBecause">A function that generates a human-readable reason when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseAssertionPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrue(
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
+        new(spec, trueBecause);
 
     /// <summary>Specifies a higher order predicate for the proposition.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
-    /// <returns>An instance of <see cref="TrueHigherOrderFromUnderlyingPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> As(
+    /// <returns>An instance of <see cref="TrueHigherOrderFromSpecPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
+    public TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> As(
         Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate) =>
         new(spec, higherOrderPredicate);
 
     /// <summary>Specifies a higher order predicate for the proposition.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
     /// <param name="causeSelector">A function that selects the causes of the boolean results.</param>
-    /// <returns>An instance of <see cref="TrueHigherOrderFromUnderlyingPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> As(
+    /// <returns>An instance of <see cref="TrueHigherOrderFromSpecPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
+    public TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> As(
         Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
         Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
             IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector) =>

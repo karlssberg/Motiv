@@ -40,7 +40,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
     /// <returns>
-    /// An instance of <see cref="FalseAssertionWithNameHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.
+    /// An instance of <see cref="FalseAssertionFromSpecDecoratorWithNameHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.
     /// </returns>
     public FalseAssertionFromBooleanPredicateWithNameHigherOrderPropositionBuilder<TModel> WhenTrue(
         string trueBecause) =>
@@ -52,7 +52,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
 
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A function that generates a human-readable reason when the condition is true.</param>
-    /// <returns>An instance of <see cref="FalseAssertionPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
+    /// <returns>An instance of <see cref="FalseAssertionFromBooleanResultHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public FalseAssertionFromBooleanPredicateHigherOrderPropositionBuilder<TModel> WhenTrue(
         Func<HigherOrderBooleanEvaluation<TModel>, string> trueBecause) =>
         new(predicate,

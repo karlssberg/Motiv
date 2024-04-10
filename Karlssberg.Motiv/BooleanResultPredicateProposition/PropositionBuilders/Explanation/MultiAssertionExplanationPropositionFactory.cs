@@ -17,10 +17,14 @@ public readonly ref struct MultiAssertionExplanationPropositionFactory<TModel, T
     /// <param name="proposition">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create(string proposition) =>
-        new BooleanResultPredicateMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
+    public SpecBase<TModel, string> Create(string proposition)
+    {
+        proposition.ThrowIfNullOrWhitespace(nameof(proposition));
+        return new BooleanResultPredicateMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
             predicate,
             trueBecause,
             falseBecause,
-            proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
+            new SpecDescription(proposition)
+        );
+    }
 }

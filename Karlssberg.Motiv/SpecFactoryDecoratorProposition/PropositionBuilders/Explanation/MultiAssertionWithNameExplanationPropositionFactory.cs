@@ -10,22 +10,9 @@
 public readonly ref struct MultiAssertionWithNameExplanationPropositionFactory<TModel,
     TUnderlyingMetadata>(
     Func<TModel, SpecBase<TModel, TUnderlyingMetadata>> specPredicate,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause,
-    string candidateProposition)
+    string trueBecause,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause)
 {
-    /// <summary>
-    /// Creates a proposition with explanations for when the condition is true or false. The propositional statement
-    /// will be obtained from the .WhenTrue() assertion.
-    /// </summary>
-    /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<TModel, string> Create() =>
-        new SpecFactoryDecoratorMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
-            specPredicate,
-            trueBecause,
-            falseBecause,
-            candidateProposition);
-
     /// <summary>
     /// Creates a proposition with descriptive assertions, but using the supplied proposition to succinctly explain
     /// the decision.
@@ -36,7 +23,24 @@ public readonly ref struct MultiAssertionWithNameExplanationPropositionFactory<T
     public SpecBase<TModel, string> Create(string proposition) =>
         new SpecFactoryDecoratorMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
             specPredicate,
-            trueBecause,
+            trueBecause
+                .ToEnumerable()
+                .ToFunc<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>>(),
             falseBecause,
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
+    
+    /// <summary>
+    /// Creates a proposition with explanations for when the condition is true or false. The propositional statement
+    /// will be obtained from the .WhenTrue() assertion.
+    /// </summary>
+    /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
+    public SpecBase<TModel, string> Create() =>
+        new SpecFactoryDecoratorMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
+            specPredicate,
+            trueBecause
+                .ToEnumerable()
+                .ToFunc<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>>(),
+            falseBecause,
+            trueBecause);
+
 }

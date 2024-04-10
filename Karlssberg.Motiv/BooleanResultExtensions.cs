@@ -2,7 +2,7 @@
 
 internal static class BooleanResultExtensions
 {
-    internal static IEnumerable<MetadataTree<TMetadata>> ResolveMetadataSets<TMetadata, TUnderlyingMetadata>(
+    internal static IEnumerable<MetadataTree<TMetadata>> ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>(
         this IEnumerable<BooleanResultBase<TUnderlyingMetadata>> underlyingResults) =>
         underlyingResults switch
         {

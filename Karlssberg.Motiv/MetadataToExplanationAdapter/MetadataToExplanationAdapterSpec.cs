@@ -10,15 +10,9 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>
     {
         var result = spec.IsSatisfiedBy(model);
         
-        var newMetadata = result.MetadataTree switch
-        {
-            IEnumerable<string> because => because,
-            _ => result.Assertions
-        };
-        
         return new BooleanResultWithUnderlying<string, TUnderlyingModel>(
             result,
-            new MetadataTree<string>(newMetadata),
+            new MetadataTree<string>(result.Assertions),
             result.Explanation,
             spec.Description.ToReason(result.Satisfied));
     }

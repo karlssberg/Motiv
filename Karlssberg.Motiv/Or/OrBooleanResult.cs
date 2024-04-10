@@ -9,7 +9,7 @@ internal sealed class OrBooleanResult<TMetadata>(
 {
     public override Explanation Explanation => GetCausalResults().CreateExplanation();
     
-    public override MetadataTree<TMetadata> MetadataTree => CreateMetadataSet();
+    public override MetadataTree<TMetadata> MetadataTree => CreateMetadataTree();
     
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
     
@@ -19,18 +19,9 @@ internal sealed class OrBooleanResult<TMetadata>(
     
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => GetCausalResults();
 
-    /// <inheritdoc />`
     public override bool Satisfied { get; } = left.Satisfied || right.Satisfied;
 
     public override ResultDescriptionBase Description => new OrBooleanResultDescription<TMetadata>(left, right, GetCausalResults());
-
-    private MetadataTree<TMetadata> CreateMetadataSet()
-    {
-        var metadataSets = GetCausalResults().Select(result => result.MetadataTree).ToArray();
-        return new(
-            metadataSets.SelectMany(metadataSet => metadataSet),
-            metadataSets.SelectMany(metadataSet => metadataSet.Underlying));
-    }
 
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {
@@ -40,9 +31,19 @@ internal sealed class OrBooleanResult<TMetadata>(
         if (right.Satisfied == Satisfied)
             yield return right;
     }
+    
     private IEnumerable<BooleanResultBase<TMetadata>> GetResults()
     {
-            yield return left;
-            yield return right;
+        yield return left;
+        yield return right;
+    }
+    
+    private MetadataTree<TMetadata> CreateMetadataTree()
+    {
+        var causes = GetCausalResults().ToArray();
+        var underlying =  causes
+            .SelectMany(cause => cause.MetadataTree.Underlying);
+        
+        return new MetadataTree<TMetadata>(causes.GetMetadata(), underlying);
     }
 }

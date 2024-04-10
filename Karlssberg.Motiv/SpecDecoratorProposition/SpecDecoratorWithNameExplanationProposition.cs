@@ -1,13 +1,13 @@
 ﻿namespace Karlssberg.Motiv.SpecDecoratorProposition;
 
-internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMetadata>(
+internal sealed class SpecDecoratorWithNameExplanationProposition<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause,
+    string trueBecause,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> falseBecause,
     string propositionalAssertion)
     : SpecBase<TModel, string>
 {
-    public override ISpecDescription Description => new SpecDescription(propositionalAssertion, UnderlyingSpec.Description.Detailed);
+    public override ISpecDescription Description => new SpecDescription(propositionalAssertion, underlyingSpec.Description.Detailed);
 
     public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
 
@@ -17,7 +17,7 @@ internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMet
 
         var assertion = booleanResult.Satisfied switch
         {
-            true => trueBecause(model, booleanResult),
+            true => trueBecause,
             false => falseBecause(model, booleanResult)
         };
         

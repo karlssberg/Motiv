@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace Karlssberg.Motiv;
+﻿namespace Karlssberg.Motiv;
 
 /// <summary>
 /// Represents errors that occur during the execution of a specification.

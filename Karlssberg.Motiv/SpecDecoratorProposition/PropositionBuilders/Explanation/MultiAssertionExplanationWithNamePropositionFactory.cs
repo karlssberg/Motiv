@@ -7,9 +7,8 @@
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
 public readonly ref struct MultiAssertionExplanationWithNamePropositionFactory<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause,
-    string candidateProposition)
+    string trueBecause,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause)
 {
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
@@ -20,7 +19,9 @@ public readonly ref struct MultiAssertionExplanationWithNamePropositionFactory<T
     public SpecBase<TModel, string> Create(string proposition) =>
         new SpecDecoratorMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
             spec,
-            trueBecause,
+            trueBecause
+                .ToEnumerable()
+                .ToFunc<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>>(),
             falseBecause,
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 
@@ -32,7 +33,9 @@ public readonly ref struct MultiAssertionExplanationWithNamePropositionFactory<T
     public SpecBase<TModel, string> Create() =>
         new SpecDecoratorMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
             spec,
-            trueBecause,
+            trueBecause
+                .ToEnumerable()
+                .ToFunc<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>>(),
             falseBecause,
-            candidateProposition);
+            trueBecause);
 }

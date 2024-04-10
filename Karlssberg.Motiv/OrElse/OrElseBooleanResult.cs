@@ -11,8 +11,8 @@ internal sealed class OrElseBooleanResult<TMetadata>(
         new OrElseBooleanResultDescription<TMetadata>(left, right, GetCauses());
     
     public override Explanation Explanation => GetCauses().CreateExplanation();
-    
-    public override MetadataTree<TMetadata> MetadataTree => new(GetCauses().GetMetadata());
+
+    public override MetadataTree<TMetadata> MetadataTree => CreateMetadataTree();
 
     public override IEnumerable<BooleanResultBase> Underlying => GetUnderlying();
 
@@ -37,5 +37,14 @@ internal sealed class OrElseBooleanResult<TMetadata>(
         
         if (right is not null)
             yield return right;
+    }
+    
+    private MetadataTree<TMetadata> CreateMetadataTree()
+    {
+        var causes = GetCauses().ToArray();
+        var underlying =  causes
+            .SelectMany(cause => cause.MetadataTree.Underlying);
+        
+        return new MetadataTree<TMetadata>(causes.GetMetadata(), underlying);
     }
 }

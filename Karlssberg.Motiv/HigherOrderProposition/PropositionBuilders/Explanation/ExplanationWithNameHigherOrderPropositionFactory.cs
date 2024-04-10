@@ -11,9 +11,8 @@
 public readonly ref struct ExplanationWithNameHigherOrderPropositionFactory<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause,
+    string trueBecause,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
-    ISpecDescription candidateSpecDescription,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
@@ -23,12 +22,12 @@ public readonly ref struct ExplanationWithNameHigherOrderPropositionFactory<TMod
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderExplanationProposition<TModel, TUnderlyingMetadata>(
+        new HigherOrderFromBooleanResultExplanationProposition<TModel, TUnderlyingMetadata>(
             spec.IsSatisfiedByWithExceptionRethrowing,
             higherOrderPredicate,
-            trueBecause,
+            trueBecause.ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string>(),
             falseBecause,
-            candidateSpecDescription,
+            new SpecDescription(trueBecause, spec.Description.Detailed),
             causeSelector);
 
     /// <summary>
@@ -41,12 +40,12 @@ public readonly ref struct ExplanationWithNameHigherOrderPropositionFactory<TMod
     public SpecBase<IEnumerable<TModel>, string> Create(string proposition)
     {
         proposition.ThrowIfNullOrWhitespace(nameof(proposition));
-        return new HigherOrderMetadataProposition<TModel, string, TUnderlyingMetadata>(
+        return new HigherOrderFromBooleanResultMetadataProposition<TModel, string, TUnderlyingMetadata>(
             spec.IsSatisfiedByWithExceptionRethrowing,
             higherOrderPredicate,
-            trueBecause,
+            trueBecause.ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string>(),
             falseBecause,
-            new HigherOrderSpecDescription<TModel, TUnderlyingMetadata>(proposition, spec),
+            new SpecDescription(proposition, spec.Description.Detailed),
             causeSelector);
     }
 }

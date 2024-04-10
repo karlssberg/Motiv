@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.HigherOrderProposition;
 
-internal sealed class HigherOrderExplanationProposition<TModel, TUnderlyingMetadata>(
+internal sealed class HigherOrderFromBooleanResultExplanationProposition<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver, 
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate, 
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause, 

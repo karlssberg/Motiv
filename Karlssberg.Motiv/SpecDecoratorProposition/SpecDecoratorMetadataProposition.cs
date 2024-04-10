@@ -7,7 +7,7 @@ internal sealed class SpecDecoratorMetadataProposition<TModel, TMetadata, TUnder
     string propositionalAssertion)
     : SpecBase<TModel, TMetadata>
 {
-    public override ISpecDescription Description => new SpecDescription(propositionalAssertion, UnderlyingSpec.Description);
+    public override ISpecDescription Description => new SpecDescription(propositionalAssertion, underlyingSpec.Description.Detailed);
 
     public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
 

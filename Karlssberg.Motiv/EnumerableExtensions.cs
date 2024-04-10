@@ -180,7 +180,7 @@ public static class EnumerableExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(atDepth), "Depth must be a non-negative integer.")
         };
     
-    public static IEnumerable<TMetadata> GetRootMetadata<TMetadata>(
+    internal static IEnumerable<TMetadata> GetRootMetadata<TMetadata>(
         this BooleanResultBase<TMetadata> result) =>
         result.MetadataTree
             .Underlying

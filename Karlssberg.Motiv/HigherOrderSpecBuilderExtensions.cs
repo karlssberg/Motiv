@@ -1,4 +1,4 @@
-﻿using Karlssberg.Motiv.BooleanResultPredicateProposition;
+﻿using Karlssberg.Motiv.BooleanResultPredicateProposition.PropositionBuilders;
 using Karlssberg.Motiv.HigherOrderProposition.PropositionBuilders;
 using Karlssberg.Motiv.SpecDecoratorProposition.PropositionBuilders;
 
@@ -6,7 +6,7 @@ namespace Karlssberg.Motiv;
 
 public static class HigherOrderSpecBuilderExtensions
 {
-    public static TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
         this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AllTrue());
     public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
@@ -17,7 +17,7 @@ public static class HigherOrderSpecBuilderExtensions
             builder.As(results => results.All(tuple => tuple.Satisfied));
     
     
-    public static TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> AsAnySatisfied<TModel, TUnderlyingMetadata>(
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> AsAnySatisfied<TModel, TUnderlyingMetadata>(
         this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AnyTrue());
     public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAnySatisfied<TModel, TUnderlyingMetadata>(
@@ -28,7 +28,7 @@ public static class HigherOrderSpecBuilderExtensions
         builder.As(booleanResults => booleanResults.Any(result => result.Satisfied));
     
     
-    public static TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> AsNoneSatisfied<TModel, TUnderlyingMetadata>(
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> AsNoneSatisfied<TModel, TUnderlyingMetadata>(
         this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AllFalse());
     public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsNoneSatisfied<TModel, TUnderlyingMetadata>(
@@ -40,7 +40,7 @@ public static class HigherOrderSpecBuilderExtensions
         builder.As(booleanResults => booleanResults.All(result => !result.Satisfied));
     
     
-    public static TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> AsNSatisfied<TModel, TUnderlyingMetadata>(
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> AsNSatisfied<TModel, TUnderlyingMetadata>(
         this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
@@ -69,7 +69,7 @@ public static class HigherOrderSpecBuilderExtensions
     }
     
     
-    public static TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> AsAtLeastNSatisfied<TModel, TUnderlyingMetadata>(
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> AsAtLeastNSatisfied<TModel, TUnderlyingMetadata>(
         this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
@@ -98,7 +98,7 @@ public static class HigherOrderSpecBuilderExtensions
     }
     
 
-    public static TrueHigherOrderFromUnderlyingPropositionBuilder<TModel, TUnderlyingMetadata> AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
         this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {

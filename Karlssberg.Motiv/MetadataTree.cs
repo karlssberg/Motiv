@@ -4,21 +4,31 @@ namespace Karlssberg.Motiv;
 
 public sealed class MetadataTree<TMetadata>(
     IEnumerable<TMetadata> metadataCollection,
-    IEnumerable<MetadataTree<TMetadata>>? underlying = null)
+    IEnumerable<MetadataTree<TMetadata>> underlying)
     : IEnumerable<TMetadata>
 {
-    public MetadataTree(TMetadata metadata, IEnumerable<MetadataTree<TMetadata>>? underlying = null)
+    public MetadataTree(IEnumerable<TMetadata> metadataCollection)
+        : this(metadataCollection, Enumerable.Empty<MetadataTree<TMetadata>>())
+    {
+    }
+    
+    public MetadataTree(TMetadata metadata)
+        : this(metadata.ToEnumerable(), Enumerable.Empty<MetadataTree<TMetadata>>())
+    {
+    }
+    
+    public MetadataTree(TMetadata metadata, IEnumerable<MetadataTree<TMetadata>> underlying)
         : this(metadata.ToEnumerable(), underlying)
     {
     }
-
-    public IEnumerable<MetadataTree<TMetadata>> Underlying => underlying?? Enumerable.Empty<MetadataTree<TMetadata>>();
+    
+    public IEnumerable<MetadataTree<TMetadata>> Underlying => underlying;
     
     public int Count => _metadataCollection.Count;
 
     private readonly ISet<TMetadata> _metadataCollection = metadataCollection switch
     {
-        ISet<TMetadata> metadataSet => metadataSet,
+        ISet<TMetadata> metadataTree => metadataTree,
         IEnumerable<IComparable<TMetadata>> => new SortedSet<TMetadata>(metadataCollection),
         _ => new HashSet<TMetadata>(metadataCollection)
     };

@@ -19,7 +19,7 @@ internal sealed class BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata
 
     public override Explanation Explanation => explanation;
 
-    public override MetadataTree<TMetadata> MetadataTree =>  metadataTree;
+    public override MetadataTree<TMetadata> MetadataTree => metadataTree;
     
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
     

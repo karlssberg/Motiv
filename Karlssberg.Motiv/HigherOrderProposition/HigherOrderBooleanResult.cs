@@ -9,7 +9,11 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
     string reason)
     : BooleanResultBase<TMetadata>
 {
-    public override MetadataTree<TMetadata> MetadataTree => new(metadata);
+    public override MetadataTree<TMetadata> MetadataTree =>
+        new(metadata,
+            causes.SelectMany(cause =>
+                cause.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>()));
+
     public override IEnumerable<BooleanResultBase> Underlying => underlyingResults;
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
         underlyingResults.ResolveUnderlyingWithMetadata<TMetadata, TUnderlyingMetadata>();

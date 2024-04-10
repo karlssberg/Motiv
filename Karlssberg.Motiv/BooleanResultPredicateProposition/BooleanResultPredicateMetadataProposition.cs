@@ -4,11 +4,11 @@ public sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> underlyingBooleanResultPredicate,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenFalse,
-    string propositionalAssertion)
+    ISpecDescription specDescription)
     : SpecBase<TModel, TMetadata>
 {
     /// <summary>Gets the name of the proposition.</summary>
-    public override ISpecDescription Description => new SpecDescription(propositionalAssertion);
+    public override ISpecDescription Description => specDescription;
 
     /// <summary>Determines if the proposition is satisfied by the given model.</summary>
     /// <param name="model">The model to be evaluated.</param>
@@ -33,7 +33,7 @@ public sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata,
         };
         
         var metadataTree = new MetadataTree<TMetadata>(
-            metadata,
+            metadata.ToEnumerable(),
             booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>());
 
         var explanation = new Explanation(assertion)

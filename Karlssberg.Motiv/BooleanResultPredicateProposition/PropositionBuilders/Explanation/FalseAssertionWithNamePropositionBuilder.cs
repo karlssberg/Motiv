@@ -7,8 +7,7 @@
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
 public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> predicate,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause,
-    string candidateProposition)
+    string trueBecause)
 {
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
@@ -19,8 +18,7 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnd
         string falseBecause) =>
         new(predicate,
             trueBecause,
-            (_, _) => falseBecause,
-            candidateProposition);
+            (_, _) => falseBecause);
 
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
@@ -31,8 +29,7 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnd
         Func<TModel, string> falseBecause) =>
         new(predicate,
             trueBecause,
-            (model, _) => falseBecause(model),
-            candidateProposition);
+            (model, _) => falseBecause(model));
     
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
@@ -43,8 +40,7 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnd
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> falseBecause) =>
         new(predicate,
             trueBecause,
-            falseBecause,
-            candidateProposition);
+            falseBecause);
     
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
@@ -54,7 +50,6 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnd
     public MultiAssertionExplanationWithNamePropositionFactory<TModel, TUnderlyingMetadata> WhenFalse(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
         new(predicate,
-            trueBecause.ToEnumerableReturn(),
-            falseBecause,
-            candidateProposition);
+            trueBecause,
+            falseBecause);
 }

@@ -9,7 +9,6 @@ internal sealed class SpecFactoryDecoratorMetadataProposition<TModel, TMetadata,
 {
     
     public override ISpecDescription Description => new SpecDescription(propositionalAssertion);
-
     
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {

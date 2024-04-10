@@ -1,21 +1,22 @@
-﻿using AutoFixture.Xunit2;
-using FluentAssertions;
+﻿using FluentAssertions;
 
 namespace Karlssberg.Motiv.Tests;
 
 public class SpecDecoratorMetadataPropositionTests
 {
-    [InlineAutoData(true, "is first true", "is second true", "is third true", "is fourth true")]
-    [InlineAutoData(false, "!is first true", "!is second true", "!is third true", "!is fourth true")]
+    public enum Metadata
+    {
+        True,
+        False
+    }
+    
     [Theory]
+    [InlineData(true, "is first true", "is second true", "is third true", "is fourth true")]
+    [InlineData(false, "!is first true", "!is second true", "!is third true", "!is fourth true")]
     public void Should_replace_the_assertion_with_new_assertion(
         bool isSatisfied,
-        string expectedA,
-        string expectedB,
-        string expectedC,
-        string expectedD)
+        params string[] expected)
     {
-        string[] expectation = [expectedA, expectedB, expectedC, expectedD];
         var underlying = Spec
             .Build<string>(m => isSatisfied)
             .WhenTrue(100)
@@ -50,11 +51,11 @@ public class SpecDecoratorMetadataPropositionTests
 
         var act = sut.IsSatisfiedBy("model");
 
-        act.Assertions.Should().BeEquivalentTo(expectation);
+        act.Assertions.Should().BeEquivalentTo(expected);
     }
     
-    [InlineAutoData(true, 200, 300, 400, 500)]
-    [InlineAutoData(false, -200, -300, -400, -500)]
+    [InlineData(true, 200, 300, 400, 500)]
+    [InlineData(false, -200, -300, -400, -500)]
     [Theory]
     public void Should_replace_the_metadata_with_new_metadata(
         bool isSatisfied,
@@ -165,19 +166,19 @@ public class SpecDecoratorMetadataPropositionTests
 
         var spec = Spec
             .Build(underlying)
-            .WhenTrue(Binary.On)
-            .WhenFalse(Binary.Off)
+            .WhenTrue(Metadata.True)
+            .WhenFalse(Metadata.False)
             .Create("is on");
 
         var act = spec.IsSatisfiedBy("model");
 
-        act.Metadata.Should().BeEquivalentTo([Binary.On]);
+        act.Metadata.Should().BeEquivalentTo([Metadata.True]);
     }
 
     [Theory]
-    [InlineAutoData(true,  Binary.On)]
-    [InlineAutoData(false, Binary.Off)]
-    public void Should_accept_single_parameter_assertion_factory_when_true_for_spec_decorators(bool model, Binary expected)
+    [InlineAutoData(true,  Metadata.True)]
+    [InlineAutoData(false, Metadata.False)]
+    public void Should_accept_single_parameter_assertion_factory_when_true_for_spec_decorators(bool model, Metadata expected)
     {
         var underlying = Spec
             .Build((bool m) => m)
@@ -185,8 +186,8 @@ public class SpecDecoratorMetadataPropositionTests
 
         var spec = Spec
             .Build(underlying)
-            .WhenTrue(_ => Binary.On)
-            .WhenFalse(_ => Binary.Off)
+            .WhenTrue(_ => Metadata.True)
+            .WhenFalse(_ => Metadata.False)
             .Create("is true");
 
         var act = spec.IsSatisfiedBy(model);
@@ -195,14 +196,14 @@ public class SpecDecoratorMetadataPropositionTests
     }
 
     [Theory]
-    [InlineAutoData(true,  Binary.On)]
-    [InlineAutoData(false, Binary.Off)]
-    public void Should_accept_double_parameter_assertion_factory_when_true_for_spec_decorators(bool model, Binary expected)
+    [InlineAutoData(true,  Metadata.True)]
+    [InlineAutoData(false, Metadata.False)]
+    public void Should_accept_double_parameter_assertion_factory_when_true_for_spec_decorators(bool model, Metadata expected)
     {
         var underlying = Spec
             .Build((bool m) => m)
-            .WhenTrue(Binary.On)
-            .WhenFalse(Binary.Off)
+            .WhenTrue(Metadata.True)
+            .WhenFalse(Metadata.False)
             .Create("is on");
 
         var spec = Spec
@@ -713,5 +714,187 @@ public class SpecDecoratorMetadataPropositionTests
         var act = spec.IsSatisfiedBy(model);
         
         act.Assertions.Should().BeEquivalentTo(expectedLeft, expectedRight);
+    }
+    
+    [Theory]
+    [InlineData(true, "propositional statement")]
+    [InlineData(false, "!propositional statement")]
+    public void Should_use_the_propositional_statement_in_the_reason(
+        bool model,
+        string expectedReason)
+    { 
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+        
+        var withFalseAsScalar =
+            Spec.Build(underlying)
+                .WhenTrue(Metadata.True)
+                .WhenFalse(Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsParameterCallback =
+            Spec.Build(underlying)
+                .WhenTrue(Metadata.True)
+                .WhenFalse(_ => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallback =
+            Spec.Build(underlying)
+                .WhenTrue(Metadata.True)
+                .WhenFalse((_, _) => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallbackThatReturnsACollection =
+            Spec.Build(underlying)
+                .WhenTrue(Metadata.True)
+                .WhenFalse((_, _) => Metadata.False.ToEnumerable())
+                .Create("propositional statement");
+        
+        var spec = withFalseAsScalar &
+                   withFalseAsParameterCallback &
+                   withFalseAsTwoParameterCallback &
+                   withFalseAsTwoParameterCallbackThatReturnsACollection;
+        
+        var act = spec.IsSatisfiedBy(model);
+        
+        act.Reason.Split(" & ").Should().AllBeEquivalentTo(expectedReason);
+    }
+    
+    [Theory]
+    [InlineData(true, "propositional statement")]
+    [InlineData(false, "!propositional statement")]
+    public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback(
+        bool model,
+        string expectedReason)
+    { 
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+        
+        var withFalseAsScalar =
+            Spec.Build(underlying)
+                .WhenTrue(_ => Metadata.True)
+                .WhenFalse(Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsParameterCallback =
+            Spec.Build(underlying)
+                .WhenTrue(_ => Metadata.True)
+                .WhenFalse(_ => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallback =
+            Spec.Build(underlying)
+                .WhenTrue(_ => Metadata.True)
+                .WhenFalse((_, _) => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallbackThatReturnsACollection =
+            Spec.Build(underlying)
+                .WhenTrue(_ => Metadata.True)
+                .WhenFalse((_, _) => Metadata.False.ToEnumerable())
+                .Create("propositional statement");
+        
+        var spec = withFalseAsScalar &
+                   withFalseAsParameterCallback &
+                   withFalseAsTwoParameterCallback &
+                   withFalseAsTwoParameterCallbackThatReturnsACollection;
+        
+        var act = spec.IsSatisfiedBy(model);
+        
+        act.Reason.Split(" & ").Should().AllBeEquivalentTo(expectedReason);
+    }
+    
+    
+    
+    [Theory]
+    [InlineData(true, "propositional statement")]
+    [InlineData(false, "!propositional statement")]
+    public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback(
+        bool model,
+        string expectedReason)
+    { 
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+        
+        var withFalseAsScalar =
+            Spec.Build(underlying)
+                .WhenTrue((_, _) => Metadata.True)
+                .WhenFalse(Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsParameterCallback =
+            Spec.Build(underlying)
+                .WhenTrue((_, _) => Metadata.True)
+                .WhenFalse(_ => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallback =
+            Spec.Build(underlying)
+                .WhenTrue((_, _) => Metadata.True)
+                .WhenFalse((_, _) => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallbackThatReturnsACollection =
+            Spec.Build(underlying)
+                .WhenTrue((_, _) => Metadata.True)
+                .WhenFalse((_, _) => Metadata.False.ToEnumerable())
+                .Create("propositional statement");
+        
+        var spec = withFalseAsScalar &
+                   withFalseAsParameterCallback &
+                   withFalseAsTwoParameterCallback &
+                   withFalseAsTwoParameterCallbackThatReturnsACollection;
+        
+        var act = spec.IsSatisfiedBy(model);
+        
+        act.Reason.Split(" & ").Should().AllBeEquivalentTo(expectedReason);
+    }
+    
+    [Theory]
+    [InlineData(true, "propositional statement")]
+    [InlineData(false, "!propositional statement")]
+    public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection(
+        bool model,
+        string expectedReason)
+    { 
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+        
+        var withFalseAsScalar =
+            Spec.Build(underlying)
+                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenFalse(Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsParameterCallback =
+            Spec.Build(underlying)
+                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenFalse(_ => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallback =
+            Spec.Build(underlying)
+                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenFalse((_, _) => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallbackThatReturnsACollection =
+            Spec.Build(underlying)
+                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenFalse((_, _) => Metadata.False.ToEnumerable())
+                .Create("propositional statement");
+        
+        var spec = withFalseAsScalar &
+                   withFalseAsParameterCallback &
+                   withFalseAsTwoParameterCallback &
+                   withFalseAsTwoParameterCallbackThatReturnsACollection;
+        
+        var act = spec.IsSatisfiedBy(model);
+        
+        act.Reason.Split(" & ").Should().AllBeEquivalentTo(expectedReason);
     }
 }

@@ -1,8 +1,8 @@
 ﻿namespace Karlssberg.Motiv.BooleanResultPredicateProposition;
 
-internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnderlyingMetadata>(
+internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> predicate,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> whenTrue,
+    string whenTrue,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> whenFalse,
     ISpecDescription specDescription)
     : SpecBase<TModel, string>
@@ -15,7 +15,7 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
         
         var assertion = booleanResult.Satisfied switch
         {
-            true => whenTrue(model, booleanResult),
+            true => whenTrue,
             false => whenFalse(model, booleanResult),
         };
         
@@ -32,6 +32,6 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
             booleanResult,
             metadataTree,
             explanation,
-            specDescription.ToReason(booleanResult.Satisfied));
+            assertion);
     }
 }
