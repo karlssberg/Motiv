@@ -1,5 +1,4 @@
 ﻿using Karlssberg.Motiv.BooleanResultPredicateProposition.PropositionBuilders;
-using SpecFactoryDecorator = Karlssberg.Motiv.SpecFactoryDecoratorProposition.PropositionBuilders;
 using SpecDecorator = Karlssberg.Motiv.SpecDecoratorProposition.PropositionBuilders;
 
 namespace Karlssberg.Motiv;
