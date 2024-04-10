@@ -169,7 +169,7 @@ public void Should_replace_the_assertions_with_new_assertions(
         bool model,
         string expectedReasonStatement)
     { 
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
         
         var underlying =
             Spec.Build((bool m) => m)
@@ -257,7 +257,7 @@ public void Should_replace_the_assertions_with_new_assertions(
         bool model,
         string expectedReasonStatement)
     { 
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 5));
         
         var underlying =
             Spec.Build((bool m) => m)

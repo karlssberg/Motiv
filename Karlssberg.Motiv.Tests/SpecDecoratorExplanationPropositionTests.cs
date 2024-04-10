@@ -477,7 +477,7 @@ public class SpecDecoratorExplanationPropositionTests
         bool model,
         string expectedReasonStatement)
     { 
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
         
         var underlying =
             Spec.Build((bool m) => m)
