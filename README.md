@@ -4,7 +4,7 @@
 Motiv is a .NET library that supercharges your boolean logic.
 
 At its core, it allows you to package your boolean expressions into strongly typed _propositions_.
-By _propositions_, we mean a declarative statement that can be either true or false, such as _the sun is shining_,
+By _propositions_, we mean a declarative statement that can be either true or false, such as _I think, therefore I am_,
 or _email address is missing an @ symbol_.
 
 A proposition can be combined with other propositions to form new ones, or it can be used to evaluate models to 
@@ -16,8 +16,8 @@ if (isUsefulLibrary.IsSatisfiedBy(new MyCriteria()))
 {
     ...
 ```
-When you evaluate a proposition, you get back a _boolean result_ object that tells you whether the proposition was 
-satisfied, or not and also provides you with a `Reason`.
+When you evaluate a proposition, you get back a `BooleanResultBase` object that tells you whether the proposition was 
+satisfied (or not) and also provides you with a `Reason` (and other useful information).
 ```csharp
 var result = isUsefulLibrary.IsSatisfiedBy(new InferiorAlternative());
 
@@ -31,16 +31,19 @@ Propositions are simple to construct and are not limited to strings—you can op
 propositions (referred to as `Metadata`). 
 
 ```csharp
-var isEvenSpec =
-    Spec.Build((int n) => n % 2 == 0)
-        .WhenTrue(new MyMetadata { Message = "is even" })
-        .WhenFalse(new MyMetadata { Message = "is odd" })
-        .Create("is even");
+var canCheckInSpec =
+    Spec.Build<Passenger>((Passenger passenger) => 
+        passenger.HasValidTicket && 
+        passenger.FlightTime <= DateTime.Now.AddHours(24) && 
+        passenger.OutstandingFees == 0)
+    .WhenTrue("Passenger can check in")
+    .WhenFalse("Passenger cannot check in")
+    .Create("can check in");
 
-var result = isEvenSpec.IsSatisfiedBy(3);
-result.Metadata; // [{ Message = "is odd" }]
-result.Reason; // "!is even"
-result.Assertions; // ["!is even"]
+var result = canCheckInSpec.IsSatisfiedBy(passenger);
+result.Metadata; // ["Passenger can check in"]
+result.Reason; // "can check in"
+result.Assertions; // ["Passenger can check in"]
 ```
 
 Observe the `Spec` type.
