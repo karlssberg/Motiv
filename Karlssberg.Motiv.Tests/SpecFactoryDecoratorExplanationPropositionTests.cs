@@ -202,7 +202,6 @@ public void Should_replace_the_assertions_with_new_assertions(
         act.Reason.Should().Be(expectedReason);
     }
     
-    
     [Theory]
     [InlineData(true, "propositional statement")]
     [InlineData(false, "!propositional statement")]
@@ -350,8 +349,6 @@ public void Should_replace_the_assertions_with_new_assertions(
         
         act.Reason.Should().Be(expectedReason);
     }
-    
-    
     [Theory]
     [InlineData(true, "propositional statement")]
     [InlineData(false, "!propositional statement")]

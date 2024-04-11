@@ -357,7 +357,6 @@ public class HigherOrderExplanationSpecTests
         act.Reason.Should().Be(expectedReason);
     }
     
-    
     [Theory]
     [InlineData(true, "propositional statement")]
     [InlineData(false, "!propositional statement")]

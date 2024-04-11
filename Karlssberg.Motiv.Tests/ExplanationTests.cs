@@ -114,13 +114,13 @@ public class ExplanationTests
                 .Create();
         
         var isPositiveSpec =
-            Spec.Build<int>(n => n > 0)
+            Spec.Build<int>(i => i > 0)
                 .WhenTrue("positive")
                 .WhenFalse("not positive")
                 .Create();
             
         var isDivisibleBy3Spec =
-            Spec.Build<int>(n => n % 3 == 0)
+            Spec.Build<int>(i => i % 3 == 0)
                 .WhenTrue("divisible by 3")
                 .WhenFalse("not divisible by 3")
                 .Create();
@@ -131,7 +131,6 @@ public class ExplanationTests
         
         result.AllAssertions.Should().BeEquivalentTo(expected);
     }
-    
     
     [Theory]
     [InlineData(6, "even", "positive", "divisible by 3")]
@@ -152,13 +151,13 @@ public class ExplanationTests
                 .Create();
         
         var isPositiveSpec =
-            Spec.Build<int>(n => n > 0)
+            Spec.Build<int>(i => i > 0)
                 .WhenTrue("positive")
                 .WhenFalse("not positive")
                 .Create();
         
         var isDivisibleBy3Spec =
-            Spec.Build<int>(n => n % 3 == 0)
+            Spec.Build<int>(i => i % 3 == 0)
                 .WhenTrue("divisible by 3")
                 .WhenFalse("not divisible by 3")
                 .Create();
@@ -193,13 +192,13 @@ public class ExplanationTests
                 .Create();
         
         var isPositiveSpec =
-            Spec.Build<int>(n => n > 0)
+            Spec.Build<int>(i => i > 0)
                 .WhenTrue("positive")
                 .WhenFalse("not positive")
                 .Create();
         
         var isDivisibleBy3Spec =
-            Spec.Build<int>(n => n % 3 == 0)
+            Spec.Build<int>(i => i % 3 == 0)
                 .WhenTrue("divisible by 3")
                 .WhenFalse("not divisible by 3")
                 .Create();

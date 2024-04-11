@@ -202,8 +202,6 @@ public class OrSpecTests
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }
     
-    
-
     [Theory]
     [InlineAutoData(false, false, 2)]
     [InlineAutoData(false, true, 1)]

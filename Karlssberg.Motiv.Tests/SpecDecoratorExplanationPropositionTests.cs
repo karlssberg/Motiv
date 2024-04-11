@@ -510,7 +510,6 @@ public class SpecDecoratorExplanationPropositionTests
         act.Reason.Should().Be(expectedReason);
     }
     
-    
     [Theory]
     [InlineData(true, "propositional statement")]
     [InlineData(false, "!propositional statement")]
@@ -606,8 +605,6 @@ public class SpecDecoratorExplanationPropositionTests
         act.Reason.Should().Be(expectedReason);
     }
     
-    
-    
     [Theory]
     [InlineData(true, "propositional statement")]
     [InlineData(false, "!propositional statement")]
@@ -654,8 +651,6 @@ public class SpecDecoratorExplanationPropositionTests
         
         act.Reason.Should().Be(expectedReason);
     }
-    
-    
     [Theory]
     [InlineData(true, "propositional statement")]
     [InlineData(false, "!propositional statement")]

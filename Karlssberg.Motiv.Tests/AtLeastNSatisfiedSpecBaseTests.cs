@@ -404,7 +404,6 @@ public class AtLeastNSatisfiedSpecBaseTests
         act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }
     
-    
     [Theory]
     [InlineAutoData(false, false, false, 0)]
     [InlineAutoData(false, false, true, 1)]
