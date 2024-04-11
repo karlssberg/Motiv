@@ -1,7 +1,7 @@
 # Motiv
 ### Turn your if-statements into _why_ statements
 
-Motiv is a .NET library that supercharges your boolean logic.
+Motiv is a .NET library that supercharges the developer experience when working with boolean logic.
 
 At its core, it allows you to package your boolean expressions into strongly typed _propositions_.
 By _propositions_, we mean a declarative statement that can be either true or false, such as _I think, therefore I am_,
@@ -32,13 +32,14 @@ propositions (referred to as `Metadata`).
 
 ```csharp
 var canCheckInSpec =
-    Spec.Build<Passenger>((Passenger passenger) => 
+    Spec.Build<Passenger>((Passenger passenger) =>  
         passenger.HasValidTicket && 
-        passenger.FlightTime <= DateTime.Now.AddHours(24) && 
-        passenger.OutstandingFees == 0)
-    .WhenTrue("Passenger can check in")
-    .WhenFalse("Passenger cannot check in")
-    .Create("can check in");
+        passenger.FlightTime.AddHours(-24) <=  DateTime.Now &&
+        passenger.FlightTime.AddMinutes(-30) >= DateTime.Now
+        passenger.OutstandingFees == 0)             // start with a predicate
+    .WhenTrue("Passenger can check in")             // explain what it means to be true
+    .WhenFalse("Passenger cannot check in")         // explain what it means to be false
+    .Create("can check in");                        // describe the proposition
 
 var result = canCheckInSpec.IsSatisfiedBy(passenger);
 result.Metadata; // ["Passenger can check in"]
@@ -47,11 +48,17 @@ result.Assertions; // ["Passenger can check in"]
 ```
 
 Observe the `Spec` type.
-This is a _specification_ and is the starting point for most operations _Propositions_ are formed from _specifications_.
-These `Spec` objects are composed into trees of logical expressions, which we refer to as _propositions_.
-So in effect, a _proposition_ is the root 'Spec' on a tree of 'Spec' objects.
+This is a _specification_.
+Specifications are the building blocks of propositions—they are the nodes of the logical expression tree.
+It is common for the terms _specification_ and _proposition_ to be used interchangeably, but it is useful to understand 
+how they differ.
 
-It is common for the two terms to be used interchangeably, but it is useful to understand the distinction.
+The name comes from the _Specification Pattern_ in software design, which is a pattern that allows you to encapsulate
+logic in a reusable and composable way.
+However, the OO nature of the Specification Pattern can make the developer experience feel a bit verbose and cumbersome 
+for what is typically a simple task.
+Motiv aims to provide a more intuitive and productive way to work with specifications by making it a (mostly)
+functional experience.
 
 #### What can I use the metadata for?
 * **User feedback** - You require an application to provide detailed and accurate feedback to the user about why a 
@@ -81,26 +88,35 @@ A basic proposition can be created using the `Spec` class. This class provides a
 logical proposition
 
 ```csharp
-var isNegativeSpec =
-    Spec.Build((int n) => n < 0)
-        .Create("is negative");
+var isEligibleForLoanSpec =
+    Spec.Build((Customer customer) => customer.CreditScore > 600 && customer.Balance > 5000)
+        .Create("is eligible for loan");
+```
 
-var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
+This can then be evaluated by calling the `IsSatisfiedBy()` method and passing in a model to evaluate.
+```csharp
+var eligibleCustomer = new Customer 
+{ 
+    CreditScore = 700, 
+    Balance = 6000
+};
 
-isNegative.Satisfied; // true
-isNegative.Reason; // "is negative"
-isNegative.Assertions; // ["is negative"]
+var isEligibleForLoan = isEligibleForLoanSpec.IsSatisfiedBy(eligibleCustomer); // evaluate
+
+isEligibleForLoan.Satisfied; // true
+isEligibleForLoan.Reason; // "is eligible for loan"
+isEligibleForLoan.Assertions; // "is eligible for loan"
 ```
 
 When negated, a basic proposition will return a reason prefixed with a `!` character.
 This is useful for debugging purposes.
 
 ```csharp
-var isNegative = isNegativeSpec.IsSatisfiedBy(3);
+var isEligibleForLoan = isEligibleForLoanSpec.IsSatisfiedBy(new Customer { Balance = 4000 });
 
-isNegative.Satisfied; // false
-isNegative.Reason; // "!is negative"
-isNegative.Assertions; // ["!is negative"]
+isEligibleForLoan.Satisfied; // true
+isEligibleForLoan.Reason; // "is eligible for loan"
+isEligibleForLoan.Assertions; // "is eligible for loan"
 ```
 
 You can also use the `WhenTrue()` and `WhenFalse()` methods to provide a more human-readable description for when the 
@@ -166,27 +182,33 @@ propositions can be combined using the `&`,`|` and `^` operators as well as the 
 `.AndAlso()` methods.
 
 ```csharp
-var isNegativeSpec =
-    Spec.Build((int n) => n < 0)
-        .WhenTrue("the number is negative")
-        .WhenFalse(n => n == 0 
-            ? "the number is zero"
-            : "the number is positive")
-        .Create("is negative");
+var hasValidTicketSpec =
+    Spec.Build((Passenger passenger) => passenger.HasValidTicket)
+        .WhenTrue("has a valid ticket")
+        .WhenFalse("does not have a valid ticket")
+        .Create();
 
-var isEvenSpec =
-    Spec.Build((int n) => n % 2 == 0)
-        .WhenTrue("the number is even")
-        .WhenFalse("the number is odd")
-        .Create("is even"); 
+var hasOutstandingFeesSpec =
+    Spec.Build((Passenger passenger) => passenger.OutstandingFees > 0)
+        .WhenTrue("has outstanding fees")
+        .WhenFalse("does not have outstanding fees")
+        .Create();
 
-var isPositiveAndOddSpec = !isNegativeSpec & !isEvenSpec;
+var isCheckInOpenSpec =
+    Spec.Build((Passenger passenger) =>
+        passenger.FlightTime - DateTime.Now <= TimeSpan.FromHours(4) &&
+        passenger.FlightTime - DateTime.Now >= TimeSpan.FromMinutes(30))
+            .WhenTrue("check-in is open")
+            .WhenFalse("check-in is closed")
+            .Create();
 
-var isPositiveAndOdd = isPositiveAndOddSpec.IsSatisfiedBy(3);
+var canCheckInSpec = hasValidTicketSpec & !hasOutstandingFeesSpec & isCheckInOpenSpec;
 
-isPositiveAndOdd.IsSatisfied; // returns true
-isPositiveAndOdd.Reason; // "!is negative & !is even"
-isPositiveAndOdd.Assertions; // ["the number is positive", "the number is odd"]
+var canCheckIn = canCheckInSpec.IsSatisfiedBy(validPassenger);
+
+canCheckIn.Satisfied; // true
+canCheckIn.Reason; // "has a valid ticket & does not have outstanding fees & check-in is open"
+canCheckIn.Assertions; // ["has a valid ticket", "does not have outstanding fees", "check-in is open"]
 ```
 
 When combining propositions to form new ones, only the propositions that helped determine the final result 
@@ -195,7 +217,7 @@ will be included in the `Assertions` property and `Reason` property.
 ```csharp
 var isPositiveAndOdd = isPositiveAndOddSpec.IsSatisfiedBy(-3);
 
-isPositiveAndOdd.IsSatisfied; // returns false
+isPositiveAndOdd.Satisfied; // returns false
 isPositiveAndOdd.Reason; // "is negative"
 isPositiveAndOdd.Assertions; // ["the number is negative"]
 ```
@@ -277,7 +299,7 @@ The current built-in higher order logical operations are:
   collection satisfy the proposition, otherwise a false boolean-result object is returned.
 - `AsAtLeastNSatisfied()`: Creates a proposition that yields a true boolean-result object if at least N models in a 
   collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- `AsAtMostNSatisfied()`: Creates a proposition that yields a true boolean-result object if at most N models in a 
+- `AsAtMostfNSatisfied()`: Creates a proposition that yields a true boolean-result object if at most N models in a 
   collection satisfy the proposition, otherwise a false boolean-result object is returned.
 
 ```csharp

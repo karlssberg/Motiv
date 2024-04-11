@@ -320,4 +320,40 @@ public class TutorialTests
         isIntegerPositiveAndEvenSpec.IsSatisfiedBy(0).AllRootAssertions.Should().BeEquivalentTo("even", "not positive");
         isIntegerPositiveAndEvenSpec.IsSatisfiedBy(-3).AllRootAssertions.Should().BeEquivalentTo("odd", "not positive");
     }
+
+    public record Passenger(bool HasValidTicket, decimal OutstandingFees, DateTime FlightTime);
+    [Fact]
+    public void Can_check_in_a_flight_demo()
+    {
+        var hasValidTicketSpec =
+            Spec.Build((Passenger passenger) => passenger.HasValidTicket)
+                .WhenTrue("has a valid ticket")
+                .WhenFalse("does not have a valid ticket")
+                .Create();
+
+        var hasOutstandingFeesSpec =
+            Spec.Build((Passenger passenger) => passenger.OutstandingFees > 0)
+                .WhenTrue("has outstanding fees")
+                .WhenFalse("does not have outstanding fees")
+                .Create();
+
+        var isCheckInOpenSpec =
+            Spec.Build((Passenger passenger) =>
+                passenger.FlightTime - DateTime.Now <= TimeSpan.FromHours(4) &&
+                passenger.FlightTime - DateTime.Now >= TimeSpan.FromMinutes(30))
+                    .WhenTrue("check-in is open")
+                    .WhenFalse("check-in is closed")
+                    .Create();
+
+        var canCheckInSpec = hasValidTicketSpec & !hasOutstandingFeesSpec & isCheckInOpenSpec;
+
+        var validPassenger = new Passenger(true, 0, DateTime.Now.AddHours(1));
+        
+        
+        var canCheckIn = canCheckInSpec.IsSatisfiedBy(validPassenger);
+
+        canCheckIn.Satisfied.Should().Be(true);
+        canCheckIn.Reason.Should().BeEquivalentTo("has a valid ticket & does not have outstanding fees & check-in is open");
+        canCheckIn.Assertions.Should().BeEquivalentTo("has a valid ticket", "does not have outstanding fees", "check-in is open");
+    }
 }

@@ -9,19 +9,14 @@ is not short-circuited.
 For example:
 
 ```csharp
-record Subscription(DateTime Start, DateTime End, bool IsCancelled);
-var activeSubscription = new Subscription(DateTime.Today, DateTime.Today.AddDays(1), false);
-
-var now = DateTime.Now;
-
 var hasSubscriptionStartedSpec =
-    Spec.Build((Subscription s) => s.Start < now)
+    Spec.Build((Subscription s) => s.Start < DateTime.Now)
         .WhenTrue("subscription has started")
         .WhenFalse("subscription has not started")
         .Create();
 
 var hasSubscriptionNotEndedSpec =
-    Spec.Build((Subscription s) => s.End >= now)
+    Spec.Build((Subscription s) => s.End >= DateTime.Now)
         .WhenTrue("subscription has not ended")
         .WhenFalse("subscription has ended")
         .Create();
