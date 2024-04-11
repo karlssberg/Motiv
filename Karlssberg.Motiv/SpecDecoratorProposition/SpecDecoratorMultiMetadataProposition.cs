@@ -4,10 +4,10 @@ internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, T
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
-    string propositionalAssertion)
+    ISpecDescription description)
     : SpecBase<TModel, TMetadata>
 {
-    public override ISpecDescription Description => new SpecDescription(propositionalAssertion, underlyingSpec.Description.Detailed);
+    public override ISpecDescription Description => description;
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {

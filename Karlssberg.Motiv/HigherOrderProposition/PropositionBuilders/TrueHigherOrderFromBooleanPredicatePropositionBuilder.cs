@@ -46,8 +46,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
         string trueBecause) =>
         new(predicate,
             higherOrderPredicate,
-            _ => trueBecause,
-            new SpecDescription(trueBecause),
+            trueBecause,
             causeSelector);
 
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>

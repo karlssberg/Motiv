@@ -6,8 +6,7 @@
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel>(
     Func<TModel, bool> predicate,
-    Func<TModel, string> trueBecause,
-    string candidateProposition)
+    string trueBecause)
 {
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
@@ -20,8 +19,7 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel>(
         return new ExplanationWithNamePropositionFactory<TModel>(
             predicate,
             trueBecause,
-            _ => falseBecause,
-            candidateProposition);
+            _ => falseBecause);
     }
 
     /// <summary>
@@ -35,7 +33,6 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel>(
         return new ExplanationWithNamePropositionFactory<TModel>(
             predicate,
             trueBecause,
-            falseBecause,
-            candidateProposition);
+            falseBecause);
     }
 }

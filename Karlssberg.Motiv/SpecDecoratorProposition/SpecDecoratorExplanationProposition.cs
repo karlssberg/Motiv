@@ -4,10 +4,10 @@ internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMet
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> falseBecause,
-    string propositionalAssertion)
+    ISpecDescription description)
     : SpecBase<TModel, string>
 {
-    public override ISpecDescription Description => new SpecDescription(propositionalAssertion, UnderlyingSpec.Description.Detailed);
+    public override ISpecDescription Description => description;
 
     public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
 

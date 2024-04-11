@@ -23,7 +23,7 @@ public readonly ref struct MultiAssertionExplanationWithNamePropositionFactory<T
                 .ToEnumerable()
                 .ToFunc<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>>(),
             falseBecause,
-            proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
+            new SpecDescription(proposition.ThrowIfNullOrWhitespace(nameof(proposition)), spec.Description.Detailed));
 
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement
@@ -37,5 +37,5 @@ public readonly ref struct MultiAssertionExplanationWithNamePropositionFactory<T
                 .ToEnumerable()
                 .ToFunc<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>>(),
             falseBecause,
-            trueBecause);
+            new SpecDescription(trueBecause, spec.Description.Detailed));
 }

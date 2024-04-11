@@ -98,5 +98,5 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
             spec,
             (_, result) => result.Metadata,
             (_, result) => result.Metadata,
-            proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
+            new SpecDescription(proposition.ThrowIfNullOrWhitespace(nameof(proposition)), spec.Description.Detailed));
 }

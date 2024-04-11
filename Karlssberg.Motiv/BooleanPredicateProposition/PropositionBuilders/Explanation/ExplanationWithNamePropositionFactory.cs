@@ -4,9 +4,8 @@
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 public readonly ref struct ExplanationWithNamePropositionFactory<TModel>(
     Func<TModel, bool> predicate,
-    Func<TModel, string> trueBecause,
-    Func<TModel, string> falseBecause,
-    string candidateProposition)
+    string trueBecause,
+    Func<TModel, string> falseBecause)
 {
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement
@@ -16,9 +15,9 @@ public readonly ref struct ExplanationWithNamePropositionFactory<TModel>(
     public SpecBase<TModel, string> Create() =>
         new ExplanationProposition<TModel>(
             predicate,
-            trueBecause,
+            trueBecause.ToFunc<TModel, string>(),
             falseBecause,
-            candidateProposition);
+            trueBecause);
 
     /// <summary>
     /// Creates a proposition with descriptive assertions, but using the supplied proposition to succinctly explain
@@ -30,7 +29,7 @@ public readonly ref struct ExplanationWithNamePropositionFactory<TModel>(
     public SpecBase<TModel, string> Create(string proposition) =>
         new MetadataProposition<TModel, string>(
             predicate,
-            trueBecause,
+            trueBecause.ToFunc<TModel, string>(),
             falseBecause,
             proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
 }

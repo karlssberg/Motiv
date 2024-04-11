@@ -19,7 +19,6 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
     /// <returns>An instance of <see cref="FalseAssertionWithNamePropositionBuilder{TModel}" />.</returns>
     public FalseAssertionWithNamePropositionBuilder<TModel> WhenTrue(string trueBecause) =>
         new(predicate,
-            _ => trueBecause,
             trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause)));
 
     /// <summary>

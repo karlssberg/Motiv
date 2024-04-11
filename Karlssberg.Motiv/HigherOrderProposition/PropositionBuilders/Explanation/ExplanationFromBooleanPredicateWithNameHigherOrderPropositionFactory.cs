@@ -10,9 +10,8 @@
 public readonly ref struct ExplanationFromBooleanPredicateWithNameHigherOrderPropositionFactory<TModel>(
     Func<TModel, bool> predicate,
     Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
-    Func<HigherOrderBooleanEvaluation<TModel>, string> trueBecause, 
+    string trueBecause, 
     Func<HigherOrderBooleanEvaluation<TModel>, string> falseBecause,
-    ISpecDescription candidateSpecDescription,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector)
 {
     /// <summary>
@@ -24,9 +23,9 @@ public readonly ref struct ExplanationFromBooleanPredicateWithNameHigherOrderPro
         new HigherOrderFromBooleanPredicateExplanationProposition<TModel>(
             predicate,
             higherOrderPredicate,
-            trueBecause,
+            trueBecause.ToFunc<HigherOrderBooleanEvaluation<TModel>, string>(),
             falseBecause,
-            candidateSpecDescription,
+            new SpecDescription(trueBecause),
             causeSelector);
 
     /// <summary>
@@ -42,7 +41,7 @@ public readonly ref struct ExplanationFromBooleanPredicateWithNameHigherOrderPro
         return new HigherOrderFromBooleanPredicateMetadataProposition<TModel,string>(
             predicate,
             higherOrderPredicate,
-            trueBecause,
+            trueBecause.ToFunc<HigherOrderBooleanEvaluation<TModel>, string>(),
             falseBecause,
             new SpecDescription(proposition),
             causeSelector);
