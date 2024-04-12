@@ -1,6 +1,6 @@
-﻿using Karlssberg.Motiv.BasicProposition;
-using Karlssberg.Motiv.BasicProposition.PropositionBuilders.Explanation;
-using Karlssberg.Motiv.BasicProposition.PropositionBuilders.Metadata;
+﻿using Karlssberg.Motiv.BooleanPredicateProposition;
+using Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
+using Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders.Metadata;
 using Karlssberg.Motiv.HigherOrderProposition;
 using Karlssberg.Motiv.HigherOrderProposition.PropositionBuilders;
 
