@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.BasicProposition.PropositionBuilders.Explanation;
+﻿namespace Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
 
 /// <summary>
 /// A factory for creating propositions based on a predicate and explanations for true and false conditions.

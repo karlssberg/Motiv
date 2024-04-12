@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.BasicProposition;
+﻿namespace Karlssberg.Motiv.BooleanPredicateProposition;
 
 internal sealed class PropositionResultDescription(string reason)
     : ResultDescriptionBase

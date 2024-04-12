@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.BasicProposition.PropositionBuilders.Metadata;
+﻿namespace Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders.Metadata;
 
 /// <summary>
 /// A factory for creating propositions based on the supplied predicate and metadata factories.

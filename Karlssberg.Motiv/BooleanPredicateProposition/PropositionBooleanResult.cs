@@ -1,4 +1,4 @@
-﻿namespace Karlssberg.Motiv.BasicProposition;
+﻿namespace Karlssberg.Motiv.BooleanPredicateProposition;
 
 public sealed class PropositionBooleanResult<TMetadata>(
     bool value,
