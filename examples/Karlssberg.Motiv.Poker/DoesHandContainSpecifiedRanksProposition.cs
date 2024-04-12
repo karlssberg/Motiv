@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.Poker;
 
-public class DoesHandContainSpecifiedRanksSpec(ICollection<Rank> ranks) : Spec<Hand>(
+public class DoesHandContainSpecifiedRanksProposition(ICollection<Rank> ranks) : Spec<Hand>(
     Spec.Build(UnderlyingSpec(ranks))
         .AsAllSatisfied()
         .WhenTrue($"all cards are either {string.Join(", or ", ranks)}")

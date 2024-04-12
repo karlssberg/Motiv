@@ -1,6 +1,6 @@
-﻿namespace Karlssberg.Motiv.Poker.HandRankSpecs;
+﻿namespace Karlssberg.Motiv.Poker.HandRankProposition;
 
-public class IsHandFlushSpec() : Spec<Hand, HandRank>(
+public class IsHandFlushProposition() : Spec<Hand, HandRank>(
     Spec.Build(IsAFlush)
         .WhenTrue(HandRank.Flush)
         .WhenFalse(HandRank.Unknown)

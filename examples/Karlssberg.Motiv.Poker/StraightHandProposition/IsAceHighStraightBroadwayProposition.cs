@@ -1,7 +1,7 @@
-﻿namespace Karlssberg.Motiv.Poker.StraightHandSpecs;
+﻿namespace Karlssberg.Motiv.Poker.StraightHandProposition;
 
-public class IsAceHighStraightBroadwaySpec() : Spec<Hand>(
-    Spec.Build(new DoesHandContainSpecifiedRanksSpec(BroadwayRanks))
+public class IsAceHighStraightBroadwayProposition() : Spec<Hand>(
+    Spec.Build(new DoesHandContainSpecifiedRanksProposition(BroadwayRanks))
         .WhenTrue("Is Ace High Straight Broadway")
         .WhenFalse("Is Not Ace High Straight Broadway")
         .Create())

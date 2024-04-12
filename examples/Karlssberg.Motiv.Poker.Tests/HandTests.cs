@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Karlssberg.Motiv.Poker.HandRankSpecs;
+using Karlssberg.Motiv.Poker.HandRankProposition;
 using static Karlssberg.Motiv.Poker.Tests.HandRanks;
 
 namespace Karlssberg.Motiv.Poker.Tests;
@@ -22,7 +22,7 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandPairSpec();
+        var sut = new IsHandPairProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -48,7 +48,7 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandTwoPairSpec();
+        var sut = new IsHandTwoPairProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -76,7 +76,7 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandStraightSpec();
+        var sut = new IsHandStraightProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -101,7 +101,7 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandStraightSpec();
+        var sut = new IsHandStraightProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -125,7 +125,7 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandFlushSpec();
+        var sut = new IsHandFlushProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -151,7 +151,7 @@ public class HandTests
             .Select(rank => new Card(rank, flushSuit))
             .ToList());
 
-        var sut = new IsHandStraightFlushSpec();
+        var sut = new IsHandStraightFlushProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -171,7 +171,7 @@ public class HandTests
             new("J", flushSuit),
             new("10", flushSuit)
         });
-        var sut = new IsHandRoyalFlushSpec();
+        var sut = new IsHandRoyalFlushProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
