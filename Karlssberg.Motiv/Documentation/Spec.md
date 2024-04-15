@@ -60,3 +60,6 @@ public class IsEvenAndPositiveProposition : Spec<int, MyMetadata>(() => // Spec 
 ```
 
 This can be useful when you want to provide additional information about the state of the model.
+
+| [Next - _Build()_](./build.md) |
+|:------------------------------:|

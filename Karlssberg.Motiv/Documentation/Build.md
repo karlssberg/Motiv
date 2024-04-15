@@ -48,6 +48,6 @@ Spec.Build(() => new IsEvenProposition())
 This is used to create a proposition from a factory function.
 The function is immediately invoked and the result is used to create the proposition.
 This doesn't add any new capabilities, but it instead improves the developer experience.
-<div style="display: flex; justify-content: right;">
-  <a href="./As.md">Next - As</a>
-</div>
+
+| [Back - _Spec_ class](./Spec.md) | [Next - _As()_](./As.md) |
+|:----------------------------------:|:------------------------:|

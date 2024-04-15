@@ -24,3 +24,6 @@ any arguments. This is because the propositional statement is obtained from the 
 <div style="display: flex; justify-content: left;">
   <a href="./.md">Back - When False</a>
 </div>
+
+| [Back - _WhenFalse()_](./WhenFalse.md) |
+|:--------------------------------------:|

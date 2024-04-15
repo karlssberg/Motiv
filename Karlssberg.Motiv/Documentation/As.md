@@ -1,7 +1,7 @@
-# `As()` 
+# `As()` - optional
 This optional builder method creates higher-order propositions.
-Higher-order propositions make statements about collections of models.
-In contrast, first-order propositions make +statements about individual models.
+Higher-order propositions make statements about set of models.
+In contrast, first-order propositions make statements about individual models.
 
 Whilst you can also create higher-order propositions without using the `As()` method (by defining the 
 model as a collection), at some point you will likely want to generate assertions using only the models that 
@@ -63,7 +63,5 @@ Spec.Build((int n) => n % 2 == 0)
 The proposition is satisfied if `n` number of models in the collection are satisfied, otherwise it is not 
 satisfied.
 
-<div style="display: flex; justify-content: space-between;">
-  <a href="./Build.md">Back - Build</a>
-  <a href="./WhenTrue.md">Next - WhenTrue</a>
-</div>
+| [Back - _Build()_](./Build.md) | [Next - _WhenTrue()_](./WhenTrue.md) |
+|:-------------------------------|-------------------------------------:|
