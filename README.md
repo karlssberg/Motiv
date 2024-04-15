@@ -67,7 +67,9 @@ logical proposition
 
 ```csharp
 var isEligibleForLoan =
-    Spec.Build((Customer customer) => customer.CreditScore > 600 && customer.Balance > 5000)
+    Spec.Build((Customer customer) => 
+                    customer.CreditScore > 600 &&
+                    customer.Balance > 5000)
         .Create("is eligible for loan");
 ```
 
@@ -135,19 +137,19 @@ propositions can be combined using the `&`,`|` and `^` operators as well as the 
 `.AndAlso()` methods.
 
 ```csharp
-var hasValidTicketSpec =
+var hasValidTicketProposition =
     Spec.Build((Passenger passenger) => passenger.HasValidTicket)
         .WhenTrue("has a valid ticket")
         .WhenFalse("does not have a valid ticket")
         .Create();
 
-var hasOutstandingFeesSpec =
+var hasOutstandingFeesProposition =
     Spec.Build((Passenger passenger) => passenger.OutstandingFees > 0)
         .WhenTrue("has outstanding fees")
         .WhenFalse("does not have outstanding fees")
         .Create();
 
-var isCheckInOpenSpec =
+var isCheckInOpenProposition =
     Spec.Build((Passenger passenger) =>
         passenger.FlightTime - DateTime.Now <= TimeSpan.FromHours(4) &&
         passenger.FlightTime - DateTime.Now >= TimeSpan.FromMinutes(30))
@@ -155,9 +157,9 @@ var isCheckInOpenSpec =
             .WhenFalse("check-in is closed")
             .Create();
 
-var canCheckInSpec = hasValidTicketSpec & !hasOutstandingFeesSpec & isCheckInOpenSpec;
+var canCheckInProposition = hasValidTicketProposition & !hasOutstandingFeesProposition & isCheckInOpenProposition;
 
-var result = canCheckInSpec.IsSatisfiedBy(validPassenger);
+var result = canCheckInProposition.IsSatisfiedBy(validPassenger);
 
 result.Satisfied; // true
 result.Reason; // "has a valid ticket & does not have outstanding fees & check-in is open"
@@ -168,7 +170,7 @@ When combining propositions to form new ones, only the propositions that helped 
 will be included in the `Assertions` property and `Reason` property.
 
 ```csharp
-var result = isPositiveAndOddSpec.IsSatisfiedBy(-3);
+var result = isPositiveAndOddProposition.IsSatisfiedBy(-3);
 
 result.Satisfied; // returns false
 result.Reason; // "is negative"
@@ -204,13 +206,13 @@ Using these classes will help you to maintain a separation of concerns and also 
 logic within an application. 
 
 ```csharp
-public class IsNegativeSpec : Spec<int>(
+public class IsNegativeProposition : Spec<int>(
     Spec.Build((int n) => n < 0)
         .WhenTrue("the number is negative")
         .WhenFalse("the number is not negative")
         .Create());
 
-public class IsNegativeMultiLingualSpec : Spec<int, MyMetadata>(
+public class IsNegativeMultiLingualProposition : Spec<int, MyMetadata>(
     Spec.Build((int n) => n < 0)
         .WhenTrue(new MyMetadata { Spanish = "el número es negativo" })
         .WhenFalse(new MyMetadata { Spanish = "el número no es negativo" })
@@ -221,17 +223,17 @@ If you require (or prefer) your proposition to be expressed as multiple statemen
 factory method.
 
 ```csharp
-public class IsPositiveAndOddSpec : Spec<int>(() => 
+public class IsPositiveAndOddProposition : Spec<int>(() => 
     {
-        var isNegativeSpec =
+        var isNegative =
             Spec.Build((int n) => n < 0)
                 .Create("is negative");+
 
-        var isEvenSpec =
+        var isEven =
             Spec.Build((int n) => n % 2 == 0)
                 .Create("is even"); 
 
-        return !isNegativeSpec & !isEvenSpec;
+        return !isNegative & !isEven;
     });
 ```
 
@@ -268,7 +270,7 @@ This will give you access to each result and model pair, which can be used to cu
 particular use-case.
 
 ```csharp
-Spec.Build(new IsNegativeIntegerSpec())
+Spec.Build(new IsNegativeIntegerProposition())
     .AsAllSatisfied()
     .WhenTrue("all are negative")
     .WhenFalse(evaluation => evaluation.FalseModels.Select(n => $"{n} is not negative"))
@@ -282,7 +284,7 @@ checks.
 
 ```csharp
 var allNegative =
-    Spec.Build(new IsNegativeIntegerSpec())
+    Spec.Build(new IsNegativeIntegerProposition())
         .AsAllSatisfied()
         .WhenTrue(eval => eval switch
         {

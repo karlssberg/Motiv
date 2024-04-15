@@ -1,6 +1,6 @@
 ﻿using Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders;
 using Karlssberg.Motiv.BooleanResultPredicateProposition.PropositionBuilders;
-using SpecDecorator = Karlssberg.Motiv.SpecDecoratorProposition.PropositionBuilders;
+using Karlssberg.Motiv.SpecDecoratorProposition.PropositionBuilders;
 
 namespace Karlssberg.Motiv;
 
@@ -134,11 +134,11 @@ public static class Spec
     /// </summary>
     /// <param name="factory">The specification factory function to be used in the specification.</param>
     /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
-    public static SpecDecorator.TruePropositionBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+    public static TruePropositionBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         Func<SpecBase<TModel, TMetadata>> factory)
     {
         factory.ThrowIfNull(nameof(factory));
-        return new SpecDecorator.TruePropositionBuilder<TModel, TMetadata>(factory());
+        return new TruePropositionBuilder<TModel, TMetadata>(factory());
     }
 
     /// <summary>
@@ -146,11 +146,11 @@ public static class Spec
     /// </summary>
     /// <param name="factory">The specification factory function to be used in the specification.</param>
     /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
-    public static SpecDecorator.TruePropositionBuilder<TModel, string> Build<TModel>(
+    public static TruePropositionBuilder<TModel, string> Build<TModel>(
         Func<SpecBase<TModel, string>> factory)
     {
         factory.ThrowIfNull(nameof(factory));
-        return new SpecDecorator.TruePropositionBuilder<TModel, string>(factory());
+        return new TruePropositionBuilder<TModel, string>(factory());
     }
 
     /// <summary>
@@ -158,10 +158,10 @@ public static class Spec
     /// </summary>
     /// <param name="proposition">The proposition upon which to derive a new proposition.</param>
     /// <returns>A TrueCompositeSpecBuilder instance for further specification building.</returns>
-    public static SpecDecorator.TruePropositionBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+    public static TruePropositionBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
         SpecBase<TModel, TMetadata> proposition)
     {
         proposition.ThrowIfNull(nameof(proposition));
-        return new SpecDecorator.TruePropositionBuilder<TModel, TMetadata>(proposition);
+        return new TruePropositionBuilder<TModel, TMetadata>(proposition);
     }
 }

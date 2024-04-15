@@ -10,7 +10,7 @@ This method is overloaded and takes one of the following types of arguments:
 All of these overloads can be used to create a new proposition with varying levels of expressiveness.
 
 ## Building propositions from regular boolean predicates
-### `Build(Func<TModel, bool> predicate)`
+### `Build(Func<TModel, bool> predicate)`+
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0) 
