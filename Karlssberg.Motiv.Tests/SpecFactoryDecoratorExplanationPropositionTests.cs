@@ -18,25 +18,25 @@ public void Should_replace_the_assertions_with_new_assertions(
             .Create();
 
         var firstSpec = Spec
-            .Build((string _) => underlying)
+            .Build(underlying)
             .WhenTrue("true - A")
             .WhenFalse("false - A")
             .Create();
 
         var secondSpec = Spec
-            .Build((string _) => underlying)
+            .Build(underlying)
             .WhenTrue(model => $"true + {model} - B")
             .WhenFalse("false - B")
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build((string _) => underlying)
+            .Build(underlying)
             .WhenTrue("true - C")
             .WhenFalse(model => $"false + {model} - C")
             .Create();
 
         var fourthSpec = Spec
-            .Build((string _) => underlying)
+            .Build(underlying)
             .WhenTrue(model => $"true + {model} - D")
             .WhenFalse(model => $"false + {model} - D")
             .Create("true + model - D");
@@ -63,25 +63,25 @@ public void Should_replace_the_assertions_with_new_assertions(
             .Create();
 
         var firstSpec = Spec
-            .Build((string _) => underlying)
+            .Build(underlying)
             .WhenTrue("true - A")
             .WhenFalse("false - A")
             .Create();
 
         var secondSpec = Spec
-            .Build((string _) => underlying)
+            .Build(underlying)
             .WhenTrue((m, _) => [$"true + {m} - B"])
             .WhenFalse("false - B")
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build((string _) => underlying)
+            .Build(underlying)
             .WhenTrue("true - C")
             .WhenFalse((m, _)  => [$"false + {m} - C"])
             .Create();
 
         var fourthSpec = Spec
-            .Build((string _) => underlying)
+            .Build(underlying)
             .WhenTrue((m, _)  => [$"true + {m} - D"])
             .WhenFalse((m, _)  => [$"false + {m} - D"])
             .Create("true + model - D");
@@ -106,7 +106,7 @@ public void Should_replace_the_assertions_with_new_assertions(
             .Create("is underlying true");
 
         var sut = Spec
-            .Build((bool _) => underlying)
+            .Build(underlying)
             .WhenTrue((boolModel, result) => $"{true.ToString()} {boolModel} {result}")
             .WhenFalse((boolModel, result) => $"{false.ToString()} {boolModel} {result}")
             .Create("is true");
@@ -128,7 +128,7 @@ public void Should_replace_the_assertions_with_new_assertions(
             .Create("is underlying true");
 
         var sut = Spec
-            .Build((bool _) => underlying)
+            .Build(underlying)
             .WhenTrue((boolModel, result) => result.Assertions.Append(boolModel.ToString()))
             .WhenFalse("False")
             .Create("is true");
@@ -151,7 +151,7 @@ public void Should_replace_the_assertions_with_new_assertions(
             .Create("is underlying true");
 
         var sut = Spec
-            .Build((bool _) => underlying)
+            .Build(underlying)
             .WhenTrue("True")
             .WhenFalse((boolModel, result) => result.Assertions.Append(boolModel.ToString()))
             .Create("is true");
@@ -176,19 +176,19 @@ public void Should_replace_the_assertions_with_new_assertions(
                 .Create("is underlying true");
         
         var withFalseAsScalar =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue("true assertion")
                 .WhenFalse("false assertion")
                 .Create();
         
         var withFalseAsParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue("true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create();
         
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue("true assertion")
                 .WhenFalse((_, _) => "false assertion")
                 .Create();
@@ -216,25 +216,25 @@ public void Should_replace_the_assertions_with_new_assertions(
                 .Create("is underlying true");
         
         var withFalseAsScalar =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue("true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
         
         var withFalseAsParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue("true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue("true assertion")
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue("true assertion")
                 .WhenFalse((_, _) => ["false assertion"])
                 .Create("propositional statement");
@@ -263,31 +263,31 @@ public void Should_replace_the_assertions_with_new_assertions(
                 .Create("is underlying true");
         
         var withFalseAsScalar =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
         
         var withFalseAsParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse((_, _) => ["false assertion"])
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollectionWithoutCustomStatement =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue("propositional statement")
                 .WhenFalse((_, _) => ["false assertion"])
                 .Create();
@@ -317,25 +317,25 @@ public void Should_replace_the_assertions_with_new_assertions(
                 .Create("is underlying true");
         
         var withFalseAsScalar =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue((_, _) => "true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
         
         var withFalseAsParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue((_, _) => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue((_, _) => "true assertion")
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue((_, _) => "true assertion")
                 .WhenFalse((_, _) => ["false assertion"])
                 .Create("propositional statement");
@@ -363,25 +363,25 @@ public void Should_replace_the_assertions_with_new_assertions(
                 .Create("is underlying true");
         
         var withFalseAsScalar =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue((_, _) => ["true assertion"])
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
         
         var withFalseAsParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue((_, _) => ["true assertion"])
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue((_, _) => ["true assertion"])
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .WhenTrue((_, _) => ["true assertion"])
                 .WhenFalse((_, _) => ["false assertion"])
                 .Create("propositional statement");

@@ -5,8 +5,8 @@ public class HasNCardsWithTheSameRankProposition(int sameRankCount) : Spec<Hand>
     Spec.Build((Hand hand) =>
             hand.Ranks
                 .Select(rank => new HasNCardsWithTheSameRank(sameRankCount, rank))
-                .Select(spec => spec.ChangeModelTo<Hand>(h => h.Cards))
-                .OrTogether())
+                .OrTogether()
+                .IsSatisfiedBy(hand.Cards))
         .Create($"has {sameRankCount} card(s) with the same rank"))
 {
     private class HasNCardsWithTheSameRank(int sameRankCount, Rank rank) : Spec<IEnumerable<Card>>(

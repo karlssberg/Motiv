@@ -6,7 +6,6 @@ This method is overloaded and takes one of the following types of arguments:
 * `Func<TModel, BooleanResultBase<TMetadata>` - a predicate that returns a `BooleanResultBase<TMetadata>` instance.
 * `SpecBase<TModel,TMetadata>` - a proposition that has already been built.
 * `Func<SpecBase<TModel, TMetadata>>` - a function that returns a proposition.
-* `Func<TModel, SpecBase<TModel,TMetdata>>` - a predicate that returns a proposition (to be immediately evaluated).
 
 All of these overloads can be used to create a new proposition with varying levels of expressiveness.
 
@@ -49,18 +48,6 @@ Spec.Build(() => new IsEvenProposition())
 This is used to create a proposition from a factory function.
 The function is immediately invoked and the result is used to create the proposition.
 This doesn't add any new capabilities, but it instead improves the developer experience.
-
-## Building propositions from factories at evaluation time
-### `Build(Func<TModel, SpecBase<TModel,TMetdata>> factory)`
-```csharp
-Spec.Build(((int n) => new IsEvenProposition($"immidiately evaluate {n}"))
-    .Create("is even (better)");
-```
-This is used to create a proposition using a factory which is invoked at evaluation time.
-This can sometimes be useful when an existing proposition requires the model data for it to be created.
-This is the same as calling `IsSatisfiedBy()` on the proposition returned by the predicate, but is more concise.  
-This is primarily for situations where different propositions are defined or selected based on the model.
-
 <div style="display: flex; justify-content: right;">
   <a href="./As.md">Next - As</a>
 </div>

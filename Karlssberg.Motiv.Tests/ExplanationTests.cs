@@ -52,9 +52,10 @@ public class ExplanationTests
                 .Create();
         
         var isEvenAndPositiveUsingChangeModelSpecAtDepth1 = 
-            Spec.Build((int _) => 
-                    isEvenWrapperSpecAtDepth2.ChangeModelTo<int>(i => i) & 
+            Spec.Build((int n) => 
+                    (isEvenWrapperSpecAtDepth2.ChangeModelTo<int>(i => i) & 
                     isPositiveWrapperSpecAtDepth2.ChangeModelTo<int>(i => i))
+                    .IsSatisfiedBy(n))
                 .WhenTrue("even and positive from change model method")
                 .WhenFalse("not even and positive from change model method")
                 .Create();

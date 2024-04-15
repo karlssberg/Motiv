@@ -183,14 +183,14 @@ public class HigherOrderExplanationSpecTests
                 .Create("is underlying true");
         
         var withFalseAsScalar =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
                 .WhenFalse("false assertion")
                 .Create();
         
         var withFalseAsParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
                 .WhenFalse(_ => "false assertion")
@@ -217,21 +217,21 @@ public class HigherOrderExplanationSpecTests
                 .Create("is underlying true");
         
         var withFalseAsScalar =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
         
         var withFalseAsCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsCallbackThatReturnsACollection =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
                 .WhenFalse(_ => ["false assertion"])
@@ -239,7 +239,7 @@ public class HigherOrderExplanationSpecTests
         
         
         var withFalseAsTwoParameterCallbackThatReturnsACollectionWithImpliedName =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue("propositional statement")
                 .WhenFalse(_ => ["false assertion"])
@@ -269,28 +269,28 @@ public class HigherOrderExplanationSpecTests
                 .Create("is underlying true");
         
         var withFalseAsScalar =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
         
         var withFalseAsParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => ["false assertion"])
@@ -320,28 +320,28 @@ public class HigherOrderExplanationSpecTests
                 .Create("is underlying true");
         
         var withFalseAsScalar =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
         
         var withFalseAsParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => ["false assertion"])
@@ -371,14 +371,14 @@ public class HigherOrderExplanationSpecTests
                 .Create("is underlying true");
         
         var withFalseAsScalar =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => ["true assertion"])
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
         
         var withFalseAsCallback =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => ["true assertion"])
                 .WhenFalse(_ => "false assertion")
@@ -386,7 +386,7 @@ public class HigherOrderExplanationSpecTests
         
         
         var withFalseAsCallbackThatReturnsACollection =
-            Spec.Build((bool _) => underlying)
+            Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => ["true assertion"])
                 .WhenFalse(_ => ["false assertion"])

@@ -128,30 +128,6 @@ public static class Spec
         predicate.ThrowIfNull(nameof(predicate));
         return new BooleanResultPredicatePropositionBuilder<TModel, TMetadata>(predicate);
     }
-    
-    /// <summary>
-    /// Commences the construction of a proposition using a specification factory function.
-    /// </summary>
-    /// <param name="factory">The specification factory function to be used in the specification.</param>
-    /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
-    public static BooleanResultPredicatePropositionBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
-        Func<TModel, SpecBase<TModel, TMetadata>> factory)
-    {
-        factory.ThrowIfNull(nameof(factory));
-        return new BooleanResultPredicatePropositionBuilder<TModel, TMetadata>(factory.ToBooleanResultPredicate());
-    }
-
-    /// <summary>
-    /// Commences the construction of a specification using a specification factory function.
-    /// </summary>
-    /// <param name="factory">The specification factory function to be used in the specification.</param>
-    /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
-    public static BooleanResultPredicatePropositionBuilder<TModel, string> Build<TModel>(
-        Func<TModel, SpecBase<TModel, string>> factory)
-    {
-        factory.ThrowIfNull(nameof(factory));
-        return new BooleanResultPredicatePropositionBuilder<TModel, string>(factory.ToBooleanResultPredicate());
-    }
 
     /// <summary>
     /// Commences the construction of a specification using a specification factory function.

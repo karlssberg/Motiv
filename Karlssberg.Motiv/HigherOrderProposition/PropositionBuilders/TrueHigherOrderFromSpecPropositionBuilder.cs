@@ -75,6 +75,16 @@ public readonly ref struct TrueHigherOrderFromSpecPropositionBuilder<TModel, TUn
             higherOrderPredicate,
             trueBecause,
             causeSelector);
+    
+    /// <summary>Specifies the set of assertions to use when the condition is true.</summary>
+    /// <param name="whenTrue">A function that generates a collection of assertions when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataHigherOrderPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrue(
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> whenTrue) =>
+        new(spec,
+            higherOrderPredicate,
+            whenTrue,
+            causeSelector);
 
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>
