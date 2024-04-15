@@ -93,6 +93,7 @@ result.Reason; // "!is eligible for loan"
 result.Assertions; // ["!is eligible for loan"]
 ```
 
+### Propositions with explanations
 You can also use the `WhenTrue()` and `WhenFalse()` methods to provide a more human-readable description for when the 
 outcome is either `true` or `false`.
 These values will be used in the `Reason` and `Assertions` properties of the result.
@@ -110,7 +111,7 @@ result.Satisfied; // true
 result.Reason; // "the number is negative"
 result.Assertions; // ["the number is negative"]
 ```
-
+### Propositions with attached metadata
 You are also not limited to strings.
 You can equally supply any POCO object, and it will be yielded when appropriate.
 
