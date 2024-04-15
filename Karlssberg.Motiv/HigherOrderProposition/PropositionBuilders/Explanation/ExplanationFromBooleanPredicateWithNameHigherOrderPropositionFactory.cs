@@ -32,18 +32,18 @@ public readonly ref struct ExplanationFromBooleanPredicateWithNameHigherOrderPro
     /// Creates a specification with descriptive assertions, but using the supplied proposition to succinctly explain
     /// the decision.
     /// </summary>
-    /// <param name="proposition">The proposition statement of what the specification represents.</param>
+    /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create(string proposition)
+    public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
-        proposition.ThrowIfNullOrWhitespace(nameof(proposition));
+        statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanPredicateMetadataProposition<TModel,string>(
             predicate,
             higherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanEvaluation<TModel>, string>(),
             falseBecause,
-            new SpecDescription(proposition),
+            new SpecDescription(statement),
             causeSelector);
     }
 }

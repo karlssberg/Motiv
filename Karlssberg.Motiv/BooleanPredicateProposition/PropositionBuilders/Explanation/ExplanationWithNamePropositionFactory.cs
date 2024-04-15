@@ -23,13 +23,13 @@ public readonly ref struct ExplanationWithNamePropositionFactory<TModel>(
     /// Creates a proposition with descriptive assertions, but using the supplied proposition to succinctly explain
     /// the decision.
     /// </summary>
-    /// <param name="proposition">The proposition statement of what the proposition represents.</param>
+    /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<TModel, string> Create(string proposition) =>
+    public SpecBase<TModel, string> Create(string statement) =>
         new MetadataProposition<TModel, string>(
             predicate,
             trueBecause.ToFunc<TModel, string>(),
             falseBecause,
-            proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
+            statement.ThrowIfNullOrWhitespace(nameof(statement)));
 }

@@ -60,18 +60,18 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
             causeSelector);
 
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
-    /// <param name="proposition">The proposition statement of what the specification represents.</param>
+    /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create(string proposition)
+    public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
-        proposition.ThrowIfNullOrWhitespace(nameof(proposition));
+        statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanPredicateMetadataProposition<TModel, string>(
             predicate,
             higherOrderPredicate,
-            _ => proposition,
-            _ => $"!{proposition}",
-            new SpecDescription(proposition),
+            _ => statement,
+            _ => $"!{statement}",
+            new SpecDescription(statement),
             causeSelector);
     }
 }

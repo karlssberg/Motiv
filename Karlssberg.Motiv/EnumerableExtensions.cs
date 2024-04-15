@@ -6,18 +6,32 @@ public static class EnumerableExtensions
     public static SpecBase<TModel, TMetadata> AndTogether<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec & rightSpec);
+    public static BooleanResultBase<TMetadata> AndTogether<TModel, TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> booleanResults) =>
+        booleanResults.Aggregate((leftSpec, rightSpec) => leftSpec & rightSpec);
     
     public static SpecBase<TModel, TMetadata> AndAlsoTogether<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec.AndAlso(rightSpec));
+    public static BooleanResultBase<TMetadata> AndAlsoTogether<TModel, TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> booleanResults) =>
+        booleanResults.Aggregate((leftSpec, rightSpec) => leftSpec.AndAlso(rightSpec));
 
     public static SpecBase<TModel, TMetadata> OrTogether<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec | rightSpec);
     
+    public static BooleanResultBase<TMetadata> OrTogether<TModel, TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> booleanResult) =>
+        booleanResult.Aggregate((leftSpec, rightSpec) => leftSpec | rightSpec);
+    
     public static SpecBase<TModel, TMetadata> OrElseTogether<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec.OrElse(rightSpec));
+    
+    public static BooleanResultBase<TMetadata> OrElseTogether<TModel, TMetadata>(
+        this IEnumerable<BooleanResultBase<TMetadata>> booleanResult) =>
+        booleanResult.Aggregate((leftSpec, rightSpec) => leftSpec.OrElse(rightSpec));
     
     public static IEnumerable<TBooleanResult> WhereTrue<TBooleanResult>(
         this IEnumerable<TBooleanResult> results)

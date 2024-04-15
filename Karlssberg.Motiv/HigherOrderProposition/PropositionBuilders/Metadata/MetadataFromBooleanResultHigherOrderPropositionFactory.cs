@@ -17,18 +17,18 @@ public readonly ref struct MetadataFromBooleanResultHigherOrderPropositionFactor
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
 {
     /// <summary>Creates a specification and names it with the propositional statement provided.</summary>
-    /// <param name="proposition">The proposition statement of what the specification represents.</param>
+    /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
-    public SpecBase<IEnumerable<TModel>, TMetadata> Create(string proposition)
+    public SpecBase<IEnumerable<TModel>, TMetadata> Create(string statement)
     {
-        proposition.ThrowIfNullOrWhitespace(nameof(proposition));
+        statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
             resultResolver,
             higherOrderPredicate,
             whenTrue,
             whenFalse,
-            new SpecDescription(proposition),
+            new SpecDescription(statement),
             causeSelector);
     }
 }

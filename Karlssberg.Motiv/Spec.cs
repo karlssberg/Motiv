@@ -1,4 +1,5 @@
-﻿using Karlssberg.Motiv.BooleanResultPredicateProposition.PropositionBuilders;
+﻿using Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders;
+using Karlssberg.Motiv.BooleanResultPredicateProposition.PropositionBuilders;
 using SpecDecorator = Karlssberg.Motiv.SpecDecoratorProposition.PropositionBuilders;
 
 namespace Karlssberg.Motiv;
@@ -131,60 +132,60 @@ public static class Spec
     /// <summary>
     /// Commences the construction of a proposition using a specification factory function.
     /// </summary>
-    /// <param name="specFactory">The specification factory function to be used in the specification.</param>
+    /// <param name="factory">The specification factory function to be used in the specification.</param>
     /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
     public static BooleanResultPredicatePropositionBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
-        Func<TModel, SpecBase<TModel, TMetadata>> specFactory)
+        Func<TModel, SpecBase<TModel, TMetadata>> factory)
     {
-        specFactory.ThrowIfNull(nameof(specFactory));
-        return new BooleanResultPredicatePropositionBuilder<TModel, TMetadata>(specFactory.ToBooleanResultPredicate());
+        factory.ThrowIfNull(nameof(factory));
+        return new BooleanResultPredicatePropositionBuilder<TModel, TMetadata>(factory.ToBooleanResultPredicate());
     }
 
     /// <summary>
     /// Commences the construction of a specification using a specification factory function.
     /// </summary>
-    /// <param name="specFactory">The specification factory function to be used in the specification.</param>
+    /// <param name="factory">The specification factory function to be used in the specification.</param>
     /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
     public static BooleanResultPredicatePropositionBuilder<TModel, string> Build<TModel>(
-        Func<TModel, SpecBase<TModel, string>> specFactory)
+        Func<TModel, SpecBase<TModel, string>> factory)
     {
-        specFactory.ThrowIfNull(nameof(specFactory));
-        return new BooleanResultPredicatePropositionBuilder<TModel, string>(specFactory.ToBooleanResultPredicate());
+        factory.ThrowIfNull(nameof(factory));
+        return new BooleanResultPredicatePropositionBuilder<TModel, string>(factory.ToBooleanResultPredicate());
     }
 
     /// <summary>
     /// Commences the construction of a specification using a specification factory function.
     /// </summary>
-    /// <param name="specFactory">The specification factory function to be used in the specification.</param>
+    /// <param name="factory">The specification factory function to be used in the specification.</param>
     /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
     public static SpecDecorator.TruePropositionBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
-        Func<SpecBase<TModel, TMetadata>> specFactory)
+        Func<SpecBase<TModel, TMetadata>> factory)
     {
-        specFactory.ThrowIfNull(nameof(specFactory));
-        return new SpecDecorator.TruePropositionBuilder<TModel, TMetadata>(specFactory());
+        factory.ThrowIfNull(nameof(factory));
+        return new SpecDecorator.TruePropositionBuilder<TModel, TMetadata>(factory());
     }
 
     /// <summary>
     /// Commences the construction of a specification using a specification factory function.
     /// </summary>
-    /// <param name="specFactory">The specification factory function to be used in the specification.</param>
+    /// <param name="factory">The specification factory function to be used in the specification.</param>
     /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
     public static SpecDecorator.TruePropositionBuilder<TModel, string> Build<TModel>(
-        Func<SpecBase<TModel, string>> specFactory)
+        Func<SpecBase<TModel, string>> factory)
     {
-        specFactory.ThrowIfNull(nameof(specFactory));
-        return new SpecDecorator.TruePropositionBuilder<TModel, string>(specFactory());
+        factory.ThrowIfNull(nameof(factory));
+        return new SpecDecorator.TruePropositionBuilder<TModel, string>(factory());
     }
 
     /// <summary>
     /// Commences the construction of a specificaton that is derived from an existing specifcation.
     /// </summary>
-    /// <param name="spec">The SpecBase instance to be used in the specification.</param>
+    /// <param name="proposition">The proposition upon which to derive a new proposition.</param>
     /// <returns>A TrueCompositeSpecBuilder instance for further specification building.</returns>
     public static SpecDecorator.TruePropositionBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
-        SpecBase<TModel, TMetadata> spec)
+        SpecBase<TModel, TMetadata> proposition)
     {
-        spec.ThrowIfNull(nameof(spec));
-        return new SpecDecorator.TruePropositionBuilder<TModel, TMetadata>(spec);
+        proposition.ThrowIfNull(nameof(proposition));
+        return new SpecDecorator.TruePropositionBuilder<TModel, TMetadata>(proposition);
     }
 }

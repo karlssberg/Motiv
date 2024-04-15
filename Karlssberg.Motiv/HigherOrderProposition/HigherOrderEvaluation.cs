@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv.HigherOrderProposition;
 
-public sealed class HigherOrderEvaluation<TModel, TMetadata>
+public struct HigherOrderEvaluation<TModel, TMetadata>
 {
     private readonly Lazy<IReadOnlyList<TModel>> _lazyAllModels;
 

@@ -90,13 +90,13 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
         new(spec, higherOrderPredicate, causeSelector);
 
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
-    /// <param name="proposition">The proposition statement of what the proposition represents.</param>
+    /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, TUnderlyingMetadata> Create(string proposition) =>
+    public SpecBase<TModel, TUnderlyingMetadata> Create(string statement) =>
         new SpecDecoratorMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             spec,
             (_, result) => result.Metadata,
             (_, result) => result.Metadata,
-            new SpecDescription(proposition.ThrowIfNullOrWhitespace(nameof(proposition)), spec.Description.Detailed));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description.Detailed));
 }

@@ -12,13 +12,13 @@ public readonly ref struct MetadataPropositionFactory<TModel, TMetadata, TUnderl
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse)
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
-    /// <param name="proposition">The proposition statement of what the proposition represents.</param>
+    /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, TMetadata> Create(string proposition) =>
+    public SpecBase<TModel, TMetadata> Create(string statement) =>
         new SpecDecoratorMultiMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
             spec,
             whenTrue,
             whenFalse,
-            new SpecDescription(proposition.ThrowIfNullOrWhitespace(nameof(proposition)), spec.Description.Detailed));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description.Detailed));
 }

@@ -13,13 +13,13 @@ public readonly ref struct MetadataWithNamePropositionFactory<TModel, TMetadata>
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>
-    /// <param name="proposition">The proposition statement of what the proposition represents.</param>
+    /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, TMetadata> Create(string proposition) =>
+    public SpecBase<TModel, TMetadata> Create(string statement) =>
         new MetadataProposition<TModel, TMetadata>(
             predicate,
             whenTrue,
             whenFalse,
-            proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
+            statement.ThrowIfNullOrWhitespace(nameof(statement)));
 }

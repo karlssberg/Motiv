@@ -13,17 +13,17 @@ public readonly ref struct MultiAssertionExplanationWithNamePropositionFactory<T
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>
-    /// <param name="proposition">The proposition statement of what the proposition represents.</param>
+    /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create(string proposition) =>
+    public SpecBase<TModel, string> Create(string statement) =>
         new SpecDecoratorMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
             spec,
             trueBecause
                 .ToEnumerable()
                 .ToFunc<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(proposition.ThrowIfNullOrWhitespace(nameof(proposition)), spec.Description.Detailed));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description.Detailed));
 
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement

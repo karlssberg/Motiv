@@ -1,10 +1,9 @@
-﻿using Karlssberg.Motiv.BooleanPredicateProposition;
-using Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
+﻿using Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
 using Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders.Metadata;
 using Karlssberg.Motiv.HigherOrderProposition;
 using Karlssberg.Motiv.HigherOrderProposition.PropositionBuilders;
 
-namespace Karlssberg.Motiv;
+namespace Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders;
 
 /// <summary>
 /// A builder for creating propositions based on a predicate, or for further refining a proposition.
@@ -75,11 +74,11 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>
-    /// <param name="proposition">The proposition statement of what the proposition represents.</param>
+    /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create(string proposition) =>
+    public SpecBase<TModel, string> Create(string statement) =>
         new ExplanationProposition<TModel>(
             predicate,
-            proposition.ThrowIfNullOrWhitespace(nameof(proposition)));
+            statement.ThrowIfNullOrWhitespace(nameof(statement)));
 }
