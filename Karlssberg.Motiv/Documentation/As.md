@@ -5,7 +5,7 @@ In contrast, first-order propositions make statements about individual models.
 
 Whilst you can also create higher-order propositions without using the `As()` method (by defining the 
 model as a collection), at some point you will likely want to generate assertions using only the models that 
-helped determined whether the higher-order proposition was satisfied (or not).
+helped determine whether the higher-order proposition was satisfied (or not).
 
 ## All models in the set are satisfied
 ### `AsAllSatified()`
