@@ -6,14 +6,14 @@ public static class EnumerableExtensions
     public static SpecBase<TModel, TMetadata> AndTogether<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec & rightSpec);
-    public static BooleanResultBase<TMetadata> AndTogether<TModel, TMetadata>(
+    public static BooleanResultBase<TMetadata> AndTogether<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> booleanResults) =>
         booleanResults.Aggregate((leftSpec, rightSpec) => leftSpec & rightSpec);
     
     public static SpecBase<TModel, TMetadata> AndAlsoTogether<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec.AndAlso(rightSpec));
-    public static BooleanResultBase<TMetadata> AndAlsoTogether<TModel, TMetadata>(
+    public static BooleanResultBase<TMetadata> AndAlsoTogether<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> booleanResults) =>
         booleanResults.Aggregate((leftSpec, rightSpec) => leftSpec.AndAlso(rightSpec));
 
@@ -21,7 +21,7 @@ public static class EnumerableExtensions
         this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec | rightSpec);
     
-    public static BooleanResultBase<TMetadata> OrTogether<TModel, TMetadata>(
+    public static BooleanResultBase<TMetadata> OrTogether<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> booleanResult) =>
         booleanResult.Aggregate((leftSpec, rightSpec) => leftSpec | rightSpec);
     
@@ -29,7 +29,7 @@ public static class EnumerableExtensions
         this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec.OrElse(rightSpec));
     
-    public static BooleanResultBase<TMetadata> OrElseTogether<TModel, TMetadata>(
+    public static BooleanResultBase<TMetadata> OrElseTogether<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> booleanResult) =>
         booleanResult.Aggregate((leftSpec, rightSpec) => leftSpec.OrElse(rightSpec));
     
@@ -68,17 +68,15 @@ public static class EnumerableExtensions
         results.Any(result => !result.Satisfied);
 
     internal static Explanation CreateExplanation(
-        this IEnumerable<BooleanResultBase> underlyingResults)
+        this IEnumerable<BooleanResultBase> causes)
     {
-        var resultArray = underlyingResults.ToArray();
+        var causesArray = causes.ToArray();
 
-        var reasons = resultArray
-            .GetAssertions();
+        var assertions = causesArray.GetAssertions();
 
-        var underlying = resultArray
-            .Select(result => result.Explanation);
+        var underlying = causesArray.Select(result => result.Explanation);
 
-        return new Explanation(reasons)
+        return new Explanation(assertions)
         {
             Underlying = underlying
         };
@@ -127,22 +125,22 @@ public static class EnumerableExtensions
         explanations.SelectMany(e => e.Assertions);
     
     public static IEnumerable<string> GetAssertionsAtDepth(
-        this Explanation explanation,
+        this BooleanResultBase result,
         int atDepth) =>
         atDepth switch
         {
-            0 => explanation.Assertions,
-            > 0 => explanation.Underlying.GetAssertionsAtDepth(atDepth - 1).Distinct(),
+            0 => result.Assertions,
+            > 0 => result.Underlying.GetAssertionsAtDepth(atDepth - 1).Distinct(),
             _ => throw new ArgumentOutOfRangeException(nameof(atDepth), "Depth must be a non-negative integer.")
         };
     
     private static IEnumerable<string> GetAssertionsAtDepth(
-        this IEnumerable<Explanation> explanations,
+        this IEnumerable<BooleanResultBase> results,
         int atDepth) =>
         atDepth switch
         {
-            0 => explanations.SelectMany(e => e.Assertions),
-            > 0 => explanations.GetAssertionsAtDepth(atDepth - 1),
+            0 => results.SelectMany(e => e.Assertions),
+            > 0 => results.GetAssertionsAtDepth(atDepth - 1),
             _ => throw new ArgumentOutOfRangeException(nameof(atDepth), "Depth must be a non-negative integer.")
         };
     
@@ -152,7 +150,7 @@ public static class EnumerableExtensions
         atDepth switch
         {
             0 => result.AllAssertions,
-            > 0 => result.GetUnderlyingPropositions().GetAllAssertionsAtDepth(atDepth - 1).Distinct(),
+            > 0 => result.AggregateBinaryOperationResults().GetAllAssertionsAtDepth(atDepth - 1).Distinct(),
             _ => throw new ArgumentOutOfRangeException(nameof(atDepth), "Depth must be a non-negative integer.")
         };
     
@@ -254,30 +252,45 @@ public static class EnumerableExtensions
         return true;
     }
     
-    internal static IEnumerable<BooleanResultBase> GetUnderlyingPropositions(
-        this IEnumerable<BooleanResultBase> results) =>
-        results.SelectMany(GetUnderlyingPropositions);
+    internal static IEnumerable<BooleanResultBase> AggregateUnderlyingCauses(
+        this IEnumerable<BooleanResultBase> underlyigRensult,
+        int atDepth = 0) =>
+        underlyigRensult.SelectMany(result => AggregateUnderlyingCauses(result,atDepth));
 
-    internal static IEnumerable<BooleanResultBase> GetUnderlyingPropositions(
+    internal static IEnumerable<BooleanResultBase> AggregateUnderlyingCauses(
+        this BooleanResultBase result,
+        int atDepth = 0) =>
+        result switch
+        {
+            IBinaryOperationBooleanResult => result.Causes.AggregateUnderlyingCauses(atDepth),
+            _ when atDepth > 0 => result.Causes.AggregateUnderlyingCauses(atDepth - 1),
+            _ => result.ToEnumerable()
+        };
+    
+    internal static IEnumerable<BooleanResultBase> AggregateBinaryOperationResults(
+        this IEnumerable<BooleanResultBase> results) =>
+        results.SelectMany(AggregateBinaryOperationResults);
+
+    internal static IEnumerable<BooleanResultBase> AggregateBinaryOperationResults(
         this BooleanResultBase result,
         int atDepth = 0) =>
         result.Underlying.SelectMany(underlyingResult => 
             underlyingResult switch
             {
-                IBinaryOperationBooleanResult => underlyingResult.GetUnderlyingPropositions(atDepth),
-                _ when atDepth > 0 => underlyingResult.GetUnderlyingPropositions(atDepth - 1),
+                IBinaryOperationBooleanResult => underlyingResult.AggregateBinaryOperationResults(atDepth),
+                _ when atDepth > 0 => underlyingResult.AggregateBinaryOperationResults(atDepth - 1),
                 _ when atDepth <= 0 => result.Underlying,
             });
 
-    internal static IEnumerable<BooleanResultBase<TMetadata>> GetUnderlyingPropositions<TMetadata>(
+    internal static IEnumerable<BooleanResultBase<TMetadata>> AggregateBinaryOperationResults<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
-        results.SelectMany(GetUnderlyingPropositions);
+        results.SelectMany(AggregateBinaryOperationResults);
 
-    internal static IEnumerable<BooleanResultBase<TMetadata>> GetUnderlyingPropositions<TMetadata>(
+    internal static IEnumerable<BooleanResultBase<TMetadata>> AggregateBinaryOperationResults<TMetadata>(
         this BooleanResultBase<TMetadata> result) =>
         result switch
         {
-            IBinaryOperationBooleanResult => result.UnderlyingWithMetadata.GetUnderlyingPropositions(),
+            IBinaryOperationBooleanResult => result.UnderlyingWithMetadata.AggregateBinaryOperationResults(),
             _ => result.UnderlyingWithMetadata
         };
 }

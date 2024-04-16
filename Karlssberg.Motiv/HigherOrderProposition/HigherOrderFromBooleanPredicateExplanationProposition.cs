@@ -27,8 +27,8 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
 
         return new HigherOrderFromBooleanPredicateBooleanResult<string>(
             isSatisfied,
-            assertion,
-            assertion,
+            new MetadataTree<string>(assertion),
+            new Explanation(assertion),
             assertion);
     }
 }

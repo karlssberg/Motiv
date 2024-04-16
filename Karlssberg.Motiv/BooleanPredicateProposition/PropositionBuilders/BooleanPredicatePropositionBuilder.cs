@@ -40,7 +40,7 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
         whenTrue.ThrowIfNull(nameof(whenTrue));
         return new FalseMetadataPropositionBuilder<TModel, TMetadata>(
             predicate,
-            _ => whenTrue);
+            _ => whenTrue.ToEnumerable());
     }
 
     /// <summary>
@@ -50,6 +50,20 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata}" />.</returns>
     public FalseMetadataPropositionBuilder<TModel, TMetadata> WhenTrue<TMetadata>(Func<TModel, TMetadata> whenTrue)
+    {
+        whenTrue.ThrowIfNull(nameof(whenTrue));
+        return new FalseMetadataPropositionBuilder<TModel, TMetadata>(
+            predicate,
+            whenTrue.ToEnumerableReturn());
+    }
+    
+    /// <summary>
+    /// Specifies a metadata factory function to use when the condition is true.
+    /// </summary>
+    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
+    /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata}" />.</returns>
+    public FalseMetadataPropositionBuilder<TModel, TMetadata> WhenTrue<TMetadata>(Func<TModel, IEnumerable<TMetadata>> whenTrue)
     {
         whenTrue.ThrowIfNull(nameof(whenTrue));
         return new FalseMetadataPropositionBuilder<TModel, TMetadata>(predicate, whenTrue);
@@ -77,8 +91,11 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create(string statement) =>
-        new ExplanationProposition<TModel>(
+    public SpecBase<TModel, string> Create(string statement)
+    {
+        statement.ThrowIfNullOrWhitespace(nameof(statement));
+        return new ExplanationProposition<TModel>(
             predicate,
-            statement.ThrowIfNullOrWhitespace(nameof(statement)));
+            new SpecDescription(statement));
+    }
 }

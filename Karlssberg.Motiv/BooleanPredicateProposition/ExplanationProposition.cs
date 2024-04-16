@@ -4,19 +4,19 @@ internal sealed class ExplanationProposition<TModel>(
     Func<TModel, bool> predicate,
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,
-    string propositionalStatement)
+    ISpecDescription specDescription)
     : SpecBase<TModel, string>
 {
-    internal ExplanationProposition(Func<TModel, bool> predicate, string propositionalStatement) 
+    internal ExplanationProposition(Func<TModel, bool> predicate, ISpecDescription specDescription) 
         : this(
             predicate, 
-            _ => ReasonFromProposition(true, propositionalStatement), 
-            _ => ReasonFromProposition(false, propositionalStatement), 
-            propositionalStatement)
+            _ => ReasonFromPropositionStatement(true, specDescription.Statement), 
+            _ => ReasonFromPropositionStatement(false, specDescription.Statement), 
+            specDescription)
     {
     }
     
-    public override ISpecDescription Description => new SpecDescription(propositionalStatement);
+    public override ISpecDescription Description => specDescription;
 
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
         WrapException.IfIsSatisfiedByMethodFails(
@@ -56,7 +56,7 @@ internal sealed class ExplanationProposition<TModel>(
             () => falseBecause(model),
             nameof(falseBecause));
     
-    private static string ReasonFromProposition(bool isSatisfied, string proposition) =>
+    private static string ReasonFromPropositionStatement(bool isSatisfied, string proposition) =>
         (isSatisfied, ContainsEscapableCharacters(proposition)) switch
         {
             (true, true) => $"({proposition})",

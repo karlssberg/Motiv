@@ -9,13 +9,13 @@
 /// <returns>The return value.</returns>
 internal sealed class MetadataProposition<TModel, TMetadata>(
     Func<TModel, bool> predicate,
-    Func<TModel, TMetadata> whenTrue,
-    Func<TModel, TMetadata> whenFalse,
-    string propositionalStatement)
+    Func<TModel, IEnumerable<TMetadata>> whenTrue,
+    Func<TModel, IEnumerable<TMetadata>> whenFalse,
+    ISpecDescription specDescription)
     : SpecBase<TModel, TMetadata>
 {
     /// <summary>Gets or sets the description of the proposition.</summary>
-    public override ISpecDescription Description => new SpecDescription(propositionalStatement);
+    public override ISpecDescription Description => specDescription;
 
     /// <summary>Determines if the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be evaluated.</param>
@@ -26,17 +26,18 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
             {
                 var isSatisfied = InvokePredicate(model);
 
-                var metadata = isSatisfied switch
-                {
-                    true => InvokeWhenTrueFunction(model),
-                    false => InvokeWhenFalseFunction(model)
-                };
-                
-                var assertion = metadata switch
-                {
-                    string because => because,
-                    _ => Description.ToReason(isSatisfied)
-                };
+        var metadata = isSatisfied switch
+        {
+            true => InvokeWhenTrueFunction(model),
+            false => InvokeWhenFalseFunction(model)
+        };
+
+        var assertion = metadata switch
+        {
+            string because => because.ToEnumerable(),
+            IEnumerable<string> because => because,
+            _ => Description.ToReason(isSatisfied).ToEnumerable()
+        };
 
                 return new PropositionBooleanResult<TMetadata>(
                     isSatisfied,
@@ -51,14 +52,14 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
             () => predicate(model),
             nameof(predicate));
 
-    private TMetadata InvokeWhenTrueFunction(TModel model) =>
-        WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
+    private IEnumerable<TMetadata> InvokeWhenTrueFunction(TModel model) =>
+        WrapException.CatchFuncExceptionOnBehalfOfSpecType(
             this,
             () => whenTrue(model),
             nameof(whenTrue));
 
-    private TMetadata InvokeWhenFalseFunction(TModel model) =>
-        WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
+    private IEnumerable<TMetadata> InvokeWhenFalseFunction(TModel model) =>
+        WrapException.CatchFuncExceptionOnBehalfOfSpecType(
             this,
             () => whenFalse(model),
             nameof(whenFalse));

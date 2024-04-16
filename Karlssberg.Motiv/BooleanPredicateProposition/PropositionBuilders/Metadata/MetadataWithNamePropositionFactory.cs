@@ -7,8 +7,8 @@
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
 public readonly ref struct MetadataWithNamePropositionFactory<TModel, TMetadata>(
     Func<TModel, bool> predicate,
-    Func<TModel, TMetadata> whenTrue,
-    Func<TModel, TMetadata> whenFalse)
+    Func<TModel, IEnumerable<TMetadata>> whenTrue,
+    Func<TModel, IEnumerable<TMetadata>> whenFalse)
 {
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
@@ -16,10 +16,13 @@ public readonly ref struct MetadataWithNamePropositionFactory<TModel, TMetadata>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, TMetadata> Create(string statement) =>
-        new MetadataProposition<TModel, TMetadata>(
+    public SpecBase<TModel, TMetadata> Create(string statement)
+    {
+        statement.ThrowIfNullOrWhitespace(nameof(statement));
+        return new MetadataProposition<TModel, TMetadata>(
             predicate,
             whenTrue,
             whenFalse,
-            statement.ThrowIfNullOrWhitespace(nameof(statement)));
+            new SpecDescription(statement));
+    }
 }

@@ -30,9 +30,6 @@ internal sealed class HigherOrderFromBooleanResultExplanationProposition<TModel,
         return new HigherOrderBooleanResult<TModel, string, TUnderlyingMetadata>(
             isSatisfied,
             assertion.ToEnumerable(),
-            underlyingResults,
-            causes,
-            assertion.ToEnumerable(),
-            assertion);
+            assertion.ToEnumerable(), assertion, underlyingResults, causes);
     }
 }

@@ -11,7 +11,11 @@ public class ExplanationBooleanResultTests
         bool isSatisfied,
         string because)
     {
-        var result = new PropositionBooleanResult<string>(isSatisfied, because, because);
+        var result = new PropositionBooleanResult<string>(
+            isSatisfied, 
+            new MetadataTree<string>(because), 
+            new Explanation(because),
+            because);
 
         var act = (bool)result;
 
@@ -25,8 +29,17 @@ public class ExplanationBooleanResultTests
     [InlineAutoData(true, true, true)]
     public void Should_support_and_operation(bool left, bool right, bool expected)
     {
-        var leftResult = new PropositionBooleanResult<string>(left, left.ToString(), left.ToString());
-        var rightResult = new  PropositionBooleanResult<string>(right, right.ToString(), right.ToString());
+        var leftResult = new PropositionBooleanResult<string>(
+            left, 
+            new MetadataTree<string>(left.ToString()), 
+            new Explanation(left.ToString()),
+            left.ToString());
+        
+        var rightResult = new  PropositionBooleanResult<string>(
+            right, 
+            new MetadataTree<string>(right.ToString()), 
+            new Explanation(right.ToString()),
+            right.ToString());
 
         var act = leftResult & rightResult;
 
@@ -45,8 +58,17 @@ public class ExplanationBooleanResultTests
     [InlineAutoData(true, true, true)]
     public void Should_support_or_operation(bool left, bool right, bool expected)
     {
-        var leftResult = new  PropositionBooleanResult<string>(left, left.ToString(), left.ToString());
-        var rightResult = new  PropositionBooleanResult<string>(right, right.ToString(), right.ToString());
+        var leftResult = new PropositionBooleanResult<string>(
+            left, 
+            new MetadataTree<string>(left.ToString()), 
+            new Explanation(left.ToString()),
+            left.ToString());
+        
+        var rightResult = new  PropositionBooleanResult<string>(
+            right, 
+            new MetadataTree<string>(right.ToString()), 
+            new Explanation(right.ToString()),
+            right.ToString());
 
         var act = leftResult | rightResult;
 
@@ -65,8 +87,17 @@ public class ExplanationBooleanResultTests
     [InlineAutoData(true, true, false)]
     public void Should_support_xor_operation(bool left, bool right, bool expected)
     {
-        var leftResult = new  PropositionBooleanResult<string>(left, left.ToString(), left.ToString());
-        var rightResult = new  PropositionBooleanResult<string>(right, right.ToString(), right.ToString());
+        var leftResult = new PropositionBooleanResult<string>(
+            left, 
+            new MetadataTree<string>(left.ToString()), 
+            new Explanation(left.ToString()),
+            left.ToString());
+        
+        var rightResult = new  PropositionBooleanResult<string>(
+            right, 
+            new MetadataTree<string>(right.ToString()), 
+            new Explanation(right.ToString()),
+            right.ToString());
 
         var act = leftResult ^ rightResult;
 
@@ -81,7 +112,11 @@ public class ExplanationBooleanResultTests
     [InlineAutoData(true, false)]
     public void Should_support_not_operation(bool operand, bool expected)
     {
-        var operandResult = new  PropositionBooleanResult<string>(operand, operand.ToString(), operand.ToString());
+        var operandResult = new  PropositionBooleanResult<string>(
+            operand, 
+            new MetadataTree<string>(operand.ToString()), 
+            new Explanation(operand.ToString()),
+            operand.ToString());
 
         var act = !operandResult;
 

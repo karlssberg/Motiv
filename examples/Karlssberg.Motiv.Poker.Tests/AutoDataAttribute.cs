@@ -1,12 +1,10 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoNSubstitute;
 
-namespace Karlssberg.Motiv.Tests;
+namespace Karlssberg.Motiv.Poker.Tests;
 
-/// <inheritdoc cref="AutoFixture.Xunit2.AutoDataAttribute"/>
-internal class AutoDataAttribute() 
-    : AutoFixture.Xunit2.AutoDataAttribute(() =>
-        new Fixture()
+internal class AutoDataAttribute() : AutoFixture.Xunit2.AutoDataAttribute(() => 
+    new Fixture()
         .Customize(
             new AutoNSubstituteCustomization
             {

@@ -2,10 +2,10 @@
 
 /// <summary>A factory for creating propositions based on a predicate and explanations for true and false conditions.</summary>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
-public readonly ref struct ExplanationWithNamePropositionFactory<TModel>(
+public readonly ref struct MultiAssertionExplanationWithNamePropositionFactory<TModel>(
     Func<TModel, bool> predicate,
     string trueBecause,
-    Func<TModel, string> falseBecause)
+    Func<TModel, IEnumerable<string>> falseBecause)
 {
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement
@@ -13,9 +13,11 @@ public readonly ref struct ExplanationWithNamePropositionFactory<TModel>(
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<TModel, string> Create() =>
-        new ExplanationProposition<TModel>(
+        new MetadataProposition<TModel, string>(
             predicate,
-            trueBecause.ToFunc<TModel, string>(),
+            trueBecause
+                .ToEnumerable()
+                .ToFunc<TModel, IEnumerable<string>>(),
             falseBecause,
             new SpecDescription(trueBecause));
 
@@ -32,7 +34,7 @@ public readonly ref struct ExplanationWithNamePropositionFactory<TModel>(
         return new MetadataProposition<TModel, string>(
             predicate,
             trueBecause.ToEnumerable().ToFunc<TModel, IEnumerable<string>>(),
-            falseBecause.ToEnumerableReturn(),
+            falseBecause,
             new SpecDescription(statement));
     }
 }

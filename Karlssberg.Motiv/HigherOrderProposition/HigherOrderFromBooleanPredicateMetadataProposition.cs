@@ -27,14 +27,15 @@ internal sealed class HigherOrderFromBooleanPredicateMetadataProposition<TModel,
         
         var assertion = metadata switch
         {
-            string because => because,
-            _ => specDescription.ToReason(isSatisfied),
+            string because => because.ToEnumerable(),                    
+            IEnumerable<string> because => because,
+            _ => specDescription.ToReason(isSatisfied).ToEnumerable()
         };
 
         return new HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
             isSatisfied,
-            metadata,
-            assertion,
+            new MetadataTree<TMetadata>(metadata),
+            new Explanation(assertion),
             specDescription.ToReason(isSatisfied));
     }
 }

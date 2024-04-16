@@ -8,21 +8,21 @@ public class IsHandFlushProposition() : Spec<Hand, HandRank>(
 {
     private static SpecBase<Hand, string> IsAFlush =>
         Enum.GetValues<Suit>()
-            .Select(HasFiveCardsWithSameSuit)
-            .OrTogether();
+            .Select(suit => new HasFiveCardsWithSameSuit(suit))
+            .OrTogether()
+            .ChangeModelTo<Hand>(hand => hand.Cards);
     
-    private static SpecBase<Hand, string> HasFiveCardsWithSameSuit(Suit suit) =>
+    private class HasFiveCardsWithSameSuit(Suit suit) :  Spec<IEnumerable<Card>, string>(
         Spec.Build(IsSuit(suit))
             .AsNSatisfied(5)
             .WhenTrue($"a flush of {suit}")
             .WhenFalse($"not a flush of {suit}")
-            .Create($"has 5 {suit} cards")
-            .ChangeModelTo<Hand>(hand => hand.Cards);
+            .Create($"has 5 {suit} cards"));
 
     private static SpecBase<Card, string> IsSuit(Suit suit) =>
         Spec.Build((Card card) => card.Suit == suit)
             .WhenTrue(card => $"{card} is a {suit}")
-            .WhenFalse(card => $"{card} is not a {suit}")
+            .WhenFalse(card => $"{card} is not {suit}")
             .Create($"is a {suit}");
 }
 

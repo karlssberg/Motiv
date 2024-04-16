@@ -2,19 +2,12 @@
 
 public sealed class PropositionBooleanResult<TMetadata>(
     bool value,
-    TMetadata metadata,
-    string assertion,
+    MetadataTree<TMetadata> metadataTree,
+    Explanation explanation,
     string reason)
     : BooleanResultBase<TMetadata>
 {
-    public PropositionBooleanResult(
-        bool value,
-        TMetadata metadata,
-        string because) : this(value, metadata, because, because)
-    {
-    }
-    
-    public override MetadataTree<TMetadata> MetadataTree => new(metadata);
+    public override MetadataTree<TMetadata> MetadataTree => metadataTree;
     
     public override IEnumerable<BooleanResultBase> Underlying =>
         Enumerable.Empty<BooleanResultBase>();
@@ -29,7 +22,7 @@ public sealed class PropositionBooleanResult<TMetadata>(
         Enumerable.Empty<BooleanResultBase<TMetadata>>();
 
     /// <summary>Gets the reasons for the result.</summary>
-    public override Explanation Explanation => new (assertion);
+    public override Explanation Explanation => explanation;
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
     public override bool Satisfied { get; } = value;

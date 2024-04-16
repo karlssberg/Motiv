@@ -16,10 +16,13 @@ public readonly ref struct ExplanationPropositionFactory<TModel>(
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<TModel, string> Create(string statement) =>
-        new MetadataProposition<TModel, string>(
+    public SpecBase<TModel, string> Create(string statement)
+    {
+        statement.ThrowIfNullOrWhitespace(nameof(statement));
+        return new MetadataProposition<TModel, string>(
             predicate,
-            whenTrue,
-            whenFalse,
-            statement.ThrowIfNullOrWhitespace(nameof(statement)));
+            whenTrue.ToEnumerableReturn(),
+            whenFalse.ToEnumerableReturn(),
+            new SpecDescription(statement));
+    }
 }

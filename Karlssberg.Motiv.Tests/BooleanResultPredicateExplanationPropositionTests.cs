@@ -51,7 +51,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         var act = sut.IsSatisfiedBy(model);
         
         act.Satisfied.Should().Be(expected);
-        act.GetRootAssertions().Should().BeEquivalentTo(expectedRootAssertion);
+        act.RootAssertions.Should().BeEquivalentTo(expectedRootAssertion);
         act.Assertions.Should().BeEquivalentTo(expectedAssertions);
     }
     

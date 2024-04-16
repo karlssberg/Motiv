@@ -3,10 +3,10 @@
 internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
     IEnumerable<TMetadata> metadata,
-    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> underlyingResults,
-    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes,
     IEnumerable<string> assertions,
-    string reason)
+    string reason,
+    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> underlyingResults,
+    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes)
     : BooleanResultBase<TMetadata>
 {
     public override MetadataTree<TMetadata> MetadataTree =>

@@ -81,7 +81,7 @@ public abstract class BooleanResultBase
 
     /// <summary>Returns a human-readable description of the tree of conditions that make up this result.</summary>
     /// <returns>A string that describes the tree of conditions that make up this result.</returns>
-    public override string ToString() => Explanation.ToString();
+    public override string ToString() => Reason;
 
     /// <summary>Defines the true operator for the <see cref="BooleanResultBase{TMetadata}" /> class.</summary>
     /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
@@ -150,7 +150,7 @@ public abstract class BooleanResultBase
     public override int GetHashCode() => Satisfied.GetHashCode();
 
     /// <summary>Gets the lowercase display text for true or false states.</summary>
-    private string GetSatisfiedText() => Satisfied ? True : False;
+    protected string GetSatisfiedText() => Satisfied ? True : False;
 }
 
 /// <summary>Represents a base class for boolean results with metadata.</summary>

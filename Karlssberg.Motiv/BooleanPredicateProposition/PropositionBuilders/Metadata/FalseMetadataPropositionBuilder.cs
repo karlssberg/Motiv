@@ -7,7 +7,7 @@
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
 public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata>(
     Func<TModel, bool> predicate,
-    Func<TModel, TMetadata> whenTrue)
+    Func<TModel, IEnumerable<TMetadata>> whenTrue)
 {
     /// <summary>
     /// Specifies the metadata to use when the condition is false.
@@ -20,7 +20,7 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata>(
         return new MetadataWithNamePropositionFactory<TModel, TMetadata>(
             predicate,
             whenTrue,
-            _ => whenFalse);
+            whenFalse.ToEnumerable().ToFunc<TModel, IEnumerable<TMetadata>>());
     }
 
     /// <summary>
@@ -34,6 +34,6 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata>(
         return new MetadataWithNamePropositionFactory<TModel, TMetadata>(
             predicate,
             whenTrue,
-            whenFalse);
+            whenFalse.ToEnumerableReturn());
     }
 }
