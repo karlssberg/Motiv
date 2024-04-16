@@ -1,6 +1,6 @@
-# NOT
-A logical NOT operation can be performed on a specification using the `!` operator ```!spec```,
-or alternatively using the `Not` method ```spec.Not()```.
+# Logical NOT `!`
+A logical NOT operation can be performed on a specification using the `!` operator `!spec`,
+or alternatively using the `Not` method `spec.Not()`.
 This will produce a new specification instance that is the logical NOT of the original specification.
 
 For example:

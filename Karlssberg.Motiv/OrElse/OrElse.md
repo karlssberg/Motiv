@@ -1,4 +1,4 @@
-﻿# Conditional OR
+﻿# Conditional OR `||`
 
 A conditional OR (i.e., short-circuited) operation can be performed on two specifications using the
 `left.OrElse(right)` method.
@@ -44,7 +44,7 @@ var isProductAtRiskOfTheftSpec =
         .Create();
 ```
 
-You can also use the `|` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy` method. This is
+You can also use the `|` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy()` method. This is
 so that you can still aggregate the results of specifications that interrogate different models.
 
 ```csharp
@@ -60,9 +60,9 @@ var isAtRiskLocationSpec = Spec
 var isAtRiskLocation = isAtRiskLocationSpec.IsSatisfiedBy(store);
 var isProductAtRiskOfTheft = isProductAtRiskOfTheftSpec.IsSatisfiedBy(store);
 
-var isExtaSecurityNeeded = isProductAtRiskOfTheft | isAtRiskLocation;
+var isExtraSecurityNeeded = isProductAtRiskOfTheft | isAtRiskLocation;
 
-isExtaSecurityNeeded.Satisfied; // true
-isExtaSecurityNeeded.Reason; // "the product is at risk of theft | the store has high incidents of shop lifting"
-isExtaSecurityNeeded.Assertions; // ["the product is at risk of theft", "the store has high incidents of shop lifting"]
+isExtraSecurityNeeded.Satisfied; // true
+isExtraSecurityNeeded.Reason; // "the product is at risk of theft | the store has high incidents of shop lifting"
+isExtraSecurityNeeded.Assertions; // ["the product is at risk of theft", "the store has high incidents of shop lifting"]
 ```

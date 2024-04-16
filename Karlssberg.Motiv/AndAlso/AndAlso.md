@@ -1,11 +1,11 @@
-﻿# Conditional AND
+﻿# Conditional AND `&&`
 
-A conditional AND (i.e., short-circuited) operation can be performed on two specifications using the
-`leftProposition.AndAlso(rightProposition)` method.
-It is serialized as `leftProposition && rightProposition`—incidentally the `&&` C# operator cannot be overriden, so 
+A conditional AND (i.e., short-circuited) operation can be performed on two propositions using the
+`left.AndAlso(right)` method.
+It is serialized as `left && right`—incidentally the `&&` C# operator cannot be overriden, so 
 we have to resort to using method invocation to perform the operation.
-This will produce a new specification instance that is the logical AND of the two specifications.
-When evaluated, the right specification will only be evaluated if the left specification is satisfied.
+This will produce a new proposition instance that is the logical AND of the two propositions.
+When evaluated, the right proposition will only be evaluated if the left proposition is satisfied.
 
 For example:
 
@@ -54,14 +54,13 @@ var isActiveSubscription =
         .Create();
 ```
 
-You can also use the `AndAlso()` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy` 
-method. This is so that you can aggregate the results of multiple specifications of different models.
+You can also use the `AndAlso()` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy()` 
+method.
+This allows you to combine into a single result the evaluations of different model types (by different propositions).
 
 ```csharp
 var isValidLocation =
     Spec.Build((Device device) => device.Country == Country.USA)
-        .WhenTrue("device is permitted to play content within the USA")
-        .WhenFalse("device not permitted to play content outside of the USA")
         .Create();
 
 var isValidLocationResult = isValidLocation.IsSatisfiedBy(device);
@@ -72,9 +71,9 @@ BooleanResultBase<string> canViewContent = isActiveSubscriptionResult.AndAlso(is
 
 The results of the `AndAlso()` operation being performed on two boolean results will be a new `BooleanResultBase<T>` 
 instance that contains the results of the two.
-The `Result` property will therefore contain the assertions of both underlying specifications.
+The `Result` property will therefore contain the assertions of both underlying propositions.
 
 ```csharp
 var result = isActiveSubscription.IsSatisfiedBy(activeSubscription);
-result.Reason; // "subscription has started & subscription has not ended"
+result.Reason; // "subscription has started && subscription has not ended"
 ```

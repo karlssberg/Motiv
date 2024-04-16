@@ -1,10 +1,10 @@
-﻿# Logical AND
+﻿# Logical AND `&`
 
-A logical AND operation can be performed on two specifications using the `&` operator 
-`leftProposition & rightProposition` or alternatively using the And  method `leftProposition.And(rightProposition)`.
-This will produce a new specification instance that is the logical AND of the two specifications.
+A logical AND operation can be performed on two propositions using the `&` operator 
+`left & right` or alternatively using the And method `left.And(right)`.
+This will produce a new proposition that is the logical AND of the two propositions.
 When evaluated, both operands will be evaluated, regardless of the outcome of the left operand—in other words, it 
-is not short-circuited.
+is not _short-circuited_.
 
 For example:
 
@@ -15,13 +15,13 @@ var hasSubscriptionStarted =
         .WhenFalse("subscription has not started")
         .Create();
 
-var hasSubscriptionNotEnded =
-    Spec.Build((Subscription s) => s.End >= DateTime.Now)
-        .WhenTrue("subscription has not ended")
-        .WhenFalse("subscription has ended")
+var hasSubscriptionEnded =
+    Spec.Build((Subscription s) => s.End < DateTime.Now)
+        .WhenTrue("subscription has ended")
+        .WhenFalse("subscription has not ended")
         .Create();
 
-var isActiveSubscription = hasSubscriptionStarted & hasSubscriptionNotEnded;
+var isActiveSubscription = hasSubscriptionStarted & !hasSubscriptionEnded;
 
 var result = isActiveSubscription.IsSatisfiedBy(activeSubscription);
 
@@ -29,16 +29,20 @@ result.Satisfied; // true
 result.Reason; // "subscription has started & subscription has not ended"
 result.Assertions; // ["subscription has started", "subscription has not ended"]
 ```
+And when encountering an unsatisfied model:
+```csharp
+var result = isActiveSubscription.IsSatisfiedBy(inactiveSubscription);
+
+result.Satisfied; // false
+result.Reason; // "subscription has ended"
+result.Assertion; // ["subscription has ended"]
+```
 
 The `Reason` property of the result will contain descriptions of the underlying causes.
-If the results was caused by both operands, then the `Reason` property will contain both assertions separated by the 
+If the result was caused by both operands, then the `Reason` property will contain both assertions separated by the 
 `&` operator to indicate that both operands were responsible for the result, otherwise it will contain the single 
 assertion that was responsible.
 
-```csharp
-var result = isActiveSubscription.IsSatisfiedBy(lapsedSubscription);
-result.Reason; // "subscription has ended"
-```
 
 If you want to redefine a true or false `Reason` you can do so by wrapping it using a `Spec.Build()` method.
 
@@ -51,7 +55,7 @@ var isActiveSubscription =
         .Create();
 ```
 
-You can also use the `&` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy` method.
+You can also use the `&` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy()` method.
 This allows you to combine into a single result the evaluations of different model types (by different propositions).
 
 For example:
@@ -69,7 +73,7 @@ var canViewContent =
 
 The results of the `&` operation being performed on two boolean results will be a new `BooleanResultBase<T>` 
 instance that contains the results of the two.
-The `Result` property will therefore contain the assertions of both underlying specifications.
+The `Result` property will therefore contain the assertions of both underlying propositions.
 
 ```csharp
 var result = isActiveSubscriptionResult.IsSatisfiedBy(activeSubscription);

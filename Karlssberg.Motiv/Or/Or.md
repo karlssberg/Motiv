@@ -1,8 +1,12 @@
-﻿# Logical OR
+﻿# Logical OR `|`
 
-A logical OR operation can be performed on two specifications using the `|` operator ```left |  right```, or 
-alternative using the Or method ```left.Or(right)```. This 
-will produce a new specification instance that is the logical OR of the two specifications.  For example:
+A logical OR operation can be performed on two specifications using the `|` operator `left |  right`, or 
+alternative using the Or method `left.Or(right)`.
+This will produce a new specification instance that is the logical OR of the two specifications.
+When evaluated, both operands will be evaluated, regardless of the outcome of the left operand—in other words, it
+is not _short-circuited_.
+
+For example:
 
 ```csharp
 record Product(string Name, decimal Price, Size Size);
@@ -10,7 +14,7 @@ record Product(string Name, decimal Price, Size Size);
 var expensiveProductSpec = Spec
     .Build((Product p) => p.Price > 1000)
     .WhenTrue("product is expensive")
-    .WhenFalse("product is not expensive")
+    .WhenFalse("product is not expensive")\\
     .Create();
 
 var isProductSizeSmallSpec = Spec
@@ -21,8 +25,7 @@ var isProductSizeSmallSpec = Spec
 
 var isAtRiskShelfItemSpec = expensiveProductSpec | isProductSizeSmallSpec;
 
-var product = new Product("Laptop", 1500, true);
-var isAtRiskShelfItem = isAtRiskShelfItemSpec.IsSatisfiedBy(product);
+var isAtRiskShelfItem = isAtRiskShelfItemSpec.IsSatisfiedBy(new Product("Laptop", 1500, Size.Small));
 
 isAtRiskShelfItem.Satisfied; // true
 isAtRiskShelfItem.Reason; // "product is expensive | product is easily stolen"
@@ -39,7 +42,7 @@ var isProductAtRiskOfTheftSpec = Spec
     .Create();
 ```
 
-You can also use the `|` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy` method. This is
+You can also use the `|` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy()` method. This is
 so that you can still aggregate the results of specifications that interrogate different models.
 
 ```csharp
@@ -55,9 +58,9 @@ var isAtRiskLocationSpec = Spec
 var isAtRiskLocation = isAtRiskLocationSpec.IsSatisfiedBy(store);
 var isProductAtRiskOfTheft = isProductAtRiskOfTheftSpec.IsSatisfiedBy(store);
 
-var isExtaSecurityNeeded = isProductAtRiskOfTheft | isAtRiskLocation;
+var isExtraSecurityNeeded = isProductAtRiskOfTheft | isAtRiskLocation;
 
-isExtaSecurityNeeded.Satisfied; // true
-isExtaSecurityNeeded.Reason; // "the product is at risk of theft | the store has high incidents of shop lifting"
-isExtaSecurityNeeded.Assertions; // ["the product is at risk of theft", "the store has high incidents of shop lifting"]
+isExtraSecurityNeeded.Satisfied; // true
+isExtraSecurityNeeded.Reason; // "the product is at risk of theft | the store has high incidents of shop lifting"
+isExtraSecurityNeeded.Assertions; // ["the product is at risk of theft", "the store has high incidents of shop lifting"]
 ```
