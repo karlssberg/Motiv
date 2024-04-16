@@ -16,20 +16,34 @@ internal sealed class HigherOrderFromBooleanResultExplanationProposition<TModel,
         var underlyingResults = models
             .Select(model => new BooleanResult<TModel, TUnderlyingMetadata>(model, resultResolver(model)))
             .ToArray();
-        
         var isSatisfied = higherOrderPredicate(underlyingResults);
-        var causes = Causes.Get(isSatisfied, underlyingResults, higherOrderPredicate, causeSelector).ToArray();
-        var booleanCollectionResults = new HigherOrderEvaluation<TModel, TUnderlyingMetadata>(
-            underlyingResults, 
-            causes);
-
-        var assertion = isSatisfied
-            ? trueBecause(booleanCollectionResults)
-            : falseBecause(booleanCollectionResults);
         
+        var causes = new Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]> (() => Causes
+            .Get(isSatisfied, underlyingResults, higherOrderPredicate, causeSelector)
+            .ToArray());
+        
+        var assertion = new Lazy<string>(() =>
+        {
+            var booleanCollectionResults = new HigherOrderEvaluation<TModel, TUnderlyingMetadata>(
+                    underlyingResults, 
+                    causes.Value);
+            
+            return isSatisfied
+                ? trueBecause(booleanCollectionResults)
+                : falseBecause(booleanCollectionResults);
+        });
+
         return new HigherOrderBooleanResult<TModel, string, TUnderlyingMetadata>(
             isSatisfied,
-            assertion.ToEnumerable(),
-            assertion.ToEnumerable(), assertion, underlyingResults, causes);
+            Metadata,
+            Assertions,
+            Reason,
+            underlyingResults,
+            GetCauses);
+
+        IEnumerable<string> Metadata() => assertion.Value.ToEnumerable();
+        IEnumerable<string> Assertions() => assertion.Value.ToEnumerable();
+        string Reason() => assertion.Value;
+        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> GetCauses() => causes.Value;
     }
 }

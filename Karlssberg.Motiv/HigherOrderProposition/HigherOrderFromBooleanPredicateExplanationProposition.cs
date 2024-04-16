@@ -18,17 +18,34 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
             .ToArray();
         
         var isSatisfied = higherOrderPredicate(underlyingResults);
-        var causes = Causes.Get(isSatisfied, underlyingResults, higherOrderPredicate, causeSelector).ToArray();
-        var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
+        
+        var assertion = new Lazy<string>(() =>
+        {
+            var causes = Causes
+                .Get(isSatisfied, underlyingResults, higherOrderPredicate, causeSelector)
+                .ToArray();
+            
+            var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
+            
+            return isSatisfied
+                ? trueBecause(evaluation)
+                : falseBecause(evaluation);
+        });
 
-        var assertion = isSatisfied
-            ? trueBecause(evaluation)
-            : falseBecause(evaluation);
+        var metadataTree = new Lazy<MetadataTree<string>>(() => 
+            new MetadataTree<string>(assertion.Value));
+
+        var explanation = new Lazy<Explanation>(() =>
+            new Explanation(assertion.Value));
 
         return new HigherOrderFromBooleanPredicateBooleanResult<string>(
             isSatisfied,
-            new MetadataTree<string>(assertion),
-            new Explanation(assertion),
-            assertion);
+            Metadata,
+            Explanation,
+            Reason);
+        
+        MetadataTree<string> Metadata() => metadataTree.Value;
+        Explanation Explanation() => explanation.Value;
+        string Reason() => assertion.Value;
     }
 }

@@ -2,17 +2,32 @@
 
 internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
-    IEnumerable<TMetadata> metadata,
-    IEnumerable<string> assertions,
-    string reason,
+    Func<IEnumerable<TMetadata>> metadata,
+    Func<IEnumerable<string>> assertions,
+    Func<string> reason,
     IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> underlyingResults,
-    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes)
+    Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causes)
     : BooleanResultBase<TMetadata>
 {
-    public override MetadataTree<TMetadata> MetadataTree =>
-        new(metadata,
-            causes.SelectMany(cause =>
-                cause.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>()));
+    private readonly IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes;
+
+    private readonly Lazy<MetadataTree<TMetadata>> _metadataTree = new (() =>
+        new MetadataTree<TMetadata>(
+            metadata(),
+            causes().SelectMany(cause => cause
+                    .ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>())));
+    
+    private readonly Lazy<Explanation> _explanation = new (() =>
+        new Explanation(assertions())
+        {
+            Underlying = causes()
+                .Select(cause => cause.Explanation)
+                .ElseIfEmpty(underlyingResults.Select(result => result.Explanation))
+        });
+
+    public override MetadataTree<TMetadata> MetadataTree => _metadataTree.Value;
+    
+    public override Explanation Explanation => _explanation.Value;
 
     public override IEnumerable<BooleanResultBase> Underlying => underlyingResults;
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
@@ -27,14 +42,6 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
 
     public override ResultDescriptionBase Description =>
         new HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
-            reason,
-            causes);
-
-    public override Explanation Explanation => 
-        new (assertions)
-        {
-            Underlying = causes
-                .Select(cause => cause.Explanation)
-                .ElseIfEmpty(underlyingResults.Select(result => result.Explanation))
-        };
+            reason(),
+            causes());
 }

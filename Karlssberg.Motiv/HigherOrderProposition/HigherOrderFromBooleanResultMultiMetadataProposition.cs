@@ -18,26 +18,39 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
             .ToArray();
         
         var isSatisfied = higherOrderPredicate(underlyingResults);
-        var causes = Causes.Get(isSatisfied, underlyingResults, higherOrderPredicate, causeSelector).ToArray();
-        var evaluation = new HigherOrderEvaluation<TModel, TUnderlyingMetadata>(
-            underlyingResults, 
-            causes);
+        var causes = new Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]> (() => Causes
+            .Get(isSatisfied, underlyingResults, higherOrderPredicate, causeSelector)
+            .ToArray());
 
-        var metadata = isSatisfied
-            ? whenTrue(evaluation)
-            : whenFalse(evaluation);
+        var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
+        {
+            var evaluation = new HigherOrderEvaluation<TModel, TUnderlyingMetadata>(
+                underlyingResults,
+                causes.Value);
+
+            return isSatisfied
+                ? whenTrue(evaluation)
+                : whenFalse(evaluation);
+        });
         
-        var assertions = metadata switch {
-            IEnumerable<string>  reasons => reasons,
-            _ => specDescription.ToReason(isSatisfied).ToEnumerable()
-        };
+        var assertions = new Lazy<IEnumerable<string>>(() =>
+            metadata.Value switch
+            {
+                IEnumerable<string>  reasons => reasons,
+                _ => specDescription.ToReason(isSatisfied).ToEnumerable()
+            });
 
         return new HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
-            metadata,
-            assertions,
-            specDescription.ToReason(isSatisfied),
+            Metadata,
+            Assertions,
+            Reason,
             underlyingResults,
-            causes);
+            GetCauses);
+
+        IEnumerable<TMetadata> Metadata() => metadata.Value;
+        IEnumerable<string> Assertions() => assertions.Value;
+        string Reason() => specDescription.ToReason(isSatisfied);
+        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> GetCauses() => causes.Value;
     }
 }

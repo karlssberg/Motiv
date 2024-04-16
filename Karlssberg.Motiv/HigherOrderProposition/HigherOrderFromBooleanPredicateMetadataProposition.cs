@@ -18,24 +18,32 @@ internal sealed class HigherOrderFromBooleanPredicateMetadataProposition<TModel,
             .ToArray();
         
         var isSatisfied = higherOrderPredicate(underlyingResults);
-        var causes = Causes.Get(isSatisfied, underlyingResults, higherOrderPredicate, causeSelector).ToArray();
-        var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
-
-        var metadata = isSatisfied
-            ? whenTrue(evaluation)
-            : whenFalse(evaluation);
-        
-        var assertion = metadata switch
+        var metadata = new Lazy<TMetadata>(() =>
         {
-            string because => because.ToEnumerable(),                    
-            IEnumerable<string> because => because,
-            _ => specDescription.ToReason(isSatisfied).ToEnumerable()
-        };
+            var causes = Causes.Get(isSatisfied, underlyingResults, higherOrderPredicate, causeSelector).ToArray();
+            var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
+
+            return isSatisfied
+                ? whenTrue(evaluation)
+                : whenFalse(evaluation);
+        });
+        
+        var assertion = new Lazy<IEnumerable<string>>(() => 
+            metadata.Value switch
+            {
+                string because => because.ToEnumerable(),                    
+                IEnumerable<string> because => because,
+                _ => specDescription.ToReason(isSatisfied).ToEnumerable()
+            });
 
         return new HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
             isSatisfied,
-            new MetadataTree<TMetadata>(metadata),
-            new Explanation(assertion),
-            specDescription.ToReason(isSatisfied));
+            Metadata,
+            Explanation,
+            Reason);
+
+        MetadataTree<TMetadata> Metadata() => new(metadata.Value);
+        Explanation Explanation() => new(assertion.Value);
+        string Reason() => specDescription.ToReason(isSatisfied);
     }
 }
