@@ -1,6 +1,6 @@
 ﻿namespace Karlssberg.Motiv;
 
-internal static class StringExtensions
+public static class StringExtensions
 {
     internal static bool IsBracketed(this string value) =>
         (value.StartsWith("(") || value.StartsWith("!(")) && value.EndsWith(")");

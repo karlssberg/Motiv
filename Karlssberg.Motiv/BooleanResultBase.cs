@@ -9,10 +9,9 @@ using Karlssberg.Motiv.XOr;
 namespace Karlssberg.Motiv;
 
 /// <summary>Represents a base class for boolean results.</summary>
-[DebuggerDisplay("{GetSatisfiedText()}: {ToString()}")]
+[DebuggerDisplay("{Reason}")]
 public abstract class BooleanResultBase
-    : IEquatable<BooleanResultBase>,
-        IEquatable<bool>
+    : IEquatable<BooleanResultBase>, IEquatable<bool>
 {
     private const string True = "true";
     private const string False = "false";
@@ -155,6 +154,7 @@ public abstract class BooleanResultBase
 
 /// <summary>Represents a base class for boolean results with metadata.</summary>
 /// <typeparam name="TMetadata">The type of the metadata associated with the boolean result.</typeparam>
+[DebuggerDisplay("{GetSatisfiedText()}: {ToString()}")]
 public abstract class BooleanResultBase<TMetadata>
     : BooleanResultBase
 {
@@ -178,7 +178,7 @@ public abstract class BooleanResultBase<TMetadata>
 
     /// <summary>Gets the underlying boolean results with metadata that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata { get; }
-
+    
     /// <summary>
     /// Performs a logical AND operation between the current BooleanResultBase instance and another BooleanResultBase
     /// instance.

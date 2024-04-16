@@ -44,7 +44,7 @@ public readonly ref struct FalseAssertionFromSpecDecoratorWithNameHigherOrderPro
     /// </returns>
     public MultiAssertionExplanationWithNameHigherOrderPropositionFactory<TModel, TUnderlyingMetadata> WhenFalse(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
-        new(spec.IsSatisfiedByWithExceptionRethrowing,
+        new(spec.IsSatisfiedBy,
             higherOrderPredicate,
             trueBecause,
             falseBecause,

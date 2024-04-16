@@ -71,7 +71,7 @@ public readonly ref struct TrueHigherOrderFromSpecPropositionBuilder<TModel, TUn
     /// <returns>An instance of <see cref="FalseAssertionFromBooleanResultHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public FalseAssertionFromBooleanResultHigherOrderPropositionBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause) =>
-        new(spec.IsSatisfiedByWithExceptionRethrowing,
+        new(spec.IsSatisfiedBy,
             higherOrderPredicate,
             trueBecause,
             causeSelector);

@@ -20,11 +20,9 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
     /// <summary>Determines if the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be evaluated.</param>
     /// <returns>A BooleanResultBase object containing the result of the evaluation.</returns>
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) =>
-        WrapException.IfIsSatisfiedByMethodFails(this,
-            () =>
-            {
-                var isSatisfied = InvokePredicate(model);
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
+    {
+        var isSatisfied = InvokePredicate(model);
 
         var metadata = isSatisfied switch
         {
@@ -39,15 +37,15 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
             _ => Description.ToReason(isSatisfied).ToEnumerable()
         };
 
-                return new PropositionBooleanResult<TMetadata>(
-                    isSatisfied,
-                    metadata,
-                    assertion,
-                    Description.ToReason(isSatisfied));
-            });
+        return new PropositionBooleanResult<TMetadata>(
+            isSatisfied,
+            new MetadataTree<TMetadata>(metadata),
+            new Explanation(assertion),
+            Description.ToReason(isSatisfied));
+    }
 
     private bool InvokePredicate(TModel model) =>
-        WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
+        WrapException.CatchFuncExceptionOnBehalfOfSpecType(
             this,
             () => predicate(model),
             nameof(predicate));

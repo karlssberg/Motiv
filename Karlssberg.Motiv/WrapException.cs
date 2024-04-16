@@ -20,18 +20,8 @@ internal static class WrapException
             return new SpecException(message, ex);
         });
     }
-    internal static BooleanResultBase<TMetadata> IsSatisfiedByWithExceptionRethrowing<TModel, TMetadata>(
-        this SpecBase<TModel, TMetadata> spec,
-        TModel model)
-    {
-        return TryCatchThrow(() => spec.IsSatisfiedBy(model), ex =>
-        {
-            var message = GetErrorMessageForIsSatisfiedByCall(spec, ex);
-            return new SpecException(message, ex);
-        });
-    }
 
-    internal static TResult CatchPredicateExceptionOnBehalfOfSpecType<TModel, TMetadata, TResult>(
+    internal static TResult CatchFuncExceptionOnBehalfOfSpecType<TModel, TMetadata, TResult>(
         SpecBase<TModel, TMetadata> underlyingSpec,
         Func<TResult> tryThisFn,
         string callbackName)

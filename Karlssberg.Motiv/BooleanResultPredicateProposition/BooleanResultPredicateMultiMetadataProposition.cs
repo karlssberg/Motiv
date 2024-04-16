@@ -36,7 +36,7 @@ public sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMeta
             booleanResult,
             MetadataTree,
             Explanation,
-            Description.ToReason(booleanResult.Satisfied));
+            () => Description.ToReason(booleanResult.Satisfied));
 
         Explanation Explanation() => new(assertions.Value)
         {

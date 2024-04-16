@@ -18,40 +18,37 @@ internal sealed class ExplanationProposition<TModel>(
     
     public override ISpecDescription Description => specDescription;
 
-    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
-        WrapException.IfIsSatisfiedByMethodFails(
-            this,
-            () =>
-            {
-                var isSatisfied = InvokePredicate(model);
-                
-                var assertion = isSatisfied switch
-                {  
-                    true => InvokeTrueBecauseFunction(model),
-                    false => InvokeFalseBecauseFunction(model)
-                };
+    public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
+    {
+        var isSatisfied = InvokePredicate(model);
 
-                return new PropositionBooleanResult<string>(
-                    isSatisfied,
-                    assertion,
-                    assertion,
-                    assertion);
-            });
+        var assertion = isSatisfied switch
+        {
+            true => InvokeTrueBecauseFunction(model),
+            false => InvokeFalseBecauseFunction(model)
+        };
+
+        return new PropositionBooleanResult<string>(
+            isSatisfied,
+            new MetadataTree<string>(assertion),
+            new Explanation(assertion),
+            assertion);
+    }
 
     private bool InvokePredicate(TModel model) =>
-        WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
+        WrapException.CatchFuncExceptionOnBehalfOfSpecType(
             this,
             () => predicate(model),
             nameof(predicate));
 
     private string InvokeTrueBecauseFunction(TModel model) =>
-        WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
+        WrapException.CatchFuncExceptionOnBehalfOfSpecType(
             this,
             () => trueBecause(model),
             nameof(trueBecause));
 
     private string InvokeFalseBecauseFunction(TModel model) =>
-        WrapException.CatchPredicateExceptionOnBehalfOfSpecType(
+        WrapException.CatchFuncExceptionOnBehalfOfSpecType(
             this,
             () => falseBecause(model),
             nameof(falseBecause));

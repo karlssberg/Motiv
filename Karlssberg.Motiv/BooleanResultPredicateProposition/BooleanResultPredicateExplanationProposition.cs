@@ -23,7 +23,7 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
             booleanResult,
             MetadataTree,
             Explanation,
-            specDescription.ToReason(booleanResult.Satisfied));
+            () => specDescription.ToReason(booleanResult.Satisfied));
 
         MetadataTree<string> MetadataTree() => 
             new(assertion.Value.ToEnumerable(), 

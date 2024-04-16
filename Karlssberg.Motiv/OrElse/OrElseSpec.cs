@@ -10,13 +10,13 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var antecedentResult = left.IsSatisfiedByWithExceptionRethrowing(model);
+        var antecedentResult = left.IsSatisfiedBy(model);
         return antecedentResult.Satisfied switch
         {
             true => new OrElseBooleanResult<TMetadata>(antecedentResult),
             false => new OrElseBooleanResult<TMetadata>(
                 antecedentResult,
-                right.IsSatisfiedByWithExceptionRethrowing(model))
+                right.IsSatisfiedBy(model))
         };
     }
 }

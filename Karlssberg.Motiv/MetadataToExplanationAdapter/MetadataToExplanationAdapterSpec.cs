@@ -14,7 +14,7 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>
             result,
             MetadataTree,
             Explanation,
-            spec.Description.ToReason(result.Satisfied));
+            () => spec.Description.ToReason(result.Satisfied));
 
         MetadataTree<string> MetadataTree() => new(result.Assertions);
 

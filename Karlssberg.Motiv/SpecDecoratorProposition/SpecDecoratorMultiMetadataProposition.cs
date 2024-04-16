@@ -28,7 +28,7 @@ internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, T
             booleanResult,
             MetadataTree,
             Explanation,
-            Description.ToReason(booleanResult.Satisfied));
+            () => Description.ToReason(booleanResult.Satisfied));
 
         Explanation Explanation() => new(assertions.Value)
         {

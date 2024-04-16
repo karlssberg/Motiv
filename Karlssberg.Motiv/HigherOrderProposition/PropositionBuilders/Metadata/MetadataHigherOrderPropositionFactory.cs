@@ -24,7 +24,7 @@ public readonly ref struct MetadataHigherOrderPropositionFactory<TModel, TMetada
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
-            spec.IsSatisfiedByWithExceptionRethrowing,
+            spec.IsSatisfiedBy,
             higherOrderPredicate,
             whenTrue,
             whenFalse,

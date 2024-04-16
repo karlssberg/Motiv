@@ -23,7 +23,7 @@ public readonly ref struct ExplanationWithNameHigherOrderPropositionFactory<TMod
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create() =>
         new HigherOrderFromBooleanResultExplanationProposition<TModel, TUnderlyingMetadata>(
-            spec.IsSatisfiedByWithExceptionRethrowing,
+            spec.IsSatisfiedBy,
             higherOrderPredicate,
             trueBecause.ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string>(),
             falseBecause,
@@ -41,7 +41,7 @@ public readonly ref struct ExplanationWithNameHigherOrderPropositionFactory<TMod
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanResultMetadataProposition<TModel, string, TUnderlyingMetadata>(
-            spec.IsSatisfiedByWithExceptionRethrowing,
+            spec.IsSatisfiedBy,
             higherOrderPredicate,
             trueBecause.ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string>(),
             falseBecause,

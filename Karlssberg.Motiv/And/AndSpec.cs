@@ -10,8 +10,8 @@ internal sealed class AndSpec<TModel, TMetadata>(
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var leftResult = left.IsSatisfiedByWithExceptionRethrowing(model);
-        var rightResult = right.IsSatisfiedByWithExceptionRethrowing(model);
+        var leftResult = left.IsSatisfiedBy(model);
+        var rightResult = right.IsSatisfiedBy(model);
 
         return leftResult.And(rightResult);
     }

@@ -180,27 +180,6 @@ public class OrSpecTests
         sut.Description.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
-
-    [Theory]
-    [InlineAutoData]
-    public void Should_wrap_thrown_exceptions_in_a_specification_exception(
-        string model)
-    {
-        var normalSpec = Spec
-            .Build<object>(_ => true)
-            .WhenTrue("true")
-            .WhenFalse("false")
-            .Create();
-
-        var throwingSpec = new ThrowingSpec<object, string>(
-            "should always throw",
-            new Exception("should be wrapped"));
-        var sut = throwingSpec | normalSpec;
-
-        var act = () => sut.IsSatisfiedBy(model);
-
-        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
-    }
     
     [Theory]
     [InlineAutoData(false, false, 2)]

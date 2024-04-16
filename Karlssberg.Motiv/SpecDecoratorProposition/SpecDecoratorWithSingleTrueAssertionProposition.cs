@@ -28,7 +28,7 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
             booleanResult,
             MetadataTree,
             Explanation,
-            reason);
+            () => reason);
 
         Explanation Explanation() => new(assertion.Value)
         {

@@ -25,7 +25,7 @@ internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMet
             booleanResult, 
             MetadataTree,
             Explanation,
-            Description.ToReason(booleanResult.Satisfied));
+            () => Description.ToReason(booleanResult.Satisfied));
 
         Explanation Explanation() => new(assertion.Value)
         {

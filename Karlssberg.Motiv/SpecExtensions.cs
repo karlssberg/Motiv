@@ -18,10 +18,10 @@ public static class SpecExtensions
     
     internal static Func<TModel, BooleanResultBase<TMetadata>> ToBooleanResultPredicate<TModel, TMetadata>(
         this Func<TModel, SpecBase<TModel, TMetadata>> specFactory) =>
-        model => specFactory(model).IsSatisfiedByWithExceptionRethrowing(model);
+        model => specFactory(model).IsSatisfiedBy(model);
     
     
     internal static Func<TModel, BooleanResultBase<TMetadata>> ToBooleanResultPredicate<TModel, TMetadata>(
         this SpecBase<TModel, TMetadata> spec) =>
-        spec.IsSatisfiedByWithExceptionRethrowing;
+        spec.IsSatisfiedBy;
 }

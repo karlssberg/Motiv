@@ -23,7 +23,7 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
             booleanResult,
             MetadataTree,
             Explanation,
-            assertion.Value);
+            () => assertion.Value);
 
         Explanation Explanation() => new(assertion.Value)
         {

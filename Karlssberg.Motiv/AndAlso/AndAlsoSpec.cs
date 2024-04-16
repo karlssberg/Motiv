@@ -10,12 +10,12 @@ internal sealed class AndAlsoSpec<TModel, TMetadata>(
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var antecedentResult = left.IsSatisfiedByWithExceptionRethrowing(model);
+        var antecedentResult = left.IsSatisfiedBy(model);
         return antecedentResult.Satisfied switch
         {
             true =>  new AndAlsoBooleanResult<TMetadata>(
                 antecedentResult,
-                right.IsSatisfiedByWithExceptionRethrowing(model)),
+                right.IsSatisfiedBy(model)),
             false => new AndAlsoBooleanResult<TMetadata>(antecedentResult)
         };
     }
