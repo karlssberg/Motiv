@@ -18,12 +18,12 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
             true => trueBecause,
             false => whenFalse(model, booleanResult),
         });
-
+        
         return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
             booleanResult,
             MetadataTree,
             Explanation,
-            trueBecause);
+            assertion.Value);
 
         Explanation Explanation() => new(assertion.Value)
         {

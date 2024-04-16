@@ -20,14 +20,15 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
             true => trueBecause,
             false => whenFalse(model, booleanResult)
         });
+        var reason = propositionalStatement is not null
+            ? propositionalStatement.ToReason(booleanResult.Satisfied)
+            : assertion.Value;
 
         return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
             booleanResult,
             MetadataTree,
             Explanation,
-            propositionalStatement is null
-                ? trueBecause
-                : propositionalStatement.ToReason(booleanResult.Satisfied));
+            reason);
 
         Explanation Explanation() => new(assertion.Value)
         {
