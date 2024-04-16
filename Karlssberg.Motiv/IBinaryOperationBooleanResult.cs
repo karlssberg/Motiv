@@ -1,9 +1,8 @@
 ﻿namespace Karlssberg.Motiv;
 
-internal interface IBinaryOperationBooleanResult
+internal interface IBinaryOperationBooleanResult : IOperationBooleanResult
 {
-    /// <summary>Gets the description of the XOR operation.</summary>
-    ResultDescriptionBase Description { get; }
+    BooleanResultBase Left { get; }
     
-    IEnumerable<BooleanResultBase> Underlying { get; }
+    BooleanResultBase? Right { get; }
 }

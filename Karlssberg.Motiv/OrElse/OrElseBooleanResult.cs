@@ -3,7 +3,7 @@
 internal sealed class OrElseBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata>? right = null)
-    : BooleanResultBase<TMetadata>
+    : BooleanResultBase<TMetadata>, IBinaryOperationBooleanResult
 {
     public override bool Satisfied { get; } = left.Satisfied || (right?.Satisfied ?? false);
     
@@ -13,7 +13,11 @@ internal sealed class OrElseBooleanResult<TMetadata>(
     public override Explanation Explanation => GetCauses().CreateExplanation();
 
     public override MetadataTree<TMetadata> MetadataTree => CreateMetadataTree();
-
+    
+    public BooleanResultBase Left { get; } = left;
+    
+    public BooleanResultBase? Right { get; } = right;
+    
     public override IEnumerable<BooleanResultBase> Underlying => GetUnderlying();
 
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetUnderlying();

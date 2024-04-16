@@ -20,6 +20,10 @@ internal sealed class AndBooleanResult<TMetadata>(
     public override MetadataTree<TMetadata> MetadataTree => CreateMetadataTree();
     
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
+    
+    public BooleanResultBase Left { get; } = left;
+
+    public BooleanResultBase? Right { get; } = right;
 
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
 

@@ -13,6 +13,10 @@ internal sealed class AndAlsoBooleanResult<TMetadata>(
     public override Explanation Explanation => GetCauses().CreateExplanation();
     
     public override MetadataTree<TMetadata> MetadataTree => CreateMetadataTree();
+    
+    public BooleanResultBase Left { get; } = left;
+
+    public BooleanResultBase? Right { get; } = right;
 
     public override IEnumerable<BooleanResultBase> Underlying => GetUnderlying();
 

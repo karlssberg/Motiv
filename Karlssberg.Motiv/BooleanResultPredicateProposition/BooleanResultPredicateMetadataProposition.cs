@@ -20,31 +20,32 @@ public sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata,
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
         
-        var metadata = booleanResult.Satisfied switch
+        var metadata = new Lazy<TMetadata>(() => booleanResult.Satisfied switch
         {
             true => whenTrue(model, booleanResult),
             false => whenFalse(model, booleanResult),
-        };
+        });
         
-        var assertion = metadata switch
+        var assertion = new Lazy<string[]>(() => metadata.Value switch
         {
-            string because => because,
-            _ => Description.ToReason(booleanResult.Satisfied)
-        };
-        
-        var metadataTree = new MetadataTree<TMetadata>(
-            metadata.ToEnumerable(),
-            booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>());
+            string because => [because],
+            IEnumerable<string>  because => because.ToArray(),
+            _ => [Description.ToReason(booleanResult.Satisfied)]
+        });
 
-        var explanation = new Explanation(assertion)
+        return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
+            booleanResult,
+            MetadataTree,
+            Explanation,
+            Description.ToReason(booleanResult.Satisfied));
+
+        Explanation Explanation() => new(assertion.Value)
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
-        
-        return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
-            booleanResult,
-            metadataTree,
-            explanation,
-            Description.ToReason(booleanResult.Satisfied));
+
+        MetadataTree<TMetadata> MetadataTree() => 
+            new(metadata.Value.ToEnumerable(), 
+                booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>());
     }
 }

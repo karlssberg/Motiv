@@ -13,6 +13,10 @@ internal sealed class OrBooleanResult<TMetadata>(
     
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
     
+    public BooleanResultBase Left { get; } = left;
+
+    public BooleanResultBase? Right { get; } = right;
+    
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
     
     public override IEnumerable<BooleanResultBase> Causes => GetCausalResults();

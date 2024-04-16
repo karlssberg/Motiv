@@ -15,25 +15,25 @@ internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMet
     {
         var booleanResult = UnderlyingSpec.IsSatisfiedBy(model);
 
-        var assertion = booleanResult.Satisfied switch
+        var assertion = new Lazy<string>(() => booleanResult.Satisfied switch
         {
             true => trueBecause(model, booleanResult),
             false => falseBecause(model, booleanResult)
-        };
-        
-        var metadataTree = new MetadataTree<string>(
-            assertion,
-            booleanResult.ResolveMetadataTrees<string, TUnderlyingMetadata>());
-        
-        var explanation = new Explanation(assertion)
+        });
+
+        return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
+            booleanResult, 
+            MetadataTree,
+            Explanation,
+            Description.ToReason(booleanResult.Satisfied));
+
+        Explanation Explanation() => new(assertion.Value)
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
-        
-        return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
-            booleanResult, 
-            metadataTree,
-            explanation,
-            Description.ToReason(booleanResult.Satisfied));
+
+        MetadataTree<string> MetadataTree() => 
+            new(assertion.Value.ToEnumerable(), 
+                booleanResult.ResolveMetadataTrees<string, TUnderlyingMetadata>());
     }
 }

@@ -3,7 +3,7 @@
 /// <summary>Represents the result of a logical NOT operation on a boolean result.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the result.</typeparam>
 internal sealed class NotBooleanResult<TMetadata>(BooleanResultBase<TMetadata> operandResult) 
-    : BooleanResultBase<TMetadata>
+    : BooleanResultBase<TMetadata>, IOperationBooleanResult
 {
 
     /// <summary>Gets a value indicating whether the negation is satisfied.</summary>

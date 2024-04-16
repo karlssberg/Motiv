@@ -86,7 +86,12 @@ public static class EnumerableExtensions
     
     public static IEnumerable<string> GetAssertions(
         this IEnumerable<BooleanResultBase> results) =>
-        results.SelectMany(e => e.Assertions);
+        results.SelectMany(result =>
+            result switch
+            {
+                IOperationBooleanResult operationResult => operationResult.Causes.GetAssertions(),
+                _ => result.Assertions
+            });
     
     public static IEnumerable<string> GetTrueAssertions(
         this IEnumerable<BooleanResultBase> results) =>

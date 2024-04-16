@@ -9,7 +9,7 @@ using Karlssberg.Motiv.XOr;
 namespace Karlssberg.Motiv;
 
 /// <summary>Represents a base class for boolean results.</summary>
-[DebuggerDisplay("{GetSatisfiedText()}: {Reason}")]
+[DebuggerDisplay("{GetSatisfiedText()}: {ToString()}")]
 public abstract class BooleanResultBase
     : IEquatable<BooleanResultBase>,
         IEquatable<bool>

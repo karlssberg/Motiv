@@ -12,12 +12,15 @@ public sealed class Explanation
         : this(assertion.ToEnumerable())
     {
     }
-    
-    public Explanation(IEnumerable<string> assertions) 
+
+    public Explanation(IEnumerable<string> assertions) : this(assertions.ToArray())
     {
-        var assertionsArray = assertions.ToArray();
-        _lazyDistinctAssertions = new Lazy<IEnumerable<string>>(assertionsArray.Distinct);
-        _lazyDistinctAllAssertions = new Lazy<IEnumerable<string>>(assertionsArray.Distinct);
+    }
+    
+    public Explanation(ICollection<string> assertions) 
+    {
+        _lazyDistinctAssertions = new Lazy<IEnumerable<string>>(assertions.Distinct);
+        _lazyDistinctAllAssertions = new Lazy<IEnumerable<string>>(assertions.Distinct);
     }
 
     public Explanation(IEnumerable<string> assertions, IEnumerable<string> allAssertions)

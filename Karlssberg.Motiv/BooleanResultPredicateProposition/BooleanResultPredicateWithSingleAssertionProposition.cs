@@ -2,7 +2,7 @@
 
 internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> predicate,
-    string whenTrue,
+    string trueBecause,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> whenFalse,
     ISpecDescription specDescription)
     : SpecBase<TModel, string>
@@ -13,25 +13,25 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
     {
         var booleanResult = predicate(model);
         
-        var assertion = booleanResult.Satisfied switch
+        var assertion = new Lazy<string>(() => booleanResult.Satisfied switch
         {
-            true => whenTrue,
+            true => trueBecause,
             false => whenFalse(model, booleanResult),
-        };
-        
-        var metadataTree = new MetadataTree<string>(
-            assertion.ToEnumerable(),
-            booleanResult.ResolveMetadataTrees<string, TUnderlyingMetadata>());
-        
-        var explanation = new Explanation(assertion)
+        });
+
+        return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
+            booleanResult,
+            MetadataTree,
+            Explanation,
+            trueBecause);
+
+        Explanation Explanation() => new(assertion.Value)
         {
             Underlying = booleanResult.Explanation.ToEnumerable()
         };
 
-        return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
-            booleanResult,
-            metadataTree,
-            explanation,
-            assertion);
+        MetadataTree<string> MetadataTree() =>
+            new(assertion.Value.ToEnumerable(), 
+                booleanResult.ResolveMetadataTrees<string, TUnderlyingMetadata>());
     }
 }
