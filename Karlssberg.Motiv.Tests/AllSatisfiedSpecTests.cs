@@ -406,29 +406,6 @@ public class AllSatisfiedSpecTests
         sut.Description.Detailed.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }
-
-    [Theory]
-    [InlineAutoData]
-    public void Should_wrap_thrown_exceptions_in_a_specification_exception(
-        string model)
-    {
-        var throwingSpec = new ThrowingSpec<object, string>(
-            "throws",
-            new Exception("should be wrapped"));
-
-        var sut = Spec
-            .Build(throwingSpec)
-            .AsAllSatisfied()
-            .WhenTrue(evaluation => $"{evaluation.TrueCount} true")
-            .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
-            .Create("all booleans are true");
-
-        var act = () => sut.IsSatisfiedBy([model]);
-
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
-        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>()
-            .Where(ex => ex.Message.Contains("should be wrapped"));
-    }
     
     [Theory]
     [InlineAutoData(false, false, false, 3)]

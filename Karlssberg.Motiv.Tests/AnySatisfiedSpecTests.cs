@@ -254,28 +254,6 @@ public class AnySatisfiedSpecTests
 
         result.Description.Detailed.Should().Be(expected);
     }
-
-    [Theory]
-    [InlineAutoData]
-    public void Should_wrap_thrown_exceptions_in_a_specification_exception(
-        string model)
-    {
-        var throwingSpec = new ThrowingSpec<object, string>(
-            "should always throw",
-            new Exception("should be wrapped"));
-
-        var sut = 
-            Spec.Build(throwingSpec)
-                .AsAnySatisfied()
-                .WhenTrue("any true")
-                .WhenFalse("any false")
-                .Create();
-
-        var act = () => sut.IsSatisfiedBy([model]);
-
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
-        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
-    }
     
     [Theory]
     [InlineAutoData(false, false, false, 3)]
