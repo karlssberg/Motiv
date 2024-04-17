@@ -15,30 +15,38 @@ internal sealed class SpecDecoratorMetadataProposition<TModel, TMetadata, TUnder
     {
         var booleanResult = UnderlyingSpec.IsSatisfiedBy(model);
         
-        var metadata = new Lazy<TMetadata>(() => booleanResult.Satisfied switch
-        {
-            true => whenTrue(model, booleanResult),
-            false => whenFalse(model, booleanResult),
-        });
+        var metadata = new Lazy<TMetadata>(() =>
+            booleanResult.Satisfied switch
+            {
+                true => whenTrue(model, booleanResult),
+                false => whenFalse(model, booleanResult),
+            });
         
-        var assertion = new Lazy<string>(() => metadata.Value switch {
-            string because => because,
-            _ => Description.ToReason(booleanResult.Satisfied)
-        });
+        var assertion = new Lazy<string>(() =>
+            metadata.Value switch
+            {
+                string because => because,
+                _ => Description.ToReason(booleanResult.Satisfied)
+            });
+
+        var explanation = new Lazy<Explanation>(() =>
+            new Explanation(assertion.Value)
+            {
+                Underlying = booleanResult.Explanation.ToEnumerable()
+            });
+        
+        var metadataTree = new Lazy<MetadataTree<TMetadata>>(() => 
+            new MetadataTree<TMetadata>(metadata.Value, 
+                booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>()));
 
         return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,
             MetadataTree,
             Explanation,
-            () => Description.ToReason(booleanResult.Satisfied));
-
-        Explanation Explanation() => new(assertion.Value)
-        {
-            Underlying = booleanResult.Explanation.ToEnumerable()
-        };
-
-        MetadataTree<TMetadata> MetadataTree() => 
-            new(metadata.Value, 
-                booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>());
+            Reason);
+        
+        MetadataTree<TMetadata> MetadataTree() => metadataTree.Value;
+        Explanation Explanation() => explanation.Value;
+        string Reason() => Description.ToReason(booleanResult.Satisfied);
     }
 }

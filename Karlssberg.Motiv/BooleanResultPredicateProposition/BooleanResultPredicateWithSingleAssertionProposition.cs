@@ -19,19 +19,24 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
             false => whenFalse(model, booleanResult),
         });
         
+        var explanation = new Lazy<Explanation>(() => 
+            new Explanation(assertion.Value)
+            {
+                Underlying = booleanResult.Explanation.ToEnumerable()
+            });
+        
+        var metadataTree = new Lazy<MetadataTree<string>>(() => 
+            new MetadataTree<string>(assertion.Value.ToEnumerable(), 
+                booleanResult.ResolveMetadataTrees<string, TUnderlyingMetadata>()));
+
         return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
             booleanResult,
             MetadataTree,
             Explanation,
-            () => assertion.Value);
+            Reason);
 
-        Explanation Explanation() => new(assertion.Value)
-        {
-            Underlying = booleanResult.Explanation.ToEnumerable()
-        };
-
-        MetadataTree<string> MetadataTree() =>
-            new(assertion.Value.ToEnumerable(), 
-                booleanResult.ResolveMetadataTrees<string, TUnderlyingMetadata>());
+        MetadataTree<string> MetadataTree() => metadataTree.Value;
+        Explanation Explanation() => explanation.Value;
+        string Reason() => assertion.Value;
     }
 }

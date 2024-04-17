@@ -9,15 +9,18 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
     {
         var result = spec.IsSatisfiedBy(model);
-        
+
+        var metadataTree = new Lazy<MetadataTree<string>>(() =>
+            new MetadataTree<string>(result.Assertions));
+
         return new BooleanResultWithUnderlying<string, TUnderlyingModel>(
             result,
             MetadataTree,
             Explanation,
-            () => spec.Description.ToReason(result.Satisfied));
+            Reason);
 
-        MetadataTree<string> MetadataTree() => new(result.Assertions);
-
+        MetadataTree<string> MetadataTree() => metadataTree.Value;
         Explanation Explanation() => result.Explanation;
+        string Reason() => spec.Description.ToReason(result.Satisfied);
     }
 }

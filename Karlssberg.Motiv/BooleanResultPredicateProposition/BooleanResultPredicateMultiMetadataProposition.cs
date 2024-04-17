@@ -31,21 +31,26 @@ public sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMeta
             IEnumerable<string> assertion => assertion.ToArray(),
             _ => [Description.ToReason(booleanResult.Satisfied)]
         });
+        
+        var explanation = new Lazy<Explanation>(() => 
+            new Explanation(assertions.Value)
+            {
+                Underlying = booleanResult.Explanation.ToEnumerable()
+            });
+
+        var metadataTree = new Lazy<MetadataTree<TMetadata>>(() =>
+            new MetadataTree<TMetadata>(metadata.Value,
+                booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>()));
 
         return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,
             MetadataTree,
             Explanation,
-            () => Description.ToReason(booleanResult.Satisfied));
+            Reason);
 
-        Explanation Explanation() => new(assertions.Value)
-        {
-            Underlying = booleanResult.Explanation.ToEnumerable()
-        };
-
-        MetadataTree<TMetadata> MetadataTree() => 
-            new(metadata.Value, 
-                booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>());
+        MetadataTree<TMetadata> MetadataTree() => metadataTree.Value;
+        Explanation Explanation() => explanation.Value;
+        string Reason() => Description.ToReason(booleanResult.Satisfied);
     }
 }
 
