@@ -179,17 +179,25 @@ public class HandTests
     }
     
     [Theory]
-    [InlineData("AH, KH, QH, JH, 10H", true, HandRank.RoyalFlush)]
-    [InlineData("KH, QH, JH, 10H, 9H", true, HandRank.StraightFlush)]
-    [InlineData("AH, AD, AC, AS, 3C", true, HandRank.FourOfAKind)]
-    [InlineData("AH, AD, AC, JH, JS", true, HandRank.FullHouse)]
-    [InlineData("10H, 8H, 6H, 4H, 2H", true, HandRank.Flush)]
-    [InlineData("10H, 9C, 8S, 7D, 6H", true, HandRank.Straight)]
-    [InlineData("AH, AD, AS, 10H, 9D", true, HandRank.ThreeOfAKind)]
-    [InlineData("AH, AD, QS, 10D, 10H", true, HandRank.TwoPair)]
-    [InlineData("AH, AD, 10S, 5C, 2H", true, HandRank.Pair)]
-    [InlineData("AH, 10D, 8S, 5C, 3D", false, HandRank.HighCard)]
-    public void Should_evaluate_a_winning_hand(string handRanks, bool expected, HandRank expectedRank)
+    [InlineData("AH, KH, QH, JH, 10H", true, HandRank.RoyalFlush, "is a royal flush hand")]
+    [InlineData("KH, QH, JH, 10H, 9H", true, HandRank.StraightFlush, "is a straight flush hand")]
+    [InlineData("AH, AD, AC, AS, 3C", true, HandRank.FourOfAKind, "is a four of a kind hand")]
+    [InlineData("AH, AD, AC, JH, JS", true, HandRank.FullHouse, "is a full house hand")]
+    [InlineData("10H, 8H, 6H, 4H, 2H", true, HandRank.Flush, "is a flush hand")]
+    [InlineData("10H, 9C, 8S, 7D, 6H", true, HandRank.Straight, "is a straight hand")]
+    [InlineData("AH, AD, AS, 10H, 9D", true, HandRank.ThreeOfAKind, "is a three of a kind hand")]
+    [InlineData("AH, AD, QS, 10D, 10H", true, HandRank.TwoPair, "is a two pair hand")]
+    [InlineData("AH, AD, 10S, 5C, 2H", true, HandRank.Pair, "is a pair hand")]
+    [InlineData("AH, 10D, 8S, 5C, 3D", false, HandRank.HighCard, "!is a royal flush hand",
+                                                                                            "!is a straight flush hand",
+                                                                                            "!is a four of a kind hand",
+                                                                                            "!is a full house hand",
+                                                                                            "!is a flush hand",
+                                                                                            "!is a straight hand",
+                                                                                            "!is a three of a kind hand",
+                                                                                            "!is a two pair hand", 
+                                                                                            "!is a pair hand")]
+    public void Should_evaluate_a_winning_hand(string handRanks, bool expected, HandRank expectedRank, params string[] expectedAssertion)
     {
         var cards = handRanks
             .Split(", ")
@@ -204,5 +212,7 @@ public class HandTests
 
         act.Satisfied.Should().Be(expected);
         act.Metadata.Max().Should().Be(expectedRank);
+        act.Explanation.Underlying.GetAssertions().Should().BeEquivalentTo(expectedAssertion);
+        act.SubAssertions.Should().BeEquivalentTo(expectedAssertion);
     }
 }

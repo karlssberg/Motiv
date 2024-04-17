@@ -21,9 +21,7 @@ public sealed class Explanation
         _lazyDistinctAssertions = new Lazy<IEnumerable<string>>(assertions.Distinct);
     }
 
-
     public IEnumerable<string> Assertions => _lazyDistinctAssertions.Value;
-    
     
     public IEnumerable<Explanation> Underlying { get; internal set; } = Enumerable.Empty<Explanation>();
     
