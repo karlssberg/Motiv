@@ -13,7 +13,7 @@ public readonly ref struct FalseMetadataHigherOrderPropositionBuilder<TModel, TM
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
-        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
+        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
     /// <summary>Specifies the metadata to use when the condition is false.</summary>
     /// <param name="whenFalse">The metadata to use when the condition is false.</param>

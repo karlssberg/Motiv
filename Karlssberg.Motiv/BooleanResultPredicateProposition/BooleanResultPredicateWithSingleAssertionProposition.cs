@@ -22,7 +22,7 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
         var explanation = new Lazy<Explanation>(() => 
             new Explanation(assertion.Value)
             {
-                Underlying = booleanResult.FindPropositionalExplanations()
+                Underlying = booleanResult.FindUnderlyingExplanations()
             });
         
         var metadataTree = new Lazy<MetadataTree<string>>(() => 

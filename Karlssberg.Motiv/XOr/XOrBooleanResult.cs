@@ -5,7 +5,7 @@
 internal sealed class XOrBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right)
-    : BooleanResultBase<TMetadata>, IBinaryOperationBooleanResult
+    : BooleanResultBase<TMetadata>, IBinaryBooleanOperationResult<TMetadata>
 {
     /// <summary>Gets a value indicating whether the XOR operation is satisfied.</summary>
     public override bool Satisfied { get; } = left.Satisfied ^ right.Satisfied;
@@ -14,11 +14,15 @@ internal sealed class XOrBooleanResult<TMetadata>(
 
     /// <summary>Gets the description of the XOR operation.</summary>
     public override ResultDescriptionBase Description =>
-        new XOrBooleanResultDescription<TMetadata>(left, right, GetResults());
+        new XOrBooleanResultDescription<TMetadata>(Left, Right, GetResults());
     
-    public BooleanResultBase Left { get; } = left;
+    public BooleanResultBase<TMetadata> Left { get; } = left;
 
-    public BooleanResultBase? Right { get; } = right;
+    public BooleanResultBase<TMetadata> Right { get; } = right;
+
+    BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
+    
+    BooleanResultBase? IBinaryBooleanOperationResult.Right => Right;
 
     public override MetadataTree<TMetadata> MetadataTree => CreateMetadataTree();
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
@@ -27,8 +31,8 @@ internal sealed class XOrBooleanResult<TMetadata>(
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => GetResults();
     
     private IEnumerable<BooleanResultBase<TMetadata>> GetResults() => 
-        left.ToEnumerable()
-            .Append(right);
+        Left.ToEnumerable()
+            .Append(Right);
 
     private MetadataTree<TMetadata> CreateMetadataTree()
     {

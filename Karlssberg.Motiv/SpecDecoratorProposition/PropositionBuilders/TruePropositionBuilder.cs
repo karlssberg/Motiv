@@ -22,7 +22,7 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
         new(spec, (_, _) => whenTrue.ToEnumerable());
 
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
-    /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
+    /// <param name="whenTrue">A human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionWithNamePropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<TModel, TMetadata> whenTrue) =>
@@ -77,7 +77,10 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
     /// <returns>An instance of <see cref="TrueHigherOrderFromSpecPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> As(
         Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate) =>
-        new(spec, higherOrderPredicate);
+        new(
+            spec,
+            higherOrderPredicate, 
+            (isSatisfied, results) => Causes.Get(isSatisfied, results, higherOrderPredicate));
 
     /// <summary>Specifies a higher order predicate for the proposition.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>

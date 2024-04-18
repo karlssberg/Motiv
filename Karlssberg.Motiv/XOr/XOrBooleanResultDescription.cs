@@ -36,7 +36,7 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
         {
             XOrBooleanResult<TMetadata> xOrSpec => 
                 xOrSpec.Description.Detailed,
-            IBinaryOperationBooleanResult binaryResult => 
+            IBinaryBooleanOperationResult<TMetadata> binaryResult => 
                 $"({binaryResult.Description.Detailed})",
             _ => result.Description.Detailed
         };

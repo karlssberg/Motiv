@@ -8,7 +8,9 @@ internal sealed class HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
     : BooleanResultBase<TMetadata>
 {
     public override MetadataTree<TMetadata> MetadataTree => metadata();
+    
     public override IEnumerable<BooleanResultBase> Underlying => Enumerable.Empty<BooleanResultBase>();
+    
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
         Enumerable.Empty<BooleanResultBase<TMetadata>>();
     

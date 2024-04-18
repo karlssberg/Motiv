@@ -12,7 +12,7 @@ public readonly ref struct FalseAssertionFromSpecDecoratorWithNameHigherOrderPro
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     string trueBecause,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
-        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
+        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
     /// <summary>Specifies an assertion to yield when the condition is false.</summary>
     /// <param name="falseBecause">A human-readable reason why the condition is false.</param>

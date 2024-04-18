@@ -74,7 +74,9 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
     /// <returns>An instance of <see cref="TrueHigherOrderFromSpecPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> As(
         Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate) =>
-        new(predicate, higherOrderPredicate);
+        new(predicate, 
+            higherOrderPredicate, 
+            (isSatisfied, results) => Causes.Get(isSatisfied, results, higherOrderPredicate));
 
     /// <summary>Specifies a higher order predicate for the proposition.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
@@ -82,7 +84,7 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
     /// <returns>An instance of <see cref="TrueHigherOrderFromSpecPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> As(
         Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,
-        Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector) =>
+        Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector) =>
         new(predicate, higherOrderPredicate, causeSelector);
 
     /// <summary>

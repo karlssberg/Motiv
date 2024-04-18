@@ -9,7 +9,7 @@ public readonly ref struct FalseAssertionFromBooleanPredicateWithNameHigherOrder
     Func<TModel, bool> predicate,
     Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
     string trueBecause,
-    Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector)
+    Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
 {
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.

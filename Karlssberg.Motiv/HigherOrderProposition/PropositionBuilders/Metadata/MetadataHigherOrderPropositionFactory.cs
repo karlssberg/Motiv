@@ -14,7 +14,7 @@ public readonly ref struct MetadataHigherOrderPropositionFactory<TModel, TMetada
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
-        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
+        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
     /// <summary>Creates a specification and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>

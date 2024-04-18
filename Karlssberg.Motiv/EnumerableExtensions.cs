@@ -71,43 +71,36 @@ public static class EnumerableExtensions
         this IEnumerable<BooleanResultBase> causes)
     {
         var causeArray = causes.ToArray();
-        var propositionalCauses = causeArray.FindPropositionalCauses().ToArray();
 
         var assertions = causeArray.GetAssertions();
 
-        var underlying = propositionalCauses.Select(result => result.Explanation);
+        var underlying = causeArray
+            .SelectMany(cause =>
+                cause switch
+                {
+                    IBooleanOperationResult operationBooleanResult =>
+                        operationBooleanResult.UnderlyingAssertionSources.GetExplanations(),
+                    _ => cause.Explanation.ToEnumerable()
+                });
 
         return new Explanation(assertions)
         {
             Underlying = underlying
         };
     }
-
-    internal static IEnumerable<BooleanResultBase> FindPropositionalCauses(this IEnumerable<BooleanResultBase> causes) => 
-        causes.SelectMany(FindPropositionalCauses);
-
-    internal static IEnumerable<BooleanResultBase> FindPropositionalCauses(this BooleanResultBase result) =>
-        result switch
-        {
-            IOperationBooleanResult booleanOperation => FindPropositionalCauses(booleanOperation.Causes),
-            _ => result.ToEnumerable()
-        };
-
-    internal static IEnumerable<Explanation> FindPropositionalExplanations(this BooleanResultBase result) =>
-        result
-            .FindPropositionalCauses()
-            .Select(cause => cause.Explanation);
     
-    
+    internal static IEnumerable<Explanation> GetExplanations(this IEnumerable<BooleanResultBase> results) =>
+        results.Select(result => result.Explanation);
 
     public static IEnumerable<string> GetAssertions(
         this IEnumerable<BooleanResultBase> results) =>
-        results.SelectMany(result =>
-            result switch
-            {
-                IOperationBooleanResult operationResult => operationResult.Causes.GetAssertions(),
-                _ => result.Assertions
-            });
+        results
+            .SelectMany(result =>
+                result switch
+                {
+                    IBooleanOperationResult operationResult => operationResult.Causes.GetAssertions(),
+                    _ => result.Assertions
+                });
     
     public static IEnumerable<string> GetTrueAssertions(
         this IEnumerable<BooleanResultBase> results) =>
@@ -140,7 +133,7 @@ public static class EnumerableExtensions
     
     public static IEnumerable<string> GetAssertions(
         this IEnumerable<Explanation> explanations) =>
-        explanations.SelectMany(e => e.Assertions);
+        explanations.SelectMany(e => e.Assertions).Distinct();
     
     public static IEnumerable<string> GetAssertionsAtDepth(
         this BooleanResultBase result,
@@ -280,7 +273,7 @@ public static class EnumerableExtensions
         int atDepth = 0) =>
         result switch
         {
-            IBinaryOperationBooleanResult => result.Causes.AggregateUnderlyingCauses(atDepth),
+            IBinaryBooleanOperationResult => result.Causes.AggregateUnderlyingCauses(atDepth),
             _ when atDepth > 0 => result.Causes.AggregateUnderlyingCauses(atDepth - 1),
             _ => result.ToEnumerable()
         };
@@ -295,7 +288,7 @@ public static class EnumerableExtensions
         result.Underlying.SelectMany(underlyingResult => 
             underlyingResult switch
             {
-                IBinaryOperationBooleanResult => underlyingResult.AggregateBinaryOperationResults(atDepth),
+                IBinaryBooleanOperationResult => underlyingResult.AggregateBinaryOperationResults(atDepth),
                 _ when atDepth > 0 => underlyingResult.AggregateBinaryOperationResults(atDepth - 1),
                 _ when atDepth <= 0 => result.Underlying,
             });
@@ -308,7 +301,7 @@ public static class EnumerableExtensions
         this BooleanResultBase<TMetadata> result) =>
         result switch
         {
-            IBinaryOperationBooleanResult => result.UnderlyingWithMetadata.AggregateBinaryOperationResults(),
+            IBinaryBooleanOperationResult => result.UnderlyingWithMetadata.AggregateBinaryOperationResults(),
             _ => result.UnderlyingWithMetadata
         };
 }

@@ -39,7 +39,9 @@ public class NoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         none are true
+                                         none are true {
+                                             3x false
+                                         }
                                          """)]
     [InlineAutoData(false, false, true, """
                                         !none are true {
@@ -102,7 +104,9 @@ public class NoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         none are true
+                                         none are true {
+                                             3x false
+                                         }
                                          """)]
     [InlineAutoData(false, false, true, """
                                         !none are true {
@@ -167,8 +171,10 @@ public class NoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         none are true
-                                         """)]
+                                        none are true {
+                                            3x !is true
+                                        }
+                                        """)]
     [InlineAutoData(false, false, true, """
                                         !none are true {
                                             1x is true
@@ -230,8 +236,10 @@ public class NoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         none are true
-                                         """)]
+                                        none are true {
+                                            3x !left & !right
+                                        }
+                                        """)]
     [InlineAutoData(false, false, true, """
                                         !none are true {
                                             1x left & right
@@ -248,10 +256,10 @@ public class NoneSatisfiedSpecTests
                                        }
                                        """)]
     [InlineAutoData(true, false, false, """
-                                        !none are true {
-                                            1x left & right
-                                        }
-                                        """)]
+                                       !none are true {
+                                           1x left & right
+                                       }
+                                       """)]
     [InlineAutoData(true, false, true, """
                                        !none are true {
                                            2x left & right
@@ -263,10 +271,10 @@ public class NoneSatisfiedSpecTests
                                        }
                                        """)]
     [InlineAutoData(true, true, true, """
-                                      !none are true {
-                                          3x left & right
-                                      }
-                                      """)]
+                                       !none are true {
+                                           3x left & right
+                                       }
+                                       """)]
     public void Should_serialize_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,

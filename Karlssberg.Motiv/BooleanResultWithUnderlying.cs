@@ -27,6 +27,7 @@ internal sealed class BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata
         booleanResult.ResolveUnderlyingWithMetadata<TMetadata, TUnderlyingMetadata>();
     
     public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes;
+
     
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
         booleanResult.ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();

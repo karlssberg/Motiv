@@ -48,7 +48,7 @@ internal sealed class OrElseBooleanResultDescription<TMetadata>(
                 orResult.Description.Detailed,
             OrElseBooleanResult<TMetadata> orElseResult =>
                 orElseResult.Description.Detailed,
-            IBinaryOperationBooleanResult binaryResult =>
+            IBinaryBooleanOperationResult<TMetadata> binaryResult =>
                 $"({binaryResult.Description.Detailed})",
             _ => result.Description.Detailed
         };
@@ -62,7 +62,7 @@ internal sealed class OrElseBooleanResultDescription<TMetadata>(
                 orResult.Description.Reason,
             OrElseBooleanResult<TMetadata> orElseResult =>
                 orElseResult.Description.Reason,
-            IBinaryOperationBooleanResult { Description.CausalOperandCount: > 1 } binaryResult =>
+            IBinaryBooleanOperationResult<TMetadata> { Description.CausalOperandCount: > 1 } binaryResult =>
                 $"({binaryResult.Description.Reason})",
             _ => result.Description.Reason
         };

@@ -121,7 +121,9 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     /// <returns>An instance of <see cref="TrueHigherOrderFromSpecPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> As(
         Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate) =>
-        new(predicate, higherOrderPredicate);
+        new(predicate, 
+            higherOrderPredicate, 
+            (isSatisfied, results) => Causes.Get(isSatisfied, results, higherOrderPredicate));
 
     /// <summary>Specifies a higher order predicate for the proposition.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>

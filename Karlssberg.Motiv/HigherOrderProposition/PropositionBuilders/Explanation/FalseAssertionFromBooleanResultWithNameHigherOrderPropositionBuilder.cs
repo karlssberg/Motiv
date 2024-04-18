@@ -9,7 +9,7 @@ public readonly ref struct FalseAssertionFromBooleanResultWithNameHigherOrderPro
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     string trueBecause,
-    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
+    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.

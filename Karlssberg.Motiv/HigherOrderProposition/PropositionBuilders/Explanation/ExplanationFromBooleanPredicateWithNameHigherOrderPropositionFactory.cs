@@ -12,7 +12,7 @@ public readonly ref struct ExplanationFromBooleanPredicateWithNameHigherOrderPro
     Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
     string trueBecause, 
     Func<HigherOrderBooleanEvaluation<TModel>, string> falseBecause,
-    Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector)
+    Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
 {
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false. The propositional statement

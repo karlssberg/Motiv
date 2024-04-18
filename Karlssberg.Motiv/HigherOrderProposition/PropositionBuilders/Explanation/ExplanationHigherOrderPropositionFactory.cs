@@ -10,7 +10,7 @@ public readonly ref struct ExplanationHigherOrderPropositionFactory<TModel, TUnd
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause,
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
-    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
+    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.

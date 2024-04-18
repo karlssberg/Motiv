@@ -5,10 +5,10 @@ public sealed class PropositionBooleanResult<TMetadata>(
     MetadataTree<TMetadata> metadataTree,
     Explanation explanation,
     string reason)
-    : BooleanResultBase<TMetadata>
+    : BooleanResultBase<TMetadata>, IPropositionResult
 {
     public override MetadataTree<TMetadata> MetadataTree => metadataTree;
-    
+
     public override IEnumerable<BooleanResultBase> Underlying =>
         Enumerable.Empty<BooleanResultBase>();
 
@@ -29,4 +29,8 @@ public sealed class PropositionBooleanResult<TMetadata>(
 
     /// <summary>Gets the description of the result.</summary>
     public override ResultDescriptionBase Description => new PropositionResultDescription(reason);
+}
+
+public interface IPropositionResult
+{
 }

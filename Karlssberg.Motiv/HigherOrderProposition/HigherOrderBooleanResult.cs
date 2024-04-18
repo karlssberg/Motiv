@@ -9,8 +9,6 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causes)
     : BooleanResultBase<TMetadata>
 {
-    private readonly IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> causes;
-
     private readonly Lazy<MetadataTree<TMetadata>> _metadataTree = new (() =>
         new MetadataTree<TMetadata>(
             metadata(),
@@ -21,22 +19,21 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
         new Explanation(assertions())
         {
             Underlying = causes()
-                .SelectMany(cause => cause.FindPropositionalExplanations())
-                .ElseIfEmpty(underlyingResults.Select(result => result.Explanation))
+                .SelectMany(cause => cause.UnderlyingAssertionSources.GetExplanations())
         });
 
     public override MetadataTree<TMetadata> MetadataTree => _metadataTree.Value;
     
     public override Explanation Explanation => _explanation.Value;
-
     public override IEnumerable<BooleanResultBase> Underlying => underlyingResults;
+
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
         underlyingResults.ResolveUnderlyingWithMetadata<TMetadata, TUnderlyingMetadata>();
     
-    public override IEnumerable<BooleanResultBase> Causes => causes;
-
+    public override IEnumerable<BooleanResultBase> Causes => causes();
+    
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
-        causes.ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();
+        causes().ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();
     
     public override bool Satisfied { get; } = isSatisfied;
 

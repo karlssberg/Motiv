@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Karlssberg.Motiv.And;
+﻿using Karlssberg.Motiv.And;
 using Karlssberg.Motiv.AndAlso;
 using Karlssberg.Motiv.Not;
 using Karlssberg.Motiv.Or;
@@ -34,7 +33,7 @@ public abstract class BooleanResultBase
     public IEnumerable<string> AllAssertions =>
         this switch
         {
-            IBinaryOperationBooleanResult result => result.Underlying.SelectMany(r => r.AllAssertions),
+            IBinaryBooleanOperationResult result => result.Underlying.SelectMany(r => r.AllAssertions),
             _ => Assertions
         };
 
@@ -63,6 +62,15 @@ public abstract class BooleanResultBase
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that caused this .</summary>
     public abstract IEnumerable<BooleanResultBase> Causes { get; }
+
+    /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Assertions" />.</summary>
+    public IEnumerable<BooleanResultBase> UnderlyingAssertionSources =>
+        Causes
+            .SelectMany(booleanResult => 
+                booleanResult is IBooleanOperationResult
+                    ? booleanResult.UnderlyingAssertionSources
+                    : this.ToEnumerable())
+            .ElseIfEmpty(this.ToEnumerable());
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" /> that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase> Underlying { get; }
@@ -173,10 +181,16 @@ public abstract class BooleanResultBase<TMetadata>
     /// <summary>Gets the underlying causes with metadata that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata { get; }
 
+    /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Metadata" />.</summary>
+    public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingMetadataSources =>
+        CausesWithMetadata.SelectMany(booleanResult => 
+            booleanResult is IBooleanOperationResult
+                ? booleanResult.UnderlyingMetadataSources
+                : this.ToEnumerable());
 
     /// <summary>Gets the underlying boolean results with metadata that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata { get; }
-    
+
     /// <summary>
     /// Performs a logical AND operation between the current BooleanResultBase instance and another BooleanResultBase
     /// instance.

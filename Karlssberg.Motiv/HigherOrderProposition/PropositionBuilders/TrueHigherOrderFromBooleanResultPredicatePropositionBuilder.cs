@@ -14,7 +14,7 @@ public readonly ref struct TrueHigherOrderFromBooleanResultPredicatePropositionB
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
-        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector = null)
+        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector = null)
 {
     /// <summary>Specifies the metadata to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>

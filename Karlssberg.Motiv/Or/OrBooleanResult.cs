@@ -5,7 +5,7 @@
 internal sealed class OrBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right)
-    : BooleanResultBase<TMetadata>, IBinaryOperationBooleanResult
+    : BooleanResultBase<TMetadata>, IBinaryBooleanOperationResult<TMetadata>
 {
     public override Explanation Explanation => GetCausalResults().CreateExplanation();
     
@@ -13,9 +13,13 @@ internal sealed class OrBooleanResult<TMetadata>(
     
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
     
-    public BooleanResultBase Left { get; } = left;
+    public BooleanResultBase<TMetadata> Left { get; } = left;
 
-    public BooleanResultBase? Right { get; } = right;
+    public BooleanResultBase<TMetadata> Right { get; } = right;
+
+    BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
+    
+    BooleanResultBase IBinaryBooleanOperationResult.Right => Right;
     
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
     
@@ -25,21 +29,21 @@ internal sealed class OrBooleanResult<TMetadata>(
 
     public override bool Satisfied { get; } = left.Satisfied || right.Satisfied;
 
-    public override ResultDescriptionBase Description => new OrBooleanResultDescription<TMetadata>(left, right, GetCausalResults());
+    public override ResultDescriptionBase Description => new OrBooleanResultDescription<TMetadata>(Left, Right, GetCausalResults());
 
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {
-        if (left.Satisfied == Satisfied)
-            yield return left;
+        if (Left.Satisfied == Satisfied)
+            yield return Left;
         
-        if (right.Satisfied == Satisfied)
-            yield return right;
+        if (Right.Satisfied == Satisfied)
+            yield return Right;
     }
     
     private IEnumerable<BooleanResultBase<TMetadata>> GetResults()
     {
-        yield return left;
-        yield return right;
+        yield return Left;
+        yield return Right;
     }
     
     private MetadataTree<TMetadata> CreateMetadataTree()

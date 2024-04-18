@@ -6,7 +6,7 @@ internal sealed class HigherOrderFromBooleanResultMetadataProposition<TModel, TM
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue, 
     Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenFalse,
     ISpecDescription specDescription,
-    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>>? causeSelector)
+    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
     public override ISpecDescription Description => specDescription;
@@ -18,9 +18,10 @@ internal sealed class HigherOrderFromBooleanResultMetadataProposition<TModel, TM
             .ToArray();
         
         var isSatisfied = higherOrderPredicate(underlyingResults);
-        var causes = new Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]> (() => Causes
-            .Get(isSatisfied, underlyingResults, higherOrderPredicate, causeSelector)
-            .ToArray());
+        var causes = new Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]>(() => 
+            causeSelector(isSatisfied, underlyingResults)
+                .ElseIfEmpty(underlyingResults)
+                .ToArray());
         
         var metadata = new Lazy<TMetadata>(() =>
         {

@@ -174,7 +174,9 @@ public class AtLeastNSatisfiedSpecBaseTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            none satisfied
+                                            none satisfied {
+                                                3x received false
+                                            }
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at least one satisfied {
@@ -237,7 +239,9 @@ public class AtLeastNSatisfiedSpecBaseTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            None satisfied
+                                            None satisfied {
+                                                3x underlying not satisfied
+                                            }
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             At least one satisfied {
@@ -300,7 +304,9 @@ public class AtLeastNSatisfiedSpecBaseTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            none satisfied
+                                            none satisfied {
+                                                3x !is true
+                                            }
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at least one satisfied {
@@ -383,7 +389,7 @@ public class AtLeastNSatisfiedSpecBaseTests
     }
     
     [Theory]
-    [InlineAutoData(false, false, false, 0)]
+    [InlineAutoData(false, false, false, 3)]
     [InlineAutoData(false, false, true, 1)]
     [InlineAutoData(false, true, false, 1)]
     [InlineAutoData(false, true, true, 2)]

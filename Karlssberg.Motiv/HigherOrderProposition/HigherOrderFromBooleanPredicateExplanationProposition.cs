@@ -6,7 +6,7 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
     Func<HigherOrderBooleanEvaluation<TModel>, string> trueBecause, 
     Func<HigherOrderBooleanEvaluation<TModel>, string> falseBecause,
     ISpecDescription specDescription,
-    Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>>? causeSelector)
+    Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
     : SpecBase<IEnumerable<TModel>, string>
 {
     public override ISpecDescription Description => specDescription;
@@ -21,9 +21,7 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
         
         var assertion = new Lazy<string>(() =>
         {
-            var causes = Causes
-                .Get(isSatisfied, underlyingResults, higherOrderPredicate, causeSelector)
-                .ToArray();
+            var causes = causeSelector(isSatisfied, underlyingResults).ToArray();
             
             var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
             
