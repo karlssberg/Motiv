@@ -19,8 +19,6 @@ internal static class PropositionExtensions
     internal static string JoinLines(this IEnumerable<string> textCollection) =>
         string.Join(Environment.NewLine, textCollection);
 
-
-    
     internal static string ToReason(
         this ISpecDescription specDescription,
         bool isSatisfied) =>

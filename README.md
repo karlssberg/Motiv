@@ -9,7 +9,7 @@ By _propositions_, we mean a declarative statement that can be evaluated to eith
 such as:
 * _the sun is shining_
 * _email address is missing an @ symbol_
-* _the user is logged in_
+* _the subscription is within a grace period_
 
 In Motiv, propositions can evaluate models to determine if they are satisfied (or not), or be easily combined with 
 others to form new propositions.
@@ -33,10 +33,6 @@ result.Assertions; // ["no support for explanations", "no support for custom met
 Only those propositions that helped determine the outcome will be used to generate the `Reason` and `Assertions` 
 properties.
 
-Observe the `Spec` type.
-This is a _specification_.
-Specifications are the building blocks of propositions—they are the nodes of the logical expression tree, whereas 
-the tree itself _is_ the proposition.
 #### What can I use the Motiv for?
 Motiv is not focused on catering to any particular use-case - except maybe to make the developers' life better.
 It is, however, inspired them:
@@ -63,7 +59,7 @@ It shows how to create a basic proposition and then use it to determine if a num
 
 ### Basic proposition
 A basic proposition can be created using the `Spec` class. This class provides a fluent API for creating a 
-logical proposition
+logical proposition.
 
 ```csharp
 var isEligibleForLoan =
