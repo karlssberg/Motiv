@@ -4,12 +4,18 @@ namespace Karlssberg.Motiv.Tests;
 
 public class ExplanationTests
 {
+    public enum NumberType
+    {
+        Even,
+        Odd
+    }
+    
     [Theory]
     [InlineAutoData(1, "is odd")]
     [InlineAutoData(2, "is even")]
     public void Should_provide_a_reason_for_a_spec_result(int n, string expected)
     {
-        var spec = Spec.Build<int>(i => i % 2 == 0)
+        var spec = Spec.Build((int i) => i % 2 == 0)
             .WhenTrue("is even")
             .WhenFalse("is odd")
             .Create();
@@ -109,19 +115,19 @@ public class ExplanationTests
     public void Should_yeild_the_assertions_from_all_operands_when_using_all_assertions_property(int n, params string[] expected)
     {
         var isEvenSpec =
-            Spec.Build<int>(i => i % 2 == 0)
+            Spec.Build((int i) => i % 2 == 0)
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
         
         var isPositiveSpec =
-            Spec.Build<int>(i => i > 0)
+            Spec.Build((int i) => i > 0)
                 .WhenTrue("positive")
                 .WhenFalse("not positive")
                 .Create();
             
         var isDivisibleBy3Spec =
-            Spec.Build<int>(i => i % 3 == 0)
+            Spec.Build((int i) => i % 3 == 0)
                 .WhenTrue("divisible by 3")
                 .WhenFalse("not divisible by 3")
                 .Create();
@@ -146,19 +152,19 @@ public class ExplanationTests
         params string[] expected)
     {
         var isEvenSpec =
-            Spec.Build<int>(i => i % 2 == 0)
+            Spec.Build((int i) => i % 2 == 0)
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
         
         var isPositiveSpec =
-            Spec.Build<int>(i => i > 0)
+            Spec.Build((int i) => i > 0)
                 .WhenTrue("positive")
                 .WhenFalse("not positive")
                 .Create();
         
         var isDivisibleBy3Spec =
-            Spec.Build<int>(i => i % 3 == 0)
+            Spec.Build((int i) => i % 3 == 0)
                 .WhenTrue("divisible by 3")
                 .WhenFalse("not divisible by 3")
                 .Create();
@@ -187,19 +193,19 @@ public class ExplanationTests
         params string[] expected)
     {
         var isEvenSpec =
-            Spec.Build<int>(i => i % 2 == 0)
+            Spec.Build((int i) => i % 2 == 0)
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
         
         var isPositiveSpec =
-            Spec.Build<int>(i => i > 0)
+            Spec.Build((int i) => i > 0)
                 .WhenTrue("positive")
                 .WhenFalse("not positive")
                 .Create();
         
         var isDivisibleBy3Spec =
-            Spec.Build<int>(i => i % 3 == 0)
+            Spec.Build((int i) => i % 3 == 0)
                 .WhenTrue("divisible by 3")
                 .WhenFalse("not divisible by 3")
                 .Create();
@@ -213,5 +219,50 @@ public class ExplanationTests
         var result = spec.IsSatisfiedBy(n);
         
         result.AllSubAssertions.Should().BeEquivalentTo(expected);
+    }
+
+    [Theory]
+    [InlineData(1, "odd")]
+    [InlineData(2, "even")]
+    public void Should_forward_assertions_when_using_basic_propositions(int model, string expected)
+    {
+        var isEven =
+            Spec.Build((int i) => i % 2 == 0)
+                .WhenTrue("even")
+                .WhenFalse("odd")
+                .Create();
+        
+        var isEvenWrapper = 
+            Spec.Build(isEven)
+                .Create("is even wrapper");
+        
+        var result = isEvenWrapper.IsSatisfiedBy(model);
+        
+        result.Assertions.Should().BeEquivalentTo(expected);
+        result.Metadata.Should().BeEquivalentTo(expected);
+    }
+    
+    [Theory]
+    [InlineData(1, NumberType.Odd, "!is even wrapper")]
+    [InlineData(2, NumberType.Even, "is even wrapper")]
+    public void Should_forward_metadata_when_using_basic_propositions(
+        int model,
+        NumberType expectedMetadata,
+        string expectedAssertion)
+    {
+        var isEven =
+            Spec.Build((int i) => i % 2 == 0)
+                .WhenTrue(NumberType.Even)
+                .WhenFalse(NumberType.Odd)
+                .Create("is even");
+        
+        var isEvenWrapper = 
+            Spec.Build(isEven)
+                .Create("is even wrapper");
+        
+        var result = isEvenWrapper.IsSatisfiedBy(model);
+        
+        result.Metadata.Should().BeEquivalentTo([expectedMetadata]);
+        result.Assertions.Should().BeEquivalentTo([expectedAssertion]);
     }
 } 
