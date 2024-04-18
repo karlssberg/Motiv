@@ -37,8 +37,13 @@ public sealed class MetadataTree<TMetadata>(
 
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_metadataCollection).GetEnumerator();
 
-    public override string ToString() =>
-        _metadataCollection switch
+    public override string ToString() => GetDebugDisplay();
+    
+    private string Debug => GetDebugDisplay();
+
+    private string GetDebugDisplay()
+    {
+        return _metadataCollection switch
         {
             IEnumerable<string> assertions => assertions.Serialize(),
             IEnumerable<byte> numerics => numerics.Serialize(),
@@ -59,4 +64,5 @@ public sealed class MetadataTree<TMetadata>(
             _ when typeof(TMetadata).IsEnum => _metadataCollection.Serialize(),
             _ => base.ToString()
         };
+    }
 }

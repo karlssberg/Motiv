@@ -1,7 +1,7 @@
 ﻿namespace Karlssberg.Motiv.Poker.StraightHandProposition;
 
 public class IsSevenHighStraightProposition() : Spec<Hand>(
-    Spec.Build(new DoesHandContainSpecifiedRanksProposition(SevenHighStraight))
+    Spec.Build(new DoAllCardsMatchRanksProposition(SevenHighStraight))
         .WhenTrue("is Seven High Straight")
         .WhenFalse("is Not Seven High Straight")
         .Create())

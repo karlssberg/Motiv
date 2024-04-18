@@ -9,7 +9,6 @@ using Karlssberg.Motiv.XOr;
 namespace Karlssberg.Motiv;
 
 /// <summary>Represents a base class for boolean results.</summary>
-[DebuggerDisplay("{Reason}")]
 public abstract class BooleanResultBase
     : IEquatable<BooleanResultBase>, IEquatable<bool>
 {
@@ -154,7 +153,6 @@ public abstract class BooleanResultBase
 
 /// <summary>Represents a base class for boolean results with metadata.</summary>
 /// <typeparam name="TMetadata">The type of the metadata associated with the boolean result.</typeparam>
-[DebuggerDisplay("{GetSatisfiedText()}: {ToString()}")]
 public abstract class BooleanResultBase<TMetadata>
     : BooleanResultBase
 {

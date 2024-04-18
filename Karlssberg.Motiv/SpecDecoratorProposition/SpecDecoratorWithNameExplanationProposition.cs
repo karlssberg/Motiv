@@ -25,7 +25,7 @@ internal sealed class SpecDecoratorWithNameExplanationProposition<TModel, TUnder
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(assertion.Value)
             {
-                Underlying = booleanResult.Explanation.ToEnumerable()
+                Underlying = booleanResult.FindPropositionalExplanations()
             });
         
         var metadataTree = new Lazy<MetadataTree<string>>(() => 

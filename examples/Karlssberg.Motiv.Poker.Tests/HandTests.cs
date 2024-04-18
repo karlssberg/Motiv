@@ -91,6 +91,7 @@ public class HandTests
     [InlineData("10, 9, 8, 7, 5")]
     [InlineData("9, 8, 7, 6, 4")]
     [InlineData("8, 7, 6, 5, 3")]
+    [InlineData("A, A, 10, 5, 2")]
     public void Should_not_evaluate_a_straight(string straightRanks)
     {
         var cards = straightRanks

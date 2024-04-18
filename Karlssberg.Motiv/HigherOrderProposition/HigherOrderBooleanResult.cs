@@ -21,7 +21,7 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
         new Explanation(assertions())
         {
             Underlying = causes()
-                .Select(cause => cause.Explanation)
+                .SelectMany(cause => cause.FindPropositionalExplanations())
                 .ElseIfEmpty(underlyingResults.Select(result => result.Explanation))
         });
 

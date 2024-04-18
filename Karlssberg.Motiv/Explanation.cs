@@ -2,7 +2,7 @@
 
 namespace Karlssberg.Motiv;
 
-[DebuggerDisplay("{GetDebuggerDisplay()}")]
+[DebuggerDisplay("{Debug}")]
 public sealed class Explanation
 {
     private readonly Lazy<IEnumerable<string>> _lazyDistinctAssertions;
@@ -27,6 +27,8 @@ public sealed class Explanation
     
     public override string ToString() => Assertions.Serialize();
 
+    private string Debug => GetDebuggerDisplay();
+    
     private string GetDebuggerDisplay()
     {
         return HaveComprehensiveAssertions() || !Underlying.Any()

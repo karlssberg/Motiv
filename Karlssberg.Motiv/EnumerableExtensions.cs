@@ -70,18 +70,36 @@ public static class EnumerableExtensions
     internal static Explanation CreateExplanation(
         this IEnumerable<BooleanResultBase> causes)
     {
-        var causesArray = causes.ToArray();
+        var causeArray = causes.ToArray();
+        var propositionalCauses = causeArray.FindPropositionalCauses().ToArray();
 
-        var assertions = causesArray.GetAssertions();
+        var assertions = causeArray.GetAssertions();
 
-        var underlying = causesArray.Select(result => result.Explanation);
+        var underlying = propositionalCauses.Select(result => result.Explanation);
 
         return new Explanation(assertions)
         {
             Underlying = underlying
         };
     }
+
+    internal static IEnumerable<BooleanResultBase> FindPropositionalCauses(this IEnumerable<BooleanResultBase> causes) => 
+        causes.SelectMany(FindPropositionalCauses);
+
+    internal static IEnumerable<BooleanResultBase> FindPropositionalCauses(this BooleanResultBase result) =>
+        result switch
+        {
+            IOperationBooleanResult booleanOperation => FindPropositionalCauses(booleanOperation.Causes),
+            _ => result.ToEnumerable()
+        };
+
+    internal static IEnumerable<Explanation> FindPropositionalExplanations(this BooleanResultBase result) =>
+        result
+            .FindPropositionalCauses()
+            .Select(cause => cause.Explanation);
     
+    
+
     public static IEnumerable<string> GetAssertions(
         this IEnumerable<BooleanResultBase> results) =>
         results.SelectMany(result =>
