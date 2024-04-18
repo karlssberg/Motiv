@@ -1,4 +1,6 @@
-﻿namespace Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
+﻿using Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders.Metadata;
+
+namespace Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
 
 /// <summary>
 /// A builder for creating propositions based on a predicate and a true condition, or for further refining a proposition.
@@ -33,6 +35,20 @@ public readonly ref struct FalseAssertionPropositionBuilder<TModel>(
         return new ExplanationPropositionFactory<TModel>(
             predicate,
             trueBecause,
+            falseBecause);
+    }
+    
+    /// <summary>
+    /// Specifies an assertion to yield when the condition is false.
+    /// </summary>
+    /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
+    /// <returns>An instance of <see cref="ExplanationPropositionFactory{TModel}" />.</returns>
+    public MetadataPropositionFactory<TModel, string> WhenFalse(Func<TModel, IEnumerable<string>> falseBecause)
+    {
+        falseBecause.ThrowIfNull(nameof(falseBecause));
+        return new MetadataPropositionFactory<TModel, string>(
+            predicate,
+            trueBecause.ToEnumerableReturn(),
             falseBecause);
     }
 }

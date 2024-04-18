@@ -223,7 +223,7 @@
         <Compile Update="BooleanPredicateProposition\PropositionBuilders\Explanation\ExplanationPropositionFactory.cs">
           <DependentUpon>FalseAssertionPropositionBuilder.cs</DependentUpon>
         </Compile>
-        <Compile Update="BooleanPredicateProposition\PropositionBuilders\Metadata\MetadataWithNamePropositionFactory.cs">
+        <Compile Update="BooleanPredicateProposition\PropositionBuilders\Metadata\MetadataPropositionFactory.cs">
           <DependentUpon>FalseMetadataPropositionBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="BooleanPredicateProposition\PropositionBuilders\Explanation\MultiAssertionExplanationWithNamePropositionFactory.cs">

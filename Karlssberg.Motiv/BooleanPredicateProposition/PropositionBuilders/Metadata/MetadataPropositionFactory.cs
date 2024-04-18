@@ -5,7 +5,7 @@
 /// </summary>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
-public readonly ref struct MetadataWithNamePropositionFactory<TModel, TMetadata>(
+public readonly ref struct MetadataPropositionFactory<TModel, TMetadata>(
     Func<TModel, bool> predicate,
     Func<TModel, IEnumerable<TMetadata>> whenTrue,
     Func<TModel, IEnumerable<TMetadata>> whenFalse)
