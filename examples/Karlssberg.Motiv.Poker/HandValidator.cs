@@ -19,5 +19,5 @@ public class HandValidator() : Spec<Hand>(
         Spec.Build((IEnumerable<Card> cards) => cards.Count() == 1)
             .WhenTrue(cards => $"{cards.First()} is unique")
             .WhenFalse(cards => cards.Select(card => $"{card.Rank} of {card.Suit} is duplicate"))
-            .Create("is unqiue");
+            .Create("is unique");
 };
