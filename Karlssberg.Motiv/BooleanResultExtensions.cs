@@ -49,4 +49,12 @@ internal static class BooleanResultExtensions
             IEnumerable<BooleanResultBase<TMetadata>> results => results,
             _ => Enumerable.Empty<BooleanResultBase<TMetadata>>()
         };
+
+    internal static IEnumerable<Explanation> FindUnderlyingExplanations(this BooleanResultBase booleanResult) =>
+        booleanResult switch
+        {
+            IBooleanOperationResult operationBooleanResult =>
+                operationBooleanResult.UnderlyingAssertionSources.GetExplanations(),
+            _ => booleanResult.Explanation.ToEnumerable()
+        };
 }
