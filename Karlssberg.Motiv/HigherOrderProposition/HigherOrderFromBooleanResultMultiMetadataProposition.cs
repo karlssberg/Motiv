@@ -20,7 +20,6 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
         var isSatisfied = higherOrderPredicate(underlyingResults);
         var causes = new Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]>(() => 
             causeSelector(isSatisfied, underlyingResults)
-                .ElseIfEmpty(underlyingResults)
                 .ToArray());
 
         var metadata = new Lazy<IEnumerable<TMetadata>>(() =>

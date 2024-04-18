@@ -13,7 +13,7 @@ namespace Karlssberg.Motiv.HigherOrderProposition.PropositionBuilders;
 public readonly ref struct TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector = null)
+    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
     /// <summary>Specifies the metadata to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>

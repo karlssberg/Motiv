@@ -53,7 +53,13 @@ public static class HigherOrderSpecBuilderExtensions
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.CountTrue() == n,
-            (_, booleanResults) => booleanResults.WhereTrue());
+            (_, booleanResults) =>
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
     
     public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsNSatisfied<TModel, TUnderlyingMetadata>(
@@ -63,7 +69,13 @@ public static class HigherOrderSpecBuilderExtensions
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.CountTrue() == n,
-            (_, booleanResults) => booleanResults.WhereTrue());
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
     
     public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsNSatisfied<TModel>(
@@ -73,7 +85,13 @@ public static class HigherOrderSpecBuilderExtensions
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.Count(result => result.Satisfied) == n,
-            (_, booleanResults) => booleanResults.Where(result => result.Satisfied));
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .Where(result => result.Satisfied)
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
     
     
@@ -84,7 +102,13 @@ public static class HigherOrderSpecBuilderExtensions
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.CountTrue() >= n,
-            (_, booleanResults) => booleanResults.WhereTrue());
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
     
     public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAtLeastNSatisfied<TModel, TUnderlyingMetadata>(
@@ -94,7 +118,13 @@ public static class HigherOrderSpecBuilderExtensions
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.CountTrue() >= n,
-            (_, booleanResults) => booleanResults.WhereTrue());
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
     
     public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAtLeastNSatisfied<TModel>(
@@ -104,7 +134,13 @@ public static class HigherOrderSpecBuilderExtensions
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.Count(result => result.Satisfied) >= n,
-            (_, booleanResults) => booleanResults.Where(result => result.Satisfied));
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .Where(result => result.Satisfied)
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
     
 
@@ -115,7 +151,13 @@ public static class HigherOrderSpecBuilderExtensions
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.CountTrue() <= n,
-            (_, booleanResults) => booleanResults.WhereTrue());
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
     
     public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
@@ -125,7 +167,13 @@ public static class HigherOrderSpecBuilderExtensions
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.CountTrue() <= n,
-            (_, booleanResults) => booleanResults.WhereTrue());
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
     
     public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAtMostNSatisfied<TModel>(
@@ -135,6 +183,12 @@ public static class HigherOrderSpecBuilderExtensions
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.Count(result => result.Satisfied) <= n,
-            (_, booleanResults) => booleanResults.Where(result => result.Satisfied));
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .Where(result => result.Satisfied)
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
 }

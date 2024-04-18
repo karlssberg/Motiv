@@ -20,7 +20,6 @@ internal sealed class HigherOrderFromBooleanResultExplanationProposition<TModel,
         
         var causes = new Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]>(() => 
             causeSelector(isSatisfied, underlyingResults)
-                .ElseIfEmpty(underlyingResults)
                 .ToArray());
         
         var assertion = new Lazy<string>(() =>

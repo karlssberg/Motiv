@@ -16,7 +16,7 @@ internal static class Causes
         var trueOperands = trueAndFalseOperands.ElementAtOrDefault(0) ?? [];
         var falseOperands = trueAndFalseOperands.ElementAtOrDefault(1) ?? [];
 
-        return isSatisfied switch
+        var candidateCauses = isSatisfied switch
         {
             true when higherOrderPredicate(trueOperands) => trueOperands,
             true when higherOrderPredicate(falseOperands) => falseOperands,
@@ -24,6 +24,9 @@ internal static class Causes
             false when !higherOrderPredicate(falseOperands) && falseOperands.Length > 0 => falseOperands,
             _ => operandResultArray
         };
+
+        return candidateCauses
+            .ElseIfEmpty(operandResultArray);
     }
     
     internal static IEnumerable<ModelResult<TModel>> Get<TModel>(
@@ -40,7 +43,7 @@ internal static class Causes
         var trueOperands = trueAndFalseOperands.ElementAtOrDefault(0) ?? [];
         var falseOperands = trueAndFalseOperands.ElementAtOrDefault(1) ?? [];
 
-        return isSatisfied switch
+        var candidateCauses = isSatisfied switch
         {
             true when higherOrderPredicate(trueOperands) => trueOperands,
             true when higherOrderPredicate(falseOperands) => falseOperands,
@@ -48,6 +51,9 @@ internal static class Causes
             false when !higherOrderPredicate(falseOperands) && falseOperands.Length > 0 => falseOperands,
             _ => operandResultArray
         };
+        
+        return candidateCauses
+            .ElseIfEmpty(operandResultArray);
     }
     
 }
