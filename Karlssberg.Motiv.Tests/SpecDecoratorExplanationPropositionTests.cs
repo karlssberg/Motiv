@@ -76,20 +76,20 @@ public class SpecDecoratorExplanationPropositionTests
 
         var secondSpec = Spec
             .Build(underlying)
-            .WhenTrue(model => 3)
+            .WhenTrue(_ => 3)
             .WhenFalse(4)
             .Create("second spec");
 
         var thirdSpec = Spec
             .Build(underlying)
             .WhenTrue(5)
-            .WhenFalse(model => 6)
+            .WhenFalse(_ => 6)
             .Create("third spec");
 
         var fourthSpec = Spec
             .Build(underlying)
-            .WhenTrue(model => 7)
-            .WhenFalse(model => 8)
+            .WhenTrue(_ => 7)
+            .WhenFalse(_ => 8)
             .Create("fourth spec");
 
         var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;

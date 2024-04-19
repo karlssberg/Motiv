@@ -22,7 +22,7 @@ internal sealed class XOrBooleanResult<TMetadata>(
 
     BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
     
-    BooleanResultBase? IBinaryBooleanOperationResult.Right => Right;
+    BooleanResultBase IBinaryBooleanOperationResult.Right => Right;
 
     public override MetadataTree<TMetadata> MetadataTree => CreateMetadataTree();
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();

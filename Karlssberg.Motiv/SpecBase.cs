@@ -17,7 +17,6 @@ namespace Karlssberg.Motiv;
 /// specifications, which together ultimately model the desired logical proposition.
 /// </summary>
 /// <typeparam name="TModel">The model type that the specification will evaluate against</typeparam>
-/// <typeparam name="TMetadata">The type of the metadata to associate with the predicate</typeparam>
 public abstract class SpecBase<TModel>
 {
     /// <summary>Prevents the external instantiation of the <see cref="SpecBase{TModel,TMetadata}" /> class.</summary>

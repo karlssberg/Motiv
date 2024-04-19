@@ -185,16 +185,6 @@ public static class EnumerableExtensions
             .GetAllRootAssertions()
             .ElseIfEmpty(result.Assertions));
     
-    private static IEnumerable<TMetadata> GetMetadataAtDepth<TMetadata>(
-        this IEnumerable<MetadataTree<TMetadata>> metadataTrees,
-        int atDepth) =>
-        atDepth switch
-        {
-            > 0 => metadataTrees.GetMetadataAtDepth(atDepth - 1),
-            0 => metadataTrees.SelectMany(metadataTree => metadataTree),
-            _ => throw new ArgumentOutOfRangeException(nameof(atDepth), "Depth must be a non-negative integer.")
-        };
-    
     internal static IEnumerable<TMetadata> GetRootMetadata<TMetadata>(
         this BooleanResultBase<TMetadata> result) =>
         result.MetadataTree
@@ -249,13 +239,13 @@ public static class EnumerableExtensions
 
         return true;
     }
-    
-    internal static IEnumerable<BooleanResultBase> AggregateUnderlyingCauses(
-        this IEnumerable<BooleanResultBase> underlyigRensult,
-        int atDepth = 0) =>
-        underlyigRensult.SelectMany(result => AggregateUnderlyingCauses(result,atDepth));
 
-    internal static IEnumerable<BooleanResultBase> AggregateUnderlyingCauses(
+    private static IEnumerable<BooleanResultBase> AggregateUnderlyingCauses(
+        this IEnumerable<BooleanResultBase> underlyingResult,
+        int atDepth = 0) =>
+        underlyingResult.SelectMany(result => AggregateUnderlyingCauses(result,atDepth));
+
+    private static IEnumerable<BooleanResultBase> AggregateUnderlyingCauses(
         this BooleanResultBase result,
         int atDepth = 0) =>
         result switch
@@ -269,7 +259,7 @@ public static class EnumerableExtensions
         this IEnumerable<BooleanResultBase> results) =>
         results.SelectMany(AggregateBinaryOperationResults);
 
-    internal static IEnumerable<BooleanResultBase> AggregateBinaryOperationResults(
+    private static IEnumerable<BooleanResultBase> AggregateBinaryOperationResults(
         this BooleanResultBase result,
         int atDepth = 0) =>
         result.Underlying.SelectMany(underlyingResult => 
@@ -277,14 +267,14 @@ public static class EnumerableExtensions
             {
                 IBinaryBooleanOperationResult => underlyingResult.AggregateBinaryOperationResults(atDepth),
                 _ when atDepth > 0 => underlyingResult.AggregateBinaryOperationResults(atDepth - 1),
-                _ when atDepth <= 0 => result.Underlying,
+                _ => result.Underlying,
             });
 
-    internal static IEnumerable<BooleanResultBase<TMetadata>> AggregateBinaryOperationResults<TMetadata>(
+    private static IEnumerable<BooleanResultBase<TMetadata>> AggregateBinaryOperationResults<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results.SelectMany(AggregateBinaryOperationResults);
 
-    internal static IEnumerable<BooleanResultBase<TMetadata>> AggregateBinaryOperationResults<TMetadata>(
+    private static IEnumerable<BooleanResultBase<TMetadata>> AggregateBinaryOperationResults<TMetadata>(
         this BooleanResultBase<TMetadata> result) =>
         result switch
         {

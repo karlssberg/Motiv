@@ -9,7 +9,6 @@ namespace Karlssberg.Motiv.HigherOrderProposition.PropositionBuilders;
 /// proposition that covers every possibility, so instead it is done on a case-by-case basis.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-/// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
 public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel>(
     Func<TModel, bool> predicate,
     Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,

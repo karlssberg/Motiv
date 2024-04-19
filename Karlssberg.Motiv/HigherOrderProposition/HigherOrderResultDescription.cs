@@ -31,7 +31,7 @@ internal sealed class HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
             var reasonFrequencyPair = _causes
                 .OrderByDescending(result => result.Satisfied)
                 .Select(result => result.Description.Reason)
-                .GroupBy(reason => reason)
+                .GroupBy(causeReason => causeReason)
                 .Select(grouping => (Reason: grouping.Key, Count: grouping.Count()))
                 .OrderByDescending(grouping => grouping.Count)
                 .ToArray();
@@ -44,10 +44,10 @@ internal sealed class HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
             return reasonFrequencyPair
                 .Select(item =>
                 {
-                    var (reason, count) = item;
+                    var (itemReason, count) = item;
                     var countAsText = $"{count}x ".PadRight(indentSize);
 
-                    return $"{countAsText}{reason.IndentAfterFirstLine()}";
+                    return $"{countAsText}{itemReason.IndentAfterFirstLine()}";
                 })
                 .JoinLines();
         }

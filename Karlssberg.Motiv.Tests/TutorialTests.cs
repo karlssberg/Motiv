@@ -57,8 +57,8 @@ public class TutorialTests
     {
         var isEven = Spec
             .Build<int>(n => n % 2 == 0)
-            .WhenTrue(n => new { English = "the number is even", Spanish = "el número es par" })
-            .WhenFalse(n => new { English = "the number is odd", Spanish = "el número es impar" })
+            .WhenTrue(_ => new { English = "the number is even", Spanish = "el número es par" })
+            .WhenFalse(_ => new { English = "the number is odd", Spanish = "el número es impar" })
             .Create("is even number");
 
         isEven.IsSatisfiedBy(2).Satisfied.Should().BeTrue();

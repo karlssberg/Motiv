@@ -26,7 +26,7 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     /// Specifies an assertion to yield when the condition is true.
     /// </summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
-    /// <returns>An instance of <see cref="FalseAssertionWithPropositionUnresolvedBooleanResultPredicateSpecBuilder{TModel}" />.</returns>
+    /// <returns>An instance of <see cref="FalseAssertionExplanationPropositionBuilder{TModel, TUnderlyingMetadata}" />.</returns>
     public FalseAssertionExplanationPropositionBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         Func<TModel, string> trueBecause)
     {
@@ -69,7 +69,6 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     /// <summary>
     /// Specifies a metadata factory function to use when the condition is true.
     /// </summary>
-    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
     public FalseMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrue(
@@ -84,7 +83,6 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     /// <summary>
     /// Specifies a metadata factory function to use when the condition is true.
     /// </summary>
-    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
     public FalseMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrue(

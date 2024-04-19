@@ -39,8 +39,6 @@ public sealed class MetadataTree<TMetadata>(
 
     public override string ToString() => GetDebugDisplay();
     
-    private string Debug => GetDebugDisplay();
-
     private string GetDebugDisplay()
     {
         return _metadataCollection switch
@@ -62,7 +60,7 @@ public sealed class MetadataTree<TMetadata>(
             IEnumerable<DateTime> dateTimes => dateTimes.Serialize(),
             IEnumerable<TimeSpan> timeSpans => timeSpans.Serialize(),
             _ when typeof(TMetadata).IsEnum => _metadataCollection.Serialize(),
-            _ => base.ToString()
+            _ => base.ToString() ?? ""
         };
     }
 }

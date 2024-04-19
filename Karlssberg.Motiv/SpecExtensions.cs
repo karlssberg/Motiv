@@ -1,6 +1,4 @@
-﻿using Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders;
-
-namespace Karlssberg.Motiv;
+﻿namespace Karlssberg.Motiv;
 
 /// <summary>
 /// Provides extension methods for predicates. These methods convert predicates into propositions.

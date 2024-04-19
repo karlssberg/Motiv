@@ -167,13 +167,11 @@ public class AndSpecTests
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
-        ;
 
         var right = Spec.Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
-        ;
 
         var expected = $"{left.Description} & {right.Description}";
 

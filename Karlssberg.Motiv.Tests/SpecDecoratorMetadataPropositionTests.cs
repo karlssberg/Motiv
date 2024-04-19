@@ -18,7 +18,7 @@ public class SpecDecoratorMetadataPropositionTests
         params string[] expected)
     {
         var underlying = Spec
-            .Build<string>(m => isSatisfied)
+            .Build<string>(_ => isSatisfied)
             .WhenTrue(100)
             .WhenFalse(-100)
             .Create("is underlying true");
@@ -66,7 +66,7 @@ public class SpecDecoratorMetadataPropositionTests
     {
         int[] expectation = [expectedA, expectedB, expectedC, expectedD];
         var underlying = Spec
-            .Build<string>(m => isSatisfied)
+            .Build<string>(_ => isSatisfied)
             .WhenTrue(100)
             .WhenFalse(-100)
             .Create("is underlying true");
@@ -117,7 +117,7 @@ public class SpecDecoratorMetadataPropositionTests
     {
         int[] expectation = [expectedA, expectedB, expectedC, expectedD];
         var underlying = Spec
-            .Build<string>(m => isSatisfied)
+            .Build<string>(_ => isSatisfied)
             .WhenTrue(trueReason)
             .WhenFalse(falseReason)
             .Create();

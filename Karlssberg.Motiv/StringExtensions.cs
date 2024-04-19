@@ -64,7 +64,7 @@ public static class StringExtensions
         this IEnumerable<T> collection,
         string conjunction,
         bool useOxfordComma = true) =>
-        string.Concat(collection.SerializeToEnumerable(",", conjunction, useOxfordComma));
+        string.Concat(collection.SerializeToEnumerable(",", conjunction));
 
     /// <summary>Serializes a collection to a human-readable string.</summary>
     /// <param name="collection">The collection to serialize.</param>
@@ -84,8 +84,7 @@ public static class StringExtensions
         var strings = collection
             .SerializeToEnumerable(
                 delimiter,
-                conjunction,
-                useOxfordComma);
+                conjunction);
 
         return string.Concat(strings);
     }
@@ -93,8 +92,7 @@ public static class StringExtensions
     private static IEnumerable<string?> SerializeToEnumerable<T>(
         this IEnumerable<T> collection,
         string delimiter,
-        string? conjunction,
-        bool useOxfordDelimiter = true)
+        string? conjunction)
     {
         const int bufferSize = 2;
         var buffer = new Queue<string?>(bufferSize);

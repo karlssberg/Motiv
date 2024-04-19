@@ -221,7 +221,7 @@ public class AtMostNSatisfiedSpecTests
             .Build((bool m) => m)
             .WhenTrue("is satisfied")
             .WhenFalse("is not satisfied")
-            .Create();;
+            .Create();
 
         var sut = Spec
             .Build(underlyingSpec)

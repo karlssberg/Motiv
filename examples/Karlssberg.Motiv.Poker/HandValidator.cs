@@ -3,7 +3,7 @@
 public class HandValidator() : Spec<Hand>(
     Spec.Build((Hand hand) => HandHasUniqueCards(hand))
         .WhenTrue("has 5 unique cards")
-        .WhenFalse((hand, result) => result.Assertions)
+        .WhenFalse((_, result) => result.Assertions)
         .Create())
 {
     private static BooleanResultBase<string> HandHasUniqueCards(Hand hand)
