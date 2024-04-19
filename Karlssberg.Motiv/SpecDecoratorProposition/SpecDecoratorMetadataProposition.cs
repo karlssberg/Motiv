@@ -34,7 +34,7 @@ internal sealed class SpecDecoratorMetadataProposition<TModel, TMetadata, TUnder
         
         var metadataTree = new Lazy<MetadataTree<TMetadata>>(() => 
             new MetadataTree<TMetadata>(metadata.Value, 
-                booleanResult.ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>()));
+                booleanResult.MetadataTree.ToEnumerable() as IEnumerable<MetadataTree<TMetadata>> ?? []));
 
         return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,

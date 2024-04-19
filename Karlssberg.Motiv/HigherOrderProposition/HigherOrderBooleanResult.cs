@@ -12,8 +12,7 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
     private readonly Lazy<MetadataTree<TMetadata>> _metadataTree = new (() =>
         new MetadataTree<TMetadata>(
             metadataFn(),
-            causesFn().SelectMany(cause => cause
-                    .ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>())));
+            causesFn().SelectMany(cause => cause.MetadataTree.ToEnumerable() as IEnumerable<MetadataTree<TMetadata>> ?? [])));
     
     private readonly Lazy<Explanation> _explanation = 
         new (() => new Explanation(assertionsFn(), causesFn()));
@@ -24,12 +23,12 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
     public override IEnumerable<BooleanResultBase> Underlying => underlyingResults;
 
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
-        underlyingResults.ResolveUnderlyingWithMetadata<TMetadata, TUnderlyingMetadata>();
+        underlyingResults as IEnumerable<BooleanResultBase<TMetadata>> ?? [];
     
     public override IEnumerable<BooleanResultBase> Causes => causesFn();
     
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
-        causesFn().ResolveCausesWithMetadata<TMetadata, TUnderlyingMetadata>();
+        causesFn() as IEnumerable<BooleanResultBase<TMetadata>> ?? [];
     
     public override bool Satisfied { get; } = isSatisfied;
 

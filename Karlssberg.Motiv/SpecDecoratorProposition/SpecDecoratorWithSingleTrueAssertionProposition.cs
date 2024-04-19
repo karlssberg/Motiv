@@ -31,7 +31,7 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
 
         var metadataTree = new Lazy<MetadataTree<string>>(() => 
             new MetadataTree<string>(assertion.Value, 
-                booleanResult.ResolveMetadataTrees<string, TUnderlyingMetadata>()));
+                booleanResult.MetadataTree.ToEnumerable() as IEnumerable<MetadataTree<string>> ?? []));
 
         return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
             booleanResult,
