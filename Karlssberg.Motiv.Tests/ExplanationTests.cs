@@ -224,7 +224,7 @@ public class ExplanationTests
     [Theory]
     [InlineData(1, "odd")]
     [InlineData(2, "even")]
-    public void Should_forward_assertions_when_using_basic_propositions(int model, string expected)
+    public void Should_forward_assertions_when_using_basic_explanation_propositions(int model, string expected)
     {
         var isEven =
             Spec.Build((int i) => i % 2 == 0)
@@ -251,7 +251,7 @@ public class ExplanationTests
     [Theory]
     [InlineData(1, NumberType.Odd, "!is even wrapper 2")]
     [InlineData(2, NumberType.Even, "is even wrapper 2")]
-    public void Should_forward_metadata_when_using_basic_propositions(
+    public void Should_forward_assertions_when_using_basic_metadata_propositions(
         int model,
         NumberType expectedMetadata,
         string expectedAssertion)
