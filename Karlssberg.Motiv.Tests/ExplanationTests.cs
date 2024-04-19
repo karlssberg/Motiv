@@ -232,19 +232,25 @@ public class ExplanationTests
                 .WhenFalse("odd")
                 .Create();
         
-        var isEvenWrapper = 
+        var isEvenWrapper1 = 
             Spec.Build(isEven)
                 .Create("is even wrapper");
         
-        var result = isEvenWrapper.IsSatisfiedBy(model);
+        var isEvenWrapper2 =
+            Spec.Build(isEvenWrapper1)
+                .WhenTrue((_, result) => result.Assertions)
+                .WhenFalse((_, result) => result.Assertions)
+                .Create("is even wrapper 2");
+        
+        var result = isEvenWrapper2.IsSatisfiedBy(model);
         
         result.Assertions.Should().BeEquivalentTo(expected);
         result.Metadata.Should().BeEquivalentTo(expected);
     }
     
     [Theory]
-    [InlineData(1, NumberType.Odd, "!is even wrapper")]
-    [InlineData(2, NumberType.Even, "is even wrapper")]
+    [InlineData(1, NumberType.Odd, "!is even wrapper 2")]
+    [InlineData(2, NumberType.Even, "is even wrapper 2")]
     public void Should_forward_metadata_when_using_basic_propositions(
         int model,
         NumberType expectedMetadata,
@@ -256,11 +262,17 @@ public class ExplanationTests
                 .WhenFalse(NumberType.Odd)
                 .Create("is even");
         
-        var isEvenWrapper = 
+        var isEvenWrapper1 = 
             Spec.Build(isEven)
                 .Create("is even wrapper");
         
-        var result = isEvenWrapper.IsSatisfiedBy(model);
+        var isEvenWrapper2 =
+            Spec.Build(isEvenWrapper1)
+                .WhenTrue((_, result) => result.Metadata)
+                .WhenFalse((_, result) => result.Metadata)
+                .Create("is even wrapper 2");
+        
+        var result = isEvenWrapper2.IsSatisfiedBy(model);
         
         result.Metadata.Should().BeEquivalentTo([expectedMetadata]);
         result.Assertions.Should().BeEquivalentTo([expectedAssertion]);

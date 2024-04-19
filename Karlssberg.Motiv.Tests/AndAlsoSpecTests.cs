@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
 using FluentAssertions;
 
 namespace Karlssberg.Motiv.Tests;
@@ -178,5 +179,68 @@ public class AndAlsoSpecTests
         var act = sut.IsSatisfiedBy(model);
 
         act.Description.Detailed.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineAutoData(false, false, false)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(true, false, false)]
+    [InlineAutoData(true, true, true)]
+    public void Should_perform_AndAlso_on_specs_with_different_metadata(
+        bool leftValue,
+        bool rightValue,
+        bool expectedSatisfied,
+        Guid leftTrue,
+        Guid leftFalse,
+        int  rightTrue,
+        int  rightFalse)
+    {
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(leftTrue)
+                .WhenFalse(leftFalse)
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(rightTrue)
+                .WhenFalse(rightFalse)
+                .Create("right");
+
+        var sut = left.AndAlso(right);
+        
+        var act = sut.IsSatisfiedBy("");
+
+        act.Satisfied.Should().Be(expectedSatisfied);
+    }
+    
+    [Theory]
+    [InlineData(false, false, "!left")]
+    [InlineData(false, true, "!left")]
+    [InlineData(true, false, "!right")]
+    [InlineData(true, true, "left", "right")]
+    public void Should_perform_AndAlso_on_specs_with_different_metadata_and_preserve_assertions(
+        bool leftValue,
+        bool rightValue,
+        params string[] expectedAssertions)
+    {
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(new Uri("http://true"))
+                .WhenFalse(new Uri("http://false"))
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(new Regex("true"))
+                .WhenFalse(new Regex("false"))
+                .Create("right");
+
+        var sut = left.AndAlso(right);
+        
+        var act = sut.IsSatisfiedBy("");
+
+        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+        act.Metadata.Should().BeEquivalentTo(expectedAssertions);
     }
 }
