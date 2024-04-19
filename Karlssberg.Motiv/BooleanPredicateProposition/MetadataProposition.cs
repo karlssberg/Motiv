@@ -40,7 +40,7 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
         return new PropositionBooleanResult<TMetadata>(
             isSatisfied,
             new MetadataTree<TMetadata>(metadata),
-            new Explanation(assertion),
+            new Explanation(assertion, []),
             Description.ToReason(isSatisfied));
     }
 

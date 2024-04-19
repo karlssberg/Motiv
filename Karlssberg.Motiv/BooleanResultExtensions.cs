@@ -2,13 +2,6 @@
 
 internal static class BooleanResultExtensions
 {
-    internal static IEnumerable<MetadataTree<TMetadata>> ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>(
-        this IEnumerable<BooleanResultBase<TUnderlyingMetadata>> underlyingResults) =>
-        underlyingResults switch
-        {
-            IEnumerable<BooleanResultBase<TMetadata>> results => results.Select(result => result.MetadataTree),
-            _ => Enumerable.Empty<MetadataTree<TMetadata>>()
-        };
 
     internal static IEnumerable<MetadataTree<TMetadata>> ResolveMetadataTrees<TMetadata, TUnderlyingMetadata>(
         this BooleanResultBase<TUnderlyingMetadata> underlyingResult) =>
@@ -30,7 +23,7 @@ internal static class BooleanResultExtensions
         this IEnumerable<BooleanResultBase<TUnderlyingMetadata>> booleanResults) =>
         booleanResults switch
         {
-            IEnumerable<BooleanResultBase<TMetadata>> results => results.SelectMany(result => result.CausesWithMetadata),
+            IEnumerable<BooleanResultBase<TMetadata>> results => results,
             _ => Enumerable.Empty<BooleanResultBase<TMetadata>>()
         };
     

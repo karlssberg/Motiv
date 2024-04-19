@@ -14,7 +14,7 @@ public class ExplanationBooleanResultTests
         var result = new PropositionBooleanResult<string>(
             isSatisfied, 
             new MetadataTree<string>(because), 
-            new Explanation(because),
+            new Explanation(because, []),
             because);
 
         var act = (bool)result;
@@ -32,13 +32,13 @@ public class ExplanationBooleanResultTests
         var leftResult = new PropositionBooleanResult<string>(
             left, 
             new MetadataTree<string>(left.ToString()), 
-            new Explanation(left.ToString()),
+            new Explanation(left.ToString(), []),
             left.ToString());
         
         var rightResult = new  PropositionBooleanResult<string>(
             right, 
             new MetadataTree<string>(right.ToString()), 
-            new Explanation(right.ToString()),
+            new Explanation(right.ToString(), []),
             right.ToString());
 
         var act = leftResult & rightResult;
@@ -61,13 +61,13 @@ public class ExplanationBooleanResultTests
         var leftResult = new PropositionBooleanResult<string>(
             left, 
             new MetadataTree<string>(left.ToString()), 
-            new Explanation(left.ToString()),
+            new Explanation(left.ToString(), []),
             left.ToString());
         
         var rightResult = new  PropositionBooleanResult<string>(
             right, 
             new MetadataTree<string>(right.ToString()), 
-            new Explanation(right.ToString()),
+            new Explanation(right.ToString(), []),
             right.ToString());
 
         var act = leftResult | rightResult;
@@ -90,13 +90,13 @@ public class ExplanationBooleanResultTests
         var leftResult = new PropositionBooleanResult<string>(
             left, 
             new MetadataTree<string>(left.ToString()), 
-            new Explanation(left.ToString()),
+            new Explanation(left.ToString(), []),
             left.ToString());
         
         var rightResult = new  PropositionBooleanResult<string>(
             right, 
             new MetadataTree<string>(right.ToString()), 
-            new Explanation(right.ToString()),
+            new Explanation(right.ToString(), []),
             right.ToString());
 
         var act = leftResult ^ rightResult;
@@ -115,7 +115,7 @@ public class ExplanationBooleanResultTests
         var operandResult = new  PropositionBooleanResult<string>(
             operand, 
             new MetadataTree<string>(operand.ToString()), 
-            new Explanation(operand.ToString()),
+            new Explanation(operand.ToString(), []),
             operand.ToString());
 
         var act = !operandResult;
@@ -138,6 +138,8 @@ public class ExplanationBooleanResultTests
 
         var spec = Spec
             .Build(underlyingSpec)
+            .WhenTrue("top-level true")
+            .WhenFalse("top-level false")
             .Create("top-level proposition");
 
         var act = spec.IsSatisfiedBy(model);

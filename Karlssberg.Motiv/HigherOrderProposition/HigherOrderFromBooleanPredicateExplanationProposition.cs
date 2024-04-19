@@ -34,7 +34,7 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
             new MetadataTree<string>(assertion.Value));
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertion.Value));
+            new Explanation(assertion.Value, []));
 
         return new HigherOrderFromBooleanPredicateBooleanResult<string>(
             isSatisfied,

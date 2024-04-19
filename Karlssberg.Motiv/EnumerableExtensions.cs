@@ -71,22 +71,9 @@ public static class EnumerableExtensions
         this IEnumerable<BooleanResultBase> causes)
     {
         var causeArray = causes.ToArray();
-
         var assertions = causeArray.GetAssertions();
 
-        var underlying = causeArray
-            .SelectMany(cause =>
-                cause switch
-                {
-                    IBooleanOperationResult operationBooleanResult =>
-                        operationBooleanResult.UnderlyingAssertionSources.GetExplanations(),
-                    _ => cause.Explanation.ToEnumerable()
-                });
-
-        return new Explanation(assertions)
-        {
-            Underlying = underlying
-        };
+        return new Explanation(assertions, causeArray);
     }
     
     internal static IEnumerable<Explanation> GetExplanations(this IEnumerable<BooleanResultBase> results) =>

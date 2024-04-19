@@ -4,23 +4,6 @@ namespace Karlssberg.Motiv;
 
 internal static class WrapException
 {
-    internal static TResult IfIsSatisfiedByMethodFails<TModel, TMetadata, TResult>(
-        SpecBase<TModel, TMetadata> spec,
-        Func<TResult> func) =>
-        IfIsSatisfiedByMethodFails<TModel, object?, TMetadata, object?, TResult>(spec, null, func);
-
-    internal static TResult IfIsSatisfiedByMethodFails<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata, TResult>(
-        SpecBase<TModel, TMetadata> spec,
-        SpecBase<TUnderlyingModel, TUnderlyingMetadata>? underlyingSpecification,
-        Func<TResult> func)
-    {
-        return TryCatchThrow(func, ex =>
-        {
-            var message = GetErrorMessageForIsSatisfiedByCall(spec, underlyingSpecification, ex);
-            return new SpecException(message, ex);
-        });
-    }
-
     internal static TResult CatchFuncExceptionOnBehalfOfSpecType<TModel, TMetadata, TResult>(
         SpecBase<TModel, TMetadata> underlyingSpec,
         Func<TResult> tryThisFn,
@@ -31,36 +14,7 @@ internal static class WrapException
             var message = CreateErrorMessageForPredicateExceptionOnBehalfOfSpecType(underlyingSpec, callbackName, ex);
             throw new SpecException(message, ex);
         });
-    }
-
-    private static string   GetErrorMessageForIsSatisfiedByCall<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata>(
-        SpecBase<TModel, TMetadata> spec,
-        SpecBase<TUnderlyingModel, TUnderlyingMetadata>? underlyingSpecification,
-        Exception ex)
-    {
-        const string vowels = "AEIOU";
-        var exceptionTypeName = ex.GetType().Name;
-        var article = vowels.Contains(exceptionTypeName[0]) ? "An" : "A";
-        var descriptionPhrase = GetDescriptionPhrase(spec, underlyingSpecification);
-
-        return string.IsNullOrWhiteSpace(ex.Message)
-            ? $"{article} '{exceptionTypeName}' was thrown while evaluating the specification {descriptionPhrase}."
-            : $"{article} '{exceptionTypeName}' was thrown with the message '{ex.Message}' while evaluating the specification {descriptionPhrase}.";
-    }
-    
-    private static string   GetErrorMessageForIsSatisfiedByCall<TModel, TMetadata>(
-        SpecBase<TModel, TMetadata> spec,
-        Exception ex)
-    {
-        const string vowels = "AEIOU";
-        var exceptionTypeName = ex.GetType().Name;
-        var article = vowels.Contains(exceptionTypeName[0]) ? "An" : "A";
-        var descriptionPhrase = DescribeType(spec);
-
-        return string.IsNullOrWhiteSpace(ex.Message)
-            ? $"{article} '{exceptionTypeName}' was thrown while evaluating the specification {descriptionPhrase}."
-            : $"{article} '{exceptionTypeName}' was thrown with the message '{ex.Message}' while evaluating the specification {descriptionPhrase}.";
-    }
+    } 
 
     private static string CreateErrorMessageForPredicateExceptionOnBehalfOfSpecType<TModel, TMetadata>(
         SpecBase<TModel, TMetadata> underlyingSpec,
@@ -75,33 +29,6 @@ internal static class WrapException
         return string.IsNullOrWhiteSpace(ex.Message)
             ? $"{article} '{exceptionTypeName}' was thrown while evaluating the '{callerName}' parameter that was supplied to Spec<{genericParams}> (aka '{underlyingSpec.Description}')."
             : $"{article} '{exceptionTypeName}' was thrown with the message '{ex.Message}' while evaluating the '{callerName}' parameter that was supplied to Spec<{genericParams}> (aka '{underlyingSpec.Description}').";
-    }
-
-    private static string GetDescriptionPhrase<TModel, TUnderlyingModel, TMetadata, TUnderlyingMetadata>(
-        SpecBase<TModel, TMetadata> spec,
-        SpecBase<TUnderlyingModel, TUnderlyingMetadata>? underlyingSpecification)
-    {
-        return underlyingSpecification switch
-        {
-            null => DescribeType(spec),
-            not null => $"{DescribeType(underlyingSpecification)}. The specification is expressed as '{spec.Description}'"
-        };
-    }
-
-    private static string DescribeType<TModel, TMetadata>(SpecBase<TModel, TMetadata> spec) => ConvertToPrettyTypeName(spec.GetType());
-
-    private static string ConvertToPrettyTypeName(Type specificationType)
-    {
-        if (!specificationType.IsGenericType)
-            return specificationType.Name;
-
-        var nameParts = specificationType.Name.Split('`');
-
-        var truncatedName = nameParts.First();
-
-        var serializedGenericArgs = SerializedGenericArguments(specificationType);
-
-        return $"{truncatedName}<{serializedGenericArgs}>";
     }
 
     private static string SerializedGenericArguments(Type specificationType)

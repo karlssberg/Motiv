@@ -5,25 +5,46 @@ namespace Karlssberg.Motiv;
 [DebuggerDisplay("{Debug}")]
 public sealed class Explanation
 {
-    private readonly Lazy<IEnumerable<string>> _lazyDistinctAssertions;
-
-    public Explanation(string assertion) 
-        : this(assertion.ToEnumerable())
-    {
-    }
-
-    public Explanation(IEnumerable<string> assertions) : this(assertions.ToArray())
+    public Explanation(string assertion, IEnumerable<BooleanResultBase> causes) 
+        : this(assertion.ToEnumerable(), causes)
     {
     }
     
-    public Explanation(ICollection<string> assertions) 
+    public Explanation(IEnumerable<string> assertions, IEnumerable<BooleanResultBase> causes) 
     {
-        _lazyDistinctAssertions = new Lazy<IEnumerable<string>>(assertions.Distinct);
+        var assertionsArray = assertions as string[] ?? assertions.ToArray();
+        var causesArray = causes as BooleanResult[] ?? causes.ToArray();
+
+        Assertions = assertionsArray.Distinct();
+        Underlying = ResolveUnderlying(assertionsArray, causesArray);
     }
 
-    public IEnumerable<string> Assertions => _lazyDistinctAssertions.Value;
-    
-    public IEnumerable<Explanation> Underlying { get; internal set; } = Enumerable.Empty<Explanation>();
+    private static IEnumerable<Explanation> ResolveUnderlying(
+        string[] assertions,
+        BooleanResultBase[] causes)
+    {
+        var underlying = causes
+            .SelectMany(cause =>
+                cause switch
+                {
+                    IBooleanOperationResult => cause.UnderlyingAssertionSources,
+                    _ => cause.ToEnumerable()
+                })
+            .Select(cause => cause.Explanation)
+            .ToArray();
+
+        var underlyingAssertions = underlying.SelectMany(explanation => explanation.Assertions);
+
+        var doesParentEqualChildAssertion = underlyingAssertions.SequenceEqual(assertions);
+
+        return doesParentEqualChildAssertion
+            ? underlying.SelectMany(result => result.Underlying)
+            : underlying;
+    }
+
+    public IEnumerable<string> Assertions { get; }
+
+    public IEnumerable<Explanation> Underlying { get; }
     
     public override string ToString() => Assertions.Serialize();
 

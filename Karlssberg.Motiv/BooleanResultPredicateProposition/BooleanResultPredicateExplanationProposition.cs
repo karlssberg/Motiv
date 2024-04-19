@@ -21,10 +21,7 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
             });
         
         var explanation = new Lazy<Explanation>(() => 
-            new Explanation(assertion.Value)
-            {
-                Underlying = booleanResult.FindUnderlyingExplanations()
-            });
+            new Explanation(assertion.Value, booleanResult.ToEnumerable()));
         
         var metadataTree = new Lazy<MetadataTree<string>>(() => 
             new MetadataTree<string>(

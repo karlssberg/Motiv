@@ -7,7 +7,7 @@ public class BooleanResult(bool satisfied, string assertion) : BooleanResultBase
     public override ResultDescriptionBase Description { get; } =
         new BooleanResultDescription(assertion);
     
-    public override Explanation Explanation { get; } = new (assertion);
+    public override Explanation Explanation => new (assertion, Causes);
     
     public override IEnumerable<BooleanResultBase> Causes { get; } =
         Enumerable.Empty<BooleanResultBase>();
@@ -34,7 +34,7 @@ public class BooleanResult<TMetadata>(
     public override ResultDescriptionBase Description { get; } =
         new BooleanResultDescription(assertion);
     
-    public override Explanation Explanation { get; } = new (assertion);
+    public override Explanation Explanation => new (assertion, Causes);
     
     public override IEnumerable<BooleanResultBase> Causes { get; }  =
         Enumerable.Empty<BooleanResultBase>();

@@ -277,4 +277,43 @@ public class ExplanationTests
         result.Metadata.Should().BeEquivalentTo([expectedMetadata]);
         result.Assertions.Should().BeEquivalentTo([expectedAssertion]);
     }
+    
+    [Theory]
+    [InlineData(2, "even")]
+    [InlineData(3, "odd")]
+    public void Should_not_have_duplicate_explanations_in_underlying_explanations(int model, string expected)
+    {
+        var isEven =
+            Spec.Build((int i) => i % 2 == 0)
+                .WhenTrue("even")
+                .WhenFalse("odd")
+                .Create();
+        
+        var allEven = 
+            Spec.Build(isEven)
+                .AsAllSatisfied()
+                .Create("all even");
+        
+        var firstEven = 
+            Spec.Build(allEven)
+                .Create("first even");
+        
+        var secondEven =
+            Spec.Build(firstEven)
+                .WhenTrue((_, result) => result.Assertions)
+                .WhenFalse((_, result) => result.Assertions)
+                .Create("second even");
+        
+        var thirdEven =
+            Spec.Build(secondEven)
+                .WhenTrue((_, result) => result.Metadata)
+                .WhenFalse((_, result) => result.Metadata)
+                .Create("third even");
+        
+        var result = thirdEven.IsSatisfiedBy([model]);
+       
+        result.Explanation.Assertions.Should().BeEquivalentTo(expected);
+        result.Explanation.Underlying.GetAssertions().Should().NotBeEquivalentTo(expected);
+        result.Explanation.Underlying.SelectMany(explanation => explanation.Underlying).Should().BeEmpty();
+    }
 } 

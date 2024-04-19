@@ -180,4 +180,37 @@ public class HigherOrderMetadataSpecTests
         act.Metadata.Should().BeEquivalentTo([expectedMetadata]);
         act.Satisfied.Should().Be(expected);
     }
+    
+    
+    
+    [Theory]
+    [InlineData(2, 4, 6, 8, "is even")]
+    [InlineData(2, 4, 6, 9, "!is even")]
+    [InlineData(1, 4, 6, 9, "!is even")]
+    [InlineData(1, 3, 6, 9, "!is even")]
+    [InlineData(1, 3, 5, 9, "!is even")]
+    public void Should_identify_the_causes_that_yield_metadata_of_the_same_type(
+        int first, 
+        int second, 
+        int third,
+        int forth,
+        string expectedMetadata)
+    {
+        var underlyingSpec = 
+            Spec.Build<int>(i => i % 2 == 0)
+                .WhenTrue(Metadata.True)
+                .WhenFalse(Metadata.False)
+                .Create("is even");
+
+        var sut =
+            Spec.Build(underlyingSpec)
+                .AsAllSatisfied()
+                .WhenTrue(Metadata.True)
+                .WhenFalse(Metadata.False)
+                .Create("all are even");
+
+        var act = sut.IsSatisfiedBy([first, second, third, forth]);
+            
+        act.CausesWithMetadata.Should().AllSatisfy(x => x.Reason.Should().Be(expectedMetadata));
+    }
 }

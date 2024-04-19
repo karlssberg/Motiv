@@ -34,10 +34,7 @@ public sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata,
         });
         
         var explanation = new Lazy<Explanation>(() => 
-            new Explanation(assertion.Value)
-            {
-                Underlying = booleanResult.FindUnderlyingExplanations()
-            });
+            new Explanation(assertion.Value, booleanResult.ToEnumerable()));
         
         var metadataTree = new Lazy<MetadataTree<TMetadata>>(() => 
             new MetadataTree<TMetadata>(metadata.Value.ToEnumerable(), 

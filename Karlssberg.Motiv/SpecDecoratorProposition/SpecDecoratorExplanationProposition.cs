@@ -21,12 +21,9 @@ internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMet
                 true => trueBecause(model, booleanResult),
                 false => falseBecause(model, booleanResult)
             });
-        
-        var explanation = new Lazy<Explanation>(() => 
-            new Explanation(assertion.Value)
-            {
-                Underlying = booleanResult.FindUnderlyingExplanations()
-            });
+
+        var explanation = new Lazy<Explanation>(() =>
+            new Explanation(assertion.Value, booleanResult.ToEnumerable()));
         
         var metadataTree = new Lazy<MetadataTree<string>>(() => 
             new MetadataTree<string>(assertion.Value.ToEnumerable(), 

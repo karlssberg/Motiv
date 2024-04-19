@@ -83,7 +83,7 @@ public abstract class BooleanResultBase
     /// <summary>Determines whether the this object is equal to another BooleanResultBase object.</summary>
     /// <param name="other">The BooleanResultBase object to compare with the current object.</param>
     /// <returns>true if the current object is equal to the other object; otherwise, false.</returns>
-    public bool Equals(BooleanResultBase other) => Satisfied == other.Satisfied;
+    public bool Equals(BooleanResultBase? other) => Satisfied == other?.Satisfied;
 
     /// <summary>Returns a human-readable description of the tree of conditions that make up this result.</summary>
     /// <returns>A string that describes the tree of conditions that make up this result.</returns>
