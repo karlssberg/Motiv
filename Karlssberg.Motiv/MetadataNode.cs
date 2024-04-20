@@ -30,7 +30,7 @@ public sealed class MetadataNode<TMetadata>
     {
         var causesArray = causes as BooleanResultBase<TMetadata>[] ?? causes.ToArray();
 
-        return causesArray
+        var underlying = causesArray
             .SelectMany(cause =>
                 cause switch
                 {
@@ -39,6 +39,15 @@ public sealed class MetadataNode<TMetadata>
                 })
             .Select(cause => cause.MetadataTier)
             .ToArray();
+        
+        var underlyingMetadata = underlying
+            .SelectMany(metadataNode => metadataNode.Metadata);
+
+        var doesParentEqualChildAssertion = underlyingMetadata.SequenceEqual(metadata);
+
+        return doesParentEqualChildAssertion
+            ? underlying.SelectMany(result => result.Underlying)
+            : underlying;
     }
 
     public MetadataNode(TMetadata metadata, IEnumerable<BooleanResultBase<TMetadata>> causes)

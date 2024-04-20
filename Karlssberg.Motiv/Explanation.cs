@@ -32,7 +32,8 @@ public sealed class Explanation
             .Select(cause => cause.Explanation)
             .ToArray();
 
-        var underlyingAssertions = underlying.SelectMany(explanation => explanation.Assertions);
+        var underlyingAssertions = underlying
+            .SelectMany(explanation => explanation.Assertions);
 
         var doesParentEqualChildAssertion = underlyingAssertions.SequenceEqual(assertions);
 

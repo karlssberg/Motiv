@@ -98,6 +98,9 @@ public static class EnumerableExtensions
             .Where(r => !r.Satisfied)
             .SelectMany(e => e.Assertions);
     
+    public static IEnumerable<TMetadata> GetMetadata<TMetadata>(
+        this IEnumerable<MetadataNode<TMetadata>> results) =>
+        results.SelectMany(e => e.Metadata);
     
     public static IEnumerable<TMetadata> GetMetadata<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
