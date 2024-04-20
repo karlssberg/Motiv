@@ -39,9 +39,10 @@ public sealed class MetadataNode<TMetadata>
                 })
             .Select(cause => cause.MetadataTier)
             .ToArray();
-        
+
         var underlyingMetadata = underlying
-            .SelectMany(metadataNode => metadataNode.Metadata);
+            .SelectMany(metadataNode => metadataNode.Metadata)
+            .Distinct();
 
         var doesParentEqualChildAssertion = underlyingMetadata.SequenceEqual(metadata);
 
