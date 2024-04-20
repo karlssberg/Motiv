@@ -46,7 +46,6 @@ public class NSatisfiedSpecTests
         string expectedShallowAssertionSerialized,
         string expectedDeepAssertionsSerialized)
     {
-        var expectedShallowAssertion = expectedShallowAssertionSerialized.Split(", ").Select(x => x.Trim());
         var expectedDeepAssertions = expectedDeepAssertionsSerialized.Split(", ").Select(x => x.Trim());
         var isEven = Spec
             .Build<int>(n => n % 2 == 0)
@@ -65,8 +64,8 @@ public class NSatisfiedSpecTests
         var result = sut.IsSatisfiedBy([first, second, third, fourth]);
 
         result.Satisfied.Should().Be(expected);
-        result.ExplanationTree.Assertions.Should().BeEquivalentTo(expectedShallowAssertionSerialized);
-        result.ExplanationTree.Underlying.GetAssertions().Should().BeEquivalentTo(expectedDeepAssertions);
+        result.Explanation.Assertions.Should().BeEquivalentTo(expectedShallowAssertionSerialized);
+        result.Explanation.Underlying.GetAssertions().Should().BeEquivalentTo(expectedDeepAssertions);
     }
     
     [Theory]
@@ -113,6 +112,6 @@ public class NSatisfiedSpecTests
             .WhenFalse(false)
             .Create("a pair of even numbers");
 
-        sut.Proposition.Statement.Should().Be("a pair of even numbers");
+        sut.Description.Statement.Should().Be("a pair of even numbers");
     }
 }

@@ -18,7 +18,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
-        result.MetadataTree.Should().ContainSingle(model.ToString());
+        result.Metadata.Should().ContainSingle(model.ToString());
     }
     
     [Theory]
@@ -62,9 +62,9 @@ public class SpecTests
 
         var result = sut.IsSatisfiedBy(model);
         
-        result.MetadataTree.Should().ContainSingle(expectedAssertion);
-        result.MetadataTree.Underlying.SelectMany(metadataTree => metadataTree).Should().BeEquivalentTo(model.ToString());
-        result.ExplanationTree.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        result.Metadata.Should().ContainSingle(expectedAssertion);
+        result.MetadataTier.Underlying.SelectMany(m => m.Metadata).Should().BeEquivalentTo(model.ToString());
+        result.Explanation.Assertions.Should().BeEquivalentTo(expectedAssertion);
         result.Description.Reason.Should().Be(expectedDescription);
     }
 
@@ -80,7 +80,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(null);
 
         result.Satisfied.Should().BeTrue();
-        result.MetadataTree.Should().ContainSingle(true.ToString());
+        result.Metadata.Should().ContainSingle(true.ToString());
     }
 
     [Theory]
@@ -97,7 +97,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
-        result.MetadataTree.Should().ContainSingle(model.ToString());
+        result.Metadata.Should().ContainSingle(model.ToString());
     }
 
     [Theory]
@@ -120,7 +120,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
-        result.MetadataTree.Should().ContainSingle(model.ToString());
+        result.Metadata.Should().ContainSingle(model.ToString());
     }
 
     [Fact]
@@ -135,7 +135,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(null);
 
         result.Satisfied.Should().Be(true);
-        result.MetadataTree.Should().ContainSingle(true.ToString());
+        result.Metadata.Should().ContainSingle(true.ToString());
     }
 
     [Fact]
@@ -218,7 +218,7 @@ public class SpecTests
             .WhenFalse("is not null")
             .Create();
 
-        var act = sut.Proposition.Detailed;
+        var act = sut.Description.Detailed;
 
         act.Should().Be("is null");
     }
@@ -236,7 +236,7 @@ public class SpecTests
             .Build(underlying)
             .Create("top-level proposition");
 
-        var act = sut.Proposition.Detailed;
+        var act = sut.Description.Detailed;
 
         act.Should().Be(
             """

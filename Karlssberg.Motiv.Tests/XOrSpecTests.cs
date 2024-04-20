@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Text.RegularExpressions;
+using FluentAssertions;
 
 namespace Karlssberg.Motiv.Tests;
 
@@ -32,9 +33,9 @@ public class XOrSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(expected);
-        result.MetadataTree.Should().HaveCount(leftResult == rightResult ? 1 : 2);
-        result.MetadataTree.Should().Contain(leftResult);
-        result.MetadataTree.Should().Contain(rightResult);
+        result.Metadata.Should().HaveCount(leftResult == rightResult ? 1 : 2);
+        result.Metadata.Should().Contain(leftResult);
+        result.Metadata.Should().Contain(rightResult);
     }
 
     [Theory]
@@ -180,11 +181,11 @@ public class XOrSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var expected = $"{left.Proposition} ^ {right.Proposition}";
+        var expected = $"{left.Description} ^ {right.Description}";
 
         var sut = left ^ right;
 
-        sut.Proposition.Statement.Should().Be(expected);
+        sut.Description.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -207,34 +208,12 @@ public class XOrSpecTests
             .WhenFalse(false.ToString())
             .Create();
 
-        var expected = $"{left.Proposition} ^ {right.Proposition}";
+        var expected = $"{left.Description} ^ {right.Description}";
 
         var sut = left ^ right;
 
-        sut.Proposition.Statement.Should().Be(expected);
+        sut.Description.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
-    }
-
-    [Theory]
-    [InlineAutoData]
-    public void Should_wrap_thrown_exceptions_in_a_specification_exception(
-        string model)
-    {
-        var normalSpec = Spec
-            .Build<object>(_ => true)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
-            .Create();
-
-        var throwingSpec = new ThrowingSpec<object, string>(
-            "should always throw",
-            new Exception("should be wrapped"));
-
-        var sut = throwingSpec ^ normalSpec;
-
-        var act = () => sut.IsSatisfiedBy(model);
-
-        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }
 
     [Theory]
@@ -258,5 +237,68 @@ public class XOrSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.CausalOperandCount.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineAutoData(false, false, false)]
+    [InlineAutoData(false, true, true)]
+    [InlineAutoData(true, false, true)]
+    [InlineAutoData(true, true, false)]
+    public void Should_perform_OrElse_on_specs_with_different_metadata(
+        bool leftValue,
+        bool rightValue,
+        bool expectedSatisfied,
+        Guid leftTrue,
+        Guid leftFalse,
+        int  rightTrue,
+        int  rightFalse)
+    {
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(leftTrue)
+                .WhenFalse(leftFalse)
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(rightTrue)
+                .WhenFalse(rightFalse)
+                .Create("right");
+
+        var sut = left ^ right;
+        
+        var act = sut.IsSatisfiedBy("");
+
+        act.Satisfied.Should().Be(expectedSatisfied);
+    }
+    
+    [Theory]
+    [InlineData(false, false, "!left", "!right")]
+    [InlineData(false, true, "!left", "right")]
+    [InlineData(true, false, "left", "!right")]
+    [InlineData(true, true, "left", "right")]
+    public void Should_perform_OrElse_on_specs_with_different_metadata_and_preserve_assertions(
+        bool leftValue,
+        bool rightValue,
+        params string[] expectedAssertions)
+    {
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(new Uri("http://true"))
+                .WhenFalse(new Uri("http://false"))
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(new Regex("true"))
+                .WhenFalse(new Regex("false"))
+                .Create("right");
+
+        var sut = left ^ right;
+        
+        var act = sut.IsSatisfiedBy("");
+
+        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+        act.Metadata.Should().BeEquivalentTo(expectedAssertions);
     }
 }

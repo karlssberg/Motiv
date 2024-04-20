@@ -5,32 +5,35 @@
 internal sealed class XOrBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right)
-    : BooleanResultBase<TMetadata>, ICompositeBooleanResult
+    : BooleanResultBase<TMetadata>, IBinaryBooleanOperationResult<TMetadata>
 {
     /// <summary>Gets a value indicating whether the XOR operation is satisfied.</summary>
-    public override bool Satisfied => left.Satisfied ^ right.Satisfied;
+    public override bool Satisfied { get; } = left.Satisfied ^ right.Satisfied;
 
-    public override ExplanationTree ExplanationTree => GetResults().CreateExplanation();
+    public override Explanation Explanation => GetResults().CreateExplanation();
 
     /// <summary>Gets the description of the XOR operation.</summary>
     public override ResultDescriptionBase Description =>
-        new XOrBooleanResultDescription<TMetadata>(left, right, GetResults());
+        new XOrBooleanResultDescription<TMetadata>(Left, Right, GetResults());
+    
+    public BooleanResultBase<TMetadata> Left { get; } = left;
 
-    public override MetadataTree<TMetadata> MetadataTree => CreateMetadataSet();
+    public BooleanResultBase<TMetadata> Right { get; } = right;
+
+    BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
+    
+    BooleanResultBase IBinaryBooleanOperationResult.Right => Right;
+
+    public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
     public override IEnumerable<BooleanResultBase> Causes => GetResults();
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => GetResults();
-
-    private MetadataTree<TMetadata> CreateMetadataSet()
-    {
-        var metadataSets = GetResults().Select(result => result.MetadataTree).ToArray();
-        return new(
-            metadataSets.SelectMany(metadataSet => metadataSet),
-            metadataSets.SelectMany(metadataSet => metadataSet.Underlying));
-    }
     
     private IEnumerable<BooleanResultBase<TMetadata>> GetResults() => 
-        left.ToEnumerable()
-            .Append(right);
+        Left.ToEnumerable()
+            .Append(Right);
+
+    private MetadataNode<TMetadata> CreateMetadataTier() =>
+        new(CausesWithMetadata.GetMetadata(), CausesWithMetadata);
 }

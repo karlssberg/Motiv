@@ -373,8 +373,8 @@ public class AllSatisfiedSpecTests
             .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
             .Create("all booleans are true");
 
-        sut.Proposition.Statement.Should().Be(expectedSummary);
-        sut.Proposition.Detailed.Should().Be(expectedFull);
+        sut.Description.Statement.Should().Be(expectedSummary);
+        sut.Description.Detailed.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }
 
@@ -402,32 +402,9 @@ public class AllSatisfiedSpecTests
             .WhenFalse(false)
             .Create("all are true");
 
-        sut.Proposition.Statement.Should().Be(expectedSummary);
-        sut.Proposition.Detailed.Should().Be(expectedFull);
+        sut.Description.Statement.Should().Be(expectedSummary);
+        sut.Description.Detailed.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
-    }
-
-    [Theory]
-    [InlineAutoData]
-    public void Should_wrap_thrown_exceptions_in_a_specification_exception(
-        string model)
-    {
-        var throwingSpec = new ThrowingSpec<object, string>(
-            "throws",
-            new Exception("should be wrapped"));
-
-        var sut = Spec
-            .Build(throwingSpec)
-            .AsAllSatisfied()
-            .WhenTrue(evaluation => $"{evaluation.TrueCount} true")
-            .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
-            .Create("all booleans are true");
-
-        var act = () => sut.IsSatisfiedBy([model]);
-
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
-        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>()
-            .Where(ex => ex.Message.Contains("should be wrapped"));
     }
     
     [Theory]
@@ -446,7 +423,7 @@ public class AllSatisfiedSpecTests
         int expected)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("underlying");
         
         var sut = Spec
@@ -467,7 +444,7 @@ public class AllSatisfiedSpecTests
     public void Should_surface_boolean_results_created_from_underlyingResult(bool modelA, bool modelB, bool expected, string expectedAssertion)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("underlying");
 
         var sut = Spec
@@ -489,7 +466,7 @@ public class AllSatisfiedSpecTests
     public void Should_surface_boolean_results_with_custom_assertions_created_from_underlyingResult(bool modelA, bool modelB, bool expected, string expectedAssertion)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("underlying");
 
         var sut = Spec

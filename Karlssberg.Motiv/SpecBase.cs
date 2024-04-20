@@ -1,7 +1,7 @@
 ﻿using Karlssberg.Motiv.And;
 using Karlssberg.Motiv.AndAlso;
-using Karlssberg.Motiv.ChangeMetadataType;
 using Karlssberg.Motiv.ChangeModelType;
+using Karlssberg.Motiv.MetadataToExplanationAdapter;
 using Karlssberg.Motiv.Not;
 using Karlssberg.Motiv.Or;
 using Karlssberg.Motiv.OrElse;
@@ -17,7 +17,6 @@ namespace Karlssberg.Motiv;
 /// specifications, which together ultimately model the desired logical proposition.
 /// </summary>
 /// <typeparam name="TModel">The model type that the specification will evaluate against</typeparam>
-/// <typeparam name="TMetadata">The type of the metadata to associate with the predicate</typeparam>
 public abstract class SpecBase<TModel>
 {
     /// <summary>Prevents the external instantiation of the <see cref="SpecBase{TModel,TMetadata}" /> class.</summary>
@@ -26,7 +25,7 @@ public abstract class SpecBase<TModel>
     }
 
     /// <summary>The description of the specification.  This is used for debugging/logging purposes.</summary>
-    public abstract IProposition Proposition { get; }
+    public abstract ISpecDescription Description { get; }
 
     public abstract SpecBase<TModel, string> ToExplanationSpec();
 
@@ -61,7 +60,7 @@ public abstract class SpecBase<TModel>
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
     /// <returns>A string that represents the logical hierarchy of the specification.</returns>
-    public override string ToString() => Proposition.Statement;
+    public override string ToString() => Description.Statement;
 
     /// <summary>Combines two specifications using the logical AND operator.</summary>
     /// <param name="left">The left operand of the AND operation.</param>
@@ -201,12 +200,12 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
         this switch
         {
             SpecBase<TModel, string> explanationSpec => explanationSpec,
-            _ => new MetadataToExplnationAdapterSpec<TModel, TMetadata>(this)
+            _ => new MetadataToExplanationAdapterSpec<TModel, TMetadata>(this)
         };
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
     /// <returns>A string that represents the logical hierarchy of the specification.</returns>
-    public override string ToString() => Proposition.Statement;
+    public override string ToString() => Description.Statement;
 
     /// <summary>Combines two specifications using the logical AND operator.</summary>
     /// <param name="left">The left operand of the AND operation.</param>

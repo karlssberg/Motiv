@@ -8,16 +8,15 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
     IEnumerable<BooleanResultBase<TMetadata>> causalResults) 
     : ResultDescriptionBase
 {
-    private readonly BooleanResultBase<TMetadata>[] _causalResults = causalResults.ToArray();
     
-    internal override int CausalOperandCount => _causalResults.Length;
+    internal override int CausalOperandCount => causalResults.Count();
     
     public override string Reason => 
         CausalOperandCount switch
         {
             0 => "",
-            1 => _causalResults.First().Description.Reason,
-            _ =>  string.Join(" | ", _causalResults.Select(ExplainReasons))
+            1 => causalResults.First().Description.Reason,
+            _ =>  string.Join(" | ", causalResults.Select(ExplainReasons))
         };
 
     public override string Detailed => GetDetails();
@@ -42,12 +41,12 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
     {
         return result switch 
         {
-            OrBooleanResult<TMetadata> orSpec => 
-                orSpec.Description.Detailed,
-            OrElseBooleanResult<TMetadata> orElseSpec =>
-                orElseSpec.Description.Detailed,
-            ICompositeBooleanResult compositeSpec =>
-                $"({compositeSpec.Description.Detailed})",
+            OrBooleanResult<TMetadata> orResult => 
+                orResult.Description.Detailed,
+            OrElseBooleanResult<TMetadata> orElseResult =>
+                orElseResult.Description.Detailed,
+            IBinaryBooleanOperationResult<TMetadata> binaryResult =>
+                $"({binaryResult.Description.Detailed})",
             _ => result.Description.Detailed
         };
     }
@@ -56,12 +55,12 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
     {
         return result switch 
         {
-            OrBooleanResult<TMetadata> orSpec => 
-                orSpec.Description.Reason,
-            OrElseBooleanResult<TMetadata> orElseSpec =>
-                orElseSpec.Description.Reason,
-            ICompositeBooleanResult { Description.CausalOperandCount: > 1 } compositeSpec =>
-                $"({compositeSpec.Description.Reason})",
+            OrBooleanResult<TMetadata> orResult => 
+                orResult.Description.Reason,
+            OrElseBooleanResult<TMetadata> orElseResult =>
+                orElseResult.Description.Reason,
+            IBinaryBooleanOperationResult<TMetadata> { Description.CausalOperandCount: > 1 } binaryResult =>
+                $"({binaryResult.Description.Reason})",
             _ => result.Description.Reason
         };
     }

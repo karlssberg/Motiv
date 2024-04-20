@@ -3,17 +3,25 @@
 internal sealed class OrElseBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata>? right = null)
-    : BooleanResultBase<TMetadata>
+    : BooleanResultBase<TMetadata>, IBinaryBooleanOperationResult<TMetadata>
 {
     public override bool Satisfied { get; } = left.Satisfied || (right?.Satisfied ?? false);
     
     public override ResultDescriptionBase Description => 
-        new OrElseBooleanResultDescription<TMetadata>(left, right, GetCauses());
+        new OrElseBooleanResultDescription<TMetadata>(Left, Right, GetCauses());
     
-    public override ExplanationTree ExplanationTree => GetCauses().CreateExplanation();
-    
-    public override MetadataTree<TMetadata> MetadataTree => new(GetCauses().GetMetadata());
+    public override Explanation Explanation => GetCauses().CreateExplanation();
 
+    public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
+    
+    public BooleanResultBase<TMetadata> Left { get; } = left;
+
+    public BooleanResultBase<TMetadata>? Right { get; } = right;
+
+    BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
+    
+    BooleanResultBase? IBinaryBooleanOperationResult.Right => Right;
+    
     public override IEnumerable<BooleanResultBase> Underlying => GetUnderlying();
 
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetUnderlying();
@@ -24,18 +32,21 @@ internal sealed class OrElseBooleanResult<TMetadata>(
     
     private IEnumerable<BooleanResultBase<TMetadata>> GetCauses()
     {
-        if (Satisfied == left.Satisfied)
-            yield return left;
+        if (Satisfied == Left.Satisfied)
+            yield return Left;
         
-        if (right is not null && Satisfied == right.Satisfied)
-            yield return right;
+        if (Right is not null && Satisfied == Right.Satisfied)
+            yield return Right;
     }
     
     private IEnumerable<BooleanResultBase<TMetadata>> GetUnderlying()
     {
-        yield return left;
+        yield return Left;
         
-        if (right is not null)
-            yield return right;
+        if (Right is not null)
+            yield return Right;
     }
+    
+    private MetadataNode<TMetadata> CreateMetadataTier() =>
+        new(CausesWithMetadata.GetMetadata(), CausesWithMetadata);
 }

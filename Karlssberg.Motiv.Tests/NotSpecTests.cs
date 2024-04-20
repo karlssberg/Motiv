@@ -23,7 +23,7 @@ public class NotSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(expected);
-        result.MetadataTree.Should().AllBeEquivalentTo(operand);
+        result.Metadata.Should().AllBeEquivalentTo(operand);
     }
 
     [Theory]
@@ -87,21 +87,5 @@ public class NotSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Reason.Should().Be(expected);
-    }
-
-    [Theory]
-    [InlineAutoData]
-    public void Should_wrap_thrown_exceptions_in_a_specification_exception(
-        string model)
-    {
-        var throwingSpec = new ThrowingSpec<object, string>(
-            "should always throw",
-            new Exception("should be wrapped"));
-
-        var sut = !throwingSpec;
-
-        var act = () => sut.IsSatisfiedBy(model);
-
-        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }
 }

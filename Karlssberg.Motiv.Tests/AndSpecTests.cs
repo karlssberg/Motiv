@@ -1,4 +1,4 @@
-﻿using AutoFixture.Xunit2;
+﻿using System.Text.RegularExpressions;
 using FluentAssertions;
 
 namespace Karlssberg.Motiv.Tests;
@@ -33,7 +33,7 @@ public class AndSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(expected);
-        result.MetadataTree.Should().AllBeEquivalentTo(expected);
+        result.Metadata.Should().AllBeEquivalentTo(expected);
     }
 
     [Theory]
@@ -146,11 +146,11 @@ public class AndSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var expected = $"{left.Proposition} & {right.Proposition}";
+        var expected = $"{left.Description} & {right.Description}";
 
         var sut = left & right;
 
-        sut.Proposition.Statement.Should().Be(expected);
+        sut.Description.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -167,45 +167,18 @@ public class AndSpecTests
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
-        ;
 
         var right = Spec.Build<object>(_ => rightResult)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
-        ;
 
-        var expected = $"{left.Proposition} & {right.Proposition}";
+        var expected = $"{left.Description} & {right.Description}";
 
         var sut = left & right;
 
-        sut.Proposition.Statement.Should().Be(expected);
+        sut.Description.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
-    }
-
-    [Theory]
-    [InlineAutoData]
-    public void Should_wrap_thrown_exceptions_in_a_specification_exception(
-        string model)
-    {
-        Func<object, bool> predicate = _ => true;
-
-        var normalSpec = predicate.ToSpec()
-            .WhenTrue("true")
-            .WhenFalse("false")
-            .Create();
-
-        var throwingSpec = new ThrowingSpec<object, string>(
-            "should always throw",
-            new Exception("should be wrapped"));
-
-        var sut = throwingSpec & normalSpec;
-
-        var act = () => sut.IsSatisfiedBy(model);
-
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
-        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>()
-            .Where(ex => ex.Message.Contains("should be wrapped"));
     }
 
     private record Subscription(DateTime Start, DateTime End)
@@ -217,13 +190,13 @@ public class AndSpecTests
     private class IsSubscriptionActive(DateTime now) : Spec<Subscription>(() =>
     {
         var hasSubscriptionStarted = Spec
-            .Build<Subscription>(s => s.Start < now)
+            .Build((Subscription s) => s.Start < now)
             .WhenTrue("subscription has started")
             .WhenFalse("subscription has not started")
             .Create();
 
         var hasSubscriptionEnded = Spec
-            .Build<Subscription>(s => s.End < now)
+            .Build((Subscription s) => s.End < now)
             .WhenTrue("subscription has ended")
             .WhenFalse("subscription has not ended")
             .Create();
@@ -242,13 +215,13 @@ public class AndSpecTests
         var now = DateTime.Now;
         var isActive = new IsSubscriptionActive(now);
 
-        var subscription = new Subscription(now.AddDays(-1), now.AddDays(1));
+        var subscription = new Subscription(now.Date, now.AddDays(1));
 
         var result = isActive.IsSatisfiedBy(subscription);
 
         result.Satisfied.Should().BeTrue();
         result.Assertions.Should().BeEquivalentTo("subscription is active");
-        result.ExplanationTree.Underlying.GetAssertions().Should().BeEquivalentTo(
+        result.Explanation.Underlying.GetAssertions().Should().BeEquivalentTo(
         [
             "subscription has started",
             "subscription has not ended"
@@ -289,7 +262,7 @@ public class AndSpecTests
             .Create();
 
         var isActiveSpec = hasSubscriptionStartedSpec & !hasSubscriptionEndedSpec;
-        var isActive = isActiveSpec.IsSatisfiedBy(new Subscription(now.AddDays(-1), now.AddDays(1)));
+        var isActive = isActiveSpec.IsSatisfiedBy(new Subscription(now.Date, now.AddDays(1)));
         var isUsa = isLocationUsaSpec.IsSatisfiedBy(new Device(Country.Usa));
 
         var result = isActive & isUsa;
@@ -325,5 +298,68 @@ public class AndSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Description.CausalOperandCount.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineAutoData(false, false, false)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(true, false, false)]
+    [InlineAutoData(true, true, true)]
+    public void Should_perform_And_on_specs_with_different_metadata(
+        bool leftValue,
+        bool rightValue,
+        bool expectedSatisfied,
+        Guid leftTrue,
+        Guid leftFalse,
+        int  rightTrue,
+        int  rightFalse)
+    {
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(leftTrue)
+                .WhenFalse(leftFalse)
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(rightTrue)
+                .WhenFalse(rightFalse)
+                .Create("right");
+
+        var sut = left & right;
+        
+        var act = sut.IsSatisfiedBy("");
+
+        act.Satisfied.Should().Be(expectedSatisfied);
+    }
+    
+    [Theory]
+    [InlineData(false, false, "!left", "!right")]
+    [InlineData(false, true, "!left")]
+    [InlineData(true, false, "!right")]
+    [InlineData(true, true, "left", "right")]
+    public void Should_perform_And_on_specs_with_different_metadata_and_preserve_assertions(
+        bool leftValue,
+        bool rightValue,
+        params string[] expectedAssertions)
+    {
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(new Uri("http://true"))
+                .WhenFalse(new Uri("http://false"))
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(new Regex("true"))
+                .WhenFalse(new Regex("false"))
+                .Create("right");
+
+        var sut = left & right;
+        
+        var act = sut.IsSatisfiedBy("");
+
+        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+        act.Metadata.Should().BeEquivalentTo(expectedAssertions);
     }
 }

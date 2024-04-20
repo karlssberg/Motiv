@@ -1,30 +1,51 @@
 # Motiv
 ### Turn your if-statements into _why_ statements
 
-Motiv is a .NET library that supercharges your boolean logic.
+Motiv is a .NET library that supercharges the experience of working with boolean logic.
 
-It allows you to package your boolean expressions into strongly typed propositions which can then be conveniently 
-re-used, re-combined and then queried to determine if they are satisfied by a given model.
-And if so required, it will also give an explanation as to _why_.
+It allows you to package your boolean expressions into strongly typed _propositions_.
+By _propositions_, we mean a declarative statement that can be evaluated to either true or false.
 
-Optionally, custom objects (referred to here as _metadata_) can be associated with propositions so that when models are 
-evaluated, only those propositions that actually influenced the final boolean result have their metadata yielded.
+such as:
+* _the sun is shining_
+* _email address is missing an @ symbol_
+* _the subscription is within a grace period_
 
-Typically, the metadata is a human-readable `string` that explains why a proposition was satisfied, or not (referred 
-to here as an _assertion_), but it could equally be a POCO object that contains explanations in different languages, or 
-even a stateful object to drive behavior elsewhere in the application.
+In Motiv, propositions can evaluate models to determine if they are satisfied (or not), or be easily combined with 
+others to form new propositions.
+```csharp
+var isUsefulLibrary = hasExplanations & hasCustomMetadata & isReusable & isComposable;
 
-#### What can I use the metadata for?
+if (isUsefulLibrary.IsSatisfiedBy(new MyCriteria()))
+{
+    ...
+```
+When you evaluate a proposition, you get back a `BooleanResultBase` object that tells you whether the proposition was 
+satisfied (or not), as well as other useful information.
+```csharp
+var result = isUsefulLibrary.IsSatisfiedBy(new InferiorAlternative());
+
+result.Satisfied; // false
+result.Reason; // "no support for explanations & no support for custom metadata"
+result.Assertions; // ["no support for explanations", "no support for custom metadata"]
+```
+
+Only those propositions that helped determine the outcome will be used to generate the `Reason` and `Assertions` 
+properties.
+
+#### What can I use the Motiv for?
+Motiv is not focused on catering to any particular use-case - except maybe to make the developers' life better.
+It is, however, inspired them:
+
 * **User feedback** - You require an application to provide detailed and accurate feedback to the user about why a 
   certain decisions were made. 
-* **Debugging** - Quickly understand why a certain condition was met, or not. This can be especially useful in complex 
-  logical expressions where it might not be immediately clear which part of the expression was responsible for the final 
-  result.
-* **Multi-language Support** - The metadata doesn't have to be a string. It can be any type, which means you could use
-  it to support multi-lingual explanations.
-* **Rules Engine** - The metadata can be used to conditionally select stateful objects, which can be used to implement a 
-  rules engine. This can be useful in scenarios where you need to apply different rules to different objects based on 
-  their state.
+* **Debugging** - Quickly understand why a certain condition was met (or not). When faced with deeply nested 
+  if-else statements it can be challenging to comprehend the bigger picture. Motiv gives you the wherewithal to 
+  separate the implementation details from the big-picture logical expression.
+* **Multilingual support** - Use custom POCO objects instead of strings to provide multi-language support.
+* **Decomposing complex logic or domain rules** - Whether you are faithfully modelling domain logic, or just trying to 
+  decompose an 
+  unwieldy logical expression, Motiv can help you to break it down into more manageable and understandable parts.+
 * **Validation** - The metadata can be used to provide human-readable explanations of why a certain validation rule was 
   not met. This can be useful in scenarios where you need to provide feedback to the user about why a certain input 
   was not valid.
@@ -34,88 +55,75 @@ even a stateful object to drive behavior elsewhere in the application.
 ## Usage
 
 The following example is a basic demonstration of how to use Motiv.
-It shows how to create a basic proposition and then use it to determine if a number (3 in this case) is negative or not.
+It shows how to create a basic proposition and then use it to determine if a number is negative or not.
 
 ### Basic proposition
 A basic proposition can be created using the `Spec` class. This class provides a fluent API for creating a 
-logical proposition
+logical proposition.
 
 ```csharp
-var isNegativeSpec =
-    Spec.Build((int n) => n < 0)
-        .Create("is negative");
+var isEligibleForLoan =
+    Spec.Build((Customer customer) => 
+                    customer.CreditScore > 600 &&
+                    customer.Balance > 5000)
+        .Create("is eligible for loan");
+```
 
-var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
+This can then be evaluated by calling the `IsSatisfiedBy()` method and passing in a model to evaluate.
+```csharp
+var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
 
-isNegative.Satisfied; // true
-isNegative.Reason; // "is negative"
-isNegative.Assertions; // ["is negative"]
+result.Satisfied; // true
+result.Reason; // "is eligible for loan"
+result.Assertions; // "is eligible for loan"
 ```
 
 When negated, a basic proposition will return a reason prefixed with a `!` character.
 This is useful for debugging purposes.
 
 ```csharp
-var isNegative = isNegativeSpec.IsSatisfiedBy(3);
+var result = isEligibleForLoan.IsSatisfiedBy(uneligibleCustomer); 
 
-isNegative.Satisfied; // false
-isNegative.Reason; // "!is negative"
-isNegative.Assertions; // ["!is negative"]
+result.Satisfied; // false
+result.Reason; // "!is eligible for loan"
+result.Assertions; // ["!is eligible for loan"]
 ```
 
+### Propositions with explanations
 You can also use the `WhenTrue()` and `WhenFalse()` methods to provide a more human-readable description for when the 
 outcome is either `true` or `false`.
 These values will be used in the `Reason` and `Assertions` properties of the result.
 
 ```csharp
-var isNegativeSpec =
+var isNegative =
     Spec.Build((int n) => n < 0)
         .WhenTrue("the number is negative")
         .WhenFalse("the number is not negative")
         .Create();
 
-var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
+var result = isNegative.IsSatisfiedBy(-3);
 
-isNegative.Satisfied; // true
-isNegative.Reason; // "the number is negative"
-isNegative.Assertions; // ["the number is negative"]
+result.Satisfied; // true
+result.Reason; // "the number is negative"
+result.Assertions; // ["the number is negative"]
 ```
-
-If for whatever reason it is not convenient to use the strings supplied to the `WhenTrue()` and `WhenFalse()` as a 
-`Reason`, you can instead provide a propositional statement to the `Create()` method.
-This will then be used in the `Reason` property.  This can be useful if the text supplied to the `WhenTrue()` and 
-`WhenFalse()` is particularly verbose, or doesn't make sense as a `Reason`.
-
-```csharp
-var isNegativeSpec =
-    Spec.Build((int n) => n < 0)
-        .WhenTrue("the number is negative")
-        .WhenFalse("the number is not negative")
-        .Create("is negative");
-
-var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
-
-isNegative.Satisfied; // true
-isNegative.Reason; // "is negative"
-isNegative.Assertions; // ["the number is negative"]
-```
-
+### Propositions with attached metadata
 You are also not limited to strings.
-You can equally supply any POCO object and it will be yielded when appropriate.
+You can equally supply any POCO object, and it will be yielded when appropriate.
 
 ```csharp
-var isNegativeSpec =
+var isNegative =
     Spec.Build((int n) => n < 0)
-        .WhenTrue(new MyClass { Message = "the number is negative" })
-        .WhenFalse(new MyClass { Message = "the number is not negative" })
+        .WhenTrue(new MyMetadata("the number is negative"))
+        .WhenFalse(new MyMetadata("the number is not negative"))
         .Create("is negative")
 
-var isNegative = isNegativeSpec.IsSatisfiedBy(-3);
+var result = isNegative.IsSatisfiedBy(-3);
 
-isNegative.Satisfied; // true
-isNegative.Reason; // "is negative"
-isNegative.Assertions; // ["is negative"]
-isNegative.Metadata; // [{ Message = "the number is negative" }]
+result.Satisfied; // true
+result.Reason; // "is negative"
+result.Assertions; // ["is negative"]
+result.Metadata; // [{ Message = "the number is negative" }]
 ````
 
 ### Combining propositions
@@ -126,38 +134,44 @@ propositions can be combined using the `&`,`|` and `^` operators as well as the 
 `.AndAlso()` methods.
 
 ```csharp
-var isNegativeSpec =
-    Spec.Build((int n) => n < 0)
-        .WhenTrue("the number is negative")
-        .WhenFalse(n => n == 0 
-            ? "the number is zero"
-            : "the number is positive")
-        .Create("is negative");
+var hasValidTicketProposition =
+    Spec.Build((Passenger passenger) => passenger.HasValidTicket)
+        .WhenTrue("has a valid ticket")
+        .WhenFalse("does not have a valid ticket")
+        .Create();
 
-var isEvenSpec =
-    Spec.Build((int n) => n % 2 == 0)
-        .WhenTrue("the number is even")
-        .WhenFalse("the number is odd")
-        .Create("is even"); 
+var hasOutstandingFeesProposition =
+    Spec.Build((Passenger passenger) => passenger.OutstandingFees > 0)
+        .WhenTrue("has outstanding fees")
+        .WhenFalse("does not have outstanding fees")
+        .Create();
 
-var isPositiveAndOddSpec = !isNegativeSpec & !isEvenSpec;
+var isCheckInOpenProposition =
+    Spec.Build((Passenger passenger) =>
+        passenger.FlightTime - DateTime.Now <= TimeSpan.FromHours(4) &&
+        passenger.FlightTime - DateTime.Now >= TimeSpan.FromMinutes(30))
+            .WhenTrue("check-in is open")
+            .WhenFalse("check-in is closed")
+            .Create();
 
-var isPositiveAndOdd = isPositiveAndOddSpec.IsSatisfiedBy(3);
+var canCheckInProposition = hasValidTicketProposition & !hasOutstandingFeesProposition & isCheckInOpenProposition;
 
-isPositiveAndOdd.IsSatisfied; // returns true
-isPositiveAndOdd.Reason; // "!is negative & !is even"
-isPositiveAndOdd.Assertions; // ["the number is positive", "the number is odd"]
+var result = canCheckInProposition.IsSatisfiedBy(validPassenger);
+
+result.Satisfied; // true
+result.Reason; // "has a valid ticket & does not have outstanding fees & check-in is open"
+result.Assertions; // ["has a valid ticket", "does not have outstanding fees", "check-in is open"]
 ```
 
 When combining propositions to form new ones, only the propositions that helped determine the final result 
 will be included in the `Assertions` property and `Reason` property.
 
 ```csharp
-var isPositiveAndOdd = isPositiveAndOddSpec.IsSatisfiedBy(-3);
+var result = isPositiveAndOddProposition.IsSatisfiedBy(-3);
 
-isPositiveAndOdd.IsSatisfied; // returns false
-isPositiveAndOdd.Reason; // "is negative"
-isPositiveAndOdd.Assertions; // ["the number is negative"]
+result.Satisfied; // returns false
+result.Reason; // "is negative"
+result.Assertions; // ["the number is negative"]
 ```
 
 ### Encapsulation and Re-use
@@ -169,8 +183,8 @@ In this case, you will need to wrap the existing proposition in a new one.
 ```csharp
 var underlying = 
     Spec.Build((int n) => n < 0)
-        .WhenTrue(new MyClass { Message = "the number is negative" })
-        .WhenFalse(new MyClass { Message = "the number is not negative" })
+        .WhenTrue(new MyMetadata("the number is negative"))
+        .WhenFalse(new MyMetadata("the number is not negative"))
         .Create("is negative (metadata)");
 
 var isNegative =
@@ -189,34 +203,34 @@ Using these classes will help you to maintain a separation of concerns and also 
 logic within an application. 
 
 ```csharp
-public class IsNegativeSpec : Spec<int>(
+public class IsNegativeProposition : Spec<int>(
     Spec.Build((int n) => n < 0)
         .WhenTrue("the number is negative")
         .WhenFalse("the number is not negative")
-        .Create();
+        .Create());
 
-public class IsNegativeMultiLingualSpec : Spec<int, MyClass>(
+public class IsNegativeMultiLingualProposition : Spec<int, MyMetadata>(
     Spec.Build((int n) => n < 0)
-        .WhenTrue(new MyClass { Spanish = "el número es negativo" })
-        .WhenFalse(new MyClass { Spanish = "el número no es negativo" })
-        .Create("is negative");
+        .WhenTrue(new MyMetadata { Spanish = "el número es negativo" })
+        .WhenFalse(new MyMetadata { Spanish = "el número no es negativo" })
+        .Create("is negative"));
 ```
 
 If you require (or prefer) your proposition to be expressed as multiple statements you can define them within a 
 factory method.
 
 ```csharp
-public class IsPositiveAndOddSpec : Spec<int>(() => 
+public class IsPositiveAndOddProposition : Spec<int>(() => 
     {
-        var isNegativeSpec =
+        var isNegative =
             Spec.Build((int n) => n < 0)
                 .Create("is negative");+
 
-        var isEvenSpec =
+        var isEven =
             Spec.Build((int n) => n % 2 == 0)
                 .Create("is even"); 
 
-        return !isNegativeSpec & !isEvenSpec;
+        return !isNegative & !isEven;
     });
 ```
 
@@ -237,9 +251,9 @@ The current built-in higher order logical operations are:
   collection satisfy the proposition, otherwise a false boolean-result object is returned.
 - `AsAtLeastNSatisfied()`: Creates a proposition that yields a true boolean-result object if at least N models in a 
   collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- `AsAtMostNSatisfied()`: Creates a proposition that yields a true boolean-result object if at most N models in a 
+- `AsAtMostfNSatisfied()`: Creates a proposition that yields a true boolean-result object if at most N models in a 
   collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- 
+
 ```csharp
 Spec.Build((int n) => n < 0)
     .AsAllSatisfied()
@@ -253,7 +267,7 @@ This will give you access to each result and model pair, which can be used to cu
 particular use-case.
 
 ```csharp
-Spec.Build(new IsNegativeSpec<int>())
+Spec.Build(new IsNegativeIntegerProposition())
     .AsAllSatisfied()
     .WhenTrue("all are negative")
     .WhenFalse(evaluation => evaluation.FalseModels.Select(n => $"{n} is not negative"))
@@ -266,16 +280,35 @@ This is to facilitate pattern matching using switch expressions, which results i
 checks.
 
 ```csharp
-Spec.Build(new IsNegativeSpec<int>())
-    .AsAllSatisfied()
-    .WhenTrue("all are negative")
-    .WhenFalse(evaluation => evaluation switch
-    {
-        { FalseCount: 1 } => $"{evaluation.FalseModels.First()} is not negative",
-        { Count: > 10 } => $"{evaluation.FalseCount} of {evaluation.Count} are not negative" ,
-        _ => $"{string.Join(", ", evaluation.FalseModels)} are not negative"
-    })
-    .Create();
+var allNegative =
+    Spec.Build(new IsNegativeIntegerProposition())
+        .AsAllSatisfied()
+        .WhenTrue(eval => eval switch
+        {
+            { Count: 0 } => "there is an absence of numbers",
+            { Models: [< 0 and var n] } => $"{n} is negative and is the only number",
+            _ => "all are negative numbers"
+        })
+        .WhenFalse(eval => eval switch
+        {
+            { Models: [0] } => ["the number is 0 and is the only number"],
+            { Models: [> 0 and var n] } => [$"{n} is positive and is the only number"],
+            { NoneSatisfied: true } when eval.Models.All(m => m is 0) => ["all are 0"],
+            { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
+            { NoneSatisfied: true } =>  ["none are negative numbers"],
+            _ => eval.FalseResults.GetAssertions()
+        })
+        .Create("all are negative");
+
+allNegative.IsSatisfiedBy([]).Assertions; // ["there is an absence of numbers"]
+allNegative.IsSatisfiedBy([-10]).Assertions; // ["-10 is negative and is the only number"]
+allNegative.IsSatisfiedBy([-2, -4, -6, -8]).Assertions; // ["all are negative numbers"]
+allNegative.IsSatisfiedBy([0]).Assertions; // ["the number is 0 and is the only number"]
+allNegative.IsSatisfiedBy([11]).Assertions; // ["11 is positive and is the only number"]
+allNegative.IsSatisfiedBy([0, 0, 0, 0]).Assertions; // ["all are 0"]
+allNegative.IsSatisfiedBy([2, 4, 6, 8]).Assertions; // ["all are positive numbers"]
+allNegative.IsSatisfiedBy([0, 1, 2, 3]).Assertions; // ["none are negative numbers"]
+allNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions; // ["0 is not negative", "9 is not negative"]
 ```
 
 ## Tradeoffs
@@ -289,7 +322,7 @@ There are inevitably potential tradeoffs to consider when using this library.
    However, this library does not itself depend on any third-party libraries, so it does not bring any unexpected 
    baggage with it. 
 3. **Learning Curve**: For many, this library is a new approach and will nonetheless require a bit of familiarization.
-   That being said, it has been deliberately designed to be as intuitive and easy to use as possible - there is 
+   That being said, it has been deliberately designed to be as intuitive and easy to use as possible—there is 
    relatively little to learn.
 
 ## Getting Started with CLI
@@ -324,29 +357,21 @@ dotnet test
 
 Your contributions to Motiv are greatly appreciated:
 
-**Branching Strategy**:
+### Branching Strategy
 
-Main Branches
+     main
+        This is the primary branch of the repository. It should always be stable and deployable. 
 
-    main: This is the primary branch of the repository. It should always be stable and deployable. All development 
-branches are created from main, and features are merged back into it once they are complete and tested.
+     develop
+        Merged into: main
+        Purpose: This branch serves as an integration branch for features. Once a feature is complete, it is merged 
+        into develop.  When develop is stable and ready for a release, its contents are merged into main.
 
-    develop: This branch serves as an integration branch for features. Once a feature is complete, it is merged into 
-develop. When develop is stable and ready for a release, its contents are merged into main.
-
-Supporting Branches
-
-    Feature Branches (feature/):
+     feature/
         Created from: develop
         Merged back into: develop
         Naming convention: feature/ followed by a descriptive name (e.g., feature/add-login)
         Purpose: Used for developing new features. Each feature should have its own branch.
-
-    Release Branches (release/):
-        Created from: develop
-        Merged back into: main and develop
-        Naming convention: release/ followed by the version number (e.g., release/v1.0.0)
-        Purpose: Used for preparing a new production release. Allows for last-minute dotting of i's and crossing of t's.
 
 Workflow Summary
 

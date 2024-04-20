@@ -1,22 +1,22 @@
 ﻿namespace Karlssberg.Motiv.Poker;
 
-public record Card(Rank Rank, Suit Suit)
+public record Card(Suit Suit, Rank Rank)
 {
     public Card(string rank, char suit)
-        : this(ResolveRank(rank), ResolveSuit(suit))
+        : this(ResolveSuit(suit), ResolveRank(rank))
     {
     }
     public Card(string rank, Suit suit)
-        : this(ResolveRank(rank), suit)
+        : this(suit, ResolveRank(rank))
     {
     }
 
     public Card(string cardName)
-        : this(ResolveRank(cardName[..^1]), ResolveSuit(cardName[^1]))
+        : this(ResolveSuit(cardName[^1]), ResolveRank(cardName[..^1]))
     {
     }
 
-    public override string ToString() => $"{ResolveRankDisplayName}{Suit.ToString()[0]}";
+    public override string ToString() => $"{ResolveRankDisplayName(Rank)}{Suit.ToString()[0]}";
 
     public string ResolveRankDisplayName(Rank rank) => rank.GetDescription();
 
