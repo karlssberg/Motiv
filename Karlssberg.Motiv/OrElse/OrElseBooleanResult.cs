@@ -12,7 +12,7 @@ internal sealed class OrElseBooleanResult<TMetadata>(
     
     public override Explanation Explanation => GetCauses().CreateExplanation();
 
-    public override MetadataTree<TMetadata> MetadataTree => CreateMetadataTree();
+    public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTree();
     
     public BooleanResultBase<TMetadata> Left { get; } = left;
 
@@ -47,12 +47,12 @@ internal sealed class OrElseBooleanResult<TMetadata>(
             yield return Right;
     }
     
-    private MetadataTree<TMetadata> CreateMetadataTree()
+    private MetadataNode<TMetadata> CreateMetadataTree()
     {
         var causes = GetCauses().ToArray();
         var underlying =  causes
-            .SelectMany(cause => cause.MetadataTree.Underlying);
+            .SelectMany(cause => cause.MetadataTiers.Underlying);
         
-        return new MetadataTree<TMetadata>(causes.GetMetadata(), underlying);
+        return new MetadataNode<TMetadata>(causes.GetMetadata(), underlying);
     }
 }

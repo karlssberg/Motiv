@@ -36,9 +36,9 @@ public sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata,
         var explanation = new Lazy<Explanation>(() => 
             new Explanation(assertion.Value, booleanResult.ToEnumerable()));
         
-        var metadataTree = new Lazy<MetadataTree<TMetadata>>(() => 
-            new MetadataTree<TMetadata>(metadata.Value.ToEnumerable(), 
-                booleanResult.MetadataTree.ToEnumerable() as IEnumerable<MetadataTree<TMetadata>> ?? []));
+        var metadataTree = new Lazy<MetadataNode<TMetadata>>(() => 
+            new MetadataNode<TMetadata>(metadata.Value.ToEnumerable(), 
+                booleanResult.MetadataTiers.ToEnumerable() as IEnumerable<MetadataNode<TMetadata>> ?? []));
 
         return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,
@@ -46,7 +46,7 @@ public sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata,
             Explanation,
             Reason);
 
-        MetadataTree<TMetadata> MetadataTree() => metadataTree.Value;
+        MetadataNode<TMetadata> MetadataTree() => metadataTree.Value;
         Explanation Explanation() => explanation.Value;
         string Reason() => Description.ToReason(booleanResult.Satisfied);
     }

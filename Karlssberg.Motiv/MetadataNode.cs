@@ -2,27 +2,28 @@
 
 namespace Karlssberg.Motiv;
 
-public sealed class MetadataTree<TMetadata>(
+public sealed class MetadataNode<TMetadata>(
     IEnumerable<TMetadata> metadataCollection,
-    IEnumerable<MetadataTree<TMetadata>> underlying)
-    : IEnumerable<TMetadata>
+    IEnumerable<MetadataNode<TMetadata>> underlying)
 {
-    public MetadataTree(IEnumerable<TMetadata> metadataCollection)
-        : this(metadataCollection, Enumerable.Empty<MetadataTree<TMetadata>>())
+    public MetadataNode(IEnumerable<TMetadata> metadataCollection)
+        : this(metadataCollection, Enumerable.Empty<MetadataNode<TMetadata>>())
     {
     }
     
-    public MetadataTree(TMetadata metadata)
-        : this(metadata.ToEnumerable(), Enumerable.Empty<MetadataTree<TMetadata>>())
+    public MetadataNode(TMetadata metadata)
+        : this(metadata.ToEnumerable(), Enumerable.Empty<MetadataNode<TMetadata>>())
     {
     }
     
-    public MetadataTree(TMetadata metadata, IEnumerable<MetadataTree<TMetadata>> underlying)
+    public MetadataNode(TMetadata metadata, IEnumerable<MetadataNode<TMetadata>> underlying)
         : this(metadata.ToEnumerable(), underlying)
     {
     }
     
-    public IEnumerable<MetadataTree<TMetadata>> Underlying => underlying;
+    public IEnumerable<MetadataNode<TMetadata>> Underlying => underlying;
+    
+    public IEnumerable<TMetadata> Metadata => _metadataCollection;
     
     public int Count => _metadataCollection.Count;
 
@@ -32,10 +33,6 @@ public sealed class MetadataTree<TMetadata>(
         IEnumerable<IComparable<TMetadata>> => new SortedSet<TMetadata>(metadataCollection),
         _ => new HashSet<TMetadata>(metadataCollection)
     };
-
-    public IEnumerator<TMetadata> GetEnumerator() => _metadataCollection.GetEnumerator();
-
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_metadataCollection).GetEnumerator();
 
     public override string ToString() => GetDebugDisplay();
     

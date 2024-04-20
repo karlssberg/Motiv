@@ -42,7 +42,7 @@ internal sealed class HigherOrderFromBooleanPredicateMetadataProposition<TModel,
             Explanation,
             Reason);
 
-        MetadataTree<TMetadata> Metadata() => new(metadata.Value);
+        MetadataNode<TMetadata> Metadata() => new(metadata.Value);
         Explanation Explanation() => new(assertion.Value, []);
         string Reason() => specDescription.ToReason(isSatisfied);
     }

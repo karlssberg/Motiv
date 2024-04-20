@@ -15,7 +15,7 @@ internal sealed class NotBooleanResult<TMetadata>(BooleanResultBase<TMetadata> o
     /// <summary>Gets the reasons associated with the operand result.</summary>
     public override Explanation Explanation => operandResult.Explanation;
 
-    public override MetadataTree<TMetadata> MetadataTree => operandResult.MetadataTree;
+    public override MetadataNode<TMetadata> MetadataTier => operandResult.MetadataTiers;
     
     public override IEnumerable<BooleanResultBase> Underlying => operandResult.ToEnumerable();
     

@@ -30,9 +30,9 @@ internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, T
         var explanation = new Lazy<Explanation>(() => 
             new Explanation(assertions.Value, booleanResult.ToEnumerable()));
         
-        var metadataTree = new Lazy<MetadataTree<TMetadata>>(() => 
-            new MetadataTree<TMetadata>(metadata.Value, 
-                booleanResult.MetadataTree.ToEnumerable() as IEnumerable<MetadataTree<TMetadata>> ?? []));
+        var metadataTree = new Lazy<MetadataNode<TMetadata>>(() => 
+            new MetadataNode<TMetadata>(metadata.Value, 
+                booleanResult.MetadataTiers.ToEnumerable() as IEnumerable<MetadataNode<TMetadata>> ?? []));
 
         return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,
@@ -42,6 +42,6 @@ internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, T
 
         string Reason() => Description.ToReason(booleanResult.Satisfied);
         Explanation Explanation() => explanation.Value;
-        MetadataTree<TMetadata> MetadataTree() => metadataTree.Value;
+        MetadataNode<TMetadata> MetadataTree() => metadataTree.Value;
     }
 }

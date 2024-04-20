@@ -46,7 +46,7 @@ public class SpecDecoratorExplanationPropositionTests
         var act = sut.IsSatisfiedBy("model");
 
         act.Assertions.Should().BeEquivalentTo(expected);
-        act.MetadataTree.Should().BeEquivalentTo(expected);
+        act.Metadata.Should().BeEquivalentTo(expected);
     }
 
     [InlineAutoData(true, 1, 3, 5, 7)]
@@ -100,7 +100,7 @@ public class SpecDecoratorExplanationPropositionTests
             ? trueReason
             : falseReason);
 
-        act.MetadataTree.Should().BeEquivalentTo(expectation);
+        act.Metadata.Should().BeEquivalentTo(expectation);
     }
 
     [Fact]

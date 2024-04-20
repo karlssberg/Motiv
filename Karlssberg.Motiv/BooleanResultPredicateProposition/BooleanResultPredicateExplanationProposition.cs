@@ -23,10 +23,10 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
         var explanation = new Lazy<Explanation>(() => 
             new Explanation(assertion.Value, booleanResult.ToEnumerable()));
         
-        var metadataTree = new Lazy<MetadataTree<string>>(() => 
-            new MetadataTree<string>(
+        var metadataTree = new Lazy<MetadataNode<string>>(() => 
+            new MetadataNode<string>(
                 assertion.Value.ToEnumerable(), 
-                booleanResult.MetadataTree.ToEnumerable() as IEnumerable<MetadataTree<string>> ?? []));
+                booleanResult.MetadataTiers.ToEnumerable() as IEnumerable<MetadataNode<string>> ?? []));
 
         return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
             booleanResult,
@@ -34,7 +34,7 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
             Explanation,
             Reason);
 
-        MetadataTree<string> MetadataTree() => metadataTree.Value;
+        MetadataNode<string> MetadataTree() => metadataTree.Value;
         Explanation Explanation() => explanation.Value;
         string Reason() => specDescription.ToReason(booleanResult.Satisfied);
     }

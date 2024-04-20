@@ -9,15 +9,15 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causesFn)
     : BooleanResultBase<TMetadata>
 {
-    private readonly Lazy<MetadataTree<TMetadata>> _metadataTree = new (() =>
-        new MetadataTree<TMetadata>(
+    private readonly Lazy<MetadataNode<TMetadata>> _metadataTree = new (() =>
+        new MetadataNode<TMetadata>(
             metadataFn(),
-            causesFn().SelectMany(cause => cause.MetadataTree.ToEnumerable() as IEnumerable<MetadataTree<TMetadata>> ?? [])));
+            causesFn().SelectMany(cause => cause.MetadataTiers.ToEnumerable() as IEnumerable<MetadataNode<TMetadata>> ?? [])));
     
     private readonly Lazy<Explanation> _explanation = 
         new (() => new Explanation(assertionsFn(), causesFn()));
 
-    public override MetadataTree<TMetadata> MetadataTree => _metadataTree.Value;
+    public override MetadataNode<TMetadata> MetadataTiers => _metadataTree.Value;
     
     public override Explanation Explanation => _explanation.Value;
     public override IEnumerable<BooleanResultBase> Underlying => underlyingResults;

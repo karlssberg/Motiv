@@ -2,12 +2,12 @@
 
 internal sealed class HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
     bool isSatisfied,
-    Func<MetadataTree<TMetadata>> metadata,
+    Func<MetadataNode<TMetadata>> metadata,
     Func<Explanation> explanation,
     Func<string> reason)
     : BooleanResultBase<TMetadata>
 {
-    public override MetadataTree<TMetadata> MetadataTree => metadata();
+    public override MetadataNode<TMetadata> MetadataTiers => metadata();
     
     public override IEnumerable<BooleanResultBase> Underlying => Enumerable.Empty<BooleanResultBase>();
     

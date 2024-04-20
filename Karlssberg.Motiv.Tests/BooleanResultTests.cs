@@ -42,7 +42,7 @@ public class BooleanResultTests
     public void MetadataTree_ReturnsCorrectValue()
     {
         var result = new BooleanResult(true, "assertion");
-        result.MetadataTree.ToString().Should().Be("assertion");
+        result.MetadataTiers.ToString().Should().Be("assertion");
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public class BooleanResultTests
     public void MetadataTree_WithMetadata_ReturnsCorrectValue()
     {
         var result = new BooleanResult<bool>(true, "assertion", true);
-        result.MetadataTree.Should().AllBeEquivalentTo(true);
+        result.Metadata.Should().AllBeEquivalentTo(true);
     }
 
     [Fact]

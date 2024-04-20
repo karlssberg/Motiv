@@ -30,8 +30,8 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
                 : falseBecause(evaluation);
         });
 
-        var metadataTree = new Lazy<MetadataTree<string>>(() => 
-            new MetadataTree<string>(assertion.Value));
+        var metadataTree = new Lazy<MetadataNode<string>>(() => 
+            new MetadataNode<string>(assertion.Value));
 
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(assertion.Value, []));
@@ -42,7 +42,7 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
             Explanation,
             Reason);
         
-        MetadataTree<string> Metadata() => metadataTree.Value;
+        MetadataNode<string> Metadata() => metadataTree.Value;
         Explanation Explanation() => explanation.Value;
         string Reason() => assertion.Value;
     }

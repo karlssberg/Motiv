@@ -99,7 +99,7 @@ public class SpecDecoratorMetadataPropositionTests
 
         var act = sut.IsSatisfiedBy("model");
 
-        act.MetadataTree.Should().BeEquivalentTo(expectation);
+        act.Metadata.Should().BeEquivalentTo(expectation);
     }
 
 
@@ -154,7 +154,7 @@ public class SpecDecoratorMetadataPropositionTests
             ? trueReason
             : falseReason);
 
-        act.MetadataTree.Should().BeEquivalentTo(expectation);
+        act.Metadata.Should().BeEquivalentTo(expectation);
     }
 
     [Fact]

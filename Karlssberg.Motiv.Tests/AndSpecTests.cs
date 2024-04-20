@@ -33,7 +33,7 @@ public class AndSpecTests
         var result = sut.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(expected);
-        result.MetadataTree.Should().AllBeEquivalentTo(expected);
+        result.Metadata.Should().AllBeEquivalentTo(expected);
     }
 
     [Theory]
