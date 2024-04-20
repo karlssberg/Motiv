@@ -90,7 +90,7 @@ public class ChangeModelTypeSpecTests
 
         var act = isAllLetters.IsSatisfiedBy(model);
 
-        act.MetadataTree.Should().BeEquivalentTo(expected);
+        act.Metadata.Should().BeEquivalentTo(expected);
     }
     
     [Fact]

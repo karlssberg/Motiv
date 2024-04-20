@@ -1,4 +1,4 @@
-﻿# Conditional OR
+﻿# Conditional OR `||`
 
 A conditional OR (i.e., short-circuited) operation can be performed on two specifications using the
 `left.OrElse(right)` method.
@@ -13,13 +13,13 @@ For example:
 record Product(string Name, decimal Price, Size Size);
 
 var expensiveProductSpec = Spec
-    .Build<Product>(p => p.Price > 1000)
+    .Build((Product p) => p.Price > 1000)
     .WhenTrue("product is expensive")
     .WhenFalse("product is not expensive")
     .Create();
 
 var isProductSizeSmallSpec = Spec
-    .Build<Product>(p => p.Size == Size.Small)
+    .Build((Product p) => p.Size == Size.Small)
     .WhenTrue("product is easily stolen")
     .WhenFalse("product is not easily stolen")
     .Create();
@@ -44,7 +44,7 @@ var isProductAtRiskOfTheftSpec =
         .Create();
 ```
 
-You can also use the `|` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy` method. This is
+You can also use the `|` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy()` method. This is
 so that you can still aggregate the results of specifications that interrogate different models.
 
 ```csharp
@@ -52,7 +52,7 @@ record Store(decimal ShopLiftingRatePercentage);
 var store = new Store(5);
 
 var isAtRiskLocationSpec = Spec
-    .Build<Store>(store => store.ShopLiftingRatePercentage > 3)
+    .Build((Store store) => store.ShopLiftingRatePercentage > 3)
     .WhenTrue("the store has high incidents of shop lifting")
     .WhenFalse("the store has low incidents of shop lifting")
     .Create();
@@ -60,9 +60,9 @@ var isAtRiskLocationSpec = Spec
 var isAtRiskLocation = isAtRiskLocationSpec.IsSatisfiedBy(store);
 var isProductAtRiskOfTheft = isProductAtRiskOfTheftSpec.IsSatisfiedBy(store);
 
-var isExtaSecurityNeeded = isProductAtRiskOfTheft | isAtRiskLocation;
+var isExtraSecurityNeeded = isProductAtRiskOfTheft | isAtRiskLocation;
 
-isExtaSecurityNeeded.Satisfied; // true
-isExtaSecurityNeeded.Reason; // "the product is at risk of theft | the store has high incidents of shop lifting"
-isExtaSecurityNeeded.Assertions; // ["the product is at risk of theft", "the store has high incidents of shop lifting"]
+isExtraSecurityNeeded.Satisfied; // true
+isExtraSecurityNeeded.Reason; // "the product is at risk of theft | the store has high incidents of shop lifting"
+isExtraSecurityNeeded.Assertions; // ["the product is at risk of theft", "the store has high incidents of shop lifting"]
 ```

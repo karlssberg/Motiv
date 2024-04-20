@@ -6,13 +6,10 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
     IEnumerable<BooleanResultBase<TMetadata>> causalResults) 
     : ResultDescriptionBase
 {
-    private readonly BooleanResultBase<TMetadata>[] _causalResults = causalResults.ToArray();
     
-    internal override int CausalOperandCount => _causalResults.Length;
-    
-    public override string Reason => _causalResults
-        .Select(result => result.Description.Reason)
-        .Serialize(" ^ ");
+    internal override int CausalOperandCount => causalResults.Count();
+
+    public override string Reason => string.Join(" ^ ", causalResults.Select(result => result.Description.Reason));
 
     public override string Detailed => GetDetails();
 
@@ -39,8 +36,8 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
         {
             XOrBooleanResult<TMetadata> xOrSpec => 
                 xOrSpec.Description.Detailed,
-            ICompositeBooleanResult compositeSpec => 
-                $"({compositeSpec.Description.Detailed})",
+            IBinaryBooleanOperationResult<TMetadata> binaryResult => 
+                $"({binaryResult.Description.Detailed})",
             _ => result.Description.Detailed
         };
     }

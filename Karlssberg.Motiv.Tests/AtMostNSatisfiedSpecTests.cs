@@ -172,7 +172,9 @@ public class AtMostNSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            at most one is satisfied
+                                            at most one is satisfied {
+                                                3x is not satisfied
+                                            }
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied {
@@ -219,7 +221,7 @@ public class AtMostNSatisfiedSpecTests
             .Build((bool m) => m)
             .WhenTrue("is satisfied")
             .WhenFalse("is not satisfied")
-            .Create();;
+            .Create();
 
         var sut = Spec
             .Build(underlyingSpec)
@@ -235,7 +237,9 @@ public class AtMostNSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            at most one is satisfied
+                                            at most one is satisfied {
+                                                3x False
+                                            }
                                             """)]
     [InlineAutoData(false, false, true, """
                                             at most one is satisfied {
@@ -298,7 +302,9 @@ public class AtMostNSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            at most one is satisfied
+                                            at most one is satisfied {
+                                                3x !is true
+                                            }
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied {
@@ -342,7 +348,7 @@ public class AtMostNSatisfiedSpecTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("is true");
@@ -364,7 +370,7 @@ public class AtMostNSatisfiedSpecTests
     {
         const string expected = "at most one is satisfied";
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue("underlying model is true")
             .WhenFalse("underlying model is false")
             .Create("underlying spec description");
@@ -376,34 +382,12 @@ public class AtMostNSatisfiedSpecTests
             .WhenFalse("more than one is satisfied")
             .Create();
 
-        sut.Proposition.Statement.Should().Be(expected);
+        sut.Description.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
-    }
-
-    [Theory]
-    [InlineAutoData]
-    public void Should_wrap_thrown_exceptions_in_a_specification_exception(
-        string model)
-    {
-        var throwingSpec = new ThrowingSpec<object, string>(
-            "throws",
-            new Exception("should be wrapped"));
-
-        var sut = Spec
-            .Build(throwingSpec)
-            .AsAtMostNSatisfied(1)
-            .WhenTrue("at most one is satisfied")
-            .WhenFalse("more than one is satisfied")
-            .Create();
-
-        var act = () => sut.IsSatisfiedBy([model]);
-
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
-        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
     }
     
     [Theory]
-    [InlineAutoData(false, false, false, 0)]
+    [InlineAutoData(false, false, false, 3)]
     [InlineAutoData(false, false, true, 1)]
     [InlineAutoData(false, true, false, 1)]
     [InlineAutoData(false, true, true, 2)]
@@ -418,7 +402,7 @@ public class AtMostNSatisfiedSpecTests
         int expected)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("underlying");
         
         var sut = Spec

@@ -1,127 +1,194 @@
-﻿using Karlssberg.Motiv.Composite.CompositeSpecBuilders;
-using Karlssberg.Motiv.HigherOrder.HigherOrderSpecBuilders;
+﻿using Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders;
+using Karlssberg.Motiv.BooleanResultPredicateProposition.PropositionBuilders;
+using Karlssberg.Motiv.HigherOrderProposition.PropositionBuilders;
+using Karlssberg.Motiv.SpecDecoratorProposition.PropositionBuilders;
 
 namespace Karlssberg.Motiv;
 
 public static class HigherOrderSpecBuilderExtensions
 {
-    public static TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
-        this TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata> builder) =>
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
+        this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AllTrue());
-    public static TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
-        this BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> builder) =>
+    
+    public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
+        this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AllTrue());
-    public static TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> AsAllSatisfied<TModel>(
-            this BooleanPredicateSpecBuilder<TModel> builder) =>
+    
+    public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAllSatisfied<TModel>(
+            this BooleanPredicatePropositionBuilder<TModel> builder) =>
             builder.As(results => results.All(tuple => tuple.Satisfied));
     
     
-    public static TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> AsAnySatisfied<TModel, TUnderlyingMetadata>(
-        this TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata> builder) =>
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> AsAnySatisfied<TModel, TUnderlyingMetadata>(
+        this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AnyTrue());
-    public static TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> AsAnySatisfied<TModel, TUnderlyingMetadata>(
-        this BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> builder) =>
+    
+    public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAnySatisfied<TModel, TUnderlyingMetadata>(
+        this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AnyTrue());
-    public static  TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> AsAnySatisfied<TModel>(
-        this BooleanPredicateSpecBuilder<TModel> builder) =>
+    
+    public static  TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAnySatisfied<TModel>(
+        this BooleanPredicatePropositionBuilder<TModel> builder) =>
         builder.As(booleanResults => booleanResults.Any(result => result.Satisfied));
     
     
-    public static TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> AsNoneSatisfied<TModel, TUnderlyingMetadata>(
-        this TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata> builder) =>
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> AsNoneSatisfied<TModel, TUnderlyingMetadata>(
+        this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AllFalse());
-    public static TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> AsNoneSatisfied<TModel, TUnderlyingMetadata>(
-        this BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> builder) =>
+    
+    public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsNoneSatisfied<TModel, TUnderlyingMetadata>(
+        this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AllFalse());
 
-    public static TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> AsNoneSatisfied<TModel>(
-        this BooleanPredicateSpecBuilder<TModel> builder) =>
+    public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsNoneSatisfied<TModel>(
+        this BooleanPredicatePropositionBuilder<TModel> builder) =>
         builder.As(booleanResults => booleanResults.All(result => !result.Satisfied));
     
     
-    public static TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> AsNSatisfied<TModel, TUnderlyingMetadata>(
-        this TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata> builder,
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> AsNSatisfied<TModel, TUnderlyingMetadata>(
+        this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.CountTrue() == n,
-            (_, booleanResults) => booleanResults.WhereTrue());
+            (_, booleanResults) =>
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
-    public static TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> AsNSatisfied<TModel, TUnderlyingMetadata>(
-        this BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> builder,
+    
+    public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsNSatisfied<TModel, TUnderlyingMetadata>(
+        this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.CountTrue() == n,
-            (_, booleanResults) => booleanResults.WhereTrue());
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
-    public static TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> AsNSatisfied<TModel>(
-        this BooleanPredicateSpecBuilder<TModel> builder,
+    
+    public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsNSatisfied<TModel>(
+        this BooleanPredicatePropositionBuilder<TModel> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.Count(result => result.Satisfied) == n,
-            (_, booleanResults) => booleanResults.Where(result => result.Satisfied));
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .Where(result => result.Satisfied)
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
     
     
-    public static TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> AsAtLeastNSatisfied<TModel, TUnderlyingMetadata>(
-        this TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata> builder,
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> AsAtLeastNSatisfied<TModel, TUnderlyingMetadata>(
+        this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.CountTrue() >= n,
-            (_, booleanResults) => booleanResults.WhereTrue());
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
-    public static TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> AsAtLeastNSatisfied<TModel, TUnderlyingMetadata>(
-        this BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> builder,
+    
+    public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAtLeastNSatisfied<TModel, TUnderlyingMetadata>(
+        this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.CountTrue() >= n,
-            (_, booleanResults) => booleanResults.WhereTrue());
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
-    public static TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> AsAtLeastNSatisfied<TModel>(
-        this BooleanPredicateSpecBuilder<TModel> builder,
+    
+    public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAtLeastNSatisfied<TModel>(
+        this BooleanPredicatePropositionBuilder<TModel> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.Count(result => result.Satisfied) >= n,
-            (_, booleanResults) => booleanResults.Where(result => result.Satisfied));
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .Where(result => result.Satisfied)
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
     
 
-    public static TrueHigherOrderFromUnderlyingSpecBuilder<TModel, TUnderlyingMetadata> AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
-        this TrueCompositeSpecBuilder<TModel, TUnderlyingMetadata> builder,
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, TUnderlyingMetadata> AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
+        this TruePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.CountTrue() <= n,
-            (_, booleanResults) => booleanResults.WhereTrue());
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
-    public static TrueHigherOrderFromBooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
-        this BooleanResultPredicateSpecBuilder<TModel, TUnderlyingMetadata> builder,
+    
+    public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
+        this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.CountTrue() <= n,
-            (_, booleanResults) => booleanResults.WhereTrue());
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
-    public static TrueHigherOrderFromBooleanPredicateSpecBuilder<TModel> AsAtMostNSatisfied<TModel>(
-        this BooleanPredicateSpecBuilder<TModel> builder,
+    
+    public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAtMostNSatisfied<TModel>(
+        this BooleanPredicatePropositionBuilder<TModel> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
             booleanResults => booleanResults.Count(result => result.Satisfied) <= n,
-            (_, booleanResults) => booleanResults.Where(result => result.Satisfied));
+            (_, booleanResults) => 
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .Where(result => result.Satisfied)
+                    .ElseIfEmpty(booleanResultsArray);
+            });
     }
 }

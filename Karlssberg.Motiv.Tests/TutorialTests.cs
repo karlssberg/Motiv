@@ -1,5 +1,4 @@
-﻿using AutoFixture.Xunit2;
-using FluentAssertions;
+﻿using FluentAssertions;
 
 namespace Karlssberg.Motiv.Tests;
 
@@ -58,8 +57,8 @@ public class TutorialTests
     {
         var isEven = Spec
             .Build<int>(n => n % 2 == 0)
-            .WhenTrue(n => new { English = "the number is even", Spanish = "el número es par" })
-            .WhenFalse(n => new { English = "the number is odd", Spanish = "el número es impar" })
+            .WhenTrue(_ => new { English = "the number is even", Spanish = "el número es par" })
+            .WhenFalse(_ => new { English = "the number is odd", Spanish = "el número es impar" })
             .Create("is even number");
 
         isEven.IsSatisfiedBy(2).Satisfied.Should().BeTrue();
@@ -69,7 +68,7 @@ public class TutorialTests
     }
 
     [Fact]
-    public void Should_demo_composite_spec()
+    public void Should_demo_spec_decorator()
     {
         var isPositive = Spec
             .Build<int>(n => n > 0)
@@ -87,16 +86,18 @@ public class TutorialTests
 
         isPositiveAndEven.IsSatisfiedBy(2).Satisfied.Should().BeTrue();
         isPositiveAndEven.IsSatisfiedBy(2).Reason.Should().Be("the number is positive & the number is even");
-        isPositiveAndEven.IsSatisfiedBy(2).Assertions.Should()
-            .BeEquivalentTo("the number is positive", "the number is even");
-
+        isPositiveAndEven.IsSatisfiedBy(2).Assertions.Should().BeEquivalentTo("the number is positive", "the number is even");
+        isPositiveAndEven.IsSatisfiedBy(2).AllAssertions.Should().BeEquivalentTo("the number is positive", "the number is even");
+        
         isPositiveAndEven.IsSatisfiedBy(3).Satisfied.Should().BeFalse();
         isPositiveAndEven.IsSatisfiedBy(3).Reason.Should().Be("the number is odd");
         isPositiveAndEven.IsSatisfiedBy(3).Assertions.Should().BeEquivalentTo("the number is odd");
+        isPositiveAndEven.IsSatisfiedBy(3).AllAssertions.Should().BeEquivalentTo("the number is positive", "the number is odd");
 
         isPositiveAndEven.IsSatisfiedBy(-2).Satisfied.Should().BeFalse();
         isPositiveAndEven.IsSatisfiedBy(-2).Reason.Should().Be("the number is negative");
         isPositiveAndEven.IsSatisfiedBy(-2).Assertions.Should().BeEquivalentTo("the number is negative");
+        isPositiveAndEven.IsSatisfiedBy(-2).AllAssertions.Should().BeEquivalentTo("the number is negative", "the number is even");
     }
 
     [Fact]
@@ -115,7 +116,7 @@ public class TutorialTests
                 .WhenFalse(evaluation => evaluation switch
                 {
                     { FalseCount: <= 10 } => evaluation.FalseModels.Select(n => $"{n}  is not negative"),
-                    _ => $"{evaluation.FalseCount} of {evaluation.Count} are not negative".ToEnumerable()
+                    _ => [$"{evaluation.FalseCount} of {evaluation.Count} are not negative"]
                 })
                 .Create();
 
@@ -143,7 +144,7 @@ public class TutorialTests
         var isEvenAndPositiveSpec =
             Spec.Build(isEvenSpec & isPositiveSpec)
                 .WhenTrue("the number is even and positive")
-                .WhenFalse((_,evaluation) => $"the number is {string.Join(" and ", evaluation.Assertions)}")
+                .WhenFalse((_,evaluation) => $"the number is {evaluation.Assertions.Serialize()}")
                 .Create();
         
         isEvenAndPositiveSpec.IsSatisfiedBy(2).Satisfied.Should().BeTrue();
@@ -179,6 +180,12 @@ public class TutorialTests
         result.Reason.Should().Be("basket is empty");
         result.Reason.Should().BeEquivalentTo("basket is empty");
     }
+
+    private class IsNegativeIntegerSpec() : Spec<int>(
+        Spec.Build((int n) => n < 0)
+            .WhenTrue(n => $"{n} is negative")
+            .WhenFalse(n => $"{n} is not negative")
+            .Create("is negative"));
     
     [Fact]
     public void Should_demonstrate_is_even_spec_as_an_all_satisfied_higher_order_logic()
@@ -195,15 +202,15 @@ public class TutorialTests
                 .WhenTrue(evaluation =>
                     evaluation switch 
                     { 
-                        { NoneSatisfied: true } => "the collection is empty",
-                        { TrueCount: 1 } => $"{evaluation.TrueModels.Serialize()} is even and is the only item",
+                        { Count: 0 } => "the collection is empty",
+                        { Models: [var n] } => $"{n} is even and is the only item",
                         _ => "all are even"
                     })
                 .WhenFalse(evaluation =>
                     evaluation switch
                     {
-                        { Count: 1 } => [$"{evaluation.FalseModels.Serialize()} is odd and is the only item"],
-                        { FalseCount: 1 } => [$"only {evaluation.FalseModels.Serialize()} is odd"],
+                        { Models: [var n] } => [$"{n} is odd and is the only item"],
+                        { FalseModels: [var n] } => [$"only {n} is odd"],
                         { NoneSatisfied: true } => ["all are odd"],
                         _ => evaluation.FalseModels.Select(n => $"{n} is odd")
                     })
@@ -235,31 +242,24 @@ public class TutorialTests
     [Fact]
     public void Should_demonstrate_is_negative_spec_as_an_all_satisfied_higher_order_logic()
     {
-        var isNegative =
-            Spec.Build<int>(n => n < 0)
-                .WhenTrue("negative")
-                .WhenFalse("not negative")
-                .Create();
 
         var allAreNegative =
-            Spec.Build(isNegative)
+            Spec.Build(new IsNegativeIntegerSpec())
                 .AsAllSatisfied()
                 .WhenTrue(eval => eval switch
                 {
-                    { Models.Count: 0 } => "there is an absence of numbers",
-                    { Models.Count: 1 } => $"{eval.TrueModels.Serialize()} is negative and is the only number",
+                    { Count: 0 } => "there is an absence of numbers",
+                    { Models: [< 0 and var n] } => $"{n} is negative and is the only number",
                     _ => "all are negative numbers"
                 })
                 .WhenFalse(eval => eval switch
                 {
                     { Models: [0] } => ["the number is 0 and is the only number"],
-                    { Models: [> 0] } => [$"{eval.Models.Serialize()} is positive and is the only number"],
-                    { NoneSatisfied: true } when eval.Models.All(m => m == 0) => ["all are 0"],
+                    { Models: [> 0 and var n] } => [$"{n} is positive and is the only number"],
+                    { NoneSatisfied: true } when eval.Models.All(m => m is 0) => ["all are 0"],
                     { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
                     { NoneSatisfied: true } =>  ["none are negative numbers"],
-                    _ => eval.FalseModels.Select(n => n == 0
-                            ? "0 is neither positive or negative"
-                            : $"{n} is positive")
+                    _ => eval.FalseResults.GetAssertions()
                 })
                 .Create("all are negative");
 
@@ -293,6 +293,67 @@ public class TutorialTests
 
 
         allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Satisfied.Should().BeFalse();
-        allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions.Should().BeEquivalentTo("9 is positive", "0 is neither positive or negative");
+        allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions.Should().BeEquivalentTo("0 is not negative", "9 is not negative");
+    }
+    
+    [Fact]
+    public void Should_harvest_assertions_from_a_boolean_result_predicate()
+    {
+        var isLongEvenSpec = 
+            Spec.Build((long n) => n % 2 == 0)
+                .WhenTrue("even")
+                .WhenFalse("odd")
+                .Create();
+
+        var isDecimalPositiveSpec =
+            Spec.Build((decimal n) => n > 0)
+                .WhenTrue("positive")
+                .WhenFalse("not positive")
+                .Create();
+
+        var isIntegerPositiveAndEvenSpec = 
+            Spec.Build((int n) => isLongEvenSpec.IsSatisfiedBy(n) & isDecimalPositiveSpec.IsSatisfiedBy(n))
+                .Create("even and positive");
+        
+        isIntegerPositiveAndEvenSpec.IsSatisfiedBy(2).AllRootAssertions.Should().BeEquivalentTo("even", "positive");
+        isIntegerPositiveAndEvenSpec.IsSatisfiedBy(3).AllRootAssertions.Should().BeEquivalentTo("odd", "positive");
+        isIntegerPositiveAndEvenSpec.IsSatisfiedBy(0).AllRootAssertions.Should().BeEquivalentTo("even", "not positive");
+        isIntegerPositiveAndEvenSpec.IsSatisfiedBy(-3).AllRootAssertions.Should().BeEquivalentTo("odd", "not positive");
+    }
+
+    public record Passenger(bool HasValidTicket, decimal OutstandingFees, DateTime FlightTime);
+    [Fact]
+    public void Can_check_in_a_flight_demo()
+    {
+        var hasValidTicketSpec =
+            Spec.Build((Passenger passenger) => passenger.HasValidTicket)
+                .WhenTrue("has a valid ticket")
+                .WhenFalse("does not have a valid ticket")
+                .Create();
+
+        var hasOutstandingFeesSpec =
+            Spec.Build((Passenger passenger) => passenger.OutstandingFees > 0)
+                .WhenTrue("has outstanding fees")
+                .WhenFalse("does not have outstanding fees")
+                .Create();
+
+        var isCheckInOpenSpec =
+            Spec.Build((Passenger passenger) =>
+                passenger.FlightTime - DateTime.Now <= TimeSpan.FromHours(4) &&
+                passenger.FlightTime - DateTime.Now >= TimeSpan.FromMinutes(30))
+                    .WhenTrue("check-in is open")
+                    .WhenFalse("check-in is closed")
+                    .Create();
+
+        var canCheckInSpec = hasValidTicketSpec & !hasOutstandingFeesSpec & isCheckInOpenSpec;
+
+        var validPassenger = new Passenger(true, 0, DateTime.Now.AddHours(1));
+        
+        
+        var canCheckIn = canCheckInSpec.IsSatisfiedBy(validPassenger);
+
+        canCheckIn.Satisfied.Should().Be(true);
+        canCheckIn.Reason.Should().BeEquivalentTo("has a valid ticket & does not have outstanding fees & check-in is open");
+        canCheckIn.Assertions.Should().BeEquivalentTo("has a valid ticket", "does not have outstanding fees", "check-in is open");
     }
 }

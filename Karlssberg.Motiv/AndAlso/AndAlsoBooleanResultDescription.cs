@@ -15,7 +15,7 @@ internal sealed class AndAlsoBooleanResultDescription<TMetadata>(
         {
             0 => "",
             1 => causalResults.First().Description.Reason,
-            _ =>  causalResults.Select(ExplainReasons).Serialize(" && ")
+            _ =>  string.Join(" && ", causalResults.Select(ExplainReasons))
         };
 
     public override string Detailed => GetDetails();
@@ -48,8 +48,8 @@ internal sealed class AndAlsoBooleanResultDescription<TMetadata>(
                 andSpec.Description.Detailed,
             AndAlsoBooleanResult<TMetadata> andAlsoSpec =>
                 andAlsoSpec.Description.Detailed,
-            ICompositeBooleanResult compositeSpec =>
-                $"({compositeSpec.Description.Detailed})",
+            IBinaryBooleanOperationResult<TMetadata> binaryResult =>
+                $"({binaryResult.Description.Detailed})",
             _ => result.Description.Detailed
         };
     }
@@ -62,8 +62,8 @@ internal sealed class AndAlsoBooleanResultDescription<TMetadata>(
                 andSpec.Description.Reason,
             AndAlsoBooleanResult<TMetadata> andAlsoSpec =>
                 andAlsoSpec.Description.Reason,
-            ICompositeBooleanResult { Description.CausalOperandCount: > 1 } compositeSpec =>
-                $"({compositeSpec.Description.Reason})",
+            IBinaryBooleanOperationResult<TMetadata> { Description.CausalOperandCount: > 1 } binaryResult =>
+                $"({binaryResult.Description.Reason})",
             _ => result.Description.Reason
         };
     }

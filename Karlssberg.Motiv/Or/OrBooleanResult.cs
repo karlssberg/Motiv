@@ -5,51 +5,47 @@
 internal sealed class OrBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right)
-    : BooleanResultBase<TMetadata>, ICompositeBooleanResult
+    : BooleanResultBase<TMetadata>, IBinaryBooleanOperationResult<TMetadata>
 {
-    /// <inheritdoc />
-    public override ExplanationTree ExplanationTree => GetCausalResults().CreateExplanation();
+    public override Explanation Explanation => GetCausalResults().CreateExplanation();
     
-    /// <inheritdoc />
-    public override MetadataTree<TMetadata> MetadataTree => CreateMetadataSet();
+    public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
     
-    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
     
-    /// <inheritdoc />
+    public BooleanResultBase<TMetadata> Left { get; } = left;
+
+    public BooleanResultBase<TMetadata> Right { get; } = right;
+
+    BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
+    
+    BooleanResultBase IBinaryBooleanOperationResult.Right => Right;
+    
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
     
-    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase> Causes => GetCausalResults();
     
-    /// <inheritdoc />
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => GetCausalResults();
 
-    /// <inheritdoc />`
     public override bool Satisfied { get; } = left.Satisfied || right.Satisfied;
 
-    /// <inheritdoc />
-    public override ResultDescriptionBase Description => new OrBooleanResultDescription<TMetadata>(left, right, GetCausalResults());
-
-    private MetadataTree<TMetadata> CreateMetadataSet()
-    {
-        var metadataSets = GetCausalResults().Select(result => result.MetadataTree).ToArray();
-        return new(
-            metadataSets.SelectMany(metadataSet => metadataSet),
-            metadataSets.SelectMany(metadataSet => metadataSet.Underlying));
-    }
+    public override ResultDescriptionBase Description => new OrBooleanResultDescription<TMetadata>(Left, Right, GetCausalResults());
 
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {
-        if (left.Satisfied == Satisfied)
-            yield return left;
+        if (Left.Satisfied == Satisfied)
+            yield return Left;
         
-        if (right.Satisfied == Satisfied)
-            yield return right;
+        if (Right.Satisfied == Satisfied)
+            yield return Right;
     }
+    
     private IEnumerable<BooleanResultBase<TMetadata>> GetResults()
     {
-            yield return left;
-            yield return right;
+        yield return Left;
+        yield return Right;
     }
+    
+    private MetadataNode<TMetadata> CreateMetadataTier() =>
+        new(CausesWithMetadata.GetMetadata(), CausesWithMetadata);
 }

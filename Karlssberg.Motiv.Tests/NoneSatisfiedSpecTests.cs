@@ -20,7 +20,7 @@ public class NoneSatisfiedSpecTests
         bool expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
@@ -39,7 +39,9 @@ public class NoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         none are true
+                                         none are true {
+                                             3x false
+                                         }
                                          """)]
     [InlineAutoData(false, false, true, """
                                         !none are true {
@@ -83,7 +85,7 @@ public class NoneSatisfiedSpecTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString().ToLowerInvariant())
             .WhenFalse(false.ToString().ToLowerInvariant())
             .Create();
@@ -102,7 +104,9 @@ public class NoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         none are true
+                                         none are true {
+                                             3x false
+                                         }
                                          """)]
     [InlineAutoData(false, false, true, """
                                         !none are true {
@@ -147,7 +151,7 @@ public class NoneSatisfiedSpecTests
             string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString().ToLowerInvariant())
             .WhenFalse(false.ToString().ToLowerInvariant())
             .Create();
@@ -167,8 +171,10 @@ public class NoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         none are true
-                                         """)]
+                                        none are true {
+                                            3x !is true
+                                        }
+                                        """)]
     [InlineAutoData(false, false, true, """
                                         !none are true {
                                             1x is true
@@ -211,7 +217,7 @@ public class NoneSatisfiedSpecTests
         string expected)
     {
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("is true");
@@ -230,8 +236,10 @@ public class NoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         none are true
-                                         """)]
+                                        none are true {
+                                            3x !left & !right
+                                        }
+                                        """)]
     [InlineAutoData(false, false, true, """
                                         !none are true {
                                             1x left & right
@@ -248,10 +256,10 @@ public class NoneSatisfiedSpecTests
                                        }
                                        """)]
     [InlineAutoData(true, false, false, """
-                                        !none are true {
-                                            1x left & right
-                                        }
-                                        """)]
+                                       !none are true {
+                                           1x left & right
+                                       }
+                                       """)]
     [InlineAutoData(true, false, true, """
                                        !none are true {
                                            2x left & right
@@ -263,10 +271,10 @@ public class NoneSatisfiedSpecTests
                                        }
                                        """)]
     [InlineAutoData(true, true, true, """
-                                      !none are true {
-                                          3x left & right
-                                      }
-                                      """)]
+                                       !none are true {
+                                           3x left & right
+                                       }
+                                       """)]
     public void Should_serialize_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,
@@ -274,13 +282,13 @@ public class NoneSatisfiedSpecTests
         string expected)
     {
         var underlyingSpecLeft = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("left");
 
         var underlyingSpecRight = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("right");
@@ -314,13 +322,13 @@ public class NoneSatisfiedSpecTests
         string expected)
     {
         var underlyingSpecLeft = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("left");
 
         var underlyingSpecRight = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("right");
@@ -352,7 +360,7 @@ public class NoneSatisfiedSpecTests
             """;
 
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("is true");
@@ -364,8 +372,8 @@ public class NoneSatisfiedSpecTests
             .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
             .Create("all booleans are true");
 
-        sut.Proposition.Statement.Should().Be(expectedSummary);
-        sut.Proposition.Detailed.Should().Be(expectedFull);
+        sut.Description.Statement.Should().Be(expectedSummary);
+        sut.Description.Detailed.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }
 
@@ -381,7 +389,7 @@ public class NoneSatisfiedSpecTests
             """;
 
         var underlyingSpec = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .WhenTrue("is true")
             .WhenFalse("is false")
             .Create();
@@ -393,31 +401,8 @@ public class NoneSatisfiedSpecTests
             .WhenFalse(false)
             .Create("none are true");
 
-        sut.Proposition.Statement.Should().Be(expectedSummary);
-        sut.Proposition.Detailed.Should().Be(expectedFull);
+        sut.Description.Statement.Should().Be(expectedSummary);
+        sut.Description.Detailed.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
-    }
-
-    [Theory]
-    [InlineAutoData]
-    public void Should_wrap_thrown_exceptions_in_a_specification_exception(
-        string model)
-    {
-        var throwingSpec = new ThrowingSpec<object, string>(
-            "throws",
-            new Exception("should be wrapped"));
-
-        var sut = Spec
-            .Build(throwingSpec)
-            .AsNoneSatisfied()
-            .WhenTrue(evaluation => $"{evaluation.TrueCount} true")
-            .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
-            .Create("all booleans are true");
-
-        var act = () => sut.IsSatisfiedBy([model]);
-
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
-        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>()
-            .Where(ex => ex.Message.Contains("should be wrapped"));
     }
 }

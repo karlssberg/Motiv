@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Karlssberg.Motiv.Poker.HandRankSpecs;
+using Karlssberg.Motiv.Poker.HandRankProposition;
 using static Karlssberg.Motiv.Poker.Tests.HandRanks;
 
 namespace Karlssberg.Motiv.Poker.Tests;
@@ -7,12 +7,12 @@ namespace Karlssberg.Motiv.Poker.Tests;
 public class HandTests
 {
     [Theory]
-    [InlineAutoData("A, A, A, A, 2", false, HandRank.Unknown)]
-    [InlineAutoData("K, A, A, 2, 2", false, HandRank.Unknown)]
-    [InlineAutoData("K, A, 2, 2, 2", false, HandRank.Unknown)]
-    [InlineAutoData("A, A, K, Q, 10", true, HandRank.Pair)]
-    [InlineAutoData("A, K, K, Q, 10", true, HandRank.Pair)]
-    [InlineAutoData("A, K, Q, Q, 10", true, HandRank.Pair)]
+    [InlineData("A, A, A, A, 2", false, HandRank.Unknown)]
+    [InlineData("K, A, A, 2, 2", false, HandRank.Unknown)]
+    [InlineData("K, A, 2, 2, 2", false, HandRank.Unknown)]
+    [InlineData("A, A, K, Q, 10", true, HandRank.Pair)]
+    [InlineData("A, K, K, Q, 10", true, HandRank.Pair)]
+    [InlineData("A, K, Q, Q, 10", true, HandRank.Pair)]
     public void Should_evaluate_a_pair(string handRanks, bool expected, HandRank expectedRank)
     {
         var cards = handRanks
@@ -22,23 +22,22 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandPairSpec();
+        var sut = new IsHandPairProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().Be(expected);
-        act.MetadataTree.Should().AllBeEquivalentTo(expectedRank);
+        act.Metadata.Should().AllBeEquivalentTo(expectedRank);
     }
     
     [Theory]
-    [InlineAutoData("A, A, 9, 2, 2", true, HandRank.TwoPair)]
-    [InlineAutoData("K, K, 3, 2, 2", true, HandRank.TwoPair)]
-    [InlineAutoData("K, K, A, A, 2", true, HandRank.TwoPair)]
-    [InlineAutoData("4, K, A, A, 4", true, HandRank.TwoPair)]
-    [InlineAutoData("4, 4, 5, 6, 7", false, HandRank.Unknown)]
-    [InlineAutoData("A, A, 8, K, 2", false, HandRank.Unknown)]
-    [InlineAutoData("A, A, A, K, 2", false, HandRank.Unknown)]
-    [InlineAutoData("A, A, A, K, 2", false, HandRank.Unknown)]
+    [InlineData("A, A, 9, 2, 2", true, HandRank.TwoPair)]
+    [InlineData("K, K, 3, 2, 2", true, HandRank.TwoPair)]
+    [InlineData("K, K, A, A, 2", true, HandRank.TwoPair)]
+    [InlineData("4, K, A, A, 4", true, HandRank.TwoPair)]
+    [InlineData("4, 4, 5, 6, 7", false, HandRank.Unknown)]
+    [InlineData("A, A, 8, K, 2", false, HandRank.Unknown)]
+    [InlineData("A, A, A, K, 2", false, HandRank.Unknown)]
     public void Should_evaluate_two_pairs(string handRanks, bool expected, HandRank expectedRank)
     {
         var cards = handRanks
@@ -48,25 +47,25 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandTwoPairSpec();
+        var sut = new IsHandTwoPairProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().Be(expected);
-        act.MetadataTree.Should().AllBeEquivalentTo(expectedRank);
+        act.Metadata.Should().AllBeEquivalentTo(expectedRank);
     }
     
     [Theory]
-    [InlineAutoData(AceHighStraightBroadway)]
-    [InlineAutoData(KingHighStraight)]
-    [InlineAutoData(QueenHighStraight)]
-    [InlineAutoData(JackHighStraight)]
-    [InlineAutoData(TenHighStraight)]
-    [InlineAutoData(NineHighStraight)]
-    [InlineAutoData(EightHighStraight)]
-    [InlineAutoData(SevenHighStraight)]
-    [InlineAutoData(SixHighStraight)]
-    [InlineAutoData(FiveHighStraightWheelorBicycle)]
+    [InlineData(AceHighStraightBroadway)]
+    [InlineData(KingHighStraight)]
+    [InlineData(QueenHighStraight)]
+    [InlineData(JackHighStraight)]
+    [InlineData(TenHighStraight)]
+    [InlineData(NineHighStraight)]
+    [InlineData(EightHighStraight)]
+    [InlineData(SevenHighStraight)]
+    [InlineData(SixHighStraight)]
+    [InlineData(FiveHighStraightWheelorBicycle)]
     public void Should_evaluate_a_straight(string straightRanks)
     {
         var cards = straightRanks
@@ -76,22 +75,23 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandStraightSpec();
+        var sut = new IsHandStraightProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().BeTrue();
-        act.MetadataTree.Max().Should().Be(HandRank.Straight);
+        act.Metadata.Max().Should().Be(HandRank.Straight);
     }
 
     [Theory]
-    [InlineAutoData("A, K, Q, J, 9")]
-    [InlineAutoData("K, Q, J, 10, 8")]
-    [InlineAutoData("Q, J, 10, 9, 7")]
-    [InlineAutoData("J, 10, 9, 8, 6")]
-    [InlineAutoData("10, 9, 8, 7, 5")]
-    [InlineAutoData("9, 8, 7, 6, 4")]
-    [InlineAutoData("8, 7, 6, 5, 3")]
+    [InlineData("A, K, Q, J, 9")]
+    [InlineData("K, Q, J, 10, 8")]
+    [InlineData("Q, J, 10, 9, 7")]
+    [InlineData("J, 10, 9, 8, 6")]
+    [InlineData("10, 9, 8, 7, 5")]
+    [InlineData("9, 8, 7, 6, 4")]
+    [InlineData("8, 7, 6, 5, 3")]
+    [InlineData("A, A, 10, 5, 2")]
     public void Should_not_evaluate_a_straight(string straightRanks)
     {
         var cards = straightRanks
@@ -101,7 +101,7 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandStraightSpec();
+        var sut = new IsHandStraightProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -125,12 +125,12 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandFlushSpec();
+        var sut = new IsHandFlushProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().BeTrue();
-        act.MetadataTree.Max().Should().Be(HandRank.Flush);
+        act.Metadata.Max().Should().Be(HandRank.Flush);
     }
 
     [Theory]
@@ -151,16 +151,16 @@ public class HandTests
             .Select(rank => new Card(rank, flushSuit))
             .ToList());
 
-        var sut = new IsHandStraightFlushSpec();
+        var sut = new IsHandStraightFlushProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().BeTrue();
-        act.MetadataTree.Max().Should().Be(HandRank.StraightFlush);
+        act.Metadata.Max().Should().Be(HandRank.StraightFlush);
     }
 
     [Theory]
-    [InlineAutoData]
+    [AutoData]
     public void Should_evaluate_a_royal_flush(Suit flushSuit)
     {
         var hand = new Hand(new List<Card>
@@ -171,11 +171,49 @@ public class HandTests
             new("J", flushSuit),
             new("10", flushSuit)
         });
-        var sut = new IsHandRoyalFlushSpec();
+        var sut = new IsHandRoyalFlushProposition();
 
         var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().BeTrue();
-        act.MetadataTree.Max().Should().Be(HandRank.RoyalFlush);
+        act.Metadata.Max().Should().Be(HandRank.RoyalFlush);
+    }
+    
+    [Theory]
+    [InlineData("AH, KH, QH, JH, 10H", true, HandRank.RoyalFlush, "is a royal flush hand")]
+    [InlineData("KH, QH, JH, 10H, 9H", true, HandRank.StraightFlush, "is a straight flush hand")]
+    [InlineData("AH, AD, AC, AS, 3C", true, HandRank.FourOfAKind, "is a four of a kind hand")]
+    [InlineData("AH, AD, AC, JH, JS", true, HandRank.FullHouse, "is a full house hand")]
+    [InlineData("10H, 8H, 6H, 4H, 2H", true, HandRank.Flush, "is a flush hand")]
+    [InlineData("10H, 9C, 8S, 7D, 6H", true, HandRank.Straight, "is a straight hand")]
+    [InlineData("AH, AD, AS, 10H, 9D", true, HandRank.ThreeOfAKind, "is a three of a kind hand")]
+    [InlineData("AH, AD, QS, 10D, 10H", true, HandRank.TwoPair, "is a two pair hand")]
+    [InlineData("AH, AD, 10S, 5C, 2H", true, HandRank.Pair, "is a pair hand")]
+    [InlineData("AH, 10D, 8S, 5C, 3D", false, HandRank.HighCard, "!is a royal flush hand",
+                                                                                            "!is a straight flush hand",
+                                                                                            "!is a four of a kind hand",
+                                                                                            "!is a full house hand",
+                                                                                            "!is a flush hand",
+                                                                                            "!is a straight hand",
+                                                                                            "!is a three of a kind hand",
+                                                                                            "!is a two pair hand", 
+                                                                                            "!is a pair hand")]
+    public void Should_evaluate_a_winning_hand(string handRanks, bool expected, HandRank expectedRank, params string[] expectedAssertion)
+    {
+        var cards = handRanks
+            .Split(", ")
+            .Select(card => new Card(card[..^1], card[^1]))
+            .ToList();
+
+        var hand = new Hand(cards);
+
+        var sut = new IsWinningHandProposition();
+
+        var act = sut.IsSatisfiedBy(hand);
+
+        act.Satisfied.Should().Be(expected);
+        act.Metadata.Max().Should().Be(expectedRank);
+        act.Explanation.Underlying.GetAssertions().Should().BeEquivalentTo(expectedAssertion);
+        act.SubAssertions.Should().BeEquivalentTo(expectedAssertion);
     }
 }

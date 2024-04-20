@@ -1,5 +1,4 @@
-﻿using Karlssberg.Motiv.AndAlso;
-using Karlssberg.Motiv.Or;
+﻿using Karlssberg.Motiv.Or;
 
 namespace Karlssberg.Motiv.OrElse;
 
@@ -16,7 +15,7 @@ internal sealed class OrElseBooleanResultDescription<TMetadata>(
         {
             0 => "",
             1 => causalResults.First().Description.Reason,
-            _ => causalResults.Select(ExplainReasons).Serialize(" || ")
+            _ => string.Join(" || ", causalResults.Select(ExplainReasons))
         };
 
     public override string Detailed => GetDetails();
@@ -45,12 +44,12 @@ internal sealed class OrElseBooleanResultDescription<TMetadata>(
     {
         return result switch 
         {
-            OrBooleanResult<TMetadata> orSpec =>
-                orSpec.Description.Detailed,
-            OrElseBooleanResult<TMetadata> orElseSpec =>
-                orElseSpec.Description.Detailed,
-            ICompositeBooleanResult compositeSpec =>
-                $"({compositeSpec.Description.Detailed})",
+            OrBooleanResult<TMetadata> orResult =>
+                orResult.Description.Detailed,
+            OrElseBooleanResult<TMetadata> orElseResult =>
+                orElseResult.Description.Detailed,
+            IBinaryBooleanOperationResult<TMetadata> binaryResult =>
+                $"({binaryResult.Description.Detailed})",
             _ => result.Description.Detailed
         };
     }
@@ -59,12 +58,12 @@ internal sealed class OrElseBooleanResultDescription<TMetadata>(
     {
         return result switch 
         {
-            OrBooleanResult<TMetadata> orSpec =>
-                orSpec.Description.Reason,
-            OrElseBooleanResult<TMetadata> orElseSpec =>
-                orElseSpec.Description.Reason,
-            ICompositeBooleanResult { Description.CausalOperandCount: > 1 } compositeSpec =>
-                $"({compositeSpec.Description.Reason})",
+            OrBooleanResult<TMetadata> orResult =>
+                orResult.Description.Reason,
+            OrElseBooleanResult<TMetadata> orElseResult =>
+                orElseResult.Description.Reason,
+            IBinaryBooleanOperationResult<TMetadata> { Description.CausalOperandCount: > 1 } binaryResult =>
+                $"({binaryResult.Description.Reason})",
             _ => result.Description.Reason
         };
     }

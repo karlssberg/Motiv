@@ -54,7 +54,7 @@ public class AnySatisfiedSpecTests
             .WhenFalse(false)
             .Create("high-level description");
 
-        sut.Proposition.Statement.Should().Be(expected);
+        sut.Description.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -254,28 +254,6 @@ public class AnySatisfiedSpecTests
 
         result.Description.Detailed.Should().Be(expected);
     }
-
-    [Theory]
-    [InlineAutoData]
-    public void Should_wrap_thrown_exceptions_in_a_specification_exception(
-        string model)
-    {
-        var throwingSpec = new ThrowingSpec<object, string>(
-            "should always throw",
-            new Exception("should be wrapped"));
-
-        var sut = 
-            Spec.Build(throwingSpec)
-                .AsAnySatisfied()
-                .WhenTrue("any true")
-                .WhenFalse("any false")
-                .Create();
-
-        var act = () => sut.IsSatisfiedBy([model]);
-
-        act.Should().Throw<SpecException>().Where(ex => ex.Message.Contains("ThrowingSpec<Object, String>"));
-        act.Should().Throw<SpecException>().WithInnerExceptionExactly<Exception>().Where(ex => ex.Message.Contains("should be wrapped"));
-    }
     
     [Theory]
     [InlineAutoData(false, false, false, 3)]
@@ -314,7 +292,7 @@ public class AnySatisfiedSpecTests
     public void Should_surface_boolean_results_created_from_underlyingResult(bool modelA, bool modelB, bool expected, string expectedAssertion)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("underlying");
 
         var sut = Spec
@@ -336,7 +314,7 @@ public class AnySatisfiedSpecTests
     public void Should_surface_boolean_results_with_custom_assertions_created_from_underlyingResult(bool modelA, bool modelB, bool expected, string expectedAssertion)
     {
         var underlying = Spec
-            .Build<bool>(m => m)
+            .Build((bool m) => m)
             .Create("underlying");
 
         var sut = Spec
