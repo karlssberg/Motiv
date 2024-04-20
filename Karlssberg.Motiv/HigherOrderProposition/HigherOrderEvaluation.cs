@@ -45,7 +45,7 @@ public struct HigherOrderEvaluation<TModel, TMetadata>
         _lazyAssertions = new Lazy<IReadOnlyList<string>>(() =>
             causalResults.SelectMany(result => result.Assertions).ToArray());
         _lazyMetadata = new Lazy<IReadOnlyList<TMetadata>>(() =>
-            causalResults.SelectMany(result => result.MetadataTiers.Metadata).ToArray());
+            causalResults.SelectMany(result => result.MetadataTier.Metadata).ToArray());
         CausalResults = causalResults;
     }
 

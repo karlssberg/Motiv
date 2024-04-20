@@ -51,7 +51,7 @@ internal sealed class AndAlsoBooleanResult<TMetadata>(
     {
         var causes = GetCauses().ToArray();
         var underlying =  causes
-            .SelectMany(cause => cause.MetadataTiers.Underlying);
+            .SelectMany(cause => cause.MetadataTier.Underlying);
         
         return new MetadataNode<TMetadata>(causes.GetMetadata(), underlying);
     }

@@ -7,7 +7,7 @@ public sealed class PropositionBooleanResult<TMetadata>(
     string reason)
     : BooleanResultBase<TMetadata>, IPropositionResult
 {
-    public override MetadataNode<TMetadata> MetadataTiers => metadataTree;
+    public override MetadataNode<TMetadata> MetadataTier => metadataTree;
 
     public override IEnumerable<BooleanResultBase> Underlying =>
         Enumerable.Empty<BooleanResultBase>();

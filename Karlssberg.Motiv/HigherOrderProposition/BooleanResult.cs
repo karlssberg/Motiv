@@ -32,7 +32,7 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
     public override bool Satisfied { get; }
 
-    public override MetadataNode<TMetadata> MetadataTiers => _underlyingResult.MetadataTiers;
+    public override MetadataNode<TMetadata> MetadataTier => _underlyingResult.MetadataTier;
     
     public override IEnumerable<BooleanResultBase> Underlying  => _underlyingResult.ToEnumerable();
     

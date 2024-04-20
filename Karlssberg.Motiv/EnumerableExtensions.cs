@@ -187,17 +187,17 @@ public static class EnumerableExtensions
     
     internal static IEnumerable<TMetadata> GetRootMetadata<TMetadata>(
         this BooleanResultBase<TMetadata> result) =>
-        result.MetadataTiers
+        result.MetadataTier
             .Underlying
             .GetRootMetadata()
             .Distinct();
     
     private static IEnumerable<TMetadata> GetRootMetadata<TMetadata>(
         this IEnumerable<MetadataNode<TMetadata>> metadataTrees) =>
-        metadataTrees.SelectMany(metadataTiers => metadataTiers
+        metadataTrees.SelectMany(MetadataTier => MetadataTier
             .Underlying
             .GetRootMetadata()
-            .ElseIfEmpty(metadataTiers.Metadata));
+            .ElseIfEmpty(MetadataTier.Metadata));
     
     internal static IEnumerable<T> ElseIfEmpty<T>(
         this IEnumerable<T> source,

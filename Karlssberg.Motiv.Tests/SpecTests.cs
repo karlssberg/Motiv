@@ -63,7 +63,7 @@ public class SpecTests
         var result = sut.IsSatisfiedBy(model);
         
         result.Metadata.Should().ContainSingle(expectedAssertion);
-        result.MetadataTiers.Underlying.SelectMany(m => m.Metadata).Should().BeEquivalentTo(model.ToString());
+        result.MetadataTier.Underlying.SelectMany(m => m.Metadata).Should().BeEquivalentTo(model.ToString());
         result.Explanation.Assertions.Should().BeEquivalentTo(expectedAssertion);
         result.Description.Reason.Should().Be(expectedDescription);
     }

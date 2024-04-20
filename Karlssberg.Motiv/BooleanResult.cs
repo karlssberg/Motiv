@@ -15,7 +15,7 @@ public class BooleanResult(bool satisfied, string assertion) : BooleanResultBase
     public override IEnumerable<BooleanResultBase> Underlying { get; } = 
         Enumerable.Empty<BooleanResultBase>();
     
-    public override MetadataNode<string> MetadataTiers { get; } = new(assertion);
+    public override MetadataNode<string> MetadataTier { get; } = new(assertion);
     
     public override IEnumerable<BooleanResultBase<string>> CausesWithMetadata { get; } =
         Enumerable.Empty<BooleanResultBase<string>>();
@@ -42,7 +42,7 @@ public class BooleanResult<TMetadata>(
     public override IEnumerable<BooleanResultBase> Underlying { get; } =
         Enumerable.Empty<BooleanResultBase>();
     
-    public override MetadataNode<TMetadata> MetadataTiers { get; } = new(metadata);
+    public override MetadataNode<TMetadata> MetadataTier { get; } = new(metadata);
     
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata { get; } =
         Enumerable.Empty<BooleanResultBase<TMetadata>>();

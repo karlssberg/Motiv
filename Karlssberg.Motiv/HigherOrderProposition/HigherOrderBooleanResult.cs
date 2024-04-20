@@ -12,12 +12,12 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
     private readonly Lazy<MetadataNode<TMetadata>> _metadataTree = new (() =>
         new MetadataNode<TMetadata>(
             metadataFn(),
-            causesFn().SelectMany(cause => cause.MetadataTiers.ToEnumerable() as IEnumerable<MetadataNode<TMetadata>> ?? [])));
+            causesFn().SelectMany(cause => cause.MetadataTier.ToEnumerable() as IEnumerable<MetadataNode<TMetadata>> ?? [])));
     
     private readonly Lazy<Explanation> _explanation = 
         new (() => new Explanation(assertionsFn(), causesFn()));
 
-    public override MetadataNode<TMetadata> MetadataTiers => _metadataTree.Value;
+    public override MetadataNode<TMetadata> MetadataTier => _metadataTree.Value;
     
     public override Explanation Explanation => _explanation.Value;
     public override IEnumerable<BooleanResultBase> Underlying => underlyingResults;

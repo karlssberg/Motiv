@@ -170,13 +170,13 @@ public abstract class BooleanResultBase<TMetadata>
     }
 
     /// <summary>Gets the metadata yielded by results that caused the outcome.</summary>
-    public IEnumerable<TMetadata> Metadata => MetadataTiers.Metadata;
+    public IEnumerable<TMetadata> Metadata => MetadataTier.Metadata;
 
     /// <summary>Gets the metadata yielded by all results that evaulated.</summary>
     public IEnumerable<TMetadata> RootMetadata => this.GetRootMetadata().ElseIfEmpty(Metadata);
 
     /// <summary>Gets the metadata tree associated with this result.</summary>
-    public abstract MetadataNode<TMetadata> MetadataTiers { get; }
+    public abstract MetadataNode<TMetadata> MetadataTier { get; }
 
     /// <summary>Gets the underlying causes with metadata that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata { get; }
