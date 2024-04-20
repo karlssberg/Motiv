@@ -34,12 +34,6 @@ internal sealed class XOrBooleanResult<TMetadata>(
         Left.ToEnumerable()
             .Append(Right);
 
-    private MetadataNode<TMetadata> CreateMetadataTier()
-    {
-        var causes = GetResults().ToArray();
-        var underlying =  causes
-            .SelectMany(cause => cause.MetadataTier.Underlying);
-        
-        return new MetadataNode<TMetadata>(causes.GetMetadata(), underlying);
-    }
+    private MetadataNode<TMetadata> CreateMetadataTier() =>
+        new(CausesWithMetadata.GetMetadata(), CausesWithMetadata);
 }

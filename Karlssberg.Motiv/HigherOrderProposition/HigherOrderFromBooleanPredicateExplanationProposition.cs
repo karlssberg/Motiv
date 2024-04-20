@@ -31,7 +31,7 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
         });
 
         var metadataTier = new Lazy<MetadataNode<string>>(() => 
-            new MetadataNode<string>(assertion.Value));
+            new MetadataNode<string>(assertion.Value, []));
 
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(assertion.Value, []));

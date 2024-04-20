@@ -27,7 +27,7 @@ internal sealed class SpecDecoratorWithNameExplanationProposition<TModel, TUnder
         
         var metadataTier = new Lazy<MetadataNode<string>>(() => 
             new MetadataNode<string>(assertion.Value, 
-                booleanResult.MetadataTier.ToEnumerable() as IEnumerable<MetadataNode<string>> ?? []));
+                booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []));
 
         return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
             booleanResult, 

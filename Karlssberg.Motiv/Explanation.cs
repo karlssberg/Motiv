@@ -13,15 +13,14 @@ public sealed class Explanation
     public Explanation(IEnumerable<string> assertions, IEnumerable<BooleanResultBase> causes) 
     {
         var assertionsArray = assertions as string[] ?? assertions.ToArray();
-        var causesArray = causes as BooleanResult[] ?? causes.ToArray();
 
         Assertions = assertionsArray.Distinct();
-        Underlying = ResolveUnderlying(assertionsArray, causesArray);
+        Underlying = ResolveUnderlying(assertionsArray, causes);
     }
 
     private static IEnumerable<Explanation> ResolveUnderlying(
-        string[] assertions,
-        BooleanResultBase[] causes)
+       IEnumerable<string> assertions,
+        IEnumerable<BooleanResultBase> causes)
     {
         var underlying = causes
             .SelectMany(cause =>

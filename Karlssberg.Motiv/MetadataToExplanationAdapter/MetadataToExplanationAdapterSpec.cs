@@ -11,7 +11,9 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>
         var result = spec.IsSatisfiedBy(model);
 
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
-            new MetadataNode<string>(result.Assertions));
+            new MetadataNode<string>(
+                result.Assertions,
+                result.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []));
 
         return new BooleanResultWithUnderlying<string, TUnderlyingModel>(
             result,

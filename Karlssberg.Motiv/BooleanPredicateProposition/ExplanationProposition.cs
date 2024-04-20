@@ -30,7 +30,7 @@ internal sealed class ExplanationProposition<TModel>(
 
         return new PropositionBooleanResult<string>(
             isSatisfied,
-            new MetadataNode<string>(assertion),
+            new MetadataNode<string>(assertion, []),
             new Explanation(assertion, []),
             assertion);
     }

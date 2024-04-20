@@ -13,7 +13,7 @@ public class ExplanationBooleanResultTests
     {
         var result = new PropositionBooleanResult<string>(
             isSatisfied, 
-            new MetadataNode<string>(because), 
+            new MetadataNode<string>(because, []), 
             new Explanation(because, []),
             because);
 
@@ -31,13 +31,13 @@ public class ExplanationBooleanResultTests
     {
         var leftResult = new PropositionBooleanResult<string>(
             left, 
-            new MetadataNode<string>(left.ToString()), 
+            new MetadataNode<string>(left.ToString(), []), 
             new Explanation(left.ToString(), []),
             left.ToString());
         
         var rightResult = new  PropositionBooleanResult<string>(
             right, 
-            new MetadataNode<string>(right.ToString()), 
+            new MetadataNode<string>(right.ToString(), []), 
             new Explanation(right.ToString(), []),
             right.ToString());
 
@@ -60,13 +60,13 @@ public class ExplanationBooleanResultTests
     {
         var leftResult = new PropositionBooleanResult<string>(
             left, 
-            new MetadataNode<string>(left.ToString()), 
+            new MetadataNode<string>(left.ToString(), []), 
             new Explanation(left.ToString(), []),
             left.ToString());
         
         var rightResult = new  PropositionBooleanResult<string>(
             right, 
-            new MetadataNode<string>(right.ToString()), 
+            new MetadataNode<string>(right.ToString(), []), 
             new Explanation(right.ToString(), []),
             right.ToString());
 
@@ -89,13 +89,13 @@ public class ExplanationBooleanResultTests
     {
         var leftResult = new PropositionBooleanResult<string>(
             left, 
-            new MetadataNode<string>(left.ToString()), 
+            new MetadataNode<string>(left.ToString(), []), 
             new Explanation(left.ToString(), []),
             left.ToString());
         
         var rightResult = new  PropositionBooleanResult<string>(
             right, 
-            new MetadataNode<string>(right.ToString()), 
+            new MetadataNode<string>(right.ToString(), []), 
             new Explanation(right.ToString(), []),
             right.ToString());
 
@@ -114,7 +114,7 @@ public class ExplanationBooleanResultTests
     {
         var operandResult = new  PropositionBooleanResult<string>(
             operand, 
-            new MetadataNode<string>(operand.ToString()), 
+            new MetadataNode<string>(operand.ToString(), []), 
             new Explanation(operand.ToString(), []),
             operand.ToString());
 

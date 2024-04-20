@@ -70,15 +70,12 @@ public static class EnumerableExtensions
     internal static Explanation CreateExplanation(
         this IEnumerable<BooleanResultBase> causes)
     {
-        var causeArray = causes.ToArray();
-        var assertions = causeArray.GetAssertions();
+        var causeCollection = causes as ICollection<BooleanResultBase> ?? causes.ToArray();
+        var assertions = causeCollection.GetAssertions();
 
-        return new Explanation(assertions, causeArray);
+        return new Explanation(assertions, causeCollection);
     }
     
-    internal static IEnumerable<Explanation> GetExplanations(this IEnumerable<BooleanResultBase> results) =>
-        results.Select(result => result.Explanation);
-
     public static IEnumerable<string> GetAssertions(
         this IEnumerable<BooleanResultBase> results) =>
         results
@@ -220,8 +217,9 @@ public static class EnumerableExtensions
             yield return alternativeEnumerator.Current;
     }
 
-    public static IEnumerable<T> ToEnumerable<T>(this T item)
+    public static IEnumerable<T> ToEnumerable<T>(this T? item)
     {
+        if (item is null) yield break;
         yield return item;
     }
 

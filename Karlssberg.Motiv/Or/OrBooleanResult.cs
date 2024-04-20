@@ -46,12 +46,6 @@ internal sealed class OrBooleanResult<TMetadata>(
         yield return Right;
     }
     
-    private MetadataNode<TMetadata> CreateMetadataTier()
-    {
-        var causes = GetCausalResults().ToArray();
-        var underlying =  causes
-            .SelectMany(cause => cause.MetadataTier.Underlying);
-        
-        return new MetadataNode<TMetadata>(causes.GetMetadata(), underlying);
-    }
+    private MetadataNode<TMetadata> CreateMetadataTier() =>
+        new(CausesWithMetadata.GetMetadata(), CausesWithMetadata);
 }

@@ -1,36 +1,50 @@
 ﻿namespace Karlssberg.Motiv;
 
-public sealed class MetadataNode<TMetadata>(
-    IEnumerable<TMetadata> metadataCollection,
-    IEnumerable<MetadataNode<TMetadata>> underlying)
+public sealed class MetadataNode<TMetadata>
 {
-    public MetadataNode(IEnumerable<TMetadata> metadataCollection)
-        : this(metadataCollection, Enumerable.Empty<MetadataNode<TMetadata>>())
-    {
-    }
-    
-    public MetadataNode(TMetadata metadata)
-        : this(metadata.ToEnumerable(), Enumerable.Empty<MetadataNode<TMetadata>>())
-    {
-    }
-    
-    public MetadataNode(TMetadata metadata, IEnumerable<MetadataNode<TMetadata>> underlying)
-        : this(metadata.ToEnumerable(), underlying)
-    {
-    }
-    
-    public IEnumerable<MetadataNode<TMetadata>> Underlying => underlying;
-    
+    public IEnumerable<MetadataNode<TMetadata>> Underlying { get; }
+
     public IEnumerable<TMetadata> Metadata => _metadataCollection;
-    
+
     public int Count => _metadataCollection.Count;
 
-    private readonly ISet<TMetadata> _metadataCollection = metadataCollection switch
+    private readonly ISet<TMetadata> _metadataCollection;
+
+    public MetadataNode(IEnumerable<TMetadata> metadata,
+        IEnumerable<BooleanResultBase<TMetadata>> causes)
     {
-        ISet<TMetadata> metadataTier => metadataTier,
-        IEnumerable<IComparable<TMetadata>> => new SortedSet<TMetadata>(metadataCollection),
-        _ => new HashSet<TMetadata>(metadataCollection)
-    };
+        var metadataCollection = metadata as ICollection<TMetadata> ?? metadata.ToArray();
+        
+        Underlying = ResolveUnderlying(metadataCollection, causes);
+        _metadataCollection = metadata switch
+        {
+            ISet<TMetadata> metadataTier => metadataTier,
+            IEnumerable<IComparable<TMetadata>> => new SortedSet<TMetadata>(metadataCollection),
+            _ => new HashSet<TMetadata>(metadataCollection)
+        };
+    }
+
+    private IEnumerable<MetadataNode<TMetadata>> ResolveUnderlying(
+        IEnumerable<TMetadata> metadata,
+        IEnumerable<BooleanResultBase<TMetadata>> causes)
+    {
+        var causesArray = causes as BooleanResultBase<TMetadata>[] ?? causes.ToArray();
+
+        return causesArray
+            .SelectMany(cause =>
+                cause switch
+                {
+                    IBooleanOperationResult<TMetadata> => cause.UnderlyingMetadataSources,
+                    _ => cause.ToEnumerable()
+                })
+            .Select(cause => cause.MetadataTier)
+            .ToArray();
+    }
+
+    public MetadataNode(TMetadata metadata, IEnumerable<BooleanResultBase<TMetadata>> causes)
+        : this(metadata.ToEnumerable(), causes)
+    {
+    }
 
     public override string ToString() => GetDebugDisplay();
     
