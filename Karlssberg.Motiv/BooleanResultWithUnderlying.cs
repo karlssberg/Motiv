@@ -5,7 +5,7 @@
 /// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
 internal sealed class BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    Func<MetadataNode<TMetadata>> metadataTree,
+    Func<MetadataNode<TMetadata>> metadataTier,
     Func<Explanation> explanation,
     Func<string> reason)
     : BooleanResultBase<TMetadata>
@@ -19,7 +19,7 @@ internal sealed class BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata
 
     public override Explanation Explanation => explanation();
 
-    public override MetadataNode<TMetadata> MetadataTier => metadataTree();
+    public override MetadataNode<TMetadata> MetadataTier => metadataTier();
     
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
     

@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace Karlssberg.Motiv;
+﻿namespace Karlssberg.Motiv;
 
 public sealed class MetadataNode<TMetadata>(
     IEnumerable<TMetadata> metadataCollection,
@@ -29,7 +27,7 @@ public sealed class MetadataNode<TMetadata>(
 
     private readonly ISet<TMetadata> _metadataCollection = metadataCollection switch
     {
-        ISet<TMetadata> metadataTree => metadataTree,
+        ISet<TMetadata> metadataTier => metadataTier,
         IEnumerable<IComparable<TMetadata>> => new SortedSet<TMetadata>(metadataCollection),
         _ => new HashSet<TMetadata>(metadataCollection)
     };

@@ -9,7 +9,7 @@ internal sealed class OrBooleanResult<TMetadata>(
 {
     public override Explanation Explanation => GetCausalResults().CreateExplanation();
     
-    public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTree();
+    public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
     
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
     
@@ -46,7 +46,7 @@ internal sealed class OrBooleanResult<TMetadata>(
         yield return Right;
     }
     
-    private MetadataNode<TMetadata> CreateMetadataTree()
+    private MetadataNode<TMetadata> CreateMetadataTier()
     {
         var causes = GetCausalResults().ToArray();
         var underlying =  causes

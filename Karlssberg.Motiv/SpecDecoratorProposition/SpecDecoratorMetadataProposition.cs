@@ -32,17 +32,17 @@ internal sealed class SpecDecoratorMetadataProposition<TModel, TMetadata, TUnder
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(assertion.Value, booleanResult.ToEnumerable()));
         
-        var metadataTree = new Lazy<MetadataNode<TMetadata>>(() => 
+        var metadataTier = new Lazy<MetadataNode<TMetadata>>(() => 
             new MetadataNode<TMetadata>(metadata.Value, 
                 booleanResult.MetadataTier.ToEnumerable() as IEnumerable<MetadataNode<TMetadata>> ?? []));
 
         return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,
-            MetadataTree,
+            MetadataTier,
             Explanation,
             Reason);
         
-        MetadataNode<TMetadata> MetadataTree() => metadataTree.Value;
+        MetadataNode<TMetadata> MetadataTier() => metadataTier.Value;
         Explanation Explanation() => explanation.Value;
         string Reason() => Description.ToReason(booleanResult.Satisfied);
     }

@@ -24,7 +24,7 @@ internal sealed class XOrBooleanResult<TMetadata>(
     
     BooleanResultBase IBinaryBooleanOperationResult.Right => Right;
 
-    public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTree();
+    public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
     public override IEnumerable<BooleanResultBase> Causes => GetResults();
@@ -34,7 +34,7 @@ internal sealed class XOrBooleanResult<TMetadata>(
         Left.ToEnumerable()
             .Append(Right);
 
-    private MetadataNode<TMetadata> CreateMetadataTree()
+    private MetadataNode<TMetadata> CreateMetadataTier()
     {
         var causes = GetResults().ToArray();
         var underlying =  causes

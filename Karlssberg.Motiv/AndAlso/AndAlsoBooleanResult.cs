@@ -12,7 +12,7 @@ internal sealed class AndAlsoBooleanResult<TMetadata>(
     
     public override Explanation Explanation => GetCauses().CreateExplanation();
     
-    public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTree();
+    public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
     
     public BooleanResultBase<TMetadata> Left { get; } = left;
 
@@ -47,7 +47,7 @@ internal sealed class AndAlsoBooleanResult<TMetadata>(
             yield return Right;
     }
 
-    private MetadataNode<TMetadata> CreateMetadataTree()
+    private MetadataNode<TMetadata> CreateMetadataTier()
     {
         var causes = GetCauses().ToArray();
         var underlying =  causes
