@@ -44,11 +44,15 @@ It is, however, inspired by use-cases such as:
   objects (metadata) to help conditionally drive behavior in the application.
 
 ## Usage
-### Basic proposition
-A basic proposition can be created calling the `Spec.Build()` method.
-There are various overloads, but the most basic is the boolean predicate overload (that takes a lambda expression 
-that returns a boolean value).
+All propositions follow the same basic usage pattern that starts with a call `Spec.Build()`.
+It has many overloads for different use-cases, but they all trace back eventually to a boolean predicate function
+(in other words a `Spec.Build(Func<TModel, bool> predicate)`).
 
+### Basic proposition
+A basic proposition can be created calling the `Spec.Build()` method and then calling the `Create()` method without 
+calling any other builder methods in between.
+
+For exampe:
 ```csharp
 var isEligibleForLoan =
     Spec.Build((Customer customer) => customer is  // predicate
@@ -61,7 +65,7 @@ var isEligibleForLoan =
 
 This can then be evaluated by calling the `IsSatisfiedBy()` method and passing in a model to evaluate.
 ```csharp
-var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
+var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);  // evaluate proposition as satisfied
 
 result.Satisfied; // true
 result.Reason; // "eligible for loan"
@@ -72,7 +76,7 @@ When negated, a basic proposition will return a reason prefixed with a `!` chara
 This is useful for debugging purposes.
 
 ```csharp
-var result = isEligibleForLoan.IsSatisfiedBy(uneligibleCustomer); 
+var result = isEligibleForLoan.IsSatisfiedBy(uneligibleCustomer); // evaluate proposition as unsatisifed
 
 result.Satisfied; // false
 result.Reason; // "!eligible for loan"
@@ -83,7 +87,7 @@ Basic propositions are useful for encapsulation and debugging purposes, but thei
 user-friendly.
 
 ### Propositions with explanations
-You can use the `WhenTrue()` and `WhenFalse()` methods to provide user-friendly explanations about models.
+You can use the `WhenTrue()` and `WhenFalse()` methods to provide user-friendly explanations about the result.
 These values will be used in the `Reason` and `Assertions` properties of the result.
 
 ```csharp
@@ -104,24 +108,7 @@ result.Reason; // "customer is eligible for a loan"
 result.Assertions; // ["customer is eligible for a loan"]
 ```
 
-#### Dynamic explanations (and metadata)
-There will be times when you need to provide a more dynamic explanation (or metadata object).
-There are overloads to the `WhenTrue()` and `WhenFalse()` methods that allow you to provide a function that will be 
-evaluated when the proposition is satisfied.
-These functions can be used to acc
-```csharp
-var isEligibleForLoan =
-    Spec.Build((Customer customer) => customer is
-            {
-                CreditScore: > 600,
-                Income: > 100000
-            })
-        .WhenTrue(customer => $"customer {customer.Name} is eligible for a loan")
-        .WhenFalse(customer => $"customer {customer.Name} is not eligible for a loan")
-        .Create("eligible for loan");
-```
-
-### Propositions with attached metadata
+### Propositions with custom metadata
 You are also not limited to strings.
 You can equally supply any POCO object, and it will be yielded when appropriate.
 
@@ -143,6 +130,23 @@ result.Reason; // "eligible for loan"
 result.Assertions; // ["eligible for loan"]
 result.Metadata; // [{ Message = "customer is eligible for a loan" }]
 ````
+
+### Dynamic explanations (and metadata)
+There will be times when you need to provide a more dynamic explanation (or metadata object).
+There are overloads to the `WhenTrue()` and `WhenFalse()` methods that allow you to provide a function that will be
+evaluated when the proposition is satisfied.
+These functions can be used to dynamically generate explanations or metadata based on the model being evaluated.
+```csharp
+var isEligibleForLoan =
+    Spec.Build((Customer customer) => customer is
+            {
+                CreditScore: > 600,
+                Income: > 100000
+            })
+        .WhenTrue(customer => $"customer {customer.Name} is eligible for a loan")
+        .WhenFalse(customer => $"customer {customer.Name} is not eligible for a loan")
+        .Create("eligible for loan");
+```
 
 ### Composing propositions
 The real power of Motiv comes from composing propositions to form new ones.
@@ -324,10 +328,10 @@ allNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions; // ["0 is not negative", "
 ## Tradeoffs
 There are inevitably potential tradeoffs to consider when using this library.
 1. **Performance**: This library is designed to be as performant as possible, but it is still a layer of abstraction
-   over the top of your logic.
-   This means that there is a measurable performance cost to using it.
-   However, this cost is negligible in most cases and is generally eclipsed by the benefits it provides.
-2. **Dependency**: This library is a dependency that you will have to manage.
+   over the top of native logic.
+   This means that there is nevertheless a measurable performance cost compared to computing boolean values natively.
+   This cost is negligible in most cases and is generally eclipsed by the benefits provided.
+2. **Dependency**: This library is a dependency.
    Once embedded in your codebase it will be challenging to remove. 
    However, this library does not itself depend on any third-party libraries, so it does not bring any unexpected 
    baggage with it. 
