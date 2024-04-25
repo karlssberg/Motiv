@@ -8,7 +8,7 @@ internal sealed class AndAlsoBooleanResult<TMetadata>(
     public override bool Satisfied { get; } = left.Satisfied && (right?.Satisfied ?? false);
 
     public override ResultDescriptionBase Description =>
-        new AndAlsoBooleanResultDescription<TMetadata>(Left, Right, GetCauses());
+        new AndAlsoBooleanResultDescription<TMetadata>(Operation, GetCauses());
     
     public override Explanation Explanation => GetCauses().CreateExplanation();
     
@@ -21,6 +21,9 @@ internal sealed class AndAlsoBooleanResult<TMetadata>(
     BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
     
     BooleanResultBase? IBinaryBooleanOperationResult.Right => Right;
+
+    public string Operation => "AND";
+    public bool IsCollapsable => true;
 
     public override IEnumerable<BooleanResultBase> Underlying => GetUnderlying();
 

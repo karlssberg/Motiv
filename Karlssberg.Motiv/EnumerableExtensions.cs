@@ -280,5 +280,247 @@ public static class EnumerableExtensions
             IBinaryBooleanOperationResult => result.UnderlyingWithMetadata.AggregateBinaryOperationResults(),
             _ => result.UnderlyingWithMetadata
         };
-}
+    
+    public static IEnumerable<string> SurroundWithBrackets(this IEnumerable<string> lines)
+    {
+        yield return "(";
+        foreach (var line in lines)
+            yield return line.IndentLine();
+        yield return ")";
+    }
+    
+    public static IEnumerable<string> ReplaceFirstLine(this IEnumerable<string> lines, Func<string, string> prefixFn)
+    {
+        using var enumerator = lines.GetEnumerator();
+        if (!enumerator.MoveNext())
+            yield break;
 
+        var firstLine = enumerator.Current;
+        yield return prefixFn(firstLine);
+        
+        while (enumerator.MoveNext())
+            yield return enumerator.Current!;
+    }
+    
+    public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) =>
+        source.Select((item, index) => (item, index));
+    
+    public static IEnumerable<string> GetBinaryDetailsAsLines(
+        this IEnumerable<BooleanResultBase> causalResults,
+        string operation,
+        int level = 0)
+    {
+        var adjacentLineGroups = causalResults
+            .IdentifyCollapsible(operation)
+            .Select(GetDetailsAsTuple)
+            .GroupAdjacentBy((prev, next) => prev.op == next.op)
+            .SelectMany(group =>
+            {
+                var groupArray = group.ToArray();
+                if (groupArray.Length == 0)
+                    return Enumerable.Empty<(OperationGroup op, IEnumerable<string> detailsAsLines)>();
+
+                var op = groupArray.First().op;
+                var detailsAsLines = groupArray.SelectMany(tuple => tuple.detailsAsLines);
+                return (op, detailsAsLines).ToEnumerable();
+            });
+        
+        foreach (var group in adjacentLineGroups)
+        {
+            if (group.op != OperationGroup.Collapsible && level == 0)
+                yield return operation;
+            
+            foreach (var line in group.detailsAsLines)
+                yield return line.IndentLine();
+        }
+        
+        yield break;
+
+        (OperationGroup op, IEnumerable<string> detailsAsLines) GetDetailsAsTuple((OperationGroup, BooleanResultBase) tuple)
+        {
+            var (op, result) = tuple;
+            var detailsAsLines = result switch
+            {
+                IBinaryBooleanOperationResult binaryOperationResult
+                    when binaryOperationResult.Operation == operation
+                         && binaryOperationResult.IsCollapsable =>
+                    result.ToEnumerable().GetBinaryDetailsAsLines(operation, level + 1),
+                _ =>
+                    result.Description.GetDetailsAsLines()
+            };
+
+            return (op, detailsAsLines);
+        }
+    }
+    
+    internal static IEnumerable<(OperationGroup, BooleanResultBase)> IdentifyCollapsible(
+        this IEnumerable<BooleanResultBase> results,
+        string operation)
+    {
+        return results.SelectMany(result =>
+            result switch
+            {
+                IBinaryBooleanOperationResult binaryOperationResults
+                    when binaryOperationResults.Operation == operation
+                         && binaryOperationResults.IsCollapsable =>
+                    IdentifyCollapsible(binaryOperationResults, operation),
+                _ =>
+                    (otherResults: OperationGroup.Other, result).ToEnumerable()
+            });
+    }
+
+    internal static IEnumerable<(OperationGroup, BooleanResultBase)> IdentifyCollapsible(
+        this IBinaryBooleanOperationResult binaryResult,
+        string operation)
+    {
+        var underlyingResults = binaryResult.Causes;
+    
+        return underlyingResults
+            .SelectMany(underlyingResult => 
+                underlyingResult switch
+                {
+                    IBinaryBooleanOperationResult binaryOperationResult
+                        when binaryOperationResult.Operation == operation
+                             && binaryOperationResult.IsCollapsable =>
+                        binaryOperationResult.Causes.IdentifyCollapsible(operation),
+                    _ =>
+                        (otherResults: OperationGroup.Other, underlyingResult).ToEnumerable()
+                })!;
+    }
+    
+    
+    private static IEnumerable<T> CreateEnumerable<T>(
+        T? first,
+        T? second,
+        IEnumerable<T>? rest = null)
+    {
+        if (first is null)
+            yield break;
+        
+        yield return first;
+        
+        if (second is null)
+            yield break;
+        
+        yield return second;
+        
+        foreach (var result in rest ?? Enumerable.Empty<T>())
+            yield return result;
+    }
+
+    public static IEnumerable<string> GetBinaryDetailsAsLines<TModel, TMetadata>(
+        this IEnumerable<SpecBase<TModel, TMetadata>> specs,
+        string operation,
+        int level  = 0)
+    {
+        var adjacentLineGroups = specs
+            .IdentifyCollapsible(operation)
+            .Select(GetDetailsAsTuple)
+            .GroupAdjacentBy((prev, next) => prev.op == next.op)
+            .SelectMany(group =>
+            {
+                var groupArray = group.ToArray();
+                if (groupArray.Length == 0)
+                    return Enumerable.Empty<(OperationGroup op, IEnumerable<string> detailsAsLines)>();
+
+                var op = groupArray.First().op;
+                var detailsAsLines = groupArray.SelectMany(tuple => tuple.detailsAsLines);
+                return (op, detailsAsLines).ToEnumerable();
+            });
+        
+        
+        foreach (var group in adjacentLineGroups)
+        {
+            if (group.op != OperationGroup.Collapsible && level == 0)
+            {
+                yield return operation;
+            }
+            
+            foreach (var line in group.detailsAsLines)
+                yield return line.IndentLine();
+        }
+        
+        yield break;
+
+        (OperationGroup op, IEnumerable<string> detailsAsLines) GetDetailsAsTuple((OperationGroup, SpecBase<TModel, TMetadata>) tuple)
+        {
+            var (op, spec) = tuple;
+            var detailsAsLines = spec switch
+            {
+                IBinaryOperationSpec<TModel, TMetadata> binaryOperationSpec
+                    when binaryOperationSpec.Operation == operation 
+                         && binaryOperationSpec.IsCollapsable =>
+                    spec.ToEnumerable().GetBinaryDetailsAsLines(operation, level + 1),
+                _ =>
+                    spec.Description.GetDetailsAsLines()
+            };
+
+            return (op, detailsAsLines);
+        }
+    }
+    
+    internal static IEnumerable<(OperationGroup, SpecBase<TModel, TMetadata>)> IdentifyCollapsible<TModel, TMetadata>(
+        this IEnumerable<SpecBase<TModel, TMetadata>> specs,
+        string operation)
+    {
+        return specs.SelectMany(spec =>
+            spec switch
+            {
+                IBinaryOperationSpec<TModel, TMetadata> binaryOperationSpec
+                    when binaryOperationSpec.Operation == operation
+                         && binaryOperationSpec.IsCollapsable=>
+                    IdentifyCollapsible(binaryOperationSpec, operation),
+                _ =>
+                    (OtherSpecs: OperationGroup.Other, spec).ToEnumerable()
+            });
+    }
+
+    internal static IEnumerable<(OperationGroup, SpecBase<TModel, TMetadata>)> IdentifyCollapsible<TModel, TMetadata>(
+        this IBinaryOperationSpec<TModel, TMetadata> spec,
+        string operation)
+    {
+        var underlyingSpecs = spec.Left.ToEnumerable().Append(spec.Right);
+    
+        return underlyingSpecs
+            .SelectMany(underlyingSpec => 
+                underlyingSpec switch
+                {
+                    IBinaryOperationSpec<TModel, TMetadata> binaryOperationSpec
+                        when binaryOperationSpec.Operation == operation
+                             && binaryOperationSpec.IsCollapsable =>
+                        binaryOperationSpec.GetUnderlyingSpecs().IdentifyCollapsible(operation),
+                    _ => (OtherSpecs: OperationGroup.Other, underlyingSpec).ToEnumerable()
+                });
+    }
+    
+    public static IEnumerable<IEnumerable<T>> GroupAdjacentBy<T>(
+        this IEnumerable<T> source, Func<T, T, bool> predicate)
+    {
+        using var enumerator = source.GetEnumerator();
+        if (!enumerator.MoveNext())
+            yield break;
+
+        List<T> currentGroup = [enumerator.Current];
+        var prev = enumerator.Current;
+
+        while (enumerator.MoveNext())
+        {
+            if (predicate(prev, enumerator.Current))
+            {
+                currentGroup.Add(enumerator.Current);
+            }
+            else
+            {
+                yield return currentGroup;
+                currentGroup = [enumerator.Current];
+            }
+            prev = enumerator.Current;
+        }
+
+        yield return currentGroup;
+    }
+    
+    private static IEnumerable<SpecBase<TModel, TMetadata>> GetUnderlyingSpecs<TModel, TMetadata>(
+        this IBinaryOperationSpec<TModel, TMetadata> binaryOperationSpec) =>
+        binaryOperationSpec.Left.ToEnumerable().Append(binaryOperationSpec.Right);
+}

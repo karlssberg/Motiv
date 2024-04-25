@@ -23,5 +23,5 @@ public readonly ref struct MultiAssertionExplanationPropositionFactory<TModel, T
             spec,
             trueBecause,
             falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description.Detailed));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description));
 }

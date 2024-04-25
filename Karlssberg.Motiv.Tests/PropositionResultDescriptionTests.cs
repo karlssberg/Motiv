@@ -82,27 +82,27 @@ public class PropositionResultDescriptionTests
     }
     
     [Theory]
-    [InlineAutoData(false, false, false, false, "(!first | !second) & (!third | !forth)")]
+    [InlineAutoData(false, false, false, false, "(!first | !second) & (!third | !fourth)")]
     [InlineAutoData(false, false, false, true,  "!first | !second")]
     [InlineAutoData(false, false, true, false,  "!first | !second")]
     [InlineAutoData(false, false, true, true,   "!first | !second")]
-    [InlineAutoData(false, true, false, false,  "!third | !forth")]
-    [InlineAutoData(false, true, false, true,   "second & forth")]
+    [InlineAutoData(false, true, false, false,  "!third | !fourth")]
+    [InlineAutoData(false, true, false, true,   "second & fourth")]
     [InlineAutoData(false, true, true, false,   "second & third")]  
-    [InlineAutoData(false, true, true, true,    "second & (third | forth)")]
-    [InlineAutoData(true, false, false, false,  "!third | !forth")]
-    [InlineAutoData(true, false, false, true,   "first & forth")]
+    [InlineAutoData(false, true, true, true,    "second & (third | fourth)")]
+    [InlineAutoData(true, false, false, false,  "!third | !fourth")]
+    [InlineAutoData(true, false, false, true,   "first & fourth")]
     [InlineAutoData(true, false, true, false,   "first & third")]
-    [InlineAutoData(true, false, true, true,    "first & (third | forth)")]
-    [InlineAutoData(true, true, false, false,   "!third | !forth")]
-    [InlineAutoData(true, true, false, true,    "(first | second) & forth")]
+    [InlineAutoData(true, false, true, true,    "first & (third | fourth)")]
+    [InlineAutoData(true, true, false, false,   "!third | !fourth")]
+    [InlineAutoData(true, true, false, true,    "(first | second) & fourth")]
     [InlineAutoData(true, true, true, false,    "(first | second) & third")]
-    [InlineAutoData(true, true, true, true,     "(first | second) & (third | forth)")]
+    [InlineAutoData(true, true, true, true,     "(first | second) & (third | fourth)")]
     public void Should_generate_a_description_from_a_complicated_composition_using_propositions(
         bool firstValue,
         bool secondValue,
         bool thirdValue,
-        bool forthValue,
+        bool fourthValue,
         string expected,
         bool model)
     {
@@ -118,11 +118,11 @@ public class PropositionResultDescriptionTests
             .Build<bool>(_ => thirdValue)
             .Create("third");
         
-        var forth = Spec
-            .Build<bool>(_ => forthValue)
-            .Create("forth");
+        var fourth = Spec
+            .Build<bool>(_ => fourthValue)
+            .Create("fourth");
         
-        var spec = (first | second) & (third | forth);
+        var spec = (first | second) & (third | fourth);
         
         var result = spec.IsSatisfiedBy(model);
 
@@ -130,27 +130,27 @@ public class PropositionResultDescriptionTests
     }
     
     [Theory]
-    [InlineAutoData(false, false, false, false, "(not first | not second) & (not third | not forth)")]
+    [InlineAutoData(false, false, false, false, "(not first | not second) & (not third | not fourth)")]
     [InlineAutoData(false, false, false, true,  "not first | not second")]
     [InlineAutoData(false, false, true, false,  "not first | not second")]
     [InlineAutoData(false, false, true, true,   "not first | not second")]
-    [InlineAutoData(false, true, false, false,  "not third | not forth")]
-    [InlineAutoData(false, true, false, true,   "is second & is forth")]
+    [InlineAutoData(false, true, false, false,  "not third | not fourth")]
+    [InlineAutoData(false, true, false, true,   "is second & is fourth")]
     [InlineAutoData(false, true, true, false,   "is second & is third")]
-    [InlineAutoData(false, true, true, true,    "is second & (is third | is forth)")]
-    [InlineAutoData(true, false, false, false,  "not third | not forth")]
-    [InlineAutoData(true, false, false, true,   "is first & is forth")]
+    [InlineAutoData(false, true, true, true,    "is second & (is third | is fourth)")]
+    [InlineAutoData(true, false, false, false,  "not third | not fourth")]
+    [InlineAutoData(true, false, false, true,   "is first & is fourth")]
     [InlineAutoData(true, false, true, false,   "is first & is third")]
-    [InlineAutoData(true, false, true, true,    "is first & (is third | is forth)")]
-    [InlineAutoData(true, true, false, false,   "not third | not forth")]
-    [InlineAutoData(true, true, false, true,    "(is first | is second) & is forth")]
+    [InlineAutoData(true, false, true, true,    "is first & (is third | is fourth)")]
+    [InlineAutoData(true, true, false, false,   "not third | not fourth")]
+    [InlineAutoData(true, true, false, true,    "(is first | is second) & is fourth")]
     [InlineAutoData(true, true, true, false,    "(is first | is second) & is third")]
-    [InlineAutoData(true, true, true, true,     "(is first | is second) & (is third | is forth)")]
+    [InlineAutoData(true, true, true, true,     "(is first | is second) & (is third | is fourth)")]
     public void Should_generate_a_description_from_a_complicated_composition(
         bool firstValue,
         bool secondValue,
         bool thirdValue,
-        bool forthValue,
+        bool fourthValue,
         string expected,
         bool model)
     {
@@ -172,13 +172,13 @@ public class PropositionResultDescriptionTests
             .WhenFalse("not third")
             .Create();
         
-        var forth = Spec
-            .Build<bool>(_ => forthValue)
-            .WhenTrue("is forth")
-            .WhenFalse("not forth")
+        var fourth = Spec
+            .Build<bool>(_ => fourthValue)
+            .WhenTrue("is fourth")
+            .WhenFalse("not fourth")
             .Create();
         
-        var spec = (first | second) & (third | forth);
+        var spec = (first | second) & (third | fourth);
         
         var result = spec.IsSatisfiedBy(model);
 
@@ -188,105 +188,155 @@ public class PropositionResultDescriptionTests
     [Theory]
     [InlineAutoData(false, false, false, false, 
         """
-        some are false {
-            1x (!first | !second) & (!third | !forth)
-        }
+        some are false
+            AND
+                OR
+                    !first
+                    !second
+                OR
+                    !third
+                    !fourth
         """)]
     [InlineAutoData(false, false, false, true,
         """
-        some are false {
-            1x !first | !second
-        }
+        some are false
+            AND
+                OR
+                    !first
+                    !second
         """)]
     [InlineAutoData(false, false, true, false,
         """
-        some are false {
-            1x !first | !second
-        }
+        some are false
+            AND
+                OR
+                    !first
+                    !second
         """)]
     [InlineAutoData(false, false, true, true,
         """
-        some are false {
-            1x !first | !second
-        }
+        some are false
+            AND
+                OR
+                    !first
+                    !second
         """)]
     [InlineAutoData(false, true, false, false,
         """
-        some are false {
-            1x !third | !forth
-        }
+        some are false
+            AND
+                OR
+                    !third
+                    !fourth
         """)]
     [InlineAutoData(false, true, false, true,
         """
-        all are true {
-            1x second & forth
-        }
+        all are true
+            AND
+                OR
+                    second
+                OR
+                    fourth
         """)]
     [InlineAutoData(false, true, true, false,
         """
-        all are true {
-            1x second & third
-        }
+        all are true
+            AND
+                OR
+                    second
+                OR
+                    third
         """)]
     [InlineAutoData(false, true, true, true,
         """
-        all are true {
-            1x second & (third | forth)
-        }
+        all are true
+            AND
+                OR
+                    second
+                OR
+                    third
+                    fourth
         """)]
     [InlineAutoData(true, false, false, false,
         """
-        some are false {
-            1x !third | !forth
-        }
+        some are false
+            AND
+                OR
+                    !third
+                    !fourth
         """)]
     [InlineAutoData(true, false, false, true,
         """
-        all are true {
-            1x first & forth
-        }
+        all are true
+            AND
+                OR
+                    first
+                OR
+                    fourth
         """)]
     [InlineAutoData(true, false, true, false,
         """
-        all are true {
-            1x first & third
-        }
+        all are true
+            AND
+                OR
+                    first
+                OR
+                    third
         """)]
     [InlineAutoData(true, false, true, true,
         """
-        all are true {
-            1x first & (third | forth)
-        }
+        all are true
+            AND
+                OR
+                    first
+                OR
+                    third
+                    fourth
         """)]
     [InlineAutoData(true, true, false, false,
         """
-        some are false {
-            1x !third | !forth
-        }
+        some are false
+            AND
+                OR
+                    !third
+                    !fourth
         """)]
     [InlineAutoData(true, true, false, true,
         """
-        all are true {
-            1x (first | second) & forth
-        }
+        all are true
+            AND
+                OR
+                    first
+                    second
+                OR
+                    fourth
         """)]
     [InlineAutoData(true, true, true, false,
         """
-        all are true {
-            1x (first | second) & third
-        }
+        all are true
+            AND
+                OR
+                    first
+                    second
+                OR
+                    third
         """)]
     [InlineAutoData(true, true, true, true,
         """
-        all are true {
-            1x (first | second) & (third | forth)
-        }
+        all are true
+            AND
+                OR
+                    first
+                    second
+                OR
+                    third
+                    fourth
         """)]
     public void Should_generate_a_description_from_a_complicated_composition_of_higher_order_spec(
         bool firstValue,
         bool secondValue,
         bool thirdValue,
-        bool forthValue,  
+        bool fourthValue,  
         string expected)
     {
         var first = Spec
@@ -301,11 +351,11 @@ public class PropositionResultDescriptionTests
             .Build<bool>(val => thirdValue & val)
             .Create("third");
         
-        var forth = Spec
-            .Build<bool>(val => forthValue & val)
-            .Create("forth");
+        var fourth = Spec
+            .Build<bool>(val => fourthValue & val)
+            .Create("fourth");
         
-        var underlying = (first | second) & (third | forth);
+        var underlying = (first | second) & (third | fourth);
         var spec = Spec
             .Build(underlying)
             .AsAllSatisfied()
@@ -321,89 +371,129 @@ public class PropositionResultDescriptionTests
     [Theory]
     [InlineAutoData(false, false, false, false, 
         """
-        (!first | !second) &
-        (!third | !forth)
+        AND
+            OR
+                !fourth
         """)]
     [InlineAutoData(false, false, false, true,
         """
-        (!first | !second) &
-        (!third | forth)
+        AND
+            OR
+                !second
+            OR
+                !third
+                fourth
         """)]
     [InlineAutoData(false, false, true, false,
         """
-        (!first | !second) &
-        (third | !forth)
+        AND
+            OR
+                third
+                !fourth
         """)]
     [InlineAutoData(false, false, true, true,
         """
-        (!first | !second) &
-        (third | forth)
+        AND
+            OR
+                third
         """)]
     [InlineAutoData(false, true, false, false,
         """
-        (!first | second) &
-        (!third | !forth)
+        AND
+            OR
+                !first
+                second
+            OR
+                !fourth
         """)]
     [InlineAutoData(false, true, false, true,
         """
-        (!first | second) &
-        (!third | forth)
+        AND
+            OR
+                !first
+                second
         """)]
     [InlineAutoData(false, true, true, false,
         """
-        (!first | second) &
-        (third | !forth)
+        AND
+            OR
+                !first
+                second
+            OR
+                third
+                !fourth
         """)]
     [InlineAutoData(false, true, true, true,
         """
-        (!first | second) &
-        (third | forth)
+        AND
+            OR
+                !first
+                second
+            OR
+                third
         """)]
     [InlineAutoData(true, false, false, false,
         """
-        (first | !second) &
-        (!third | !forth)
+        AND
+            OR
+                !fourth
         """)]
     [InlineAutoData(true, false, false, true,
         """
-        (first | !second) &
-        (!third | forth)
+        AND
+            OR
+                first
+                !second
+            OR
+                !third
+                fourth
         """)]
     [InlineAutoData(true, false, true, false,
         """
-        (first | !second) &
-        (third | !forth)
+        AND
+            OR
+                third
+                !fourth
         """)]
     [InlineAutoData(true, false, true, true,
         """
-        (first | !second) &
-        (third | forth)
+        AND
+            OR
+                third
         """)]
     [InlineAutoData(true, true, false, false,
         """
-        (first | second) &
-        (!third | !forth)
+        AND
+            OR
+                !fourth
         """)]
     [InlineAutoData(true, true, false, true,
         """
-        (first | second) &
-        (!third | forth)
+        AND
+            OR
+                first
+            OR
+                !third
+                fourth
         """)]
     [InlineAutoData(true, true, true, false,
         """
-        (first | second) &
-        (third | !forth)
+        AND
+            OR
+                third
+                !fourth
         """)]
     [InlineAutoData(true, true, true, true,
         """
-        (first | second) &
-        (third | forth)
+        AND
+            OR
+                third
         """)]
     public void Should_generate_a_detailed_description_from_a_complicated_composition_of_a_first_order_expression(
         bool firstValue,
         bool secondValue,
         bool thirdValue,
-        bool forthValue,  
+        bool fourthValue,  
         string expected)
     {
         var first = Spec
@@ -418,11 +508,11 @@ public class PropositionResultDescriptionTests
             .Build<bool>(val => thirdValue & val)
             .Create("third");
         
-        var forth = Spec
-            .Build<bool>(val => forthValue & val)
-            .Create("forth");
+        var fourth = Spec
+            .Build<bool>(val => fourthValue & val)
+            .Create("fourth");
         
-        var spec = (first | !second) & !(third | !forth);
+        var spec = (first | !second) & !(third | !fourth);
         var result = spec.IsSatisfiedBy(true);
 
         result.Description.Detailed.Should().Be(expected);
@@ -441,5 +531,267 @@ public class PropositionResultDescriptionTests
         var result = spec.IsSatisfiedBy(model);
 
         result.Description.ToString().Should().Be(result.Description.Reason);
+    }
+
+    [Fact]
+    public void Should_collapse_operators_in_spec_description_to_improve_readability()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+        
+        var fourth = Spec
+            .Build<bool>(val => true)
+            .Create("fourth");
+        
+        var fifth = Spec
+            .Build<bool>(val => true)
+            .Create("fifth");
+        
+        var sixth = Spec
+            .Build<bool>(val => true)
+            .Create("sixth");
+        
+        var seventh = Spec
+            .Build<bool>(val => true)
+            .Create("seventh");
+        
+        var spec = !(first & second).AndAlso((third | fourth) & !(fifth | !sixth) & !!!!seventh);
+        
+        spec.Description.Detailed.Should().Be(
+            """
+            !AND ALSO
+                AND
+                    first
+                    second
+                AND
+                    OR
+                        third
+                        fourth
+                    !OR
+                        fifth
+                        !sixth
+                    seventh
+            """);
+    }
+    
+    [Fact]
+    public void Should_not_collapse_xor_operators_in_spec_description()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+        
+        var fourth = Spec
+            .Build<bool>(val => true)
+            .Create("fourth");
+
+        var spec = first ^ second ^ third ^ fourth; 
+        
+        spec.Description.Detailed.Should().Be(
+            """
+            XOR
+                XOR
+                    XOR
+                        first
+                        second
+                    third
+                fourth
+            """);
+    }
+    
+    [Fact]
+    public void Should_collapse_AND_and_ANDALSO_operators_in_spec_description()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+        
+        var fourth = Spec
+            .Build<bool>(val => true)
+            .Create("fourth");
+
+
+        var spec = first.AndAlso(second & third & fourth); 
+        
+        spec.Description.Detailed.Should().Be(
+            """
+            AND ALSO
+                first
+                AND
+                    second
+                    third
+                    fourth
+            """);
+    }
+    
+    [Fact]
+    public void Should_collapse_OR_and_ORELSE_operators_in_spec_description()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+        
+        var fourth = Spec
+            .Build<bool>(val => true)
+            .Create("fourth");
+
+        var spec = first.OrElse(second | third | fourth); 
+        
+        spec.Description.Detailed.Should().Be(
+            """
+            OR ELSE
+                first
+                OR
+                    second
+                    third
+                    fourth
+            """);
+    }
+    
+    [Fact]
+    public void Should_collapse_operators_in_spec_result_description_to_improve_readability()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+        
+        var fourth = Spec
+            .Build<bool>(val => true)
+            .Create("fourth");
+        
+        var fifth = Spec
+            .Build<bool>(val => true)
+            .Create("fifth");
+        
+        var sixth = Spec
+            .Build<bool>(val => true)
+            .Create("sixth");
+        
+        var seventh = Spec
+            .Build<bool>(val => true)
+            .Create("seventh");
+        
+        var spec = (first & second).AndAlso((third | fourth) & (fifth | sixth) & seventh);
+        var act = spec.IsSatisfiedBy(true);
+        
+        act.Description.Detailed.Should().Be(
+            """
+            AND
+                first
+                second
+                OR
+                    third
+                    fourth
+                OR
+                    fifth
+                    sixth
+                seventh
+            """);
+    }
+    
+    [Fact]
+    public void Should_collapse_AND_and_ANDALSO_operators_in_spec_result_description()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+        
+        var fourth = Spec
+            .Build<bool>(val => true)
+            .Create("fourth");
+
+
+        var spec = first.AndAlso(second & third & fourth); 
+        var act = spec.IsSatisfiedBy(true);
+        
+        act.Description.Detailed.Should().Be(
+            """
+            AND
+                first
+                second
+                third
+                fourth
+            """);
+    }
+    
+    [Fact]
+    public void Should_collapse_OR_and_ORELSE_operators_in_spec_result_description()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+        
+        var fourth = Spec
+            .Build<bool>(val => true)
+            .Create("fourth");
+
+        var spec = first | (second | third | fourth); 
+        var act = spec.IsSatisfiedBy(true);
+        
+        act.Description.Detailed.Should().Be(
+            """
+            OR
+                first
+                second
+                third
+                fourth
+            """);
     }
 }

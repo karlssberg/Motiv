@@ -158,7 +158,7 @@ public class HigherOrderMetadataSpecTests
         int first, 
         int second, 
         int third,
-        int forth,
+        int fourth,
         bool expected,
         Metadata expectedMetadata)
     {
@@ -175,7 +175,7 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse(results => results.Metadata)
                 .Create("all are even");
 
-        var act = sut.IsSatisfiedBy([first, second, third, forth]);
+        var act = sut.IsSatisfiedBy([first, second, third, fourth]);
             
         act.Metadata.Should().BeEquivalentTo([expectedMetadata]);
         act.Satisfied.Should().Be(expected);
@@ -193,7 +193,7 @@ public class HigherOrderMetadataSpecTests
         int first, 
         int second, 
         int third,
-        int forth,
+        int fourth,
         string expectedMetadata)
     {
         var underlyingSpec = 
@@ -209,7 +209,7 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse(Metadata.False)
                 .Create("all are even");
 
-        var act = sut.IsSatisfiedBy([first, second, third, forth]);
+        var act = sut.IsSatisfiedBy([first, second, third, fourth]);
             
         act.CausesWithMetadata.Should().AllSatisfy(x => x.Reason.Should().Be(expectedMetadata));
     }

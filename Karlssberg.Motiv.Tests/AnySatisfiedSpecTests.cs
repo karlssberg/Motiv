@@ -60,44 +60,43 @@ public class AnySatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            !any satisfied {
-                                                3x !is true
-                                            }
+                                            !any satisfied
+                                                !is true
+                                                !is true
+                                                !is true
                                             """)]
     [InlineAutoData(false, false, true,  """
-                                            any satisfied {
-                                                1x is true
-                                            }
+                                            any satisfied
+                                                is true
                                             """)]
     [InlineAutoData(false, true, false,  """
-                                            any satisfied {
-                                                1x is true
-                                            }
+                                            any satisfied
+                                                is true
                                             """)]
     [InlineAutoData(false, true, true,   """
-                                            any satisfied {
-                                                2x is true
-                                            }
+                                            any satisfied
+                                                is true
+                                                is true
                                             """)]
     [InlineAutoData(true, false, false,  """
-                                            any satisfied {
-                                                1x is true
-                                            }
+                                            any satisfied
+                                                is true
                                             """)]
     [InlineAutoData(true, false, true,   """
-                                            any satisfied {
-                                                2x is true
-                                            }
+                                            any satisfied
+                                                is true
+                                                is true
                                             """)]
     [InlineAutoData(true, true, false,   """
-                                            any satisfied {
-                                                2x is true
-                                            }
+                                            any satisfied
+                                                is true
+                                                is true
                                             """)]
     [InlineAutoData(true, true, true,    """
-                                            any satisfied {
-                                                3x is true
-                                            }
+                                            any satisfied
+                                                is true
+                                                is true
+                                                is true
                                             """)]
     public void Should_serialize_the_result_of_the_any_operation(
         bool first,
@@ -125,44 +124,43 @@ public class AnySatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            some false {
-                                                3x False
-                                            }
+                                            some false
+                                                False
+                                                False
+                                                False
                                             """)]
     [InlineAutoData(false, false, true,  """
-                                            any true {
-                                                1x True
-                                            }
+                                            any true
+                                                True
                                             """)]
     [InlineAutoData(false, true, false,  """
-                                            any true {
-                                                1x True
-                                            }
+                                            any true
+                                                True
                                             """)]
     [InlineAutoData(false, true, true,   """
-                                            any true {
-                                                2x True
-                                            }
+                                            any true
+                                                True
+                                                True
                                             """)]
     [InlineAutoData(true, false, false,  """
-                                            any true {
-                                                1x True
-                                            }
+                                            any true
+                                                True
                                             """)]
     [InlineAutoData(true, false, true,   """
-                                            any true {
-                                                2x True
-                                            }
+                                            any true
+                                                True
+                                                True
                                             """)]
     [InlineAutoData(true, true, false,   """
-                                            any true {
-                                                2x True
-                                            }
+                                            any true
+                                                True
+                                                True
                                             """)]
     [InlineAutoData(true, true, true,    """
-                                            any true {
-                                                3x True
-                                            }
+                                            any true
+                                                True
+                                                True
+                                                True
                                             """)]
     public void Should_serialize_the_result_of_the_any_operation_when_metadata_is_a_string(
         bool first,
@@ -192,45 +190,44 @@ public class AnySatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                           !any true {
-                                               3x !is true
-                                           }
-                                           """)]
+                                            !any true
+                                                !is true
+                                                !is true
+                                                !is true
+                                            """)]
     [InlineAutoData(false, false, true,  """
-                                           any true {
-                                               1x is true
-                                           }
-                                           """)]
+                                            any true
+                                                is true
+                                            """)]
     [InlineAutoData(false, true, false,  """
-                                           any true {
-                                               1x is true
-                                           }
-                                           """)]
+                                            any true
+                                                is true
+                                            """)]
     [InlineAutoData(false, true, true,   """
-                                           any true {
-                                               2x is true
-                                           }
-                                           """)]
+                                            any true
+                                                is true
+                                                is true
+                                            """)]
     [InlineAutoData(true, false, false,  """
-                                           any true {
-                                               1x is true
-                                           }
-                                           """)]
+                                            any true
+                                                is true
+                                            """)]
     [InlineAutoData(true, false, true,   """
-                                           any true {
-                                               2x is true
-                                           }
-                                           """)]
+                                            any true
+                                                is true
+                                                is true
+                                            """)]
     [InlineAutoData(true, true, false,   """
-                                           any true {
-                                               2x is true
-                                           }
-                                           """)]
+                                            any true
+                                                is true
+                                                is true
+                                            """)]
     [InlineAutoData(true, true, true,    """
-                                           any true {
-                                               3x is true
-                                           }
-                                           """)]
+                                            any true
+                                                is true
+                                                is true
+                                                is true
+                                            """)]
     public void Should_serialize_the_result_of_the_any_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
         bool second,

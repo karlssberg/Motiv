@@ -10,46 +10,18 @@ internal sealed class HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
 
     public override string Reason => reason;
 
-    public override string Detailed => GetDetails();
-
-    private string GetDetails()
+    public override IEnumerable<string> GetDetailsAsLines() 
     {
-        var causes = GetUnderlyingCauses();
-        return causes switch
+        yield return Reason;
+        foreach (var line in UnderlyingDetailsAsLines())
+            yield return line.IndentLine();
+
+        yield break;
+
+        IEnumerable<string> UnderlyingDetailsAsLines()
         {
-            "" => Reason,
-            _ =>
-                $$"""
-                  {{Reason}} {
-                      {{causes.IndentAfterFirstLine()}}
-                  }
-                  """
-        };
-
-        string GetUnderlyingCauses()
-        {
-            var reasonFrequencyPair = _causes
-                .OrderByDescending(result => result.Satisfied)
-                .Select(result => result.Description.Reason)
-                .GroupBy(causeReason => causeReason)
-                .Select(grouping => (Reason: grouping.Key, Count: grouping.Count()))
-                .OrderByDescending(grouping => grouping.Count)
-                .ToArray();
-
-            if (reasonFrequencyPair.Length == 0)
-                return "";
-
-            var indentSize = reasonFrequencyPair.First().Count.ToString().Length + 2;
-
-            return reasonFrequencyPair
-                .Select(item =>
-                {
-                    var (itemReason, count) = item;
-                    var countAsText = $"{count}x ".PadRight(indentSize);
-
-                    return $"{countAsText}{itemReason.IndentAfterFirstLine()}";
-                })
-                .JoinLines();
+            return _causes
+                .SelectMany(cause => cause.Description.GetDetailsAsLines());
         }
     }
 }

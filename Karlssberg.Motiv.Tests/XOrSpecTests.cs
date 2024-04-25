@@ -301,4 +301,109 @@ public class XOrSpecTests
         act.Assertions.Should().BeEquivalentTo(expectedAssertions);
         act.Metadata.Should().BeEquivalentTo(expectedAssertions);
     }
+    
+    [Fact]
+    public void Should_not_collapse_xor_operators_in_spec_result_description()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+        
+        var fourth = Spec
+            .Build<bool>(val => true)
+            .Create("fourth");
+
+        var spec = first ^ second ^ third ^ fourth; 
+        var act = spec.IsSatisfiedBy(true);
+        
+        act.Description.Detailed.Should().Be(
+            """
+            XOR
+                XOR
+                    XOR
+                        first
+                        second
+                    third
+                fourth
+            """);
+    }
+
+
+    [Fact]
+    public void Should_not_collapse_xor_operators_in_spec_result_description_when_grouped()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+
+        var fourth = Spec
+            .Build<bool>(val => true)
+            .Create("fourth");
+
+
+        var spec = (first ^ second) ^ (third ^ fourth);
+        var act = spec.IsSatisfiedBy(true);
+
+        act.Description.Detailed.Should().Be(
+            """
+            XOR
+                XOR
+                    first
+                    second
+                XOR
+                    third
+                    fourth
+            """);
+    }
+    [Fact]
+    public void Should_not_collapse_xor_operators_in_spec_result_description_when_grouped_in_reverse_order()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+        
+        var fourth = Spec
+            .Build<bool>(val => true)
+            .Create("fourth");
+
+
+        var spec = first ^ (second ^ (third ^ fourth)); 
+        var act = spec.IsSatisfiedBy(true);
+        
+        act.Description.Detailed.Should().Be(
+            """
+            XOR
+                first
+                XOR
+                    second
+                    XOR
+                        third
+                        fourth
+            """);
+    }
+    
 }

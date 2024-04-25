@@ -3,10 +3,13 @@
 internal sealed class OrSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
     SpecBase<TModel, TMetadata> right)
-    : SpecBase<TModel, TMetadata>, IBinaryOperationSpec
+    : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>
 {
     public override ISpecDescription Description => 
         new OrSpecDescription<TModel, TMetadata>(left, right);
+
+    public string Operation => "OR";
+    public bool IsCollapsable => true;
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
@@ -15,4 +18,7 @@ internal sealed class OrSpec<TModel, TMetadata>(
 
         return leftResult.Or(rightResult);
     }
+
+    public SpecBase<TModel, TMetadata> Left => left;
+    public SpecBase<TModel, TMetadata> Right => right;
 }

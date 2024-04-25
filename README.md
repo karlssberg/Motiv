@@ -25,8 +25,8 @@ result.Assertions; // ["no support for explanations", "no support for custom met
 ```
 
 #### What can I use the Motiv for?
-Motiv is not focused on catering to any particular use-case - except maybe _DX (Developer Experience)_.
-It is, however, inspired by use-cases such as:
+Motiv is not focused on catering to any particular use-case (except maybe _DX (Developer Experience)_,
+but it is inspired by use-cases such as:
 
 * **User feedback** - You require an application to provide detailed and accurate feedback to the user about why a 
   certain decisions were made. 
@@ -35,18 +35,19 @@ It is, however, inspired by use-cases such as:
   separate the implementation details from the big-picture logical expression.
 * **Multilingual support** - Use custom POCO objects instead of strings to provide multi-language support.
 * **Decomposing complex logic or domain rules** - Whether you are faithfully modelling domain logic, or just trying to 
-  decompose an 
-  unwieldy logical expression, Motiv can help you to break it down into more manageable and understandable parts.+
-* **Validation** - The metadata can be used to provide human-readable explanations of why a certain validation rule was 
-  not met. This can be useful in scenarios where you need to provide feedback to the user about why a certain input 
-  was not valid.
+  decompose an unwieldy logical expression, Motiv can help you to break it down into more manageable and 
+  understandable parts.
+* **Validation** - Ensure user input meets certain criteria and provide detailed feedback when it does not.  Because 
+  of the approach Motiv takes, it makes it relatively straightforward to convert existing logic into validation logic.
 * **Parsing CLI arguments** - The command line arguments array can be interrogated and mapped to state 
   objects (metadata) to help conditionally drive behavior in the application.
 
+You are encouraged to explore the library and find new and innovative ways to use it.
+
 ## Usage
 All propositions follow the same basic usage pattern that starts with a call `Spec.Build()`.
-It has many overloads for different use-cases, but they all trace back eventually to a boolean predicate function
-(in other words a `Spec.Build(Func<TModel, bool> predicate)`).
+It has many overloads for different use-cases, but they all trace back eventually to a boolean predicate function—in 
+other words a `Spec.Build(Func<TModel, bool> predicate)`.
 
 ### Basic proposition
 A basic proposition can be created calling the `Spec.Build()` method and then calling the `Create()` method without 

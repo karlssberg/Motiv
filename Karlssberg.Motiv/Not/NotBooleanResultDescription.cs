@@ -3,16 +3,11 @@
 internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase<TMetadata> operand) : ResultDescriptionBase
 {
     internal override int CausalOperandCount => 1;
-    public override string Reason => FormatDescription(operand.Description.Reason);
+    public override string Reason => operand.Description.Reason;
     
-    public override string Detailed => FormatDescription(operand.Description.Detailed);
-    
-    private string FormatDescription(string underlyingDescription)
-    {
-        return operand switch
-        {
-           IBinaryBooleanOperationResult<TMetadata> => $"({underlyingDescription})",
-            _ => underlyingDescription
-        };
-    }
+    public override IEnumerable<string> GetDetailsAsLines() => FormatDetails();
+
+    private IEnumerable<string> FormatDetails() =>
+        operand.Description
+            .GetDetailsAsLines();
 }

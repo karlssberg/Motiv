@@ -20,5 +20,5 @@ public readonly ref struct MetadataPropositionFactory<TModel, TMetadata, TUnderl
             spec,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description.Detailed));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description));
 }

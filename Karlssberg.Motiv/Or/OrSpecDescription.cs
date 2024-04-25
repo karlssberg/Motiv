@@ -9,11 +9,13 @@ internal sealed class OrSpecDescription<TModel, TMetadata>(
 {
     public string Statement => $"{Summarize(left)} | {Summarize(right)}";
 
-    public string Detailed =>
-        $"""
-             {Explain(left).IndentAfterFirstLine()} |
-             {Explain(right).IndentAfterFirstLine()}
-         """;
+    public string Detailed => string.Join(Environment.NewLine, GetDetailsAsLines());
+
+    public IEnumerable<string> GetDetailsAsLines()
+    {
+        IEnumerable<SpecBase<TModel, TMetadata>> specs = [left, right];
+        return specs.GetBinaryDetailsAsLines("OR");
+    }
 
     private string Summarize(SpecBase<TModel, TMetadata> operand)
     {
@@ -29,17 +31,16 @@ internal sealed class OrSpecDescription<TModel, TMetadata>(
         };
     }
 
-    private string Explain(SpecBase<TModel, TMetadata> operand)
+    private IEnumerable<string> Explain(SpecBase<TModel, TMetadata> operand)
     {
         return operand switch
         {
             OrSpec<TModel, TMetadata> orSpec =>
-                orSpec.Description.Detailed,
+                orSpec.Description.GetDetailsAsLines(),
             OrElseSpec<TModel, TMetadata> orElseSpec =>
-                orElseSpec.Description.Detailed,
-            IBinaryOperationSpec binarySpec =>
-                $"({binarySpec.Description.Detailed})",
-            _ => operand.Description.Detailed
+                orElseSpec.Description.GetDetailsAsLines(),
+            IBinaryOperationSpec binarySpec => binarySpec.Description.GetDetailsAsLines().IndentLines(),
+            _ => operand.Description.GetDetailsAsLines()
         };
     }
 

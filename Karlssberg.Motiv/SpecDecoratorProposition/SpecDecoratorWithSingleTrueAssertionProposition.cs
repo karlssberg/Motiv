@@ -7,9 +7,10 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
     string? propositionalStatement = null)
     : SpecBase<TModel, string>
 {
-    public override ISpecDescription Description => new SpecDescription(
-        propositionalStatement ?? trueBecause,
-        underlyingSpec.Description.Detailed);
+    public override ISpecDescription Description => 
+        new SpecDescription(
+            propositionalStatement ?? trueBecause,
+            underlyingSpec.Description);
 
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
     {

@@ -240,9 +240,8 @@ public class SpecTests
 
         act.Should().Be(
             """
-            top-level proposition {
+            top-level proposition
                 is null
-            }
             """);
     }
 }
