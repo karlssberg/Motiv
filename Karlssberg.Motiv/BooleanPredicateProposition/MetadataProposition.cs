@@ -32,7 +32,6 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
 
         var assertion = metadata switch
         {
-            string because => because.ToEnumerable(),
             IEnumerable<string> because => because,
             _ => Description.ToReason(isSatisfied).ToEnumerable()
         };

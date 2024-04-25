@@ -3,10 +3,13 @@
 internal sealed class AndSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
     SpecBase<TModel, TMetadata> right) 
-    : SpecBase<TModel, TMetadata>, IBinaryOperationSpec
+    : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>
 {
     public override ISpecDescription Description =>
         new AndSpecDescription<TModel, TMetadata>(left, right);
+
+    public string Operation => "AND";
+    public bool IsCollapsable => true;
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
@@ -15,4 +18,7 @@ internal sealed class AndSpec<TModel, TMetadata>(
 
         return leftResult.And(rightResult);
     }
+
+    public SpecBase<TModel, TMetadata> Left => left;
+    public SpecBase<TModel, TMetadata> Right => right;
 }

@@ -12,6 +12,6 @@ public class DoAllCardsMatchRanksProposition(ICollection<Rank> ranks) : Spec<Han
             
             return cardRanks.Count == 0;
         })
-        .WhenTrue($"all cards are either {ranks.Serialize()}")
+        .WhenTrue($"all cards are {ranks.Serialize()}")
         .WhenFalse($"cards are not {ranks.Serialize()}")
         .Create());

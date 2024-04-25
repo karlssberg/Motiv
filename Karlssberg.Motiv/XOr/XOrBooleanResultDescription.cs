@@ -1,46 +1,25 @@
 ﻿namespace Karlssberg.Motiv.XOr;
 
 internal sealed class XOrBooleanResultDescription<TMetadata>(
+    string operationName,
     BooleanResultBase<TMetadata> left,
-    BooleanResultBase<TMetadata> right,
-    IEnumerable<BooleanResultBase<TMetadata>> causalResults) 
+    BooleanResultBase<TMetadata> right) 
     : ResultDescriptionBase
 {
     
-    internal override int CausalOperandCount => causalResults.Count();
+    internal override int CausalOperandCount => Results.Count();
 
-    public override string Reason => string.Join(" ^ ", causalResults.Select(result => result.Description.Reason));
+    public override string Reason => string.Join(" ^ ", Results.Select(result => result.Description.Reason));
 
-    public override string Detailed => GetDetails();
-
-    private string GetDetails()
+    public override IEnumerable<string> GetDetailsAsLines()
     {
-        var leftDetails = Explain(left);
-        var rightDetails = Explain(right);
-
-        var isBracketed = leftDetails.IsBracketed() || rightDetails.IsBracketed();
-        var isTooLong = leftDetails.IsLongExpression() || rightDetails.IsLongExpression();
-        if (isBracketed || isTooLong)
-            return $"""
-                    {leftDetails} ^
-                    {rightDetails}
-                    """;
-        
-        return $"{leftDetails} ^ {rightDetails}";
+        var reversedResults = left.ToEnumerable().Append(right); // reverse order for easier reading
+        return reversedResults.GetBinaryDetailsAsLines(operationName);
     }
 
-
-    private string Explain(BooleanResultBase<TMetadata> result)
-    {
-        return result switch 
-        {
-            XOrBooleanResult<TMetadata> xOrSpec => 
-                xOrSpec.Description.Detailed,
-            IBinaryBooleanOperationResult<TMetadata> binaryResult => 
-                $"({binaryResult.Description.Detailed})",
-            _ => result.Description.Detailed
-        };
-    }
-    
     public override string ToString() => Reason;
+    
+    private IEnumerable<BooleanResultBase<TMetadata>> Results => 
+        left.ToEnumerable()
+            .Append(right);
 }

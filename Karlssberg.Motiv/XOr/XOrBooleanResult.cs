@@ -14,11 +14,13 @@ internal sealed class XOrBooleanResult<TMetadata>(
 
     /// <summary>Gets the description of the XOR operation.</summary>
     public override ResultDescriptionBase Description =>
-        new XOrBooleanResultDescription<TMetadata>(Left, Right, GetResults());
+        new XOrBooleanResultDescription<TMetadata>(Operation, Left, Right);
     
     public BooleanResultBase<TMetadata> Left { get; } = left;
 
     public BooleanResultBase<TMetadata> Right { get; } = right;
+    public string Operation => "XOR";
+    public bool IsCollapsable => false;
 
     BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
     

@@ -5,7 +5,6 @@
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetadata>
 {
-
     /// <summary>Gets the underlying boolean result.</summary>
     private readonly BooleanResultBase<TMetadata> _underlyingResult;
 

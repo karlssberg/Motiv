@@ -27,7 +27,7 @@ public readonly ref struct ExplanationWithNameHigherOrderPropositionFactory<TMod
             higherOrderPredicate,
             trueBecause.ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string>(),
             falseBecause,
-            new SpecDescription(trueBecause, spec.Description.Detailed),
+            new SpecDescription(trueBecause, spec.Description),
             causeSelector);
 
     /// <summary>
@@ -45,7 +45,7 @@ public readonly ref struct ExplanationWithNameHigherOrderPropositionFactory<TMod
             higherOrderPredicate,
             trueBecause.ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string>(),
             falseBecause,
-            new SpecDescription(statement, spec.Description.Detailed),
+            new SpecDescription(statement, spec.Description),
             causeSelector);
     }
 }

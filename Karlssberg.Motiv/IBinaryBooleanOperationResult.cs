@@ -5,6 +5,10 @@ internal interface IBinaryBooleanOperationResult : IBooleanOperationResult
     BooleanResultBase Left { get; }
     
     BooleanResultBase? Right { get; }
+    
+    string Operation { get; }
+    
+    bool IsCollapsable { get; }
 }
 
 internal interface IBinaryBooleanOperationResult<TMetadata> : IBinaryBooleanOperationResult, IBooleanOperationResult<TMetadata>

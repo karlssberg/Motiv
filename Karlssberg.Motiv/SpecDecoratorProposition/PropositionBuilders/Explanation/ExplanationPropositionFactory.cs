@@ -22,5 +22,5 @@ public readonly ref struct ExplanationPropositionFactory<TModel, TUnderlyingMeta
             spec,
             trueBecause,
             falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description.Detailed));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description));
 }

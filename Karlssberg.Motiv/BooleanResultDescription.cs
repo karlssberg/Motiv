@@ -7,5 +7,6 @@ internal sealed class BooleanResultDescription(
     internal override int CausalOperandCount => 0;
 
     public override string Reason => reason;
-    public override string Detailed => reason;
+    
+    public override IEnumerable<string> GetDetailsAsLines() => reason.ToEnumerable();
 }

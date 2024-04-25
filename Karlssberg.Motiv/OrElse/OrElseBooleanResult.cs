@@ -8,16 +8,18 @@ internal sealed class OrElseBooleanResult<TMetadata>(
     public override bool Satisfied { get; } = left.Satisfied || (right?.Satisfied ?? false);
     
     public override ResultDescriptionBase Description => 
-        new OrElseBooleanResultDescription<TMetadata>(Left, Right, GetCauses());
+        new OrElseBooleanResultDescription<TMetadata>(Operation, GetCauses());
     
     public override Explanation Explanation => GetCauses().CreateExplanation();
 
     public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
     
     public BooleanResultBase<TMetadata> Left { get; } = left;
-
     public BooleanResultBase<TMetadata>? Right { get; } = right;
 
+    public string Operation => "OR";
+    public bool IsCollapsable => true;
+    
     BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
     
     BooleanResultBase? IBinaryBooleanOperationResult.Right => Right;
