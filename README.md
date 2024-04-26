@@ -5,7 +5,7 @@ Motiv is a .NET library that supercharges the experience of working with boolean
 ```csharp
     Spec.Build((Subscription subscription) => subscription.ExpiryDate < DateTime.Now)
         .WhenTrue("subscription has expired")
-        .WhenFalse("subscription is still active")
+        .WhenFalse("subscription has not expired")
         .Create();
 ```
 
@@ -17,17 +17,21 @@ Examples of propositions include:
 * _email address is missing an @ symbol_
 * _the subscription is within a grace period_
 
-
 Propositions can be composed together using boolean operators, such as `&`, `|`, and `^`, and when evaluated will only
 surface the reasons (or custom metadata) from propositions that determined the final result.
 
 ```csharp
-var isUsefulLibrary = isEasyToDebug & (hasExplanations | hasCustomMetadata) & isReusable & isComposable;
+var canViewContent = ((!hasSubscriptionExpired & isGracePeriod) | isStaff) & !isCancelled;
 
-var result = isUsefulLibrary.IsSatisfiedBy(new InferiorAlternative());  // evaluate proposition
+var result = canViewContent.IsSatisfiedBy(user);  // evaluate proposition
 
-result.Satisfied; // false
-result.Assertions; // ["is difficult to debug", "no explanations", "no custom metadata"]
+result.Satisfied; // true
+result.Assertions; // ["subscription has not expired", "subscription is not cancelled"]
+result.Description.Detailed; // AND
+                             //     OR
+                             //         AND
+                             //             subscription has not expired
+                             //     subscription is not cancelled
 ```
 
 #### What can I use the Motiv for?
