@@ -31,7 +31,7 @@ result.Description.Detailed; // OR
                              //     AND
                              //         OR
                              //             subscription has not expired
-                             //     subscription is not cancelled
+                             //         subscription is not cancelled
 ```
 
 #### What can I use the Motiv for?
