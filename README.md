@@ -229,7 +229,7 @@ isEligibleForLoan.IsSatisfiedBy(ineligibleCustomer).Reason; // "customer has an 
 ```
 
 #### Strongly typed proposition
-You will likely want to encapsulate propositions for reuse across an application.
+You will likely want to encapsulate propositions for reuse across your application.
 For this you typically have two options, which is to either return `Spec` instances from members of POCO 
 objects, or to derive from the `Spec<TModel>` or `Spec<TModel, TMetadata>` class (the former being merely syntactic 
 sugar for `Spec<TModel, string>`).
