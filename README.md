@@ -233,11 +233,13 @@ You will likely want to encapsulate propositions for reuse across an application
 For this you typically have two options, which is to either return `Spec` instances from members of POCO 
 objects, or to derive from the `Spec<TModel>` or `Spec<TModel, TMetadata>` class (the former being merely syntactic 
 sugar for `Spec<TModel, string>`).
-Using these classes will help you to maintain a separation of concerns and also raise the conspicuity of important 
-logic within an application. 
+By creating a new class that derives from `Spec<TModel>` or `Spec<TModel, TMetadata>`, the proposition becomes a
+unique type within the type-system, which is necessary in some situation, such as with dependency injection frameworks.
+Using the above classes will help you to maintain a separation of concerns and also raise the conspicuity of important 
+logic within your application. 
 
 ```csharp
-public class HasGoodCreditScoreProposition(int threshold) : Spec<int>(   // wrap in a strongly typed proposition
+public class HasGoodCreditScoreProposition(int threshold) : Spec<int>(   // promote the proposition to a unique type
     Spec.Build((Customer customer) => customer.CreditScore > threshold)
         .WhenTrue("customer has a good credit score")
         .WhenFalse("customer has an inadequate credit score")
