@@ -22,7 +22,7 @@ internal sealed class AndAlsoBooleanResult<TMetadata>(
     
     BooleanResultBase? IBinaryBooleanOperationResult.Right => Right;
 
-    public string Operation => "AND ALSO";
+    public string Operation => "AND";
     public bool IsCollapsable => true;
 
     public override IEnumerable<BooleanResultBase> Underlying => GetUnderlying();
