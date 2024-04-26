@@ -8,7 +8,7 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
     public override ISpecDescription Description => 
         new OrElseSpecDescription<TModel, TMetadata>(left, right);
 
-    public string Operation => "OR";
+    public string Operation => "OR ELSE";
     public bool IsCollapsable => true;
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)

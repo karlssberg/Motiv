@@ -25,22 +25,9 @@ internal sealed class OrElseSpecDescription<TModel, TMetadata>(
                 orSpec.Description.Statement,
             OrElseSpec<TModel, TMetadata> orElseSpec =>
                 orElseSpec.Description.Statement,
-            IBinaryOperationSpec compositeSpec =>
-                $"({compositeSpec.Description.Statement})",
+            IBinaryOperationSpec binarySpec =>
+                $"({binarySpec.Description.Statement})",
             _ => operand.Description.Statement
-        };
-    }
-
-    private IEnumerable<string> Explain(SpecBase<TModel, TMetadata> operand)
-    {
-        return operand switch
-        {
-            OrSpec<TModel, TMetadata> orSpec =>
-                orSpec.Description.GetDetailsAsLines(),
-            OrElseSpec<TModel, TMetadata> orElseSpec =>
-                orElseSpec.Description.GetDetailsAsLines(),
-            IBinaryOperationSpec binarySpec => binarySpec.Description.GetDetailsAsLines().IndentLines(),
-            _ => operand.Description.GetDetailsAsLines()
         };
     }
 
