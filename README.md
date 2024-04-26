@@ -205,7 +205,7 @@ result.Assertions; // ["customer has an inadequate credit score"]
 ### Encapsulation and Re-use
 
 #### Redefining propositions
-Sometimes an existing propositions do not produce the desired assertions or metadata.
+Sometimes existing propositions do not produce the desired assertions or metadata.
 In this case, you will need to wrap the existing proposition in a new one.
 
 ```csharp
@@ -214,6 +214,15 @@ var isEligibleForLoan =
         .WhenTrue("customer is eligible for a loan")
         .WhenFalse("customer is not eligible for a loan")
         .Create();
+
+var eligibleResult = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
+
+eligibleResult.Reason;   // "customer is eligible for a loan"
+eligibleResult.Assertions; // ["customer is eligible for a loan"]
+eligibleResult.DetailedReason; // customer is eligible for a loan
+                               //     AND
+                               //         customer has a good credit score
+                               //         customer has sufficient income
 ```
 
 When deriving new propositions, you may still require assertions or metadata from the original.
@@ -224,8 +233,14 @@ var isEligibleForLoan =
         .WhenFalse((_, result) => result.Assertions) // reusing assertions from the original propositions
         .Create();
 
-isEligibleForLoan.IsSatisfiedBy(eligibleCustomer).Reason;   // "customer is eligible for a loan"
-isEligibleForLoan.IsSatisfiedBy(ineligibleCustomer).Reason; // "customer has an inadequate credit score"
+var ineligibleResult = isEligibleForLoan.IsSatisfiedBy(ineligibleCustomer);
+
+ineligibleResult.Reason;   // "customer is eligible for a loan"
+ineligibleResult.Assertions; // ["customer has an inadequate credit score", "customer has insufficient income"]
+ineligibleResult.DetailedReason; // !customer is eligible for a loan
+                                 //     AND
+                                 //         customer has an inadequate credit score
+                                 //         customer has insufficient income
 ```
 
 #### Strongly typed proposition

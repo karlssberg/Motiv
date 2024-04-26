@@ -160,7 +160,7 @@ public class OrElseSpecTests
         
         var act = sut.IsSatisfiedBy(model);
 
-        act.Description.Detailed.Should().Be(expected);
+        act.Rationale.Should().Be(expected);
     }
     
     [Theory]
@@ -191,7 +191,7 @@ public class OrElseSpecTests
         
         var act = sut.IsSatisfiedBy(model);
 
-        act.Description.Detailed.Should().Be(expected);
+        act.Rationale.Should().Be(expected);
     }
     
     [Theory]

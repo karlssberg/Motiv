@@ -21,8 +21,8 @@ public class ExplanationPropositionTests
     }
     
     [Theory]
-    [InlineData(1, "!is even")]
-    [InlineData(2, "is even")]
+    [InlineData(1, "odd")]
+    [InlineData(2, "even")]
     public void Should_allow_a_proposition_that_provides_a_reason_for_a_spec_result(int model, string expected)
     {
         var spec = Spec.Build((int i) => i % 2 == 0)
@@ -32,6 +32,19 @@ public class ExplanationPropositionTests
         
         var result = spec.IsSatisfiedBy(model);
         result.Reason.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineData(1, "odd")]
+    [InlineData(2, "even")]
+    public void Should_provide_a_(int model, string expected)
+    {
+        var spec = Spec.Build((int i) => i % 2 == 0)
+            .WhenTrue("even")
+            .WhenFalse("odd")
+            .Create("is even");
+        
+        spec.Description.Statement.Should().Be("is even");
     }
     
     [Theory]

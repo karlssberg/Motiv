@@ -22,14 +22,21 @@ public abstract class BooleanResultBase
     /// <summary>Gets a value indicating whether the condition is satisfied.</summary>
     public abstract bool Satisfied { get; }
 
-    /// <summary>Gets the reason for the result, represented as a compact string.</summary>
+    /// <summary>
+    /// Gets a concise reason for the result. If the result is a proposition, then the reason will be a single
+    /// assertion. Otherwise, the result is boolean expression, and the reason will be a conjunction of assertions using the
+    /// logical operators (e.g., &, |, ^).
+    /// </summary>
     public string Reason => Description.Reason;
+
+    /// <summary>Gets a full hierarchical breakdown of the reasons for the result.</summary>
+    public string Rationale => Description.Rationale;
 
     /// <summary>Gets the assertions that determined this result.</summary>
     public IEnumerable<string> Assertions => Explanation.Assertions;
 
     /// <summary>Gets all the assertions yielded by the current result, including those that are non-determinative.</summary>
-    /// <remarks>This will yield assertions from satisfied operands when an overall result was not, and vice versa. </remarks>
+    /// <remarks>This will yield assertions from both satisfied and unsatisfied operands. </remarks>
     public IEnumerable<string> AllAssertions =>
         this switch
         {
@@ -66,7 +73,7 @@ public abstract class BooleanResultBase
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Assertions" />.</summary>
     public IEnumerable<BooleanResultBase> UnderlyingAssertionSources =>
         Causes
-            .SelectMany(booleanResult => 
+            .SelectMany(booleanResult =>
                 booleanResult is IBooleanOperationResult
                     ? booleanResult.UnderlyingAssertionSources
                     : this.ToEnumerable())
@@ -183,7 +190,7 @@ public abstract class BooleanResultBase<TMetadata>
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Metadata" />.</summary>
     public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingMetadataSources =>
-        CausesWithMetadata.SelectMany(booleanResult => 
+        CausesWithMetadata.SelectMany(booleanResult =>
             booleanResult is IBooleanOperationResult
                 ? booleanResult.UnderlyingMetadataSources
                 : this.ToEnumerable());

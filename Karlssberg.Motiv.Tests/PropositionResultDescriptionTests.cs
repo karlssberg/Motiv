@@ -21,9 +21,9 @@ public class PropositionResultDescriptionTests
     }
     
     [Theory]
-    [InlineAutoData(true, "is true proposition")]
-    [InlineAutoData(false, "!is true proposition")]
-    public void Should_generate_a_simple_description_reason_not_using_assertions_in_reason(bool isTrue, string expected)
+    [InlineAutoData(true, "is true")]
+    [InlineAutoData(false, "is false")]
+    public void Should_generate_a_simple_description_reason_regardless_of_the_proposition_name(bool isTrue, string expected)
     {
         var spec = Spec
             .Build<object>(_ => isTrue)
@@ -365,7 +365,7 @@ public class PropositionResultDescriptionTests
         
         var result = spec.IsSatisfiedBy([true]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Rationale.Should().Be(expected);
     }
     
     [Theory]
@@ -515,7 +515,7 @@ public class PropositionResultDescriptionTests
         var spec = (first | !second) & !(third | !fourth);
         var result = spec.IsSatisfiedBy(true);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Rationale.Should().Be(expected);
     }
     
     [Theory]
@@ -715,7 +715,7 @@ public class PropositionResultDescriptionTests
         var spec = (first & second).AndAlso((third | fourth) & (fifth | sixth) & seventh);
         var act = spec.IsSatisfiedBy(true);
         
-        act.Description.Detailed.Should().Be(
+        act.Rationale.Should().Be(
             """
             AND
                 first
@@ -753,7 +753,7 @@ public class PropositionResultDescriptionTests
         var spec = first.AndAlso(second & third & fourth); 
         var act = spec.IsSatisfiedBy(true);
         
-        act.Description.Detailed.Should().Be(
+        act.Rationale.Should().Be(
             """
             AND
                 first
@@ -785,7 +785,7 @@ public class PropositionResultDescriptionTests
         var spec = first | (second | third | fourth); 
         var act = spec.IsSatisfiedBy(true);
         
-        act.Description.Detailed.Should().Be(
+        act.Rationale.Should().Be(
             """
             OR
                 first

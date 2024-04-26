@@ -324,7 +324,7 @@ public class XOrSpecTests
         var spec = first ^ second ^ third ^ fourth; 
         var act = spec.IsSatisfiedBy(true);
         
-        act.Description.Detailed.Should().Be(
+        act.Rationale.Should().Be(
             """
             XOR
                 XOR
@@ -360,7 +360,7 @@ public class XOrSpecTests
         var spec = (first ^ second) ^ (third ^ fourth);
         var act = spec.IsSatisfiedBy(true);
 
-        act.Description.Detailed.Should().Be(
+        act.Rationale.Should().Be(
             """
             XOR
                 XOR
@@ -394,7 +394,7 @@ public class XOrSpecTests
         var spec = first ^ (second ^ (third ^ fourth)); 
         var act = spec.IsSatisfiedBy(true);
         
-        act.Description.Detailed.Should().Be(
+        act.Rationale.Should().Be(
             """
             XOR
                 first

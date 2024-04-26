@@ -80,15 +80,11 @@ public class OrSpecTests
     {
         var left = Spec
             .Build<object>(_ => leftResult)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
             .Create("left");
 
 
         var right = Spec
             .Build<object>(_ => rightResult)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
             .Create("right");
 
         var sut = left | right;

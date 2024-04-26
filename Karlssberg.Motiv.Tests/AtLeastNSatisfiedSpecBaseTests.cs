@@ -233,7 +233,7 @@ public class AtLeastNSatisfiedSpecBaseTests
             
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Rationale.Should().Be(expected);
     }
 
     [Theory]
@@ -297,7 +297,7 @@ public class AtLeastNSatisfiedSpecBaseTests
             
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Rationale.Should().Be(expected);
     }
 
     [Theory]
@@ -361,7 +361,7 @@ public class AtLeastNSatisfiedSpecBaseTests
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Rationale.Should().Be(expected);
     }
 
     [Fact]

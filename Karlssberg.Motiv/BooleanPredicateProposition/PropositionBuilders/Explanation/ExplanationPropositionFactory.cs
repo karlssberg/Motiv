@@ -19,10 +19,10 @@ public readonly ref struct ExplanationPropositionFactory<TModel>(
     public SpecBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new MetadataProposition<TModel, string>(
+        return new ExplanationProposition<TModel>(
             predicate,
-            whenTrue.ToEnumerableReturn(),
-            whenFalse.ToEnumerableReturn(),
+            whenTrue,
+            whenFalse,
             new SpecDescription(statement));
     }
 }

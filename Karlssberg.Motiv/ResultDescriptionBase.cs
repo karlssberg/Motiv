@@ -6,7 +6,7 @@ public abstract class ResultDescriptionBase
     
     public abstract string Reason { get; }
     
-    public virtual string Detailed => string.Join(Environment.NewLine, GetDetailsAsLines());
+    public virtual string Rationale => string.Join(Environment.NewLine, GetDetailsAsLines());
     
     public override string ToString() => Reason;
 

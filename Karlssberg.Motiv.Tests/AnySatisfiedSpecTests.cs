@@ -119,7 +119,7 @@ public class AnySatisfiedSpecTests
             
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Rationale.Should().Be(expected);
     }
 
     [Theory]
@@ -185,15 +185,15 @@ public class AnySatisfiedSpecTests
 
         var result = sut.IsSatisfiedBy(models);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Rationale.Should().Be(expected);
     }
 
     [Theory]
     [InlineAutoData(false, false, false, """
                                             !any true
-                                                !is true
-                                                !is true
-                                                !is true
+                                                is false
+                                                is false
+                                                is false
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             any true
@@ -236,8 +236,8 @@ public class AnySatisfiedSpecTests
     {
         var underlyingSpec = Spec
             .Build((bool m) => m)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
+            .WhenTrue("is true")
+            .WhenFalse("is false")
             .Create("is true");
 
         var sut = Spec
@@ -249,7 +249,7 @@ public class AnySatisfiedSpecTests
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Rationale.Should().Be(expected);
     }
     
     [Theory]

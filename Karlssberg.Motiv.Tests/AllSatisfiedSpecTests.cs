@@ -98,7 +98,7 @@ public class AllSatisfiedSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Rationale.Should().Be(expected);
     }
 
     [Theory]
@@ -164,7 +164,7 @@ public class AllSatisfiedSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Rationale.Should().Be(expected);
     }
 
     [Theory]
@@ -228,7 +228,7 @@ public class AllSatisfiedSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Rationale.Should().Be(expected);
     }
 
     [Theory]
@@ -329,7 +329,7 @@ public class AllSatisfiedSpecTests
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Rationale.Should().Be(expected);
     }
 
     [Theory]
