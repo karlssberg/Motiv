@@ -20,16 +20,6 @@ internal sealed class OrElseBooleanResultDescription<TMetadata>(
     public override IEnumerable<string> GetDetailsAsLines() =>
         causalResults.GetBinaryDetailsAsLines(operationName);
     
-
-    private IEnumerable<string> Explain(BooleanResultBase<TMetadata>? result)
-    {
-        return result switch 
-        {
-            null => Enumerable.Empty<string>(),
-            _ => result.Description.GetDetailsAsLines()
-        };
-    }
-    
     private string ExplainReasons(BooleanResultBase<TMetadata> result)
     {
         return result switch 

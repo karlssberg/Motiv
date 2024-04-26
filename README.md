@@ -1,30 +1,40 @@
 # Motiv
-### Turn your if-statements into _why_ statements
+## Turn your if-statements into _why_ statements
 
 Motiv is a .NET library that supercharges the experience of working with boolean logic.
-
-It allows you to package your boolean expressions into strongly typed _propositions_.
-By _propositions_, we mean a declarative statement that can be evaluated to either true or false.
-
-such as:
-* _the sun is shining_
-* _email address is missing an @ symbol_
-* _the subscription is within a grace period_
-
-Propositions can be composed together using boolean operators, such as `&`, `|`, and `^`, and when evaluated will only 
-surface the reasons (or custom data) from propositions that determined the final result.
-
 ```csharp
-var isUsefulLibrary = hasExplanations & hasCustomMetadata & isReusable & isComposable;
-
-var result = isUsefulLibrary.IsSatisfiedBy(new InferiorAlternative());
-
-result.Satisfied; // false
-result.Reason; // "no support for explanations & no support for custom metadata"
-result.Assertions; // ["no support for explanations", "no support for custom metadata"]
+    Spec.Build((Subscription subscription) => subscription.ExpiryDate < DateTime.Now)
+        .WhenTrue("subscription has expired")
+        .WhenFalse("subscription has not expired")
+        .Create();
 ```
 
-#### What can I use the Motiv for?
+It allows you to package your boolean expressions into strongly typed _propositions_.
+By propositions, we mean a declarative statement that can later be evaluated to either true or false.
+
+Examples of propositions include:
+* _the sun is shining_
+* _email address is missing an @ symbol_
+* _subscription is within the grace period_
+
+Propositions can be composed together using boolean operators, such as `&`, `|`, and `^`, and when evaluated will only
+surface the reasons (or custom metadata) from propositions that determined the final result.
+
+```csharp
+var canViewContent = ((!hasSubscriptionExpired | isGracePeriod) & !isSubscriptionCancelled) | isStaff;
+
+var result = canViewContent.IsSatisfiedBy(subscription);  // evaluate proposition
+
+result.Satisfied; // true
+result.Assertions; // ["subscription is within the grace period", "subscription is not cancelled"]
+result.Description.Detailed; // OR
+                             //     AND
+                             //         OR
+                             //             subscription is within the grace period
+                             //         subscription is not cancelled
+```
+
+### What can I use the Motiv for?
 Motiv is not specifically focused on catering to any particular use-case (except maybe _Developer Experience_),
 but it does nonetheless serve use-cases such as:
 
@@ -56,12 +66,13 @@ calling any other builder methods in between.
 For exampe:
 ```csharp
 var isEligibleForLoan =
-    Spec.Build((Customer customer) => customer is  // predicate
+    Spec.Build((Customer customer) => 
+            customer is                 // predicate
             {
                 CreditScore: > 600,
                 Income: > 100000
             })                         
-        .Create("eligible for loan");  // propositional statement
+        .Create("eligible for loan");   // propositional statement
 ```
 
 This can then be evaluated by calling the `IsSatisfiedBy()` method and passing in a model to evaluate.
@@ -70,7 +81,7 @@ var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);  // evaluate pro
 
 result.Satisfied; // true
 result.Reason; // "eligible for loan"
-result.Assertions; // "eligible for loan"
+result.Assertions; // ["eligible for loan"]
 ```
 
 When negated, a basic proposition will return a reason prefixed with a `!` character.
@@ -98,8 +109,8 @@ var isEligibleForLoan =
                 CreditScore: > 600,
                 Income: > 100000
             })
-        .WhenTrue("customer is eligible for a loan")
-        .WhenFalse("customer is not eligible for a loan")
+        .WhenTrue("customer is eligible for a loan")        // yield explanation when true
+        .WhenFalse("customer is not eligible for a loan")   // yield explanation when false
         .Create();
 
 var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
@@ -120,8 +131,8 @@ var isEligibleForLoan =
                 CreditScore: > 600,
                 Income: > 100000
             })
-        .WhenTrue(new MyMetadata("customer is eligible for a loan"))          // POCO object
-        .WhenFalse(new MyMetadata("customer is not eligible for a loan"))   // POCO object
+        .WhenTrue(new MyMetadata("customer is eligible for a loan"))        // yield POCO object when true
+        .WhenFalse(new MyMetadata("customer is not eligible for a loan"))   // yield POCO object when false
         .Create("eligible for loan");
 
 var result = isNegative.IsSatisfiedBy(eligibleCustomer);
@@ -144,8 +155,8 @@ var isEligibleForLoan =
                 CreditScore: > 600,
                 Income: > 100000
             })
-        .WhenTrue(customer => $"customer {customer.Name} is eligible for a loan")
-        .WhenFalse(customer => $"customer {customer.Name} is not eligible for a loan")
+        .WhenTrue(customer => $"customer {customer.Name} is eligible for a loan")      // dynamic explanation when true
+        .WhenFalse(customer => $"customer {customer.Name} is not eligible for a loan") // dynamic explanation when false
         .Create("eligible for loan");
 ```
 
@@ -218,19 +229,21 @@ isEligibleForLoan.IsSatisfiedBy(ineligibleCustomer).Reason; // "customer has an 
 ```
 
 #### Strongly typed proposition
-You will likely want to encapsulate propositions for reuse across an application.
+You will likely want to encapsulate propositions for reuse across your application.
 For this you typically have two options, which is to either return `Spec` instances from members of POCO 
 objects, or to derive from the `Spec<TModel>` or `Spec<TModel, TMetadata>` class (the former being merely syntactic 
 sugar for `Spec<TModel, string>`).
-Using these classes will help you to maintain a separation of concerns and also raise the conspicuity of important 
-logic within an application. 
+By creating a new class that derives from `Spec<TModel>` or `Spec<TModel, TMetadata>`, the proposition becomes a
+unique type within the type-system, which is necessary in some situation, such as with dependency injection frameworks.
+Using the above classes will help you to maintain a separation of concerns and also raise the conspicuity of important 
+logic within your application. 
 
 ```csharp
-public class HasGoodCreditScoreProposition(int threshold) : Spec<int>(
+public class HasGoodCreditScoreProposition(int threshold) : Spec<int>(   // promote the proposition to a unique type
     Spec.Build((Customer customer) => customer.CreditScore > threshold)
         .WhenTrue("customer has a good credit score")
         .WhenFalse("customer has an inadequate credit score")
-        .Create();
+        .Create());
 ```
 or if a custom object is required for metadata, then you can use the `Spec<TModel, TMetadata>` class instead:
 ```csharp
@@ -238,7 +251,7 @@ public class HasSufficientIncomeProposition(decimal threshold) : Spec<int, MyMet
     Spec.Build((Customer customer) => customer.Income > threshold)
         .WhenTrue(new MyMetadata("customer has sufficient income"))  // custom metadata
         .WhenFalse(new MyMetadata("customer has insufficient income"))  // custom metadata
-        .Create("has sufficient income");
+        .Create("has sufficient income"));
 ```
 
 ### Higher Order Logic
@@ -247,7 +260,7 @@ Whilst you can create a first-order proposition that operates on collections of 
 metadata) would be challenging.
 This library provides a `.As()` builder method to address this.
 
-#### Build-in higher order logic
+#### Built-in higher order logic
 Some built-in higher order logical operations are provided for popular operations, but you can also add your own using
 extension methods.
 
@@ -267,7 +280,7 @@ The current built-in higher order logical operations are:
 
 ```csharp
 Spec.Build((int n) => n < 0)
-    .AsAllSatisfied()  // higher order logic
+    .AsAllSatisfied()               // higher order logic
     .WhenTrue("all are negative")
     .WhenFalse("some are not negative")
     .Create();
@@ -278,7 +291,7 @@ This will give you access to each result and model pair, which can be used to cu
 particular use-case.
 
 ```csharp
-Spec.Build(new IsNegativeIntegerProposition())
+Spec.Build(new IsNegativeIntegerProposition())  // existing proposition
     .AsAllSatisfied()
     .WhenTrue("all are negative")
     .WhenFalse(evaluation => evaluation.FalseModels.Select(n => $"{n} is not negative"))

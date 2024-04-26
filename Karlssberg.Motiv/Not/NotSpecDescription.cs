@@ -1,6 +1,4 @@
-﻿using Karlssberg.Motiv.AndAlso;
-
-namespace Karlssberg.Motiv.Not;
+﻿namespace Karlssberg.Motiv.Not;
 
 internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMetadata> operand) : ISpecDescription
 {

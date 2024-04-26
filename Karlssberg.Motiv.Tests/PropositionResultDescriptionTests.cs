@@ -537,31 +537,31 @@ public class PropositionResultDescriptionTests
     public void Should_collapse_operators_in_spec_description_to_improve_readability()
     {
         var first = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("first");
         
         var second = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("second");
         
         var third = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("third");
         
         var fourth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("fourth");
         
         var fifth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("fifth");
         
         var sixth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("sixth");
         
         var seventh = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("seventh");
         
         var spec = !(first & second).AndAlso((third | fourth) & !(fifth | !sixth) & !!!!seventh);
@@ -587,19 +587,19 @@ public class PropositionResultDescriptionTests
     public void Should_not_collapse_xor_operators_in_spec_description()
     {
         var first = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("first");
         
         var second = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("second");
         
         var third = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("third");
         
         var fourth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("fourth");
 
         var spec = first ^ second ^ third ^ fourth; 
@@ -620,19 +620,19 @@ public class PropositionResultDescriptionTests
     public void Should_collapse_AND_and_ANDALSO_operators_in_spec_description()
     {
         var first = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("first");
         
         var second = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("second");
         
         var third = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("third");
         
         var fourth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("fourth");
 
 
@@ -653,19 +653,19 @@ public class PropositionResultDescriptionTests
     public void Should_collapse_OR_and_ORELSE_operators_in_spec_description()
     {
         var first = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("first");
         
         var second = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("second");
         
         var third = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("third");
         
         var fourth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("fourth");
 
         var spec = first.OrElse(second | third | fourth); 
@@ -685,31 +685,31 @@ public class PropositionResultDescriptionTests
     public void Should_collapse_operators_in_spec_result_description_to_improve_readability()
     {
         var first = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("first");
         
         var second = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("second");
         
         var third = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("third");
         
         var fourth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("fourth");
         
         var fifth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("fifth");
         
         var sixth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("sixth");
         
         var seventh = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("seventh");
         
         var spec = (first & second).AndAlso((third | fourth) & (fifth | sixth) & seventh);
@@ -734,19 +734,19 @@ public class PropositionResultDescriptionTests
     public void Should_collapse_AND_and_ANDALSO_operators_in_spec_result_description()
     {
         var first = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("first");
         
         var second = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("second");
         
         var third = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("third");
         
         var fourth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("fourth");
 
 
@@ -767,19 +767,19 @@ public class PropositionResultDescriptionTests
     public void Should_collapse_OR_and_ORELSE_operators_in_spec_result_description()
     {
         var first = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("first");
         
         var second = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("second");
         
         var third = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("third");
         
         var fourth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("fourth");
 
         var spec = first | (second | third | fourth); 
