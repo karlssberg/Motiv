@@ -17,7 +17,7 @@ internal sealed class OrElseBooleanResult<TMetadata>(
     public BooleanResultBase<TMetadata> Left { get; } = left;
     public BooleanResultBase<TMetadata>? Right { get; } = right;
 
-    public string Operation => "OR";
+    public string Operation => "OR ELSE";
     public bool IsCollapsable => true;
     
     BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
