@@ -21,15 +21,15 @@ Propositions can be composed together using boolean operators, such as `&`, `|`,
 surface the reasons (or custom metadata) from propositions that determined the final result.
 
 ```csharp
-var canViewContent = ((!hasSubscriptionExpired & isGracePeriod) | isStaff) & !isCancelled;
+var canViewContent = ((!hasSubscriptionExpired | isGracePeriod) & !isCancelled) | isStaff;
 
 var result = canViewContent.IsSatisfiedBy(user);  // evaluate proposition
 
 result.Satisfied; // true
 result.Assertions; // ["subscription has not expired", "subscription is not cancelled"]
-result.Description.Detailed; // AND
-                             //     OR
-                             //         AND
+result.Description.Detailed; // OR
+                             //     AND
+                             //         OR
                              //             subscription has not expired
                              //     subscription is not cancelled
 ```
