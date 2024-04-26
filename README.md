@@ -26,7 +26,7 @@ result.Assertions; // ["no support for explanations", "no support for custom met
 
 #### What can I use the Motiv for?
 Motiv is not specifically focused on catering to any particular use-case (except maybe _Developer Experience_),
-but it does nonetheless cater for use-cases such as:
+but it does nonetheless serve use-cases such as:
 
 * **User feedback** - You require an application to provide detailed and accurate feedback to the user about why a 
   certain decisions were made. 
