@@ -15,26 +15,26 @@ By propositions, we mean a declarative statement that can later be evaluated to 
 Examples of propositions include:
 * _the sun is shining_
 * _email address is missing an @ symbol_
-* _the subscription is within a grace period_
+* _subscription is within the grace period_
 
 Propositions can be composed together using boolean operators, such as `&`, `|`, and `^`, and when evaluated will only
 surface the reasons (or custom metadata) from propositions that determined the final result.
 
 ```csharp
-var canViewContent = ((!hasSubscriptionExpired | isGracePeriod) & !isCancelled) | isStaff;
+var canViewContent = ((!hasSubscriptionExpired | isGracePeriod) & !isSubscriptionCancelled) | isStaff;
 
-var result = canViewContent.IsSatisfiedBy(user);  // evaluate proposition
+var result = canViewContent.IsSatisfiedBy(subscription);  // evaluate proposition
 
 result.Satisfied; // true
-result.Assertions; // ["subscription has not expired", "subscription is not cancelled"]
+result.Assertions; // ["subscription is within the grace period", "subscription is not cancelled"]
 result.Description.Detailed; // OR
                              //     AND
                              //         OR
-                             //             subscription has not expired
+                             //             subscription is within the grace period
                              //         subscription is not cancelled
 ```
 
-#### What can I use the Motiv for?
+### What can I use the Motiv for?
 Motiv is not specifically focused on catering to any particular use-case (except maybe _Developer Experience_),
 but it does nonetheless serve use-cases such as:
 
