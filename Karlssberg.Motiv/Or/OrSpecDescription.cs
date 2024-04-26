@@ -31,18 +31,5 @@ internal sealed class OrSpecDescription<TModel, TMetadata>(
         };
     }
 
-    private IEnumerable<string> Explain(SpecBase<TModel, TMetadata> operand)
-    {
-        return operand switch
-        {
-            OrSpec<TModel, TMetadata> orSpec =>
-                orSpec.Description.GetDetailsAsLines(),
-            OrElseSpec<TModel, TMetadata> orElseSpec =>
-                orElseSpec.Description.GetDetailsAsLines(),
-            IBinaryOperationSpec binarySpec => binarySpec.Description.GetDetailsAsLines().IndentLines(),
-            _ => operand.Description.GetDetailsAsLines()
-        };
-    }
-
     public override string ToString() => Statement;
 }

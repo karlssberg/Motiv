@@ -306,19 +306,19 @@ public class XOrSpecTests
     public void Should_not_collapse_xor_operators_in_spec_result_description()
     {
         var first = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("first");
         
         var second = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("second");
         
         var third = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("third");
         
         var fourth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("fourth");
 
         var spec = first ^ second ^ third ^ fourth; 
@@ -341,19 +341,19 @@ public class XOrSpecTests
     public void Should_not_collapse_xor_operators_in_spec_result_description_when_grouped()
     {
         var first = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("first");
 
         var second = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("second");
 
         var third = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("third");
 
         var fourth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("fourth");
 
 
@@ -375,19 +375,19 @@ public class XOrSpecTests
     public void Should_not_collapse_xor_operators_in_spec_result_description_when_grouped_in_reverse_order()
     {
         var first = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("first");
         
         var second = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("second");
         
         var third = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("third");
         
         var fourth = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("fourth");
 
 
