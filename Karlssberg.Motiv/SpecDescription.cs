@@ -1,20 +1,20 @@
 ﻿namespace Karlssberg.Motiv;
 
-internal sealed class SpecDescription(string statement, string? underlyingDetailedDescription = null) : ISpecDescription
+internal sealed class SpecDescription(string statement, ISpecDescription? underlyingDescription = null) : ISpecDescription
 {
     public string Statement => statement;
 
-    public string Detailed =>
-        underlyingDetailedDescription switch
-        {
-            null => statement,
-            not null =>
-                $$"""
-                  {{statement}} {
-                      {{underlyingDetailedDescription.IndentAfterFirstLine()}}
-                  }
-                  """
-        };
+    public string Detailed => string.Join(Environment.NewLine, GetDetailsAsLines());
+
+    public IEnumerable<string> GetDetailsAsLines()
+    {
+        yield return Statement;
+        if (underlyingDescription is null)
+            yield break;
+
+        foreach (var line in underlyingDescription.GetDetailsAsLines())
+            yield return line.IndentLine();
+    }
 
     public override string ToString() => Statement;
 }

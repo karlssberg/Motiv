@@ -8,10 +8,21 @@ internal sealed class BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata
     internal override int CausalOperandCount => 1;
 
     public override string Reason => reason;
-    public override string Detailed =>
-        $$"""
-          {{Reason}} {
-              {{booleanResult.Description.Reason.IndentAfterFirstLine()}}
-          }
-          """;
+
+    public override IEnumerable<string> GetDetailsAsLines()
+    {
+        if (IsReasonTheSameAsUnderlying())
+        {
+            foreach (var line in booleanResult.Description.GetDetailsAsLines())
+                yield return line;
+            
+            yield break;
+        }
+        
+        yield return reason;
+        foreach (var line in booleanResult.Description.GetDetailsAsLines())
+            yield return line.IndentLine();
+    }
+
+    private bool IsReasonTheSameAsUnderlying() => reason == booleanResult.Description.Reason;
 }

@@ -20,6 +20,9 @@ internal sealed class OrBooleanResult<TMetadata>(
     BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
     
     BooleanResultBase IBinaryBooleanOperationResult.Right => Right;
+
+    public string Operation => "OR";
+    public bool IsCollapsable => true;
     
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
     
@@ -29,7 +32,7 @@ internal sealed class OrBooleanResult<TMetadata>(
 
     public override bool Satisfied { get; } = left.Satisfied || right.Satisfied;
 
-    public override ResultDescriptionBase Description => new OrBooleanResultDescription<TMetadata>(Left, Right, GetCausalResults());
+    public override ResultDescriptionBase Description => new OrBooleanResultDescription<TMetadata>(Operation, GetCausalResults());
 
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {

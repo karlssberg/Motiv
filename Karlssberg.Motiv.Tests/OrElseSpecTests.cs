@@ -87,8 +87,9 @@ public class OrElseSpecTests
     {
         const string expected =
             """
-            left ||
-            right
+            OR ELSE
+                left
+                right
             """;
         
         var left =
@@ -132,10 +133,15 @@ public class OrElseSpecTests
         act.Description.Reason.Should().Be(expected);
     }
     
-        
     [Theory]
-    [InlineAutoData(true, "left")]
-    [InlineAutoData(false, "not left || right")]
+    [InlineAutoData(true, """
+                        OR
+                            left
+                        """)]
+    [InlineAutoData(false, """
+                        OR
+                            right
+                        """)]
     public void Should_describe_the_result_in_detail_over_a_single_line_because_operands_are_short(bool model, string expected)
     {
         var left =
@@ -158,12 +164,15 @@ public class OrElseSpecTests
     }
     
     [Theory]
-    [InlineAutoData(true, "left assertion statement")]
+    [InlineAutoData(true, """
+                                OR
+                                    left assertion statement
+                                """)]
     [InlineAutoData(false,
-            """
-            not left assertion statement ||
-            right assertion statement
-            """)]
+                                """
+                                OR
+                                    right assertion statement
+                                """)]
     public void Should_describe_the_result_in_detail_over_multiple_lines_because_operands_are_long(bool model, string expected)
     {
         var left =
@@ -246,5 +255,31 @@ public class OrElseSpecTests
 
         act.Assertions.Should().BeEquivalentTo(expectedAssertions);
         act.Metadata.Should().BeEquivalentTo(expectedAssertions);
+    }
+    
+    [Fact]
+    public void Should_not_collapse_ORELSE_operators_in_spec_description()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+
+        var spec = first.OrElse(second).OrElse(third); 
+        
+        spec.Description.Detailed.Should().Be(
+            """
+            OR ELSE
+                first
+                second
+                third
+            """);
     }
 }

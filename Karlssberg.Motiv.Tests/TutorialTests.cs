@@ -181,7 +181,7 @@ public class TutorialTests
         result.Reason.Should().BeEquivalentTo("basket is empty");
     }
 
-    private class IsNegativeIntegerSpec() : Spec<int>(
+    private class IsNegativeIntegerProposition() : Spec<int>(
         Spec.Build((int n) => n < 0)
             .WhenTrue(n => $"{n} is negative")
             .WhenFalse(n => $"{n} is not negative")
@@ -244,23 +244,25 @@ public class TutorialTests
     {
 
         var allAreNegative =
-            Spec.Build(new IsNegativeIntegerSpec())
+            Spec.Build(new IsNegativeIntegerProposition())
                 .AsAllSatisfied()
-                .WhenTrue(eval => eval switch
-                {
-                    { Count: 0 } => "there is an absence of numbers",
-                    { Models: [< 0 and var n] } => $"{n} is negative and is the only number",
-                    _ => "all are negative numbers"
-                })
-                .WhenFalse(eval => eval switch
-                {
-                    { Models: [0] } => ["the number is 0 and is the only number"],
-                    { Models: [> 0 and var n] } => [$"{n} is positive and is the only number"],
-                    { NoneSatisfied: true } when eval.Models.All(m => m is 0) => ["all are 0"],
-                    { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
-                    { NoneSatisfied: true } =>  ["none are negative numbers"],
-                    _ => eval.FalseResults.GetAssertions()
-                })
+                .WhenTrue(eval => 
+                    eval switch
+                    {
+                        { Count: 0 } => "there is an absence of numbers",
+                        { Models: [< 0 and var n] } => $"{n} is negative and is the only number",
+                        _ => "all are negative numbers"
+                    })
+                .WhenFalse(eval =>
+                    eval switch
+                    {
+                        { Models: [0] } => ["the number is 0 and is the only number"],
+                        { Models: [> 0 and var n] } => [$"{n} is positive and is the only number"],
+                        { NoneSatisfied: true } when eval.Models.All(m => m is 0) => ["all are 0"],
+                        { NoneSatisfied: true } when eval.Models.All(m => m > 0) => ["all are positive numbers"],
+                        { NoneSatisfied: true } =>  ["none are negative numbers"],
+                        _ => eval.FalseResults.GetAssertions()
+                    })
                 .Create("all are negative");
 
 

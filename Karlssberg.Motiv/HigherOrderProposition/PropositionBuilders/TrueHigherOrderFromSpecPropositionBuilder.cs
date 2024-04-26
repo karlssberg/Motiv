@@ -98,6 +98,6 @@ public readonly ref struct TrueHigherOrderFromSpecPropositionBuilder<TModel, TUn
             eval => eval.Metadata,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
-                spec.Description.Statement),
+                spec.Description),
             causeSelector);
 }

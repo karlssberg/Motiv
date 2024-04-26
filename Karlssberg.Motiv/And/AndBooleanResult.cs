@@ -13,7 +13,7 @@ internal sealed class AndBooleanResult<TMetadata>(
     public override bool Satisfied { get; } = left.Satisfied && right.Satisfied;
     
     public override ResultDescriptionBase Description =>
-        new AndBooleanResultDescription<TMetadata>(Left, Right, GetCausalResults());
+        new AndBooleanResultDescription<TMetadata>(Operation, GetCausalResults());
 
     public override Explanation Explanation => GetCausalResults().CreateExplanation();
 
@@ -28,6 +28,9 @@ internal sealed class AndBooleanResult<TMetadata>(
     BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
     
     BooleanResultBase IBinaryBooleanOperationResult.Right => Right;
+
+    public string Operation => "AND";
+    public bool IsCollapsable => true;
 
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
 

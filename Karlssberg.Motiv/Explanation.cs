@@ -13,10 +13,11 @@ public sealed class Explanation
     public Explanation(IEnumerable<string> assertions, IEnumerable<BooleanResultBase> causes) 
     {
         var assertionsArray = assertions as string[] ?? assertions.ToArray();
-
+        Causes = causes;
         Assertions = assertionsArray.Distinct();
-        Underlying = ResolveUnderlying(assertionsArray, causes);
     }
+
+    public IEnumerable<BooleanResultBase> Causes { get; }
 
     private static IEnumerable<Explanation> ResolveUnderlying(
        IEnumerable<string> assertions,
@@ -33,7 +34,8 @@ public sealed class Explanation
             .ToArray();
 
         var underlyingAssertions = underlying
-            .SelectMany(explanation => explanation.Assertions);
+            .SelectMany(explanation => explanation.Assertions)
+            .Distinct();
 
         var doesParentEqualChildAssertion = underlyingAssertions.SequenceEqual(assertions);
 
@@ -44,7 +46,7 @@ public sealed class Explanation
 
     public IEnumerable<string> Assertions { get; }
 
-    public IEnumerable<Explanation> Underlying { get; }
+    public IEnumerable<Explanation> Underlying => ResolveUnderlying(Assertions, Causes);
     
     public override string ToString() => Assertions.Serialize();
 

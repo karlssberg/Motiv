@@ -7,12 +7,14 @@ internal sealed class XOrSpecDescription<TModel, TMetadata>(
 {
 
     public string Statement => $"{Summarize(left)} ^ {Summarize(right)}";
-    public string Detailed =>
-        $"""
-            {Explain(left).IndentAfterFirstLine()} ^
-            {Explain(right).IndentAfterFirstLine()}
-        """;
-    
+    public string Detailed => string.Join(Environment.NewLine, GetDetailsAsLines());
+
+    public IEnumerable<string> GetDetailsAsLines()
+    {
+        var specs = left.ToEnumerable().Append(right); // reverse order for easier reading
+        return specs.GetBinaryDetailsAsLines("XOR");
+    }
+
     private string Summarize(SpecBase<TModel, TMetadata> operand)
     {
         return operand switch 
@@ -20,16 +22,6 @@ internal sealed class XOrSpecDescription<TModel, TMetadata>(
             XOrSpec<TModel, TMetadata> xOrSpec => xOrSpec.Description.Statement,
             IBinaryOperationSpec binarySpec => $"({binarySpec.Description.Statement})",
             _ => operand.Description.Statement
-        };
-    }
-    
-    private string Explain(SpecBase<TModel, TMetadata> operand)
-    {
-        return operand switch 
-        {
-            XOrSpec<TModel, TMetadata> xOrSpec => xOrSpec.Description.Detailed,
-            IBinaryOperationSpec binarySpec => $"({binarySpec.Description.Detailed})",
-            _ => operand.Description.Detailed
         };
     }
     

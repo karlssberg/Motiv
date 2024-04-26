@@ -139,7 +139,7 @@ public class HigherOrderExplanationSpecTests
         int first, 
         int second, 
         int third,
-        int forth,
+        int fourth,
         bool expected,
         string expectedReason)
     {
@@ -163,7 +163,7 @@ public class HigherOrderExplanationSpecTests
                 })
                 .Create();
 
-        var act = sut.IsSatisfiedBy([first, second, third, forth]);
+        var act = sut.IsSatisfiedBy([first, second, third, fourth]);
             
         act.Assertions.Should().BeEquivalentTo(expectedReason);
         act.Satisfied.Should().Be(expected);

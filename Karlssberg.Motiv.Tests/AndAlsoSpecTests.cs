@@ -85,8 +85,9 @@ public class AndAlsoSpecTests
     {
         const string expected =
             """
-            left &&
-            right
+            AND ALSO
+                left
+                right
             """;
         
         var left =
@@ -131,8 +132,14 @@ public class AndAlsoSpecTests
     }
     
     [Theory]
-    [InlineAutoData(true, "left && not right")]
-    [InlineAutoData(false, "not left")]
+    [InlineAutoData(true, """
+                                    AND
+                                        not right
+                                    """)]
+    [InlineAutoData(false, """
+                                    AND
+                                        not left
+                                    """)] 
     public void Should_describe_the_result_in_detail_over_a_single_line_because_operands_are_short(bool model, string expected)
     {
         var left =
@@ -156,10 +163,13 @@ public class AndAlsoSpecTests
     
     [Theory]
     [InlineAutoData(true, """
-                          left assertion statement &&
-                          not right assertion statement
-                          """)]
-    [InlineAutoData(false, "not left assertion statement")]
+                            AND
+                                not right assertion statement
+                            """)]
+    [InlineAutoData(false, """
+                            AND
+                                not left assertion statement
+                            """)]
     public void Should_describe_the_result_in_detail_over_multiple_lines_because_operands_are_long(bool model, string expected)
     {
         var left =
@@ -242,5 +252,31 @@ public class AndAlsoSpecTests
 
         act.Assertions.Should().BeEquivalentTo(expectedAssertions);
         act.Metadata.Should().BeEquivalentTo(expectedAssertions);
+    }
+    
+    [Fact]
+    public void Should_not_collapse_ORELSE_operators_in_spec_description()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+
+        var spec = first.AndAlso(second).AndAlso(third); 
+        
+        spec.Description.Detailed.Should().Be(
+            """
+            AND ALSO
+                first
+                second
+                third
+            """);
     }
 }

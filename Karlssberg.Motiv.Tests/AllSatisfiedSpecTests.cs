@@ -39,45 +39,44 @@ public class AllSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         !all are true {
-                                             3x false
-                                         }
-                                         """)]
+                                            !all are true
+                                                false
+                                                false
+                                                false
+                                            """)]
     [InlineAutoData(false, false, true, """
-                                        !all are true {
-                                            2x false
-                                        }
-                                        """)]
+                                            !all are true
+                                                false
+                                                false
+                                            """)]
     [InlineAutoData(false, true, false, """
-                                        !all are true {
-                                            2x false
-                                        }
-                                        """)]
+                                            !all are true
+                                                false
+                                                false
+                                            """)]
     [InlineAutoData(false, true, true, """
-                                       !all are true {
-                                           1x false
-                                       }
-                                       """)]
+                                            !all are true
+                                                false
+                                            """)]
     [InlineAutoData(true, false, false, """
-                                        !all are true {
-                                            2x false
-                                        }
-                                        """)]
+                                            !all are true
+                                                false
+                                                false
+                                            """)]
     [InlineAutoData(true, false, true, """
-                                       !all are true {
-                                           1x false
-                                       }
-                                       """)]
+                                            !all are true
+                                                false
+                                            """)]
     [InlineAutoData(true, true, false, """
-                                       !all are true {
-                                           1x false
-                                       }
-                                       """)]
+                                            !all are true
+                                                false
+                                            """)]
     [InlineAutoData(true, true, true, """
-                                      all are true {
-                                          3x true
-                                      }
-                                      """)]
+                                            all are true
+                                                true
+                                                true
+                                                true
+                                            """)]
     public void Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string(
         bool first,
         bool second,
@@ -104,45 +103,44 @@ public class AllSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         !all are true {
-                                             3x false
-                                         }
-                                         """)]
+                                        !all are true
+                                            false
+                                            false
+                                            false
+                                        """)]
     [InlineAutoData(false, false, true, """
-                                        !all are true {
-                                            2x false
-                                        }
+                                        !all are true
+                                            false
+                                            false
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        !all are true {
-                                            2x false
-                                        }
+                                        !all are true
+                                            false
+                                            false
                                         """)]
     [InlineAutoData(false, true, true, """
-                                       !all are true {
-                                           1x false
-                                       }
-                                       """)]
+                                        !all are true
+                                            false
+                                        """)]
     [InlineAutoData(true, false, false, """
-                                        !all are true {
-                                            2x false
-                                        }
+                                        !all are true
+                                            false
+                                            false
                                         """)]
     [InlineAutoData(true, false, true, """
-                                       !all are true {
-                                           1x false
-                                       }
-                                       """)]
+                                        !all are true
+                                            false
+                                        """)]
     [InlineAutoData(true, true, false, """
-                                       !all are true {
-                                           1x false
-                                       }
-                                       """)]
+                                        !all are true
+                                            false
+                                        """)]
     [InlineAutoData(true, true, true, """
-                                      all are true {
-                                          3x true
-                                      }
-                                      """)]
+                                        all are true
+                                            true
+                                            true
+                                            true
+                                        """)]
     public void
         Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
             bool first,
@@ -171,44 +169,43 @@ public class AllSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         !all are true {
-                                             3x !is true
-                                         }
-                                         """)]
+                                        !all are true
+                                            !is true
+                                            !is true
+                                            !is true
+                                        """)]
     [InlineAutoData(false, false, true, """
-                                        !all are true {
-                                            2x !is true
-                                        }
+                                        !all are true
+                                            !is true
+                                            !is true
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        !all are true {
-                                            2x !is true
-                                        }
+                                        !all are true
+                                            !is true
+                                            !is true
                                         """)]
     [InlineAutoData(false, true, true, """
-                                       !all are true {
-                                           1x !is true
-                                       }
-                                       """)]
+                                        !all are true
+                                            !is true
+                                        """)]
     [InlineAutoData(true, false, false, """
-                                        !all are true {
-                                            2x !is true
-                                        }
+                                        !all are true
+                                            !is true
+                                            !is true
                                         """)]
     [InlineAutoData(true, false, true, """
-                                       !all are true {
-                                           1x !is true
-                                       }
+                                       !all are true
+                                           !is true
                                        """)]
     [InlineAutoData(true, true, false, """
-                                       !all are true {
-                                           1x !is true
-                                       }
+                                       !all are true
+                                           !is true
                                        """)]
     [InlineAutoData(true, true, true, """
-                                      all are true {
-                                          3x is true
-                                      }
+                                      all are true
+                                          is true
+                                          is true
+                                          is true
                                       """)]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
@@ -234,68 +231,96 @@ public class AllSatisfiedSpecTests
         result.Description.Detailed.Should().Be(expected);
     }
 
-
     [Theory]
     [InlineAutoData(false, false, false, """
-                                         !all are true {
-                                             3x !left & !right
-                                         }
-                                         """)]
+                                            !all are true
+                                                AND
+                                                    !left
+                                                    !right
+                                                AND
+                                                    !left
+                                                    !right
+                                                AND
+                                                    !left
+                                                    !right
+                                            """)]
     [InlineAutoData(false, false, true, """
-                                        !all are true {
-                                            2x !left & !right
-                                        }
-                                        """)]
+                                            !all are true
+                                                AND
+                                                    !left
+                                                    !right
+                                                AND
+                                                    !left
+                                                    !right
+                                            """)]
     [InlineAutoData(false, true, false, """
-                                        !all are true {
-                                            2x !left & !right
-                                        }
-                                        """)]
+                                            !all are true
+                                                AND
+                                                    !left
+                                                    !right
+                                                AND
+                                                    !left
+                                                    !right
+                                            """)]
     [InlineAutoData(false, true, true, """
-                                       !all are true {
-                                           1x !left & !right
-                                       }
-                                       """)]
+                                            !all are true
+                                                AND
+                                                    !left
+                                                    !right
+                                            """)]
     [InlineAutoData(true, false, false, """
-                                        !all are true {
-                                            2x !left & !right
-                                        }
-                                        """)]
+                                            !all are true
+                                                AND
+                                                    !left
+                                                    !right
+                                                AND
+                                                    !left
+                                                    !right
+                                            """)]
     [InlineAutoData(true, false, true, """
-                                       !all are true {
-                                           1x !left & !right
-                                       }
-                                       """)]
+                                            !all are true
+                                                AND
+                                                    !left
+                                                    !right
+                                            """)]
     [InlineAutoData(true, true, false, """
-                                       !all are true {
-                                           1x !left & !right
-                                       }
-                                       """)]
+                                            !all are true
+                                                AND
+                                                    !left
+                                                    !right
+                                            """)]
     [InlineAutoData(true, true, true, """
-                                      all are true {
-                                          3x left & right
-                                      }
-                                      """)]
+                                            all are true
+                                                AND
+                                                    left
+                                                    right
+                                                AND
+                                                    left
+                                                    right
+                                                AND
+                                                    left
+                                                    right
+                                            """)]
     public void Should_serialize_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,
         bool third,
         string expected)
     {
-        var underlyingSpecLeft = Spec
+        var left = Spec
             .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("left");
 
-        var underlyingSpecRight = Spec
+        var right = Spec
             .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("right");
 
         var sut = Spec
-            .Build(underlyingSpecLeft & underlyingSpecRight)
+            .Build(left & right)
             .AsAllSatisfied()
             .WhenTrue(evaluation => evaluation.Metadata)
             .WhenFalse(evaluation => evaluation.Metadata)
@@ -355,9 +380,8 @@ public class AllSatisfiedSpecTests
         const string expectedSummary = "all booleans are true";
         const string expectedFull =
             """
-            all booleans are true {
+            all booleans are true
                 is true
-            }
             """;
 
         var underlyingSpec = Spec
@@ -384,9 +408,8 @@ public class AllSatisfiedSpecTests
         const string expectedSummary = "all are true";
         const string expectedFull =
             """
-            all are true {
+            all are true
                 is true
-            }
             """;
 
         var underlyingSpec = Spec
