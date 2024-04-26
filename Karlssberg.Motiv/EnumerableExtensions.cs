@@ -297,9 +297,9 @@ public static class EnumerableExtensions
 
         var firstLine = enumerator.Current;
         yield return prefixFn(firstLine);
-        
+
         while (enumerator.MoveNext())
-            yield return enumerator.Current!;
+            yield return enumerator.Current ?? "";
     }
     
     public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) =>
@@ -385,27 +385,7 @@ public static class EnumerableExtensions
                         binaryOperationResult.Causes.IdentifyCollapsible(operation),
                     _ =>
                         (otherResults: OperationGroup.Other, underlyingResult).ToEnumerable()
-                })!;
-    }
-    
-    
-    private static IEnumerable<T> CreateEnumerable<T>(
-        T? first,
-        T? second,
-        IEnumerable<T>? rest = null)
-    {
-        if (first is null)
-            yield break;
-        
-        yield return first;
-        
-        if (second is null)
-            yield break;
-        
-        yield return second;
-        
-        foreach (var result in rest ?? Enumerable.Empty<T>())
-            yield return result;
+                });
     }
 
     public static IEnumerable<string> GetBinaryDetailsAsLines<TModel, TMetadata>(

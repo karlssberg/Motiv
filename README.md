@@ -70,7 +70,7 @@ var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);  // evaluate pro
 
 result.Satisfied; // true
 result.Reason; // "eligible for loan"
-result.Assertions; // "eligible for loan"
+result.Assertions; // ["eligible for loan"]
 ```
 
 When negated, a basic proposition will return a reason prefixed with a `!` character.
@@ -247,7 +247,7 @@ Whilst you can create a first-order proposition that operates on collections of 
 metadata) would be challenging.
 This library provides a `.As()` builder method to address this.
 
-#### Build-in higher order logic
+#### Built-in higher order logic
 Some built-in higher order logical operations are provided for popular operations, but you can also add your own using
 extension methods.
 

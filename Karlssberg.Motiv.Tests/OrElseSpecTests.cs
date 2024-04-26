@@ -261,15 +261,15 @@ public class OrElseSpecTests
     public void Should_not_collapse_ORELSE_operators_in_spec_description()
     {
         var first = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("first");
         
         var second = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("second");
         
         var third = Spec
-            .Build<bool>(val => true)
+            .Build<bool>(_ => true)
             .Create("third");
 
         var spec = first.OrElse(second).OrElse(third); 
