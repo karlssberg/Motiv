@@ -2,8 +2,8 @@
 
 public class IsAceHighStraightBroadwayProposition() : Spec<Hand>(
     Spec.Build(new DoAllCardsMatchRanksProposition(BroadwayRanks))
-        .WhenTrue("Is Ace High Straight Broadway")
-        .WhenFalse("Is Not Ace High Straight Broadway")
+        .WhenTrue("is Ace High Straight Broadway")
+        .WhenFalse("is Not Ace High Straight Broadway")
         .Create())
 {
     private static readonly ICollection<Rank> BroadwayRanks =

@@ -8,7 +8,7 @@ internal sealed class AndAlsoSpec<TModel, TMetadata>(
     public override ISpecDescription Description => 
         new AndAlsoSpecDescription<TModel, TMetadata>(left, right);
 
-    public string Operation => "AND";
+    public string Operation => "AND ALSO";
     public bool IsCollapsable => true;
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)

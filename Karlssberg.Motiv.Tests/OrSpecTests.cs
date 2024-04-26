@@ -268,4 +268,32 @@ public class OrSpecTests
         act.Assertions.Should().BeEquivalentTo(expectedAssertions);
         act.Metadata.Should().BeEquivalentTo(expectedAssertions);
     }
+    
+    
+    
+    [Fact]
+    public void Should_not_collapse_OR_operators_in_spec_description()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+
+        var spec = first | second | third; 
+        
+        spec.Description.Detailed.Should().Be(
+            """
+            OR
+                first
+                second
+                third
+            """);
+    }
 }

@@ -362,4 +362,30 @@ public class AndSpecTests
         act.Assertions.Should().BeEquivalentTo(expectedAssertions);
         act.Metadata.Should().BeEquivalentTo(expectedAssertions);
     }
+    
+    [Fact]
+    public void Should_not_collapse_ORELSE_operators_in_spec_description()
+    {
+        var first = Spec
+            .Build<bool>(val => true)
+            .Create("first");
+        
+        var second = Spec
+            .Build<bool>(val => true)
+            .Create("second");
+        
+        var third = Spec
+            .Build<bool>(val => true)
+            .Create("third");
+
+        var spec = first & second & third; 
+        
+        spec.Description.Detailed.Should().Be(
+            """
+            AND
+                first
+                second
+                third
+            """);
+    }
 }

@@ -6,7 +6,7 @@ internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMe
 {
     public string Statement => FormatStatement(operand.Description.Statement);
 
-    public string Detailed => FormatStatement(operand.Description.Detailed);
+    public string Detailed => string.Join(Environment.NewLine, GetDetailsAsLines());
 
     public IEnumerable<string> GetDetailsAsLines()
     {
