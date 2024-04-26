@@ -166,7 +166,7 @@ var hasGoodCreditScore =
         .Create();
 
 var hasSufficientIncome =
-    Spec.Build((Customer customer) => Income: > 100000)
+    Spec.Build((Customer customer) => customer.Income > 100000)
         .WhenTrue("customer has sufficient income")
         .WhenFalse("customer has insufficient income")
         .Create();
@@ -235,7 +235,7 @@ public class HasGoodCreditScoreProposition(int threshold) : Spec<int>(
 or if a custom object is required for metadata, then you can use the `Spec<TModel, TMetadata>` class instead:
 ```csharp
 public class HasSufficientIncomeProposition(decimal threshold) : Spec<int, MyMetadata>( // declare custom metadata
-    Spec.Build((Customer customer) => Income: > threshold)
+    Spec.Build((Customer customer) => customer.Income > threshold)
         .WhenTrue(new MyMetadata("customer has sufficient income"))  // custom metadata
         .WhenFalse(new MyMetadata("customer has insufficient income"))  // custom metadata
         .Create("has sufficient income");
