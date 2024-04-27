@@ -365,7 +365,7 @@ public class PropositionResultDescriptionTests
         
         var result = spec.IsSatisfiedBy([true]);
 
-        result.Rationale.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
     
     [Theory]
@@ -515,7 +515,7 @@ public class PropositionResultDescriptionTests
         var spec = (first | !second) & !(third | !fourth);
         var result = spec.IsSatisfiedBy(true);
 
-        result.Rationale.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
     
     [Theory]
@@ -566,7 +566,7 @@ public class PropositionResultDescriptionTests
         
         var spec = !(first & second).AndAlso((third | fourth) & !(fifth | !sixth) & !!!!seventh);
         
-        spec.Description.Detailed.Should().Be(
+        spec.Expression.Should().Be(
             """
             !AND ALSO
                 AND
@@ -604,7 +604,7 @@ public class PropositionResultDescriptionTests
 
         var spec = first ^ second ^ third ^ fourth; 
         
-        spec.Description.Detailed.Should().Be(
+        spec.Expression.Should().Be(
             """
             XOR
                 XOR
@@ -638,7 +638,7 @@ public class PropositionResultDescriptionTests
 
         var spec = first.AndAlso(second & third & fourth); 
         
-        spec.Description.Detailed.Should().Be(
+        spec.Expression.Should().Be(
             """
             AND ALSO
                 first
@@ -670,7 +670,7 @@ public class PropositionResultDescriptionTests
 
         var spec = first.OrElse(second | third | fourth); 
         
-        spec.Description.Detailed.Should().Be(
+        spec.Expression.Should().Be(
             """
             OR ELSE
                 first
@@ -715,7 +715,7 @@ public class PropositionResultDescriptionTests
         var spec = (first & second).AndAlso((third | fourth) & (fifth | sixth) & seventh);
         var act = spec.IsSatisfiedBy(true);
         
-        act.Rationale.Should().Be(
+        act.Justification.Should().Be(
             """
             AND
                 first
@@ -753,7 +753,7 @@ public class PropositionResultDescriptionTests
         var spec = first.AndAlso(second & third & fourth); 
         var act = spec.IsSatisfiedBy(true);
         
-        act.Rationale.Should().Be(
+        act.Justification.Should().Be(
             """
             AND
                 first
@@ -785,7 +785,7 @@ public class PropositionResultDescriptionTests
         var spec = first | (second | third | fourth); 
         var act = spec.IsSatisfiedBy(true);
         
-        act.Rationale.Should().Be(
+        act.Justification.Should().Be(
             """
             OR
                 first

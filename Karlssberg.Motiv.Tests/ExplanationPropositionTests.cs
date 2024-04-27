@@ -34,17 +34,15 @@ public class ExplanationPropositionTests
         result.Reason.Should().Be(expected);
     }
     
-    [Theory]
-    [InlineData(1, "odd")]
-    [InlineData(2, "even")]
-    public void Should_provide_a_(int model, string expected)
+    [Fact]
+    public void Should_provide_a_()
     {
         var spec = Spec.Build((int i) => i % 2 == 0)
             .WhenTrue("even")
             .WhenFalse("odd")
             .Create("is even");
         
-        spec.Description.Statement.Should().Be("is even");
+        spec.Statement.Should().Be("is even");
     }
     
     [Theory]

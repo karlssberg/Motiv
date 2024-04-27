@@ -231,7 +231,7 @@ public class AtMostNSatisfiedSpecTests
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Rationale.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Theory]
@@ -295,7 +295,7 @@ public class AtMostNSatisfiedSpecTests
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Rationale.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Theory]
@@ -359,7 +359,7 @@ public class AtMostNSatisfiedSpecTests
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Rationale.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Fact]
@@ -379,7 +379,7 @@ public class AtMostNSatisfiedSpecTests
             .WhenFalse("more than one is satisfied")
             .Create();
 
-        sut.Description.Statement.Should().Be(expected);
+        sut.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
     

@@ -147,7 +147,7 @@ public class OrSpecTests
 
         var sut = left | right;
 
-        sut.Description.Statement.Should().Be(expected);
+        sut.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -174,7 +174,7 @@ public class OrSpecTests
 
         var sut = left | right;
 
-        sut.Description.Statement.Should().Be(expected);
+        sut.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
     
@@ -282,7 +282,7 @@ public class OrSpecTests
 
         var spec = first | second | third; 
         
-        spec.Description.Detailed.Should().Be(
+        spec.Expression.Should().Be(
             """
             OR
                 first

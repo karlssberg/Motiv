@@ -386,7 +386,7 @@ public class TutorialTests
         
         act.Satisfied.Should().BeFalse();
 
-        act.Rationale.Should().Be(
+        act.Justification.Should().Be(
             """
             !customer is eligible for a loan
                 AND

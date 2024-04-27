@@ -54,7 +54,7 @@ public class AnySatisfiedSpecTests
             .WhenFalse(false)
             .Create("high-level description");
 
-        sut.Description.Statement.Should().Be(expected);
+        sut.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -119,7 +119,7 @@ public class AnySatisfiedSpecTests
             
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Rationale.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Theory]
@@ -185,12 +185,12 @@ public class AnySatisfiedSpecTests
 
         var result = sut.IsSatisfiedBy(models);
 
-        result.Rationale.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            !any true
+                                            all false
                                                 is false
                                                 is false
                                                 is false
@@ -243,13 +243,13 @@ public class AnySatisfiedSpecTests
         var sut = Spec
             .Build(underlyingSpec)
             .AsAnySatisfied()
-            .WhenTrue(_ => true.ToString())
-            .WhenFalse(_ => false.ToString())
+            .WhenTrue(_ => "any true")
+            .WhenFalse(_ => "all false")
             .Create("any true");
         
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Rationale.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
     
     [Theory]
@@ -350,15 +350,14 @@ public class AnySatisfiedSpecTests
     }
     
     [Theory]
-    [InlineAutoData(false, false, false, "none are true", "!any true")]
-    [InlineAutoData(false, true, true, "some are true", "any true")]
-    [InlineAutoData(true, false, true, "some are true", "any true")]
-    [InlineAutoData(true, true, true, "some are true", "any true")]
+    [InlineData(false, false, false, "none are true")]
+    [InlineData(false, true, true, "some are true")]
+    [InlineData(true, false, true, "some are true")]
+    [InlineData(true, true, true, "some are true")]
     public void Should_surface_boolean_results_created_from_predicate_when_a_proposition_is_specified(
         bool modelA,
         bool modelB,
         bool expected,
-        string expectedAssertion,
         string expectedReason)
     {
         var sut = Spec
@@ -372,6 +371,6 @@ public class AnySatisfiedSpecTests
         
         act.Satisfied.Should().Be(expected);
         act.Reason.Should().Be(expectedReason);
-        act.Assertions.Should().BeEquivalentTo([expectedAssertion]);
+        act.Assertions.Should().BeEquivalentTo([expectedReason]);
     }
 }

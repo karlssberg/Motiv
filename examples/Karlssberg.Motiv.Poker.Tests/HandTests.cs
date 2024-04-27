@@ -211,7 +211,7 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.Rationale.Should().NotBeNullOrEmpty();
+        act.Justification.Should().NotBeNullOrEmpty();
         act.Satisfied.Should().Be(expected);
         act.Metadata.Max().Should().Be(expectedRank);
         act.Explanation.Underlying.GetAssertions().Should().BeEquivalentTo(expectedAssertion);

@@ -21,8 +21,8 @@ public class IsHandFlushProposition() : Spec<Hand, HandRank>(
 
     private static SpecBase<Card, string> IsSuit(Suit suit) =>
         Spec.Build((Card card) => card.Suit == suit)
-            .WhenTrue(card => $"{card} is a {suit}")
+            .WhenTrue(card => $"{card} is {suit}")
             .WhenFalse(card => $"{card} is not {suit}")
-            .Create($"is a {suit}");
+            .Create($"is {suit}");
 }
 

@@ -2,7 +2,7 @@
 
 internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMetadata> operand) : ISpecDescription
 {
-    public string Statement => FormatStatement(operand.Description.Statement);
+    public string Statement => FormatStatement(operand.Statement);
 
     public string Detailed => string.Join(Environment.NewLine, GetDetailsAsLines());
 

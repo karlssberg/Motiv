@@ -29,7 +29,10 @@ public abstract class SpecBase<TModel>
     
     /// <summary>Gets the propositional statement.</summary>
     public string Statement => Description.Statement;
-
+    
+    /// <summary>Gets the propositional statement.</summary>
+    public string Expression => Description.Detailed;
+    
     public abstract SpecBase<TModel, string> ToExplanationSpec();
 
     /// <summary>Combines this specification with another specification using the logical AND operator.</summary>

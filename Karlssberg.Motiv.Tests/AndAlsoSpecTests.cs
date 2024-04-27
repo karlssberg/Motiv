@@ -77,7 +77,7 @@ public class AndAlsoSpecTests
 
         var sut = left.AndAlso(right);
 
-        sut.Description.Statement.Should().Be("left && right");
+        sut.Statement.Should().Be("left && right");
     }
     
     [Fact]
@@ -104,7 +104,7 @@ public class AndAlsoSpecTests
 
         var sut = left.AndAlso(right);
 
-        sut.Description.Detailed.Should().Be(expected);
+        sut.Expression.Should().Be(expected);
     }
     
     [Theory]
@@ -158,7 +158,7 @@ public class AndAlsoSpecTests
         
         var act = sut.IsSatisfiedBy(model);
 
-        act.Rationale.Should().Be(expected);
+        act.Justification.Should().Be(expected);
     }
     
     [Theory]
@@ -188,7 +188,7 @@ public class AndAlsoSpecTests
         
         var act = sut.IsSatisfiedBy(model);
 
-        act.Rationale.Should().Be(expected);
+        act.Justification.Should().Be(expected);
     }
     
     [Theory]
@@ -271,7 +271,7 @@ public class AndAlsoSpecTests
 
         var spec = first.AndAlso(second).AndAlso(third); 
         
-        spec.Description.Detailed.Should().Be(
+        spec.Expression.Should().Be(
             """
             AND ALSO
                 first

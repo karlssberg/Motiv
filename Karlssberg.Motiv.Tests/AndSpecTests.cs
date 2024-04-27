@@ -150,7 +150,7 @@ public class AndSpecTests
 
         var sut = left & right;
 
-        sut.Description.Statement.Should().Be(expected);
+        sut.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -177,7 +177,7 @@ public class AndSpecTests
 
         var sut = left & right;
 
-        sut.Description.Statement.Should().Be(expected);
+        sut.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -380,7 +380,7 @@ public class AndSpecTests
 
         var spec = first & second & third; 
         
-        spec.Description.Detailed.Should().Be(
+        spec.Expression.Should().Be(
             """
             AND
                 first

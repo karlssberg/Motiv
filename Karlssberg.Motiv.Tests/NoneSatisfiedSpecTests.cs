@@ -98,7 +98,7 @@ public class NoneSatisfiedSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Rationale.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Theory]
@@ -164,7 +164,7 @@ public class NoneSatisfiedSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Rationale.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Theory]
@@ -228,7 +228,7 @@ public class NoneSatisfiedSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Rationale.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Theory]
@@ -329,7 +329,7 @@ public class NoneSatisfiedSpecTests
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
 
-        result.Rationale.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Theory]
@@ -397,8 +397,8 @@ public class NoneSatisfiedSpecTests
             .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
             .Create("all booleans are true");
 
-        sut.Description.Statement.Should().Be(expectedSummary);
-        sut.Description.Detailed.Should().Be(expectedFull);
+        sut.Statement.Should().Be(expectedSummary);
+        sut.Expression.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }
 
@@ -425,8 +425,8 @@ public class NoneSatisfiedSpecTests
             .WhenFalse(false)
             .Create("none are true");
 
-        sut.Description.Statement.Should().Be(expectedSummary);
-        sut.Description.Detailed.Should().Be(expectedFull);
+        sut.Statement.Should().Be(expectedSummary);
+        sut.Expression.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }
 }

@@ -22,12 +22,12 @@ internal sealed class OrSpecDescription<TModel, TMetadata>(
         return operand switch
         {
             OrSpec<TModel, TMetadata> orSpec =>
-                orSpec.Description.Statement,
+                orSpec.Statement,
             OrElseSpec<TModel, TMetadata> orElseSpec =>
-                orElseSpec.Description.Statement,
+                orElseSpec.Statement,
             IBinaryOperationSpec binarySpec =>
                 $"({binarySpec.Description.Statement})",
-            _ => operand.Description.Statement
+            _ => operand.Statement
         };
     }
 
