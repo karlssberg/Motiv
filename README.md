@@ -10,28 +10,38 @@ Motiv is a .NET library that supercharges the experience of working with boolean
 ```
 
 It allows you to package your boolean expressions into strongly typed _propositions_.
-By propositions, we mean a declarative statement that can later be evaluated to either true or false.
+By propositions, we mean a declarative statement that can be evaluated to either true or false.
 
 Examples of propositions include:
 * _the sun is shining_
 * _email address is missing an @ symbol_
-* _subscription is within the grace period_
+* _subscription is within grace period_
 
 Propositions can be composed together using boolean operators, such as `&`, `|`, and `^`, and when evaluated will only
 surface the reasons (or custom metadata) from propositions that determined the final result.
 
 ```csharp
-var canViewContent = ((!hasSubscriptionExpired | isGracePeriod) & !isSubscriptionCancelled) | isStaff;
+// compose propositions
+var expression = ((!hasSubscriptionExpired | isGracePeriod) & !isSubscriptionCancelled) | isStaff;
 
-var result = canViewContent.IsSatisfiedBy(subscription);  // evaluate proposition
+// define a new proposition
+var canViewContent = 
+    Spec.Build(expression)
+        .WhenTrue("can view content")
+        .WhenFalse("cannot view content")
+        .Create();
 
-result.Satisfied; // true
-result.Assertions; // ["subscription is within the grace period", "subscription is not cancelled"]
-result.Description.Detailed; // OR
-                             //     AND
-                             //         OR
-                             //             subscription is within the grace period
-                             //         subscription is not cancelled
+// evaluate proposition
+var result = canViewContent.IsSatisfiedBy(subscription); 
+
+result.Satisfied;     // true
+result.Reason;        // "can view content"
+result.Justification; // can view content
+                      //    OR
+                      //        AND
+                      //            OR
+                      //                subscription is within grace period
+                      //            subscription is not cancelled
 ```
 
 ### What can I use the Motiv for?
@@ -54,6 +64,16 @@ but it does nonetheless serve use-cases such as:
 
 You are encouraged to explore the library and find new and innovative ways to use it.
 
+## Installation
+You can install Motiv via NuGet Package Manager Console by running the following command:
+```bash
+Install-Package Motiv
+```
+or by using the .NET CLI:
+```bash
+dotnet add package Motiv
+```
+
 ## Usage
 All propositions follow the same basic usage pattern that starts with a call `Spec.Build()`.
 It has many overloads for different use-cases, but they all trace back eventually to a boolean predicate function—in 
@@ -67,20 +87,21 @@ For exampe:
 ```csharp
 var isEligibleForLoan =
     Spec.Build((Customer customer) => 
-            customer is                 // predicate
+            customer is               // predicate
             {
                 CreditScore: > 600,
                 Income: > 100000
             })                         
-        .Create("eligible for loan");   // propositional statement
+        .Create("eligible for loan"); // propositional statement
 ```
 
 This can then be evaluated by calling the `IsSatisfiedBy()` method and passing in a model to evaluate.
 ```csharp
-var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);  // evaluate proposition as satisfied
+// evaluate proposition as satisfied
+var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);   
 
-result.Satisfied; // true
-result.Reason; // "eligible for loan"
+result.Satisfied;  // true
+result.Reason;     // "eligible for loan"
 result.Assertions; // ["eligible for loan"]
 ```
 
@@ -88,10 +109,11 @@ When negated, a basic proposition will return a reason prefixed with a `!` chara
 This is useful for debugging purposes.
 
 ```csharp
-var result = isEligibleForLoan.IsSatisfiedBy(uneligibleCustomer); // evaluate proposition as unsatisifed
+// evaluate proposition as unsatisifed
+var result = isEligibleForLoan.IsSatisfiedBy(uneligibleCustomer); 
 
-result.Satisfied; // false
-result.Reason; // "!eligible for loan"
+result.Satisfied;  // false
+result.Reason;     // "!eligible for loan"
 result.Assertions; // ["!eligible for loan"]
 ```
 
@@ -109,14 +131,14 @@ var isEligibleForLoan =
                 CreditScore: > 600,
                 Income: > 100000
             })
-        .WhenTrue("customer is eligible for a loan")        // yield explanation when true
-        .WhenFalse("customer is not eligible for a loan")   // yield explanation when false
+        .WhenTrue("customer is eligible for a loan")      // yield explanation when true
+        .WhenFalse("customer is not eligible for a loan") // yield explanation when false
         .Create();
 
 var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
 
-result.Satisfied; // true
-result.Reason; // "customer is eligible for a loan"
+result.Satisfied;  // true
+result.Reason;     // "customer is eligible for a loan"
 result.Assertions; // ["customer is eligible for a loan"]
 ```
 
@@ -131,16 +153,16 @@ var isEligibleForLoan =
                 CreditScore: > 600,
                 Income: > 100000
             })
-        .WhenTrue(new MyMetadata("customer is eligible for a loan"))        // yield POCO object when true
-        .WhenFalse(new MyMetadata("customer is not eligible for a loan"))   // yield POCO object when false
+        .WhenTrue(new MyMetadata("customer is eligible for a loan"))      // yield POCO object
+        .WhenFalse(new MyMetadata("customer is not eligible for a loan")) // yield POCO object
         .Create("eligible for loan");
 
 var result = isNegative.IsSatisfiedBy(eligibleCustomer);
 
-result.Satisfied; // true
-result.Reason; // "eligible for loan"
+result.Satisfied;  // true
+result.Reason;     // "eligible for loan"
 result.Assertions; // ["eligible for loan"]
-result.Metadata; // [{ Message = "customer is eligible for a loan" }]
+result.Metadata;   // [{ Message = "customer is eligible for a loan" }]
 ````
 
 ### Dynamic explanations (and metadata)
@@ -155,8 +177,8 @@ var isEligibleForLoan =
                 CreditScore: > 600,
                 Income: > 100000
             })
-        .WhenTrue(customer => $"customer {customer.Name} is eligible for a loan")      // dynamic explanation when true
-        .WhenFalse(customer => $"customer {customer.Name} is not eligible for a loan") // dynamic explanation when false
+        .WhenTrue(customer => $"customer {customer.Name} is eligible for a loan")      // dynamic
+        .WhenFalse(customer => $"customer {customer.Name} is not eligible for a loan") // dynamic
         .Create("eligible for loan");
 ```
 
@@ -182,12 +204,13 @@ var hasSufficientIncome =
         .WhenFalse("customer has insufficient income")
         .Create();
     
-var isEligibleForLoan = hasGoodCreditScore & hasSufficientIncome; // composing propositions
+// compose propositions
+var isEligibleForLoan = hasGoodCreditScore & hasSufficientIncome; 
 
 var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
 
-result.Satisfied; // true
-result.Reason; // "customer has a good credit score & customer has sufficient income"
+result.Satisfied;  // true
+result.Reason;     // "customer has a good credit score & customer has sufficient income"
 result.Assertions; // ["customer has a good credit score", "customer has sufficient income"]
 ```
 
@@ -197,15 +220,15 @@ will be included in the `Assertions` property and `Reason` property.
 ```csharp
 var result = isPositiveAndOddProposition.IsSatisfiedBy(ineligibleCustomer);
 
-result.Satisfied; // false
-result.Reason; // "customer has an inadequate credit score"
+result.Satisfied;  // false
+result.Reason;     // "customer has an inadequate credit score"
 result.Assertions; // ["customer has an inadequate credit score"]
 ```
 
 ### Encapsulation and Re-use
 
 #### Redefining propositions
-Sometimes an existing propositions do not produce the desired assertions or metadata.
+Sometimes existing propositions do not produce the desired assertions or metadata.
 In this case, you will need to wrap the existing proposition in a new one.
 
 ```csharp
@@ -214,6 +237,15 @@ var isEligibleForLoan =
         .WhenTrue("customer is eligible for a loan")
         .WhenFalse("customer is not eligible for a loan")
         .Create();
+
+var eligibleResult = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
+
+eligibleResult.Reason;        // "customer is eligible for a loan"
+eligibleResult.Assertions;    // ["customer is eligible for a loan"]
+eligibleResult.Justification; // customer is eligible for a loan
+                              //     AND
+                              //         customer has a good credit score
+                              //         customer has sufficient income
 ```
 
 When deriving new propositions, you may still require assertions or metadata from the original.
@@ -221,11 +253,17 @@ When deriving new propositions, you may still require assertions or metadata fro
 var isEligibleForLoan =
     Spec.Build(hasGoodCreditScore & hasSufficientIncome) 
         .WhenTrue("customer is eligible for a loan")
-        .WhenFalse((_, result) => result.Assertions) // reusing assertions from the original propositions
+        .WhenFalse((_, result) => result.Assertions)     // reusing assertions
         .Create();
 
-isEligibleForLoan.IsSatisfiedBy(eligibleCustomer).Reason;   // "customer is eligible for a loan"
-isEligibleForLoan.IsSatisfiedBy(ineligibleCustomer).Reason; // "customer has an inadequate credit score"
+var ineligibleResult = isEligibleForLoan.IsSatisfiedBy(ineligibleCustomer);
+
+ineligibleResult.Reason;        // "customer is eligible for a loan"
+ineligibleResult.Assertions;    // ["customer has an inadequate credit score", "customer has insufficient income"]
+ineligibleResult.Justification; // !customer is eligible for a loan
+                                //     AND
+                                //         customer has an inadequate credit score
+                                //         customer has insufficient income
 ```
 
 #### Strongly typed proposition
@@ -239,7 +277,7 @@ Using the above classes will help you to maintain a separation of concerns and a
 logic within your application. 
 
 ```csharp
-public class HasGoodCreditScoreProposition(int threshold) : Spec<int>(   // promote the proposition to a unique type
+public class HasGoodCreditScoreProposition(int threshold) : Spec<int>(  // declare as a unique type
     Spec.Build((Customer customer) => customer.CreditScore > threshold)
         .WhenTrue("customer has a good credit score")
         .WhenFalse("customer has an inadequate credit score")
@@ -247,10 +285,10 @@ public class HasGoodCreditScoreProposition(int threshold) : Spec<int>(   // prom
 ```
 or if a custom object is required for metadata, then you can use the `Spec<TModel, TMetadata>` class instead:
 ```csharp
-public class HasSufficientIncomeProposition(decimal threshold) : Spec<int, MyMetadata>( // declare custom metadata
+public class HasSufficientIncomeProposition(decimal threshold) : Spec<int, MyMetadata>( // use MyMetadata type
     Spec.Build((Customer customer) => customer.Income > threshold)
-        .WhenTrue(new MyMetadata("customer has sufficient income"))  // custom metadata
-        .WhenFalse(new MyMetadata("customer has insufficient income"))  // custom metadata
+        .WhenTrue(new MyMetadata("customer has sufficient income"))    // custom metadata
+        .WhenFalse(new MyMetadata("customer has insufficient income")) // custom metadata
         .Create("has sufficient income"));
 ```
 
@@ -291,7 +329,7 @@ This will give you access to each result and model pair, which can be used to cu
 particular use-case.
 
 ```csharp
-Spec.Build(new IsNegativeIntegerProposition())  // existing proposition
+Spec.Build(new IsNegativeIntegerProposition()) // existing proposition
     .AsAllSatisfied()
     .WhenTrue("all are negative")
     .WhenFalse(evaluation => evaluation.FalseModels.Select(n => $"{n} is not negative"))
@@ -328,15 +366,15 @@ var allNegative =
             })
         .Create("all are negative");
 
-allNegative.IsSatisfiedBy([]).Assertions; // ["there is an absence of numbers"]
-allNegative.IsSatisfiedBy([-10]).Assertions; // ["-10 is negative and is the only number"]
+allNegative.IsSatisfiedBy([]).Assertions;               // ["there is an absence of numbers"]
+allNegative.IsSatisfiedBy([-10]).Assertions;            // ["-10 is negative and is the only number"]
 allNegative.IsSatisfiedBy([-2, -4, -6, -8]).Assertions; // ["all are negative numbers"]
-allNegative.IsSatisfiedBy([0]).Assertions; // ["the number is 0 and is the only number"]
-allNegative.IsSatisfiedBy([11]).Assertions; // ["11 is positive and is the only number"]
-allNegative.IsSatisfiedBy([0, 0, 0, 0]).Assertions; // ["all are 0"]
-allNegative.IsSatisfiedBy([2, 4, 6, 8]).Assertions; // ["all are positive numbers"]
-allNegative.IsSatisfiedBy([0, 1, 2, 3]).Assertions; // ["none are negative numbers"]
-allNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions; // ["0 is not negative", "9 is not negative"]
+allNegative.IsSatisfiedBy([0]).Assertions;              // ["the number is 0 and is the only number"]
+allNegative.IsSatisfiedBy([11]).Assertions;             // ["11 is positive and is the only number"]
+allNegative.IsSatisfiedBy([0, 0, 0, 0]).Assertions;     // ["all are 0"]
+allNegative.IsSatisfiedBy([2, 4, 6, 8]).Assertions;     // ["all are positive numbers"]
+allNegative.IsSatisfiedBy([0, 1, 2, 3]).Assertions;     // ["none are negative numbers"]
+allNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions;   // ["0 is not negative", "9 is not negative"]
 ```
 
 ## Tradeoffs

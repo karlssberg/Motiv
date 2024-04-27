@@ -32,7 +32,7 @@ public readonly ref struct ExplanationWithNamePropositionFactory<TModel, TUnderl
     public SpecBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new BooleanResultPredicateMetadataProposition<TModel, string, TUnderlyingMetadata>(
+        return new BooleanResultPredicateExplanationProposition<TModel,TUnderlyingMetadata>(
             predicate,
             trueBecause.ToFunc<TModel, BooleanResultBase<TUnderlyingMetadata>, string>(),
             falseBecause,

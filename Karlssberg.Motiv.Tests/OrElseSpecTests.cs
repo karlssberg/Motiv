@@ -79,7 +79,7 @@ public class OrElseSpecTests
 
         var sut = left.OrElse(right);
 
-        sut.Description.Statement.Should().Be("left || right");
+        sut.Statement.Should().Be("left || right");
     }
     
     [Fact]
@@ -106,7 +106,7 @@ public class OrElseSpecTests
 
         var sut = left.OrElse(right);
 
-        sut.Description.Detailed.Should().Be(expected);
+        sut.Expression.Should().Be(expected);
     }
     
     [Theory]
@@ -160,7 +160,7 @@ public class OrElseSpecTests
         
         var act = sut.IsSatisfiedBy(model);
 
-        act.Description.Detailed.Should().Be(expected);
+        act.Justification.Should().Be(expected);
     }
     
     [Theory]
@@ -191,7 +191,7 @@ public class OrElseSpecTests
         
         var act = sut.IsSatisfiedBy(model);
 
-        act.Description.Detailed.Should().Be(expected);
+        act.Justification.Should().Be(expected);
     }
     
     [Theory]
@@ -274,7 +274,7 @@ public class OrElseSpecTests
 
         var spec = first.OrElse(second).OrElse(third); 
         
-        spec.Description.Detailed.Should().Be(
+        spec.Expression.Should().Be(
             """
             OR ELSE
                 first

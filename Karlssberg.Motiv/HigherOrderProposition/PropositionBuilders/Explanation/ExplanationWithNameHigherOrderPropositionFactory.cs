@@ -40,7 +40,7 @@ public readonly ref struct ExplanationWithNameHigherOrderPropositionFactory<TMod
     public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultMetadataProposition<TModel, string, TUnderlyingMetadata>(
+        return new HigherOrderFromBooleanResultExplanationProposition<TModel, TUnderlyingMetadata>(
             spec.IsSatisfiedBy,
             higherOrderPredicate,
             trueBecause.ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string>(),

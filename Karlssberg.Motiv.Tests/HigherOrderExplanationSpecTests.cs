@@ -45,7 +45,7 @@ public class HigherOrderExplanationSpecTests
                 .WhenFalse("is not a pair of even numbers")
                 .Create();
 
-        sut.Description.Statement.Should().Be("is a pair of even numbers");
+        sut.Statement.Should().Be("is a pair of even numbers");
     }
 
     [Theory]
@@ -204,13 +204,19 @@ public class HigherOrderExplanationSpecTests
     }
     
     [Theory]
-    [InlineData(true, "propositional statement")]
-    [InlineData(false, "!propositional statement")]
+    [InlineData(true, "true assertion",  "true assertion", "propositional statement")]
+    [InlineData(false, "false assertion", "!true assertion", "!propositional statement")]
     public void Should_use_the_propositional_statement_in_the_reason(
         bool model,
+        string expectedAssertion,
+        string expectedImplicitAssertion,
         string expectedReasonStatement)
-    { 
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+    {
+        var expectedReason = string.Join(" & ",
+            expectedAssertion,
+            expectedAssertion,
+            expectedReasonStatement,
+            expectedImplicitAssertion);
         
         var underlying =
             Spec.Build((bool m) => m)
@@ -237,11 +243,10 @@ public class HigherOrderExplanationSpecTests
                 .WhenFalse(_ => ["false assertion"])
                 .Create("propositional statement");
         
-        
         var withFalseAsTwoParameterCallbackThatReturnsACollectionWithImpliedName =
             Spec.Build(underlying)
                 .AsAllSatisfied()
-                .WhenTrue("propositional statement")
+                .WhenTrue("true assertion")
                 .WhenFalse(_ => ["false assertion"])
                 .Create();
         
@@ -256,13 +261,18 @@ public class HigherOrderExplanationSpecTests
     }
     
     [Theory]
-    [InlineData(true, "propositional statement")]
-    [InlineData(false, "!propositional statement")]
+    [InlineData(true, "true assertion", "propositional statement")]
+    [InlineData(false, "false assertion", "!propositional statement")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback(
         bool model,
+        string expectedAssertion,
         string expectedReasonStatement)
-    { 
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+    {
+        var expectedReason = string.Join(" & ",
+            expectedAssertion,
+            expectedAssertion,
+            expectedAssertion,
+            expectedReasonStatement);
         
         var underlying =
             Spec.Build((bool m) => m)
@@ -307,13 +317,18 @@ public class HigherOrderExplanationSpecTests
     }
     
     [Theory]
-    [InlineData(true, "propositional statement")]
-    [InlineData(false, "!propositional statement")]
+    [InlineData(true, "true assertion", "propositional statement")]
+    [InlineData(false, "false assertion", "!propositional statement")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback(
         bool model,
+        string expectedAssertion,
         string expectedReasonStatement)
     { 
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        var expectedReason = string.Join(" & ", 
+            expectedAssertion,
+            expectedAssertion,
+            expectedAssertion,
+            expectedReasonStatement);
         
         var underlying =
             Spec.Build((bool m) => m)

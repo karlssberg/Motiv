@@ -24,9 +24,15 @@ public abstract class SpecBase<TModel>
     {
     }
 
-    /// <summary>The description of the specification.  This is used for debugging/logging purposes.</summary>
+    /// <summary>Gets a description of the specification.  This is used for debugging/logging purposes.</summary>
     public abstract ISpecDescription Description { get; }
-
+    
+    /// <summary>Gets the propositional statement.</summary>
+    public string Statement => Description.Statement;
+    
+    /// <summary>Gets the propositional statement.</summary>
+    public string Expression => Description.Detailed;
+    
     public abstract SpecBase<TModel, string> ToExplanationSpec();
 
     /// <summary>Combines this specification with another specification using the logical AND operator.</summary>

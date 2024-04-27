@@ -80,15 +80,11 @@ public class OrSpecTests
     {
         var left = Spec
             .Build<object>(_ => leftResult)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
             .Create("left");
 
 
         var right = Spec
             .Build<object>(_ => rightResult)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
             .Create("right");
 
         var sut = left | right;
@@ -151,7 +147,7 @@ public class OrSpecTests
 
         var sut = left | right;
 
-        sut.Description.Statement.Should().Be(expected);
+        sut.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -178,7 +174,7 @@ public class OrSpecTests
 
         var sut = left | right;
 
-        sut.Description.Statement.Should().Be(expected);
+        sut.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
     
@@ -286,7 +282,7 @@ public class OrSpecTests
 
         var spec = first | second | third; 
         
-        spec.Description.Detailed.Should().Be(
+        spec.Expression.Should().Be(
             """
             OR
                 first

@@ -185,7 +185,7 @@ public class XOrSpecTests
 
         var sut = left ^ right;
 
-        sut.Description.Statement.Should().Be(expected);
+        sut.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -212,7 +212,7 @@ public class XOrSpecTests
 
         var sut = left ^ right;
 
-        sut.Description.Statement.Should().Be(expected);
+        sut.Statement.Should().Be(expected);
         sut.ToString().Should().Be(expected);
     }
 
@@ -324,7 +324,7 @@ public class XOrSpecTests
         var spec = first ^ second ^ third ^ fourth; 
         var act = spec.IsSatisfiedBy(true);
         
-        act.Description.Detailed.Should().Be(
+        act.Justification.Should().Be(
             """
             XOR
                 XOR
@@ -360,7 +360,7 @@ public class XOrSpecTests
         var spec = (first ^ second) ^ (third ^ fourth);
         var act = spec.IsSatisfiedBy(true);
 
-        act.Description.Detailed.Should().Be(
+        act.Justification.Should().Be(
             """
             XOR
                 XOR
@@ -394,7 +394,7 @@ public class XOrSpecTests
         var spec = first ^ (second ^ (third ^ fourth)); 
         var act = spec.IsSatisfiedBy(true);
         
-        act.Description.Detailed.Should().Be(
+        act.Justification.Should().Be(
             """
             XOR
                 first

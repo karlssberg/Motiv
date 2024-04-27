@@ -52,7 +52,7 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse(Metadata.False)
                 .Create("is a pair of even numbers");
 
-        sut.Description.Statement.Should().Be("is a pair of even numbers");
+        sut.Statement.Should().Be("is a pair of even numbers");
     }
 
     [Theory]

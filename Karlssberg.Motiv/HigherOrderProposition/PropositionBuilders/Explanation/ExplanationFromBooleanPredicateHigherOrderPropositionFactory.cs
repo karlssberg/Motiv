@@ -20,7 +20,7 @@ public readonly ref struct ExplanationFromBooleanPredicateHigherOrderProposition
     public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanPredicateMetadataProposition<TModel, string>(
+        return new HigherOrderFromBooleanPredicateExplanationProposition<TModel>(
             predicate,
             higherOrderPredicate,
             trueBecause,

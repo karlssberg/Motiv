@@ -98,7 +98,7 @@ public class AllSatisfiedSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Theory]
@@ -164,7 +164,7 @@ public class AllSatisfiedSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Theory]
@@ -228,7 +228,7 @@ public class AllSatisfiedSpecTests
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Theory]
@@ -329,7 +329,7 @@ public class AllSatisfiedSpecTests
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
 
-        result.Description.Detailed.Should().Be(expected);
+        result.Justification.Should().Be(expected);
     }
 
     [Theory]
@@ -397,8 +397,8 @@ public class AllSatisfiedSpecTests
             .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
             .Create("all booleans are true");
 
-        sut.Description.Statement.Should().Be(expectedSummary);
-        sut.Description.Detailed.Should().Be(expectedFull);
+        sut.Statement.Should().Be(expectedSummary);
+        sut.Expression.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }
 
@@ -425,8 +425,8 @@ public class AllSatisfiedSpecTests
             .WhenFalse(false)
             .Create("all are true");
 
-        sut.Description.Statement.Should().Be(expectedSummary);
-        sut.Description.Detailed.Should().Be(expectedFull);
+        sut.Statement.Should().Be(expectedSummary);
+        sut.Expression.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
     }
     
@@ -528,15 +528,14 @@ public class AllSatisfiedSpecTests
     }
     
     [Theory]
-    [InlineAutoData(false, false, false, "not all are true", "!all true")]
-    [InlineAutoData(false, true, false, "not all are true", "!all true")]
-    [InlineAutoData(true, false, false, "not all are true", "!all true")]
-    [InlineAutoData(true, true, true, "all are true", "all true")]
+    [InlineData(false, false, false, "not all are true")]
+    [InlineData(false, true, false, "not all are true")]
+    [InlineData(true, false, false, "not all are true")]
+    [InlineData(true, true, true, "all are true")]
     public void Should_surface_boolean_results_created_from_predicate_when_a_proposition_is_specified(
         bool modelA,
         bool modelB,
         bool expected,
-        string expectedAssertion,
         string expectedReason)
     {
         var sut = Spec
@@ -550,6 +549,6 @@ public class AllSatisfiedSpecTests
         
         act.Satisfied.Should().Be(expected);
         act.Reason.Should().Be(expectedReason);
-        act.Assertions.Should().BeEquivalentTo([expectedAssertion]);
+        act.Assertions.Should().BeEquivalentTo([expectedReason]);
     }
 }

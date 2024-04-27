@@ -45,10 +45,10 @@ public class TutorialTests
             .WhenFalse(n => $"{n} is odd")
             .Create("is even");
 
-        isEven.IsSatisfiedBy(2).Reason.Should().Be("is even");
+        isEven.IsSatisfiedBy(2).Reason.Should().Be("2 is even");
         isEven.IsSatisfiedBy(2).Assertions.Should().BeEquivalentTo("2 is even");
 
-        isEven.IsSatisfiedBy(3).Reason.Should().Be("!is even");
+        isEven.IsSatisfiedBy(3).Reason.Should().Be("3 is odd");
         isEven.IsSatisfiedBy(3).Assertions.Should().BeEquivalentTo("3 is odd");
     }
 
@@ -357,5 +357,41 @@ public class TutorialTests
         canCheckIn.Satisfied.Should().Be(true);
         canCheckIn.Reason.Should().BeEquivalentTo("has a valid ticket & does not have outstanding fees & check-in is open");
         canCheckIn.Assertions.Should().BeEquivalentTo("has a valid ticket", "does not have outstanding fees", "check-in is open");
+    }
+
+    public record Customer(int CreditScore, decimal Income);
+    
+    [Fact]
+    public void Should_be_eligible_for_a_loan()
+    {
+        var hasGoodCreditScore =
+            Spec.Build((Customer customer) => customer.CreditScore > 600)
+                .WhenTrue("customer has a good credit score")
+                .WhenFalse("customer has an inadequate credit score")
+                .Create();
+
+        var hasSufficientIncome =
+            Spec.Build((Customer customer) => customer.Income > 100000)
+                .WhenTrue("customer has sufficient income")
+                .WhenFalse("customer has insufficient income")
+                .Create();
+        
+        var isEligibleForLoan =
+            Spec.Build(hasGoodCreditScore & hasSufficientIncome) 
+                .WhenTrue("customer is eligible for a loan")
+                .WhenFalse((_, result) => result.Assertions) // reusing assertions from the original propositions
+                .Create();
+        
+        var act = isEligibleForLoan.IsSatisfiedBy(new Customer(200, 20000));
+        
+        act.Satisfied.Should().BeFalse();
+
+        act.Justification.Should().Be(
+            """
+            !customer is eligible for a loan
+                AND
+                    customer has an inadequate credit score
+                    customer has insufficient income
+            """);
     }
 }
