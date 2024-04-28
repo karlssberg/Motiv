@@ -6,7 +6,7 @@
 public static class SpecExtensions
 {
     /// <summary>
-    /// Combines a collection of propositions using the logical AND operator (i.e. `&`)..
+    /// Combines a collection of propositions using the logical AND operator (i.e. `&amp;`)..
     /// </summary>
     /// <param name="propositions">the propositions to apply the AND operator to.</param>
     /// <typeparam name="TModel">The type of the model.</typeparam>
@@ -17,7 +17,7 @@ public static class SpecExtensions
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec & rightSpec);
     
     /// <summary>
-    /// Combines a collection of propositions using the conditional AND operator (i.e. `&&`).
+    /// Combines a collection of propositions using the conditional AND operator (i.e. `&amp;&amp;`).
     /// </summary>
     /// <param name="propositions">the propositions to apply the AND operator to.</param>
     /// <typeparam name="TModel">The type of the model.</typeparam>

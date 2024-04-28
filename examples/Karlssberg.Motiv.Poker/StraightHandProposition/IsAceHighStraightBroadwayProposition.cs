@@ -8,4 +8,4 @@ public class IsAceHighStraightBroadwayProposition() : Spec<Hand>(
 {
     private static readonly ICollection<Rank> BroadwayRanks =
         [Rank.Ace, Rank.King, Rank.Queen, Rank.Jack, Rank.Ten];
-};
+}

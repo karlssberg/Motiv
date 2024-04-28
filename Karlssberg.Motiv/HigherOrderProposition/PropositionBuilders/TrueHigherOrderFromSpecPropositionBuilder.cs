@@ -91,7 +91,7 @@ public readonly ref struct TrueHigherOrderFromSpecPropositionBuilder<TModel, TUn
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
     public SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> Create(string statement) =>
-        new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
+        new HigherOrderFromBooleanResultMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             spec.ToBooleanResultPredicate(),
             higherOrderPredicate,
             eval => eval.Metadata,

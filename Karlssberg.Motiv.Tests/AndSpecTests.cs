@@ -241,7 +241,7 @@ public class AndSpecTests
 
     [Theory]
     [AutoData]
-    void Should_format_the_reason_from_the_results_obtained_from_two_specs_of_different_models(DateTime now)
+    public void Should_format_the_reason_from_the_results_obtained_from_two_specs_of_different_models(DateTime now)
     {
         var hasSubscriptionStartedSpec = Spec
             .Build<Subscription>(s => s.Start < now)

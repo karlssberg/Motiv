@@ -16,8 +16,8 @@ internal static class WrapException
         });
     } 
 
-    private static string CreateErrorMessageForPredicateExceptionOnBehalfOfSpecType<TModel, TMetadata>(
-        SpecBase<TModel, TMetadata> underlyingSpec,
+    private static string CreateErrorMessageForPredicateExceptionOnBehalfOfSpecType<TModel>(
+        SpecBase<TModel> underlyingSpec,
         string callerName,
         Exception ex)
     {

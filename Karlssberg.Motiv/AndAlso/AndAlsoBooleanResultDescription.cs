@@ -20,7 +20,7 @@ internal sealed class AndAlsoBooleanResultDescription<TMetadata>(
     public override IEnumerable<string> GetDetailsAsLines() =>
         causalResults.GetBinaryJustificationAsLines(operationName);
     
-    private string ExplainReasons(BooleanResultBase<TMetadata> result)
+    private static string ExplainReasons(BooleanResultBase<TMetadata> result)
     {
         return result switch 
         {

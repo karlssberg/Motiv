@@ -17,7 +17,7 @@ internal sealed class OrElseSpecDescription<TModel, TMetadata>(
         return specs.GetBinaryJustificationAsLines("OR ELSE");
     }
 
-    private string Summarize(SpecBase<TModel, TMetadata> operand)
+    private static string Summarize(SpecBase<TModel> operand)
     {
         return operand switch
         {

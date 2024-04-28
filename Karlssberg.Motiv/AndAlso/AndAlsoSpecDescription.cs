@@ -17,7 +17,7 @@ internal sealed class AndAlsoSpecDescription<TModel, TMetadata>(
         return specs.GetBinaryJustificationAsLines("AND ALSO");
     }
 
-    private string Summarize(SpecBase<TModel, TMetadata> operand)
+    private static string Summarize(SpecBase<TModel> operand)
     {
         return operand switch
         {

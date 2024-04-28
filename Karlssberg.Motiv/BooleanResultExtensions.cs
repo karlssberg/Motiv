@@ -6,7 +6,7 @@
 public static class BooleanResultExtensions
 {
     /// <summary>
-    /// Combines a collection of boolean results using the logical AND operator (i.e. `&`).
+    /// Combines a collection of boolean results using the logical AND operator (i.e. `&amp;`).
     /// </summary>
     /// <param name="booleanResults">The boolean results to apply the AND operator to.</param>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
@@ -16,7 +16,7 @@ public static class BooleanResultExtensions
         booleanResults.Aggregate((leftSpec, rightSpec) => leftSpec & rightSpec);
     
     /// <summary>
-    /// Combines a collection of propositions using the conditional AND operator (i.e. `&&`).
+    /// Combines a collection of propositions using the conditional AND operator (i.e. `&amp;&amp;`).
     /// </summary>
     /// <param name="booleanResults">The boolean results to apply the AND operator to.</param>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
@@ -207,7 +207,7 @@ public static class BooleanResultExtensions
     }
 
     private static IEnumerable<(OperationGroup, BooleanResultBase)> IdentifyCollapsible(
-        this IBinaryBooleanOperationResult binaryResult,
+        this IBooleanOperationResult binaryResult,
         string operation)
     {
         var underlyingResults = binaryResult.Causes;

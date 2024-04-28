@@ -1,7 +1,7 @@
 namespace Karlssberg.Motiv;
 
 internal sealed class BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(
-    BooleanResultBase<TUnderlyingMetadata> booleanResult,
+    BooleanResultBase booleanResult,
     string reason)
     : ResultDescriptionBase
 {

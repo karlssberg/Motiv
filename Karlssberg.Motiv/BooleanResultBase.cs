@@ -25,7 +25,7 @@ public abstract class BooleanResultBase
     /// <summary>
     /// Gets a concise reason for the result. If the result is a proposition, then the reason will be a single
     /// assertion. Otherwise, the result is boolean expression, and the reason will be a conjunction of assertions using the
-    /// logical operators (e.g., &, |, ^).
+    /// logical operators (e.g., &amp;, |, ^).
     /// </summary>
     public string Reason => Description.Reason;
 
@@ -288,7 +288,6 @@ public abstract class BooleanResultBase<TMetadata>
         left.Or(right);
 
     /// <summary>Overloads the ^ operator to perform an exclusive OR (XOR) operation on two BooleanResultBase instances.</summary>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the BooleanResultBase.</typeparam>
     /// <param name="left">The left BooleanResultBase operand.</param>
     /// <param name="right">The right BooleanResultBase operand.</param>
     /// <returns>A new BooleanResultBase instance representing the result of the XOR operation.</returns>

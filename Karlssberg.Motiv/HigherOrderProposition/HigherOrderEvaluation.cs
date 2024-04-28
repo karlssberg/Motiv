@@ -5,7 +5,7 @@
 /// </summary>
 /// <typeparam name="TModel"></typeparam>
 /// <typeparam name="TMetadata"></typeparam>
-public struct HigherOrderEvaluation<TModel, TMetadata>
+public class HigherOrderEvaluation<TModel, TMetadata>
 {
     private readonly Lazy<IReadOnlyList<TModel>> _lazyAllModels;
 
@@ -52,7 +52,6 @@ public struct HigherOrderEvaluation<TModel, TMetadata>
             causalResults.SelectMany(result => result.Assertions).ToArray());
         _lazyMetadata = new Lazy<IReadOnlyList<TMetadata>>(() =>
             causalResults.SelectMany(result => result.MetadataTier.Metadata).ToArray());
-        CausalResults = causalResults;
     }
     
     /// <summary>
@@ -118,7 +117,7 @@ public struct HigherOrderEvaluation<TModel, TMetadata>
     /// <summary>
     /// Gets the list of causal results.
     /// </summary>
-    public IEnumerable<BooleanResult<TModel, TMetadata>> CausalResults { get; }
+    public IEnumerable<BooleanResult<TModel, TMetadata>> CausalResults => _causalResults;
     
     /// <summary>
     /// Gets the total count of results.

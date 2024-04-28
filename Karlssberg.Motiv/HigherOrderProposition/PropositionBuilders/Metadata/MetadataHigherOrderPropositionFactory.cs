@@ -23,7 +23,7 @@ public readonly ref struct MetadataHigherOrderPropositionFactory<TModel, TMetada
     public SpecBase<IEnumerable<TModel>, TMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
+        return new HigherOrderFromBooleanResultMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
             spec.IsSatisfiedBy,
             higherOrderPredicate,
             whenTrue,

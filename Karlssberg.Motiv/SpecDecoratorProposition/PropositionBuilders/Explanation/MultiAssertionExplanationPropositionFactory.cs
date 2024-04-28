@@ -19,7 +19,7 @@ public readonly ref struct MultiAssertionExplanationPropositionFactory<TModel, T
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, string> Create(string statement) =>
-        new SpecDecoratorMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
+        new SpecDecoratorMetadataProposition<TModel, string, TUnderlyingMetadata>(
             spec,
             trueBecause,
             falseBecause,

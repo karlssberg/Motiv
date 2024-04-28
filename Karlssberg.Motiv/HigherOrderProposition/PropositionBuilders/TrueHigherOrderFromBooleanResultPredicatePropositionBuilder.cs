@@ -78,7 +78,7 @@ public readonly ref struct TrueHigherOrderFromBooleanResultPredicatePropositionB
     public SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
+        return new HigherOrderFromBooleanResultMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             resultResolver,
             higherOrderPredicate,
             eval => eval.Metadata,

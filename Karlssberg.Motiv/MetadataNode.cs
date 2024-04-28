@@ -58,7 +58,7 @@ public sealed class MetadataNode<TMetadata>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString() => GetDebugDisplay();
 
-    private IEnumerable<MetadataNode<TMetadata>> ResolveUnderlying(
+    private static IEnumerable<MetadataNode<TMetadata>> ResolveUnderlying(
         IEnumerable<TMetadata> metadata,
         IEnumerable<BooleanResultBase<TMetadata>> causes)
     {

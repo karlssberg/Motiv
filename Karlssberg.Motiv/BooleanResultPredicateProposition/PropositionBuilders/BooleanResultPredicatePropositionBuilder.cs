@@ -128,7 +128,7 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     public SpecBase<TModel, TUnderlyingMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new BooleanResultPredicateMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
+        return new BooleanResultPredicateMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             predicate,
             (_, result) => result.Metadata,
             (_, result) => result.Metadata,

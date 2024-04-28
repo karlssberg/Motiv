@@ -16,7 +16,7 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
         var assertion = new Lazy<string>(() => booleanResult.Satisfied switch
         {
             true => trueBecause,
-            false => whenFalse(model, booleanResult),
+            false => whenFalse(model, booleanResult)
         });
         
         var explanation = new Lazy<Explanation>(() => 

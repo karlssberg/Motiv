@@ -98,7 +98,7 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, TUnderlyingMetadata> Create(string statement) =>
-        new SpecDecoratorMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
+        new SpecDecoratorMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             spec,
             (_, result) => result.Metadata,
             (_, result) => result.Metadata,
