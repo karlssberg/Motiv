@@ -20,4 +20,4 @@ public class HandValidator() : Spec<Hand>(
             .WhenTrue(cards => $"{cards.First()} is unique")
             .WhenFalse(cards => cards.Select(card => $"{card.Rank} of {card.Suit} is duplicate"))
             .Create("is unique");
-};
+}

@@ -48,8 +48,9 @@ public readonly ref struct TrueHigherOrderFromBooleanResultPredicatePropositionB
             whenTrue,
             causeSelector);
 
-    /// <summary>Specifies an assertion to yield when the condition is true.</summary>
-    /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
+    /// <summary>Specifies an assertion to yield when the condition is true.  This will also be the name of the proposition, unless otherwise
+    /// specified by the subsequent <c>Create(string statement)</c> method.</summary>
+    /// <param name="trueBecause"> A human-readable reason why the condition is true. </param>
     /// <returns>
     /// An instance of <see cref="FalseAssertionFromSpecDecoratorWithNameHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.
     /// </returns>
@@ -77,7 +78,7 @@ public readonly ref struct TrueHigherOrderFromBooleanResultPredicatePropositionB
     public SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
+        return new HigherOrderFromBooleanResultMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             resultResolver,
             higherOrderPredicate,
             eval => eval.Metadata,

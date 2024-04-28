@@ -18,7 +18,7 @@ public readonly ref struct MetadataPropositionFactory<TModel, TMetadata, TUnderl
     public SpecBase<TModel, TMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new BooleanResultPredicateMultiMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
+        return new BooleanResultPredicateMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
             spec,
             whenTrue,
             whenFalse,

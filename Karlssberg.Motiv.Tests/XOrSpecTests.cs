@@ -357,7 +357,7 @@ public class XOrSpecTests
             .Create("fourth");
 
 
-        var spec = (first ^ second) ^ (third ^ fourth);
+        var spec = first ^ second ^ (third ^ fourth);
         var act = spec.IsSatisfiedBy(true);
 
         act.Justification.Should().Be(

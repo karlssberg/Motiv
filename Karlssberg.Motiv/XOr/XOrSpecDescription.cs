@@ -12,10 +12,10 @@ internal sealed class XOrSpecDescription<TModel, TMetadata>(
     public IEnumerable<string> GetDetailsAsLines()
     {
         var specs = left.ToEnumerable().Append(right); // reverse order for easier reading
-        return specs.GetBinaryDetailsAsLines("XOR");
+        return specs.GetBinaryJustificationAsLines("XOR");
     }
 
-    private string Summarize(SpecBase<TModel, TMetadata> operand)
+    private static string Summarize(SpecBase<TModel> operand)
     {
         return operand switch 
         {

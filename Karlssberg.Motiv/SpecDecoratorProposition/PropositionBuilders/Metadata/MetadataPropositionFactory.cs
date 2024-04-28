@@ -16,7 +16,7 @@ public readonly ref struct MetadataPropositionFactory<TModel, TMetadata, TUnderl
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, TMetadata> Create(string statement) =>
-        new SpecDecoratorMultiMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
+        new SpecDecoratorMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
             spec,
             whenTrue,
             whenFalse,

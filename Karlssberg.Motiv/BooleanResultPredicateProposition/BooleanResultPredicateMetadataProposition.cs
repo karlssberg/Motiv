@@ -1,9 +1,19 @@
 ﻿namespace Karlssberg.Motiv.BooleanResultPredicateProposition;
 
+/// <summary>
+/// Represents a proposition that yields a collection of metadata based on the result of a boolean predicate.
+/// </summary>
+/// <param name="underlyingBooleanResultPredicate">The predicate that determines the boolean result.</param>
+/// <param name="whenTrue">The metadata to yield when the predicate is true.</param>
+/// <param name="whenFalse">The metadata to yield when the predicate is false.</param>
+/// <param name="specDescription">The description of the proposition.</param>
+/// <typeparam name="TModel">The type of the model.</typeparam>
+/// <typeparam name="TMetadata">The type of the metadata.</typeparam>
+/// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the boolean result.</typeparam>
 public sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> underlyingBooleanResultPredicate,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenFalse,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
     ISpecDescription specDescription)
     : SpecBase<TModel, TMetadata>
 {
@@ -20,27 +30,26 @@ public sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata,
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
         
-        var metadata = new Lazy<TMetadata>(() => booleanResult.Satisfied switch
+        var metadata = new Lazy<TMetadata[]>(() => booleanResult.Satisfied switch
         {
-            true => whenTrue(model, booleanResult),
-            false => whenFalse(model, booleanResult),
+            true => whenTrue(model, booleanResult).ToArray(),
+            false => whenFalse(model, booleanResult).ToArray()
         });
-        
-        var assertion = new Lazy<string[]>(() => metadata.Value switch
+
+        var assertions = new Lazy<string[]>(() => metadata.Value switch
         {
-            string because => [because],
-            IEnumerable<string>  because => because.ToArray(),
+            IEnumerable<string> assertion => assertion.ToArray(),
             _ => [Description.ToReason(booleanResult.Satisfied)]
         });
         
         var explanation = new Lazy<Explanation>(() => 
-            new Explanation(assertion.Value, booleanResult.ToEnumerable()));
-        
-        var metadataTier = new Lazy<MetadataNode<TMetadata>>(() => 
-            new MetadataNode<TMetadata>(metadata.Value.ToEnumerable(), 
+            new Explanation(assertions.Value, booleanResult.ToEnumerable()));
+
+        var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
+            new MetadataNode<TMetadata>(metadata.Value,
                 booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []));
 
-        return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
+        return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,
             MetadataTier,
             Explanation,
@@ -51,3 +60,4 @@ public sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata,
         string Reason() => Description.ToReason(booleanResult.Satisfied);
     }
 }
+

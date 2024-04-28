@@ -22,7 +22,7 @@ public readonly ref struct MultiAssertionExplanationHigherOrderPropositionFactor
     public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
+        return new HigherOrderFromBooleanResultMetadataProposition<TModel, string, TUnderlyingMetadata>(
             resultResolver,
             higherOrderPredicate,
             trueBecause,

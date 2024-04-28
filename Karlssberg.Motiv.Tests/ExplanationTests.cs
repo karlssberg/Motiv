@@ -84,23 +84,14 @@ public class ExplanationTests
         isEvenWholeNumber.IsSatisfiedBy(-3).AllRootAssertions.Should().BeEquivalentTo("odd", "not positive");
         isEvenWholeNumber.IsSatisfiedBy(-3).RootAssertions.Should().BeEquivalentTo("odd", "not positive");
         
-        isEvenWholeNumber.IsSatisfiedBy(2).GetAllAssertionsAtDepth(2).Should().BeEquivalentTo("even wrapper", "positive wrapper");
-        isEvenWholeNumber.IsSatisfiedBy(3).GetAllAssertionsAtDepth(2).Should().BeEquivalentTo("odd wrapper", "positive wrapper");
-        isEvenWholeNumber.IsSatisfiedBy(0).GetAllAssertionsAtDepth(2).Should().BeEquivalentTo("even wrapper", "not positive wrapper");
-        isEvenWholeNumber.IsSatisfiedBy(-3).GetAllAssertionsAtDepth(2).Should().BeEquivalentTo("odd wrapper", "not positive wrapper");
-        
-        isEvenWholeNumber.IsSatisfiedBy(2).GetAllAssertionsAtDepth(1).Should().BeEquivalentTo("even and positive from predicate", "even and positive from change model method");
         isEvenWholeNumber.IsSatisfiedBy(2).SubAssertions.Should().BeEquivalentTo("even and positive from predicate", "even and positive from change model method");
         
         isEvenWholeNumber.IsSatisfiedBy(2).SubAssertions.Should().BeEquivalentTo("even and positive from predicate", "even and positive from change model method");
         
-        isEvenWholeNumber.IsSatisfiedBy(0).GetAllAssertionsAtDepth(1).Should().BeEquivalentTo("not even and positive from predicate", "not even and positive from change model method");
         isEvenWholeNumber.IsSatisfiedBy(0).SubAssertions.Should().BeEquivalentTo("not even and positive from predicate", "not even and positive from change model method");
         
-        isEvenWholeNumber.IsSatisfiedBy(2).GetAllAssertionsAtDepth(0).Should().BeEquivalentTo("even whole number");
         isEvenWholeNumber.IsSatisfiedBy(2).Assertions.Should().BeEquivalentTo("even whole number");
         
-        isEvenWholeNumber.IsSatisfiedBy(0).GetAllAssertionsAtDepth(0).Should().BeEquivalentTo("not an even whole number");
         isEvenWholeNumber.IsSatisfiedBy(0).Assertions.Should().BeEquivalentTo("not an even whole number");
     }
 

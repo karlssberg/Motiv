@@ -17,7 +17,7 @@ public readonly ref struct MultiAssertionExplanationWithNamePropositionFactory<T
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, string> Create(string statement) =>
-        new SpecDecoratorMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
+        new SpecDecoratorMetadataProposition<TModel, string, TUnderlyingMetadata>(
             spec,
             trueBecause
                 .ToEnumerable()
@@ -31,7 +31,7 @@ public readonly ref struct MultiAssertionExplanationWithNamePropositionFactory<T
     /// </summary>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, string> Create() =>
-        new SpecDecoratorMultiMetadataProposition<TModel, string, TUnderlyingMetadata>(
+        new SpecDecoratorMetadataProposition<TModel, string, TUnderlyingMetadata>(
             spec,
             trueBecause
                 .ToEnumerable()

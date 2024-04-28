@@ -54,14 +54,11 @@ internal sealed class ExplanationProposition<TModel>(
             nameof(falseBecause));
     
     private static string ReasonFromPropositionStatement(bool isSatisfied, string proposition) =>
-        (isSatisfied, ContainsEscapableCharacters(proposition)) switch
+        (isSatisfied, proposition.ContainsReservedCharacters()) switch
         {
             (true, true) => $"({proposition})",
             (true, _)=> proposition,
             (false, true) => $"!({proposition})",
             (false, _) => $"!{proposition}"
         };
-
-    private static bool ContainsEscapableCharacters(string proposition) => 
-        proposition.Contains('!') || proposition.Contains('(') || proposition.Contains(')');
 }

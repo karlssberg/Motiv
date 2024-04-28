@@ -14,10 +14,10 @@ internal sealed class AndSpecDescription<TModel, TMetadata>(
     public IEnumerable<string> GetDetailsAsLines()
     {
         IEnumerable<SpecBase<TModel, TMetadata>> specs = [left, right];
-        return specs.GetBinaryDetailsAsLines("AND");
+        return specs.GetBinaryJustificationAsLines("AND");
     }
 
-    private string Summarize(SpecBase<TModel, TMetadata> operand)
+    private static string Summarize(SpecBase<TModel> operand)
     {
         return operand switch
         {

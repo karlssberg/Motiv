@@ -1,46 +1,11 @@
 ﻿namespace Karlssberg.Motiv;
 
+/// <summary>
+/// Provides extension methods for strings.
+/// </summary>
 public static class StringExtensions
 {
-    internal static bool IsBracketed(this string value) =>
-        (value.StartsWith("(") || value.StartsWith("!(")) && value.EndsWith(")");
-
-    internal static bool IsLongExpression(this string value) => value.Length > 20;
-
-    internal static string EnsureBracketed(this string value) =>
-        !value.IsBracketed() || value.RequiresBrackets()
-            ? $"({value})"
-            : value;
-
-    internal static bool RequiresBrackets(this string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            return false;
-
-        var currentLevel = 0;
-        for (var index = 0; index < text.Length; index++)
-        {
-            switch (text[index])
-            {
-                case '!':
-                    return currentLevel <= 0;
-                case '(':
-                    currentLevel++;
-                    break;
-                case ')':
-                    currentLevel--;
-                    break;
-                case '\\':
-                    index++;
-                    continue;
-            }
-
-            if (currentLevel <= 0)
-                return true;
-        }
-
-        return currentLevel != 0;
-    }
+    private static readonly HashSet<char> Characters = ['!', '(', ')', '&', '|', '^'];
 
     /// <summary>
     /// Serializes a collection to a human-readable string.  It will separate the items with <c>", "</c> and the last
@@ -133,4 +98,6 @@ public static class StringExtensions
                 yield break;
         }
     }
+
+    internal static bool ContainsReservedCharacters(this string text) => text.Any(c => Characters.Contains(c));
 }

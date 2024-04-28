@@ -14,10 +14,10 @@ internal sealed class OrElseSpecDescription<TModel, TMetadata>(
     public IEnumerable<string> GetDetailsAsLines()
     {
         IEnumerable<SpecBase<TModel, TMetadata>> specs = [left, right];
-        return specs.GetBinaryDetailsAsLines("OR ELSE");
+        return specs.GetBinaryJustificationAsLines("OR ELSE");
     }
 
-    private string Summarize(SpecBase<TModel, TMetadata> operand)
+    private static string Summarize(SpecBase<TModel> operand)
     {
         return operand switch
         {

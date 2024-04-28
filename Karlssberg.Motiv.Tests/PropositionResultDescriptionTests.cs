@@ -48,7 +48,7 @@ public class PropositionResultDescriptionTests
             .Build<object>(_ => isTrue)
             .WhenTrue(true)
             .WhenFalse(false)
-            .Create($"is true");
+            .Create("is true");
 
         var result = spec.IsSatisfiedBy(model);
 

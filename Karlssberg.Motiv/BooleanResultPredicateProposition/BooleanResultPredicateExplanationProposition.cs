@@ -17,7 +17,7 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
             booleanResult.Satisfied switch
             {
                 true => whenTrue(model, booleanResult),
-                false => whenFalse(model, booleanResult),
+                false => whenFalse(model, booleanResult)
             });
         
         var explanation = new Lazy<Explanation>(() => 

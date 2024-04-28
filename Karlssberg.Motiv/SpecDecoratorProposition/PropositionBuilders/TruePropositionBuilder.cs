@@ -44,8 +44,9 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
         new(spec, whenTrue);
 
-    /// <summary>Specifies an assertion to yield when the condition is true.</summary>
-    /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
+    /// <summary>Specifies an assertion to yield when the condition is true.  This will also be the name of the proposition, unless otherwise
+    /// specified by the subsequent <c>Create(string statement)</c> method.</summary>
+    /// <param name="trueBecause">A human-readable reason why the condition is true. </param>
     /// <returns>An instance of <see cref="FalseAssertionWithNamePropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public FalseAssertionWithNamePropositionBuilder<TModel, TUnderlyingMetadata> WhenTrue(
         string trueBecause) =>
@@ -97,7 +98,7 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, TUnderlyingMetadata> Create(string statement) =>
-        new SpecDecoratorMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
+        new SpecDecoratorMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             spec,
             (_, result) => result.Metadata,
             (_, result) => result.Metadata,

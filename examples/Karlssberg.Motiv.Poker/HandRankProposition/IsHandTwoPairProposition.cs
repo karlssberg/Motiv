@@ -5,5 +5,5 @@ namespace Karlssberg.Motiv.Poker.HandRankProposition;
 public class IsHandTwoPairProposition() : Spec<Hand, HandRank>(
     Spec.Build(new HasNPairsProposition(2))
         .WhenTrue(TwoPair)
-        .WhenFalse(HandRank.Unknown)
+        .WhenFalse(Unknown)
         .Create("is a two pair hand"));
