@@ -14,7 +14,7 @@ internal sealed class AndAlsoSpecDescription<TModel, TMetadata>(
     public IEnumerable<string> GetDetailsAsLines()
     {
         IEnumerable<SpecBase<TModel, TMetadata>> specs = [left, right];
-        return specs.GetBinaryDetailsAsLines("AND ALSO");
+        return specs.GetBinaryJustificationAsLines("AND ALSO");
     }
 
     private string Summarize(SpecBase<TModel, TMetadata> operand)

@@ -1,5 +1,15 @@
 ﻿namespace Karlssberg.Motiv.BooleanResultPredicateProposition;
 
+/// <summary>
+/// Represents a proposition that yields a collection of metadata based on the result of a boolean predicate.
+/// </summary>
+/// <param name="underlyingBooleanResultPredicate">The predicate that determines the boolean result.</param>
+/// <param name="whenTrue">The metadata to yield when the predicate is true.</param>
+/// <param name="whenFalse">The metadata to yield when the predicate is false.</param>
+/// <param name="specDescription">The description of the proposition.</param>
+/// <typeparam name="TModel">The type of the model.</typeparam>
+/// <typeparam name="TMetadata">The type of the metadata.</typeparam>
+/// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the boolean result.</typeparam>
 public sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> underlyingBooleanResultPredicate,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
