@@ -214,8 +214,8 @@ public abstract class BooleanResultBase<TMetadata>
     /// Performs a logical AND operation between the current BooleanResultBase instance and another BooleanResultBase
     /// instance.
     /// </summary>
-    /// <param name="right">The other BooleanResultBase instance to perform the logical AND operation with.</param>
-    /// <returns>A new instance of AndBooleanResult representing the result of the logical AND operation.</returns>
+    /// <param name="right">The other boolean result instance to perform the logical AND operation with.</param>
+    /// <returns>A new boolean result instance representing the result of the logical AND operation.</returns>
     public BooleanResultBase<TMetadata> And(BooleanResultBase<TMetadata> right) =>
         new AndBooleanResult<TMetadata>(this, right);
 
@@ -224,8 +224,8 @@ public abstract class BooleanResultBase<TMetadata>
     /// BooleanResultBase instance. This will short-circuit the evaluation of the right operand if the left operand is not
     /// satisfied.
     /// </summary>
-    /// <param name="right">The other BooleanResultBase instance to perform the logical AND operation with.</param>
-    /// <returns>A new instance of AndBooleanResult representing the result of the logical AND operation.</returns>
+    /// <param name="right">The other boolean result instance to perform the logical AND operation with.</param>
+    /// <returns>A new boolean result instance representing the result of the logical AND operation.</returns>
     public BooleanResultBase<TMetadata> AndAlso(BooleanResultBase<TMetadata> right) => Satisfied
         ? new AndAlsoBooleanResult<TMetadata>(this, right)
         : new AndAlsoBooleanResult<TMetadata>(this);
@@ -234,8 +234,8 @@ public abstract class BooleanResultBase<TMetadata>
     /// Performs a logical OR operation between the current BooleanResultBase instance and another BooleanResultBase
     /// instance.
     /// </summary>
-    /// <param name="right">The other BooleanResultBase instance to perform the OR operation with.</param>
-    /// <returns>A new BooleanResultBase instance representing the result of the OR operation.</returns>
+    /// <param name="right">The other boolean result instance to perform the OR operation with.</param>
+    /// <returns>A new boolean result instance representing the result of the OR operation.</returns>
     public BooleanResultBase<TMetadata> Or(BooleanResultBase<TMetadata> right) =>
         new OrBooleanResult<TMetadata>(this, right);
 
@@ -244,8 +244,8 @@ public abstract class BooleanResultBase<TMetadata>
     /// BooleanResultBase instance. This will short-circuit the evaluation of the right operand if the left operand is
     /// satisfied.
     /// </summary>
-    /// <param name="right">The other BooleanResultBase instance to perform the OR operation with.</param>
-    /// <returns>A new BooleanResultBase instance representing the result of the OR operation.</returns>
+    /// <param name="right">The other boolean result instance to perform the OR operation with.</param>
+    /// <returns>A new boolean result instance representing the result of the OR operation.</returns>
     public BooleanResultBase<TMetadata> OrElse(BooleanResultBase<TMetadata> right) => Satisfied
         ? new OrElseBooleanResult<TMetadata>(this)
         : new OrElseBooleanResult<TMetadata>(this, right);
@@ -254,8 +254,8 @@ public abstract class BooleanResultBase<TMetadata>
     /// Performs a logical exclusive OR (XOR) operation between this BooleanResultBase instance and another
     /// BooleanResultBase instance.
     /// </summary>
-    /// <param name="right">The other BooleanResultBase instance to perform the XOR operation with.</param>
-    /// <returns>A new XOrBooleanResult instance representing the result of the XOR operation.</returns>
+    /// <param name="right">The other boolean result instance to perform the XOR operation with.</param>
+    /// <returns>A new boolean result instance representing the result of the XOR operation.</returns>
     public BooleanResultBase<TMetadata> XOr(BooleanResultBase<TMetadata> right) =>
         new XOrBooleanResult<TMetadata>(this, right);
 
@@ -270,8 +270,8 @@ public abstract class BooleanResultBase<TMetadata>
     public BooleanResultBase<TMetadata> Not() => new NotBooleanResult<TMetadata>(this);
 
     /// <summary>Overloads the bitwise AND operator to perform a logical AND operation on two BooleanResultBase instances.</summary>
-    /// <param name="left">The left BooleanResultBase instance.</param>
-    /// <param name="right">The right BooleanResultBase instance.</param>
+    /// <param name="left">The left boolean result instance.</param>
+    /// <param name="right">The right boolean result instance.</param>
     /// <returns>A new BooleanResultBase instance representing the result of the logical AND operation.</returns>
     public static BooleanResultBase<TMetadata> operator &(
         BooleanResultBase<TMetadata> left,
@@ -279,8 +279,8 @@ public abstract class BooleanResultBase<TMetadata>
         left.And(right);
 
     /// <summary>Overloads the logical OR operator (|) to perform a logical OR operation on two BooleanResultBase instances.</summary>
-    /// <param name="left">The left BooleanResultBase instance.</param>
-    /// <param name="right">The right BooleanResultBase instance.</param>
+    /// <param name="left">The left boolean result instance.</param>
+    /// <param name="right">The right boolean result instance.</param>
     /// <returns>A new BooleanResultBase instance representing the result of the logical OR operation.</returns>
     public static BooleanResultBase<TMetadata> operator |(
         BooleanResultBase<TMetadata> left,
@@ -288,8 +288,8 @@ public abstract class BooleanResultBase<TMetadata>
         left.Or(right);
 
     /// <summary>Overloads the ^ operator to perform an exclusive OR (XOR) operation on two BooleanResultBase instances.</summary>
-    /// <param name="left">The left BooleanResultBase operand.</param>
-    /// <param name="right">The right BooleanResultBase operand.</param>
+    /// <param name="left">The left boolean result operand.</param>
+    /// <param name="right">The right boolean result operand.</param>
     /// <returns>A new BooleanResultBase instance representing the result of the XOR operation.</returns>
     public static BooleanResultBase<TMetadata> operator ^(
         BooleanResultBase<TMetadata> left,
@@ -297,8 +297,8 @@ public abstract class BooleanResultBase<TMetadata>
         left.XOr(right);
 
     /// <summary>Overloads the logical NOT operator for the BooleanResultBase class.</summary>
-    /// <param name="result">The BooleanResultBase object to negate.</param>
-    /// <returns>A new BooleanResultBase object that represents the negation of the input.</returns>
+    /// <param name="result">The boolean result object to negate.</param>
+    /// <returns>A new boolean result object that represents the negation of the input.</returns>
     public static BooleanResultBase<TMetadata> operator !(
         BooleanResultBase<TMetadata> result) =>
         result.Not();
