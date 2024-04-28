@@ -155,7 +155,7 @@ public class HigherOrderExplanationSpecTests
                 .WhenTrue("all even")
                 .WhenFalse(results =>
                 {
-                    var serializedModels =results.CausalModels.Serialize();
+                    var serializedModels = results.CausalModels.Serialize();
                     var modelCount = results.CausalModels.Count;
                     var isOrAre = modelCount == 1 ? "is" : "are";
                     

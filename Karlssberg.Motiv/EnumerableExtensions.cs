@@ -1,7 +1,21 @@
 ﻿namespace Karlssberg.Motiv;
 
+/// <summary>
+/// Provides extension methods for <see cref="IEnumerable{T}"/>.
+/// </summary>
 public static class EnumerableExtensions
 {
+    /// <summary>
+    /// Enumerates a single item as an <See cref="IEnumerable{T}"/>.
+    /// </summary>
+    /// <param name="item">The item to enumerate.</param>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <returns>An <See cref="IEnumerable{T}"/> containing only the item provided.</returns>
+    public static IEnumerable<T> ToEnumerable<T>(this T item)
+    {
+        yield return item;
+    }
+
     internal static IEnumerable<T> ReplaceFirstLine<T>(this IEnumerable<T> lines, Func<T, T> prefixFn)
     {
         using var enumerator = lines.GetEnumerator();
@@ -14,7 +28,7 @@ public static class EnumerableExtensions
         while (enumerator.MoveNext())
             yield return enumerator.Current;
     }
-    
+
     internal static IEnumerable<T> ElseIfEmpty<T>(
         this IEnumerable<T> source,
         IEnumerable<T> alternative)
@@ -48,7 +62,7 @@ public static class EnumerableExtensions
 
         return true;
     }
-    
+
     internal static IEnumerable<IEnumerable<T>> GroupAdjacentBy<T>(
         this IEnumerable<T> source, Func<T, T, bool> predicate)
     {
@@ -75,18 +89,7 @@ public static class EnumerableExtensions
 
         yield return currentGroup;
     }
-    
+
     internal static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) =>
         source.Select((item, index) => (item, index));
-    
-    /// <summary>
-    /// Enumerates a single item as an <See cref="IEnumerable{T}"/>.
-    /// </summary>
-    /// <param name="item">The item to enumerate.</param>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <returns>An <See cref="IEnumerable{T}"/> containing only the item provided.</returns>
-    public static IEnumerable<T> ToEnumerable<T>(this T item)
-    {
-        yield return item;
-    }
 }

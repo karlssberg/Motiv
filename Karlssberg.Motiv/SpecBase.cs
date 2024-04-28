@@ -33,6 +33,13 @@ public abstract class SpecBase<TModel>
     /// <summary>Gets the propositional statement.</summary>
     public string Expression => Description.Detailed;
     
+    /// <summary>
+    /// Converts this specification to an explanation specification (i.e., Spec&lt;TModel, string&gt;).
+    /// This is necessary when establishing a "lowest-common-denominator" between very different specification.
+    /// Therefore, specifications with different metadata types will be wrapped in a spec that uses string as the
+    /// metadata type.
+    /// </summary>
+    /// <returns></returns>
     public abstract SpecBase<TModel, string> ToExplanationSpec();
 
     /// <summary>Combines this specification with another specification using the logical AND operator.</summary>
@@ -41,6 +48,15 @@ public abstract class SpecBase<TModel>
     public SpecBase<TModel, string> And(SpecBase<TModel> spec) =>
         new AndSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
+    /// <summary>
+    /// Combines this specification with another specification using the conditional AND operator.
+    /// The left operand will only be evaluated only if the right operand evaluates to <c>true</c>.
+    /// This is commonly referred to as "short-circuiting".
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>
+    /// A new specification that represents the conditional AND of this specification and the other specification.
+    /// </returns>
     public SpecBase<TModel, string> AndAlso(SpecBase<TModel> spec) =>
         new AndAlsoSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
@@ -50,6 +66,15 @@ public abstract class SpecBase<TModel>
     public SpecBase<TModel, string> Or(SpecBase<TModel> spec) =>
         new OrSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
+    /// <summary>
+    /// Combines this specification with another specification using the conditional OR operator.
+    /// The left operand will only be evaluated only if the right operand evaluates to <c>false</c>.
+    /// This is commonly referred to as "short-circuiting".
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>
+    /// A new specification that represents the conditional OR of this specification and the other specification.
+    /// </returns>
     public SpecBase<TModel, string> OrElse(SpecBase<TModel> spec) =>
         new OrElseSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
@@ -202,6 +227,13 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
         where TDerivedModel : TModel =>
         new ChangeModelTypeSpec<TDerivedModel, TModel, TMetadata>(this, model => model);
 
+    /// <summary>
+    /// Converts this specification to an explanation specification (i.e., Spec&lt;TModel, string&gt;).
+    /// This is necessary when establishing a "lowest-common-denominator" between very different specification.
+    /// Therefore, specifications with different metadata types will be wrapped in a spec that uses string as the
+    /// metadata type.
+    /// </summary>
+    /// <returns></returns>
     public override SpecBase<TModel, string> ToExplanationSpec() =>
         this switch
         {
