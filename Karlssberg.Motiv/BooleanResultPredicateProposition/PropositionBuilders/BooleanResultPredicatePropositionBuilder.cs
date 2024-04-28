@@ -17,7 +17,7 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">
     /// A human-readable reason why the condition is true.  This will also be the name of the
-    /// proposition, unless otherwise specificed by the subsequent <c>Create(string statement)</c> method.
+    /// proposition, unless otherwise specified by the subsequent <c>Create(string statement)</c> method.
     /// </param>
     /// <returns>An instance of <see cref="FalseAssertionExplanationPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public FalseAssertionWithNamePropositionBuilder<TModel, TUnderlyingMetadata> WhenTrue(

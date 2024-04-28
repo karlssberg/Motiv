@@ -1,4 +1,5 @@
 # Motiv
+
 ## Turn your if-statements into _why_ statements
 
 Motiv is a .NET library that supercharges the experience of working with boolean logic.
@@ -50,6 +51,7 @@ result.Justification; // can view content
 ```
 
 ### What can I use the Motiv for?
+
 Motiv is not specifically focused on catering to any particular use-case (except maybe _Developer Experience_),
 but it does nonetheless serve use-cases such as:
 
@@ -70,6 +72,7 @@ but it does nonetheless serve use-cases such as:
 You are encouraged to explore the library and find new and innovative ways to use it.
 
 ## Installation
+
 You can install Motiv via NuGet Package Manager Console by running the following command:
 ```bash
 Install-Package Motiv
@@ -80,11 +83,13 @@ dotnet add package Motiv
 ```
 
 ## Usage
+
 All propositions follow the same basic usage pattern that starts with a call `Spec.Build()`.
 It has many overloads for different use-cases, but they all trace back eventually to a boolean predicate function—in 
 other words a `Spec.Build(Func<TModel, bool> predicate)`.
 
 ### Basic proposition
+
 A basic proposition can be created calling the `Spec.Build()` method and then calling the `Create()` method without 
 calling any other builder methods in between.
 
@@ -126,6 +131,7 @@ Basic propositions are useful for encapsulation and debugging purposes, but thei
 user-friendly.
 
 ### Propositions with explanations
+
 You can use the `WhenTrue()` and `WhenFalse()` methods to provide user-friendly explanations about the result.
 These values will be used in the `Reason` and `Assertions` properties of the result.
 
@@ -148,6 +154,7 @@ result.Assertions; // ["customer is eligible for a loan"]
 ```
 
 ### Propositions with custom metadata
+
 You are also not limited to strings.
 You can equally supply any POCO object, and it will be yielded when appropriate.
 
@@ -171,6 +178,7 @@ result.Metadata;   // [{ Message = "customer is eligible for a loan" }]
 ````
 
 ### Dynamic explanations (and metadata)
+
 There will be times when you need to provide a more dynamic explanation (or metadata object).
 There are overloads to the `WhenTrue()` and `WhenFalse()` methods that allow you to provide a function that will be
 evaluated when the proposition is satisfied.
@@ -188,6 +196,7 @@ var isEligibleForLoan =
 ```
 
 ### Composing propositions
+
 The real power of Motiv comes from composing propositions to form new ones.
 The library will take care of collating the underlying causes and filter out irrelevant and inconsequential 
 assertions and metadata from the final result. 
@@ -233,6 +242,7 @@ result.Assertions; // ["customer has an inadequate credit score"]
 ### Encapsulation and Re-use
 
 #### Redefining propositions
+
 Sometimes existing propositions do not produce the desired assertions or metadata.
 In this case, you will need to wrap the existing proposition in a new one.
 
@@ -272,6 +282,7 @@ ineligibleResult.Justification; // !customer is eligible for a loan
 ```
 
 #### Strongly typed proposition
+
 You will likely want to encapsulate propositions for reuse across your application.
 For this you typically have two options, which is to either return `Spec` instances from members of POCO 
 objects, or to derive from the `Spec<TModel>` or `Spec<TModel, TMetadata>` class (the former being merely syntactic 
@@ -298,12 +309,14 @@ public class HasSufficientIncomeProposition(decimal threshold) : Spec<int, MyMet
 ```
 
 ### Higher Order Logic
+
 To perform logic over collections of models, higher order logical operations are required.
 Whilst you can create a first-order proposition that operates on collections of models, yielding explanations (or 
 metadata) would be challenging.
 This library provides a `.As()` builder method to address this.
 
 #### Built-in higher order logic
+
 Some built-in higher order logical operations are provided for popular operations, but you can also add your own using
 extension methods.
 
@@ -341,7 +354,8 @@ Spec.Build(new IsNegativeIntegerProposition()) // existing proposition
     .Create();
 ```
 
-#### Dynamic 
+#### Dynamic
+
 When dynamically generating assertions/metadata, you are provided with an _evaluation_ object that contains 
 pre-defined properties that can be used to customize the output (such as `TrueModels`, `FalseModels`, `TrueCount`, 
 `FalseCount` etc.).
@@ -383,6 +397,7 @@ allNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions;   // ["0 is not negative",
 ```
 
 ## Tradeoffs
+
 There are inevitably potential tradeoffs to consider when using this library.
 1. **Performance**: This library is designed to be as performant as possible, but it is still a layer of abstraction
    over the top of native logic.

@@ -45,7 +45,7 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
         new(spec, whenTrue);
 
     /// <summary>Specifies an assertion to yield when the condition is true.  This will also be the name of the proposition, unless otherwise
-    /// specificed by the subsequent <c>Create(string statement)</c> method.</summary>
+    /// specified by the subsequent <c>Create(string statement)</c> method.</summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true. </param>
     /// <returns>An instance of <see cref="FalseAssertionWithNamePropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public FalseAssertionWithNamePropositionBuilder<TModel, TUnderlyingMetadata> WhenTrue(
