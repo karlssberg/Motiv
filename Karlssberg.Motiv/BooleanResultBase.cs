@@ -109,33 +109,45 @@ public abstract class BooleanResultBase
         !result.Satisfied;
 
     /// <summary>Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are equal.</summary>
-    /// <param name="left">The first <see cref="BooleanResultBase{TMetadata}" /> to compare.</param>
-    /// <param name="right">The second <see cref="BooleanResultBase{TMetadata}" /> to compare.</param>
+    /// <param name="left">The first operand to compare.</param>
+    /// <param name="right">The second operand to compare.</param>
     /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
     public static bool operator ==(BooleanResultBase left, BooleanResultBase right) =>
         left.Equals(right);
 
     /// <summary>Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are equal.</summary>
-    /// <param name="left">The first <see cref="BooleanResultBase{TMetadata}" /> to compare.</param>
-    /// <param name="right">The second <see cref="bool" /> to compare.</param>
+    /// <param name="left">The first operand to compare.</param>
+    /// <param name="right">The second operand to compare.</param>
     /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
     public static bool operator ==(bool left, BooleanResultBase right) =>
         left == right.Satisfied;
-
+    
+    /// <summary>
+    /// Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are not equal.
+    /// </summary>
+    /// <param name="left">The first operand to compare.</param>
+    /// <param name="right">The second operand to compare.</param>
+    /// <returns><c>true</c> if the two objects are not equal; otherwise, <c>false</c>.</returns>
     public static bool operator !=(bool left, BooleanResultBase right) => !(left == right);
 
     /// <summary>Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are equal.</summary>
-    /// <param name="left">The first <see cref="BooleanResultBase{TMetadata}" /> to compare.</param>
-    /// <param name="right">The second <see cref="bool" /> to compare.</param>
+    /// <param name="left">The first operand to compare.</param>
+    /// <param name="right">The second operand to compare.</param>
     /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
     public static bool operator ==(BooleanResultBase left, bool right) =>
         left.Satisfied == right;
-
+    
+    /// <summary>
+    /// Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are not equal.
+    /// </summary>
+    /// <param name="left">The first operand to compare.</param>
+    /// <param name="right">The second operand to compare.</param>
+    /// <returns><c>true</c> if the two objects are not equal; otherwise, <c>false</c>.</returns>
     public static bool operator !=(BooleanResultBase left, bool right) => !(left == right);
 
     /// <summary>Implements the inequality operator for comparing two instances of <see cref="BooleanResultBase{TMetadata}" />.</summary>
-    /// <param name="left">The left-hand side <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
-    /// <param name="right">The right-hand side <see cref="BooleanResultBase{TMetadata}" /> instance.</param>
+    /// <param name="left">The first operand to compare.</param>
+    /// <param name="right">The second operand to compare.</param>
     /// <returns><c>true</c> if the two instances are not equal; otherwise, <c>false</c>.</returns>
     public static bool operator !=(BooleanResultBase left, BooleanResultBase right) =>
         !(left == right);

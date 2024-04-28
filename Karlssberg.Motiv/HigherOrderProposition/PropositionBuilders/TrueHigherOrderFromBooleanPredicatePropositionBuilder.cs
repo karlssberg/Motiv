@@ -36,8 +36,11 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
             whenTrue,
             causeSelector);
 
-    /// <summary>Specifies an assertion to yield when the condition is true.</summary>
-    /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
+    /// <summary>
+    /// Specifies an assertion to yield when the condition is true.  This will also be the name of the proposition, unless otherwise
+    /// specificed by the subsequent <c>Create(string statement)</c> method.
+    /// </summary>
+    /// <param name="trueBecause"> A human-readable reason why the condition is true. </param>
     /// <returns>
     /// An instance of <see cref="FalseAssertionFromSpecDecoratorWithNameHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.
     /// </returns>

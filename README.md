@@ -2,12 +2,6 @@
 ## Turn your if-statements into _why_ statements
 
 Motiv is a .NET library that supercharges the experience of working with boolean logic.
-```csharp
-    Spec.Build((Subscription subscription) => subscription.ExpiryDate < DateTime.Now)
-        .WhenTrue("subscription has expired")
-        .WhenFalse("subscription has not expired")
-        .Create();
-```
 
 It allows you to package your boolean expressions into strongly typed _propositions_.
 By propositions, we mean a declarative statement that can be evaluated to either true or false.
@@ -17,12 +11,23 @@ Examples of propositions include:
 * _email address is missing an @ symbol_
 * _subscription is within grace period_
 
+In Motiv they look like this:
+```csharp
+Spec.Build((Subscription subscription) => 
+        DateTime.Now is var now 
+        && subscription.ExpiryDate < now
+        && now < subscription.ExpiryDate.AddDays(7))      // predicate function
+    .WhenTrue("subscription is within grace period")      // true assertion (and proposition statement)
+    .WhenFalse("subscription is not within grace period") // false assertion
+    .Create();
+```
+
 Propositions can be composed together using boolean operators, such as `&`, `|`, and `^`, and when evaluated will only
 surface the reasons (or custom metadata) from propositions that determined the final result.
 
 ```csharp
 // compose propositions
-var expression = ((!hasSubscriptionExpired | isGracePeriod) & !isSubscriptionCancelled) | isStaff;
+var expression = ((!hasSubscriptionExpired | isInGracePeriod) & !isSubscriptionCancelled) | isStaff;
 
 // define a new proposition
 var canViewContent = 

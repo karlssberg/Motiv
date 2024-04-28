@@ -12,7 +12,8 @@ namespace Karlssberg.Motiv.BooleanPredicateProposition.PropositionBuilders;
 public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TModel, bool> predicate)
 {
     /// <summary>
-    /// Specifies an assertion to yield when the condition is true.
+    /// Specifies an assertion to yield when the condition is true.  This will also be the name of the proposition, unless otherwise
+    /// specificed by the subsequent <c>Create(string statement)</c> method.
     /// </summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionWithNamePropositionBuilder{TModel}" />.</returns>

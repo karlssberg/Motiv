@@ -341,8 +341,9 @@ public class TutorialTests
 
         var isCheckInOpenSpec =
             Spec.Build((Passenger passenger) =>
-                passenger.FlightTime - DateTime.Now <= TimeSpan.FromHours(4) &&
-                passenger.FlightTime - DateTime.Now >= TimeSpan.FromMinutes(30))
+                        DateTime.Now is var now
+                        && passenger.FlightTime - now <= TimeSpan.FromHours(4)
+                        && passenger.FlightTime - now >= TimeSpan.FromMinutes(30))
                     .WhenTrue("check-in is open")
                     .WhenFalse("check-in is closed")
                     .Create();
@@ -393,5 +394,24 @@ public class TutorialTests
                     customer has an inadequate credit score
                     customer has insufficient income
             """);
+    }
+
+    public record Subscription(DateTime ExpiryDate);
+    [Fact]
+    public void Should_have_subscription_in_grace_period()
+    {
+        var hasSubscriptionInGracePeriod =
+            Spec.Build((Subscription subscription) => 
+                    DateTime.Now is var now 
+                    && subscription.ExpiryDate < now
+                    && now < subscription.ExpiryDate.AddDays(7))
+                .WhenTrue("subscription is within grace period")
+                .WhenFalse("subscription is not within grace period")
+                .Create();
+
+        var act = hasSubscriptionInGracePeriod.IsSatisfiedBy(new Subscription(DateTime.Now.AddDays(-3)));
+
+        act.Satisfied.Should().BeTrue();
+        act.Reason.Should().Be("subscription is within grace period");
     }
 }

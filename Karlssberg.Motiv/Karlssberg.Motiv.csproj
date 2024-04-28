@@ -7,6 +7,8 @@
         <Authors>Daniel Karlsson</Authors>
         <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Motiv.xml</DocumentationFile>
         <PackageId>Motiv</PackageId>
         <Title>Motiv</Title>
         <Description>Motiv lets you explain to users (and other stakeholders including devs) what is going on with your boolean logic.  It can also be used to model meaningful domain logic (like with DDD), or even as a way to construct stateful objects based on conditional logic </Description>

@@ -133,4 +133,9 @@ public static class StringExtensions
                 yield break;
         }
     }
+    
+    
+    private static readonly HashSet<char> Characters = ['!', '(', ')', '&', '|', '^'];
+    
+    public static bool ContainsReservedCharacters(this string text) => text.Any(c => Characters.Contains(c));
 }

@@ -51,7 +51,7 @@ public readonly ref struct TrueHigherOrderFromSpecPropositionBuilder<TModel, TUn
             causeSelector);
 
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
-    /// <param name="trueBecause">A human-readable reason why the condition is true.</param>
+    /// <param name="trueBecause"> A human-readable reason why the condition is true. </param>
     /// <returns>
     /// An instance of <see cref="FalseAssertionFromSpecDecoratorWithNameHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.
     /// </returns>

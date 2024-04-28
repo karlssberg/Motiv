@@ -25,7 +25,7 @@ public class BooleanResultPredicateMetadataPropositionTests
             .Build((bool m) => m == other)
             .WhenTrue(100)
             .WhenFalse(-100)
-            .Create($"are equal");
+            .Create("are equal");
         
         var firstSpec = Spec
             .Build((bool m) => underlying.IsSatisfiedBy(m))
