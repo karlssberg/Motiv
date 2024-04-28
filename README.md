@@ -137,7 +137,8 @@ These values will be used in the `Reason` and `Assertions` properties of the res
 
 ```csharp
 var isEligibleForLoan =
-    Spec.Build((Customer customer) => customer is
+    Spec.Build((Customer customer) => 
+            customer is
             {
                 CreditScore: > 600,
                 Income: > 100000
@@ -160,7 +161,8 @@ You can equally supply any POCO object, and it will be yielded when appropriate.
 
 ```csharp
 var isEligibleForLoan =
-    Spec.Build((Customer customer) => customer is
+    Spec.Build((Customer customer) =>
+            customer is
             {
                 CreditScore: > 600,
                 Income: > 100000
@@ -185,7 +187,8 @@ evaluated when the proposition is satisfied.
 These functions can be used to dynamically generate explanations or metadata based on the model being evaluated.
 ```csharp
 var isEligibleForLoan =
-    Spec.Build((Customer customer) => customer is
+    Spec.Build((Customer customer) =>
+            ~~~~customer is
             {
                 CreditScore: > 600,
                 Income: > 100000
