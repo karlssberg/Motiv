@@ -188,7 +188,7 @@ These functions can be used to dynamically generate explanations or metadata bas
 ```csharp
 var isEligibleForLoan =
     Spec.Build((Customer customer) =>
-            ~~~~customer is
+            customer is
             {
                 CreditScore: > 600,
                 Income: > 100000
