@@ -130,7 +130,7 @@ result.Assertions; // ["!eligible for loan"]
 Basic propositions are useful for encapsulation and debugging purposes, but their explanations are not particularly
 user-friendly.
 
-### Propositions with explanations
+### Propositions with assertions
 
 You can use the `WhenTrue()` and `WhenFalse()` methods to provide user-friendly explanations about the result.
 These values will be used in the `Reason` and `Assertions` properties of the result.
@@ -143,8 +143,8 @@ var isEligibleForLoan =
                 CreditScore: > 600,
                 Income: > 100000
             })
-        .WhenTrue("customer is eligible for a loan")      // yield explanation when true
-        .WhenFalse("customer is not eligible for a loan") // yield explanation when false
+        .WhenTrue("customer is eligible for a loan")      // yield assertion when true
+        .WhenFalse("customer is not eligible for a loan") // yield assertion when false
         .Create();
 
 var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
