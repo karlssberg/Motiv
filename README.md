@@ -12,7 +12,7 @@ Examples of propositions include:
 * _email address is missing an @ symbol_
 * _subscription is within grace period_
 
-In Motiv they look like this:
+In Motiv, they look like this:
 ```csharp
 Spec.Build((Subscription subscription) => 
         DateTime.Now is var now 
@@ -55,7 +55,7 @@ result.Justification; // can view content
 Motiv is not specifically focused on catering to any particular use-case (except maybe _Developer Experience_),
 but it does nonetheless serve use-cases such as:
 
-* **User feedback** - You require an application to provide detailed and accurate feedback to the user about why a 
+* **User feedback** - You require an application to provide detailed and accurate feedback to the user about why 
   certain decisions were made. 
 * **Debugging** - Quickly understand why a certain condition was met (or not). When faced with deeply nested 
   if-else statements it can be challenging to comprehend the bigger picture. Motiv gives you the wherewithal to 
@@ -93,7 +93,7 @@ other words a `Spec.Build(Func<TModel, bool> predicate)`.
 A basic proposition can be created calling the `Spec.Build()` method and then calling the `Create()` method without 
 calling any other builder methods in between.
 
-For exampe:
+For example:
 ```csharp
 var isEligibleForLoan =
     Spec.Build((Customer customer) => 
@@ -207,7 +207,7 @@ Propositions can be composed using the `&`,`|` and `^` operators as well as the 
 `.AndAlso()` methods.
 This allows you to create explanations at various levels of granularity.
 
-In our example we can break down into its constituent parts, each with their own explanation.
+In our example, we can break down into its constituent parts, each with their own explanation.
 ```csharp
 var hasGoodCreditScore =
     Spec.Build((Customer customer) => customer.CreditScore > 600)
