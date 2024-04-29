@@ -23,13 +23,13 @@ jobs:
     - name: Test
       run: dotnet test --verbosity normal
     - name: Build for netstandard2.0
-      run: dotnet build Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --framework netstandard2.0 --no-restore -o ./Karlssberg.Motiv/bin/Release/netstandard2.0/
+      run: dotnet build Motiv/Motiv.csproj --configuration Release --framework netstandard2.0 --no-restore -o ./Motiv/bin/Release/netstandard2.0/
     - name: Build for net8.0
-      run: dotnet build Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --framework net8.0 --no-restore -o ./Karlssberg.Motiv/bin/Release/net8.0/
+      run: dotnet build Motiv/Motiv.csproj --configuration Release --framework net8.0 --no-restore -o ./Motiv/bin/Release/net8.0/
     - name: List Build Artifacts
-      run: find "$(pwd)/Karlssberg.Motiv/bin/Release" -type f
+      run: find "$(pwd)/Motiv/bin/Release" -type f
     - name: Pack
-      run: dotnet pack Karlssberg.Motiv/Karlssberg.Motiv.csproj --configuration Release --no-build --output nupkgs
+      run: dotnet pack Motiv/Motiv.csproj --configuration Release --no-build --output nupkgs
     - name: List NuGet Packages
       run: ls -lR ./nupkgs
     - name: Publish to NuGet
