@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
     - name: Setup .NET
@@ -27,11 +27,15 @@ jobs:
     - name: Build for net8.0
       run: dotnet build Motiv/Motiv.csproj --configuration Release --framework net8.0 --no-restore -o ./Motiv/bin/Release/net8.0/
     - name: List Build Artifacts
-      run: find "$(pwd)/Motiv/bin/Release" -type f
+      run: dir .\Motiv\bin\Release\ /s /b
     - name: Pack
       run: dotnet pack Motiv/Motiv.csproj --configuration Release --no-build --output nupkgs
     - name: List NuGet Packages
-      run: ls -lR ./nupkgs
+      run: dir .\nupkgs\ /s /b
     - name: Publish to NuGet
       run: dotnet nuget push "**/*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
       if: github.ref == 'refs/heads/main'
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4.0.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}

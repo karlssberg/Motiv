@@ -46,7 +46,7 @@ public class NSatisfiedSpecTests
         string expectedShallowAssertionSerialized,
         string expectedDeepAssertionsSerialized)
     {
-        var expectedDeepAssertions = expectedDeepAssertionsSerialized.Split(", ").Select(x => x.Trim());
+        var expectedDeepAssertions = expectedDeepAssertionsSerialized.Split(new []{", "}, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
         var isEven = Spec
             .Build<int>(n => n % 2 == 0)
             .WhenTrue(n => $"{n} is even")

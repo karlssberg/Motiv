@@ -48,7 +48,7 @@ public class AndAlsoSpecTests
                 .Create();
 
         var right = 
-            Spec.Build(new Func<object, bool>(_ => throw new UnreachableException("Should not be evaluated")))
+            Spec.Build(new Func<object, bool>(_ => throw new Exception("Should not be evaluated")))
                 .WhenTrue("right")
                 .WhenFalse("not right")
                 .Create();
@@ -57,7 +57,7 @@ public class AndAlsoSpecTests
         
         Action act = () => sut.IsSatisfiedBy(new object());
         
-        act.Should().NotThrow<UnreachableException>();
+        act.Should().NotThrow<Exception>();
     }
 
     [Fact]

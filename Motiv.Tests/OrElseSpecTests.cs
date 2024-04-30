@@ -50,7 +50,7 @@ public class OrElseSpecTests
                 .Create();
 
         var right = 
-            Spec.Build(new Func<object, bool>(_ => throw new UnreachableException("Should not be evaluated")))
+            Spec.Build(new Func<object, bool>(_ => throw new Exception("Should not be evaluated")))
                 .WhenTrue("right")
                 .WhenFalse("not right")
                 .Create();
@@ -59,7 +59,7 @@ public class OrElseSpecTests
 
         Action act = () => sut.IsSatisfiedBy(new object());
         
-        act.Should().NotThrow<UnreachableException>();
+        act.Should().NotThrow<Exception>();
     }
     
     [Fact]

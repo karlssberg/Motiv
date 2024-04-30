@@ -4,8 +4,11 @@ namespace Motiv.Tests;
 
 public class MetadataTests
 {
-    public record Metadata(string Assertion);
-    
+    private record Metadata(string Assertion)
+    {
+        public string Assertion { get; } = Assertion;
+    }
+
     [Theory]
     [InlineData(2, "even")]
     [InlineData(3, "odd")]
