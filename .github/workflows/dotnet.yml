@@ -21,7 +21,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Test
-      run: dotnet test --verbosity normal
+      run: dotnet test --verbosity normal --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
     - name: Build for netstandard2.0
       run: dotnet build Motiv/Motiv.csproj --configuration Release --framework netstandard2.0 --no-restore -o ./Motiv/bin/Release/netstandard2.0/
     - name: Build for net8.0
