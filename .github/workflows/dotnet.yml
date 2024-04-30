@@ -27,11 +27,11 @@ jobs:
     - name: Build for net8.0
       run: dotnet build Motiv/Motiv.csproj --configuration Release --framework net8.0 --no-restore -o ./Motiv/bin/Release/net8.0/
     - name: List Build Artifacts
-      run: Get-ChildItem -Path .\Motiv\bin\Release\ -Recurse -FullName
+      run: Get-ChildItem -Path .\Motiv\bin\Release\ -Recurse -Name
     - name: Pack
       run: dotnet pack Motiv/Motiv.csproj --configuration Release --no-build --output nupkgs
     - name: List NuGet Packages
-      run: Get-ChildItem -Path .\nupkgs\ -Recurse -FullName
+      run: Get-ChildItem -Path .\nupkgs\ -Recurse -Name
     - name: Publish to NuGet
       run: dotnet nuget push "**/*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
       if: github.ref == 'refs/heads/main'
