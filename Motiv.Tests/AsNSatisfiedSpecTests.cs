@@ -2,7 +2,7 @@
 
 namespace Motiv.Tests;
 
-public class NSatisfiedSpecTests
+public class AsNSatisfiedSpecTests
 {
     [Theory]
     [InlineAutoData(2, 4, true)]
@@ -113,5 +113,102 @@ public class NSatisfiedSpecTests
             .Create("a pair of even numbers");
 
         sut.Statement.Should().Be("a pair of even numbers");
+    }
+    
+    [Theory]
+    [InlineData(false, false, false, false, "!2 are true")]
+    [InlineData(false, false, true, false, "!2 are true")]
+    [InlineData(false, true, false, false, "!2 are true")]
+    [InlineData(false, true, true, true, "2 are true")]
+    [InlineData(true, false, false, false, "!2 are true")]
+    [InlineData(true, false, true, true, "2 are true")]
+    [InlineData(true, true, false, true, "2 are true")]
+    [InlineData(true, true, true, false, "!2 are true")]
+    public void Should_perform_a_none_satisfied_operation_when_using_a_boolean_predicate_function(
+        bool first,
+        bool second,
+        bool third,
+        bool expected,
+        string expectedReason)
+    {
+
+        bool[] models = [first, second, third];
+
+        var sut =
+            Spec.Build((bool m) => m)
+                .AsNSatisfied(2)
+                .Create("2 are true");
+
+        var result = sut.IsSatisfiedBy(models);
+
+        result.Satisfied.Should().Be(expected);
+        result.Reason.Should().Be(expectedReason);
+    }
+    
+    [Theory]
+    [InlineData(false, false, false, false, "!2 are true")]
+    [InlineData(false, false, true, false, "!2 are true")]
+    [InlineData(false, true, false, false, "!2 are true")]
+    [InlineData(false, true, true, true, "2 are true")]
+    [InlineData(true, false, false, false, "!2 are true")]
+    [InlineData(true, false, true, true, "2 are true")]
+    [InlineData(true, true, false, true, "2 are true")]
+    [InlineData(true, true, true, false, "!2 are true")]
+    public void Should_perform_an_n_satisfied_operation_when_using_a_boolean_result_predicate_function_with_metadata(
+        bool first,
+        bool second,
+        bool third,
+        bool expected,
+        string expectedReason)
+    {
+
+        bool[] models = [first, second, third];
+
+        var sut =
+            Spec.Build((bool m) => m)
+                .AsNSatisfied(2)
+                .WhenTrue(_ => "2 are true")
+                .WhenFalse(_ => "!2 are true")
+                .Create("none are true");
+
+        var result = sut.IsSatisfiedBy(models);
+
+        result.Satisfied.Should().Be(expected);
+        result.Reason.Should().Be(expectedReason);
+    }
+    
+    [Theory]
+    [InlineData(false, false, false, false, "!2 are true")]
+    [InlineData(false, false, true, false, "!2 are true")]
+    [InlineData(false, true, false, false, "!2 are true")]
+    [InlineData(false, true, true, true, "2 are true")]
+    [InlineData(true, false, false, false, "!2 are true")]
+    [InlineData(true, false, true, true, "2 are true")]
+    [InlineData(true, true, false, true, "2 are true")]
+    [InlineData(true, true, true, false, "!2 are true")]
+    public void Should_perform_an_n_satisfied_operation_when_using_a_boolean_result_predicate_function(
+        bool first,
+        bool second,
+        bool third,
+        bool expected,
+        string expectedReason)
+    {
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is true");
+
+        bool[] models = [first, second, third];
+
+        var sut =
+            Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
+                .AsNSatisfied(2)
+                .WhenTrue(_ => "2 are true")
+                .WhenFalse(_ => "!2 are true")
+                .Create("2 are true");
+
+        var result = sut.IsSatisfiedBy(models);
+
+        result.Satisfied.Should().Be(expected);
+        result.Reason.Should().Be(expectedReason);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Motiv.Tests;
 
-public class AtLeastNSatisfiedSpecBaseTests
+public class AsAtLeastNSatisfiedSpecBaseTests
 {
     [Theory]
     [InlineAutoData(false, false, false, false, true)]
@@ -412,5 +412,72 @@ public class AtLeastNSatisfiedSpecBaseTests
         var result = sut.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
 
         result.Description.CausalOperandCount.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineData(false, false, false, false, "!at least 2 true")]
+    [InlineData(false, false, true, false, "!at least 2 true")]
+    [InlineData(false, true, false, false, "!at least 2 true")]
+    [InlineData(false, true, true, true, "at least 2 true")]
+    [InlineData(true, false, false, false, "!at least 2 true")]
+    [InlineData(true, false, true, true, "at least 2 true")]
+    [InlineData(true, true, false, true, "at least 2 true")]
+    [InlineData(true, true, true, true, "at least 2 true")]
+    public void Should_perform_an_at_least_n_satisfied_operation_when_using_a_boolean_predicate_function(
+        bool first,
+        bool second,
+        bool third,
+        bool expected,
+        string expectedReason)
+    {
+
+        bool[] models = [first, second, third];
+
+        var sut =
+            Spec.Build((bool m) => m)
+                .AsAtLeastNSatisfied(2)
+                .WhenTrue(_ => "at least 2 true")
+                .WhenFalse(_ => "!at least 2 true")
+                .Create("at least 2 true");
+
+        var result = sut.IsSatisfiedBy(models);
+
+        result.Satisfied.Should().Be(expected);
+        result.Reason.Should().Be(expectedReason);
+    }
+    
+    [Theory]
+    [InlineData(false, false, false, false, "!at least 2 true")]
+    [InlineData(false, false, true, false, "!at least 2 true")]
+    [InlineData(false, true, false, false, "!at least 2 true")]
+    [InlineData(false, true, true, true, "at least 2 true")]
+    [InlineData(true, false, false, false, "!at least 2 true")]
+    [InlineData(true, false, true, true, "at least 2 true")]
+    [InlineData(true, true, false, true, "at least 2 true")]
+    [InlineData(true, true, true, true, "at least 2 true")]
+    public void Should_perform_an_at_least_n_satisfied_operation_when_using_a_boolean_result_predicate_function(
+        bool first,
+        bool second,
+        bool third,
+        bool expected,
+        string expectedReason)
+    {
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is true");
+
+        bool[] models = [first, second, third];
+
+        var sut =
+            Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
+                .AsAtLeastNSatisfied(2)
+                .WhenTrue(_ => "at least 2 true")
+                .WhenFalse(_ => "!at least 2 true")
+                .Create("at least 2 true");
+
+        var result = sut.IsSatisfiedBy(models);
+
+        result.Satisfied.Should().Be(expected);
+        result.Reason.Should().Be(expectedReason);
     }
 }

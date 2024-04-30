@@ -246,4 +246,205 @@ public class BooleanResultPredicateMetadataPropositionTests
         
         act.Reason.Should().Be(expectedReason);
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    [Theory]
+    [InlineData(true, Metadata.True)]
+    [InlineData(false, Metadata.False)]
+    public void Should_yield_the_appropriate_metadata(
+        bool model,
+        Metadata expectedMetadata)
+    { 
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+        
+        var withFalseAsScalar =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue(Metadata.True)
+                .WhenFalse(Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsParameterCallback =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue(Metadata.True)
+                .WhenFalse(_ => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallback =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue(Metadata.True)
+                .WhenFalse((_, _) => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallbackThatReturnsACollection =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue(Metadata.True)
+                .WhenFalse((_, _) => [Metadata.False])
+                .Create("propositional statement");
+        
+        var spec = withFalseAsScalar &
+                   withFalseAsParameterCallback &
+                   withFalseAsTwoParameterCallback &
+                   withFalseAsTwoParameterCallbackThatReturnsACollection;
+        
+        var act = spec.IsSatisfiedBy(model);
+        
+        act.Metadata.Should().BeEquivalentTo([expectedMetadata]);
+        act.MetadataTier.Metadata.Should().BeEquivalentTo([expectedMetadata]);
+    }
+    
+    [Theory]
+    [InlineData(true, Metadata.True)]
+    [InlineData(false, Metadata.False)]
+    public void Should_yield_the_appropriate_metadata_when_true_assertion_uses_a_single_parameter_callback(
+        bool model,
+        Metadata expectedMetadata)
+    {
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+        
+        var withFalseAsScalar =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue(_ => Metadata.True)
+                .WhenFalse(Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsParameterCallback =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue(_ => Metadata.True)
+                .WhenFalse(_ => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallback =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue(_ => Metadata.True)
+                .WhenFalse((_, _) => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallbackThatReturnsACollection =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue(_ => Metadata.True)
+                .WhenFalse((_, _) => [Metadata.False])
+                .Create("propositional statement");
+        
+        var spec = withFalseAsScalar &
+                   withFalseAsParameterCallback &
+                   withFalseAsTwoParameterCallback &
+                   withFalseAsTwoParameterCallbackThatReturnsACollection;
+        
+        var act = spec.IsSatisfiedBy(model);
+        
+        act.Metadata.Should().BeEquivalentTo([expectedMetadata]);
+        act.MetadataTier.Metadata.Should().BeEquivalentTo([expectedMetadata]);
+    }
+    
+    [Theory]
+    [InlineData(true, Metadata.True)]
+    [InlineData(false, Metadata.False)]
+    public void Should_yield_the_appropriate_metadata_when_true_assertion_uses_a_two_parameter_callback(
+        bool model,
+        Metadata expectedMetadata)
+    {
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+        
+        var withFalseAsScalar =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue((_, _) => Metadata.True)
+                .WhenFalse(Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsParameterCallback =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue((_, _) => Metadata.True)
+                .WhenFalse(_ => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallback =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue((_, _) => Metadata.True)
+                .WhenFalse((_, _) => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallbackThatReturnsACollection =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue((_, _) => Metadata.True)
+                .WhenFalse((_, _) => [Metadata.False])
+                .Create("propositional statement");
+        
+        var spec = withFalseAsScalar &
+                   withFalseAsParameterCallback &
+                   withFalseAsTwoParameterCallback &
+                   withFalseAsTwoParameterCallbackThatReturnsACollection;
+        
+        var act = spec.IsSatisfiedBy(model);
+        
+        act.Metadata.Should().BeEquivalentTo([expectedMetadata]);
+        act.MetadataTier.Metadata.Should().BeEquivalentTo([expectedMetadata]);
+    }
+    
+    [Theory]
+    [InlineData(true, Metadata.True)]
+    [InlineData(false, Metadata.False)]
+    public void Should_yield_the_appropriate_metadata_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection(
+        bool model,
+        Metadata expectedMetadata)
+    {
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+        
+        var withFalseAsScalar =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenFalse(Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsParameterCallback =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenFalse(_ => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallback =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenFalse((_, _) => Metadata.False)
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallbackThatReturnsACollection =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenFalse((_, _) => [Metadata.False])
+                .Create("propositional statement");
+        
+        var spec = withFalseAsScalar &
+                   withFalseAsParameterCallback &
+                   withFalseAsTwoParameterCallback &
+                   withFalseAsTwoParameterCallbackThatReturnsACollection;
+        
+        var act = spec.IsSatisfiedBy(model);
+        
+        act.Metadata.Should().BeEquivalentTo([expectedMetadata]);
+        act.MetadataTier.Metadata.Should().BeEquivalentTo([expectedMetadata]);
+    }
 }

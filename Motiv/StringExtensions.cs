@@ -15,7 +15,7 @@ public static class StringExtensions
     /// <returns>The serialized string.</returns>
     public static string Serialize<T>(
         this IEnumerable<T> collection) =>
-        string.Concat(collection.SerializeToEnumerable(",", "and"));
+        string.Concat(collection.SerializeToEnumerable(",", "and", true));
 
     /// <summary>Serializes a collection to a human-readable string.</summary>
     /// <param name="collection">The collection to serialize.</param>
@@ -29,35 +29,13 @@ public static class StringExtensions
         this IEnumerable<T> collection,
         string conjunction,
         bool useOxfordComma = true) =>
-        string.Concat(collection.SerializeToEnumerable(",", conjunction));
-
-    /// <summary>Serializes a collection to a human-readable string.</summary>
-    /// <param name="collection">The collection to serialize.</param>
-    /// <param name="delimiter">The delimiter to use other than the default comma</param>
-    /// <param name="conjunction">The coordinating conjunction (i.e. "and", "or" etc) to be used between the last two items</param>
-    /// <param name="useOxfordComma">
-    /// A value indicating whether to use a comma as well as a conjunction between the last two
-    /// items.
-    /// </param>
-    /// <returns>The serialized string.</returns>
-    public static string Serialize<T>(
-        this IEnumerable<T> collection,
-        string delimiter,
-        string conjunction,
-        bool useOxfordComma = true)
-    {
-        var strings = collection
-            .SerializeToEnumerable(
-                delimiter,
-                conjunction);
-
-        return string.Concat(strings);
-    }
+        string.Concat(collection.SerializeToEnumerable(",", conjunction, useOxfordComma));
 
     private static IEnumerable<string?> SerializeToEnumerable<T>(
         this IEnumerable<T> collection,
         string delimiter,
-        string? conjunction)
+        string? conjunction,
+        bool useOxfordComma)
     {
         const int bufferSize = 2;
         var buffer = new Queue<string?>(bufferSize);
@@ -90,7 +68,8 @@ public static class StringExtensions
                 yield break;
             default:
                 yield return buffer.Dequeue();
-                yield return delimiter;
+                if (useOxfordComma)
+                    yield return delimiter;
                 yield return " ";
                 yield return conjunction;
                 yield return " ";

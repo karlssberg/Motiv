@@ -2,7 +2,7 @@
 
 namespace Motiv.Tests;
 
-public class AnySatisfiedSpecTests
+public class AsAnySatisfiedSpecTests
 {
     [Theory]
     [InlineAutoData(false, false, false, false)]

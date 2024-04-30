@@ -92,6 +92,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         
         var act = spec.IsSatisfiedBy(model);
         act.Reason.Should().Be(expectedReason);
+        act.Description.Reason.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -146,6 +147,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         var act = spec.IsSatisfiedBy(model);
         
         act.Reason.Should().Be(expectedReason);
+        act.Description.Reason.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -193,6 +195,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         var act = spec.IsSatisfiedBy(model);
         
         act.Reason.Should().Be(expectedReason);
+        act.Description.Reason.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -240,6 +243,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         var act = spec.IsSatisfiedBy(model);
         
         act.Reason.Should().Be(expectedReason);
+        act.Description.Reason.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -287,5 +291,24 @@ public class BooleanResultPredicateExplanationPropositionTests
         var act = spec.IsSatisfiedBy(model);
         
         act.Reason.Should().Be(expectedReason);
+        act.Description.Reason.Should().Be(expectedReason);
+    }
+
+    [Fact]
+    public void Should_describe_a_boolean_result_spec()
+    {
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+        
+        var spec = Spec
+            .Build((bool model) => underlying.IsSatisfiedBy(model))
+            .WhenTrue("is true")
+            .WhenFalse("is false")
+            .Create("is model true");
+
+        var act = spec.Description.Statement;
+
+        act.Should().Be("is model true");
     }
 }

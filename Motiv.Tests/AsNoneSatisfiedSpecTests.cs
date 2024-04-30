@@ -2,7 +2,7 @@
 
 namespace Motiv.Tests;
 
-public class NoneSatisfiedSpecTests
+public class AsNoneSatisfiedSpecTests
 {
     [Theory]
     [InlineAutoData(false, false, false, true)]
@@ -83,18 +83,18 @@ public class NoneSatisfiedSpecTests
         bool third,
         string expected)
     {
-        var underlyingSpec = Spec
-            .Build((bool m) => m)
-            .WhenTrue(true.ToString().ToLowerInvariant())
-            .WhenFalse(false.ToString().ToLowerInvariant())
-            .Create();
+        var underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString().ToLowerInvariant())
+                .WhenFalse(false.ToString().ToLowerInvariant())
+                .Create();
 
-        var sut = Spec
-            .Build(underlyingSpec)
-            .AsNoneSatisfied()
-            .WhenTrue(evaluation => evaluation.Metadata)
-            .WhenFalse(evaluation => evaluation.Metadata)
-            .Create("none are true");
+        var sut =
+            Spec.Build(underlyingSpec)
+                .AsNoneSatisfied()
+                .WhenTrue(evaluation => evaluation.Metadata)
+                .WhenFalse(evaluation => evaluation.Metadata)
+                .Create("none are true");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
 
@@ -347,24 +347,24 @@ public class NoneSatisfiedSpecTests
         bool third,
         string expected)
     {
-        var underlyingSpecLeft = Spec
-            .Build((bool m) => m)
-            .WhenTrue(true)
-            .WhenFalse(false)
-            .Create("left");
+        var underlyingSpecLeft =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true)
+                .WhenFalse(false)
+                .Create("left");
 
-        var underlyingSpecRight = Spec
-            .Build((bool m) => m)
-            .WhenTrue(true)
-            .WhenFalse(false)
-            .Create("right");
+        var underlyingSpecRight =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true)
+                .WhenFalse(false)
+                .Create("right");
 
-        var sut = Spec
-            .Build(underlyingSpecLeft & underlyingSpecRight)
-            .AsNoneSatisfied()
-            .WhenTrue(evaluation => evaluation.Metadata)
-            .WhenFalse(evaluation => evaluation.Metadata)
-            .Create("none are true");
+        var sut =
+            Spec.Build(underlyingSpecLeft & underlyingSpecRight)
+                .AsNoneSatisfied()
+                .WhenTrue(evaluation => evaluation.Metadata)
+                .WhenFalse(evaluation => evaluation.Metadata)
+                .Create("none are true");
 
         bool[] models = [first, second, third];
         var result = sut.IsSatisfiedBy(models);
@@ -384,18 +384,18 @@ public class NoneSatisfiedSpecTests
                 is true
             """;
 
-        var underlyingSpec = Spec
-            .Build((bool m) => m)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
-            .Create("is true");
+        var underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString())
+                .WhenFalse(false.ToString())
+                .Create("is true");
 
-        var sut = Spec
-            .Build(underlyingSpec)
-            .AsNoneSatisfied()
-            .WhenTrue("all  true")
-            .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
-            .Create("all booleans are true");
+        var sut =
+            Spec.Build(underlyingSpec)
+                .AsNoneSatisfied()
+                .WhenTrue("all  true")
+                .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
+                .Create("all booleans are true");
 
         sut.Statement.Should().Be(expectedSummary);
         sut.Expression.Should().Be(expectedFull);
@@ -412,21 +412,88 @@ public class NoneSatisfiedSpecTests
                 is true
             """;
 
-        var underlyingSpec = Spec
-            .Build((bool m) => m)
-            .WhenTrue("is true")
-            .WhenFalse("is false")
-            .Create();
+        var underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue("is true")
+                .WhenFalse("is false")
+                .Create();
 
-        var sut = Spec
-            .Build(underlyingSpec)
-            .AsNoneSatisfied()
-            .WhenTrue(true)
-            .WhenFalse(false)
-            .Create("none are true");
+        var sut =
+            Spec.Build(underlyingSpec)
+                .AsNoneSatisfied()
+                .WhenTrue(true)
+                .WhenFalse(false)
+                .Create("none are true");
 
         sut.Statement.Should().Be(expectedSummary);
         sut.Expression.Should().Be(expectedFull);
         sut.ToString().Should().Be(expectedSummary);
+    }
+    
+    [Theory]
+    [InlineData(false, false, false, true, "none are true")]
+    [InlineData(false, false, true, false, "!none are true")]
+    [InlineData(false, true, false, false, "!none are true")]
+    [InlineData(false, true, true, false, "!none are true")]
+    [InlineData(true, false, false, false, "!none are true")]
+    [InlineData(true, false, true, false, "!none are true")]
+    [InlineData(true, true, false, false, "!none are true")]
+    [InlineData(true, true, true, false, "!none are true")]
+    public void Should_perform_a_none_satisfied_operation_when_using_a_boolean_predicate_function(
+        bool first,
+        bool second,
+        bool third,
+        bool expected,
+        string expectedReason)
+    {
+
+        bool[] models = [first, second, third];
+
+        var sut =
+            Spec.Build((bool m) => m)
+                .AsNoneSatisfied()
+                .WhenTrue(_ => "none are true")
+                .WhenFalse(_ => "!none are true")
+                .Create("none are true");
+
+        var result = sut.IsSatisfiedBy(models);
+
+        result.Satisfied.Should().Be(expected);
+        result.Reason.Should().Be(expectedReason);
+    }
+    
+    [Theory]
+    [InlineData(false, false, false, true, "none are true")]
+    [InlineData(false, false, true, false, "!none are true")]
+    [InlineData(false, true, false, false, "!none are true")]
+    [InlineData(false, true, true, false, "!none are true")]
+    [InlineData(true, false, false, false, "!none are true")]
+    [InlineData(true, false, true, false, "!none are true")]
+    [InlineData(true, true, false, false, "!none are true")]
+    [InlineData(true, true, true, false, "!none are true")]
+    public void Should_perform_a_none_satisfied_operation_when_using_a_boolean_result_predicate_function(
+        bool first,
+        bool second,
+        bool third,
+        bool expected,
+        string expectedReason)
+    {
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is true");
+
+        bool[] models = [first, second, third];
+
+        var sut =
+            Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
+                .AsNoneSatisfied()
+                .WhenTrue(_ => "none are true")
+                .WhenFalse(_ => "!none are true")
+                .Create("none are true");
+
+        var result = sut.IsSatisfiedBy(models);
+
+        result.Satisfied.Should().Be(expected);
+        result.Reason.Should().Be(expectedReason);
     }
 }
