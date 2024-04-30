@@ -2,7 +2,7 @@
 
 namespace Motiv.Tests;
 
-public class AtMostNSatisfiedSpecTests
+public class AsAtMostNSatisfiedSpecTests
 {
     [Theory]
     [InlineAutoData(false, false, false, false, true )]
@@ -410,5 +410,72 @@ public class AtMostNSatisfiedSpecTests
         var result = sut.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
 
         result.Description.CausalOperandCount.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineData(false, false, false, true, "at most 1 true")]
+    [InlineData(false, false, true, true, "at most 1 true")]
+    [InlineData(false, true, false, true, "at most 1 true")]
+    [InlineData(false, true, true, false, "!at most 1 true")]
+    [InlineData(true, false, false, true, "at most 1 true")]
+    [InlineData(true, false, true, false, "!at most 1 true")]
+    [InlineData(true, true, false, false, "!at most 1 true")]
+    [InlineData(true, true, true, false, "!at most 1 true")]
+    public void Should_perform_an_at_most_n_satisfied_operation_when_using_a_boolean_predicate_function(
+        bool first,
+        bool second,
+        bool third,
+        bool expected,
+        string expectedReason)
+    {
+
+        bool[] models = [first, second, third];
+
+        var sut =
+            Spec.Build((bool m) => m)
+                .AsAtMostNSatisfied(1)
+                .WhenTrue(_ => "at most 1 true")
+                .WhenFalse(_ => "!at most 1 true")
+                .Create("at most 1 true");
+
+        var result = sut.IsSatisfiedBy(models);
+
+        result.Satisfied.Should().Be(expected);
+        result.Reason.Should().Be(expectedReason);
+    }
+    
+    [Theory]
+    [InlineData(false, false, false, true, "at most 1 true")]
+    [InlineData(false, false, true, true, "at most 1 true")]
+    [InlineData(false, true, false, true, "at most 1 true")]
+    [InlineData(false, true, true, false, "!at most 1 true")]
+    [InlineData(true, false, false, true, "at most 1 true")]
+    [InlineData(true, false, true, false, "!at most 1 true")]
+    [InlineData(true, true, false, false, "!at most 1 true")]
+    [InlineData(true, true, true, false, "!at most 1 true")]
+    public void Should_perform_an_at_most_n_satisfied_operation_when_using_a_boolean_result_predicate_function(
+        bool first,
+        bool second,
+        bool third,
+        bool expected,
+        string expectedReason)
+    {
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is true");
+
+        bool[] models = [first, second, third];
+
+        var sut =
+            Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
+                .AsAtMostNSatisfied(1)
+                .WhenTrue(_ => "at most 1 true")
+                .WhenFalse(_ => "!at most 1 true")
+                .Create("at most 1 true");
+
+        var result = sut.IsSatisfiedBy(models);
+
+        result.Satisfied.Should().Be(expected);
+        result.Reason.Should().Be(expectedReason);
     }
 }

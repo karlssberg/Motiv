@@ -1,4 +1,5 @@
 # Motiv
+![Build Status](https://github.com/karlssberg/Motiv/actions/workflows/dotnet.yml/badge.svg) [![NuGet](https://img.shields.io/nuget/v/Motiv.svg)](https://www.nuget.org/packages/Motiv/) [![codecov](https://codecov.io/gh/karlssberg/Motiv/graph/badge.svg?token=XNN34D2JIP)](https://codecov.io/gh/karlssberg/Motiv)
 
 ## Turn your if-statements into _why_ statements
 
@@ -481,7 +482,7 @@ enabling continuous development and quick fixes as needed.
 
 MIT License
 
-Copyright (c) 2023 karlssberg
+Copyright (c) 2024 karlssberg
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

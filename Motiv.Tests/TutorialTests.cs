@@ -153,9 +153,16 @@ public class TutorialTests
         isEvenAndPositiveSpec.IsSatisfiedBy(-3).Reason.Should().Be("the number is odd and not positive");
     }
 
-    public record BasketItem(bool FreeShipping);
-    public record Basket(ICollection<BasketItem> Items);
-    
+    public record BasketItem(bool FreeShipping)
+    {
+        public bool FreeShipping { get; } = FreeShipping;
+    }
+
+    public record Basket(ICollection<BasketItem> Items)
+    {
+        public ICollection<BasketItem> Items { get; } = Items;
+    }
+
     [Fact]
     public void Should_demonstrate_and_also_operation()
     {
@@ -187,6 +194,8 @@ public class TutorialTests
             .WhenFalse(n => $"{n} is not negative")
             .Create("is negative"));
     
+#if !NETFRAMEWORK
+
     [Fact]
     public void Should_demonstrate_is_even_spec_as_an_all_satisfied_higher_order_logic()
     {
@@ -297,6 +306,8 @@ public class TutorialTests
         allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Satisfied.Should().BeFalse();
         allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions.Should().BeEquivalentTo("0 is not negative", "9 is not negative");
     }
+
+#endif
     
     [Fact]
     public void Should_harvest_assertions_from_a_boolean_result_predicate()
@@ -323,7 +334,13 @@ public class TutorialTests
         isIntegerPositiveAndEvenSpec.IsSatisfiedBy(-3).AllRootAssertions.Should().BeEquivalentTo("odd", "not positive");
     }
 
-    public record Passenger(bool HasValidTicket, decimal OutstandingFees, DateTime FlightTime);
+    private record Passenger(bool HasValidTicket, decimal OutstandingFees, DateTime FlightTime)
+    {
+        public bool HasValidTicket { get; } = HasValidTicket;
+        public decimal OutstandingFees { get; } = OutstandingFees;
+        public DateTime FlightTime { get; } = FlightTime;
+    }
+
     [Fact]
     public void Can_check_in_a_flight_demo()
     {
@@ -360,8 +377,12 @@ public class TutorialTests
         canCheckIn.Assertions.Should().BeEquivalentTo("has a valid ticket", "does not have outstanding fees", "check-in is open");
     }
 
-    public record Customer(int CreditScore, decimal Income);
-    
+    public record Customer(int CreditScore, decimal Income)
+    {
+        public int CreditScore { get; } = CreditScore;
+        public decimal Income { get; } = Income;
+    }
+
     [Fact]
     public void Should_be_eligible_for_a_loan()
     {
@@ -396,7 +417,11 @@ public class TutorialTests
             """);
     }
 
-    public record Subscription(DateTime ExpiryDate);
+    private record Subscription(DateTime ExpiryDate)
+    {
+        public DateTime ExpiryDate { get; } = ExpiryDate;
+    }
+
     [Fact]
     public void Should_have_subscription_in_grace_period()
     {
