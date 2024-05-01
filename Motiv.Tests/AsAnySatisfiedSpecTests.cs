@@ -26,14 +26,13 @@ public class AsAnySatisfiedSpecTests
             .WhenFalse(false.ToString())
             .Create();
 
-        bool[] models = [first, second, third];
-
         var spec = Spec.Build(underlyingSpec)
             .AsAnySatisfied()
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("any satisfied");
-        var result = spec.IsSatisfiedBy(models);
+        
+        var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Satisfied;
@@ -47,6 +46,7 @@ public class AsAnySatisfiedSpecTests
     {
         // Arrange
         const string expected = "high-level description";
+        
         var underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue("boolean is true")   
@@ -72,6 +72,7 @@ public class AsAnySatisfiedSpecTests
     {
         // Arrange
         const string expected = "high-level description";
+        
         var underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue("boolean is true")   
@@ -86,10 +87,10 @@ public class AsAnySatisfiedSpecTests
             .Create("high-level description");
 
         // Act
-        var act = spec.Statement;
+        var act = spec.ToString();
         
         // Assert
-        spec.ToString().Should().Be(expected);
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -214,8 +215,6 @@ public class AsAnySatisfiedSpecTests
             .WhenFalse(false.ToString())
             .Create();
 
-        bool[] models = [first, second, third];
-
         var spec = Spec
             .Build(underlyingSpec)
             .AsAnySatisfied()
@@ -223,7 +222,7 @@ public class AsAnySatisfiedSpecTests
             .WhenFalse("some false")
             .Create();
 
-        var result = spec.IsSatisfiedBy(models);
+        var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Justification;
@@ -360,8 +359,6 @@ public class AsAnySatisfiedSpecTests
         act.Should().Be(expected);
     }
     
-    
-
     [Theory]
     [InlineAutoData(false, false, "!any true")]
     [InlineAutoData(false, true, "any true")]
@@ -419,7 +416,6 @@ public class AsAnySatisfiedSpecTests
         act.Should().Be(expected);
     }
     
-
     [Theory]
     [InlineAutoData(false, false, "none are true")]
     [InlineAutoData(false, true, "some are true")]
