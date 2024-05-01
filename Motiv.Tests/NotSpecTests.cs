@@ -170,4 +170,20 @@ public class NotSpecTests
         // Assert
         statement.Should().Be("!(is true & is false)");
     }
+    
+
+    [Fact]
+    public void Should_return_the_underlying_specs()
+    {
+        // Arrange
+        var underlying = Spec
+            .Build<bool>(_ => true)
+            .Create("left");
+
+        // Act
+        var act = (!underlying).Underlying;
+        
+        // Assert
+        act.Should().BeEquivalentTo([underlying]);
+    }
 }
