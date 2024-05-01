@@ -1,6 +1,6 @@
 ﻿namespace Motiv;
 
-internal static class Indent
+internal static class IndentStringExtensions
 {
     private const string Value = "    ";
 
