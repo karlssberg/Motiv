@@ -16,6 +16,7 @@ public class AndSpecTests
         bool expected,
         object model)
     {
+        // Arrange
         var left = Spec
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
@@ -28,12 +29,46 @@ public class AndSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var sut = left & right;
+        var spec = left & right;
+        
+        // Act
+        var act = spec.IsSatisfiedBy(model).Satisfied;
 
-        var result = sut.IsSatisfiedBy(model);
+        // Assert
+        act.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineAutoData(true, true, true)]
+    [InlineAutoData(true, false, false)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(false, false, false)]
+    public void Should_yield_metadata(
+        bool leftResult,
+        bool rightResult,
+        bool expected,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
 
-        result.Satisfied.Should().Be(expected);
-        result.Metadata.Should().AllBeEquivalentTo(expected);
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = left & right;
+
+        // Act
+        var act = spec.IsSatisfiedBy(model).Metadata;
+
+        // Assert
+        act.Should().AllBeEquivalentTo(expected);
     }
 
     [Theory]
@@ -47,6 +82,7 @@ public class AndSpecTests
         string expected,
         object model)
     {
+        // Arrange
         var left = Spec
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
@@ -59,11 +95,13 @@ public class AndSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var sut = left & right;
+        var spec = left & right;
 
-        var result = sut.IsSatisfiedBy(model);
+        // Act
+        var result = spec.IsSatisfiedBy(model).Reason;
 
-        result.Reason.Should().Be(expected);
+        // Assert
+        result.Should().Be(expected);
     }
 
     [Theory]
