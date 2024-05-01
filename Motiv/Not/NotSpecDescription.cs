@@ -2,7 +2,7 @@
 
 internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMetadata> operand) : ISpecDescription
 {
-    public string Statement => FormatStatement(operand.Statement);
+    public string Statement => FormatStatement();
 
     public string Detailed => string.Join(Environment.NewLine, GetDetailsAsLines());
 
@@ -19,15 +19,23 @@ internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMe
             yield return line;
     }
 
-    private string FormatStatement(string underlyingSummary)
+    private string FormatStatement()
     {
-        return (operand, underlyingSummary.FirstOrDefault()) switch
+        var firstChar = operand.Statement.FirstOrDefault();
+        return firstChar switch
         {
-            (not IBinaryOperationSpec, '!') => underlyingSummary.Substring(1),
-            (not IBinaryOperationSpec, '(') => $"!{underlyingSummary}",
-            _ => $"!({underlyingSummary})"
+            '!' => operand.Statement.Substring(1),
+            not '!' when ContainsBinaryOperation(operand) =>  $"!({operand.Statement})",
+            _ =>  $"!{operand.Statement}"
         };
     }
+    
+    private static bool ContainsBinaryOperation(SpecBase spec) =>
+        spec switch 
+        {
+            IBinaryOperationSpec => true,
+            _ => spec.Underlying.Any(ContainsBinaryOperation)
+        };
     
     public override string ToString() => Statement;
 }

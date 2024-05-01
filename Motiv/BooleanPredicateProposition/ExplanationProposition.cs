@@ -7,6 +7,8 @@ internal sealed class ExplanationProposition<TModel>(
     ISpecDescription specDescription)
     : SpecBase<TModel, string>
 {
+    public override IEnumerable<SpecBase> Underlying => Enumerable.Empty<SpecBase>();
+    
     internal ExplanationProposition(Func<TModel, bool> predicate, ISpecDescription specDescription) 
         : this(
             predicate, 

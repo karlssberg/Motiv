@@ -301,12 +301,12 @@ public class BooleanResultPredicateExplanationPropositionTests
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
         
-        var spec = Spec
-            .Build((bool model) => underlying.IsSatisfiedBy(model))
-            .WhenTrue("is true")
-            .WhenFalse("is false")
-            .Create("is model true");
-
+        var spec = 
+            Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
+                .WhenTrue("is true")
+                .WhenFalse("is false")
+                .Create("is model true");
+            
         var act = spec.Description.Statement;
 
         act.Should().Be("is model true");

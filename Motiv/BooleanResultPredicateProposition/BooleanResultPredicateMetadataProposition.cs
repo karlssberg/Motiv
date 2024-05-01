@@ -17,6 +17,11 @@ public sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata,
     ISpecDescription specDescription)
     : SpecBase<TModel, TMetadata>
 {
+    /// <summary>
+    /// Gets an empty collection of underlying propositions, since there are no underlying specifications.
+    /// </summary>
+    public override IEnumerable<SpecBase> Underlying => Enumerable.Empty<SpecBase>();
+
     /// <summary>Gets the name of the proposition.</summary>
     public override ISpecDescription Description => specDescription;
 

@@ -9,6 +9,8 @@ internal sealed class HigherOrderFromBooleanResultExplanationProposition<TModel,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
     : SpecBase<IEnumerable<TModel>, string>
 {
+    public override IEnumerable<SpecBase> Underlying => Enumerable.Empty<SpecBase>();
+
     public override ISpecDescription Description => specDescription;
 
     public override BooleanResultBase<string> IsSatisfiedBy(IEnumerable<TModel> models)

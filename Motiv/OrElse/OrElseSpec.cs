@@ -5,6 +5,9 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> right)
     : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>
 {
+    
+    public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
+    
     public override ISpecDescription Description => 
         new OrElseSpecDescription<TModel, TMetadata>(left, right);
 

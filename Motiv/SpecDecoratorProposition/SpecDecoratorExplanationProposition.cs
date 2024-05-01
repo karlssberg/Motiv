@@ -7,6 +7,8 @@ internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMet
     ISpecDescription description)
     : SpecBase<TModel, string>
 {
+    public override IEnumerable<SpecBase> Underlying => underlyingSpec.ToEnumerable();
+    
     public override ISpecDescription Description => description;
 
     public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
