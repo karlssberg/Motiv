@@ -44,7 +44,7 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     }
     
     /// <summary>
-    /// Gets the underlying specifications that makes up this composite proposition.
+    /// Gets the underlying specifications that make up this composite proposition.
     /// </summary>
     public override IEnumerable<SpecBase> Underlying => _spec is null
         ? Enumerable.Empty<SpecBase<TModel>>()

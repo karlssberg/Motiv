@@ -611,7 +611,8 @@ public class AsAnySatisfiedSpecTests
         
         // Assert
         act.Should().Be(expectedReason);
-    }   
+    }
+    
     [Theory]
     [InlineData(false, false, "none are true")]
     [InlineData(false, true, "some are true")]
