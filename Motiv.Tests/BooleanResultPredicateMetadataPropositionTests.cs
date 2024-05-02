@@ -51,9 +51,9 @@ public class BooleanResultPredicateMetadataPropositionTests
             .WhenFalse(_ => -500)
             .Create("is fourth true");
 
-        var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
+        var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var act = sut.IsSatisfiedBy(model);
+        var act = spec.IsSatisfiedBy(model);
 
         act.Satisfied.Should().Be(expected);
         act.Assertions.Should().BeEquivalentTo(expectedAssertion);

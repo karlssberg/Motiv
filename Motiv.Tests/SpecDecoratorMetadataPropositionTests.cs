@@ -47,9 +47,9 @@ public class SpecDecoratorMetadataPropositionTests
             .WhenFalse(_ => -500)
             .Create("is fourth true");
 
-        var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
+        var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var act = sut.IsSatisfiedBy("model");
+        var act = spec.IsSatisfiedBy("model");
 
         act.Assertions.Should().BeEquivalentTo(expected);
     }
@@ -95,9 +95,9 @@ public class SpecDecoratorMetadataPropositionTests
             .WhenFalse(_ => -500)
             .Create("is fourth true");
 
-        var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
+        var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var act = sut.IsSatisfiedBy("model");
+        var act = spec.IsSatisfiedBy("model");
 
         act.Metadata.Should().BeEquivalentTo(expectation);
     }
@@ -146,9 +146,9 @@ public class SpecDecoratorMetadataPropositionTests
             .WhenFalse(_ => 8)
             .Create("fourth spec");
 
-        var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
+        var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var act = sut.IsSatisfiedBy("model");
+        var act = spec.IsSatisfiedBy("model");
 
         act.GetRootAssertions().Should().BeEquivalentTo(act.Satisfied
             ? trueReason
@@ -575,11 +575,11 @@ public class SpecDecoratorMetadataPropositionTests
         
         var expected = orSpec.IsSatisfiedBy(model);
         
-        var sut = Spec
+        var spec = Spec
             .Build(orSpec)
             .Create("composite");
         
-        var act = sut.IsSatisfiedBy(model);
+        var act = spec.IsSatisfiedBy(model);
 
         act.Underlying.Should().BeEquivalentTo([expected]);
     }
@@ -601,11 +601,11 @@ public class SpecDecoratorMetadataPropositionTests
         
         var expected = orSpec.IsSatisfiedBy(model);
         
-        var sut = Spec
+        var spec = Spec
             .Build(orSpec)
             .Create("composite");
         
-        var act = sut.IsSatisfiedBy(model);
+        var act = spec.IsSatisfiedBy(model);
         
         act.UnderlyingWithMetadata.Should().BeEquivalentTo([expected]);
     }
@@ -625,11 +625,11 @@ public class SpecDecoratorMetadataPropositionTests
 
         var orSpec = left | right;
         
-        var sut = Spec
+        var spec = Spec
             .Build(orSpec)
             .Create("composite");
         
-        var act = sut.IsSatisfiedBy(model);
+        var act = spec.IsSatisfiedBy(model);
 
         act.Description.CausalOperandCount.Should().Be(1);
     }
@@ -651,11 +651,11 @@ public class SpecDecoratorMetadataPropositionTests
         
         var expected = orSpec.IsSatisfiedBy(model).Causes;
         
-        var sut = Spec
+        var spec = Spec
             .Build(orSpec)
             .Create("composite");
         
-        var act = sut.IsSatisfiedBy(model);
+        var act = spec.IsSatisfiedBy(model);
 
         act.Causes.Should().BeEquivalentTo(expected);
     }
@@ -677,11 +677,11 @@ public class SpecDecoratorMetadataPropositionTests
         
         var expected = orSpec.IsSatisfiedBy(model).CausesWithMetadata;
         
-        var sut = Spec
+        var spec = Spec
             .Build(orSpec)
             .Create("composite");
         
-        var act = sut.IsSatisfiedBy(model);
+        var act = spec.IsSatisfiedBy(model);
         
         act.CausesWithMetadata.Should().BeEquivalentTo(expected);
     }

@@ -17,14 +17,14 @@ public class HigherOrderExplanationSpecTests
                 .WhenFalse(i => $"{i} is odd")
                 .Create("is even spec");
 
-        var sut =
+        var spec =
             Spec.Build(underlyingSpec)
                 .AsNSatisfied(2)
                 .WhenTrue("is a pair of even numbers")
                 .WhenFalse("is not a pair of even numbers")
                 .Create();
 
-        var result = sut.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
         
         result.Explanation.Assertions.Should().BeEquivalentTo(expected);
     }
@@ -38,14 +38,14 @@ public class HigherOrderExplanationSpecTests
                 .WhenFalse("is odd")
                 .Create("is even spec");
 
-        var sut =
+        var spec =
             Spec.Build(underlyingSpec)
                 .AsNSatisfied(2)
                 .WhenTrue("is a pair of even numbers")
                 .WhenFalse("is not a pair of even numbers")
                 .Create();
 
-        sut.Statement.Should().Be("is a pair of even numbers");
+        spec.Statement.Should().Be("is a pair of even numbers");
     }
 
     [Theory]
@@ -78,13 +78,13 @@ public class HigherOrderExplanationSpecTests
                 .WhenFalse("second all false")
                 .Create();
             
-        var sut =
+        var spec =
             Spec.Build(secondSpec)
                 .WhenTrue("third all true")
                 .WhenFalse("third all false")
                 .Create();
 
-        var result = sut.IsSatisfiedBy([first, second, third]);
+        var result = spec.IsSatisfiedBy([first, second, third]);
         
         result.Explanation.Assertions.Should().BeEquivalentTo(expected);
     }
@@ -118,13 +118,13 @@ public class HigherOrderExplanationSpecTests
                 .WhenFalse("second false")
                 .Create();
             
-        var sut =
+        var spec =
             Spec.Build(secondSpec)
                 .WhenTrue("third true")
                 .WhenFalse("third false")
                 .Create("all even");
 
-        var result = sut.IsSatisfiedBy([first, second, third]);
+        var result = spec.IsSatisfiedBy([first, second, third]);
         
         result.GetRootAssertions().Should().BeEquivalentTo(expected);
     }
@@ -149,7 +149,7 @@ public class HigherOrderExplanationSpecTests
                 .WhenFalse(i => $"{i} is odd")
                 .Create("is even spec");
 
-        var sut =
+        var spec =
             Spec.Build(underlyingSpec)
                 .AsAllSatisfied()
                 .WhenTrue("all even")
@@ -163,7 +163,7 @@ public class HigherOrderExplanationSpecTests
                 })
                 .Create();
 
-        var act = sut.IsSatisfiedBy([first, second, third, fourth]);
+        var act = spec.IsSatisfiedBy([first, second, third, fourth]);
             
         act.Assertions.Should().BeEquivalentTo(expectedReason);
         act.Satisfied.Should().Be(expected);

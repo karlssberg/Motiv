@@ -24,14 +24,14 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse(_ => Guid.NewGuid())
                 .Create("is even spec");
 
-        var sut =
+        var spec =
             Spec.Build(underlyingSpec)
                 .AsNSatisfied(2)
                 .WhenTrue(Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("is a pair of even numbers");
 
-        var result = sut.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
         
         result.Metadata.Should().BeEquivalentTo([expected]);
     }
@@ -45,14 +45,14 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse(_ => Guid.NewGuid())
                 .Create("is even spec");
 
-        var sut =
+        var spec =
             Spec.Build(underlyingSpec)
                 .AsNSatisfied(2)
                 .WhenTrue(Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("is a pair of even numbers");
 
-        sut.Statement.Should().Be("is a pair of even numbers");
+        spec.Statement.Should().Be("is a pair of even numbers");
     }
 
     [Theory]
@@ -91,13 +91,13 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse((2, Metadata.False))
                 .Create("second all true");
             
-        var sut =
+        var spec =
             Spec.Build(secondSpec)
                 .WhenTrue((3, Metadata.True))
                 .WhenFalse((3, Metadata.False))
                 .Create("third all true");
 
-        var result = sut.IsSatisfiedBy([first, second, third]);
+        var result = spec.IsSatisfiedBy([first, second, third]);
         
         result.Metadata.Should().BeEquivalentTo([expected]);
     }
@@ -137,13 +137,13 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse((2, Metadata.Unknown))
                 .Create("second all-true encapsulation");
             
-        var sut =
+        var spec =
             Spec.Build(secondSpec)
                 .WhenTrue((3, Metadata.Unknown))
                 .WhenFalse((3, Metadata.Unknown))
                 .Create("third all-true encapsulation");
 
-        var result = sut.IsSatisfiedBy([first, second, third]);
+        var result = spec.IsSatisfiedBy([first, second, third]);
         
         result.RootMetadata.Should().BeEquivalentTo([expected]);
     }
@@ -168,14 +168,14 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse(_ => Metadata.False)
                 .Create("is even");
 
-        var sut =
+        var spec =
             Spec.Build(underlyingSpec)
                 .AsAllSatisfied()
                 .WhenTrue(Metadata.True)
                 .WhenFalse(results => results.Metadata)
                 .Create("all are even");
 
-        var act = sut.IsSatisfiedBy([first, second, third, fourth]);
+        var act = spec.IsSatisfiedBy([first, second, third, fourth]);
             
         act.Metadata.Should().BeEquivalentTo([expectedMetadata]);
         act.Satisfied.Should().Be(expected);
@@ -202,14 +202,14 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse(Metadata.False)
                 .Create("is even");
 
-        var sut =
+        var spec =
             Spec.Build(underlyingSpec)
                 .AsAllSatisfied()
                 .WhenTrue(Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("all are even");
 
-        var act = sut.IsSatisfiedBy([first, second, third, fourth]);
+        var act = spec.IsSatisfiedBy([first, second, third, fourth]);
             
         act.CausesWithMetadata.Should().AllSatisfy(x => x.Reason.Should().Be(expectedMetadata));
     }

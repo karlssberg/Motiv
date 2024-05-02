@@ -9,13 +9,13 @@ public class SpecTests
     [InlineAutoData(false)]
     public void Should_return_a_result_that_satisfies_the_predicate(bool model)
     {
-        var sut = Spec
+        var spec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("returns model value");
 
-        var result = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
         result.Metadata.Should().ContainSingle(model.ToString());
@@ -32,13 +32,13 @@ public class SpecTests
             .WhenFalse(false.ToString())
             .Create();
         
-        var sut = Spec
+        var spec = Spec
             .Build(() => underlyingSpec)
             .WhenTrue("underlying true")
             .WhenFalse("underlying false")
             .Create("is true");
 
-        var result = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
     }
@@ -54,13 +54,13 @@ public class SpecTests
             .WhenFalse(false.ToString())
             .Create();
         
-        var sut = Spec
+        var spec = Spec
             .Build(() => underlyingSpec)
             .WhenTrue("underlying true")
             .WhenFalse("underlying false")
             .Create("is true");
 
-        var result = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
         
         result.Metadata.Should().ContainSingle(expectedAssertion);
         result.MetadataTier.Underlying.SelectMany(m => m.Metadata).Should().BeEquivalentTo(model.ToString());
@@ -71,13 +71,13 @@ public class SpecTests
     [Fact]
     public void Should_handle_null_model_without_throwing()
     {
-        var sut = Spec
+        var spec = Spec
             .Build<string?>(m => m is null)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create("is null");
 
-        var result = sut.IsSatisfiedBy(null);
+        var result = spec.IsSatisfiedBy(null);
 
         result.Satisfied.Should().BeTrue();
         result.Metadata.Should().ContainSingle(true.ToString());
@@ -88,13 +88,13 @@ public class SpecTests
     [InlineAutoData(false)]
     public void Should_return_a_result_that_satisfies_the_predicate_when_using_textual_specification(bool model)
     {
-        var sut = Spec
+        var spec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
 
-        var result = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
         result.Metadata.Should().ContainSingle(model.ToString());
@@ -111,13 +111,13 @@ public class SpecTests
             .WhenFalse("is false")
             .Create();
         
-        var sut = Spec
+        var spec = Spec
             .Build(underlyingSpec)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("new spec");
 
-        var result = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(model);
         result.Metadata.Should().ContainSingle(model.ToString());
@@ -126,13 +126,13 @@ public class SpecTests
     [Fact]
     public void Should_handle_null_model_without_throwing_when_using_textual_specification()
     {
-        var sut = Spec
+        var spec = Spec
             .Build<string?>(m => m is null)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
 
-        var result = sut.IsSatisfiedBy(null);
+        var result = spec.IsSatisfiedBy(null);
 
         result.Satisfied.Should().Be(true);
         result.Metadata.Should().ContainSingle(true.ToString());
@@ -212,13 +212,13 @@ public class SpecTests
     [Fact]
     public void Should_provide_detailed_proposition()
     {
-        var sut = Spec
+        var spec = Spec
             .Build<object?>(m => m is null)
             .WhenTrue("is null")
             .WhenFalse("is not null")
             .Create();
 
-        var act = sut.Expression;
+        var act = spec.Expression;
 
         act.Should().Be("is null");
     }
@@ -232,11 +232,11 @@ public class SpecTests
             .WhenFalse("is not null")
             .Create();
         
-        var sut = Spec
+        var spec = Spec
             .Build(underlying)
             .Create("top-level proposition");
 
-        var act = sut.Expression;
+        var act = spec.Expression;
 
         act.Should().Be(
             """

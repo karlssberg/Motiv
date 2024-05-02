@@ -28,9 +28,9 @@ public class OrSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var sut = left | right;
+        var spec = left | right;
 
-        var result = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(expected);
         result.Metadata.Should().AllBeEquivalentTo(expected);
@@ -59,9 +59,9 @@ public class OrSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var sut = left | right;
+        var spec = left | right;
 
-        var result = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
 
         result.Reason.Should().Be(expected);
     }
@@ -87,9 +87,9 @@ public class OrSpecTests
             .Build<object>(_ => rightResult)
             .Create("right");
 
-        var sut = left | right;
+        var spec = left | right;
 
-        var result = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
 
         result.Reason.Should().Be(expected);
     }
@@ -117,9 +117,9 @@ public class OrSpecTests
             .WhenFalse(false.ToString())
             .Create();
 
-        var sut = left | right;
+        var spec = left | right;
 
-        var result = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
 
         result.Reason.Should().Be(expected);
     }
@@ -145,10 +145,10 @@ public class OrSpecTests
 
         var expected = $"{left.Description} | {right.Description}";
 
-        var sut = left | right;
+        var spec = left | right;
 
-        sut.Statement.Should().Be(expected);
-        sut.ToString().Should().Be(expected);
+        spec.Statement.Should().Be(expected);
+        spec.ToString().Should().Be(expected);
     }
 
     [Theory]
@@ -172,10 +172,10 @@ public class OrSpecTests
 
         var expected = $"{left.Description} | {right.Description}";
 
-        var sut = left | right;
+        var spec = left | right;
 
-        sut.Statement.Should().Be(expected);
-        sut.ToString().Should().Be(expected);
+        spec.Statement.Should().Be(expected);
+        spec.ToString().Should().Be(expected);
     }
     
     [Theory]
@@ -194,9 +194,9 @@ public class OrSpecTests
             .Build<object>(_ => right)
             .Create("right");
 
-        var sut = leftSpec | rightSpec;
+        var spec = leftSpec | rightSpec;
 
-        var result = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
 
         result.Description.CausalOperandCount.Should().Be(expected);
     }
@@ -228,9 +228,9 @@ public class OrSpecTests
                 .WhenFalse(rightFalse)
                 .Create("right");
 
-        var sut = left | right;
+        var spec = left | right;
         
-        var act = sut.IsSatisfiedBy("");
+        var act = spec.IsSatisfiedBy("");
 
         act.Satisfied.Should().Be(expectedSatisfied);
     }
@@ -257,9 +257,9 @@ public class OrSpecTests
                 .WhenFalse(new Regex("false"))
                 .Create("right");
 
-        var sut = left | right;
+        var spec = left | right;
         
-        var act = sut.IsSatisfiedBy("");
+        var act = spec.IsSatisfiedBy("");
 
         act.Assertions.Should().BeEquivalentTo(expectedAssertions);
         act.Metadata.Should().BeEquivalentTo(expectedAssertions);

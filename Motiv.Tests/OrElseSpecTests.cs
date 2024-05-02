@@ -29,9 +29,9 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var sut = left.OrElse(right);
+        var spec = left.OrElse(right);
 
-        var result = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
 
         result.Satisfied.Should().Be(expectedSatisfied);
         result.Reason.Should().BeEquivalentTo(expectedSerialized);
@@ -54,9 +54,9 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var sut = left.OrElse(right);
+        var spec = left.OrElse(right);
 
-        Action act = () => sut.IsSatisfiedBy(new object());
+        Action act = () => spec.IsSatisfiedBy(new object());
         
         act.Should().NotThrow<Exception>();
     }
@@ -76,9 +76,9 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var sut = left.OrElse(right);
+        var spec = left.OrElse(right);
 
-        sut.Statement.Should().Be("left || right");
+        spec.Statement.Should().Be("left || right");
     }
     
     [Fact]
@@ -103,9 +103,9 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var sut = left.OrElse(right);
+        var spec = left.OrElse(right);
 
-        sut.Expression.Should().Be(expected);
+        spec.Expression.Should().Be(expected);
     }
     
     [Theory]
@@ -125,9 +125,9 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var sut = left.OrElse(right);
+        var spec = left.OrElse(right);
         
-        var act = sut.IsSatisfiedBy(model);
+        var act = spec.IsSatisfiedBy(model);
 
         act.Description.Reason.Should().Be(expected);
     }
@@ -155,9 +155,9 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var sut = left.OrElse(right);
+        var spec = left.OrElse(right);
         
-        var act = sut.IsSatisfiedBy(model);
+        var act = spec.IsSatisfiedBy(model);
 
         act.Justification.Should().Be(expected);
     }
@@ -186,9 +186,9 @@ public class OrElseSpecTests
                 .WhenFalse("not right assertion statement")
                 .Create();
 
-        var sut = left.OrElse(right);
+        var spec = left.OrElse(right);
         
-        var act = sut.IsSatisfiedBy(model);
+        var act = spec.IsSatisfiedBy(model);
 
         act.Justification.Should().Be(expected);
     }
@@ -219,9 +219,9 @@ public class OrElseSpecTests
                 .WhenFalse(rightFalse)
                 .Create("right");
 
-        var sut = left.OrElse(right);
+        var spec = left.OrElse(right);
         
-        var act = sut.IsSatisfiedBy("");
+        var act = spec.IsSatisfiedBy("");
 
         act.Satisfied.Should().Be(expectedSatisfied);
     }
@@ -248,9 +248,9 @@ public class OrElseSpecTests
                 .WhenFalse(new Regex("false"))
                 .Create("right");
 
-        var sut = left.OrElse(right);
+        var spec = left.OrElse(right);
         
-        var act = sut.IsSatisfiedBy("");
+        var act = spec.IsSatisfiedBy("");
 
         act.Assertions.Should().BeEquivalentTo(expectedAssertions);
         act.Metadata.Should().BeEquivalentTo(expectedAssertions);

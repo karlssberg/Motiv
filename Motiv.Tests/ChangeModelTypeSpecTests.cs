@@ -15,9 +15,9 @@ public class ChangeModelTypeSpecTests
             .WhenFalse("is not null")
             .Create();
 
-        var sut = isEmpty.ChangeModelTo<string?>();
+        var spec = isEmpty.ChangeModelTo<string?>();
 
-        var act = sut.IsSatisfiedBy(model);
+        var act = spec.IsSatisfiedBy(model);
 
         act.Satisfied.Should().Be(expected);
     }
@@ -36,9 +36,9 @@ public class ChangeModelTypeSpecTests
             .WhenFalse("is not value-type")
             .Create();
 
-        var sut = isValueType.ChangeModelTo<object>(m => m.GetType());
+        var spec = isValueType.ChangeModelTo<object>(m => m.GetType());
 
-        var act = sut.IsSatisfiedBy(model);
+        var act = spec.IsSatisfiedBy(model);
 
         act.Satisfied.Should().Be(expected);
     }
