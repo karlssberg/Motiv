@@ -9,6 +9,7 @@ public class ChangeModelTypeSpecTests
     [InlineAutoData(default(string), true)]
     public void Should_change_the_model(string? model, bool expected)
     {
+        // Arrange
         var isEmpty = Spec
             .Build((object? m) => m is null)
             .WhenTrue("is null")
@@ -17,9 +18,13 @@ public class ChangeModelTypeSpecTests
 
         var spec = isEmpty.ChangeModelTo<string?>();
 
-        var act = spec.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
 
-        act.Satisfied.Should().Be(expected);
+        // Act
+        var act = result.Satisfied;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -30,6 +35,7 @@ public class ChangeModelTypeSpecTests
     [InlineAutoData(typeof(object), false)]
     public void Should_change_the_model_using_a_model_selector_function(object model, bool expected)
     {
+        // Arrange
         var isValueType = Spec
             .Build((Type t) => t.IsValueType)
             .WhenTrue("is value-type")
@@ -38,9 +44,13 @@ public class ChangeModelTypeSpecTests
 
         var spec = isValueType.ChangeModelTo<object>(m => m.GetType());
 
-        var act = spec.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
 
-        act.Satisfied.Should().Be(expected);
+        // Act
+        var act = result.Satisfied;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -49,6 +59,7 @@ public class ChangeModelTypeSpecTests
     [InlineAutoData("h1e234j", false)]
     public void Should_logically_resolve_parent_specification(string model, bool expected)
     {
+        // Arrange
         var isLetter = 
             Spec.Build<char>(char.IsLetter)
                 .WhenTrue(ch => $"'{ch}' is a letter")
@@ -63,9 +74,13 @@ public class ChangeModelTypeSpecTests
                 .Create() 
                 .ChangeModelTo<string>(m => m.ToCharArray());
 
-        var act = isAllLetters.IsSatisfiedBy(model);
+        var result = isAllLetters.IsSatisfiedBy(model);
 
-        act.Satisfied.Should().Be(expected);
+        // Act
+        var act = result.Satisfied;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -74,6 +89,7 @@ public class ChangeModelTypeSpecTests
     [InlineAutoData("ok", "'o' is a letter", "'k' is a letter")]
     public void Should_identify_non_letters(string model, params string[] expected)
     {
+        // Arrange
         var isLetter = Spec
             .Build<char>(char.IsLetter)
             .WhenTrue(ch => $"'{ch}' is a letter")
@@ -88,14 +104,19 @@ public class ChangeModelTypeSpecTests
             .Create("has all letters")
             .ChangeModelTo<string>(m => m.ToCharArray());
 
-        var act = isAllLetters.IsSatisfiedBy(model);
+        var result = isAllLetters.IsSatisfiedBy(model);
 
-        act.Metadata.Should().BeEquivalentTo(expected);
+        // Act
+        var act = result.Metadata;
+        
+        // Assert
+        act.Should().BeEquivalentTo(expected);
     }
     
     [Fact]
     public void Should_delegate_toString_method_to_underlying_spec()
     {
+        // Arrange
         var isLetter = Spec
             .Build<char>(char.IsLetter)
             .WhenTrue(ch => $"'{ch}' is a letter")
@@ -112,8 +133,10 @@ public class ChangeModelTypeSpecTests
         var isAllLetters = isAllLettersAsCharArray
             .ChangeModelTo<string>(m => m.ToCharArray());
 
+        // Act
         var act = isAllLetters.ToString();
 
+        // Assert
         act.Should().Be(isAllLetters.ToString());
     }
 }
