@@ -14,7 +14,7 @@ internal sealed class HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
     {
         yield return Reason;
         foreach (var line in UnderlyingDetailsAsLines())
-            yield return line.IndentLine();
+            yield return line.Indent();
 
         yield break;
 

@@ -153,7 +153,7 @@ public static class BooleanResultExtensions
                 yield return operation;
             
             foreach (var line in group.detailsAsLines)
-                yield return line.IndentLine();
+                yield return line.Indent();
         }
         
         yield break;

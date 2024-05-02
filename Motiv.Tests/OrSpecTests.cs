@@ -10,12 +10,13 @@ public class OrSpecTests
     [InlineAutoData(true, false, true)]
     [InlineAutoData(false, true, true)]
     [InlineAutoData(false, false, false)]
-    public void Should_perform_logical_and(
+    public void Should_perform_logical_or_operation(
         bool leftResult,
         bool rightResult,
         bool expected,
         object model)
     {
+        // Arrange
         var left = Spec
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
@@ -32,8 +33,47 @@ public class OrSpecTests
 
         var result = spec.IsSatisfiedBy(model);
 
-        result.Satisfied.Should().Be(expected);
-        result.Metadata.Should().AllBeEquivalentTo(expected);
+        // Act
+        var act = result.Satisfied;
+        
+        // Assert
+        act.Should().Be(expected);
+    }
+    
+    
+    [Theory]
+    [InlineAutoData(true, true, true)]
+    [InlineAutoData(true, false, true)]
+    [InlineAutoData(false, true, true)]
+    [InlineAutoData(false, false, false)]
+    public void Should_yield_metadata_for_logical_or_operation(
+        bool leftResult,
+        bool rightResult,
+        bool expected,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = left | right;
+
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Metadata;
+        
+        // Assert
+        act.Should().AllBeEquivalentTo(expected);
     }
 
     [Theory]
@@ -47,6 +87,7 @@ public class OrSpecTests
         string expected,
         object model)
     {
+        // Arrange
         var left = Spec
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
@@ -63,7 +104,11 @@ public class OrSpecTests
 
         var result = spec.IsSatisfiedBy(model);
 
-        result.Reason.Should().Be(expected);
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
 
@@ -78,6 +123,7 @@ public class OrSpecTests
         string expected,
         object model)
     {
+        // Arrange
         var left = Spec
             .Build<object>(_ => leftResult)
             .Create("left");
@@ -91,7 +137,11 @@ public class OrSpecTests
 
         var result = spec.IsSatisfiedBy(model);
 
-        result.Reason.Should().Be(expected);
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -105,6 +155,7 @@ public class OrSpecTests
         string expected,
         object model)
     {
+        // Arrange
         var left = Spec
             .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
@@ -121,7 +172,11 @@ public class OrSpecTests
 
         var result = spec.IsSatisfiedBy(model);
 
-        result.Reason.Should().Be(expected);
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -129,8 +184,9 @@ public class OrSpecTests
     [InlineAutoData(true, false)]
     [InlineAutoData(false, true)]
     [InlineAutoData(false, false)]
-    public void Should_provide_a_description_of_the_specification(bool leftResult, bool rightResult)
+    public void Should_provide_a_statement_of_the_metadata_specification(bool leftResult, bool rightResult)
     {
+        // Arrange
         var left = Spec
             .Build<object>(_ => leftResult)
             .WhenTrue(true)
@@ -143,12 +199,15 @@ public class OrSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var expected = $"{left.Description} | {right.Description}";
+        var expected = $"{left.Statement} | {right.Statement}";
 
         var spec = left | right;
 
-        spec.Statement.Should().Be(expected);
-        spec.ToString().Should().Be(expected);
+        // Act
+        var act = spec.Statement;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -156,8 +215,40 @@ public class OrSpecTests
     [InlineAutoData(true, false)]
     [InlineAutoData(false, true)]
     [InlineAutoData(false, false)]
-    public void Should_provide_a_description_of_the_specification_when_using_convenience_specification(bool leftResult, bool rightResult)
+    public void Should_serialize_a_description_of_the_metadata_specification(bool leftResult, bool rightResult)
     {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var expected = $"{left.Statement} | {right.Statement}";
+
+        var spec = left | right;
+
+        // Act
+        var act = spec.ToString();
+        
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_provide_a_statement_about_the_explanation_specification(bool leftResult, bool rightResult)
+    {
+        // Arrange
         var left = Spec
             .Build<object>(_ => leftResult)
             .WhenTrue(true.ToString())
@@ -170,14 +261,48 @@ public class OrSpecTests
             .WhenFalse(false.ToString())
             .Create();
 
-        var expected = $"{left.Description} | {right.Description}";
+        var expected = $"{left.Statement} | {right.Statement}";
 
         var spec = left | right;
 
-        spec.Statement.Should().Be(expected);
-        spec.ToString().Should().Be(expected);
+        // Act
+        var act = spec.Statement;
+        
+        // Assert
+        act.Should().Be(expected);
     }
     
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_serialize_the_implicit_statement_about_the_explanation_specification(bool leftResult, bool rightResult)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var expected = $"{left.Statement} | {right.Statement}";
+
+        var spec = left | right;
+
+        // Act
+        var act = spec.ToString();
+        
+        // Assert
+        act.Should().Be(expected);
+    }
+
     [Theory]
     [InlineAutoData(false, false, 2)]
     [InlineAutoData(false, true, 1)]
@@ -186,6 +311,7 @@ public class OrSpecTests
     public void Should_accurately_report_the_number_of_causal_operands(bool left, bool right, int expected,
         object model)
     {
+        // Arrange
         var leftSpec = Spec
             .Build<object>(_ => left)
             .Create("left");
@@ -198,10 +324,13 @@ public class OrSpecTests
 
         var result = spec.IsSatisfiedBy(model);
 
-        result.Description.CausalOperandCount.Should().Be(expected);
+        // Act
+        var act = result.Description.CausalOperandCount;
+        
+        // Assert
+        act.Should().Be(expected);
     }
-    
-    
+
     [Theory]
     [InlineAutoData(false, false, false)]
     [InlineAutoData(false, true, true)]
@@ -216,6 +345,7 @@ public class OrSpecTests
         int  rightTrue,
         int  rightFalse)
     {
+        // Arrange
         var left =
             Spec.Build((string _) => leftValue)
                 .WhenTrue(leftTrue)
@@ -230,21 +360,26 @@ public class OrSpecTests
 
         var spec = left | right;
         
-        var act = spec.IsSatisfiedBy("");
+        var result = spec.IsSatisfiedBy("");
 
-        act.Satisfied.Should().Be(expectedSatisfied);
+        // Act
+        var act = result.Satisfied;
+        
+        // Assert
+        act.Should().Be(expectedSatisfied);
     }
-    
+
     [Theory]
     [InlineData(false, false, "!left", "!right")]
     [InlineData(false, true, "right")]
     [InlineData(true, false, "left")]
     [InlineData(true, true, "left", "right")]
-    public void Should_perform_Or_on_specs_with_different_metadata_and_preserve_assertions(
+    public void Should_yield_assertions_for_different_metadata_types(
         bool leftValue,
         bool rightValue,
         params string[] expectedAssertions)
     {
+        // Arrange
         var left =
             Spec.Build((string _) => leftValue)
                 .WhenTrue(new Uri("http://true"))
@@ -259,15 +394,53 @@ public class OrSpecTests
 
         var spec = left | right;
         
-        var act = spec.IsSatisfiedBy("");
+        var result = spec.IsSatisfiedBy("");
 
-        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
-        act.Metadata.Should().BeEquivalentTo(expectedAssertions);
+        // Act
+        var act = result.Assertions;
+        
+        // Assert
+        act.Should().BeEquivalentTo(expectedAssertions);
+    }
+
+    [Theory]
+    [InlineData(false, false, "!left", "!right")]
+    [InlineData(false, true, "right")]
+    [InlineData(true, false, "left")]
+    [InlineData(true, true, "left", "right")]
+    public void Should_yield_metadata_for_different_metadata_types(
+        bool leftValue,
+        bool rightValue,
+        params string[] expectedAssertions)
+    {
+        // Arrange
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(new Uri("http://true"))
+                .WhenFalse(new Uri("http://false"))
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(new Regex("true"))
+                .WhenFalse(new Regex("false"))
+                .Create("right");
+
+        var spec = left | right;
+        
+        var result = spec.IsSatisfiedBy("");
+
+        // Act
+        var act = result.Metadata;
+        
+        // Assert
+        act.Should().BeEquivalentTo(expectedAssertions);
     }
     
     [Fact]
     public void Should_not_collapse_OR_operators_in_spec_description()
     {
+        // Arrange
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
@@ -280,9 +453,13 @@ public class OrSpecTests
             .Build<bool>(_ => true)
             .Create("third");
 
-        var spec = first | second | third; 
+        var spec = first | second | third;
+
+        // Act
+        var act = spec.Expression;
         
-        spec.Expression.Should().Be(
+        // Assert
+        act.Should().Be(
             """
             OR
                 first

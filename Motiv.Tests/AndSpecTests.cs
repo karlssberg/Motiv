@@ -158,7 +158,7 @@ public class AndSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var expected = $"{left.Description} & {right.Description}";
+        var expected = $"{left.Statement} & {right.Statement}";
 
         // Act
         var act = (left & right).Statement;
@@ -186,7 +186,7 @@ public class AndSpecTests
             .WhenFalse(false.ToString())
             .Create();
 
-        var expected = $"{left.Description} & {right.Description}";
+        var expected = $"{left.Statement} & {right.Statement}";
 
         // Act
         var act = (left & right).Statement;
@@ -214,7 +214,7 @@ public class AndSpecTests
             .WhenFalse(false.ToString())
             .Create();
 
-        var expected = $"{left.Description} & {right.Description}";
+        var expected = $"{left.Statement} & {right.Statement}";
 
         // Act
         var act = (left & right).Statement;

@@ -82,7 +82,7 @@ public static class SpecExtensions
             }
             
             foreach (var line in group.detailsAsLines)
-                yield return line.IndentLine();
+                yield return line.Indent();
         }
         
         yield break;

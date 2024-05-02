@@ -12,10 +12,8 @@ public class MetadataTests
     [Theory]
     [InlineData(2, "even")]
     [InlineData(3, "odd")]
-    public void Should_not_have_duplicate_metadata_from_underlying_metadata_tier(int model, string expectedText)
+    public void Should_not_have_duplicate_metadata_from_underlying_metadata_tier(int model, string expected)
     {
-        var expected = new Metadata(expectedText);
-        
         var isEven =
             Spec.Build((int i) => i % 2 == 0)
                 .WhenTrue(new Metadata("even"))
@@ -44,9 +42,87 @@ public class MetadataTests
                 .Create("third even");
         
         var result = thirdEven.IsSatisfiedBy([model]);
-       
-        result.MetadataTier.Metadata.Should().BeEquivalentTo([expected]);
-        result.MetadataTier.Underlying.GetMetadata().Should().NotBeEquivalentTo([expected]);
-        result.MetadataTier.Underlying.SelectMany(explanation => explanation.Underlying).Should().BeEmpty();
+
+        var act = result.MetadataTier.Metadata.Select(metadata => metadata.Assertion);
+        
+        act.Should().BeEquivalentTo([expected]);
+    }
+    
+    [Theory]
+    [InlineData(2, "even")]
+    [InlineData(3, "odd")]
+    public void Should_not_have_duplicate_underlying_metadata_from_underlying_metadata_tier(int model, string expected)
+    {
+        var isEven =
+            Spec.Build((int i) => i % 2 == 0)
+                .WhenTrue(new Metadata("even"))
+                .WhenFalse(new Metadata("odd"))
+                .Create("is even");
+        
+        var allEven = 
+            Spec.Build(isEven)
+                .AsAllSatisfied()
+                .Create("all even");
+        
+        var firstEven = 
+            Spec.Build(allEven)
+                .Create("first even");
+        
+        var secondEven =
+            Spec.Build(firstEven)
+                .WhenTrue((_, result) => result.Metadata)
+                .WhenFalse((_, result) => result.Metadata)
+                .Create("second even");
+        
+        var thirdEven =
+            Spec.Build(secondEven)
+                .WhenTrue((_, result) => result.Metadata)
+                .WhenFalse((_, result) => result.Metadata)
+                .Create("third even");
+        
+        var result = thirdEven.IsSatisfiedBy([model]);
+
+        var act = result.MetadataTier.Underlying.GetMetadata();
+        
+        act.Should().NotBeEquivalentTo(expected);
+    }
+    
+    [Theory]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void Should_not_have_yield_metadata_from_levels_that_do_not_exist(int model)
+    {
+        var isEven =
+            Spec.Build((int i) => i % 2 == 0)
+                .WhenTrue(new Metadata("even"))
+                .WhenFalse(new Metadata("odd"))
+                .Create("is even");
+        
+        var allEven = 
+            Spec.Build(isEven)
+                .AsAllSatisfied()
+                .Create("all even");
+        
+        var firstEven = 
+            Spec.Build(allEven)
+                .Create("first even");
+        
+        var secondEven =
+            Spec.Build(firstEven)
+                .WhenTrue((_, result) => result.Metadata)
+                .WhenFalse((_, result) => result.Metadata)
+                .Create("second even");
+        
+        var thirdEven =
+            Spec.Build(secondEven)
+                .WhenTrue((_, result) => result.Metadata)
+                .WhenFalse((_, result) => result.Metadata)
+                .Create("third even");
+        
+        var result = thirdEven.IsSatisfiedBy([model]);
+
+        var act = result.MetadataTier.Underlying.SelectMany(metadata => metadata.Underlying);
+        
+        act.Should().BeEmpty();
     }
 }

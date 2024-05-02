@@ -21,7 +21,7 @@ internal sealed class BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata
         
         yield return reason;
         foreach (var line in booleanResult.Description.GetDetailsAsLines())
-            yield return line.IndentLine();
+            yield return line.Indent();
     }
 
     private bool IsReasonTheSameAsUnderlying() => reason == booleanResult.Description.Reason;

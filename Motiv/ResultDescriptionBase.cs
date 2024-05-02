@@ -5,9 +5,6 @@
 /// </summary>
 public abstract class ResultDescriptionBase
 {
-    /// <summary>
-    /// Gets the count of causal operands.
-    /// </summary>
     internal abstract int CausalOperandCount { get; }
 
     /// <summary>

@@ -9,13 +9,18 @@ public class MinimalPropositionTests
     [InlineData(false, false)]
     public void Should_evaluate_a_minimal_proposition(bool model, bool expectedSatisfied)
     {
+        // Arrange
         var spec = 
             Spec.Build((bool b) => b)
                 .Create("is true");
         
-        var act = spec.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Satisfied;
         
-        act.Satisfied.Should().Be(expectedSatisfied);
+        // Assert
+        act.Should().Be(expectedSatisfied);
     }
     
     [Theory]
@@ -23,13 +28,18 @@ public class MinimalPropositionTests
     [InlineData(false, "!is true")]
     public void Should_evaluate_reason_of_a_minimal_proposition(bool model, string expectedReason)
     {
+        // Arrange
         var spec = 
             Spec.Build((bool b) => b)
                 .Create("is true");
         
-        var act = spec.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Reason;
         
-        act.Reason.Should().Be(expectedReason);
+        // Assert
+        act.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -41,12 +51,17 @@ public class MinimalPropositionTests
     [InlineData(false, "is true!", "!(is true!)")]
     public void Should_escape_propositional_statement_when_evaluated(bool model, string propositionalStatement, string expectedReason)
     {
+        // Arrange
         var spec = 
             Spec.Build((bool b) => b)
                 .Create(propositionalStatement);
         
-        var act = spec.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Reason;
         
-        act.Reason.Should().Be(expectedReason);
+        // Assert
+        act.Should().Be(expectedReason);
     }
 }

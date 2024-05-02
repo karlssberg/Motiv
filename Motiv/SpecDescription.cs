@@ -13,7 +13,7 @@ internal sealed class SpecDescription(string statement, ISpecDescription? underl
             yield break;
 
         foreach (var line in underlyingDescription.GetDetailsAsLines())
-            yield return line.IndentLine();
+            yield return line.Indent();
     }
 
     public override string ToString() => Statement;
