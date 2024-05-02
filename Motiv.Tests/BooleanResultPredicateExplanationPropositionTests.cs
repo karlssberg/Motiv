@@ -5,17 +5,16 @@ namespace Motiv.Tests;
 public class BooleanResultPredicateExplanationPropositionTests
 {
     [Theory]
-    [InlineData(false, false, true, "underlying is true", "first is true", "second is true", "third is true", "fourth is true")]
-    [InlineData(false, true, false, "underlying is false", "first is false", "second is false", "third is false", "fourth is false")]
-    [InlineData(true, false, false, "underlying is false", "first is false", "second is false", "third is false", "fourth is false")]
-    [InlineData(true, true, true, "underlying is true", "first is true", "second is true", "third is true", "fourth is true")]
-    public void Should_replace_the_assertion_with_new_assertion(
+    [InlineData(false, false, true)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, true)]
+    public void Should_be_satisfied_boolean_predicate(
         bool model,
         bool other,
-        bool expected,
-        string expectedRootAssertion,
-        params string[] expectedAssertions)
+        bool expected)
     {
+        // Arrange
         var underlying = Spec
             .Build((bool m) => m == other)
             .WhenTrue("underlying is true")
@@ -46,22 +45,129 @@ public class BooleanResultPredicateExplanationPropositionTests
             .WhenFalse(_ => "fourth is false")
             .Create("is fourth true");
 
-        var sut = firstSpec | secondSpec | thirdSpec | fourthSpec;
+        var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var act = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Satisfied;
         
-        act.Satisfied.Should().Be(expected);
-        act.RootAssertions.Should().BeEquivalentTo(expectedRootAssertion);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+        // Assert
+        act.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineData(false, false, "underlying is true")]
+    [InlineData(false, true, "underlying is false")]
+    [InlineData(true, false, "underlying is false")]
+    [InlineData(true, true, "underlying is true")]
+    public void Should_provide_root_assertions(
+        bool model,
+        bool other,
+        string expectedRootAssertion)
+    {
+        // Arrange
+        var underlying = Spec
+            .Build((bool m) => m == other)
+            .WhenTrue("underlying is true")
+            .WhenFalse("underlying is false")
+            .Create("are equal");
+        
+        var firstSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrue("first is true")
+            .WhenFalse("first is false")
+            .Create();
+
+        var secondSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrue(_ => "second is true")
+            .WhenFalse("second is false")
+            .Create("is second true");
+
+        var thirdSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrue("third is true")
+            .WhenFalse(_ => "third is false")
+            .Create("is third true");
+
+        var fourthSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrue(_ => "fourth is true")
+            .WhenFalse(_ => "fourth is false")
+            .Create("is fourth true");
+
+        var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
+
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.RootAssertions;
+        
+        // Assert
+        act.Should().BeEquivalentTo(expectedRootAssertion);
+    }
+    
+    [Theory]
+    [InlineData(false, false, "first is true", "second is true", "third is true", "fourth is true")]
+    [InlineData(false, true, "first is false", "second is false", "third is false", "fourth is false")]
+    [InlineData(true, false, "first is false", "second is false", "third is false", "fourth is false")]
+    [InlineData(true, true, "first is true", "second is true", "third is true", "fourth is true")]
+    public void Should_replace_the_assertion_with_new_assertion(
+        bool model,
+        bool other,
+        params string[] expectedAssertions)
+    {
+        // Arrange
+        var underlying = Spec
+            .Build((bool m) => m == other)
+            .WhenTrue("underlying is true")
+            .WhenFalse("underlying is false")
+            .Create("are equal");
+        
+        var firstSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrue("first is true")
+            .WhenFalse("first is false")
+            .Create();
+
+        var secondSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrue(_ => "second is true")
+            .WhenFalse("second is false")
+            .Create("is second true");
+
+        var thirdSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrue("third is true")
+            .WhenFalse(_ => "third is false")
+            .Create("is third true");
+
+        var fourthSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrue(_ => "fourth is true")
+            .WhenFalse(_ => "fourth is false")
+            .Create("is fourth true");
+
+        var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
+
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Assertions;
+        
+        // Assert
+        act.Should().BeEquivalentTo(expectedAssertions);
     }
     
     [Theory]
     [InlineData(true, "true")]
     [InlineData(false, "false")]
-    public void Should_harvest_propositionStatement_from_assertion(
+    public void Should_a_reason_from_assertions(
         bool model,
         string expectedReasonStatement)
     { 
+        // Arrange
         var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
         
         var underlying =
@@ -90,9 +196,13 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsParameterCallback &
                    withFalseAsTwoParameterCallback; 
         
-        var act = spec.IsSatisfiedBy(model);
-        act.Reason.Should().Be(expectedReason);
-        act.Description.Reason.Should().Be(expectedReason);
+        var result = spec.IsSatisfiedBy(model);
+        
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -102,6 +212,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         bool model,
         string expectedReasonStatement)
     { 
+        // Arrange
         var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 5));
         
         var underlying =
@@ -144,10 +255,13 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsTwoParameterCallbackThatReturnsACollection &
                    withFalseAsTwoParameterCallbackThatReturnsACollectionAndNoCustomName;
         
-        var act = spec.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Reason;
         
-        act.Reason.Should().Be(expectedReason);
-        act.Description.Reason.Should().Be(expectedReason);
+        // Assert
+        act.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -157,6 +271,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         bool model,
         string expectedReasonStatement)
     { 
+        // Arrange
         var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
         
         var underlying =
@@ -192,10 +307,13 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
         
-        var act = spec.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Reason;
         
-        act.Reason.Should().Be(expectedReason);
-        act.Description.Reason.Should().Be(expectedReason);
+        // Assert
+        act.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -205,6 +323,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         bool model,
         string expectedReasonStatement)
     { 
+        // Arrange
         var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
         
         var underlying =
@@ -240,10 +359,13 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
         
-        var act = spec.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Reason;
         
-        act.Reason.Should().Be(expectedReason);
-        act.Description.Reason.Should().Be(expectedReason);
+        // Assert
+        act.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -253,6 +375,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         bool model,
         string expectedReasonStatement)
     { 
+        // Arrange
         var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
         
         var underlying =
@@ -288,15 +411,20 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
         
-        var act = spec.IsSatisfiedBy(model);
-        
-        act.Reason.Should().Be(expectedReason);
-        act.Description.Reason.Should().Be(expectedReason);
-    }
+        var result = spec.IsSatisfiedBy(model);
 
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().Be(expectedReason);
+        
+    }
+    
     [Fact]
     public void Should_describe_a_boolean_result_spec()
     {
+        // Arrange
         var underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
@@ -306,9 +434,11 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .WhenTrue("is true")
                 .WhenFalse("is false")
                 .Create("is model true");
-            
+           
+        // Act
         var act = spec.Description.Statement;
 
+        // Assert
         act.Should().Be("is model true");
     }
 }
