@@ -40,8 +40,8 @@ public readonly ref struct FalseAssertionFromBooleanResultHigherOrderProposition
     /// Specifies an assertion to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
-    /// <returns>An instance of <see cref="MultiAssertionExplanationHigherOrderPropositionFactory{TModel,TUnderlyingMetadata}" />.</returns>
-    public MultiAssertionExplanationHigherOrderPropositionFactory<TModel, TUnderlyingMetadata> WhenFalse(
+    /// <returns>An instance of <see cref="MultiAssertionExplanationHigherOrderBooleanResultPropositionFactory{TModel,TUnderlyingMetadata}" />.</returns>
+    public MultiAssertionExplanationHigherOrderBooleanResultPropositionFactory<TModel, TUnderlyingMetadata> WhenFalse(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
         new(resultResolver,
             higherOrderPredicate,

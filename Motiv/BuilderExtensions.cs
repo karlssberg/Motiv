@@ -3,9 +3,6 @@
 internal static class BuilderExtensions
 {
     
-    internal static Func<IEnumerable<TResult>> ToEnumerableReturn<TResult>(this Func<TResult> func) =>
-        () => func().ToEnumerable();
-    
     internal static Func<T, IEnumerable<TResult>> ToEnumerableReturn<T, TResult>(this Func<T, TResult> func) =>
         argument => func(argument).ToEnumerable();
     

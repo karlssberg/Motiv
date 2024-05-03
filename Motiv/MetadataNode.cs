@@ -28,7 +28,8 @@ public sealed class MetadataNode<TMetadata>
     /// </summary>
     /// <param name="metadata">The metadata to associate with this node.</param>
     /// <param name="causes">The causes of the metadata.</param>
-    public MetadataNode(IEnumerable<TMetadata> metadata,
+    public MetadataNode(
+        IEnumerable<TMetadata> metadata,
         IEnumerable<BooleanResultBase<TMetadata>> causes)
     {
         var metadataCollection = metadata as ICollection<TMetadata> ?? metadata.ToArray();

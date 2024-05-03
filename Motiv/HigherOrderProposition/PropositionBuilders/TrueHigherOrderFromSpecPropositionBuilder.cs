@@ -30,8 +30,26 @@ public readonly ref struct TrueHigherOrderFromSpecPropositionBuilder<TModel, TUn
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
-    /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
+    /// <param name="whenTrue">A function that generates metadata when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    /// <remarks>
+    /// <para>
+    /// The compiler might not always infer the correct usage of <see cref="TMetadata" /> when collections are used as
+    /// a return type.  If so, you will need to be either explicit with your generic arguments, or ensure the return type is explicitly an <c>IEnumerable&lt;T&gt;</c>.
+    ///</para>
+    /// <para>
+    /// For example:
+    /// </para>
+    /// <para>
+    /// <c>.WhenTrue&lt;char&gt;(_ =&gt; "hello world");  // ['h', 'e', 'l', 'l', 'o',...]</c>
+    /// </para>
+    /// <para>
+    /// or
+    /// </para>
+    /// <para>
+    /// <c>.WhenTrue(_ =&gt; "hello world".AsEnumerable());  // ['h', 'e', 'l', 'l', 'o',...]</c>
+    /// </para>
+    /// </remarks>
     public FalseMetadataHigherOrderPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue) =>
         new(spec,
@@ -45,6 +63,28 @@ public readonly ref struct TrueHigherOrderFromSpecPropositionBuilder<TModel, TUn
     /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
     public FalseMetadataHigherOrderPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
+        new(spec,
+            higherOrderPredicate,
+            whenTrue,
+            causeSelector);
+    
+    /// <summary>Specifies the set of metadata to use when the condition is true.</summary>
+    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
+    /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataHigherOrderPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IReadOnlyList<TMetadata>> whenTrue) =>
+        new(spec,
+            higherOrderPredicate,
+            whenTrue,
+            causeSelector);
+    
+    /// <summary>Specifies the set of metadata to use when the condition is true.</summary>
+    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
+    /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataHigherOrderPropositionBuilder<TModel, TUnderlyingMetadata, TUnderlyingMetadata> WhenTrue(
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IReadOnlyList<TUnderlyingMetadata>> whenTrue) =>
         new(spec,
             higherOrderPredicate,
             whenTrue,

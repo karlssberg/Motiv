@@ -1,4 +1,5 @@
-﻿using Motiv.And;
+﻿using System.Diagnostics;
+using Motiv.And;
 using Motiv.AndAlso;
 using Motiv.Not;
 using Motiv.Or;
@@ -8,6 +9,7 @@ using Motiv.XOr;
 namespace Motiv;
 
 /// <summary>Represents a base class for boolean results.</summary>
+[DebuggerDisplay("{GetSatisfiedText()}: {Reason}")]
 public abstract class BooleanResultBase
     : IEquatable<BooleanResultBase>, IEquatable<bool>
 {

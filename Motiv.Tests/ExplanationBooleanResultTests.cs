@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using Motiv.BooleanPredicateProposition;
+﻿using Motiv.BooleanPredicateProposition;
 
 namespace Motiv.Tests;
 

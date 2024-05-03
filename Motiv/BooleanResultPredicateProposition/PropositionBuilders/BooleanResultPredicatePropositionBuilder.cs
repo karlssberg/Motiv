@@ -85,6 +85,24 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    /// <remarks>
+    /// <para>
+    /// The compiler might not always infer the correct usage of <see cref="TMetadata" /> when collections are used as
+    /// a return type.  If so, you will need to be either explicit with your generic arguments, or ensure the return type is explicitly an <c>IEnumerable&lt;T&gt;</c>.
+    ///</para>
+    /// <para>
+    /// For example:
+    /// </para>
+    /// <para>
+    /// <c>.WhenTrue&lt;char&gt;((_, _) =&gt; "hello world");  // ['h', 'e', 'l', 'l', 'o',...]</c>
+    /// </para>
+    /// <para>
+    /// or
+    /// </para>
+    /// <para>
+    /// <c>.WhenTrue((_, _) =&gt; "hello world".AsEnumerable());  // ['h', 'e', 'l', 'l', 'o',...]</c>
+    /// </para>
+    /// </remarks>
     public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue)
     {
@@ -100,6 +118,14 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
     public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
+        new(predicate, whenTrue.ThrowIfNull(nameof(whenTrue)));
+
+    /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
+    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
+    /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IReadOnlyList<TMetadata>> whenTrue) =>
         new(predicate, whenTrue.ThrowIfNull(nameof(whenTrue)));
 
     /// <summary>Specifies a higher order predicate for the proposition.</summary>

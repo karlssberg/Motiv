@@ -26,7 +26,7 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata>(
     /// <summary>
     /// Specifies a metadata factory function to use when the condition is false.
     /// </summary>
-    /// <param name="whenFalse">A function that generates a human-readable reason when the condition is false.</param>
+    /// <param name="whenFalse">A function that generates metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataPropositionFactory{TModel,TMetadata}" />.</returns>
     public MetadataPropositionFactory<TModel, TMetadata> WhenFalse(Func<TModel, TMetadata> whenFalse)
     {
@@ -40,7 +40,7 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata>(
     /// <summary>
     /// Specifies a metadata factory function to use when the condition is false.
     /// </summary>
-    /// <param name="whenFalse">A function that generates a human-readable reason when the condition is false.</param>
+    /// <param name="whenFalse">A function that generates a collection of metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataPropositionFactory{TModel,TMetadata}" />.</returns>
     public MetadataPropositionFactory<TModel, TMetadata> WhenFalse(Func<TModel, IEnumerable<TMetadata>> whenFalse)
     {

@@ -69,18 +69,6 @@ public static class AssertionExtensions
             .Distinct()
             .ElseIfEmpty(result.Assertions);
 
-    private static IEnumerable<BooleanResultBase<TMetadata>> AggregateBinaryOperationResults<TMetadata>(
-        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
-        results.SelectMany(AggregateBinaryOperationResults);
-
-    private static IEnumerable<BooleanResultBase<TMetadata>> AggregateBinaryOperationResults<TMetadata>(
-        this BooleanResultBase<TMetadata> result) =>
-        result switch
-        {
-            IBinaryBooleanOperationResult => result.UnderlyingWithMetadata.AggregateBinaryOperationResults(),
-            _ => result.UnderlyingWithMetadata
-        };
-
     private static IEnumerable<string> GetRootAssertions(
         this IEnumerable<Explanation> explanations) =>
         explanations.SelectMany(explanation => explanation
