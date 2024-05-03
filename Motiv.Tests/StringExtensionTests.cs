@@ -13,9 +13,9 @@ public class StringExtensionTests
     [InlineData("")]
     public void Should_serialize_a_collection_to_a_human_readable_string(string expected, params int[] collection)
     {
-        var result = collection.Serialize();
+        var act = collection.Serialize();
         
-        result.Should().Be(expected);
+        act.Should().Be(expected);
     }
     
     [Theory]
@@ -36,8 +36,8 @@ public class StringExtensionTests
         bool useOxfordComma,
         params int[] collection)
     {
-        var result = collection.Serialize("or", useOxfordComma);
+        var act = collection.Serialize("or", useOxfordComma);
         
-        result.Should().Be(expected);
+        act.Should().Be(expected);
     }
 }
