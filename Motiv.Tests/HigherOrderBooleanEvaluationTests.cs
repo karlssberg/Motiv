@@ -118,8 +118,8 @@ public class HigherOrderBooleanEvaluationTests
         var higherOrder = Spec
             .Build((bool b) => b)
             .AsAllSatisfied()
-            .WhenTrue(eval => eval.TrueModels)
-            .WhenFalse(eval => eval.TrueModels)
+            .WhenTrueYield(eval => eval.TrueModels)
+            .WhenFalseYield(eval => eval.TrueModels)
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
@@ -146,7 +146,7 @@ public class HigherOrderBooleanEvaluationTests
             .Build((bool b) => b)
             .AsAllSatisfied()
             .WhenTrueYield(eval => eval.FalseModels)
-            .WhenFalse(eval => eval.FalseModels)
+            .WhenFalseYield(eval => eval.FalseModels)
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
@@ -174,8 +174,8 @@ public class HigherOrderBooleanEvaluationTests
         var higherOrder = Spec
             .Build((bool b) => b)
             .AsAllSatisfied()
-            .WhenTrue(eval => eval.Models)
-            .WhenFalse(eval => eval.Models)
+            .WhenTrueYield(eval => eval.Models)
+            .WhenFalseYield(eval => eval.Models)
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy(models);

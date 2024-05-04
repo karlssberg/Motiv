@@ -54,16 +54,6 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
             whenTrue.ToEnumerableReturn(),
             causeSelector);
     
-    /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
-    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
-    /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
-    /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataFromBooleanHigherOrderPropositionBuilder<TModel, TMetadata> WhenTrue<TMetadata>(
-        Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenTrue) =>
-        new(predicate,
-            higherOrderPredicate,
-            whenTrue,
-            causeSelector);
     
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
@@ -71,17 +61,6 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
     /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
     public FalseMetadataFromBooleanHigherOrderPropositionBuilder<TModel, TMetadata> WhenTrueYield<TMetadata>(
         Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenTrue) =>
-        new(predicate,
-            higherOrderPredicate,
-            whenTrue,
-            causeSelector);
-    
-    /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
-    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
-    /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
-    /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataFromBooleanHigherOrderPropositionBuilder<TModel, TMetadata> WhenTrue<TMetadata>(
-        Func<HigherOrderBooleanEvaluation<TModel>, IReadOnlyList<TMetadata>> whenTrue) =>
         new(predicate,
             higherOrderPredicate,
             whenTrue,

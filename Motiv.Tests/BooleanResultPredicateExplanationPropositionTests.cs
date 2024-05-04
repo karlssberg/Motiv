@@ -349,7 +349,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue((_, _) => "true assertion")
-                .WhenFalse((_, _) => ["false assertion"])
+                .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -382,26 +382,26 @@ public class BooleanResultPredicateExplanationPropositionTests
         
         var withFalseAsScalar =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => ["true assertion"])
+                .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
         
         var withFalseAsParameterCallback =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => ["true assertion"])
+                .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallback =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => ["true assertion"])
+                .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => ["true assertion"])
-                .WhenFalse((_, _) => ["false assertion"])
+                .WhenTrueYield((_, _) => ["true assertion"])
+                .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &

@@ -307,7 +307,7 @@ public class ExplanationTests
         var isEvenWrapper2 =
             Spec.Build(isEvenWrapper1)
                 .WhenTrue((_, result) => result.Assertions)
-                .WhenFalse((_, result) => result.Assertions)
+                .WhenFalseYield((_, result) => result.Assertions)
                 .Create("is even wrapper 2");
         
         var result = isEvenWrapper2.IsSatisfiedBy(model);
@@ -338,7 +338,7 @@ public class ExplanationTests
         var isEvenWrapper2 =
             Spec.Build(isEvenWrapper1)
                 .WhenTrue((_, result) => result.Assertions)
-                .WhenFalse((_, result) => result.Assertions)
+                .WhenFalseYield((_, result) => result.Assertions)
                 .Create("is even wrapper 2");
         
         var result = isEvenWrapper2.IsSatisfiedBy(model);
@@ -369,8 +369,8 @@ public class ExplanationTests
         
         var isEvenWrapper2 =
             Spec.Build(isEvenWrapper1)
-                .WhenTrue((_, result) => result.Metadata)
-                .WhenFalse((_, result) => result.Metadata)
+                .WhenTrueYield((_, result) => result.Metadata)
+                .WhenFalseYield((_, result) => result.Metadata)
                 .Create("is even wrapper 2");
         
         var result = isEvenWrapper2.IsSatisfiedBy(model);
@@ -402,8 +402,8 @@ public class ExplanationTests
         
         var isEvenWrapper2 =
             Spec.Build(isEvenWrapper1)
-                .WhenTrue((_, result) => result.Metadata)
-                .WhenFalse((_, result) => result.Metadata)
+                .WhenTrueYield((_, result) => result.Metadata)
+                .WhenFalseYield((_, result) => result.Metadata)
                 .Create("is even wrapper 2");
         
         var result = isEvenWrapper2.IsSatisfiedBy(model);
@@ -439,13 +439,13 @@ public class ExplanationTests
         var secondEven =
             Spec.Build(firstEven)
                 .WhenTrue((_, result) => result.Assertions)
-                .WhenFalse((_, result) => result.Assertions)
+                .WhenFalseYield((_, result) => result.Assertions)
                 .Create("second even");
         
         var thirdEven =
             Spec.Build(secondEven)
                 .WhenTrue((_, result) => result.Metadata)
-                .WhenFalse((_, result) => result.Metadata)
+                .WhenFalseYield((_, result) => result.Metadata)
                 .Create("third even");
         
         var result = thirdEven.IsSatisfiedBy([model]);
@@ -481,13 +481,13 @@ public class ExplanationTests
         var secondEven =
             Spec.Build(firstEven)
                 .WhenTrue((_, result) => result.Assertions)
-                .WhenFalse((_, result) => result.Assertions)
+                .WhenFalseYield((_, result) => result.Assertions)
                 .Create("second even");
         
         var thirdEven =
             Spec.Build(secondEven)
                 .WhenTrue((_, result) => result.Metadata)
-                .WhenFalse((_, result) => result.Metadata)
+                .WhenFalseYield((_, result) => result.Metadata)
                 .Create("third even");
         
         var result = thirdEven.IsSatisfiedBy([model]);
@@ -523,13 +523,13 @@ public class ExplanationTests
         var secondEven =
             Spec.Build(firstEven)
                 .WhenTrue((_, result) => result.Assertions)
-                .WhenFalse((_, result) => result.Assertions)
+                .WhenFalseYield((_, result) => result.Assertions)
                 .Create("second even");
         
         var thirdEven =
             Spec.Build(secondEven)
                 .WhenTrue((_, result) => result.Metadata)
-                .WhenFalse((_, result) => result.Metadata)
+                .WhenFalseYield((_, result) => result.Metadata)
                 .Create("third even");
         
         var result = thirdEven.IsSatisfiedBy([model]);

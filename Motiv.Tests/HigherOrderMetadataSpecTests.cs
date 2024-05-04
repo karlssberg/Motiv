@@ -190,7 +190,7 @@ public class HigherOrderMetadataSpecTests
             Spec.Build(underlyingSpec)
                 .AsAllSatisfied()
                 .WhenTrue(Metadata.True)
-                .WhenFalse(results => results.Metadata)
+                .WhenFalseYield(results => results.Metadata)
                 .Create("all are even");
 
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);
@@ -226,7 +226,7 @@ public class HigherOrderMetadataSpecTests
             Spec.Build(underlyingSpec)
                 .AsAllSatisfied()
                 .WhenTrue(Metadata.True)
-                .WhenFalse(results => results.Metadata)
+                .WhenFalseYield(results => results.Metadata)
                 .Create("all are even");
 
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);

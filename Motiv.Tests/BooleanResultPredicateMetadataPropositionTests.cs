@@ -147,7 +147,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue(Metadata.True)
-                .WhenFalse((_, _) => [Metadata.False])
+                .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -199,7 +199,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue(_ => Metadata.True)
-                .WhenFalse((_, _) => [Metadata.False])
+                .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -251,7 +251,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue((_, _) => Metadata.True)
-                .WhenFalse((_, _) => [Metadata.False])
+                .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -284,26 +284,26 @@ public class BooleanResultPredicateMetadataPropositionTests
         
         var withFalseAsScalar =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
         
         var withFalseAsParameterCallback =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallback =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
-                .WhenFalse((_, _) => [Metadata.False])
+                .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
+                .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -353,7 +353,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue(Metadata.True)
-                .WhenFalse((_, _) => [Metadata.False])
+                .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -403,7 +403,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue(Metadata.True)
-                .WhenFalse((_, _) => [Metadata.False])
+                .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -453,7 +453,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue(_ => Metadata.True)
-                .WhenFalse((_, _) => [Metadata.False])
+                .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -503,7 +503,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue(_ => Metadata.True)
-                .WhenFalse((_, _) => [Metadata.False])
+                .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -553,7 +553,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue((_, _) => Metadata.True)
-                .WhenFalse((_, _) => [Metadata.False])
+                .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -603,7 +603,7 @@ public class BooleanResultPredicateMetadataPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue((_, _) => Metadata.True)
-                .WhenFalse((_, _) => [Metadata.False])
+                .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -634,26 +634,26 @@ public class BooleanResultPredicateMetadataPropositionTests
         
         var withFalseAsScalar =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
         
         var withFalseAsParameterCallback =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallback =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
-                .WhenFalse((_, _) => [Metadata.False])
+                .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
+                .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -684,26 +684,26 @@ public class BooleanResultPredicateMetadataPropositionTests
         
         var withFalseAsScalar =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
         
         var withFalseAsParameterCallback =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallback =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
+                .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
-                .WhenTrue((_, _) => Metadata.True.ToEnumerable())
-                .WhenFalse((_, _) => [Metadata.False])
+                .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
+                .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &

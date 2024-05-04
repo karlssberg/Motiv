@@ -97,8 +97,8 @@ public class ChangeModelTypeSpecTests
         var isAllLetters = Spec
             .Build(isLetter)
             .AsAllSatisfied()
-            .WhenTrue(evaluation => evaluation.Assertions)
-            .WhenFalse(evaluation => evaluation.Assertions)
+            .WhenTrueYield(evaluation => evaluation.Assertions)
+            .WhenFalseYield(evaluation => evaluation.Assertions)
             .Create("has all letters")
             .ChangeModelTo<string>(m => m.ToCharArray());
 
@@ -124,8 +124,8 @@ public class ChangeModelTypeSpecTests
         var isAllLettersAsCharArray = Spec
             .Build(isLetter)
             .AsAllSatisfied()
-            .WhenTrue(evaluation => evaluation.Assertions)
-            .WhenFalse(evaluation => evaluation.Assertions)
+            .WhenTrueYield(evaluation => evaluation.Assertions)
+            .WhenFalseYield(evaluation => evaluation.Assertions)
             .Create("has all letters");
             
         var isAllLetters = isAllLettersAsCharArray

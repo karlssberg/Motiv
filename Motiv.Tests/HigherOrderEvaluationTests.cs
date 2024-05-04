@@ -20,8 +20,8 @@ public class HigherOrderEvaluationTests
         var higherOrder = Spec
             .Build(underlying)
             .AsAllSatisfied()
-            .WhenTrue(eval => eval.Metadata)
-            .WhenFalse(eval => eval.Metadata)
+            .WhenTrueYield(eval => eval.Metadata)
+            .WhenFalseYield(eval => eval.Metadata)
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy([true]);
@@ -53,8 +53,8 @@ public class HigherOrderEvaluationTests
         var higherOrder = Spec
             .Build(underlying)
             .AsAllSatisfied()
-            .WhenTrue(eval => eval.TrueResults.GetMetadata())
-            .WhenFalse(eval => eval.TrueResults.GetMetadata())
+            .WhenTrueYield(eval => eval.TrueResults.GetMetadata())
+            .WhenFalseYield(eval => eval.TrueResults.GetMetadata())
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
@@ -86,8 +86,8 @@ public class HigherOrderEvaluationTests
         var higherOrder = Spec
             .Build(underlying)
             .AsAllSatisfied()
-            .WhenTrue(eval => eval.FalseResults.GetMetadata())
-            .WhenFalse(eval => eval.FalseResults.GetMetadata())
+            .WhenTrueYield(eval => eval.FalseResults.GetMetadata())
+            .WhenFalseYield(eval => eval.FalseResults.GetMetadata())
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
@@ -176,8 +176,8 @@ public class HigherOrderEvaluationTests
         var higherOrder = Spec
             .Build(underlying)
             .AsAnySatisfied()
-            .WhenTrue(eval => eval.CausalResults.GetMetadata().Select(m => m.Text))
-            .WhenFalse(eval => eval.CausalResults.GetMetadata().Select(m => m.Text))
+            .WhenTrueYield(eval => eval.CausalResults.GetMetadata().Select(m => m.Text))
+            .WhenFalseYield(eval => eval.CausalResults.GetMetadata().Select(m => m.Text))
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
@@ -242,8 +242,8 @@ public class HigherOrderEvaluationTests
         var higherOrder = Spec
             .Build(underlying)
             .AsAnySatisfied()
-            .WhenTrue(eval => eval.Results.GetMetadata().Select(m => m.Text))
-            .WhenFalse(eval => eval.Results.GetMetadata().Select(m => m.Text))
+            .WhenTrueYield(eval => eval.Results.GetMetadata().Select(m => m.Text))
+            .WhenFalseYield(eval => eval.Results.GetMetadata().Select(m => m.Text))
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
@@ -275,8 +275,8 @@ public class HigherOrderEvaluationTests
         var higherOrder = Spec
             .Build(underlying)
             .AsAllSatisfied()
-            .WhenTrue(eval => eval.TrueModels)
-            .WhenFalse(eval => eval.TrueModels)
+            .WhenTrueYield(eval => eval.TrueModels)
+            .WhenFalseYield(eval => eval.TrueModels)
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);

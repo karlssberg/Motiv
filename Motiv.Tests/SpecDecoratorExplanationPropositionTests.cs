@@ -617,7 +617,7 @@ public class SpecDecoratorExplanationPropositionTests
         var spec = Spec
             .Build(underlying)
             .WhenTrue((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
-            .WhenFalse((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
+            .WhenFalseYield((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
             .Create("top-level proposition");
         
         var result = spec.IsSatisfiedBy(model);
@@ -865,7 +865,7 @@ public class SpecDecoratorExplanationPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build(underlying)
                 .WhenTrue((_, _) => ["true assertion"])
-                .WhenFalse((_, _) => ["false assertion"])
+                .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
