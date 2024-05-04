@@ -27,8 +27,8 @@ internal static class WrapException
         var genericParams = SerializedGenericArguments(underlyingSpec.GetType());
 
         return string.IsNullOrWhiteSpace(ex.Message)
-            ? $"{article} '{exceptionTypeName}' was thrown while evaluating the '{callerName}' parameter that was supplied to Spec<{genericParams}> (aka '{underlyingSpec.Description}')."
-            : $"{article} '{exceptionTypeName}' was thrown with the message '{ex.Message}' while evaluating the '{callerName}' parameter that was supplied to Spec<{genericParams}> (aka '{underlyingSpec.Description}').";
+            ? $"{article} '{exceptionTypeName}' was thrown while evaluating the '{callerName}' parameter that was supplied to Spec<{genericParams}> named '{underlyingSpec.Statement}'."
+            : $"{article} '{exceptionTypeName}' was thrown with the message '{ex.Message}' while evaluating the '{callerName}' parameter that was supplied to Spec<{genericParams}> named '{underlyingSpec.Statement}'.";
     }
 
     private static string SerializedGenericArguments(Type specificationType)

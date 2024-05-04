@@ -27,7 +27,7 @@ public readonly ref struct FalseMetadataFromBooleanResultHigherOrderSpecBuilder<
             causeSelector);
 
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
-    /// <param name="whenFalse">A function that generates a human-readable reason when the condition is false.</param>
+    /// <param name="whenFalse">A function that generates metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
     public MetadataFromBooleanResultHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenFalse) =>
@@ -38,9 +38,9 @@ public readonly ref struct FalseMetadataFromBooleanResultHigherOrderSpecBuilder<
             causeSelector);
 
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
-    /// <param name="whenFalse">A function that generates a human-readable reason when the condition is false.</param>
+    /// <param name="whenFalse">A function that generates a collection of metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public MetadataFromBooleanResultHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(
+    public MetadataFromBooleanResultHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalseYield(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse) =>
         new(resultResolver,
             higherOrderPredicate,

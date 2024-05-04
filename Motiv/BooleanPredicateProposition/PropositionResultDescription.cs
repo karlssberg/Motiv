@@ -5,11 +5,11 @@ internal sealed class PropositionResultDescription(string reason)
 {
     internal override int CausalOperandCount => 0;
     
-    public override string Rationale => reason;
+    public override string Justification => reason;
 
     public override string Reason => reason;
 
-    public override IEnumerable<string> GetDetailsAsLines()
+    public override IEnumerable<string> GetJustificationAsLines()
     {
         yield return reason;
     }

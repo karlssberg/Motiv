@@ -16,6 +16,6 @@ public class IsWinningHandProposition() : Spec<Hand, HandRank>(
                 new IsHandPairProposition(),
             }
             .OrElseTogether())
-        .WhenTrue((_, result) => result.Metadata)
+        .WhenTrueYield((_, result) => result.Metadata)
         .WhenFalse(HandRank.HighCard)
         .Create("is a winning poker hand"));

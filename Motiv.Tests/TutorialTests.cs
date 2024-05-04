@@ -1,6 +1,4 @@
-﻿using FluentAssertions;
-
-namespace Motiv.Tests;
+﻿namespace Motiv.Tests;
 
 public class TutorialTests
 {
@@ -113,7 +111,7 @@ public class TutorialTests
             Spec.Build(isNegative)
                 .AsAllSatisfied()
                 .WhenTrue("all are negative")
-                .WhenFalse(evaluation => evaluation switch
+                .WhenFalseYield(evaluation => evaluation switch
                 {
                     { FalseCount: <= 10 } => evaluation.FalseModels.Select(n => $"{n}  is not negative"),
                     _ => [$"{evaluation.FalseCount} of {evaluation.Count} are not negative"]
@@ -215,7 +213,7 @@ public class TutorialTests
                         { Models: [var n] } => $"{n} is even and is the only item",
                         _ => "all are even"
                     })
-                .WhenFalse(evaluation =>
+                .WhenFalseYield(evaluation =>
                     evaluation switch
                     {
                         { Models: [var n] } => [$"{n} is odd and is the only item"],
@@ -262,7 +260,7 @@ public class TutorialTests
                         { Models: [< 0 and var n] } => $"{n} is negative and is the only number",
                         _ => "all are negative numbers"
                     })
-                .WhenFalse(eval =>
+                .WhenFalseYield(eval =>
                     eval switch
                     {
                         { Models: [0] } => ["the number is 0 and is the only number"],
@@ -401,7 +399,7 @@ public class TutorialTests
         var isEligibleForLoan =
             Spec.Build(hasGoodCreditScore & hasSufficientIncome) 
                 .WhenTrue("customer is eligible for a loan")
-                .WhenFalse((_, result) => result.Assertions) // reusing assertions from the original propositions
+                .WhenFalseYield((_, result) => result.Assertions) // reusing assertions from the original propositions
                 .Create();
         
         var act = isEligibleForLoan.IsSatisfiedBy(new Customer(200, 20000));

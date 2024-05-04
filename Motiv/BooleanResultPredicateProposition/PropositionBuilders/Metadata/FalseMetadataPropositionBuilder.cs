@@ -48,7 +48,7 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata, TU
     /// </summary>
     /// <param name="whenFalse">A function that generates a collection of metadata when the condition is false.</param>
     /// <returns>A factory for creating propositions based on the supplied proposition and metadata factories.</returns>
-    public MetadataPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(
+    public MetadataPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalseYield(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse) =>
         new(predicate,
             whenTrue,

@@ -22,37 +22,55 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
         TMetadata whenTrue) =>
         new(predicate,
             higherOrderPredicate, 
-            _ => whenTrue,
+            _ => whenTrue.ToEnumerable(),
             causeSelector);
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
-    /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
+    /// <param name="whenTrue">A function that generates metadata when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    /// <remarks>
+    /// <para>
+    /// If you wish to return a collection of metadata items, you will need to use the <c>WhenTrueYield()</c>
+    /// method instead, otherwise the whole collection will become the metadata.
+    /// </para>
+    /// </remarks>
     public FalseMetadataFromBooleanHigherOrderPropositionBuilder<TModel, TMetadata> WhenTrue<TMetadata>(
         Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenTrue) =>
         new(predicate,
             higherOrderPredicate,
+            whenTrue.ToEnumerableReturn(),
+            causeSelector);
+    
+    
+    /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
+    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
+    /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataFromBooleanHigherOrderPropositionBuilder<TModel, TMetadata> WhenTrueYield<TMetadata>(
+        Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenTrue) =>
+        new(predicate,
+            higherOrderPredicate,
             whenTrue,
             causeSelector);
-
+    
     /// <summary>
     /// Specifies an assertion to yield when the condition is true.  This will also be the name of the proposition, unless otherwise
     /// specified by the subsequent <c>Create(string statement)</c> method.
     /// </summary>
-    /// <param name="trueBecause"> A human-readable reason why the condition is true. </param>
+    /// <param name="metadata">the metadata to yield when the condition is true.</param>
     /// <returns>
     /// An instance of <see cref="FalseAssertionFromSpecDecoratorWithNameHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.
     /// </returns>
     public FalseAssertionFromBooleanPredicateWithNameHigherOrderPropositionBuilder<TModel> WhenTrue(
-        string trueBecause) =>
+        string metadata) =>
         new(predicate,
             higherOrderPredicate,
-            trueBecause,
+            metadata,
             causeSelector);
 
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
-    /// <param name="trueBecause">A function that generates a human-readable reason when the condition is true.</param>
+    /// <param name="trueBecause">A function that generates a reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionFromBooleanResultHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public FalseAssertionFromBooleanPredicateHigherOrderPropositionBuilder<TModel> WhenTrue(
         Func<HigherOrderBooleanEvaluation<TModel>, string> trueBecause) =>
@@ -61,6 +79,16 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
             trueBecause,
             causeSelector);
 
+    /// <summary>Specifies an assertion to yield when the condition is true.</summary>
+    /// <param name="trueBecause">A function that generates a collection of reasons when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseAssertionFromBooleanResultHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataFromBooleanHigherOrderPropositionBuilder<TModel, string> WhenTrueYield(
+        Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> trueBecause) =>
+        new(predicate,
+            higherOrderPredicate,
+            trueBecause,
+            causeSelector);
+    
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
@@ -71,8 +99,8 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
         return new HigherOrderFromBooleanPredicateMetadataProposition<TModel, string>(
             predicate,
             higherOrderPredicate,
-            _ => statement,
-            _ => $"!{statement}",
+            _ => statement.ToEnumerable(),
+            _ => $"!{statement}".ToEnumerable(),
             new SpecDescription(statement),
             causeSelector);
     }

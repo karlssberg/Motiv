@@ -10,20 +10,16 @@ using Motiv.XOr;
 namespace Motiv;
 
 /// <summary>
-/// The base class for all specifications. At its most basic, a 'Spec' is an encapsulated predicate function that can
-/// be evaluated against a model.  When the predicate is evaluated, it returns a result that contains the Boolean
-/// result of the predicate as well as metadata that captures the meaning behind the predicate.  By encapsulating the
-/// predicate we can supply methods to assist with combining specifications together to form more complex
-/// specifications, which together ultimately model the desired logical proposition.
+/// The generic-less base class for all specifications. It ensures that all specifications have a description and a
+/// statement, without requiring knowledge of the model type.
 /// </summary>
-/// <typeparam name="TModel">The model type that the specification will evaluate against</typeparam>
-public abstract class SpecBase<TModel>
+public abstract class SpecBase
 {
-    /// <summary>Prevents the external instantiation of the <see cref="SpecBase{TModel,TMetadata}" /> class.</summary>
+    /// <summary>Prevents the external instantiation of the <see cref="SpecBase" /> class.</summary>
     internal SpecBase()
     {
     }
-
+    
     /// <summary>Gets a description of the specification.  This is used for debugging/logging purposes.</summary>
     public abstract ISpecDescription Description { get; }
     
@@ -32,6 +28,30 @@ public abstract class SpecBase<TModel>
     
     /// <summary>Gets the propositional statement.</summary>
     public string Expression => Description.Detailed;
+    
+    /// <summary>
+    /// Gets the underlying specifications that make up this composite proposition.
+    /// </summary>
+    /// <remarks>
+    /// This will yield an empty collection if the specification is dynamically generated at evaluation-time.
+    /// </remarks>
+    public abstract IEnumerable<SpecBase> Underlying { get; }
+}
+
+/// <summary>
+/// The base class for all specifications. At its most basic, a 'Spec' is an encapsulated predicate function that can
+/// be evaluated against a model.  When the predicate is evaluated, it returns a result that contains the Boolean
+/// result of the predicate as well as metadata that captures the meaning behind the predicate.  By encapsulating the
+/// predicate we can supply methods to assist with combining specifications together to form more complex
+/// specifications, which together ultimately model the desired logical proposition.
+/// </summary>
+/// <typeparam name="TModel">The model type that the specification will evaluate against</typeparam>
+public abstract class SpecBase<TModel> : SpecBase
+{
+    /// <summary>Prevents the external instantiation of the <see cref="SpecBase{TModel}" /> class.</summary>
+    internal SpecBase()
+    {
+    }
     
     /// <summary>
     /// Converts this specification to an explanation specification (i.e., Spec&lt;TModel, string&gt;).

@@ -28,20 +28,26 @@ public readonly ref struct TrueHigherOrderFromBooleanResultPredicatePropositionB
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
-    /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
+    /// <param name="whenTrue">A function that generates metadata when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    /// <remarks>
+    /// <para>
+    /// If you wish to return a collection of metadata items, you will need to use the <c>WhenTrueYield()</c>
+    /// method instead, otherwise the whole collection will become the metadata.
+    /// </para>
+    /// </remarks>
     public FalseMetadataFromBooleanResultHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue) =>
         new(resultResolver,
             higherOrderPredicate,
             results => whenTrue(results).ToEnumerable(),
             causeSelector);
-
+    
     /// <summary>Specifies the set of metadata to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataFromBooleanResultHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+    public FalseMetadataFromBooleanResultHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrueYield<TMetadata>(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
         new(resultResolver,
             higherOrderPredicate,
@@ -70,6 +76,16 @@ public readonly ref struct TrueHigherOrderFromBooleanResultPredicatePropositionB
             higherOrderPredicate,
             trueBecause,
             causeSelector);
+    
+    /// <summary>Specifies the set of metadata to use when the condition is true.</summary>
+    /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataFromBooleanResultHigherOrderSpecBuilder<TModel, string, TUnderlyingMetadata> WhenTrueYield(
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> whenTrue) =>
+        new(resultResolver,
+            higherOrderPredicate,
+            whenTrue,
+            causeSelector);
 
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
@@ -86,14 +102,4 @@ public readonly ref struct TrueHigherOrderFromBooleanResultPredicatePropositionB
             new SpecDescription(statement),
                 causeSelector);
     }
-    
-    /// <summary>Specifies the set of metadata to use when the condition is true.</summary>
-    /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
-    /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataFromBooleanResultHigherOrderSpecBuilder<TModel, string, TUnderlyingMetadata> WhenTrue(
-        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> whenTrue) =>
-        new(resultResolver,
-            higherOrderPredicate,
-            whenTrue,
-            causeSelector);
 }

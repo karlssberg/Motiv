@@ -11,6 +11,8 @@ namespace Motiv;
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
 {
+    private readonly SpecBase<TModel, TMetadata>? _spec;
+
     // The base proposition associated with the Spec instance.
     private readonly Func<TModel, SpecBase<TModel, TMetadata>> _specFactory;
 
@@ -21,7 +23,9 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     protected Spec(SpecBase<TModel, TMetadata> spec)
     {
         spec.ThrowIfNull(nameof(spec));
+        
         Description = spec.Description;
+        _spec = spec;
         _specFactory = _ => spec;
     }
 
@@ -38,6 +42,13 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
         Description = spec.Description;
         _specFactory = _ => spec;
     }
+    
+    /// <summary>
+    /// Gets the underlying specifications that make up this composite proposition.
+    /// </summary>
+    public override IEnumerable<SpecBase> Underlying => _spec is null
+        ? Enumerable.Empty<SpecBase<TModel>>()
+        : _spec.Underlying;
 
     /// <summary>
     /// Gets the description of the proposition.
@@ -60,6 +71,8 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 public class Spec<TModel> : SpecBase<TModel, string>
 {
+    private readonly SpecBase<TModel, string>? _spec;
+
     // The base proposition associated with the Spec instance.
     private readonly Func<TModel, SpecBase<TModel, string>> _specFactory;
 
@@ -69,8 +82,10 @@ public class Spec<TModel> : SpecBase<TModel, string>
     /// <param name="spec">The base proposition associated with the Spec instance.</param>
     protected Spec(SpecBase<TModel, string> spec)
     {
-        Description = spec.Description;
         spec.ThrowIfNull(nameof(spec));
+        
+        Description = spec.Description;
+        _spec = spec;
         _specFactory = _ => spec;
     }
 
@@ -90,6 +105,11 @@ public class Spec<TModel> : SpecBase<TModel, string>
     /// Gets the description of the proposition.
     /// </summary>
     public override ISpecDescription Description { get; }
+
+    /// <summary>
+    /// Gets the underlying specifications that makes up this composite proposition.
+    /// </summary>
+    public override IEnumerable<SpecBase> Underlying => Enumerable.Empty<SpecBase<TModel>>();
 
     /// <summary>
     /// Determines whether the specified model satisfies the proposition.

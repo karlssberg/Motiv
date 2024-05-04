@@ -153,7 +153,7 @@ public static class BooleanResultExtensions
                 yield return operation;
             
             foreach (var line in group.detailsAsLines)
-                yield return line.IndentLine();
+                yield return line.Indent();
         }
         
         yield break;
@@ -168,7 +168,7 @@ public static class BooleanResultExtensions
                          && binaryOperationResult.IsCollapsable =>
                     result.ToEnumerable().GetBinaryJustificationAsLines(operation, level + 1),
                 _ =>
-                    result.Description.GetDetailsAsLines()
+                    result.Description.GetJustificationAsLines()
             };
 
             return (op, detailsAsLines);

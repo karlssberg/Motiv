@@ -21,8 +21,8 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
         TMetadata whenTrue) =>
         new(spec, (_, _) => whenTrue.ToEnumerable());
 
-    /// <summary>Specifies an assertion to yield when the condition is true.</summary>
-    /// <param name="whenTrue">A human-readable reason why the condition is true.</param>
+    /// <summary>Specifies an assertion to yield when the proposition is true.</summary>
+    /// <param name="whenTrue">Metadata to yield when the proposition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionWithNamePropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
     public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<TModel, TMetadata> whenTrue) =>
@@ -32,6 +32,12 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates the metadata when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    /// <remarks>
+    /// <para>
+    /// If you wish to return a collection of metadata items, you will need to use the <c>WhenTrueYield()</c>
+    /// method instead, otherwise the whole collection will become the metadata.
+    /// </para>
+    /// </remarks>
     public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue) =>
         new(spec, (model, result) => whenTrue(model, result).ToEnumerable());
@@ -40,7 +46,7 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+    public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrueYield<TMetadata>(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
         new(spec, whenTrue);
 
@@ -69,7 +75,7 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrue(
+    public FalseMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrueYield(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
         new(spec, trueBecause);
 

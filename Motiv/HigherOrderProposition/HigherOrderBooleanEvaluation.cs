@@ -28,6 +28,7 @@ public sealed class HigherOrderBooleanEvaluation<TModel>
         IReadOnlyList<ModelResult<TModel>> causalResults)
     {
         _allResults = allResults;
+        
         _causalResults = causalResults;
         
         _lazyAllModels = new Lazy<IReadOnlyList<TModel>>(() =>
@@ -37,7 +38,7 @@ public sealed class HigherOrderBooleanEvaluation<TModel>
             allResults.All(result => result.Satisfied));
         
         _lazyAnySatisfied = new Lazy<bool>(() =>
-            allResults.Any(result => !result.Satisfied));
+            allResults.Any(result => result.Satisfied));
 
         _lazyNoneSatisfied = new Lazy<bool>(() =>
             allResults.All(result => !result.Satisfied));

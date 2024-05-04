@@ -5,9 +5,6 @@
 /// </summary>
 public abstract class ResultDescriptionBase
 {
-    /// <summary>
-    /// Gets the count of causal operands.
-    /// </summary>
     internal abstract int CausalOperandCount { get; }
 
     /// <summary>
@@ -16,9 +13,9 @@ public abstract class ResultDescriptionBase
     public abstract string Reason { get; }
 
     /// <summary>
-    /// Gets the rationale for the result, represented as a string.
+    /// Gets the multi-line detailed breakdown of the causes as a human-readable string.
     /// </summary>
-    public virtual string Rationale => string.Join(Environment.NewLine, GetDetailsAsLines());
+    public virtual string Justification => string.Join(Environment.NewLine, GetJustificationAsLines());
 
     /// <summary>
     /// Returns a string that represents the current object.
@@ -30,5 +27,5 @@ public abstract class ResultDescriptionBase
     /// Retrieves the details of the result as a collection of lines.
     /// </summary>
     /// <returns>An enumerable collection of strings, each representing a line of detail.</returns>
-    public abstract IEnumerable<string> GetDetailsAsLines();
+    public abstract IEnumerable<string> GetJustificationAsLines();
 }

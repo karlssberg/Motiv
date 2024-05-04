@@ -1,6 +1,4 @@
-﻿using FluentAssertions;
-
-namespace Motiv.Tests;
+﻿namespace Motiv.Tests;
 
 public class MinimalPropositionTests
 {
@@ -9,13 +7,18 @@ public class MinimalPropositionTests
     [InlineData(false, false)]
     public void Should_evaluate_a_minimal_proposition(bool model, bool expectedSatisfied)
     {
-        var sut = 
+        // Arrange
+        var spec = 
             Spec.Build((bool b) => b)
                 .Create("is true");
         
-        var act = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Satisfied;
         
-        act.Satisfied.Should().Be(expectedSatisfied);
+        // Assert
+        act.Should().Be(expectedSatisfied);
     }
     
     [Theory]
@@ -23,13 +26,18 @@ public class MinimalPropositionTests
     [InlineData(false, "!is true")]
     public void Should_evaluate_reason_of_a_minimal_proposition(bool model, string expectedReason)
     {
-        var sut = 
+        // Arrange
+        var spec = 
             Spec.Build((bool b) => b)
                 .Create("is true");
         
-        var act = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Reason;
         
-        act.Reason.Should().Be(expectedReason);
+        // Assert
+        act.Should().Be(expectedReason);
     }
     
     [Theory]
@@ -41,12 +49,17 @@ public class MinimalPropositionTests
     [InlineData(false, "is true!", "!(is true!)")]
     public void Should_escape_propositional_statement_when_evaluated(bool model, string propositionalStatement, string expectedReason)
     {
-        var sut = 
+        // Arrange
+        var spec = 
             Spec.Build((bool b) => b)
                 .Create(propositionalStatement);
         
-        var act = sut.IsSatisfiedBy(model);
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Reason;
         
-        act.Reason.Should().Be(expectedReason);
+        // Assert
+        act.Should().Be(expectedReason);
     }
 }

@@ -272,7 +272,7 @@ When deriving new propositions, you may still require assertions or metadata fro
 var isEligibleForLoan =
     Spec.Build(hasGoodCreditScore & hasSufficientIncome) 
         .WhenTrue("customer is eligible for a loan")
-        .WhenFalse((_, result) => result.Assertions)     // reusing assertions
+        .WhenFalseYield((_, result) => result.Assertions)     // reusing assertions
         .Create();
 
 var ineligibleResult = isEligibleForLoan.IsSatisfiedBy(ineligibleCustomer);
@@ -354,7 +354,7 @@ particular use-case.
 Spec.Build(new IsNegativeIntegerProposition()) // existing proposition
     .AsAllSatisfied()
     .WhenTrue("all are negative")
-    .WhenFalse(evaluation => evaluation.FalseModels.Select(n => $"{n} is not negative"))
+    .WhenFalseYield(evaluation => evaluation.FalseModels.Select(n => $"{n} is not negative"))
     .Create();
 ```
 
@@ -377,7 +377,7 @@ var allNegative =
                 { Models: [< 0 and var n] } => $"{n} is negative and is the only number",
                 _ => "all are negative numbers"
             })
-        .WhenFalse(eval =>
+        .WhenFalseYield(eval =>
             eval switch
             {
                 { Models: [0] } => ["the number is 0 and is the only number"],

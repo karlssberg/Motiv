@@ -1,23 +1,21 @@
-﻿using System.Diagnostics;
-using System.Text.RegularExpressions;
-using FluentAssertions;
+﻿using System.Text.RegularExpressions;
 
 namespace Motiv.Tests;
 
 public class AndAlsoSpecTests
 {
     [Theory]
-    [InlineAutoData(false, false, false, "not left")]
-    [InlineAutoData(false, true, false, "not left")]
-    [InlineAutoData(true, false, false, "not right")]
-    [InlineAutoData(true, true, true, "left && right")]
+    [InlineAutoData(false, false, false)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(true, false, false)]
+    [InlineAutoData(true, true, true)]
     public void Should_evaluate_as_a_logical_and_with_short_circuiting(
         bool leftValue,
         bool rightValue,
         bool expectedSatisfied,
-        string expectedSerialized,
         object model)
     {
+        // Arrange
         var left = 
             Spec.Build((object _) => leftValue)
                 .WhenTrue("left")
@@ -30,17 +28,54 @@ public class AndAlsoSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var sut = left.AndAlso(right);
+        var spec = left.AndAlso(right);
+        var result = spec.IsSatisfiedBy(model);
+        
+        // Act
+        var act = result.Satisfied;
+        
+        // Assert
+        act.Should().Be(expectedSatisfied);
+    }
+    
+    [Theory]
+    [InlineAutoData(false, false, "not left")]
+    [InlineAutoData(false, true, "not left")]
+    [InlineAutoData(true, false, "not right")]
+    [InlineAutoData(true, true, "left && right")]
+    public void Should_evaluate_reasons(
+        bool leftValue,
+        bool rightValue,
+        string expectedSerialized,
+        object model)
+    {
+        // Arrange
+        var left = 
+            Spec.Build((object _) => leftValue)
+                .WhenTrue("left")
+                .WhenFalse("not left")
+                .Create();
 
-        var result = sut.IsSatisfiedBy(model);
+        var right = 
+            Spec.Build((object _) => rightValue)
+                .WhenTrue("right")
+                .WhenFalse("not right")
+                .Create();
 
-        result.Satisfied.Should().Be(expectedSatisfied);
-        result.Reason.Should().BeEquivalentTo(expectedSerialized);
+        var spec = left.AndAlso(right);
+        var result = spec.IsSatisfiedBy(model);
+        
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().BeEquivalentTo(expectedSerialized);
     }
 
     [Fact]
     public void Should_not_evaluate_the_right_operand_when_false()
     {
+        // Arrange
         var left = 
             Spec.Build((object _) => false)
                 .WhenTrue("left")
@@ -53,16 +88,19 @@ public class AndAlsoSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var sut = left.AndAlso(right);
+        var spec = left.AndAlso(right);
         
-        Action act = () => sut.IsSatisfiedBy(new object());
+        // Act
+        Action act = () => spec.IsSatisfiedBy(new object());
         
+        // Assert
         act.Should().NotThrow<Exception>();
     }
 
     [Fact]
     public void Should_have_spec_with_propositional_statement()
     {
+        // Arrange
         var left =
             Spec.Build((bool m) => m)
                 .WhenTrue("left")
@@ -75,14 +113,19 @@ public class AndAlsoSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var sut = left.AndAlso(right);
-
-        sut.Statement.Should().Be("left && right");
+        var spec = left.AndAlso(right);
+        
+        // Act
+        var act = spec.Statement;
+        
+        // Assert
+        act.Should().Be("left && right");
     }
     
     [Fact]
     public void Should_describe_in_detail_the_or_else_spec()
     {
+        // Arrange
         const string expected =
             """
             AND ALSO
@@ -102,9 +145,13 @@ public class AndAlsoSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var sut = left.AndAlso(right);
+        var spec = left.AndAlso(right);
 
-        sut.Expression.Should().Be(expected);
+        // Act
+        var act = spec.Expression;
+        
+        // Assert
+        act.Should().Be(expected);
     }
     
     [Theory]
@@ -112,6 +159,7 @@ public class AndAlsoSpecTests
     [InlineAutoData(false, "not left")]
     public void Should_describe_the_result(bool model, string expected)
     {
+        // Arrange
         var left = 
             Spec.Build((bool m) => m)
                 .WhenTrue("left")
@@ -124,11 +172,13 @@ public class AndAlsoSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var sut = left.AndAlso(right);
+        var spec = left.AndAlso(right);
         
-        var act = sut.IsSatisfiedBy(model);
-
-        act.Description.Reason.Should().Be(expected);
+        // Act
+        var act = spec.IsSatisfiedBy(model).Description.Reason;
+        
+        // Assert
+        act.Should().Be(expected);
     }
     
     [Theory]
@@ -142,6 +192,7 @@ public class AndAlsoSpecTests
                                     """)] 
     public void Should_describe_the_result_in_detail_over_a_single_line_because_operands_are_short(bool model, string expected)
     {
+        // Arrange
         var left =
             Spec.Build((bool m) => m)
                 .WhenTrue("left")
@@ -154,11 +205,13 @@ public class AndAlsoSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var sut = left.AndAlso(right);
+        var spec = left.AndAlso(right);
         
-        var act = sut.IsSatisfiedBy(model);
+        // Act
+        var act = spec.IsSatisfiedBy(model).Justification;
 
-        act.Justification.Should().Be(expected);
+        // Assert
+        act.Should().Be(expected);
     }
     
     [Theory]
@@ -172,6 +225,7 @@ public class AndAlsoSpecTests
                             """)]
     public void Should_describe_the_result_in_detail_over_multiple_lines_because_operands_are_long(bool model, string expected)
     {
+        // Arrange
         var left =
             Spec.Build((bool m) => m)
                 .WhenTrue("left assertion statement")
@@ -184,11 +238,13 @@ public class AndAlsoSpecTests
                 .WhenFalse("not right assertion statement")
                 .Create();
 
-        var sut = left.AndAlso(right);
+        var spec = left.AndAlso(right);
         
-        var act = sut.IsSatisfiedBy(model);
+        // Act
+        var act = spec.IsSatisfiedBy(model).Justification;
 
-        act.Justification.Should().Be(expected);
+        // Assert
+        act.Should().Be(expected);
     }
     
     [Theory]
@@ -205,6 +261,7 @@ public class AndAlsoSpecTests
         int  rightTrue,
         int  rightFalse)
     {
+        // Arrange
         var left =
             Spec.Build((string _) => leftValue)
                 .WhenTrue(leftTrue)
@@ -217,11 +274,13 @@ public class AndAlsoSpecTests
                 .WhenFalse(rightFalse)
                 .Create("right");
 
-        var sut = left.AndAlso(right);
+        var spec = left.AndAlso(right);
         
-        var act = sut.IsSatisfiedBy("");
+        // Act
+        var act = spec.IsSatisfiedBy("").Satisfied;
 
-        act.Satisfied.Should().Be(expectedSatisfied);
+        // Assert
+        act.Should().Be(expectedSatisfied);
     }
     
     [Theory]
@@ -234,6 +293,7 @@ public class AndAlsoSpecTests
         bool rightValue,
         params string[] expectedAssertions)
     {
+        // Arrange
         var left =
             Spec.Build((string _) => leftValue)
                 .WhenTrue(new Uri("http://true"))
@@ -246,17 +306,51 @@ public class AndAlsoSpecTests
                 .WhenFalse(new Regex("false"))
                 .Create("right");
 
-        var sut = left.AndAlso(right);
+        var spec = left.AndAlso(right);
         
-        var act = sut.IsSatisfiedBy("");
+        // Act
+        var act = spec.IsSatisfiedBy("").Assertions;
 
-        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
-        act.Metadata.Should().BeEquivalentTo(expectedAssertions);
+        // Assert
+        act.Should().BeEquivalentTo(expectedAssertions);
+    }
+    
+    [Theory]
+    [InlineData(false, false, "!left")]
+    [InlineData(false, true, "!left")]
+    [InlineData(true, false, "!right")]
+    [InlineData(true, true, "left", "right")]
+    public void Should_perform_AndAlso_on_specs_with_different_metadata_and_preserve_metadata(
+        bool leftValue,
+        bool rightValue,
+        params string[] expectedAssertions)
+    {
+        // Arrange
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(new Uri("http://true"))
+                .WhenFalse(new Uri("http://false"))
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(new Regex("true"))
+                .WhenFalse(new Regex("false"))
+                .Create("right");
+
+        var spec = left.AndAlso(right);
+        
+        // Act
+        var act = spec.IsSatisfiedBy("").Metadata;
+
+        // Assert
+        act.Should().BeEquivalentTo(expectedAssertions);
     }
     
     [Fact]
     public void Should_not_collapse_ORELSE_operators_in_spec_description()
     {
+        // Arrange
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
@@ -278,5 +372,26 @@ public class AndAlsoSpecTests
                 second
                 third
             """);
+    }
+
+    [Fact]
+    public void Should_return_the_underlying_specs()
+    {
+        // Arrange
+        var left = Spec
+            .Build<bool>(_ => true)
+            .Create("left");
+        
+        var right = Spec
+            .Build<bool>(_ => true)
+            .Create("right");
+        
+        var spec = left.AndAlso(right);
+        
+        // Act
+        var act = spec.Underlying;
+        
+        // Assert
+        act.Should().BeEquivalentTo([left, right]);
     }
 }

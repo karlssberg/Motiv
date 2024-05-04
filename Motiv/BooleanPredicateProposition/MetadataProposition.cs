@@ -14,6 +14,8 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
     ISpecDescription specDescription)
     : SpecBase<TModel, TMetadata>
 {
+    public override IEnumerable<SpecBase> Underlying => Enumerable.Empty<SpecBase>();
+    
     /// <summary>Gets or sets the description of the proposition.</summary>
     public override ISpecDescription Description => specDescription;
 

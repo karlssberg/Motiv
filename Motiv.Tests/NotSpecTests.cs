@@ -1,6 +1,4 @@
-﻿using FluentAssertions;
-
-namespace Motiv.Tests;
+﻿namespace Motiv.Tests;
 
 public class NotSpecTests
 {
@@ -12,18 +10,44 @@ public class NotSpecTests
         bool expected,
         object model)
     {
+        // Arrange
         var spec = Spec
             .Build<object>(_ => operand)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create($"is {operand}");
 
-        var sut = !spec;
+        var result = (!spec).IsSatisfiedBy(model);
 
-        var result = sut.IsSatisfiedBy(model);
+        // Act
+        var act = result.Satisfied;
+        
+        // Assert
+        act.Should().Be(expected);
+    }
 
-        result.Satisfied.Should().Be(expected);
-        result.Metadata.Should().AllBeEquivalentTo(operand);
+    [Theory]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    public void Should_yield_metadata(
+        bool operand,
+        bool expected,
+        object model)
+    {
+        // Arrange
+        var spec = Spec
+            .Build<object>(_ => operand)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create($"is {operand}");
+
+        var result = (!spec).IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Metadata;
+        
+        // Assert
+        act.Should().AllBeEquivalentTo(operand);
     }
 
     [Theory]
@@ -34,17 +58,20 @@ public class NotSpecTests
         string expected,
         object model)
     {
+        // Arrange
         var spec = Spec
             .Build<object>(_ => operand)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("is true");
 
-        var sut = !spec;
+        var result = (!spec).IsSatisfiedBy(model);
 
-        var result = sut.IsSatisfiedBy(model);
-
-        result.Reason.Should().Be(expected);
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -55,17 +82,20 @@ public class NotSpecTests
         string expected,
         object model)
     {
+        // Arrange
         var spec = Spec
             .Build<object>(_ => operand)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
 
-        var sut = !spec;
+        var result = (!spec).IsSatisfiedBy(model);
 
-        var result = sut.IsSatisfiedBy(model);
-
-        result.Reason.Should().Be(expected);
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -76,16 +106,82 @@ public class NotSpecTests
         string expected,
         object model)
     {
+        // Arrange
         var spec = Spec
             .Build<object>(_ => operand)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
 
-        var sut = !spec;
+        var result = (!spec).IsSatisfiedBy(model);
 
-        var result = sut.IsSatisfiedBy(model);
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineData("is true", "!is true")]
+    [InlineData("!is true", "is true")]
+    [InlineData("(is true)", "!(is true)")]
+    public void Should_Format_Statement_Correctly(string operandStatement, string expected)
+    {
+        // Arrange
+        var operand = Spec
+            .Build<object>(_ => true)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create(operandStatement);
 
-        result.Reason.Should().Be(expected);
+        var notSpecDescription = !operand;
+
+        // Act
+        var statement = notSpecDescription.Statement;
+
+        // Assert
+        statement.Should().Be(expected);
+    }
+
+    [Fact]
+    public void Should_Format_Statement_Correctly_When_Operand_Is_BinaryOperationSpec()
+    {
+        // Arrange
+        var left = 
+            Spec.Build<object>(_ => true)
+                .WhenTrue(true)
+                .WhenFalse(false)
+                .Create("is true");
+        
+        var right =
+            Spec.Build<object>(_ => false)
+                .WhenTrue(true)
+                .WhenFalse(false)
+                .Create("is false");
+
+        var notSpecDescription = !(left & right);
+
+        // Act
+        var statement = notSpecDescription.Statement;
+
+        // Assert
+        statement.Should().Be("!(is true & is false)");
+    }
+    
+
+    [Fact]
+    public void Should_return_the_underlying_specs()
+    {
+        // Arrange
+        var underlying = Spec
+            .Build<bool>(_ => true)
+            .Create("left");
+
+        // Act
+        var act = (!underlying).Underlying;
+        
+        // Assert
+        act.Should().BeEquivalentTo([underlying]);
     }
 }

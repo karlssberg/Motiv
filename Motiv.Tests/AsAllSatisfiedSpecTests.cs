@@ -1,6 +1,4 @@
-﻿using FluentAssertions;
-
-namespace Motiv.Tests;
+﻿namespace Motiv.Tests;
 
 public class AsAllSatisfiedSpecTests
 {
@@ -19,6 +17,7 @@ public class AsAllSatisfiedSpecTests
         bool third,
         bool expected)
     {
+        // Arrange
         var underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString())
@@ -27,14 +26,16 @@ public class AsAllSatisfiedSpecTests
 
         bool[] models = [first, second, third];
 
-        var sut = Spec
+        var spec = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
             .Create("all are true");
 
-        var result = sut.IsSatisfiedBy(models);
+        // Act
+        var act = spec.IsSatisfiedBy(models).Satisfied;
 
-        result.Satisfied.Should().Be(expected);
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -83,22 +84,27 @@ public class AsAllSatisfiedSpecTests
         bool third,
         string expected)
     {
+        // Arrange
         var underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString().ToLowerInvariant())
             .WhenFalse(false.ToString().ToLowerInvariant())
             .Create();
 
-        var sut = Spec
+        var spec = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
-            .WhenTrue(evaluation => evaluation.Metadata)
-            .WhenFalse(evaluation => evaluation.Metadata)
+            .WhenTrueYield(evaluation => evaluation.Metadata)
+            .WhenFalseYield(evaluation => evaluation.Metadata)
             .Create("all are true");
+        
+        var result = spec.IsSatisfiedBy([first, second, third]);
 
-        var result = sut.IsSatisfiedBy([first, second, third]);
+        // Act
+        var act = result.Justification;
 
-        result.Justification.Should().Be(expected);
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -148,23 +154,27 @@ public class AsAllSatisfiedSpecTests
             bool third,
             string expected)
     {
+        // Arrange
         var underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString().ToLowerInvariant())
             .WhenFalse(false.ToString().ToLowerInvariant())
             .Create();
 
-        var sut = Spec
+        var spec = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
-            .WhenTrue(evaluation => evaluation.Metadata)
-            .WhenFalse(evaluation => evaluation.Metadata)
+            .WhenTrueYield(evaluation => evaluation.Metadata)
+            .WhenFalseYield(evaluation => evaluation.Metadata)
             .Create("all are true");
 
+        var result = spec.IsSatisfiedBy([first, second, third]);
 
-        var result = sut.IsSatisfiedBy([first, second, third]);
-
-        result.Justification.Should().Be(expected);
+        // Act
+        var act = result.Justification;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -213,22 +223,27 @@ public class AsAllSatisfiedSpecTests
         bool third,
         string expected)
     {
+        // Arrange
         var underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("is true");
 
-        var sut = Spec
+        var spec = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
-            .WhenTrue(evaluation => evaluation.Metadata)
-            .WhenFalse(evaluation => evaluation.Metadata)
+            .WhenTrueYield(evaluation => evaluation.Metadata)
+            .WhenFalseYield(evaluation => evaluation.Metadata)
             .Create("all are true");
 
-        var result = sut.IsSatisfiedBy([first, second, third]);
+        var result = spec.IsSatisfiedBy([first, second, third]);
 
-        result.Justification.Should().Be(expected);
+        // Act
+        var act = result.Justification;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -307,6 +322,7 @@ public class AsAllSatisfiedSpecTests
         bool third,
         string expected)
     {
+        // Arrange
         var left = Spec
             .Build((bool m) => m)
             .WhenTrue(true)
@@ -322,14 +338,17 @@ public class AsAllSatisfiedSpecTests
         var sut = Spec
             .Build(left & right)
             .AsAllSatisfied()
-            .WhenTrue(evaluation => evaluation.Metadata)
-            .WhenFalse(evaluation => evaluation.Metadata)
+            .WhenTrueYield(evaluation => evaluation.Metadata)
+            .WhenFalseYield(evaluation => evaluation.Metadata)
             .Create("all are true");
 
-        bool[] models = [first, second, third];
-        var result = sut.IsSatisfiedBy(models);
+        var result = sut.IsSatisfiedBy([first, second, third]);
 
-        result.Justification.Should().Be(expected);
+        // Act
+        var act = result.Justification;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -347,6 +366,7 @@ public class AsAllSatisfiedSpecTests
         bool third,
         string expected)
     {
+        // Arrange
         var underlyingSpecLeft = Spec
             .Build((bool m) => m)
             .WhenTrue(true)
@@ -362,27 +382,69 @@ public class AsAllSatisfiedSpecTests
         var sut = Spec
             .Build(underlyingSpecLeft & underlyingSpecRight)
             .AsAllSatisfied()
-            .WhenTrue(evaluation => evaluation.Metadata)
-            .WhenFalse(evaluation => evaluation.Metadata)
+            .WhenTrueYield(evaluation => evaluation.Metadata)
+            .WhenFalseYield(evaluation => evaluation.Metadata)
             .Create("all are true");
 
-        bool[] models = [first, second, third];
-        var result = sut.IsSatisfiedBy(models);
+        var result = sut.IsSatisfiedBy([first, second, third]);
+
+        // Act
+        var act = result.Reason;
         
-        result.Reason.Should().Be(expected);
-        result.ToString().Should().Be(expected);
+        // Assert
+        act.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineAutoData(false, false, false, "!all are true")]
+    [InlineAutoData(false, false, true, "!all are true")]
+    [InlineAutoData(false, true, false, "!all are true")]
+    [InlineAutoData(false, true, true, "!all are true")]
+    [InlineAutoData(true, false, false, "!all are true")]
+    [InlineAutoData(true, false, true, "!all are true")]
+    [InlineAutoData(true, true, false, "!all are true")]
+    [InlineAutoData(true, true, true, "all are true")]
+    public void Should_serialize_the_result_of_the_all_operation_and_show_underlying_causes(
+        bool first,
+        bool second,
+        bool third,
+        string expected)
+    {
+        // Arrange
+        var underlyingSpecLeft = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var underlyingSpecRight = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var sut = Spec
+            .Build(underlyingSpecLeft & underlyingSpecRight)
+            .AsAllSatisfied()
+            .WhenTrueYield(evaluation => evaluation.Metadata)
+            .WhenFalseYield(evaluation => evaluation.Metadata)
+            .Create("all are true");
+
+        var result = sut.IsSatisfiedBy([first, second, third]);
+
+        // Act
+        var act = result.ToString();
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
 
     [Fact]
-    public void Should_provide_a_description_of_the_specification()
+    public void Should_provide_a_statement_of_the_specification()
     {
+        // Arrange
         const string expectedSummary = "all booleans are true";
-        const string expectedFull =
-            """
-            all booleans are true
-                is true
-            """;
 
         var underlyingSpec = Spec
             .Build((bool m) => m)
@@ -397,15 +459,73 @@ public class AsAllSatisfiedSpecTests
             .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
             .Create("all booleans are true");
 
-        sut.Statement.Should().Be(expectedSummary);
-        sut.Expression.Should().Be(expectedFull);
-        sut.ToString().Should().Be(expectedSummary);
+        // Act
+        var act = sut.Statement;
+        
+        // Assert
+        act.Should().Be(expectedSummary);
     }
-
-    [Fact]  
-    public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
+    
+    [Fact]
+    public void Should_provide_a_serialized_expression_tree_of_the_specification()
     {
+        // Arrange
+        const string expectedFull =
+            """
+            all booleans are true
+                is true
+            """;
+
+        var underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("is true");
+
+        var spec = Spec
+            .Build(underlyingSpec)
+            .AsAllSatisfied()
+            .WhenTrue("all  true")
+            .WhenFalse(evaluation => $"{evaluation.FalseCount} false")
+            .Create("all booleans are true");
+
+        // Act
+        var act = spec.Expression;
+        
+        // Assert
+        act.Should().Be(expectedFull);
+    }
+    
+    [Fact]  
+    public void Should_provide_a_statement_of_the_specification_when_metadata_is_a_string()
+    {
+        // Arrange
         const string expectedSummary = "all are true";
+
+        var underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue("is true")
+            .WhenFalse("is false")
+            .Create();
+
+        var spec = Spec
+            .Build(underlyingSpec)
+            .AsAllSatisfied()
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("all are true");
+
+        // Act
+        var act = spec.Statement;
+        
+        // Assert
+        act.Should().Be(expectedSummary);
+    }
+    
+    [Fact]  
+    public void Should_provide_a_serialized_expression_tree_of_the_specification_when_metadata_is_a_string()
+    {
+        // Arrange
         const string expectedFull =
             """
             all are true
@@ -417,17 +537,18 @@ public class AsAllSatisfiedSpecTests
             .WhenTrue("is true")
             .WhenFalse("is false")
             .Create();
-
-        var sut = Spec
+        var spec = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("all are true");
 
-        sut.Statement.Should().Be(expectedSummary);
-        sut.Expression.Should().Be(expectedFull);
-        sut.ToString().Should().Be(expectedSummary);
+        // Act
+        var act = spec.Expression;
+        
+        // Assert
+        act.Should().Be(expectedFull);
     }
     
     [Theory]
@@ -445,18 +566,23 @@ public class AsAllSatisfiedSpecTests
         bool thirdModel,
         int expected)
     {
+        // Arrange
         var underlying = Spec
             .Build((bool m) => m)
             .Create("underlying");
         
-        var sut = Spec
+        var spec = Spec
             .Build(underlying)
             .AsAllSatisfied()
             .Create("all are true");
 
-        var result = sut.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
+        var result = spec.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
 
-        result.Description.CausalOperandCount.Should().Be(expected);
+        // Act
+        var act = result.Description.CausalOperandCount;
+        
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
@@ -466,89 +592,295 @@ public class AsAllSatisfiedSpecTests
     [InlineAutoData(true, true, true, "all are true")]
     public void Should_surface_boolean_results_created_from_underlyingResult(bool modelA, bool modelB, bool expected, string expectedAssertion)
     {
+        // Arrange
         var underlying = Spec
             .Build((bool m) => m)
             .Create("underlying");
 
-        var sut = Spec
+        var spec = Spec
             .Build((bool m) => underlying.IsSatisfiedBy(m))
             .AsAllSatisfied()
             .Create("all are true");
         
-        var act = sut.IsSatisfiedBy([modelA, modelB]);
+        // Act
+        var act = spec.IsSatisfiedBy([modelA, modelB]).Satisfied;
         
-        act.Satisfied.Should().Be(expected);
-        act.Reason.Should().Be(expectedAssertion);
+        // Assert
+        act.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "not all are true")]
-    [InlineAutoData(false, true, false, "not all are true")]
-    [InlineAutoData(true, false, false, "not all are true")]
+    [InlineAutoData(false, false, false, "!all are true")]
+    [InlineAutoData(false, true, false, "!all are true")]
+    [InlineAutoData(true, false, false, "!all are true")]
     [InlineAutoData(true, true, true, "all are true")]
-    public void Should_surface_boolean_results_with_custom_assertions_created_from_underlyingResult(bool modelA, bool modelB, bool expected, string expectedAssertion)
+    public void Should_surface_reasons_from_underlyingResult(bool modelA, bool modelB, bool expected, string expectedAssertion)
     {
+        // Arrange
         var underlying = Spec
             .Build((bool m) => m)
             .Create("underlying");
 
-        var sut = Spec
+        var spec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .AsAllSatisfied()
+            .Create("all are true");
+        
+        // Act
+        var act = spec.IsSatisfiedBy([modelA, modelB]).Reason;
+        
+        // Assert
+        act.Should().Be(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(true, false, false)]
+    [InlineAutoData(true, true, true)]
+    public void Should_evaluate_boolean_results_created_with_custom_assertions(
+        bool modelA,
+        bool modelB,
+        bool expected)
+    {
+        // Arrange
+        var underlying = Spec
+            .Build((bool m) => m)
+            .Create("underlying");
+
+        var spec = Spec
             .Build((bool m) => underlying.IsSatisfiedBy(m))
             .AsAllSatisfied()
             .WhenTrue("all are true")
             .WhenFalse("not all are true")
             .Create();
         
-        var act = sut.IsSatisfiedBy([modelA, modelB]);
+        // Act
+        var act = spec.IsSatisfiedBy([modelA, modelB]).Satisfied;
         
-        act.Satisfied.Should().Be(expected);
-        act.Reason.Should().Be(expectedAssertion);
-        act.Assertions.Should().BeEquivalentTo([expectedAssertion]);
+        // Assert
+        act.Should().Be(expected);
     }
     
+
     [Theory]
-    [InlineAutoData(false, false, false, "not all are true")]
-    [InlineAutoData(false, true, false, "not all are true")]
-    [InlineAutoData(true, false, false, "not all are true")]
-    [InlineAutoData(true, true, true, "all are true")]
-    public void Should_surface_boolean_results_created_from_predicate(bool modelA, bool modelB, bool expected, string expectedAssertion)
+    [InlineAutoData(false, false, "not all are true")]
+    [InlineAutoData(false, true, "not all are true")]
+    [InlineAutoData(true, false, "not all are true")]
+    [InlineAutoData(true, true, "all are true")]
+    public void Should_surface_assertions_from_boolean_results_created_with_custom_assertions(
+        bool modelA,
+        bool modelB,
+        string expectedAssertion)
     {
-        var sut = Spec
+        // Arrange
+        var underlying = Spec
+            .Build((bool m) => m)
+            .Create("underlying");
+
+        var spec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .AsAllSatisfied()
+            .WhenTrue("all are true")
+            .WhenFalse("not all are true")
+            .Create();
+        
+        // Act
+        var act = spec.IsSatisfiedBy([modelA, modelB]).Assertions;
+        
+        // Assert
+        act.Should().BeEquivalentTo([expectedAssertion]);
+    }
+    
+
+    [Theory]
+    [InlineAutoData(false, false, "not all are true")]
+    [InlineAutoData(false, true, "not all are true")]
+    [InlineAutoData(true, false, "not all are true")]
+    [InlineAutoData(true, true, "all are true")]
+    public void Should_surface_reason_from_boolean_results_with_custom_assertions(
+        bool modelA,
+        bool modelB,
+        string expectedAssertion)
+    {
+        // Arrange
+        var underlying = Spec
+            .Build((bool m) => m)
+            .Create("underlying");
+
+        var spec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .AsAllSatisfied()
+            .WhenTrue("all are true")
+            .WhenFalse("not all are true")
+            .Create();
+        
+        // Act
+        var act = spec.IsSatisfiedBy([modelA, modelB]).Reason;
+        
+        // Assert
+        act.Should().Be(expectedAssertion);
+    }
+   
+    [Theory]
+    [InlineAutoData(false, false, false)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(true, false, false)]
+    [InlineAutoData(true, true, true)]
+    public void Should_evaluate_boolean_results_created_from_predicate(
+        bool modelA,
+        bool modelB,
+        bool expected)
+    {
+        // Arrange
+        var spec = Spec
+            .Build((bool m) => m)
+            .AsAllSatisfied()
+            .WhenTrue("all are true")
+            .WhenFalse("not all are true")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([modelA, modelB]);
+        
+        // Act
+        var act = result.Satisfied;
+        
+        // Assert
+        act.Should().Be(expected);
+    }
+    
+    
+    [Theory]
+    [InlineAutoData(false, false, "not all are true")]
+    [InlineAutoData(false, true, "not all are true")]
+    [InlineAutoData(true, false, "not all are true")]
+    [InlineAutoData(true, true, "all are true")]
+    public void Should_surface_reason_for_boolean_results_created_from_predicate(
+        bool modelA,
+        bool modelB,
+        string expectedAssertion)
+    {
+        // Arrange
+        var spec = Spec
             .Build((bool m) => m)
             .AsAllSatisfied()
             .WhenTrue("all are true")
             .WhenFalse("not all are true")
             .Create();
         
-        var act = sut.IsSatisfiedBy([modelA, modelB]);
+        var result = spec.IsSatisfiedBy([modelA, modelB]);
+
+        // Act
+        var act = result.Reason;
         
-        act.Satisfied.Should().Be(expected);
-        act.Reason.Should().Be(expectedAssertion);
-        act.Assertions.Should().BeEquivalentTo([expectedAssertion]);
+        // Assert
+        act.Should().Be(expectedAssertion);
     }
     
     [Theory]
-    [InlineData(false, false, false, "not all are true")]
-    [InlineData(false, true, false, "not all are true")]
-    [InlineData(true, false, false, "not all are true")]
-    [InlineData(true, true, true, "all are true")]
-    public void Should_surface_boolean_results_created_from_predicate_when_a_proposition_is_specified(
+    [InlineAutoData(false, false, "not all are true")]
+    [InlineAutoData(false, true, "not all are true")]
+    [InlineAutoData(true, false, "not all are true")]
+    [InlineAutoData(true, true, "all are true")]
+    public void Should_surface_assertion_of_boolean_results_created_from_predicate(
         bool modelA,
         bool modelB,
-        bool expected,
-        string expectedReason)
+        string expectedAssertion)
     {
-        var sut = Spec
+        // Arrange
+        var spec = Spec
+            .Build((bool m) => m)
+            .AsAllSatisfied()
+            .WhenTrue("all are true")
+            .WhenFalse("not all are true")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([modelA, modelB]);
+        
+        // Act
+        var act = result.Assertions;
+        
+        // Assert
+        act.Should().BeEquivalentTo([expectedAssertion]);
+    }
+    
+    [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, true)]
+    public void Should_evaluate_boolean_results_created_from_predicate_when_a_proposition_is_specified(
+        bool modelA,
+        bool modelB,
+        bool expected)
+    {
+        // Arrange
+        var spec = Spec
             .Build((bool m) => m)
             .AsAllSatisfied()
             .WhenTrue("all are true")
             .WhenFalse("not all are true")
             .Create("all true");
+
+        var result = spec.IsSatisfiedBy([modelA, modelB]);
         
-        var act = sut.IsSatisfiedBy([modelA, modelB]);
+        // Act
+        var act = result.Satisfied;
         
-        act.Satisfied.Should().Be(expected);
-        act.Reason.Should().Be(expectedReason);
-        act.Assertions.Should().BeEquivalentTo([expectedReason]);
+        // Assert
+        act.Should().Be(expected);
+    }
+    
+    [Theory]
+    [InlineData(false, false, "not all are true")]
+    [InlineData(false, true, "not all are true")]
+    [InlineData(true, false, "not all are true")]
+    [InlineData(true, true, "all are true")]
+    public void Should_surface_reason_for_boolean_results_created_from_predicate_when_a_proposition_is_specified(
+        bool modelA,
+        bool modelB,       string expectedReason)
+    {
+        // Arrange
+        var spec = Spec
+            .Build((bool m) => m)
+            .AsAllSatisfied()
+            .WhenTrue("all are true")
+            .WhenFalse("not all are true")
+            .Create("all true");
+
+        var result = spec.IsSatisfiedBy([modelA, modelB]);
+        
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().Be(expectedReason);
+    }
+    
+    [Theory]
+    [InlineData(false, false, "not all are true")]
+    [InlineData(false, true, "not all are true")]
+    [InlineData(true, false, "not all are true")]
+    [InlineData(true, true, "all are true")]
+    public void Should_surface_assertions_of_boolean_results_created_from_predicate_when_a_proposition_is_specified(
+        bool modelA,
+        bool modelB,
+        string expectedAssertion)
+    {
+        // Arrange
+        var spec = Spec
+            .Build((bool m) => m)
+            .AsAllSatisfied()
+            .WhenTrue("all are true")
+            .WhenFalse("not all are true")
+            .Create("all true");
+
+        var result = spec.IsSatisfiedBy([modelA, modelB]);
+        
+        // Act
+        var act = result.Assertions;
+        
+        // Assert
+        act.Should().BeEquivalentTo([expectedAssertion]);
     }
 }

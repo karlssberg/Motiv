@@ -7,6 +7,8 @@ internal sealed class SpecDecoratorMetadataProposition<TModel, TMetadata, TUnder
     ISpecDescription description)
     : SpecBase<TModel, TMetadata>
 {
+    public override IEnumerable<SpecBase> Underlying => underlyingSpec.ToEnumerable();
+
     public override ISpecDescription Description => description;
 
     public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)

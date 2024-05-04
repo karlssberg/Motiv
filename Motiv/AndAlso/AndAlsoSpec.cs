@@ -5,6 +5,8 @@ internal sealed class AndAlsoSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> right)
     : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>
 {
+    public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
+    
     public override ISpecDescription Description => 
         new AndAlsoSpecDescription<TModel, TMetadata>(left, right);
 

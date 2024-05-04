@@ -7,6 +7,8 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
     string? propositionalStatement = null)
     : SpecBase<TModel, string>
 {
+    public override IEnumerable<SpecBase> Underlying => underlyingSpec.ToEnumerable();
+
     public override ISpecDescription Description => 
         new SpecDescription(
             propositionalStatement ?? trueBecause,

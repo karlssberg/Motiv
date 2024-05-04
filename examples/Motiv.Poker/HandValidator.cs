@@ -3,7 +3,7 @@
 public class HandValidator() : Spec<Hand>(
     Spec.Build((Hand hand) => HandHasUniqueCards(hand))
         .WhenTrue("has 5 unique cards")
-        .WhenFalse((_, result) => result.Assertions)
+        .WhenFalseYield((_, result) => result.Assertions)
         .Create())
 {
     private static BooleanResultBase<string> HandHasUniqueCards(Hand hand)
@@ -18,6 +18,6 @@ public class HandValidator() : Spec<Hand>(
     private static SpecBase<IEnumerable<Card>, string> IsUniqueCard { get; } =
         Spec.Build((IEnumerable<Card> cards) => cards.Count() == 1)
             .WhenTrue(cards => $"{cards.First()} is unique")
-            .WhenFalse(cards => cards.Select(card => $"{card.Rank} of {card.Suit} is duplicate"))
+            .WhenFalseYield(cards => cards.Select(card => $"{card.Rank} of {card.Suit} is duplicate"))
             .Create("is unique");
 }

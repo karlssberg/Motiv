@@ -77,7 +77,7 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrue(
+    public FalseMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrueYield(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> whenTrue) =>
         new(predicate, whenTrue.ThrowIfNull(nameof(whenTrue)));
 
@@ -85,6 +85,12 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    /// <remarks>
+    /// <para>
+    /// If you wish to return a collection of metadata items, you will need to use the <c>WhenTrueYield()</c>
+    /// method instead, otherwise the whole collection will become the metadata.
+    /// </para>
+    /// </remarks>
     public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue)
     {
@@ -98,7 +104,7 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
+    public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrueYield<TMetadata>(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
         new(predicate, whenTrue.ThrowIfNull(nameof(whenTrue)));
 

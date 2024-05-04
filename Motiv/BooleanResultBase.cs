@@ -1,4 +1,5 @@
-﻿using Motiv.And;
+﻿using System.Diagnostics;
+using Motiv.And;
 using Motiv.AndAlso;
 using Motiv.Not;
 using Motiv.Or;
@@ -8,6 +9,7 @@ using Motiv.XOr;
 namespace Motiv;
 
 /// <summary>Represents a base class for boolean results.</summary>
+[DebuggerDisplay("{GetSatisfiedText()}: {Reason}")]
 public abstract class BooleanResultBase
     : IEquatable<BooleanResultBase>, IEquatable<bool>
 {
@@ -30,7 +32,7 @@ public abstract class BooleanResultBase
     public string Reason => Description.Reason;
 
     /// <summary>Gets a full hierarchical breakdown of the reasons for the result.</summary>
-    public string Justification => Description.Rationale;
+    public string Justification => Description.Justification;
 
     /// <summary>Gets the assertions that determined this result.</summary>
     public IEnumerable<string> Assertions => Explanation.Assertions;

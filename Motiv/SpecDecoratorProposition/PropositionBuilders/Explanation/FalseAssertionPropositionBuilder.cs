@@ -59,7 +59,7 @@ public readonly ref struct FalseAssertionPropositionBuilder<TModel, TUnderlyingM
     /// </summary>
     /// <param name="falseBecause">A function that generates a collection of human-readable reasons when the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied specification and explanation factories.</returns>
-    public MultiAssertionExplanationPropositionFactory<TModel, TUnderlyingMetadata> WhenFalse(
+    public MultiAssertionExplanationPropositionFactory<TModel, TUnderlyingMetadata> WhenFalseYield(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause)
     {
         falseBecause.ThrowIfNull(nameof(falseBecause));
