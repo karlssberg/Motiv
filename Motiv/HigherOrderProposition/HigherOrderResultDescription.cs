@@ -10,7 +10,7 @@ internal sealed class HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
 
     public override string Reason => reason;
 
-    public override IEnumerable<string> GetDetailsAsLines() 
+    public override IEnumerable<string> GetJustificationAsLines() 
     {
         yield return Reason;
         foreach (var line in UnderlyingDetailsAsLines())
@@ -21,7 +21,7 @@ internal sealed class HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
         IEnumerable<string> UnderlyingDetailsAsLines()
         {
             return _causes
-                .SelectMany(cause => cause.Description.GetDetailsAsLines());
+                .SelectMany(cause => cause.Description.GetJustificationAsLines());
         }
     }
 }

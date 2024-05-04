@@ -55,21 +55,9 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata}" />.</returns>
     /// <remarks>
     /// <para>
-    /// The compiler might not always infer the correct usage of <see cref="TMetadata" /> when collections are used as
-    /// a return type.  If so, you will need to be either explicit with your generic arguments, or ensure the return type is explicitly an <c>IEnumerable&lt;T&gt;</c>.
-    ///</para>
-    /// <para>
-    /// For example:
-    /// </para>
-    /// <para>
-    /// <c>.WhenTrue&lt;char&gt;(_ =&gt; "hello world");  // ['h', 'e', 'l', 'l', 'o',...]</c>
-    /// </para>
-    /// <para>
-    /// or
-    /// </para>
-    /// <para>
-    /// <c>.WhenTrue(_ =&gt; "hello world".AsEnumerable());  // ['h', 'e', 'l', 'l', 'o',...]</c>
-    /// </para>
+    /// If you wish to return a collection of metadata items, you will need to use the <c>WhenTrueYield()</c>
+    /// method instead.
+    /// </para>#
     /// </remarks>
     public FalseMetadataPropositionBuilder<TModel, TMetadata> WhenTrue<TMetadata>(Func<TModel, TMetadata> whenTrue)
     {

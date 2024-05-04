@@ -168,7 +168,7 @@ public static class BooleanResultExtensions
                          && binaryOperationResult.IsCollapsable =>
                     result.ToEnumerable().GetBinaryJustificationAsLines(operation, level + 1),
                 _ =>
-                    result.Description.GetDetailsAsLines()
+                    result.Description.GetJustificationAsLines()
             };
 
             return (op, detailsAsLines);

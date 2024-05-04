@@ -32,7 +32,7 @@ public abstract class BooleanResultBase
     public string Reason => Description.Reason;
 
     /// <summary>Gets a full hierarchical breakdown of the reasons for the result.</summary>
-    public string Justification => Description.Rationale;
+    public string Justification => Description.Justification;
 
     /// <summary>Gets the assertions that determined this result.</summary>
     public IEnumerable<string> Assertions => Explanation.Assertions;

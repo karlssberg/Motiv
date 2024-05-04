@@ -11,7 +11,7 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
 
     public override string Reason => string.Join(" ^ ", Results.Select(result => result.Description.Reason));
 
-    public override IEnumerable<string> GetDetailsAsLines()
+    public override IEnumerable<string> GetJustificationAsLines()
     {
         var reversedResults = left.ToEnumerable().Append(right); // reverse order for easier reading
         return reversedResults.GetBinaryJustificationAsLines(operationName);

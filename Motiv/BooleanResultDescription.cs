@@ -8,5 +8,5 @@ internal sealed class BooleanResultDescription(
 
     public override string Reason => reason;
     
-    public override IEnumerable<string> GetDetailsAsLines() => reason.ToEnumerable();
+    public override IEnumerable<string> GetJustificationAsLines() => reason.ToEnumerable();
 }
