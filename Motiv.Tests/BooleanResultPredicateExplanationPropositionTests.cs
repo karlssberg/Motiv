@@ -238,13 +238,13 @@ public class BooleanResultPredicateExplanationPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue("true assertion")
-                .WhenFalse((_, _) => ["false assertion"])
+                .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollectionAndNoCustomName =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue("propositional statement")
-                .WhenFalse((_, _) => ["false assertion"])
+                .WhenFalseYield((_, _) => ["false assertion"])
                 .Create();
 
         var spec = withFalseAsScalar &
@@ -297,7 +297,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
                 .WhenTrue(_ => "true assertion")
-                .WhenFalse((_, _) => ["false assertion"])
+                .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &

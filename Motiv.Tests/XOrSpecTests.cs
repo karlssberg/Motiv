@@ -137,7 +137,7 @@ public class XOrSpecTests
 
         var spec = Spec
             .Build(left ^ right)
-            .WhenTrue((_, result) => result.Causes.GetTrueAssertions())
+            .WhenTrueYield((_, result) => result.Causes.GetTrueAssertions())
             .WhenFalse("none")
             .Create("xor");
 

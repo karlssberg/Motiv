@@ -42,7 +42,7 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata>(
     /// </summary>
     /// <param name="whenFalse">A function that generates a collection of metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataPropositionFactory{TModel,TMetadata}" />.</returns>
-    public MetadataPropositionFactory<TModel, TMetadata> WhenFalse(Func<TModel, IEnumerable<TMetadata>> whenFalse)
+    public MetadataPropositionFactory<TModel, TMetadata> WhenFalseYield(Func<TModel, IEnumerable<TMetadata>> whenFalse)
     {
         whenFalse.ThrowIfNull(nameof(whenFalse));
         return new MetadataPropositionFactory<TModel, TMetadata>(

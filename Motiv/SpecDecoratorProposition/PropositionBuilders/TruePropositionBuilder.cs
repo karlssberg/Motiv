@@ -75,7 +75,7 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrue(
+    public FalseMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrueYield(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause) =>
         new(spec, trueBecause);
 

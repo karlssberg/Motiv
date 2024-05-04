@@ -82,7 +82,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A function that generates a collection of reasons when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionFromBooleanResultHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataFromBooleanHigherOrderPropositionBuilder<TModel, string> WhenTrue(
+    public FalseMetadataFromBooleanHigherOrderPropositionBuilder<TModel, string> WhenTrueYield(
         Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> trueBecause) =>
         new(predicate,
             higherOrderPredicate,

@@ -447,7 +447,7 @@ public class SpecDecoratorMetadataPropositionTests
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
-            .WhenFalse((falseModel, result) => result.Metadata.Select(meta => $"{falseModel} - {meta}"))
+            .WhenFalseYield((falseModel, result) => result.Metadata.Select(meta => $"{falseModel} - {meta}"))
             .Create("is true");
 
         var result = spec.IsSatisfiedBy(model);
@@ -853,7 +853,7 @@ public class SpecDecoratorMetadataPropositionTests
         
         var spec = Spec
             .Build(underlying)
-            .WhenTrue((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
+            .WhenTrueYield((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
             .WhenFalseYield((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
             .Create("top-level proposition");
         

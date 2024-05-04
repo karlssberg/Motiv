@@ -42,7 +42,7 @@ public readonly ref struct FalseAssertionFromSpecDecoratorWithNameHigherOrderPro
     /// An instance of
     /// <see cref="MultiAssertionExplanationWithNameHigherOrderPropositionFactory{TModel,TUnderlyingMetadata}" />.
     /// </returns>
-    public MultiAssertionExplanationWithNameHigherOrderPropositionFactory<TModel, TUnderlyingMetadata> WhenFalse(
+    public MultiAssertionExplanationWithNameHigherOrderPropositionFactory<TModel, TUnderlyingMetadata> WhenFalseYield(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
         new(spec.IsSatisfiedBy,
             higherOrderPredicate,

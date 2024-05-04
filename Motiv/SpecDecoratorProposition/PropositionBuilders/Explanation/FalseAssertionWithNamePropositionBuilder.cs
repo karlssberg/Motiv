@@ -49,7 +49,7 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnd
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="MultiAssertionExplanationWithNamePropositionFactory{TModel,TUnderlyingMetadata}" />.</returns>
-    public MultiAssertionExplanationWithNamePropositionFactory<TModel, TUnderlyingMetadata> WhenFalse(
+    public MultiAssertionExplanationWithNamePropositionFactory<TModel, TUnderlyingMetadata> WhenFalseYield(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
         new(spec,
             trueBecause,

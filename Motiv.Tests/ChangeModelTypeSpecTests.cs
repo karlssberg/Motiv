@@ -68,7 +68,7 @@ public class ChangeModelTypeSpecTests
             Spec.Build(isLetter)
                 .As(result => result.AllTrue())
                 .WhenTrue("all characters are letters")
-                .WhenFalse(evaluation => evaluation.Assertions)
+                .WhenFalseYield(evaluation => evaluation.Assertions)
                 .Create() 
                 .ChangeModelTo<string>(m => m.ToCharArray());
 

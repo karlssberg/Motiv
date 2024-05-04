@@ -219,7 +219,7 @@ public class SpecDecoratorExplanationPropositionTests
 
         var spec = Spec
             .Build(underlying)
-            .WhenTrue((trueModel, result) => result.Metadata.Select(meta => $"{trueModel} - {meta}"))
+            .WhenTrueYield((trueModel, result) => result.Metadata.Select(meta => $"{trueModel} - {meta}"))
             .WhenFalse("false")
             .Create("is true");
 
@@ -322,7 +322,7 @@ public class SpecDecoratorExplanationPropositionTests
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
-            .WhenFalse((falseModel, result) => result.Metadata.Select(meta => $"{falseModel} - {meta}"))
+            .WhenFalseYield((falseModel, result) => result.Metadata.Select(meta => $"{falseModel} - {meta}"))
             .Create("is true");
 
         var result = spec.IsSatisfiedBy(model);
@@ -616,7 +616,7 @@ public class SpecDecoratorExplanationPropositionTests
         
         var spec = Spec
             .Build(underlying)
-            .WhenTrue((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
+            .WhenTrueYield((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
             .WhenFalseYield((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
             .Create("top-level proposition");
         
@@ -709,7 +709,7 @@ public class SpecDecoratorExplanationPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build(underlying)
                 .WhenTrue("true assertion")
-                .WhenFalse((_, _) => ["false assertion"])
+                .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
         
         
@@ -762,7 +762,7 @@ public class SpecDecoratorExplanationPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build(underlying)
                 .WhenTrue(_ => "true assertion")
-                .WhenFalse((_, _) => ["false assertion"])
+                .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -814,7 +814,7 @@ public class SpecDecoratorExplanationPropositionTests
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build(underlying)
                 .WhenTrue((_, _) => "true assertion")
-                .WhenFalse((_, _) => ["false assertion"])
+                .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -846,25 +846,25 @@ public class SpecDecoratorExplanationPropositionTests
         
         var withFalseAsScalar =
             Spec.Build(underlying)
-                .WhenTrue((_, _) => ["true assertion"])
+                .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
         
         var withFalseAsParameterCallback =
             Spec.Build(underlying)
-                .WhenTrue((_, _) => ["true assertion"])
+                .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallback =
             Spec.Build(underlying)
-                .WhenTrue((_, _) => ["true assertion"])
+                .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
             Spec.Build(underlying)
-                .WhenTrue((_, _) => ["true assertion"])
+                .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
         

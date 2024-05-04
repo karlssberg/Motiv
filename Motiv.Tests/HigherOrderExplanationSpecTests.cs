@@ -312,14 +312,14 @@ public class HigherOrderExplanationSpecTests
             Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
-                .WhenFalse(_ => ["false assertion"])
+                .WhenFalseYield(_ => ["false assertion"])
                 .Create("propositional statement");
         
         var withFalseAsTwoParameterCallbackThatReturnsACollectionWithImpliedName =
             Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
-                .WhenFalse(_ => ["false assertion"])
+                .WhenFalseYield(_ => ["false assertion"])
                 .Create();
         
         var spec = withFalseAsScalar &
@@ -380,7 +380,7 @@ public class HigherOrderExplanationSpecTests
             Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
-                .WhenFalse(_ => ["false assertion"])
+                .WhenFalseYield(_ => ["false assertion"])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
@@ -441,7 +441,7 @@ public class HigherOrderExplanationSpecTests
             Spec.Build(underlying)
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
-                .WhenFalse(_ => ["false assertion"])
+                .WhenFalseYield(_ => ["false assertion"])
                 .Create("propositional statement");
         
         var spec = withFalseAsScalar &
