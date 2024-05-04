@@ -76,6 +76,17 @@ public readonly ref struct TrueHigherOrderFromBooleanResultPredicatePropositionB
             higherOrderPredicate,
             whenTrue,
             causeSelector);
+    
+    /// <summary>Specifies the set of metadata to use when the condition is true.</summary>
+    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
+    /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataFromBooleanResultHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrueYield<TMetadata>(
+        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
+        new(resultResolver,
+            higherOrderPredicate,
+            whenTrue,
+            causeSelector);
 
     /// <summary>Specifies an assertion to yield when the condition is true.  This will also be the name of the proposition, unless otherwise
     /// specified by the subsequent <c>Create(string statement)</c> method.</summary>

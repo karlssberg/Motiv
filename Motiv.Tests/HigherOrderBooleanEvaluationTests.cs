@@ -87,6 +87,7 @@ public class HigherOrderBooleanEvaluationTests
         bool modelB,
         params int[] expected)
     {
+        // Arrange
         var higherOrder = Spec
             .Build((bool b) => b)
             .AsAnySatisfied()
@@ -114,14 +115,8 @@ public class HigherOrderBooleanEvaluationTests
         params bool[] expected)
     {
         // Arrange
-        var underlying = Spec
-            .Build((bool b) => b)
-            .WhenTrue(new Metadata("is true"))
-            .WhenFalse(new Metadata("is false"))
-            .Create("is true");
-
         var higherOrder = Spec
-            .Build(underlying)
+            .Build((bool b) => b)
             .AsAllSatisfied()
             .WhenTrue(eval => eval.TrueModels)
             .WhenFalse(eval => eval.TrueModels)
@@ -147,16 +142,10 @@ public class HigherOrderBooleanEvaluationTests
         params bool[] expected)
     {
         // Arrange
-        var underlying = Spec
-            .Build((bool b) => b)
-            .WhenTrue(new Metadata("is true"))
-            .WhenFalse(new Metadata("is false"))
-            .Create("is true");
-
         var higherOrder = Spec
-            .Build(underlying)
+            .Build((bool b) => b)
             .AsAllSatisfied()
-            .WhenTrue(eval => eval.FalseModels)
+            .WhenTrueYield(eval => eval.FalseModels)
             .WhenFalse(eval => eval.FalseModels)
             .Create("all true");
 
@@ -166,6 +155,121 @@ public class HigherOrderBooleanEvaluationTests
         var act = result.Metadata;
 
         // Assert
+        act.Should().BeEquivalentTo(expected.AsEnumerable());
+    }
+    
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public void Should_yield_underlying_metadata_using_models_property(
+        bool modelA,
+        bool modelB)
+    {
+        // Arrange
+        List<bool> models = [modelA, modelB];
+        var expected = models.Distinct();
+
+        var higherOrder = Spec
+            .Build((bool b) => b)
+            .AsAllSatisfied()
+            .WhenTrue(eval => eval.Models)
+            .WhenFalse(eval => eval.Models)
+            .Create("all true");
+
+        var result = higherOrder.IsSatisfiedBy(models);
+
+        // Act
+        var act = result.Metadata;
+
+        // Assert
         act.Should().BeEquivalentTo(expected);
+    }
+    
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public void Should_yield_underlying_metadata_using_count_property(
+        bool modelA,
+        bool modelB)
+    {
+        // Arrange
+        List<bool> models = [modelA, modelB];
+        
+        var higherOrder = Spec
+            .Build((bool b) => b)
+            .AsAllSatisfied()
+            .WhenTrue(eval => eval.Count)
+            .WhenFalse(eval => eval.Count)
+            .Create("all true");
+
+        var result = higherOrder.IsSatisfiedBy(models);
+
+        // Act
+        var act = result.Metadata;
+
+        // Assert
+        act.Should().BeEquivalentTo([2]);
+    }
+    
+    [Theory]
+    [InlineData(true, true, 2)]
+    [InlineData(true, false, 1)]
+    [InlineData(false, true, 1)]
+    [InlineData(false, false, 0)]
+    public void Should_yield_underlying_metadata_using_true_count_property(
+        bool modelA,
+        bool modelB,
+        int expectedCount)
+    {
+        // Arrange
+        List<bool> models = [modelA, modelB];
+        
+        var higherOrder = Spec
+            .Build((bool b) => b)
+            .AsAllSatisfied()
+            .WhenTrue(eval => eval.TrueCount)
+            .WhenFalse(eval => eval.TrueCount)
+            .Create("all true");
+
+        var result = higherOrder.IsSatisfiedBy(models);
+
+        // Act
+        var act = result.Metadata;
+
+        // Assert
+        act.Should().BeEquivalentTo([expectedCount]);
+    }
+    
+    [Theory]
+    [InlineData(true, true, 0)]
+    [InlineData(true, false, 1)]
+    [InlineData(false, true, 1)]
+    [InlineData(false, false, 2)]
+    public void Should_yield_underlying_metadata_using_false_count_property(
+        bool modelA,
+        bool modelB,
+        int expectedCount)
+    {
+        // Arrange
+        List<bool> models = [modelA, modelB];
+        
+        var higherOrder = Spec
+            .Build((bool b) => b)
+            .AsAllSatisfied()
+            .WhenTrue(eval => eval.FalseCount)
+            .WhenFalse(eval => eval.FalseCount)
+            .Create("all true");
+
+        var result = higherOrder.IsSatisfiedBy(models);
+
+        // Act
+        var act = result.Metadata;
+
+        // Assert
+        act.Should().BeEquivalentTo([expectedCount]);
     }
 }

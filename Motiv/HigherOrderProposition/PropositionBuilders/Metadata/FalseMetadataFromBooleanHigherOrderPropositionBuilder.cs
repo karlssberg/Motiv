@@ -44,4 +44,15 @@ public readonly ref struct FalseMetadataFromBooleanHigherOrderPropositionBuilder
             whenTrue,
             whenFalse,
             causeSelector);
+    
+    /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
+    /// <param name="whenFalse">A function that generates a collecton of metadata when the condition is false.</param>
+    /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public MetadataFromBooleanHigherOrderPropositionFactory<TModel, TMetadata> WhenFalseYield(
+        Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenFalse) =>
+        new(resultResolver,
+            higherOrderPredicate,
+            whenTrue,
+            whenFalse,
+            causeSelector);
 }

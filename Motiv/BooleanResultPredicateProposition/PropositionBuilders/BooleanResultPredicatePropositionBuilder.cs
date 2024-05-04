@@ -127,6 +127,14 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IReadOnlyList<TMetadata>> whenTrue) =>
         new(predicate, whenTrue.ThrowIfNull(nameof(whenTrue)));
+    
+    /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
+    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
+    /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrueYield<TMetadata>(
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
+        new(predicate, whenTrue.ThrowIfNull(nameof(whenTrue)));
 
     /// <summary>Specifies a higher order predicate for the proposition.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>

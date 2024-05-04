@@ -70,6 +70,14 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IReadOnlyList<TMetadata>> whenTrue) =>
         new(spec, whenTrue);
 
+    /// <summary>Specifies the metadata to use when the condition is true.</summary>
+    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
+    /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrueYield<TMetadata>(
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
+        new(spec, whenTrue);
+
     /// <summary>Specifies an assertion to yield when the condition is true.  This will also be the name of the proposition, unless otherwise
     /// specified by the subsequent <c>Create(string statement)</c> method.</summary>
     /// <param name="trueBecause">A human-readable reason why the condition is true. </param>
