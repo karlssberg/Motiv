@@ -56,8 +56,8 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
     /// <remarks>
     /// <para>
     /// If you wish to return a collection of metadata items, you will need to use the <c>WhenTrueYield()</c>
-    /// method instead.
-    /// </para>#
+    /// method instead, otherwise the whole collection will become the metadata.
+    /// </para>
     /// </remarks>
     public FalseMetadataPropositionBuilder<TModel, TMetadata> WhenTrue<TMetadata>(Func<TModel, TMetadata> whenTrue)
     {

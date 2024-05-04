@@ -35,8 +35,8 @@ public readonly ref struct TrueHigherOrderFromSpecPropositionBuilder<TModel, TUn
     /// <remarks>
     /// <para>
     /// If you wish to return a collection of metadata items, you will need to use the <c>WhenTrueYield()</c>
-    /// method instead.
-    /// </para>#
+    /// method instead, otherwise the whole collection will become the metadata.
+    /// </para>
     /// </remarks>
     public FalseMetadataHigherOrderPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrue<TMetadata>(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue) =>
