@@ -92,12 +92,12 @@ property of the result.
 
 ## False assertion collection derived from model/result
 
-### `WhenFalse(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> factory)`
+### `WhenFalseYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
     .WhenTrue("is even")
-    .WhenFalse((n, result) => result.Assertions)
+    .WhenFalseYield((n, result) => result.Assertions)
     .Create();
 ```
 
@@ -107,12 +107,12 @@ When the proposition is not satisfied, the metadata returned by the factory func
 
 ## False metadata collection derived from model/result
 
-### `WhenFalse(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> factory)`
+### `WhenFalseYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
     .WhenTrue(new MyMetadata("is even"))
-    .WhenFalse((n, result) => result.Assertions.Select(assertion => new MyMetadata($"{n} {assertion}")))
+    .WhenFalseYield((n, result) => result.Assertions.Select(assertion => new MyMetadata($"{n} {assertion}")))
     .Create("is even");
 ```
 
