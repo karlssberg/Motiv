@@ -52,23 +52,38 @@ result.Justification; // can view content
 ```
 
 ### What is wrong with regular booleans?
+
 Primitive booleans will not explain why they are `true` or `false`. 
-If your expression only has one clause then you can easily figure it out, but when you have multiple clauses, you 
-will have to forensically analyze the expression to determine the underlying cause(s), which is not always possible.
+If your expression only has one clause, then you can easily figure it out, but when you have multiple clauses, you 
+would have to forensically analyze the expression to determine the underlying cause(s), which is not always possible.
 
 ### How is this different from an if-statement?
-When you have an if-statement with multiple clauses, and you want an explanation about _each_ clause, then you would 
-need to have multiple if-statements (one for each clause).
-You would then have to collate the results from each if-statement and filter out those that did not contribute to the 
-final boolean result. 
-This might be ok for simple expressions, but as your expressions get more complex, this approach becomes unwieldy.
+
+When you have a logical expression with multiple clauses, to get a detailed explanation, you would 
+need to split the expression up in to multiple sub-expressions (one for each clause) and evaluate them separately.
+You then need to combine the sub-expressions by applying the outstanding boolean operators in the right order to 
+determine if the expression as a whole is satisfied.
+Secondly, to surface an explanation (or metadata), you will need to collate the explanations from the sub-expressions 
+and filter out those that didn't materially affect the result.
+It is safe to say that an if-statement does not do all this for you.
 
 ### How is this different from wrapping my logic in a function?
-Wrapping your logic in a function is a good start.
-However, you will eventually be faced with the same problem that this library solves, which is collating the 
-explanations/metadata and filtering out those that did not contribute to the final result.
-Once you venture down this path of hand-rolling this yourself, you will find that it is not as trivial as it first 
-seems and can be quite error-prone.
+
+Wrapping your logic in a function is a good start when modeling propositions.
+A function-per-clause approach is a sensible, as it allows you to encapsulate related logic whilst separating your 
+concerns.
+However, as you start doing this, your code will start to look like an inferior version of the Specification pattern 
+(which is the pattern that Motiv is based upon).
+It only takes a few more modifications, like wrapping the function in a class that simplifies composition, before you 
+finally have an implementation of the Specification pattern.
+
+### What is Motiv exactly?
+
+Motiv is a functional-ish/fluent version of the
+[Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern), that allows you to very easily model your 
+logic in a declarative way and then re-compose it to form new propositions.
+When it is time to evaluate whether a model is satisfied by the expression, the underlying causes are figured out 
+on your behalf, and any data associated with it subsequently surfaced (which is typically a textual explanation).
 
 ### What can I use the Motiv for?
 
