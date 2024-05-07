@@ -51,10 +51,28 @@ result.Justification; // can view content
                       //            subscription is not cancelled
 ```
 
+### What is wrong with regular booleans?
+Primitive booleans will not explain why they are `true` or `false`. 
+If your expression only has one clause then you can easily figure it out, but when you have multiple clauses, you 
+will have to forensically analyze the expression to determine the underlying cause(s), which is not always possible.
+
+### How is this different from an if-statement?
+When you have an if-statement with multiple clauses, and you want an explanation about _each_ clause, then you would 
+need to have multiple if-statements (one for each clause).
+You would then have to collate the results from each if-statement and filter out those that did not contribute to the 
+final boolean result. 
+This might be ok for simple expressions, but as your expressions get more complex, this approach becomes unwieldy.
+
+### How is this different from wrapping my logic in a function?
+Wrapping your logic in a function is a good start.
+However, you will eventually be faced with the same problem that this library solves, which is collating the 
+explanations/metadata and filtering out those that did not contribute to the final result.
+Once you venture down this path of hand-rolling this yourself, you will find that it is not as trivial as it first 
+seems and can be quite error-prone.
+
 ### What can I use the Motiv for?
 
-Motiv is not specifically focused on catering to any particular use-case (except maybe _Developer Experience_),
-but it does nonetheless serve use-cases such as:
+Motiv can be used in a variety of scenarios, including:
 
 * **User feedback** - You require an application to provide detailed and accurate feedback to the user about why 
   certain decisions were made. 
