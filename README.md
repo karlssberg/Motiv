@@ -83,7 +83,7 @@ Motiv is a functional-ish/fluent version of the
 [Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern), that allows you to very easily model your 
 logic in a declarative way and then re-compose it to form new expressions.
 When it is time to evaluate whether a model is satisfied by the expression, the underlying causes are figured out 
-on your behalf, and any data associated with it subsequently surfaced (which is typically a textual explanation).
+on your behalf, and any data associated with them is subsequently surfaced (which is typically a textual explanation).
 
 ### What can I use the Motiv for?
 
