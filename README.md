@@ -70,7 +70,7 @@ It is safe to say that an if-statement does not do all this for you.
 ### How is this different from wrapping my logic in a function?
 
 Wrapping your logic in a function is a good start when modeling propositions.
-A function-per-clause approach is sensible, as it allows you to encapsulate related logic whilst separating your 
+A function-per-clause approach is sensible, as it allows you to encapsulate cohesive logic whilst also separating your 
 concerns.
 However, as you start doing this, your code will start to look like an inferior version of the Specification pattern 
 (which is the pattern that Motiv is based upon).
