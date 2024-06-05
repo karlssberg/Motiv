@@ -54,28 +54,30 @@ result.Justification; // can view content
 ### What is wrong with regular booleans?
 
 Primitive booleans will not explain why they are `true` or `false`. 
-If your expression only has one clause, then you can easily figure it out, but when you have multiple clauses, you 
+If our expression only has one clause, then we can easily figure it out, but when we have multiple clauses, we 
 would have to forensically analyze the expression to determine the underlying cause(s), which is not always possible.
 
 ### How is this different from an if-statement?
 
-When you have a logical expression with multiple clauses, to get a detailed explanation, you would 
-need to split the expression up in to multiple sub-expressions (one for each clause) and evaluate them separately.
-You then need to combine the sub-expressions by applying the outstanding boolean operators in the right order to 
-determine if the expression as a whole is satisfied.
-Secondly, to surface an explanation (or metadata), you will need to collate the explanations from the sub-expressions 
-and filter out those that didn't materially affect the result.
-It is safe to say that an if-statement does not do all this for you.
+The sub-expressions of an if-statement cannot explain why they are true or false.
+To do so, would need to break apart the if-statement and evaluate each sub-expression separately, provide a reason, and 
+then intelligently combine the results and reasons.
+This does not scale well and is error-prone.
 
 ### How is this different from wrapping my logic in a function?
 
-Wrapping your logic in a function is a good start when modeling propositions.
-A function-per-clause approach is sensible, as it allows you to encapsulate cohesive logic whilst also separating your 
-concerns.
-However, as you start doing this, your code will start to look like an inferior version of the Specification pattern 
-(which is the pattern that Motiv is based upon).
-It only takes a few more modifications, like wrapping the function in a class that simplifies composition, before you 
-finally have an implementation of the Specification pattern.
+Functions are great for encapsulating logic, but they do not natively provide a way to be logically composed together.
+Sure, we can do it ourselves by wrapping the functions in another function, but doing this every time becomes very 
+tedious and error-prone.
+We could, however, create re-usable functions to logically combine the sub-expressions, but then we begin to stray into 
+the realm of the [Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern), which is the pattern 
+that Motiv is based on.
+
+You may be wondering why we do not just eagerly evaluate the functions and avoid composition altogether.
+However, we now have the unenviable task of manually executing each function in-turn and intelligently combining the 
+results ourselves based on the logical operator in use.
+
+Doing this at scale compromises readability, maintainability, and introduces the potential for errors.
 
 ### What is Motiv exactly?
 
