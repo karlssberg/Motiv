@@ -47,5 +47,4 @@ public static class AsAllSatisfiedExtensions
     public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAllSatisfied<TModel>(
         this BooleanPredicatePropositionBuilder<TModel> builder) =>
         builder.As(results => results.All(tuple => tuple.Satisfied));
-
 }

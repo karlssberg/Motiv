@@ -8,12 +8,12 @@ Motiv is a .NET library that supercharges the experience of working with boolean
 It allows you to package your boolean expressions into strongly typed _propositions_.
 By propositions, we mean a declarative statement that can be evaluated to either true or false.
 
-Examples of propositions include:
+Examples include:
 * _the sun is shining_
 * _email address is missing an @ symbol_
 * _subscription is within grace period_
 
-In Motiv, they look like this:
+In Motiv, propositions look like this:
 ```csharp
 Spec.Build((Subscription subscription) => 
         DateTime.Now is var now 
@@ -24,8 +24,8 @@ Spec.Build((Subscription subscription) =>
     .Create();
 ```
 
-Propositions can be composed together using boolean operators, such as `&`, `|`, and `^`, and when evaluated will only
-surface the reasons (or custom metadata) from propositions that determined the final result.
+They can be composed with other propositions using boolean operators, such as `&`, `|`, and `^`,
+and when evaluated will give concise explanations about why the proposition is true or false.
 
 ```csharp
 // compose propositions
@@ -51,17 +51,28 @@ result.Justification; // can view content
                       //            subscription is not cancelled
 ```
 
+### What problem is being solved?
+
+If your project requires two or more of the following, then Motiv is likely to be a great fit.
+
+1. **Visibility**: You need to explain in real-time why a certain condition was met (or not).
+2. **Decomposition**: Your logic is either too complex or deeply nested to understand at a glance, so it needs 
+   to be broken up in to meaningful parts.
+3. **Reusability**: You wish to re-use your logic in multiple places without having to re-implement it.
+4. **Modeling**: You need to explicitly model the facets of your domain logic.
+
 ### What is wrong with regular booleans?
 
 Primitive booleans will not explain why they are `true` or `false`. 
-If our expression only has one clause, then we can easily figure it out, but when we have multiple clauses, we 
-would have to forensically analyze the expression to determine the underlying cause(s), which is not always possible.
+If an expression only has one clause, then we can easily figure it out.
+However, if it is made up of multiple clauses, then it may not be obvious or even possible to determine the underlying 
+cause.
 
 ### How is this different from an if-statement?
 
-The sub-expressions of an if-statement cannot explain why they are true or false.
-To do so, would need to break apart the if-statement and evaluate each sub-expression separately, provide a reason, and 
-then intelligently combine the results and reasons.
+The sub-expressions of an if-statement cannot themselves explain why they are true or false.
+To do so, we would need to break apart the if-statement and evaluate each sub-expression separately, provide a reason, 
+and then intelligently combine the results and reasons together.
 This does not scale well and is error-prone.
 
 ### How is this different from wrapping my logic in a function?
