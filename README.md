@@ -63,32 +63,33 @@ If your project requires two or more of the following, then Motiv is likely to b
 
 ### What is wrong with regular booleans?
 
-Primitive booleans will not explain why they are `true` or `false`. 
+Primitive booleans will not explain _why_ they are `true` or `false`. 
 If an expression only has one clause, then we can easily figure it out.
-However, if it is made up of multiple clauses, then it may not be obvious or even possible to determine the underlying 
-cause.
+However, if it is made up of multiple clauses, then at runtime it may not be obvious or even possible to determine the 
+underlying cause.
 
-### How is this different from an if-statement?
+### Isn't an if-statement visible enough?
 
-The sub-expressions of an if-statement cannot themselves explain why they are true or false.
-To do so, we would need to break apart the if-statement and evaluate each sub-expression separately, provide a reason, 
-and then intelligently combine the results and reasons together.
-This does not scale well and is error-prone.
+If-statements are only visible at design-time, and at runtime they are not (unless you are using a debugger).
+To provide runtime visibility, you would need to decompose the expression into clauses and evaluate them separately
+(so we can provide detailed explanations), and then recombine them to form the final result.
+This instantly compromises the (design-time) readability of the code.
 
-### How is this different from wrapping my logic in a function?
+Furthermore, if the logic is sufficiently complex, then readability (at design-time) may be challenging.
+This is especially true if the clauses themselves are complex, or if the logic is deeply nested, in which case it 
+may be hard to discern which sub-expressions belong to which clause.
+
+### But we can decompose expressions into functions, can't we?
 
 Functions are great for encapsulating logic, but they do not natively provide a way to be logically composed together.
-Sure, we can do it ourselves by wrapping the functions in another function, but doing this every time becomes very 
-tedious and error-prone.
-We could, however, create re-usable functions to logically combine the sub-expressions, but then we begin to stray into 
-the realm of the [Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern), which is the pattern 
-that Motiv is based on.
+Sure, we can create utility functions that do this for us, but in doing so we are unwittingly implementing a 
+functional version of the [Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern) ourselves —
+which is the pattern Motiv is based on.
+At this point we might want to consider well-tested alternatives (such as Motiv).
 
 You may be wondering why we do not just eagerly evaluate the functions and avoid composition altogether.
-However, we now have the unenviable task of manually executing each function in-turn and intelligently combining the 
-results ourselves based on the logical operator in use.
-
-Doing this at scale compromises readability, maintainability, and introduces the potential for errors.
+However, it places a burden on the caller, since it requires each function to be evaluated in turn, with the results 
+collated into the final result, which interferes with the readability of the code and invites human error.
 
 ### What is Motiv exactly?
 
