@@ -362,21 +362,30 @@ public class HasSufficientIncomeProposition(decimal threshold) : Spec<int, MyMet
 ### Higher Order Logic
 
 Higher order logic is a way to reason about collections of models.
-They are all defined using the `.As()` builder method, but Motiv already comes with some built-in.
-
-Whilst we can nonetheless coerce "first-order" propositions into operating on collections of models, using the 
-`.As()` method ensures that we can yield detailed explanations about each model that was satisfied, or not.
+They are all defined using the `.As()` builder method.
 
 ```csharp
-
 Spec.Build((int n) => n < 0)
     .As(booleanResults => booleanResults.All(result => result.Satisfied))   // higher order predicate
     .Create("all are negative");
 ```
 
+Whilst we can nonetheless make a "first-order" propositions operate on a collection of models, inspecting the
+models' results will be challenging.
+By instead using the `.As()` method, we allow ourselves to easily inspect each model, and its corresponding result, so 
+that explanations can be tailored to specific use-cases.
+
+```csharp
+Spec.Build((int n) => n < 0) // existing proposition
+    .As(booleanResults => booleanResults.All(result => result.Satisfied))   // higher order predicate
+    .WhenTrue("all are negative")
+    .WhenFalseYield(evaluation => evaluation.FalseModels.Select(n => $"{n} is not negative"))
+    .Create();
+```
+
 #### Built-in higher order operations
 
-Some common higher order operations are provided out-of-the-box.
+Some common higher order operations are already provided out-of-the-box.
 
 These are:
 
@@ -396,7 +405,7 @@ Spec.Build((int n) => n < 0)
 ```
 
 You can also use an existing proposition instead of a predicate to create a higher order logical operation.
-This will give you access to each result and model pair, which can be used to customize the output to a 
+This will give you access to the underlying models and results, which can be used to customize the output to a 
 particular use-case.
 
 ```csharp
