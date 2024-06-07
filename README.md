@@ -294,7 +294,7 @@ result.Assertions; // ["customer has an inadequate credit score"]
 
 #### Redefining propositions
 
-Sometimes existing propositions do not produce the desired assertions or metadata.
+Sometimes you may wish to redefine an existing proposition with a new explanation (or metadata).
 In this case, you will need to wrap the existing proposition in a new one.
 
 ```csharp
