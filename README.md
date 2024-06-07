@@ -5,7 +5,7 @@
 
 Motiv is a .NET library that supercharges the experience of working with boolean logic.
 
-It allows you to package your boolean expressions into strongly typed _propositions_.
+It allows you to model your boolean expressions as strongly typed _propositions_.
 By propositions, we mean a declarative statement that can be evaluated to either true or false.
 
 Examples include:
@@ -25,7 +25,7 @@ Spec.Build((Subscription subscription) =>
 ```
 
 They can be composed with other propositions using boolean operators, such as `&`, `|`, and `^`,
-and when evaluated will give concise explanations about why the proposition is true or false.
+and when evaluated will give concise explanations about why the result is true or false.
 
 ```csharp
 // compose propositions
@@ -361,33 +361,35 @@ public class HasSufficientIncomeProposition(decimal threshold) : Spec<int, MyMet
 
 ### Higher Order Logic
 
-To perform logic over collections of models, higher order logical operations are required.
-Whilst you can create a first-order proposition that operates on collections of models, yielding explanations (or 
-metadata) would be challenging.
-This library provides a `.As()` builder method to address this.
+Higher order logic is a way to reason about collections of models.
+They are all defined using the `.As()` builder method, but Motiv already comes with some built-in.
 
-#### Built-in higher order logic
+Whilst we can nonetheless coerce "first-order" propositions into operating on collections of models, using the 
+`.As()` method ensures that we can yield detailed explanations about each model that was satisfied, or not.
 
-Some built-in higher order logical operations are provided for popular operations, but you can also add your own using
-extension methods.
+```csharp
 
-The current built-in higher order logical operations are:
-- `AsAllSatisfied()`: Creates a proposition that yields a true boolean-result object if all the models in a 
-  collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- `AsAnySatisfied()`: Creates a proposition that yields a true boolean-result object if any of the models in a 
-  collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- `AsNoneSatisfied()`: Creates a proposition that yields a true boolean-result object if none of the models in a 
-  collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- `AsNSatisfied()`: Creates a proposition that yields a true boolean-result object if exactly N models in a 
-  collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- `AsAtLeastNSatisfied()`: Creates a proposition that yields a true boolean-result object if at least N models in a 
-  collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- `AsAtMostfNSatisfied()`: Creates a proposition that yields a true boolean-result object if at most N models in a 
-  collection satisfy the proposition, otherwise a false boolean-result object is returned.
+Spec.Build((int n) => n < 0)
+    .As(booleanResults => booleanResults.All(result => result.Satisfied))   // higher order predicate
+    .Create("all are negative");
+```
+
+#### Built-in higher order operations
+
+Some common higher order operations are provided out-of-the-box.
+
+These are:
+
+- `AsAllSatisfied()`: Creates a proposition that is satisfied when all the models in a collection are satisfied.
+- `AsAnySatisfied()`: Creates a proposition that is satisfied when any of the models in a collection are satisfied.
+- `AsNoneSatisfied()`: Creates a proposition that is satisfied when none of the models in a collection are satisfied.
+- `AsNSatisfied()`: Creates a proposition that is satisfied when exactly N models in a collection are satisfied.
+- `AsAtLeastNSatisfied()`: Creates a proposition that is satisfied when at least N models in a collection are satisfied.
+- `AsAtMostfNSatisfied()`: Creates a proposition that is satisfied when at most N models in a collection are satisfied.
 
 ```csharp
 Spec.Build((int n) => n < 0)
-    .AsAllSatisfied()               // higher order logic
+    .AsAllSatisfied()               // higher order operation
     .WhenTrue("all are negative")
     .WhenFalse("some are not negative")
     .Create();
