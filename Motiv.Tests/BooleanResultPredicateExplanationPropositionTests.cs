@@ -55,6 +55,52 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
     
     [Theory]
+    [InlineData(false, false, true)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, true)]
+    public void Should_be_satisfied_boolean_predicate_when_yielding_multiple_assertions(
+        bool model,
+        bool other,
+        bool expected)
+    {
+        // Arrange
+        var underlying = Spec
+            .Build((bool m) => m == other)
+            .WhenTrue("underlying is true")
+            .WhenFalse("underlying is false")
+            .Create("are equal");
+        
+        var firstSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrueYield((_, _) => ["first is true"])
+            .WhenFalse("first is false")
+            .Create("first true");
+
+        var secondSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrue("second is true")
+            .WhenFalseYield((_, _) => ["second is false"])
+            .Create("is second true");
+
+        var thirdSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrueYield((_, _) => ["first is true"])
+            .WhenFalseYield((_, _) => ["second is false"])
+            .Create("is third true");
+
+        var spec = firstSpec | secondSpec | thirdSpec;
+
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Satisfied;
+        
+        // Assert
+        act.Should().Be(expected);
+    }
+    
+    [Theory]
     [InlineData(false, false, "underlying is true")]
     [InlineData(false, true, "underlying is false")]
     [InlineData(true, false, "underlying is false")]
@@ -107,18 +153,15 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
     
     [Theory]
-    [InlineData(false, false, "first is true", "second is true", "third is true", "fourth is true")]
-    [InlineData(false, true, "first is false", "second is false", "third is false", "fourth is false")]
-    [InlineData(true, false, "first is false", "second is false", "third is false", "fourth is false")]
-    [InlineData(true, true, "first is true", "second is true", "third is true", "fourth is true")]
+    [InlineData(true,  "first is true", "second is true", "third is true", "fourth is true")]
+    [InlineData(false,  "first is false", "second is false", "third is false", "fourth is false")]
     public void Should_replace_the_assertion_with_new_assertion(
         bool model,
-        bool other,
         params string[] expectedAssertions)
     {
         // Arrange
         var underlying = Spec
-            .Build((bool m) => m == other)
+            .Build((bool m) => m)
             .WhenTrue("underlying is true")
             .WhenFalse("underlying is false")
             .Create("are equal");
@@ -148,6 +191,49 @@ public class BooleanResultPredicateExplanationPropositionTests
             .Create("is fourth true");
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
+
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Assertions;
+        
+        // Assert
+        act.Should().BeEquivalentTo(expectedAssertions);
+    }
+    
+    [Theory]
+    [InlineData(true,  "first is true", "second is true", "third is true")]
+    [InlineData(false, "first is false", "second is false", "third is false")]
+    public void Should_replace_the_assertion_with_new_assertion_when_yielding_multiple_assertions(
+        bool model,
+        params string[] expectedAssertions)
+    {
+        // Arrange
+        var underlying = Spec
+            .Build((bool m) => m)
+            .WhenTrue("underlying is true")
+            .WhenFalse("underlying is false")
+            .Create("are equal");
+        
+        var firstSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrueYield((_, _) => ["first is true"])
+            .WhenFalse("first is false")
+            .Create("first true");
+
+        var secondSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrue("second is true")
+            .WhenFalseYield((_, _) => ["second is false"])
+            .Create("second true");
+
+        var thirdSpec = Spec
+            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .WhenTrueYield((_, _) => ["third is true"])
+            .WhenFalseYield((_, _) => ["third is false"])
+            .Create("third true");
+
+        var spec = firstSpec | secondSpec | thirdSpec;
 
         var result = spec.IsSatisfiedBy(model);
 

@@ -10,9 +10,9 @@ Whilst the `WhenTrue()` method overloads remains broadly consistent across the v
 there are nuances to be aware of that are as a result of prior builder method calls. The outliers are the Higher-Order
 propositions, which require the pairing of models and results to be preserved for them to be useful.
 
-## False assertion
+### Fixed assertion
 
-### `WhenTrue(string assertion)`
+### `.WhenTrue(string assertion)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -27,9 +27,9 @@ can use the parameterless `Create()` method fo finalize the building of the prop
 assertion value will be used to populate the `Reason`, `Assertions` and
 `Metadata` properties of the result.
 
-## False metadata
+### Fixed metadata
 
-### `WhenTrue(TMetadata metadata)`
+### `.WhenTrue(TMetadata metadata)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -43,9 +43,9 @@ with a non-string metadata object. This overload requires that the `Create()` me
 to set the propositional statement. When the proposition is satisfied, the metadata will be used to populate
 the `Metadata` property of the result.
 
-## False assertion derived from model
+### Dynamic assertion (derived from model)
 
-### `WhenTrue(Func<TModel, string> factory)`
+### `.WhenTrue(Func<TModel, string> factory)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -58,9 +58,9 @@ This overload generates assertion statements based on the model when the proposi
 is satisfied, the assertion result from the factory function will be used to populate the
 `Reason`, `Assertions` and `Metadata` properties of the result.
 
-## False metadata derived from model
+### Dynamic metadata (derived from model)
 
-### `WhenTrue(Func<TModel, TMetadata> factory)`
+### `.WhenTrue(Func<TModel, TMetadata> factory)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -73,9 +73,9 @@ This overload generates metadata based on the model when the proposition is sati
 satisfied, the metadata returned by the factory function will be used to populate the
 `Metadata` property of the result.
 
-## False assertion derived from model/result
+### Dynamic assertion (derived from model and underlying result)
 
-### `WhenTrue(Func<TModel, BooleanResultBase<TMetadata>, string> factory)`
+### `.WhenTrue(Func<TModel, BooleanResultBase<TMetadata>, string> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -88,9 +88,9 @@ This overload generates assertion statements based on the model and the result o
 proposition is satisfied, the assertion result from the factory function will be used to populate the
 `Reason`, `Assertions` and `Metadata` properties of the result.
 
-## False assertion derived from model/result
+### Dynamic assertion (derived from model and underlying result)
 
-### `WhenTrue(Func<TModel, BooleanResultBase<TMetadata>, TMetadata> factory)`
+### `.WhenTrue(Func<TModel, BooleanResultBase<TMetadata>, TMetadata> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -102,36 +102,6 @@ Spec.Build(new IsEvenProposition())
 This overload generates a metadata value based on the model and the result of the underlying proposition. When the
 proposition is satisfied, the metadata returned by the factory function will populate the `Metadata` property of the
 result.
-
-## False assertion collection derived from model/result
-
-### `WhenTrueYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> factory)`
-
-```csharp
-Spec.Build(new IsEvenProposition())
-    .WhenTrueYield((n, result) => result.Assertions)
-    .WhenFalse("is odd")
-    .Create("is even");
-```
-
-This is used to generate multiple assertion statements based on the model and the result of the underlying proposition.
-When the proposition is satisfied, the assertion result from the factory function will be used to populate the
-`Assertions` and `Metadata` properties of the result.
-
-## False metadata collection derived from model/result
-
-### `WhenTrueYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> factory)`
-
-```csharp
-Spec.Build(new IsEvenProposition())
-    .WhenTrueYield((n, result) => result.Assertions.Select(assertion => new MyMetadata($"{n} {assertion}")))
-    .WhenFalse(new MyMetadata("is odd"))
-    .Create("is even");
-```
-
-This overload generates multiple metadata values based on the model and the result of the underlying proposition. When
-the proposition is satisfied, the metadata values returned by the factory function will populate the `Metadata`
-property of the result.
 
 | [Back - _As()_](./As.md) | [Next - _WhenFalse()_](./WhenFalse.md) |
 |:---------------------------------------:|:-----------------------------------------------------:|

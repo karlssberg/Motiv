@@ -77,4 +77,42 @@ public class ExplanationPropositionTests
         // Assert
         act.Should().Be("is even");
     }
+    
+    [Theory]
+    [InlineData(true,  "first is true", "second is true", "third is true")]
+    [InlineData(false, "first is false", "second is false", "third is false")]
+    public void Should_allow_the_yielding_of_multiple_assertions(
+        bool model,
+        params string[] expectedAssertions)
+    {
+        // Arrange
+        var firstSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrueYield(_ => ["first is true"])
+            .WhenFalse("first is false")
+            .Create("first true");
+
+        var secondSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue("second is true")
+            .WhenFalseYield(_ => ["second is false"])
+            .Create("second true");
+
+        var thirdSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrueYield(_ => ["third is true"])
+            .WhenFalseYield(_ => ["third is false"])
+            .Create("third true");
+
+        var spec = firstSpec | secondSpec | thirdSpec;
+
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Assertions;
+        
+        // Assert
+        act.Should().BeEquivalentTo(expectedAssertions);
+    }
+    
 }

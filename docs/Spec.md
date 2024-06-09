@@ -1,4 +1,5 @@
 ﻿# Spec
+
 Instances of the `Spec` type are the building blocks of a _propositions_.
 They are the nodes of a logical syntax trees that collectively we call _propositions_.
 There are three main ways to create a proposition.
@@ -7,17 +8,22 @@ There are three main ways to create a proposition.
 2. Using the `Spec.Build()` method to create a new proposition.
 3. Deriving from the `Spec<TModel>` or `Spec<TModel, TMetadata>` types to create a new proposition.
 
-## Building propositions
+### Building propositions
+
 ### `Spec` 
+
 ```csharp
 Spec.Build((int n) => n % 2 == 0)  // Spec used as static type
     .Create("is even");
 ````
+
 This type is only used for building propositions using the logical operators.
 As it is `static` it cannot be used to derive new types, but it can be used to compose new specifications.
 
-## Creating strongly typed propositions
+### Creating strongly typed propositions
+
 ### `Spec<TModel>`
+
 ```csharp
 public class IsEvenProposition : Spec<int>( // Spec used as base type
     Spec.Build((int n) => n % 2 == 0)       // Spec used as static type
@@ -32,13 +38,16 @@ public class IsEvenAndPositiveProposition : Spec<int>(() => // Spec used as base
         return isEven & isPositive;    
     });
 ```
+
 This type is used to derive new types of _explanation_ specifications.
 It is a syntactic sugar for the `Spec<TModel, string>` type.
 The primary constructor accepts an
 
 ### `Spec<TModel, TMetadata>`
+
 This type is used to derive new types of _metadata_ specifications.
 These specifications allow arbitrary types, known as _metadata_, to be attached to the result.
+
 ```csharp 
 public class IsEvenProposition : Spec<int, MyMetadata>( // Spec used as base type
     Spec.Build((int n) => n % 2 == 0)                   // Spec used as static type

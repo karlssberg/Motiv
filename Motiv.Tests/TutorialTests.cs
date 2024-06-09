@@ -434,7 +434,50 @@ public class TutorialTests
 
         var act = hasSubscriptionInGracePeriod.IsSatisfiedBy(new Subscription(DateTime.Now.AddDays(-3)));
 
-        act.Satisfied.Should().BeTrue();
-        act.Reason.Should().Be("subscription is within grace period");
+            act.Satisfied.Should().BeTrue();
+            act.Reason.Should().Be("subscription is within grace period");
+    }
+
+    [Fact]
+    public void Should_get_root_assertions()
+    {
+        var isEven = 
+            Spec.Build<int>(n => n % 2 == 0)
+                .WhenTrue("is even")
+                .WhenFalse("is odd")
+                .Create();
+        
+        var areEven = 
+            Spec.Build(isEven)
+                .AsAnySatisfied()
+                .WhenTrue("some even")
+                .WhenFalse("all odd")
+                .Create();
+        
+        var act = areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]);
+        
+        act.GetRootAssertions().Should().BeEquivalentTo(["is even"]);
+    }
+    
+
+    [Fact]
+    public void Should_get_all_root_assertions()
+    {
+        var isEven = 
+            Spec.Build<int>(n => n % 2 == 0)
+                .WhenTrue("is even")
+                .WhenFalse("is odd")
+                .Create();
+        
+        var areEven = 
+            Spec.Build(isEven)
+                .AsAnySatisfied()
+                .WhenTrue("some even")
+                .WhenFalse("all odd")
+                .Create();
+        
+        var act = areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]);
+        
+        act.GetAllRootAssertions().Should().BeEquivalentTo(["is even", "is odd"]);
     }
 }
