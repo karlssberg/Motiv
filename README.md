@@ -53,20 +53,26 @@ result.Justification; // can view content
 
 ### What problem is being solved?
 
-If your project requires two or more of the following, then Motiv is likely to be a great fit.
+Primarily, Motiv is designed to provide visibility into your application's decision-making process.
+However, since it decomposes expressions into propositions, almost as an accident of its design, it also satisfies some 
+important architectural concerns and opening doors to more exotic usages (such as implementing rules engines).
 
-1. **Visibility**: You need to explain in real-time why a certain condition was met (or not).
-2. **Decomposition**: Your logic is either too complex or deeply nested to understand at a glance, so it needs 
+If your project requires two or more of the following, then Motiv is very likely to be a great fit.
+
+1. **Visibility**: You need to provide feedback in real-time regarding why a certain condition was met (or not).
+2. **Decomposition**: Your logic is either too complex or deeply nested to understand at a glance, so it needs
    to be broken up in to meaningful parts.
 3. **Reusability**: You wish to re-use your logic in multiple places without having to re-implement it.
 4. **Modeling**: You need to explicitly model the facets of your domain logic.
 
 ### What is wrong with regular booleans?
 
-Primitive booleans will not explain _why_ they are `true` or `false`. 
+Regular boolean expressions will not explain _why_ they are `true` or `false`. 
 If an expression only has one clause, then we can easily figure it out.
 However, if it is made up of multiple clauses, then at runtime it may not be obvious or even possible to determine the 
 underlying cause.
+Moreover, since Motiv requires that you break up your expressions in to meaningful propositions, it greatly improves 
+readability, in the same way that decomposing code into meaningful functions does.
 
 ### Isn't an if-statement visible enough?
 
@@ -75,9 +81,9 @@ To provide runtime visibility, you would need to decompose the expression into c
 (so we can provide detailed explanations), and then recombine them to form the final result.
 This instantly compromises the (design-time) readability of the code.
 
-Furthermore, if the logic is sufficiently complex, then readability (at design-time) may be challenging.
+Furthermore, if the logic is sufficiently complex, then readability may already be challenging.
 This is especially true if the clauses themselves are complex, or if the logic is deeply nested, in which case it 
-may be hard to discern which sub-expressions belong to which clause.
+may be hard to discern the boundaries between clauses.
 
 ### But we can decompose expressions into functions, can't we?
 
@@ -85,17 +91,19 @@ Functions are great for encapsulating logic, but they do not natively provide a 
 Sure, we can create utility functions that do this for us, but in doing so we are unwittingly implementing a 
 functional version of the [Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern) ourselves —
 which is the pattern Motiv is based on.
-At this point we might want to consider well-tested alternatives (such as Motiv).
+At this point, we might want to consider well-tested alternatives (such as Motiv).
 
 You may be wondering why we do not just eagerly evaluate the functions and avoid composition altogether.
 However, it places a burden on the caller, since it requires each function to be evaluated in turn, with the results 
 collated into the final result, which interferes with the readability of the code and invites human error.
+Removing this burden is very much the raison d'être of Motiv, which is also very much in the spirit of 
+monadic composition.
 
 ### What is Motiv exactly?
 
 Motiv is a functional-ish/fluent version of the
-[Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern), that allows you to very easily model your 
-logic in a declarative way and then re-compose it to form new expressions.
+[Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern), that allows you to very easily model 
+your logic in a declarative way and then re-compose it to form new expressions.
 When it is time to evaluate whether a model is satisfied by the expression, the underlying causes are figured out 
 on your behalf, and any data associated with them is subsequently surfaced (which is typically a textual explanation).
 
@@ -461,10 +469,9 @@ allNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions;   // ["0 is not negative",
 ## Tradeoffs
 
 There are inevitably potential tradeoffs to consider when using this library.
-1. **Performance**: This library is designed to be as performant as possible, but it is still a layer of abstraction
-   over the top of native logic.
-   This means that there is nevertheless a measurable performance cost compared to computing boolean values natively.
-   This cost is negligible in most cases and is generally eclipsed by the benefits provided.
+1. **Performance**: Motiv is not designed for high-performance scenarios where nanoseconds matter. 
+   It is meant to be used in scenarios where maintainability and readability are paramount.
+   That being said, for the majority of use-cases the performance overhead is truly negligible.
 2. **Dependency**: This library is a dependency.
    Once embedded in your codebase it will be challenging to remove. 
    However, this library does not itself depend on any third-party libraries, so it does not bring any unexpected 
