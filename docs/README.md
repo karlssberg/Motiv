@@ -5,16 +5,15 @@ It provides a fluent API for building propositions, and it generates human-reada
 application's user interface or to otherwise provide visibility into your application's decision-making process.
 
 ### Contents
-1. [Supercharge your boolean logic](./README.md)
-2. [Spec](./Spec.md)
-3. [Build](./Build.md)
-4. [WhenTrue](./WhenTrue.md)
-5. [WhenTrueYield](./WhenTrueYield.md)
-6. [WhenFalse](./WhenFalse.md)
-7. [WhenFalseYield](./WhenFalseYield.md)
-8. [Create](./Create.md)
-9. [As](./As.md)
-10. [Collections](./Collections.md)
+1. [Spec](./Spec.md)
+2. [Build()](./Build.md)
+3. [WhenTrue()](./WhenTrue.md)
+4. [WhenTrueYield()](./WhenTrueYield.md)
+5. [WhenFalse()](./WhenFalse.md)
+6. [WhenFalseYield()](./WhenFalseYield.md)
+7. [Create()](./Create.md)
+8. [As()](./As.md)
+9. [Collections](./Collections.md)
 
 ## Usage
 
