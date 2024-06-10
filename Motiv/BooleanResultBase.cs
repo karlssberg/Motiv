@@ -26,9 +26,23 @@ public abstract class BooleanResultBase
 
     /// <summary>
     /// Gets a concise reason for the result. If the result is a proposition, then the reason will be a single
-    /// assertion. Otherwise, the result is boolean expression, and the reason will be a conjunction of assertions using the
-    /// logical operators (e.g., &amp;, |, ^).
+    /// assertion. Otherwise, the result is boolean expression, and the reason will be a conjunction of assertions
+    /// using the logical operators (e.g., &amp;, |, ^).
     /// </summary>
+    /// <Remarks>
+    /// <para>
+    /// The source of the text used for the <see cref="Reason" /> property will either come from the <c>WhenTrue()</c>
+    /// or <c>WhenFalse()</c> methods, or from the <c>Create()</c> method.
+    /// </para>
+    /// <para>
+    /// If the <c>WhenTrue()</c> or <c>WhenFalse()</c> methods received either a string, or a function that returns a
+    /// string (and neither return an <c>IEnumerable&lt;string&gt;</c>), then the <see cref="Reason"/> property
+    /// will use these values.
+    /// Otherwise, it will use the propositional statement provided to the <c>Create()</c> method,
+    /// with negations prefixed with a <c>!</c>.
+    /// For example, <c>"!is even"</c>.
+    /// </para>
+    /// </Remarks>
     public string Reason => Description.Reason;
 
     /// <summary>Gets a full hierarchical breakdown of the reasons for the result.</summary>

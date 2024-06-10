@@ -38,6 +38,6 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
 
         MetadataNode<string> MetadataTier() => metadataTier.Value;
         Explanation Explanation() => explanation.Value;
-        string Reason() => specDescription.ToReason(booleanResult.Satisfied);
+        string Reason() => assertion.Value;
     }
 }

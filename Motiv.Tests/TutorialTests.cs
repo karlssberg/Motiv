@@ -480,4 +480,50 @@ public class TutorialTests
         
         act.GetAllRootAssertions().Should().BeEquivalentTo(["is even", "is odd"]);
     }
+
+    [Theory]
+    [InlineData(1, "1")]
+    [InlineData(2, "2")]
+    [InlineData(3, "fizz")]
+    [InlineData(4, "4")]
+    [InlineData(5, "buzz")]
+    [InlineData(6, "fizz")]
+    [InlineData(7, "7")]
+    [InlineData(8, "8")]
+    [InlineData(9, "fizz")]
+    [InlineData(10, "buzz")]
+    [InlineData(11, "11")]
+    [InlineData(12, "fizz")]
+    [InlineData(13, "13")]
+    [InlineData(14, "14")]
+    [InlineData(15, "fizzbuzz")]
+    [InlineData(16, "16")]
+    [InlineData(17, "17")]
+    [InlineData(18, "fizz")]
+    [InlineData(19, "19")]
+    [InlineData(20, "buzz")]
+    public void Should_solve_fizzbuzz(int number, string expected)
+    {
+        var isFizz = 
+            Spec.Build((int n) => n % 3 == 0)
+                .Create("fizz");
+        
+        var isBuzz =
+            Spec.Build((int n) => n % 5 == 0)
+                .Create("buzz");
+        
+        var isFizzBuzz =
+            Spec.Build(isFizz & isBuzz)
+                .Create("fizzbuzz");
+
+        var isFizzOrBuzzOrFizzBuzz = 
+            Spec.Build(isFizzBuzz.OrElse(isFizz | isBuzz))
+                .WhenTrue((_, result) => result.Reason)
+                .WhenFalse(n => n.ToString())
+                .Create("is fizz and/or buzz");
+        
+        var act = isFizzOrBuzzOrFizzBuzz.IsSatisfiedBy(number);
+        
+        act.Reason.Should().Be(expected);
+    }
 }

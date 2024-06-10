@@ -7,7 +7,7 @@ internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMet
     ISpecDescription description)
     : SpecBase<TModel, string>
 {
-    public override IEnumerable<SpecBase> Underlying => underlyingSpec.ToEnumerable();
+    public override IEnumerable<SpecBase> Underlying => UnderlyingSpec.ToEnumerable();
     
     public override ISpecDescription Description => description;
 
@@ -39,6 +39,6 @@ internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMet
         
         MetadataNode<string> MetadataTier() => metadataTier.Value;
         Explanation Explanation() => explanation.Value;
-        string Reason() => Description.ToReason(booleanResult.Satisfied);
+        string Reason() => assertion.Value;
     }
 }

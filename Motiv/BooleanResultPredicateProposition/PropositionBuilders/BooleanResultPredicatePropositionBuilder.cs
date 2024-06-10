@@ -33,7 +33,19 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
         trueBecause.ThrowIfNull(nameof(trueBecause));
         return new FalseAssertionExplanationPropositionBuilder<TModel, TUnderlyingMetadata>(
             predicate,
-            (model, _) => trueBecause(model).ToEnumerable());
+            (model, _) => trueBecause(model));
+    }
+    
+    /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
+    /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
+    /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
+    public FalseAssertionExplanationPropositionBuilder<TModel, TUnderlyingMetadata> WhenTrue(
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> whenTrue)
+    {
+        whenTrue.ThrowIfNull(nameof(whenTrue));
+        return new FalseAssertionExplanationPropositionBuilder<TModel, TUnderlyingMetadata>(
+            predicate,
+            whenTrue);
     }
 
     /// <summary>Specifies the metadata to use when the condition is true.</summary>
@@ -60,18 +72,6 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
         return new FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata>(
             predicate,
             (model, _) => whenTrue(model).ToEnumerable());
-    }
-
-    /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
-    /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
-    /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrue(
-        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> whenTrue)
-    {
-        whenTrue.ThrowIfNull(nameof(whenTrue));
-        return new FalseMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata>(
-            predicate,
-            whenTrue.ToEnumerableReturn());
     }
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>

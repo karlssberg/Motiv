@@ -42,7 +42,7 @@ internal sealed class SpecDecoratorMetadataProposition<TModel, TMetadata, TUnder
             Explanation,
             Reason);
 
-        string Reason() => Description.ToReason(booleanResult.Satisfied);
+        string Reason() =>  Description.ToReason(booleanResult.Satisfied);
         Explanation Explanation() => explanation.Value;
         MetadataNode<TMetadata> MetadataTier() => metadataTier.Value;
     }
