@@ -63,7 +63,7 @@ If your project requires two or more of the following, then Motiv is very likely
 2. **Decomposition**: Your logic is either too complex or deeply nested to understand at a glance, so it needs
    to be broken up in to meaningful parts.
 3. **Reusability**: You wish to re-use your logic in multiple places without having to re-implement it.
-4. **Modeling**: You need to explicitly model the facets of your domain logic.
+4. **Modeling**: You need to explicitly model your domain logic.
 
 ### What is wrong with regular booleans?
 
