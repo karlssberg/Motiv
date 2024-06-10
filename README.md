@@ -55,7 +55,7 @@ result.Justification; // can view content
 
 Primarily, Motiv is designed to provide visibility into your application's decision-making process.
 However, since it decomposes expressions into propositions, almost as an accident of its design, it also satisfies some 
-important architectural concerns and opening doors to more exotic usages (such as implementing rules engines).
+important architectural concerns and opens doors to more exotic usages (such as implementing rules engines).
 
 If your project requires two or more of the following, then Motiv is very likely to be a great fit.
 
