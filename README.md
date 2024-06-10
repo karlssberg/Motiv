@@ -64,6 +64,7 @@ If your project requires two or more of the following, then Motiv is very likely
    to be broken up in to meaningful parts.
 3. **Reusability**: You wish to re-use your logic in multiple places without having to re-implement it.
 4. **Modeling**: You need to explicitly model your domain logic.
+5. **Testing**: You want to thoroughly test your logic without having to mock or stub out dependencies.
 
 ### What is wrong with regular booleans?
 
