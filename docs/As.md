@@ -83,4 +83,3 @@ The proposition is satisfied if `n` number of models in the collection are satis
 satisfied.
 
 | [Back - _Build()_](./Build.md) | [Next - _WhenTrue()_](./WhenTrue.md) |
-|:-------------------------------|-------------------------------------:|

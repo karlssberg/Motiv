@@ -60,4 +60,3 @@ The function is immediately invoked and the result is used to create the proposi
 This doesn't add any new capabilities, but it instead improves the developer experience.
 
 | [Back - _Spec_ class](./Spec.md) | [Next - _As()_](./As.md) |
-|:----------------------------------:|:------------------------:|

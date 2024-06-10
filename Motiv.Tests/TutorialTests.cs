@@ -482,27 +482,27 @@ public class TutorialTests
     }
 
     [Theory]
-    [InlineData(1, "1")]
-    [InlineData(2, "2")]
-    [InlineData(3, "fizz")]
-    [InlineData(4, "4")]
-    [InlineData(5, "buzz")]
-    [InlineData(6, "fizz")]
-    [InlineData(7, "7")]
-    [InlineData(8, "8")]
-    [InlineData(9, "fizz")]
-    [InlineData(10, "buzz")]
-    [InlineData(11, "11")]
-    [InlineData(12, "fizz")]
-    [InlineData(13, "13")]
-    [InlineData(14, "14")]
-    [InlineData(15, "fizzbuzz")]
-    [InlineData(16, "16")]
-    [InlineData(17, "17")]
-    [InlineData(18, "fizz")]
-    [InlineData(19, "19")]
-    [InlineData(20, "buzz")]
-    public void Should_solve_fizzbuzz(int number, string expected)
+    [InlineData(1, false, "1")]
+    [InlineData(2, false, "2")]
+    [InlineData(3, true, "fizz")]
+    [InlineData(4, false, "4")]
+    [InlineData(5, true, "buzz")]
+    [InlineData(6, true, "fizz")]
+    [InlineData(7, false, "7")]
+    [InlineData(8, false, "8")]
+    [InlineData(9, true, "fizz")]
+    [InlineData(10, true, "buzz")]
+    [InlineData(11, false, "11")]
+    [InlineData(12, true, "fizz")]
+    [InlineData(13, false, "13")]
+    [InlineData(14, false, "14")]
+    [InlineData(15, true, "fizzbuzz")]
+    [InlineData(16, false, "16")]
+    [InlineData(17, false, "17")]
+    [InlineData(18, true, "fizz")]
+    [InlineData(19, false, "19")]
+    [InlineData(20, true, "buzz")]
+    public void Should_solve_fizzbuzz(int number, bool expectedSatisfied, string expectedReason)
     {
         var isFizz = 
             Spec.Build((int n) => n % 3 == 0)
@@ -512,18 +512,19 @@ public class TutorialTests
             Spec.Build((int n) => n % 5 == 0)
                 .Create("buzz");
         
-        var isFizzBuzz =
+        var isFizzAndBuzz =
             Spec.Build(isFizz & isBuzz)
                 .Create("fizzbuzz");
 
-        var isFizzOrBuzzOrFizzBuzz = 
-            Spec.Build(isFizzBuzz.OrElse(isFizz | isBuzz))
+        var isSubstitution = 
+            Spec.Build(isFizzAndBuzz.OrElse(isFizz | isBuzz))
                 .WhenTrue((_, result) => result.Reason)
                 .WhenFalse(n => n.ToString())
-                .Create("is fizz and/or buzz");
+                .Create("should substitute number");
         
-        var act = isFizzOrBuzzOrFizzBuzz.IsSatisfiedBy(number);
+        var act = isSubstitution.IsSatisfiedBy(number);
         
-        act.Reason.Should().Be(expected);
+        act.Satisfied.Should().Be(expectedSatisfied);
+        act.Reason.Should().Be(expectedReason);
     }
 }
