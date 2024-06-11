@@ -88,6 +88,6 @@ Spec.Build((int n) => n % 2 == 0))
 ```
 
 <div style="display: flex; justify-content: space-between">
-    <a href="./WhenTrue.md">&lt; Previous</a>
-    <a href="./WhenFalse.md">Next &gt;</a>
+    <a href="./WhenTrue.html">&lt; Previous</a>
+    <a href="./WhenFalse.html">Next &gt;</a>
 </div>

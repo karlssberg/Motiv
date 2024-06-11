@@ -60,6 +60,6 @@ The function is immediately invoked and the result is used to create the proposi
 This doesn't add any new capabilities, but it instead improves the developer experience.
 
 <div style="display: flex; justify-content: space-between">
-    <a href="./Spec.md">&lt; Previous</a>
-    <a href="./As.md">Next &gt;</a>
+    <a href="./Spec.html">&lt; Previous</a>
+    <a href="./As.html">Next &gt;</a>
 </div>

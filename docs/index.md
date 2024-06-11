@@ -7,15 +7,15 @@ When evaluated, Motiv generates human-readable explanations of the results, whic
 leveraged to gain valuable insights into the decision-making process.
 
 ### Contents
-1. [Spec](./Spec.md)
-2. [Build()](./Build.md)
-3. [As()](./As.md)
-4. [WhenTrue()](./WhenTrue.md)
-5. [WhenTrueYield()](./WhenTrueYield.md)
-6. [WhenFalse()](./WhenFalse.md)
-7. [WhenFalseYield()](./WhenFalseYield.md)
-8. [Create()](./Create.md)
-9. [Collections](./Collections.md)
+1. [Spec](./Spec.html)
+2. [Build()](./Build.html)
+3. [As()](./As.html)
+4. [WhenTrue()](./WhenTrue.html)
+5. [WhenTrueYield()](./WhenTrueYield.html)
+6. [WhenFalse()](./WhenFalse.html)
+7. [WhenFalseYield()](./WhenFalseYield.html)
+8. [Create()](./Create.html)
+9. [Collections](./Collections.html)
 
 ## Installation
 

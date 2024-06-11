@@ -161,6 +161,6 @@ proposition is not satisfied. When the proposition is not satisfied, the metadat
 populate the `Metadata` property of the result.
 
 <div style="display: flex; justify-content: space-between">
-    <a href="./WhenTrueYield.md">&lt; Previous</a>
-    <a href="./WhenFalseYield.md">Next &gt;</a>
+    <a href="./WhenTrueYield.html">&lt; Previous</a>
+    <a href="./WhenFalseYield.html">Next &gt;</a>
 </div>

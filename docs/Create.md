@@ -28,6 +28,6 @@ The propositional statement is used when serializing the proposition to a string
 `Description` property, or the results `Reason` property.
 
 <div style="display: flex; justify-content: space-between">
-    <a href="./WhenFalse.md">&lt; Previous</a>
-    <a href="./Collections.md">Next &gt;</a>
+    <a href="./WhenFalse.html">&lt; Previous</a>
+    <a href="./Collections.html">Next &gt;</a>
 </div>

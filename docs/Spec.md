@@ -71,5 +71,5 @@ public class IsEvenAndPositiveProposition : Spec<int, MyMetadata>(() => // Spec 
 This can be useful when you want to provide additional information about the state of the model.
 
 <div style="display: flex; justify-content: right;">
-    <a href="./Build.md">Next &gt;</a>
+    <a href="./Build.html">Next &gt;</a>
 </div>
