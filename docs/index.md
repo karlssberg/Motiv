@@ -44,7 +44,7 @@ Creating them is a fluid process, with a variety of methods available to cater t
 
 To create a proposition with the minimal of fuss, you can omit the `WhenTrue()` and `WhenFalse()` methods.
 In this case, Motiv will automatically use the propositional statement when the proposition is satisfied, and prefix 
-it with a "!" when it's not. 
+it with a "!" when it is not. 
 
 For example, the following proposition will return "is even" when the number is even and "!is even" when it is not.
 
@@ -179,7 +179,7 @@ Its value will likely become clear if you are looking to achieve two or more of 
    Its focus is on maintainability and readability.
    That being said, for most use cases, the performance overhead is negligible. 
 2. **Dependency**: Once embedded in your codebase, removing Motiv can be challenging.
-   However, it doesn't depend on any third-party libraries itself, so it won't bring any unexpected baggage. 
+   However, it does not depend on any third-party libraries itself, so it won't bring any unexpected baggage. 
 3. **Learning Curve**: If you're new to Motiv, you might take a moment to familiarize yourself with its approach,
    but the library has been carefully designed to be as intuitive as possible, with the aim being that developers can 
    quickly understand its concepts and start using it effectively from the get-go.
