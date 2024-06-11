@@ -30,8 +30,6 @@ or by using the .NET CLI:
 dotnet add package Motiv
 ```
 
-
-
 ## Usage
 
 ### Create a proposition

@@ -42,14 +42,15 @@ var canViewContent =
 // evaluate proposition
 var result = canViewContent.IsSatisfiedBy(subscription); 
 
-result.Satisfied;     // true
-result.Reason;        // "can view content"
-result.Justification; // can view content
-                      //    OR
-                      //        AND
-                      //            OR
-                      //                subscription is within grace period
-                      //            subscription is not cancelled
+result.Satisfied;      // true
+result.Reason;         // "can view content"
+result.SubAssertions;  // ["subscription is within grace period", "subscription is not cancelled"]
+result.Justification;  // can view content
+                       //    OR
+                       //        AND
+                       //            OR
+                       //                subscription is within grace period
+                       //            subscription is not cancelled
 ```
 
 #### Useful Links
