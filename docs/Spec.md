@@ -46,7 +46,7 @@ The primary constructor accepts an
 ### `Spec<TModel, TMetadata>`
 
 This type is used to derive new types of _metadata_ specifications.
-These specifications allow arbitrary types, known as _metadata_, to be attached to the result.
+These specifi[WhenTrueYield.md](WhenTrueYield.md)cations allow arbitrary types, known as _metadata_, to be attached to the result.
 
 ```csharp 
 public class IsEvenProposition : Spec<int, MyMetadata>( // Spec used as base type
@@ -70,5 +70,6 @@ public class IsEvenAndPositiveProposition : Spec<int, MyMetadata>(() => // Spec 
 
 This can be useful when you want to provide additional information about the state of the model.
 
-| [Next - _Build()_](./build.md) |
-|:------------------------------:|
+<div style="display: flex; justify-content: right;">
+    <a href="./Build.md">Next &gt;</a>
+</div>

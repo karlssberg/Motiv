@@ -2,7 +2,7 @@
 
 ### Fixed assertion
 
-### `.WhenFalse(string assertion)`
+`.WhenFalse(string assertion)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -17,7 +17,7 @@ satisfied, the metadata returned by the factory function will be used to populat
 
 ### Fixed metadata
 
-### `.WhenFalse(TMetadata metadata)`
+`.WhenFalse(TMetadata metadata)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -32,7 +32,7 @@ property of the result.
 
 ### Dynamic assertion (derived from model)
 
-### `.WhenFalse(Func<TModel, string> factory)`
+`.WhenFalse(Func<TModel, string> factory)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -47,7 +47,7 @@ proposition is not satisfied, the metadata returned by the factory function will
 
 ### Dynamic metadata (derived from model)
 
-### `.WhenFalse(Func<TModel, TMetadata> factory)`
+`.WhenFalse(Func<TModel, TMetadata> factory)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -64,7 +64,7 @@ property of the result.
 
 ### Dynamic assertion (derived from model and underlying result)
 
-### `.WhenFalse(Func<TModel, BooleanResultBase<TMetadata>, string> factory)`
+`.WhenFalse(Func<TModel, BooleanResultBase<TMetadata>, string> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -79,7 +79,7 @@ proposition is not satisfied, the metadata returned by the factory function will
 
 ### Dynamic assertion (derived from model and underlying result)
 
-### `.WhenFalse(Func<TModel, BooleanResultBase<TMetadata>, TMetadata> factory)`
+`.WhenFalse(Func<TModel, BooleanResultBase<TMetadata>, TMetadata> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -96,7 +96,7 @@ property of the result.
 
 ### Dynamic assertion (derived from pairwise models and results)
 
-### `.WhenFalse(Func<HigherOrderBooleanEvaluation<TModel>, string> factory)`
+`.WhenFalse(Func<HigherOrderBooleanEvaluation<TModel>, string> factory)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -112,7 +112,7 @@ the `Reason`, `Assertions` and `Metadata` properties of the result.
 
 ### Dynamic metadata (derived from pairwise models and results)
 
-### `.WhenFalse(Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> factory)`
+`.WhenFalse(Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> factory)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -130,7 +130,7 @@ property of the result.
 
 ### Dynamic assertion (derived from model and underlying result)
 
-### `.WhenFalse(Func<HigherOrderEvaluation<TModel>, string> factory)`
+`.WhenFalse(Func<HigherOrderEvaluation<TModel>, string> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -146,7 +146,7 @@ be used to populate the `Reason`, `Assertions` and `Metadata` properties of the 
 
 ### Dynamic metadata (derived from model and underlying result)
 
-### `.WhenFalse(Func<HigherOrderEvaluation<TModel>, TMetadata> factory)`
+`.WhenFalse(Func<HigherOrderEvaluation<TModel>, TMetadata> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -160,5 +160,7 @@ This overload generates a metadata value based on the model and the result of th
 proposition is not satisfied. When the proposition is not satisfied, the metadata returned by the factory function will
 populate the `Metadata` property of the result.
 
-| [Back - _WhenTrueYield()_](./WhenTrueYield.md) | [Next - _WhenFalseYield()_](./WhenFalseYield.md) |
-|:----------------------------------------------:|:------------------------------------------------:|
+<div style="display: flex; justify-content: space-between">
+    <a href="./WhenTrueYield.md">&lt; Previous</a>
+    <a href="./WhenFalseYield.md">Next &gt;</a>
+</div>

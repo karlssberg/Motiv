@@ -9,7 +9,7 @@ model in a set.
 
 ### Dynamic assertions (derived from model)
 
-### `.WhenTrueYield(Func<TModel, IEnumerable<string>> factory)`
+`.WhenTrueYield(Func<TModel, IEnumerable<string>> factory)`
 
 ```csharp
 Spec.Build((string str) => str.Contains("foo") && str.Contains("bar"))
@@ -28,7 +28,7 @@ proposition is satisfied, the assertion result from the factory function will be
 
 ### Dynamic metadata (derived from model)
 
-### `.WhenTrueYield(Func<TModel, IEnumerable<TMetadata>> factory)`
+`.WhenTrueYield(Func<TModel, IEnumerable<TMetadata>> factory)`
 
 ```csharp
 Spec.Build((string str) => str.Contains("foo") && str.Contains("bar"))
@@ -45,7 +45,7 @@ Spec.Build((string str) => str.Contains("foo") && str.Contains("bar"))
 
 ### Dynamic assertions (derived from model and underlying result)
 
-### `.WhenTrueYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> factory)`
+`.WhenTrueYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -60,7 +60,7 @@ When the proposition is satisfied, the assertion result from the factory functio
 
 ### Dynamic metadata (derived from model and underlying result)
 
-### `.WhenTrueYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> factory)`
+`.WhenTrueYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -77,14 +77,17 @@ property of the result.
 
 ### Dynamic assertions (derived from pairwise model and result)
 
-### `.WhenTrueYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> factory)`
+`.WhenTrueYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> factory)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0))
     .AsAnySatisfied()
-    .WhenTrueYield(eval => eval.T))
+    .WhenTrueYield(eval => $"{eval.TrueModels.Serialize()} are even"))
     .WhenFalse("is odd")
     .Create("all even");
 ```
-| [Back - _WhenTrue()_](./WhenTrue.md) | [Next - _WhenFalse()_](./WhenFalse.md) |
-|:------------------------------------:|:--------------------------------------:|
+
+<div style="display: flex; justify-content: space-between">
+    <a href="./WhenTrue.md">&lt; Previous</a>
+    <a href="./WhenFalse.md">Next &gt;</a>
+</div>

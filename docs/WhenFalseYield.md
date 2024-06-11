@@ -5,11 +5,45 @@ assertions/metadata. This may be, for instance, because you want to pass through
 summarizing them, or maybe you are working with higher-order propositions and want assertions for each unsatisfied 
 model in a set.
 
+## Usage when building a new proposition
+
+### Dynamic assertions (derived from model)
+
+`.WhenTrueYield(Func<TModel, IEnumerable<string>> factory)`
+
+```csharp
+Spec.Build((string str) => str.Contains("foo") || str.Contains("bar"))
+    .WhenTrue("contains 'foo' or 'bar'")
+    .WhenFalseYield(str =>
+        [
+            $"'{str}' does not contain 'foo'",
+            $"'{str}' does not contain 'bar'"
+        ])
+    .Create();
+```
+
+This overload generates multiple assertion statements based on the model when the proposition is satisfied. When the
+proposition is satisfied, the assertion result from the factory function will be used to populate the `Assertions` and
+`Metadata` properties of the result.
+
+### Dynamic metadata (derived from model)
+
+`.WhenTrueYield(Func<TModel, IEnumerable<TMetadata>> factory)`
+
+```csharp
+Spec.Build((string str) => str.Contains("foo") || str.Contains("bar"))
+    .WhenTrue(new MyMetadata("contains 'foo' or 'bar'"))
+    .WhenFalseYield(str =>
+        [
+            new MyMetadata($"'{str}' does not contain 'foo'"),
+            new MyMetadata($"'{str}' does not contains 'bar'")
+        ])
+    .Create();
+```
+
 ### Dynamic assertions (derived from model and underlying result)
 
-### `.WhenFalseYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> factory)`
-`factory` - A factory function that returns multiple assertions.
-Both the model and the boolean result of the underlying proposition are passed as arguments to the factory function.
+`.WhenFalseYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -24,7 +58,7 @@ When the proposition is not satisfied, the metadata returned by the factory func
 
 ### Dynamic metadata (derived from model and underlying result)
 
-### `.WhenFalseYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> factory)`
+`.WhenFalseYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -37,5 +71,21 @@ This overload generates multiple metadata values based on the model and the resu
 the proposition is not satisfied, the metadata returned by the factory function will populate the `Metadata`
 property of the result.
 
-| [Back - _WhenFalse()_](./WhenFalse.md) | [Next - _Create()_](./Create.md) |
-|:--------------------------------------:|:--------------------------------:|
+## Usage when building a higher-order proposition from an existing proposition
+
+### Dynamic assertions (derived from pairwise model and result)
+
+`.WhenTrueYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> factory)`
+
+```csharp
+Spec.Build((int n) => n % 2 == 0))
+    .AsAnySatisfied()
+    .WhenTrue("is even")
+    .WhenFalseYield(eval => $"{eval.FalseModels.Serialize()} are odd"))
+    .Create();
+```
+
+<div style="display: flex; justify-content: space-between">
+    <a href="./WhenFalse.md">&lt; Previous</a>
+    <a href="./Create.md">Next &gt;</a>
+</div>

@@ -11,7 +11,7 @@ All of these overloads can be used to create a new proposition with varying leve
 
 ### From a predicate
 
-### `.Build<TModel>(Func<TModel, bool> predicate)`
+`.Build<TModel>(Func<TModel, bool> predicate)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0) 
@@ -23,7 +23,7 @@ Propositions built from these generally serve as the foundations to more complex
 
 ### From a boolean-result predicate
 
-### `.Build<TModel, TMetadata>(Func<TModel, BooleanResultBase<TMetadata>> predicate)`
+`.Build<TModel, TMetadata>(Func<TModel, BooleanResultBase<TMetadata>> predicate)`
 
 ```csharp
 Spec.Build((int n) => new IsEvenProposition().IsSatisfiedBy(n))
@@ -37,7 +37,7 @@ also possible.
 
 ### From a proposition
 
-### `.Build<TModel, TMetadata>(SpecBase<TModel,TMetadata> proposition)`
+`.Build<TModel, TMetadata>(SpecBase<TModel,TMetadata> proposition)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -48,7 +48,7 @@ assertions or metadata to a different value or type, as well as to compose new p
 
 ### From a proposition factory
 
-### `.Build<TModel, TMetadata>(Func<SpecBase<TModel, TMetadata>> factory)`
+`.Build<TModel, TMetadata>(Func<SpecBase<TModel, TMetadata>> factory)`
 
 ```csharp
 Spec.Build(() => new IsEvenProposition())
@@ -59,5 +59,7 @@ This is used to create a proposition from a factory function.
 The function is immediately invoked and the result is used to create the proposition.
 This doesn't add any new capabilities, but it instead improves the developer experience.
 
-| [Back - _Spec_ class](./Spec.md) | [Next - _As()_](./As.md) |
-|:--------------------------------:|:------------------------:|
+<div style="display: flex; justify-content: space-between">
+    <a href="./Spec.md">&lt; Previous</a>
+    <a href="./As.md">Next &gt;</a>
+</div>

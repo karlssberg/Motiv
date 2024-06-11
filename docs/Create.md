@@ -2,7 +2,7 @@
 
 ### Default 
 
-### `SpecBase<TModel, TMetadata> Create()`
+`SpecBase<TModel, TMetadata> Create()`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -16,7 +16,7 @@ any arguments. This is because the propositional statement is obtained from the 
 
 ### With an explicit propositional statement
 
-### `SpecBase<TModel, TMetadata> Create(string statement)`
+`SpecBase<TModel, TMetadata> Create(string statement)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -27,5 +27,7 @@ This method is used to create a new proposition with a given propositional state
 The propositional statement is used when serializing the proposition to a string, such as with the propositions
 `Description` property, or the results `Reason` property.
 
-| [Back - _WhenFalse()_](./WhenFalse.md) | [Collections - _Collections_](./Collections.md) |
-|:--------------------------------------:|:-----------------------------------------------:|
+<div style="display: flex; justify-content: space-between">
+    <a href="./WhenFalse.md">&lt; Previous</a>
+    <a href="./Collections.md">Next &gt;</a>
+</div>

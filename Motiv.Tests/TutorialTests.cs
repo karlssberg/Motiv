@@ -424,13 +424,13 @@ public class TutorialTests
     public void Should_have_subscription_in_grace_period()
     {
         var hasSubscriptionInGracePeriod =
-            Spec.Build((Subscription subscription) => 
-                    DateTime.Now is var now 
-                    && subscription.ExpiryDate < now
-                    && now < subscription.ExpiryDate.AddDays(7))
-                .WhenTrue("subscription is within grace period")
-                .WhenFalse("subscription is not within grace period")
-                .Create();
+        Spec.Build((Subscription subscription) => 
+                DateTime.Now is var now 
+                && subscription.ExpiryDate < now
+                && now < subscription.ExpiryDate.AddDays(7))
+            .WhenTrue("subscription is within grace period")
+            .WhenFalse("subscription is not within grace period")
+            .Create();
 
         var act = hasSubscriptionInGracePeriod.IsSatisfiedBy(new Subscription(DateTime.Now.AddDays(-3)));
 

@@ -12,7 +12,7 @@ propositions, which require the pairing of models and results to be preserved fo
 
 ### Fixed assertion
 
-### `.WhenTrue(string assertion)`
+`.WhenTrue(string assertion)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -29,7 +29,7 @@ assertion value will be used to populate the `Reason`, `Assertions` and
 
 ### Fixed metadata
 
-### `.WhenTrue(TMetadata metadata)`
+`.WhenTrue(TMetadata metadata)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -45,7 +45,7 @@ the `Metadata` property of the result.
 
 ### Dynamic assertion (derived from model)
 
-### `.WhenTrue(Func<TModel, string> factory)`
+`.WhenTrue(Func<TModel, string> factory)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -60,7 +60,7 @@ is satisfied, the assertion result from the factory function will be used to pop
 
 ### Dynamic metadata (derived from model)
 
-### `.WhenTrue(Func<TModel, TMetadata> factory)`
+`.WhenTrue(Func<TModel, TMetadata> factory)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -75,7 +75,7 @@ satisfied, the metadata returned by the factory function will be used to populat
 
 ### Dynamic assertion (derived from model and underlying result)
 
-### `.WhenTrue(Func<TModel, BooleanResultBase<TMetadata>, string> factory)`
+`.WhenTrue(Func<TModel, BooleanResultBase<TMetadata>, string> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -90,7 +90,7 @@ proposition is satisfied, the assertion result from the factory function will be
 
 ### Dynamic assertion (derived from model and underlying result)
 
-### `.WhenTrue(Func<TModel, BooleanResultBase<TMetadata>, TMetadata> factory)`
+`.WhenTrue(Func<TModel, BooleanResultBase<TMetadata>, TMetadata> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -103,5 +103,7 @@ This overload generates a metadata value based on the model and the result of th
 proposition is satisfied, the metadata returned by the factory function will populate the `Metadata` property of the
 result.
 
-| [Back - _As()_](./As.md) | [Next - _WhenTrueYield()_](./WhenTrueYield.md) |
-|:------------------------:|:----------------------------------------------:|
+<div style="display: flex; justify-content: space-between">
+    <a href="./As.md">&lt; Previous</a>
+    <a href="./WhenTrueYield.md">Next &gt;</a>
+</div>

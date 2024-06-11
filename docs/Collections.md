@@ -4,7 +4,7 @@
 
 ### Where()
 
-### `IEnumerable<T> Where<T>(this IEnumerable<T> enumerable, SpecBase<TModel, TMetadata> spec)`
+`IEnumerable<T> Where<T>(this IEnumerable<T> enumerable, SpecBase<TModel, TMetadata> spec)`
 
 The `.Where()` extension method overload is used to filter a collection of values based on an existing specification.
 
@@ -25,7 +25,7 @@ IEnumerable<int> evenNumbers = Enumerable
 
 ### ToEnumerable()
 
-### `IEnumerable<T> ToEnumerable<T>(this T value)`
+`IEnumerable<T> ToEnumerable<T>(this T value)`
 
 The `.ToEnumerable()` extension method is used to encapsulate a single value as an `Enumerable<T>`.
 Internally, it yields a value instead of wrapping it in a collection data structure, and thus avoids an unnecessary
@@ -39,7 +39,7 @@ IEnumberable<int> value = 42.ToEnumerable();  // [ 42 ]
 
 ### OrTogether()
 
-### `SpecBase<TModel, TMetadata> OrTogether<TModel, TMetadata>(this IEnumerable<SpecBase<TModel, TMetadata>> specs)`
+`SpecBase<TModel, TMetadata> OrTogether<TModel, TMetadata>(this IEnumerable<SpecBase<TModel, TMetadata>> specs)`
 
 The `.OrTogether()` extension method is used to combine a collection of specifications into a single specification
 that is satisfied if any of the original specifications are satisfied.  All specifications are evaluated, regardless of
@@ -60,7 +60,7 @@ isEvenOrGreaterThanFive.IsSatisfiedBy(3).Reason;  // "is odd | is less than or e
 
 ### OrElseTogether()
 
-### `SpecBase<TModel, TMetadata> OrElseTogether<TModel, TMetadata>(this IEnumerable<SpecBase<TModel, TMetadata>> specs)`
+`SpecBase<TModel, TMetadata> OrElseTogether<TModel, TMetadata>(this IEnumerable<SpecBase<TModel, TMetadata>> specs)`
 
 The `.OrElseTogether()` extension method is used to combine a collection of specifications into a single specification
 that is satisfied if any of the original specifications are satisfied.  If the first specification is satisfied, the
@@ -82,7 +82,7 @@ isEvenOrElseGreaterThanFive.IsSatisfiedBy(3).Reason;  // "is odd || is less than
 
 ### AndTogether()
 
-### `SpecBase<TModel, TMetadata> AndTogether<TModel, TMetadata>(this IEnumerable<SpecBase<TModel, TMetadata>> specs)`
+`SpecBase<TModel, TMetadata> AndTogether<TModel, TMetadata>(this IEnumerable<SpecBase<TModel, TMetadata>> specs)`
 
 The `.AndTogether()` extension method is used to combine a collection of specifications into a single specification
 that is satisfied if all the original specifications are satisfied.  All specifications are evaluated, regardless of
@@ -103,7 +103,7 @@ isEvenAndGreaterThanFive.IsSatisfiedBy(3).Reason;  // "is odd & is less than or 
 
 ### AndAlsoTogether()
 
-### `SpecBase<TModel, TMetadata> AndAlsoTogether<TModel, TMetadata>(this IEnumerable<SpecBase<TModel, TMetadata>> specs)`
+`SpecBase<TModel, TMetadata> AndAlsoTogether<TModel, TMetadata>(this IEnumerable<SpecBase<TModel, TMetadata>> specs)`
 
 The `.AndAlsoTogether()` extension method is used to combine a collection of specifications into a single specification
 that is satisfied if all the original specifications are satisfied.  If the first specification is not satisfied, the
@@ -127,7 +127,7 @@ isEvenAndAlsoGreaterThanFive.IsSatisfiedBy(3).Reason;  // "is odd"
 
 ### OrTogether()
 
-### `BooleanResultBase<TMetadata> OrTogether<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
+`BooleanResultBase<TMetadata> OrTogether<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
 
 The `.OrTogether()` extension method is used to combine a collection of boolean results into a single boolean result
 that is satisfied if any of the original results are satisfied.  All results are evaluated, regardless of
@@ -147,7 +147,7 @@ orTogetherResult.Reason;  // "is even & is greater than 5"
 
 ### OrElseTogether()
 
-### `BooleanResultBase<TMetadata> OrElseTogether<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
+`BooleanResultBase<TMetadata> OrElseTogether<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
 
 The `.OrElseTogether()` extension method is used to combine a collection of boolean results into a single boolean result
 that is satisfied if any of the original results are satisfied.  If the first result is satisfied, the
@@ -168,7 +168,7 @@ orElseTogetherResult.Reason;  // "is even"
 
 ### AndTogether()
 
-### `BooleanResultBase<TMetadata> AndTogether<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
+`BooleanResultBase<TMetadata> AndTogether<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
 
 The `.AndTogether()` extension method is used to combine a collection of boolean results into a single boolean result
 that is satisfied if all the original results are satisfied.  All results are evaluated, regardless of
@@ -188,7 +188,7 @@ andTogetherResult.Reason;  // "is even & is greater than 5"
 
 ### AndAlsoTogether()
 
-### `BooleanResultBase<TMetadata> AndAlsoTogether<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
+`BooleanResultBase<TMetadata> AndAlsoTogether<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
 
 The `.AndAlsoTogether()` extension method is used to combine a collection of boolean results into a single boolean result
 that is satisfied if all the original results are satisfied.  If the first result is not satisfied, the
@@ -209,7 +209,7 @@ andAlsoTogetherResult.Reason;  // "is even & is greater than 5"
 
 ###  WhereTrue()
 
-### `IEnumerable<T> WhereTrue<T>(this IEnumerable<BooleanResultBase<T>> results)`
+`IEnumerable<T> WhereTrue<T>(this IEnumerable<BooleanResultBase<T>> results)`
 
 The `.WhereTrue()` extension method is used to filter a collection of boolean results based on whether the result is
 satisfied.
@@ -228,7 +228,7 @@ trueResults.Select(result => result.Reason);  // [ "is even" ]
 
 ### WhereFalse()
 
-### `IEnumerable<T> WhereFalse<T>(this IEnumerable<BooleanResultBase<T>> results)`
+`IEnumerable<T> WhereFalse<T>(this IEnumerable<BooleanResultBase<T>> results)`
 
 The `.WhereFalse()` extension method is used to filter a collection of boolean results based on whether the result is
 not satisfied.
@@ -247,7 +247,7 @@ falseResults.Select(result => result.Reason);  // [ "is greater than 5" ]
 
 ### CountTrue()
 
-### `int CountFalse<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
+`int CountFalse<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
 
 The `.CountTrue()` extension method is used to count the number of boolean results that are satisfied.
 
@@ -263,7 +263,7 @@ results.CountTrue();  // 1
 
 ### CountFalse()
 
-### `int CountFalse<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
+`int CountFalse<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
 
 The `.CountFalse()` extension method is used to count the number of boolean results that are not satisfied.
 
@@ -279,7 +279,7 @@ results.CountFalse();  // 1
 
 ### AllTrue()
 
-### `bool AllTrue<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
+`bool AllTrue<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
 
 The `.AllTrue()` extension method is used to determine whether all the boolean results are satisfied.
 
@@ -295,7 +295,7 @@ results.AllTrue();  // true
 
 ### AllFalse()
 
-### `bool AllFalse<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
+`bool AllFalse<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
 The `.AllFalse()` extension method is used to determine whether all the boolean results are not satisfied.
 
 ```csharp
@@ -310,7 +310,7 @@ results.AllFalse();  // true
 
 ### AnyTrue()
 
-### `bool AnyTrue<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
+`bool AnyTrue<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
 
 The `.AnyTrue()` extension method is used to determine whether any of the boolean results are satisfied.
 
@@ -326,7 +326,7 @@ results.AnyTrue();  // true
 
 ### AnyFalse()
 
-### `bool AnyFalse<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
+`bool AnyFalse<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)`
 
 The `.AnyFalse()` extension method is used to determine whether any of the boolean results are not satisfied.
 
@@ -342,7 +342,7 @@ results.AnyFalse();  // true
 
 ### GetAssertions()
 
-### `IEnumerable<string> GetAssertions(this IEnumerable<BooleanResultBase> results)`
+`IEnumerable<string> GetAssertions(this IEnumerable<BooleanResultBase> results)`
 
 The `.GetAssertions()` extension method is used to extract the assertions from a collection of boolean results.
 
@@ -358,7 +358,7 @@ results.GetAssertions();  // [ "is even", "is greater than 5" ]
 
 ### GetTrueAssertions()
 
-### `IEnumerable<string> GetTrueAssertions(this IEnumerable<BooleanResultBase> results)`
+`IEnumerable<string> GetTrueAssertions(this IEnumerable<BooleanResultBase> results)`
 
 The `.GetTrueAssertions()` extension method is used to extract the assertions from a collection of boolean results 
 that are satisfied.
@@ -375,7 +375,7 @@ results.GetTrueAssertions();  // [ "is even" ]
 
 ### GetFalseAssertions()
 
-### `IEnumerable<string> GetFalseAssertions(this IEnumerable<BooleanResultBase> results)`
+`IEnumerable<string> GetFalseAssertions(this IEnumerable<BooleanResultBase> results)`
 
 The `.GetFalseAssertions()` extension method is used to extract the assertions from a collection of boolean results
 that are not satisfied.
@@ -392,7 +392,7 @@ results.GetFalseAssertions();  // [ "is greater than 5" ]
 
 ### GetRootAssertions()
 
-### `IEnumerable<string> GetRootAssertions(this BooleanResultBase result)`
+`IEnumerable<string> GetRootAssertions(this BooleanResultBase result)`
 
 The `.GetRootAssertions()` extension method is used to extract the assertions from the root causes.  Only the root 
 assertions that caused the final result to be satisfied or not are returned.
@@ -417,7 +417,7 @@ areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]).GetRootAssertions();  // [ "is even" ]
 
 ### GetAllRootAssertions()
 
-### `IEnumerable<string> GetAllRootAssertions(this IEnumerable<BooleanResultBase> results)`
+`IEnumerable<string> GetAllRootAssertions(this IEnumerable<BooleanResultBase> results)`
 
 The `.GetAllRootAssertions()` extension method is used to extract the root assertions from a collection of boolean 
 results, whether they cause the result to be satisfied or not.
@@ -438,5 +438,6 @@ var areEven =
 
 areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]).GetRootAssertions();  // [ "is even", "is odd" ]
 ```
-| [Back - _Create()_](./Create.md) |
-|:--------------------------------:|
+<div style="display: flex; justify-content: left">
+    <a href="./Create.md">&lt; Previous</a>
+</div>
