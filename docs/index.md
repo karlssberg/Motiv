@@ -55,11 +55,11 @@ var isEven =
 
 isEven.IsSatisfiedBy(2).Satisfied;   // true
 isEven.IsSatisfiedBy(2).Reason;      // "is even"
-isEven.IsSatisfiedBy(2).Assertions; // ["is even"]
+isEven.IsSatisfiedBy(2).Assertions;  // ["is even"]
 
 isEven.IsSatisfiedBy(3).Satisfied;   // false
 isEven.IsSatisfiedBy(3).Reason;      // "!is even"
-isEven.IsSatisfiedBy(3).Assertions; // ["!is even"]
+isEven.IsSatisfiedBy(3).Assertions;  // ["!is even"]
 ```
 
 #### Explicit Assertions
