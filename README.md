@@ -57,6 +57,7 @@ result.Justification; // can view content
 - [NuGet Package](https://www.nuget.org/packages/Motiv/)
 - [Specification Pattern](https://en.wikipedia.org/wiki/Specification_pattern)
 - [Propositions](https://en.wikipedia.org/wiki/Proposition)
+- [Official GitHub Repository](https://github.com/karlssberg/Motiv)
 
 ### What problem is being solved?
 
