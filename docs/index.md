@@ -48,6 +48,7 @@ result.Satisfied;  // true
 result.Reason;     // "is even"
 result.Assertions; // ["is even"]
 ```
+Although this example is very trivial, it introduces the basic building blocks of Motiv.
 
 ### Advanced
 
