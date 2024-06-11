@@ -51,7 +51,7 @@ result.Assertions; // ["is even"]
 
 ### Advanced
 
-However, Motiv's strengths really start to show as we scale up.
+Motiv's strengths really start to show as we scale up.
 
 The following is an example of solving the famous [Fizz buzz](https://en.wikipedia.org/wiki/Fizz_buzz) task using 
 Motiv.  If you are unfamiliar, numbers that are multiples of 3 are replaced with "fizz", numbers that are multiples of 5
