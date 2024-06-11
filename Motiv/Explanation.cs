@@ -27,7 +27,7 @@ public sealed class Explanation
     {
         var assertionsArray = assertions as string[] ?? assertions.ToArray();
         Causes = causes;
-        Assertions = assertionsArray.Distinct();
+        Assertions = assertionsArray.DistinctWithOrderPreserved();
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ public sealed class Explanation
 
         var underlyingAssertions = underlying
             .SelectMany(explanation => explanation.Assertions)
-            .Distinct();
+            .DistinctWithOrderPreserved();
 
         var doesParentEqualChildAssertion = underlyingAssertions.SequenceEqual(assertions);
 

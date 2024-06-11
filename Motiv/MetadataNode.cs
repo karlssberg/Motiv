@@ -77,7 +77,7 @@ public sealed class MetadataNode<TMetadata>
 
         var underlyingMetadata = underlying
             .SelectMany(metadataNode => metadataNode.Metadata)
-            .Distinct();
+            .DistinctWithOrderPreserved();
 
         var doesParentEqualChildAssertion = underlyingMetadata.SequenceEqual(metadata);
 

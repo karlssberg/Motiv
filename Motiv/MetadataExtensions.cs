@@ -55,7 +55,7 @@ public static class MetadataExtensions
             .Underlying
             .GetRootMetadata()
             .ElseIfEmpty(result.MetadataTier.Metadata)
-            .Distinct();
+            .DistinctWithOrderPreserved();
 
     private static IEnumerable<TMetadata> GetRootMetadata<TMetadata>(
         this IEnumerable<MetadataNode<TMetadata>> metadataTiers) =>
