@@ -103,5 +103,5 @@ This overload generates a metadata value based on the model and the result of th
 proposition is satisfied, the metadata returned by the factory function will populate the `Metadata` property of the
 result.
 
-| [Back - _As()_](./As.md) | [Next - _WhenFalse()_](./WhenFalse.md) |
-|:---------------------------------------:|:-----------------------------------------------------:|
+| [Back - _As()_](./As.md) | [Next - _WhenTrueYield()_](./WhenTrueYield.md) |
+|:------------------------:|:----------------------------------------------:|

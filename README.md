@@ -5,7 +5,8 @@
 
 Motiv is a .NET library that supercharges the experience of working with boolean logic.
 
-It allows you to model your boolean expressions as strongly typed _propositions_.
+It allows you to model your boolean expressions as strongly typed
+[propositions](https://en.wikipedia.org/wiki/Proposition).
 By propositions, we mean a declarative statement that can be evaluated to either true or false.
 
 Examples include:

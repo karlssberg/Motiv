@@ -27,5 +27,5 @@ This method is used to create a new proposition with a given propositional state
 The propositional statement is used when serializing the proposition to a string, such as with the propositions
 `Description` property, or the results `Reason` property.
 
-| [Back - _WhenFalse()_](./WhenFalse.md) |
-|:--------------------------------------:|
+| [Back - _WhenFalse()_](./WhenFalse.md) | [Collections - _Collections_](./Collections.md) |
+|:--------------------------------------:|:-----------------------------------------------:|

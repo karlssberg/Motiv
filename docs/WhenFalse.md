@@ -160,7 +160,5 @@ This overload generates a metadata value based on the model and the result of th
 proposition is not satisfied. When the proposition is not satisfied, the metadata returned by the factory function will
 populate the `Metadata` property of the result.
 
-
-
-| [Back - _WhenTrue()_](./WhenTrue.md) | [Next - _Create()_](./Create.md) |
-|:------------------------------------:|:--------------------------------:|
+| [Back - _WhenTrueYield()_](./WhenTrueYield.md) | [Next - _WhenFalseYield()_](./WhenFalseYield.md) |
+|:----------------------------------------------:|:------------------------------------------------:|

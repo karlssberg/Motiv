@@ -86,3 +86,5 @@ Spec.Build((int n) => n % 2 == 0))
     .WhenFalse("is odd")
     .Create("all even");
 ```
+| [Back - _WhenTrue()_](./WhenTrue.md) | [Next - _WhenFalse()_](./WhenFalse.md) |
+|:------------------------------------:|:--------------------------------------:|

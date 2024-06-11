@@ -36,3 +36,6 @@ Spec.Build(new IsEvenProposition())
 This overload generates multiple metadata values based on the model and the result of the underlying proposition. When
 the proposition is not satisfied, the metadata returned by the factory function will populate the `Metadata`
 property of the result.
+
+| [Back - _WhenFalse()_](./WhenFalse.md) | [Next - _Create()_](./Create.md) |
+|:--------------------------------------:|:--------------------------------:|
