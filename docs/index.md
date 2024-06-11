@@ -161,8 +161,8 @@ If your logic is pretty straightforward or does not really need any feedback abo
 might not see a big benefit from using Motiv.
 It is just another tool in your toolbox, and sometimes the simplest solution is the best fit.
 
-But when your needs are a bit more complex, that's where Motiv really shines.
-Its value will likely become clear if you're looking to achieve two or more of the following goals: 
+But when your needs are a bit more complex, that is where Motiv really shines.
+Its value will likely become clear if you are looking to achieve two or more of the following goals: 
 
 1. **Visibility**: Provide granular, real-time feedback about decisions made.
 2. **Decomposition**: Break down complex or deeply nested logic into meaningful subclauses for better readability.
