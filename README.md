@@ -52,6 +52,12 @@ result.Justification; // can view content
                       //            subscription is not cancelled
 ```
 
+#### Useful Links
+- [Documentation](https://karlssberg.github.io/Motiv/)
+- [NuGet Package](https://www.nuget.org/packages/Motiv/)
+- [Specification Pattern](https://en.wikipedia.org/wiki/Specification_pattern)
+- [Propositions](https://en.wikipedia.org/wiki/Proposition)
+
 ### What problem is being solved?
 
 Primarily, Motiv is designed to provide visibility into your application's decision-making process.
