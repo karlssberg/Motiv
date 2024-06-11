@@ -15,7 +15,21 @@ application's user interface or to otherwise provide visibility into your applic
 8. [As()](./As.md)
 9. [Collections](./Collections.md)
 
+## Installation
+Motiv is available as a [Nuget Package](https://www.nuget.org/packages/Motiv/) that can be install it via NuGet Package 
+Manager Console by running the following command:
+
+```bash
+Install-Package Motiv
+```
+or by using the .NET CLI:
+```bash
+dotnet add package Motiv
+```
+
 ## Usage
+
+### Simple 
 
 Here's a simple example of how you can use Motiv to build a proposition that checks if a number is even.
 
@@ -35,7 +49,9 @@ result.Reason;     // "is even"
 result.Assertions; // ["is even"]
 ```
 
-However, Motiv's strengths really start to show as we tackle more advanced scenarios.
+### Advanced
+
+However, Motiv's strengths really start to show as we scale up.
 
 The following is an example of solving the famous [Fizz buzz](https://en.wikipedia.org/wiki/Fizz_buzz) task using 
 Motiv.  If you are unfamiliar, numbers that are multiples of 3 are replaced with "fizz", numbers that are multiples of 5
@@ -77,7 +93,7 @@ isSubstitution.IsSatisfiedBy(15).Satisfied;  // true
 isSubstitution.IsSatisfiedBy(15).Reason;     // "fizzbuzz"
 ```
 
-Whilst more optimal solutions to Fizz Buzz exist, this example concisely demonstrates how Motiv can be used to build
+Whilst more optimal solutions to Fizz Buzz exist, this example demonstrates the ease with which we can compose
 complex propositions from simpler ones.
 
 ## Should I use Motiv?
