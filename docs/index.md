@@ -1,8 +1,9 @@
 ﻿# Supercharge your boolean logic
 
-Motiv is a .NET library that helps you write expressive, maintainable, composable and testable boolean logic.
-It provides a fluent API for building propositions, and it generates human-readable results that can be used in your 
-application's user interface or to otherwise provide visibility into your application's decision-making process.
+Motiv is a .NET library that enables you to write more expressive, maintainable, and testable boolean logic.
+Its fluent API allows you to effortlessly create and compose propositions.
+When evaluated, Motiv generates human-readable explanations of the results, which can be presented to users or 
+leveraged to gain valuable insights into the decision-making process.
 
 ### Contents
 1. [Spec](./Spec.md)
@@ -16,8 +17,9 @@ application's user interface or to otherwise provide visibility into your applic
 9. [Collections](./Collections.md)
 
 ## Installation
-Motiv is available as a [Nuget Package](https://www.nuget.org/packages/Motiv/) that can be install it via NuGet Package 
-Manager Console by running the following command:
+
+Motiv is available as a [Nuget Package](https://www.nuget.org/packages/Motiv/)
+that can be installed via NuGet Package Manager Console by running the following command:
 
 ```bash
 Install-Package Motiv
@@ -29,9 +31,35 @@ dotnet add package Motiv
 
 ## Usage
 
-### Simple 
+### Create a proposition
 
-Here's a simple example of how you can use Motiv to build a proposition that checks if a number is even.
+Think of propositions as the fundamental building blocks of Motiv.
+Creating them is a fluid process, with a variety of overloads available to suit your specific needs.
+
+#### Minimal
+
+To create a proposition with the minimal of fuss, you can omit the `WhenTrue()` and `WhenFalse()` methods.
+In this case, Motiv will automatically use the propositional statement when the proposition is satisfied, and prefix 
+it with a "!" when it's not. 
+
+For example, the following proposition will return "is even" when the number is even and "!is even" when it is not.
+
+```csharp
+var isEven =
+    Spec.Build((int n) => n % 2 == 0)
+        .Create("is even");
+
+isEven.IsSatisfiedBy(2).Satisfied;   // true
+isEven.IsSatisfiedBy(2).Reason;      // "is even"
+
+isEven.IsSatisfiedBy(3).Satisfied;   // false
+isEven.IsSatisfiedBy(3).Reason;      // "!is even"
+```
+
+#### Explicit Assertions
+
+If you want a better explanation, you can use the `WhenTrue()` and `WhenFalse()` methods to explicitly define 
+the assertions that should be used when the proposition is satisfied or not
 
 ```csharp
 // define a proposition
@@ -48,14 +76,39 @@ result.Satisfied;  // true
 result.Reason;     // "is even"
 result.Assertions; // ["is even"]
 ```
-Although this example is very trivial, it introduces the basic building blocks of Motiv.
 
-### Advanced
+Although this example is very trivial, it introduces the fundamental building blocks of Motiv.
+
+#### Explicit Metadata
+
+Sometimes simple assertions are not enough, and you need to handle more context about the results.
+This is what we refer to as metadata.
+So instead of providing a string, you can provide a POCO object that will be treated in the same way.
+The only difference is that metadata will instead populate the `Metadata` property of the result.
+
+```csharp
+// define a proposition
+var isEven =
+    Spec.Build((int n) => n % 2 == 0)
+        .WhenTrue(new MyMetadata("is even"))
+        .WhenFalse(new MyMetadata("is odd"))
+        .Create("is even");
+
+// evaluate a model against the proposition
+var result = isEven.IsSatisfiedBy(2);
+
+result.Satisfied;  // true
+result.Reason;     // "is even"
+result.Assertions; // ["is even"]
+result.Metadata;   // [{ Text: "is even" }]
+```
+
+### Compose propositions
 
 Motiv's strengths really start to show as we scale up.
 
-The following is an example of solving the famous [Fizz buzz](https://en.wikipedia.org/wiki/Fizz_buzz) task using 
-Motiv.  If you are unfamiliar, numbers that are multiples of 3 are replaced with "fizz", numbers that are multiples of 5
+The following is an example of solving the famous [Fizz buzz](https://en.wikipedia.org/wiki/Fizz_buzz) challenge using Motiv.
+If you are unfamiliar, numbers that are multiples of 3 are replaced with "fizz", numbers that are multiples of 5
 are replaced with "buzz", and numbers that are multiples of both 3 and 5 are replaced with "fizzbuzz".
 If none of these conditions are met, the number is returned as a string.
 
@@ -94,33 +147,34 @@ isSubstitution.IsSatisfiedBy(15).Satisfied;  // true
 isSubstitution.IsSatisfiedBy(15).Reason;     // "fizzbuzz"
 ```
 
-Whilst more optimal solutions to Fizz Buzz exist, this example demonstrates the ease with which we can compose
-complex propositions from simpler ones.
+While there might be more optimal solutions to Fizz Buzz out there, this example demonstrates how effortlessly you 
+can compose complex propositions from simpler ones using Motiv. 
 
 ## Should I use Motiv?
 
-Motiv is not meant to be a wholesale replacement of regular boolean logic.
-If your logic is sufficiently simple or does not really require any feedback regarding decisions made, then there is 
-probably no real tangible benefit of using Motiv.
+Motiv is not designed to completely replace regular boolean logic in all cases.
+If your logic is pretty straightforward or does not really need any feedback about the decisions being made, then you 
+might not see a big benefit from using Motiv.
+It is just another tool in your toolbox, and sometimes the simplest solution is the best fit.
 
-Its utility, however, will likely become clear if two or more of the following are desired:
+But when your needs are a bit more complex, that's where Motiv really shines.
+Its value will likely become clear if you're looking to achieve two or more of the following goals: 
 
-1. **Visibility**: You need to provide feedback in real-time regarding why a certain condition was met (or not).
-2. **Decomposition**: Your logic is either too complex or deeply nested to understand at a glance, so it needs
-   to be broken up in to meaningful parts.
-3. **Reusability**: You wish to re-use your logic in multiple places without having to re-implement it.
-4. **Modeling**: You need to explicitly model your domain logic.
-5. **Testing**: You want to thoroughly test your logic without having to mock or stub out dependencies.
+1. **Visibility**: Provide granular, real-time feedback about decisions made.
+2. **Decomposition**: Break down complex or deeply nested logic into meaningful subclauses for better readability.
+3. **Reusability**: Reuse your logic in multiple places to avoid duplication.
+4. **Modeling**: Explicitly model your domain logic (e.g.
+   [Domain Driven Design](https://en.wikipedia.org/wiki/Domain-driven_design)).
+5. **Testing**: Easily and thoroughly test your logic (especially by avoiding the need to mock or stub out 
+   dependencies).
 
 ### Tradeoffs
 
-1. **Performance**: Motiv is not designed for high-performance scenarios where nanoseconds matter.
-   It is meant to be used in scenarios where maintainability and readability are paramount.
-   That being said, for the majority of use-cases the performance overhead is truly negligible.
-2. **Dependency**: This library is a dependency.
-   Once embedded in your codebase it will be challenging to remove.
-   However, this library does not itself depend on any third-party libraries, so it does not bring any unexpected
-   baggage with it.
-3. **Learning Curve**: For many, this library is a new approach and will nonetheless require a bit of familiarization.
-   That being said, it has been deliberately designed to be as intuitive and easy to use as possible—there is
-   relatively little to learn.
+1. **Performance**: Motiv is not designed for high-performance scenarios where every nanosecond counts.
+   Its focus is on maintainability and readability.
+   That being said, for most use cases, the performance overhead is negligible. 
+2. **Dependency**: Once embedded in your codebase, removing Motiv can be challenging.
+   However, it doesn't depend on any third-party libraries itself, so it won't bring any unexpected baggage. 
+3. **Learning Curve**: If you're new to Motiv, you might take a moment to familiarize yourself with its approach,
+   but the library has been carefully designed to be intuitive as possible, with the aim being that developers can 
+   quickly understand its concepts and start using it effectively from the get-go.
