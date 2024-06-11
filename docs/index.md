@@ -181,3 +181,7 @@ Its value will likely become clear if you are looking to achieve two or more of 
 3. **Learning Curve**: If you're new to Motiv, you might take a moment to familiarize yourself with its approach,
    but the library has been carefully designed to be as intuitive as possible, with the aim being that developers can 
    quickly understand its concepts and start using it effectively from the get-go.
+
+<div style="display: flex; justify-content: right;">
+    <a href="./Spec.html">Next &gt;</a>
+</div>
