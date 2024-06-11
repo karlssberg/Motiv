@@ -77,8 +77,6 @@ result.Reason;     // "is even"
 result.Assertions; // ["is even"]
 ```
 
-Although this example is very trivial, it introduces the fundamental building blocks of Motiv.
-
 #### Explicit Metadata
 
 Sometimes simple assertions are not enough, and you need to handle more context about the results.
@@ -103,11 +101,14 @@ result.Assertions; // ["is even"]
 result.Metadata;   // [{ Text: "is even" }]
 ```
 
-### Compose propositions
+Although these examples are very trivial, they introduce the fundamental building blocks of Motiv.
+
+### Composing propositions
 
 Motiv's strengths really start to show as we scale up.
 
-The following is an example of solving the famous [Fizz buzz](https://en.wikipedia.org/wiki/Fizz_buzz) challenge using Motiv.
+The following is an example of solving the famous [Fizz Buzz](https://en.wikipedia.org/wiki/Fizz_buzz) challenge 
+using Motiv.
 If you are unfamiliar, numbers that are multiples of 3 are replaced with "fizz", numbers that are multiples of 5
 are replaced with "buzz", and numbers that are multiples of both 3 and 5 are replaced with "fizzbuzz".
 If none of these conditions are met, the number is returned as a string.
