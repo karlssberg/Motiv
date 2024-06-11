@@ -29,12 +29,15 @@ or by using the .NET CLI:
 dotnet add package Motiv
 ```
 
+
+
 ## Usage
 
 ### Create a proposition
 
-Think of propositions as the fundamental building blocks of Motiv.
-Creating them is a fluid process, with a variety of overloads available to suit your specific needs.
+Think of propositions as the fundamental building blocks of Motiv that can later be reused and composed to form new 
+propositions.
+Creating them is a fluid process, with a variety of methods available to cater to your specific needs.
 
 #### Minimal
 
@@ -51,9 +54,11 @@ var isEven =
 
 isEven.IsSatisfiedBy(2).Satisfied;   // true
 isEven.IsSatisfiedBy(2).Reason;      // "is even"
+isEven.IsSatisfiedBy(2).Assertions; // ["is even"]
 
 isEven.IsSatisfiedBy(3).Satisfied;   // false
 isEven.IsSatisfiedBy(3).Reason;      // "!is even"
+isEven.IsSatisfiedBy(3).Assertions; // ["!is even"]
 ```
 
 #### Explicit Assertions
@@ -69,18 +74,19 @@ var isEven =
         .WhenFalse("is odd")
         .Create();
 
-// evaluate a model against the proposition
-var result = isEven.IsSatisfiedBy(2);
+isEven.IsSatisfiedBy(2).Satisfied;  // true
+isEven.IsSatisfiedBy(2).Reason;     // "is even"
+isEven.IsSatisfiedBy(2).Assertions; // ["is even"]
 
-result.Satisfied;  // true
-result.Reason;     // "is even"
-result.Assertions; // ["is even"]
+isEven.IsSatisfiedBy(3).Satisfied;  // false
+isEven.IsSatisfiedBy(3).Reason;     // "is odd"
+isEven.IsSatisfiedBy(3).Assertions; // ["is odd"]
 ```
 
 #### Explicit Metadata
 
 Sometimes simple assertions are not enough, and you need to handle more context about the results.
-This is what we refer to as metadata.
+This is what we refer to as _metadata_.
 So instead of providing a string, you can provide a POCO object that will be treated in the same way.
 The only difference is that metadata will instead populate the `Metadata` property of the result.
 
@@ -101,7 +107,8 @@ result.Assertions; // ["is even"]
 result.Metadata;   // [{ Text: "is even" }]
 ```
 
-Although these examples are very trivial, they introduce the fundamental building blocks of Motiv.
+These examples serve as an introduction to the fundamental building blocks of Motiv, and should not be considered as 
+an alternative approach to the humble if-statement.
 
 ### Composing propositions
 
@@ -119,18 +126,14 @@ var isFizz =
         .Create("fizz");
 
 var isBuzz =
-    Spec.Build((int n) => n % 5 == 0)  
+    Spec.Build((int n) => n % 5 == 0)
         .Create("buzz");
 
-var isFizzAndBuzz =
-    Spec.Build(isFizz & isBuzz)
-        .Create("fizzbuzz");
-
 var isSubstitution = 
-    Spec.Build(isFizzAndBuzz.OrElse(isFizz | isBuzz))
-        .WhenTrue((_, result) => result.Reason)
+    Spec.Build(isFizz | isBuzz)
+        .WhenTrue((_, result) => string.Concat(result.Assertions))
         .WhenFalse(n => n.ToString())
-        .Create("is a fizzbuzz substitution");
+        .Create("should substitute number");
 
 isSubstitution.IsSatisfiedBy(2).Satisfied;   // false
 isSubstitution.IsSatisfiedBy(2).Reason;      // "2"
@@ -177,5 +180,5 @@ Its value will likely become clear if you're looking to achieve two or more of t
 2. **Dependency**: Once embedded in your codebase, removing Motiv can be challenging.
    However, it doesn't depend on any third-party libraries itself, so it won't bring any unexpected baggage. 
 3. **Learning Curve**: If you're new to Motiv, you might take a moment to familiarize yourself with its approach,
-   but the library has been carefully designed to be intuitive as possible, with the aim being that developers can 
+   but the library has been carefully designed to be as intuitive as possible, with the aim being that developers can 
    quickly understand its concepts and start using it effectively from the get-go.

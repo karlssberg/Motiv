@@ -512,13 +512,9 @@ public class TutorialTests
             Spec.Build((int n) => n % 5 == 0)
                 .Create("buzz");
         
-        var isFizzAndBuzz =
-            Spec.Build(isFizz & isBuzz)
-                .Create("fizzbuzz");
-
         var isSubstitution = 
-            Spec.Build(isFizzAndBuzz.OrElse(isFizz | isBuzz))
-                .WhenTrue((_, result) => result.Reason)
+            Spec.Build(isFizz | isBuzz)
+                .WhenTrue((_, result) => string.Concat(result.Assertions))
                 .WhenFalse(n => n.ToString())
                 .Create("should substitute number");
         
