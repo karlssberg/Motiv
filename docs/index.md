@@ -1,7 +1,8 @@
 ﻿# Supercharge your boolean logic
 
 Motiv is a .NET library that enables you to write more expressive, maintainable, and testable boolean logic.
-Its fluent API allows you to effortlessly create and compose propositions.
+Its fluent API allows you to effortlessly create and compose 
+[propositions](https://en.wikipedia.org/wiki/Proposition).
 When evaluated, Motiv generates human-readable explanations of the results, which can be presented to users or 
 leveraged to gain valuable insights into the decision-making process.
 
