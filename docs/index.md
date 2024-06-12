@@ -15,7 +15,13 @@ leveraged to gain valuable insights into the decision-making process.
 6. [WhenFalse()](./WhenFalse.html)
 7. [WhenFalseYield()](./WhenFalseYield.html)
 8. [Create()](./Create.html)
-9. [Collections](./Collections.html)
+9. [And](./And.html)
+10. [AndAlso](./AndAlso.html)
+11. [Or](./Or.html)
+12. [OrElse](./OrElse.html)
+13. [XOr](./XOr.html)
+14. [Not](./Not.html)
+15. [Collections](./Collections.html)
 
 ## Installation
 
@@ -178,7 +184,7 @@ Its value will likely become clear if you are looking to achieve two or more of 
    That being said, for most use cases, the performance overhead is negligible. 
 2. **Dependency**: Once embedded in your codebase, removing Motiv can be challenging.
    However, it does not depend on any third-party libraries itself, so it won't bring any unexpected baggage. 
-3. **Learning Curve**: If you're new to Motiv, you might take a moment to familiarize yourself with its approach,
+3. **Learning Curve**: If you are new to Motiv, you might take a moment to familiarize yourself with its approach,
    but the library has been carefully designed to be as intuitive as possible, with the aim being that developers can 
    quickly understand its concepts and start using it effectively from the get-go.
 

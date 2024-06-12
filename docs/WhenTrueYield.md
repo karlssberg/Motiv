@@ -5,6 +5,23 @@ assertions/metadata. This may be, for instance, because you want to pass through
 summarizing them, or maybe you are working with higher-order propositions and want assertions for each unsatisfied
 model in a set.
 
+Different overloads are made available for different use cases—depending on which `Build()` overload was previously 
+chosen. 
+
+#### New propositions
+* `Func<TModel, IEnumerable<string>>` - a factory function that returns multiple assertion statements.
+* `Func<TModel, IEnumerable<TMetadata>>` - a factory function that returns multiple metadata values.
+
+#### Reusing existing propositions or their results
+* `Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>` - a factory function that returns multiple assertion statements.
+* `Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>>` - a factory function that returns multiple metadata values.
+
+#### Higher-order propositions
+* `Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>>` - a factory function that returns multiple assertion statements.
+* `Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>>` - a factory function that returns multiple metadata values.
+
+#### Hi
+
 ## Usage when building a new proposition
 
 ### Dynamic assertions (derived from model)
@@ -84,6 +101,18 @@ Spec.Build((int n) => n % 2 == 0))
     .AsAnySatisfied()
     .WhenTrueYield(eval => $"{eval.TrueModels.Serialize()} are even"))
     .WhenFalse("is odd")
+    .Create("all even");
+```
+
+### Dynamic metadata (derived from pairwise model and result)
+
+`.WhenTrueYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> factory)`
+
+```csharp
+Spec.Build((int n) => n % 2 == 0))
+    .AsAnySatisfied()
+    .WhenTrueYield(eval => new MyMetadata($"{eval.TrueModels.Serialize()} are even")))
+    .WhenFalse(new MyMetadata("is odd"))
     .Create("all even");
 ```
 

@@ -1,5 +1,24 @@
 ﻿# WhenFalse()
 
+The `WhenFalse()` method is used to yield values when the proposition is unsatisfied.
+It also implicitly sets `TMetadata` type for the rest of the proposition.
+Any values yielded from underlying propositions (if they exist) will be supplanted by the new value from the 
+`WhenFalse()` method.
+However, should the underlying yielded values still be required, then it is still possible to re-yield them.
+
+Whilst the `WhenFalse()` method overloads remains broadly consistent across the various ways a proposition can be built,
+there are nuances to be aware of that are as a result of prior builder method calls.
+The outliers are the Higher-Order propositions, which require the pairing of models and results to be preserved for 
+them to be useful.
+
+This method is overloaded and takes one of the following types of arguments:
+* `string` - a fixed assertion statement.
+* `TMetadata` - a fixed metadata value.
+* `Func<TModel, string>` - a factory function that returns an assertion statement.
+* `Func<TModel, TMetadata>` - a factory function that returns a metadata value.
+* `Func<TModel, BooleanResultBase<TMetadata>, string>` - a factory function that returns an assertion statement.
+* `Func<TModel, BooleanResultBase<TMetadata>, TMetadata>` - a factory function that returns a metadata value.
+
 ### Fixed assertion
 
 `.WhenFalse(string assertion)`

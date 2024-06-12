@@ -1,11 +1,9 @@
 ﻿# Conditional OR `||`
 
-A conditional OR (i.e., short-circuited) operation can be performed on two specifications using the
-`left.OrElse(right)` method.
-It is serialized as `left || right`—incidentally the `||` C# operator cannot be overriden, so we have to resort to 
-using method invocation to perform the operation.
-This will produce a new specification instance that is the logical OR of the two specifications.
-When evaluated, the right specification will only be evaluated if the left specification is not satisfied.
+You can perform a conditional OR operation on two propositions by using the method `left.OrElse(right)`.
+It will produce a new proposition that represents the logical OR of the two input propositions.
+When evaluating the resulting proposition, the right operand will only be evaluated if the left is not satisfied.
+In other words, the logical OR operation is short-circuited.
 
 For example:
 
@@ -66,3 +64,8 @@ isExtraSecurityNeeded.Satisfied; // true
 isExtraSecurityNeeded.Reason; // "the product is at risk of theft | the store has high incidents of shop lifting"
 isExtraSecurityNeeded.Assertions; // ["the product is at risk of theft", "the store has high incidents of shop lifting"]
 ```
+
+<div style="display: flex; justify-content: space-between">
+    <a href="./Or.html">&lt; Previous</a>
+    <a href="./XOr.html">Next &gt;</a>
+</div>

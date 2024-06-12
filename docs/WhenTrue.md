@@ -10,6 +10,14 @@ Whilst the `WhenTrue()` method overloads remains broadly consistent across the v
 there are nuances to be aware of that are as a result of prior builder method calls. The outliers are the Higher-Order
 propositions, which require the pairing of models and results to be preserved for them to be useful.
 
+This method is overloaded and takes one of the following types of arguments:
+* `string` - a fixed assertion statement.
+* `TMetadata` - a fixed metadata value.
+* `Func<TModel, string>` - a factory function that returns an assertion statement.
+* `Func<TModel, TMetadata>` - a factory function that returns a metadata value.
+* `Func<TModel, BooleanResultBase<TMetadata>, string>` - a factory function that returns an assertion statement.
+* `Func<TModel, BooleanResultBase<TMetadata>, TMetadata>` - a factory function that returns a metadata value.
+
 ### Fixed assertion
 
 `.WhenTrue(string assertion)`

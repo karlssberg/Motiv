@@ -1,10 +1,11 @@
 ﻿# Logical OR `|`
 
-A logical OR operation can be performed on two specifications using the `|` operator `left |  right`, or 
-alternative using the Or method `left.Or(right)`.
-This will produce a new specification instance that is the logical OR of the two specifications.
-When evaluated, both operands will be evaluated, regardless of the outcome of the left operand—in other words, it
-is not _short-circuited_.
+You can perform a logical OR operation on two propositions in two ways:
+using the `|` operator `left | right` or the Or method `left.Or(right)`.
+Both approaches produce a new proposition that represents the logical OR of the two input propositions.
+When evaluating the resulting proposition, both operands will be evaluated,
+regardless of the outcome of the left operand.
+In other words, the logical OR operation is not short-circuited.
 
 For example:
 
@@ -64,3 +65,8 @@ isExtraSecurityNeeded.Satisfied; // true
 isExtraSecurityNeeded.Reason; // "the product is at risk of theft | the store has high incidents of shop lifting"
 isExtraSecurityNeeded.Assertions; // ["the product is at risk of theft", "the store has high incidents of shop lifting"]
 ```
+
+<div style="display: flex; justify-content: space-between">
+    <a href="./AndAlso.html">&lt; Previous</a>
+    <a href="./OrElse.html">Next &gt;</a>
+</div>

@@ -1,10 +1,11 @@
 ﻿# Logical AND `&`
 
-A logical AND operation can be performed on two propositions using the `&` operator 
-`left & right` or alternatively using the And method `left.And(right)`.
-This will produce a new proposition that is the logical AND of the two propositions.
-When evaluated, both operands will be evaluated, regardless of the outcome of the left operand—in other words, it 
-is not _short-circuited_.
+You can perform a logical AND operation on two propositions in two ways:
+using the `&` operator `left & right` or the And method `left.And(right)`.
+Both approaches produce a new proposition that represents the logical AND of the two input propositions.
+When evaluating the resulting proposition, both operands will be evaluated,
+regardless of the outcome of the left operand.
+In other words, the logical AND operation is not short-circuited.
 
 For example:
 
@@ -79,3 +80,8 @@ The `Result` property will therefore contain the assertions of both underlying p
 var result = isActiveSubscriptionResult.IsSatisfiedBy(activeSubscription);
 result.Reason; // "subscription has started & subscription has not ended"
 ```
+
+<div style="display: flex; justify-content: space-between">
+    <a href="./Create.html">&lt; Previous</a>
+    <a href="./AndAlso.html">Next &gt;</a>
+</div>

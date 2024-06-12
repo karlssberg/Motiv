@@ -1,6 +1,13 @@
 ﻿# Logical XOR `^`
 
-A logical XOR operation can be performed on two specifications using the `^` operator `left ^ right`,
+You can perform a logical XOR operation on two propositions in two ways:
+using the `^` operator `left ^ right` or the XOr method `left.XOr(right)`.
+Both approaches produce a new proposition that represents the logical XOR of the two input propositions.
+When evaluating the resulting proposition, both operands will be evaluated,
+regardless of the outcome of the left operand.
+In other words, the logical OR operation is not short-circuited.
+
+A logical XOR operation can be performed upon two specifications using the `^` operator `left ^ right`,
 or the alternative XOR method `left.XOr(right)`.
 This will produce a new specification instance that is the logical XOR of the two specifications.
 
@@ -45,3 +52,8 @@ Spec.Build(new IsRedLightProposition() ^ new IsGreenLightProposition())
 
 You can also use the `^` operator on the `BooleanResult<T>`s that are returned from the `IsSatisfiedBy()` method. This is
 so that you can still aggregate the results of specifications that interrogate different models.
+
+<div style="display: flex; justify-content: space-between">
+    <a href="./OrElse.html">&lt; Previous</a>
+    <a href="./Not.html">Next &gt;</a>
+</div>
