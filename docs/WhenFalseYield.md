@@ -5,7 +5,29 @@ assertions/metadata. This may be, for instance, because you want to pass through
 summarizing them, or maybe you are working with higher-order propositions and want assertions for each unsatisfied 
 model in a set.
 
+Different overloads are made available for different use cases—depending on which `Build()` overload was previously
+chosen.
+
+#### New propositions
+* `Func<TModel, IEnumerable<string>>` - a factory function that returns multiple assertion statements.
+* `Func<TModel, IEnumerable<TMetadata>>` - a factory function that returns multiple metadata values.
+
+#### Reusing existing propositions or their results
+* `Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>` - a factory function that returns multiple assertion statements.
+* `Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>>` - a factory function that returns multiple metadata values.
+
+#### Higher-order propositions from a predicate function
+* `Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>>` - a factory function that returns multiple assertion statements.
+* `Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>>` - a factory function that returns multiple metadata values.
+
+#### Higher-order propositions from an existing proposition
+* `Func<HigherOrderEvaluation<TModel>, IEnumerable<string>>` - a factory function that returns multiple assertion statements.
+* `Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<TMetadata>>` - a factory function that returns multiple metadata values.
+
 ## Usage when building a new proposition
+
+When the `Build()` method is called using a predicate function, or an existing proposition, you can use the model to
+generate multiple assertions or metadata values from it.
 
 ### Dynamic assertions (derived from model)
 
@@ -22,9 +44,7 @@ Spec.Build((string str) => str.Contains("foo") || str.Contains("bar"))
     .Create();
 ```
 
-This overload generates multiple assertion statements based on the model when the proposition is satisfied. When the
-proposition is satisfied, the assertion result from the factory function will be used to populate the `Assertions` and
-`Metadata` properties of the result.
+This overload generates multiple assertion statements based on the model when the proposition is satisfied.
 
 ### Dynamic metadata (derived from model)
 
@@ -40,6 +60,11 @@ Spec.Build((string str) => str.Contains("foo") || str.Contains("bar"))
         ])
     .Create();
 ```
+## Usage when building upon existing propositions or results
+
+Existing propositions can be re-used to build new propositions.
+In this case, the factory function will receive the model and the result of the underlying proposition so that you
+can generate multiple assertions or metadata values from them.
 
 ### Dynamic assertions (derived from model and underlying result)
 
@@ -52,9 +77,7 @@ Spec.Build(new IsEvenProposition())
     .Create();
 ```
 
-This overload generates multiple assertion statements based on the model and the result of the underlying proposition.
-When the proposition is not satisfied, the metadata returned by the factory function will be used to populate the
-`Reason`, `Assertions` and `Metadata` properties of the result.
+This is used to generate multiple assertion statements based on the model and the result of the underlying proposition.
 
 ### Dynamic metadata (derived from model and underlying result)
 
@@ -67,15 +90,12 @@ Spec.Build(new IsEvenProposition())
     .Create("is even");
 ```
 
-This overload generates multiple metadata values based on the model and the result of the underlying proposition. When
-the proposition is not satisfied, the metadata returned by the factory function will populate the `Metadata`
-property of the result.
+This overload generates multiple metadata values based on the model and the result of the underlying proposition.
 
 ## Usage when building a higher-order proposition from an predicate function
 
 When a predicate function is used by the `Build()` method, the factory function will receive a
-`HigherOrderBooleanEvaluation<TModel>` containing the pairwise models and results (`BooleanResult<TModel, TMetadata>`)
-of the proposition.
+`HigherOrderBooleanEvaluation<TModel>` containing the models and their results.
 
 ### Dynamic assertions (derived from pairwise model and result)
 
@@ -109,12 +129,13 @@ metadata values.
 
 ## Usage when building a higher-order proposition from an existing proposition
 
-When an existing proposition is used by the `Build()` method, the factory function will receive have access to the 
-models and information about whether they are satisfied or not.
+
+When an existing proposition is used by the `Build()` method, the factory function will receive a
+`HigherOrderEvaluation<TModel, TMetadata>` containing the models and their results.
 
 ### Dynamic assertions (derived from pairwise model and result)
 
-`.WhenFalseYield(Func<HigherOrderEvaluation<TModel>, IEnumerable<string>> factory)`
+`.WhenFalseYield(Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<string>> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -129,7 +150,7 @@ statements.
 
 ### Dynamic metadata (derived from pairwise model and result)
 
-`.WhenFalseYield(Func<HigherOrderEvaluation<TModel>, IEnumerable<TMetadata>> factory)`
+`.WhenFalseYield(Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<TMetadata>> factory)`
 
 ```csharp
 Spec.Build(new IsEvenProposition())
