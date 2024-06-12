@@ -19,8 +19,8 @@ chosen.
 #### Higher-order propositions
 * `Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>>` - a factory function that returns multiple assertion statements.
 * `Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>>` - a factory function that returns multiple metadata values.
-
-#### Hi
+* `Func<HigherOrderEvaluation<TModel>, IEnumerable<string>>` - a factory function that returns multiple assertion statements.
+* `Func<HigherOrderEvaluation<TModel>, IEnumerable<TMetadata>>` - a factory function that returns multiple metadata values.
 
 ## Usage when building a new proposition
 
@@ -90,7 +90,11 @@ This overload generates multiple metadata values based on the model and the resu
 the proposition is satisfied, the metadata values returned by the factory function will populate the `Metadata`
 property of the result.
 
-## Usage when building a higher-order proposition from an existing proposition
+## Usage when building a higher-order proposition from a predicate function
+
+When a predicate function is used by the `Build()` method, the factory function will receive a
+`HigherOrderBooleanEvaluation<TModel>` containing the pairwise models and results (`BooleanResult<TModel, TMetadata>`)
+of the proposition.
 
 ### Dynamic assertions (derived from pairwise model and result)
 
@@ -99,10 +103,13 @@ property of the result.
 ```csharp
 Spec.Build((int n) => n % 2 == 0))
     .AsAnySatisfied()
-    .WhenTrueYield(eval => $"{eval.TrueModels.Serialize()} are even"))
-    .WhenFalse("is odd")
+    .WhenTrueYield(eval => eval.TrueModels.Select(n => $"{n} is even"))
+    .WhenFalse("all are odd")
     .Create("all even");
 ```
+
+This overload gives you access to the models (and various aspects of them) so that you can generate multiple
+distinct assertion statements.
 
 ### Dynamic metadata (derived from pairwise model and result)
 
@@ -111,10 +118,48 @@ Spec.Build((int n) => n % 2 == 0))
 ```csharp
 Spec.Build((int n) => n % 2 == 0))
     .AsAnySatisfied()
-    .WhenTrueYield(eval => new MyMetadata($"{eval.TrueModels.Serialize()} are even")))
-    .WhenFalse(new MyMetadata("is odd"))
+    .WhenTrueYield(eval => eval.TrueModels.Select(n => new MyMetadata($"{n} is even")))
+    .WhenFalse(new MyMetadata("all are odd"))
     .Create("all even");
 ```
+
+This overload gives you access to the models (and various aspects of them) so that you can generate multiple distinct
+metadata values.
+
+## Usage when building a higher-order proposition from an existing proposition
+
+When an existing proposition is used by the `Build()` method, the factory function will receive have access to the
+models and information about whether they are satisfied or not.
+
+### Dynamic assertions (derived from pairwise model and result)
+
+`.WhenTrueYield(Func<HigherOrderEvaluation<TModel>, IEnumerable<string>> factory)`
+
+```csharp
+Spec.Build(new IsEvenProposition())
+    .AsAnySatisfied()
+    .WhenTrueYield(eval => eval.TrueModels.Select(n => $"{n} is even"))
+    .WhenFalse("all are odd")
+    .Create("all even");
+```
+
+This overload gives you access to the models and their results so that you can generate multiple distinct assertion
+statements.
+
+### Dynamic metadata (derived from pairwise model and result)
+
+`.WhenTrueYield(Func<HigherOrderEvaluation<TModel>, IEnumerable<TMetadata>> factory)`
+
+```csharp
+Spec.Build(new IsEvenProposition())
+    .AsAnySatisfied()
+    .WhenTrueYield(eval => eval.TrueModels.Select(n => new MyMetadata($"{n} is even")))
+    .WhenFalse(new MyMetadata("all are odd"))
+    .Create("all even");
+```
+
+This overload gives you access to the models and their results so that you can generate multiple distinct metadata
+objects.
 
 <div style="display: flex; justify-content: space-between">
     <a href="./WhenTrue.html">&lt; Previous</a>
