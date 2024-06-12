@@ -1,11 +1,9 @@
-﻿# Conditional AND `&&`
+﻿# Conditional AND
 
-A conditional AND (i.e., short-circuited) operation can be performed on two propositions using the
-`left.AndAlso(right)` method.
-It is serialized as `left && right`—incidentally the `&&` C# operator cannot be overriden, so 
-we have to resort to using method invocation to perform the operation.
-This will produce a new proposition instance that is the logical AND of the two propositions.
-When evaluated, the right proposition will only be evaluated if the left proposition is satisfied.
+You can perform a conditional AND operation on two propositions by using the method `left.AndAlso(right)`.
+It will produce a new proposition that represents the logical AND of the two input propositions.
+When evaluating the resulting proposition, the right operand will only be evaluated if the left is satisfied.
+In other words, the logical AND operation is short-circuited.
 
 For example:
 
@@ -77,3 +75,8 @@ The `Result` property will therefore contain the assertions of both underlying p
 var result = isActiveSubscription.IsSatisfiedBy(activeSubscription);
 result.Reason; // "subscription has started && subscription has not ended"
 ```
+
+<div style="display: flex; justify-content: space-between">
+    <a href="./And.html">&lt; Previous</a>
+    <a href="./Or.html">Next &gt;</a>
+</div>

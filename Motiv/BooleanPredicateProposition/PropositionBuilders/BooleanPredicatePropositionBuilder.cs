@@ -27,10 +27,9 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
             trueBecause.ThrowIfNull(nameof(trueBecause)));
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
-    /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata}" />.</returns>
-    public FalseMetadataPropositionBuilder<TModel, string> WhenTrueYield<TMetadata>(
+    public FalseMetadataPropositionBuilder<TModel, string> WhenTrueYield(
         Func<TModel, IEnumerable<string>> whenTrue)
     {
         whenTrue.ThrowIfNull(nameof(whenTrue));

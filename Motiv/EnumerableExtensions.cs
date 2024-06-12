@@ -103,6 +103,14 @@ public static class EnumerableExtensions
         yield return currentGroup;
     }
 
-    internal static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) =>
-        source.Select((item, index) => (item, index));
+    internal static IEnumerable<T> DistinctWithOrderPreserved<T>(this IEnumerable<T> source)
+    {
+        var uniqueItems = new HashSet<T>();
+        foreach (var x in source)
+        {
+            if (uniqueItems.Add(x)) 
+                yield return x;
+        }
+    }
+        
 }

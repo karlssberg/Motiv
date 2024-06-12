@@ -53,7 +53,7 @@ public static class AssertionExtensions
         result.Explanation
             .Underlying
             .GetRootAssertions()
-            .Distinct()
+            .DistinctWithOrderPreserved()
             .ElseIfEmpty(result.Assertions);
 
     /// <summary>
@@ -66,7 +66,7 @@ public static class AssertionExtensions
         this BooleanResultBase result) =>
         result.Underlying
             .GetAllRootAssertions()
-            .Distinct()
+            .DistinctWithOrderPreserved()
             .ElseIfEmpty(result.Assertions);
 
     private static IEnumerable<string> GetRootAssertions(

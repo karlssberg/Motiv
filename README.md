@@ -5,15 +5,16 @@
 
 Motiv is a .NET library that supercharges the experience of working with boolean logic.
 
-It allows you to package your boolean expressions into strongly typed _propositions_.
+It allows you to model your boolean expressions as strongly typed
+[propositions](https://en.wikipedia.org/wiki/Proposition).
 By propositions, we mean a declarative statement that can be evaluated to either true or false.
 
-Examples of propositions include:
+Examples include:
 * _the sun is shining_
 * _email address is missing an @ symbol_
 * _subscription is within grace period_
 
-In Motiv, they look like this:
+In Motiv, propositions look like this:
 ```csharp
 Spec.Build((Subscription subscription) => 
         DateTime.Now is var now 
@@ -24,8 +25,8 @@ Spec.Build((Subscription subscription) =>
     .Create();
 ```
 
-Propositions can be composed together using boolean operators, such as `&`, `|`, and `^`, and when evaluated will only
-surface the reasons (or custom metadata) from propositions that determined the final result.
+They can be composed with other propositions using boolean operators, such as `&`, `|`, and `^`,
+and when evaluated will give concise explanations about why the result is true or false.
 
 ```csharp
 // compose propositions
@@ -41,20 +42,84 @@ var canViewContent =
 // evaluate proposition
 var result = canViewContent.IsSatisfiedBy(subscription); 
 
-result.Satisfied;     // true
-result.Reason;        // "can view content"
-result.Justification; // can view content
-                      //    OR
-                      //        AND
-                      //            OR
-                      //                subscription is within grace period
-                      //            subscription is not cancelled
+result.Satisfied;      // true
+result.Reason;         // "can view content"
+result.SubAssertions;  // ["subscription is within grace period", "subscription is not cancelled"]
+result.Justification;  // can view content
+                       //    OR
+                       //        AND
+                       //            OR
+                       //                subscription is within grace period
+                       //            subscription is not cancelled
 ```
+
+#### Useful Links
+- [Documentation](https://karlssberg.github.io/Motiv/)
+- [NuGet Package](https://www.nuget.org/packages/Motiv/)
+- [Specification Pattern](https://en.wikipedia.org/wiki/Specification_pattern)
+- [Propositions](https://en.wikipedia.org/wiki/Proposition)
+- [Official GitHub Repository](https://github.com/karlssberg/Motiv)
+
+### What problem is being solved?
+
+Primarily, Motiv is designed to provide visibility into your application's decision-making process.
+However, since it decomposes expressions into propositions, almost as an accident of its design, it also satisfies some 
+important architectural concerns and opens doors to more exotic usages (such as implementing rules engines).
+
+If your project requires two or more of the following, then Motiv is very likely to be a great fit.
+
+1. **Visibility**: You need to provide feedback in real-time regarding why a certain condition was met (or not).
+2. **Decomposition**: Your logic is either too complex or deeply nested to understand at a glance, so it needs
+   to be broken up in to meaningful parts.
+3. **Reusability**: You wish to re-use your logic in multiple places without having to re-implement it.
+4. **Modeling**: You need to explicitly model your domain logic.
+5. **Testing**: You want to thoroughly test your logic without having to mock or stub out dependencies.
+
+### What is wrong with regular booleans?
+
+Regular boolean expressions will not explain _why_ they are `true` or `false`. 
+If an expression only has one clause, then we can easily figure it out.
+However, if it is made up of multiple clauses, then at runtime it may not be obvious or even possible to determine the 
+underlying cause.
+Moreover, since Motiv requires that you break up your expressions in to meaningful propositions, it greatly improves 
+readability, in the same way that decomposing code into meaningful functions does.
+
+### Isn't an if-statement visible enough?
+
+If-statements are only visible at design-time, and at runtime they are not (unless you are using a debugger).
+To provide runtime visibility, you would need to decompose the expression into clauses and evaluate them separately
+(so we can provide detailed explanations), and then recombine them to form the final result.
+This instantly compromises the (design-time) readability of the code.
+
+Furthermore, if the logic is sufficiently complex, then readability may already be challenging.
+This is especially true if the clauses themselves are complex, or if the logic is deeply nested, in which case it 
+may be hard to discern the boundaries between clauses.
+
+### But we can decompose expressions into functions, can't we?
+
+Functions are great for encapsulating logic, but they do not natively provide a way to be logically composed together.
+Sure, we can create utility functions that do this for us, but in doing so we are unwittingly implementing a 
+functional version of the [Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern) ourselves —
+which is the pattern Motiv is based on.
+At this point, we might want to consider well-tested alternatives (such as Motiv).
+
+You may be wondering why we do not just eagerly evaluate the functions and avoid composition altogether.
+However, it places a burden on the caller, since it requires each function to be evaluated in turn, with the results 
+collated into the final result, which interferes with the readability of the code and invites human error.
+Removing this burden is very much the raison d'être of Motiv, which is also very much in the spirit of 
+monadic composition.
+
+### What is Motiv exactly?
+
+Motiv is a functional-ish/fluent version of the
+[Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern), that allows you to very easily model 
+your logic in a declarative way and then re-compose it to form new expressions.
+When it is time to evaluate whether a model is satisfied by the expression, the underlying causes are figured out 
+on your behalf, and any data associated with them is subsequently surfaced (which is typically a textual explanation).
 
 ### What can I use the Motiv for?
 
-Motiv is not specifically focused on catering to any particular use-case (except maybe _Developer Experience_),
-but it does nonetheless serve use-cases such as:
+Motiv can be used in a variety of scenarios, including:
 
 * **User feedback** - You require an application to provide detailed and accurate feedback to the user about why 
   certain decisions were made. 
@@ -247,7 +312,7 @@ result.Assertions; // ["customer has an inadequate credit score"]
 
 #### Redefining propositions
 
-Sometimes existing propositions do not produce the desired assertions or metadata.
+Sometimes you may wish to redefine an existing proposition with a new explanation (or metadata).
 In this case, you will need to wrap the existing proposition in a new one.
 
 ```csharp
@@ -287,10 +352,10 @@ ineligibleResult.Justification; // !customer is eligible for a loan
 
 #### Strongly typed proposition
 
-You will likely want to encapsulate propositions for reuse across your application.
+You will likely want to reuse propositions across your application.
 For this you typically have two options, which is to either return `Spec` instances from members of POCO 
 objects, or to derive from the `Spec<TModel>` or `Spec<TModel, TMetadata>` class (the former being merely syntactic 
-sugar for `Spec<TModel, string>`).
+sugar for `Spec<TModel, string>`). 
 By creating a new class that derives from `Spec<TModel>` or `Spec<TModel, TMetadata>`, the proposition becomes a
 unique type within the type-system, which is necessary in some situation, such as with dependency injection frameworks.
 Using the above classes will help you to maintain a separation of concerns and also raise the conspicuity of important 
@@ -314,40 +379,51 @@ public class HasSufficientIncomeProposition(decimal threshold) : Spec<int, MyMet
 
 ### Higher Order Logic
 
-To perform logic over collections of models, higher order logical operations are required.
-Whilst you can create a first-order proposition that operates on collections of models, yielding explanations (or 
-metadata) would be challenging.
-This library provides a `.As()` builder method to address this.
-
-#### Built-in higher order logic
-
-Some built-in higher order logical operations are provided for popular operations, but you can also add your own using
-extension methods.
-
-The current built-in higher order logical operations are:
-- `AsAllSatisfied()`: Creates a proposition that yields a true boolean-result object if all the models in a 
-  collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- `AsAnySatisfied()`: Creates a proposition that yields a true boolean-result object if any of the models in a 
-  collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- `AsNoneSatisfied()`: Creates a proposition that yields a true boolean-result object if none of the models in a 
-  collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- `AsNSatisfied()`: Creates a proposition that yields a true boolean-result object if exactly N models in a 
-  collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- `AsAtLeastNSatisfied()`: Creates a proposition that yields a true boolean-result object if at least N models in a 
-  collection satisfy the proposition, otherwise a false boolean-result object is returned.
-- `AsAtMostfNSatisfied()`: Creates a proposition that yields a true boolean-result object if at most N models in a 
-  collection satisfy the proposition, otherwise a false boolean-result object is returned.
+Higher order logic is a way to reason about collections of models.
+They are all defined using the `.As()` builder method.
 
 ```csharp
 Spec.Build((int n) => n < 0)
-    .AsAllSatisfied()               // higher order logic
+    .As(booleanResults => booleanResults.All(result => result.Satisfied))   // higher order predicate
+    .Create("all are negative");
+```
+
+Whilst we can nonetheless make a "first-order" propositions operate on a collection of models, inspecting the
+models' results will be challenging.
+By instead using the `.As()` method, we allow ourselves to easily inspect each model, and its corresponding result, so 
+that explanations can be tailored to specific use-cases.
+
+```csharp
+Spec.Build((int n) => n < 0) // existing proposition
+    .As(booleanResults => booleanResults.All(result => result.Satisfied))   // higher order predicate
+    .WhenTrue("all are negative")
+    .WhenFalseYield(evaluation => evaluation.FalseModels.Select(n => $"{n} is not negative"))
+    .Create();
+```
+
+#### Built-in higher order operations
+
+Some common higher order operations are already provided out-of-the-box.
+
+These are:
+
+- `AsAllSatisfied()`: Creates a proposition that is satisfied when all the models in a collection are satisfied.
+- `AsAnySatisfied()`: Creates a proposition that is satisfied when any of the models in a collection are satisfied.
+- `AsNoneSatisfied()`: Creates a proposition that is satisfied when none of the models in a collection are satisfied.
+- `AsNSatisfied()`: Creates a proposition that is satisfied when exactly N models in a collection are satisfied.
+- `AsAtLeastNSatisfied()`: Creates a proposition that is satisfied when at least N models in a collection are satisfied.
+- `AsAtMostfNSatisfied()`: Creates a proposition that is satisfied when at most N models in a collection are satisfied.
+
+```csharp
+Spec.Build((int n) => n < 0)
+    .AsAllSatisfied()               // higher order operation
     .WhenTrue("all are negative")
     .WhenFalse("some are not negative")
     .Create();
 ```
 
 You can also use an existing proposition instead of a predicate to create a higher order logical operation.
-This will give you access to each result and model pair, which can be used to customize the output to a 
+This will give you access to the underlying models and results, which can be used to customize the output to a 
 particular use-case.
 
 ```csharp
@@ -403,10 +479,9 @@ allNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions;   // ["0 is not negative",
 ## Tradeoffs
 
 There are inevitably potential tradeoffs to consider when using this library.
-1. **Performance**: This library is designed to be as performant as possible, but it is still a layer of abstraction
-   over the top of native logic.
-   This means that there is nevertheless a measurable performance cost compared to computing boolean values natively.
-   This cost is negligible in most cases and is generally eclipsed by the benefits provided.
+1. **Performance**: Motiv is not designed for high-performance scenarios where nanoseconds matter. 
+   It is meant to be used in scenarios where maintainability and readability are paramount.
+   That being said, for the majority of use-cases the performance overhead is truly negligible.
 2. **Dependency**: This library is a dependency.
    Once embedded in your codebase it will be challenging to remove. 
    However, this library does not itself depend on any third-party libraries, so it does not bring any unexpected 
@@ -482,7 +557,7 @@ enabling continuous development and quick fixes as needed.
 
 MIT License
 
-Copyright (c) 2024 karlssberg
+Copyright (c) 2024 Daniel Karlsson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -424,17 +424,103 @@ public class TutorialTests
     public void Should_have_subscription_in_grace_period()
     {
         var hasSubscriptionInGracePeriod =
-            Spec.Build((Subscription subscription) => 
-                    DateTime.Now is var now 
-                    && subscription.ExpiryDate < now
-                    && now < subscription.ExpiryDate.AddDays(7))
-                .WhenTrue("subscription is within grace period")
-                .WhenFalse("subscription is not within grace period")
-                .Create();
+        Spec.Build((Subscription subscription) => 
+                DateTime.Now is var now 
+                && subscription.ExpiryDate < now
+                && now < subscription.ExpiryDate.AddDays(7))
+            .WhenTrue("subscription is within grace period")
+            .WhenFalse("subscription is not within grace period")
+            .Create();
 
         var act = hasSubscriptionInGracePeriod.IsSatisfiedBy(new Subscription(DateTime.Now.AddDays(-3)));
 
-        act.Satisfied.Should().BeTrue();
-        act.Reason.Should().Be("subscription is within grace period");
+            act.Satisfied.Should().BeTrue();
+            act.Reason.Should().Be("subscription is within grace period");
+    }
+
+    [Fact]
+    public void Should_get_root_assertions()
+    {
+        var isEven = 
+            Spec.Build<int>(n => n % 2 == 0)
+                .WhenTrue("is even")
+                .WhenFalse("is odd")
+                .Create();
+        
+        var areEven = 
+            Spec.Build(isEven)
+                .AsAnySatisfied()
+                .WhenTrue("some even")
+                .WhenFalse("all odd")
+                .Create();
+        
+        var act = areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]);
+        
+        act.GetRootAssertions().Should().BeEquivalentTo(["is even"]);
+    }
+    
+
+    [Fact]
+    public void Should_get_all_root_assertions()
+    {
+        var isEven = 
+            Spec.Build<int>(n => n % 2 == 0)
+                .WhenTrue("is even")
+                .WhenFalse("is odd")
+                .Create();
+        
+        var areEven = 
+            Spec.Build(isEven)
+                .AsAnySatisfied()
+                .WhenTrue("some even")
+                .WhenFalse("all odd")
+                .Create();
+        
+        var act = areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]);
+        
+        act.GetAllRootAssertions().Should().BeEquivalentTo(["is even", "is odd"]);
+    }
+
+    [Theory]
+    [InlineData(1, false, "1")]
+    [InlineData(2, false, "2")]
+    [InlineData(3, true, "fizz")]
+    [InlineData(4, false, "4")]
+    [InlineData(5, true, "buzz")]
+    [InlineData(6, true, "fizz")]
+    [InlineData(7, false, "7")]
+    [InlineData(8, false, "8")]
+    [InlineData(9, true, "fizz")]
+    [InlineData(10, true, "buzz")]
+    [InlineData(11, false, "11")]
+    [InlineData(12, true, "fizz")]
+    [InlineData(13, false, "13")]
+    [InlineData(14, false, "14")]
+    [InlineData(15, true, "fizzbuzz")]
+    [InlineData(16, false, "16")]
+    [InlineData(17, false, "17")]
+    [InlineData(18, true, "fizz")]
+    [InlineData(19, false, "19")]
+    [InlineData(20, true, "buzz")]
+    public void Should_solve_fizzbuzz(int number, bool expectedSatisfied, string expectedReason)
+    {
+        var isFizz = 
+            Spec.Build((int n) => n % 3 == 0)
+                .Create("fizz");
+        
+        var isBuzz =
+            Spec.Build((int n) => n % 5 == 0)
+                .Create("buzz");
+        
+        var isSubstitution = 
+            Spec.Build(isFizz | isBuzz)
+                .WhenTrue((_, result) => string.Concat(result.Assertions))
+                .WhenFalse(n => n.ToString())
+                .Create("should substitute number");
+        
+        var act = isSubstitution.IsSatisfiedBy(number);
+        
+        act.Satisfied.Should().Be(expectedSatisfied);
+        act.Reason.Should().Be(expectedReason);
     }
 }

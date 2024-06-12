@@ -682,7 +682,7 @@ public class SpecDecoratorExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange 
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
         
         var underlying =
             Spec.Build((bool m) => m)
@@ -705,18 +705,10 @@ public class SpecDecoratorExplanationPropositionTests
                 .WhenTrue("true assertion")
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
-        
-        var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(underlying)
-                .WhenTrue("true assertion")
-                .WhenFalseYield((_, _) => ["false assertion"])
-                .Create("propositional statement");
-        
-        
+
         var spec = withFalseAsScalar &
                    withFalseAsParameterCallback &
-                   withFalseAsTwoParameterCallback &
-                   withFalseAsTwoParameterCallbackThatReturnsACollection;
+                   withFalseAsTwoParameterCallback;
         
         var result = spec.IsSatisfiedBy(model);
 
@@ -730,12 +722,38 @@ public class SpecDecoratorExplanationPropositionTests
     [Theory]
     [InlineData(true, "propositional statement")]
     [InlineData(false, "!propositional statement")]
+    public void Should_use_the_propositional_statement_in_the_reason_when_using_multiple_assertions(
+            bool model,
+            string expectedReason)
+    {
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+        
+        var spec =
+            Spec.Build(underlying)
+                .WhenTrue("true assertion")
+                .WhenFalseYield((_, _) => ["false assertion"])
+                .Create("propositional statement");
+        
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().Be(expectedReason);
+    }
+    
+    [Theory]
+    [InlineData(true, "true assertion")]
+    [InlineData(false, "false assertion")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback(
         bool model,
         string expectedReasonStatement)
     {
         // Arrange 
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
         
         var underlying =
             Spec.Build((bool m) => m)
@@ -758,17 +776,82 @@ public class SpecDecoratorExplanationPropositionTests
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
+
+        var spec = withFalseAsScalar &
+                   withFalseAsParameterCallback &
+                   withFalseAsTwoParameterCallback;
         
-        var withFalseAsTwoParameterCallbackThatReturnsACollection =
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().Be(expectedReason);
+    }
+
+    [Theory]
+    [InlineData(true, "propositional statement")]
+    [InlineData(false, "!propositional statement")]
+    public void
+        Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_when_using_multiple_assertions(
+            bool model,
+            string expectedReason)
+    {
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+        
+        var spec =
             Spec.Build(underlying)
                 .WhenTrue(_ => "true assertion")
                 .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
         
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Reason;
+        
+        // Assert
+        act.Should().Be(expectedReason);
+    }
+
+    [Theory]
+    [InlineData(true, "true assertion")]
+    [InlineData(false, "false assertion")]
+    public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback(
+        bool model,
+        string expectedReasonStatement)
+    {
+        // Arrange 
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+        
+        var withFalseAsScalar =
+            Spec.Build(underlying)
+                .WhenTrue((_, _) => "true assertion")
+                .WhenFalse("false assertion")
+                .Create("propositional statement");
+        
+        var withFalseAsParameterCallback =
+            Spec.Build(underlying)
+                .WhenTrue((_, _) => "true assertion")
+                .WhenFalse(_ => "false assertion")
+                .Create("propositional statement");
+        
+        var withFalseAsTwoParameterCallback =
+            Spec.Build(underlying)
+                .WhenTrue((_, _) => "true assertion")
+                .WhenFalse((_, _) => "false assertion")
+                .Create("propositional statement");
+
         var spec = withFalseAsScalar &
                    withFalseAsParameterCallback &
-                   withFalseAsTwoParameterCallback &
-                   withFalseAsTwoParameterCallbackThatReturnsACollection;
+                   withFalseAsTwoParameterCallback;
         
         var result = spec.IsSatisfiedBy(model);
 
@@ -782,45 +865,20 @@ public class SpecDecoratorExplanationPropositionTests
     [Theory]
     [InlineData(true, "propositional statement")]
     [InlineData(false, "!propositional statement")]
-    public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback(
-        bool model,
-        string expectedReasonStatement)
+    public void
+        Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_when_using_multiple_assertions(
+            bool model,
+            string expectedReason)
     {
-        // Arrange 
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
-        
         var underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
         
-        var withFalseAsScalar =
-            Spec.Build(underlying)
-                .WhenTrue((_, _) => "true assertion")
-                .WhenFalse("false assertion")
-                .Create("propositional statement");
-        
-        var withFalseAsParameterCallback =
-            Spec.Build(underlying)
-                .WhenTrue((_, _) => "true assertion")
-                .WhenFalse(_ => "false assertion")
-                .Create("propositional statement");
-        
-        var withFalseAsTwoParameterCallback =
-            Spec.Build(underlying)
-                .WhenTrue((_, _) => "true assertion")
-                .WhenFalse((_, _) => "false assertion")
-                .Create("propositional statement");
-        
-        var withFalseAsTwoParameterCallbackThatReturnsACollection =
+        var spec =
             Spec.Build(underlying)
                 .WhenTrue((_, _) => "true assertion")
                 .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
-        
-        var spec = withFalseAsScalar &
-                   withFalseAsParameterCallback &
-                   withFalseAsTwoParameterCallback &
-                   withFalseAsTwoParameterCallbackThatReturnsACollection;
         
         var result = spec.IsSatisfiedBy(model);
 
@@ -830,6 +888,7 @@ public class SpecDecoratorExplanationPropositionTests
         // Assert
         act.Should().Be(expectedReason);
     }
+    
     [Theory]
     [InlineData(true, "propositional statement")]
     [InlineData(false, "!propositional statement")]
