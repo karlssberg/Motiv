@@ -1,2 +1,3 @@
-﻿theme: minimal
-docs_dir: /docs
+﻿theme: jekyll-theme-minimal
+title: Motiv
+description: Supercharge your boolean logic!
