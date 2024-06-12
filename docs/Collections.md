@@ -436,7 +436,7 @@ var areEven =
         .WhenFalse("all odd")
         .Create();
 
-areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]).GetRootAssertions();  // [ "is even", "is odd" ]
+areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]).GetAllRootAssertions();  // [ "is even", "is odd" ]
 ```
 <div style="display: flex; justify-content: left">
     <a href="./Create.html">&lt; Previous</a>
