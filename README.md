@@ -14,43 +14,29 @@ Examples include:
 * _email address is missing an @ symbol_
 * _subscription is within grace period_
 
-In Motiv, propositions look like this:
+The following is a minimalist example of a proposition:
+
 ```csharp
-Spec.Build((Subscription subscription) => 
-        DateTime.Now is var now 
-        && subscription.ExpiryDate < now
-        && now < subscription.ExpiryDate.AddDays(7))      // predicate function
-    .WhenTrue("subscription is within grace period")      // true assertion (and proposition statement)
-    .WhenFalse("subscription is not within grace period") // false assertion
-    .Create();
+Spec.Build((int n) => n == 0).Create("empty");
 ```
 
-They can be composed with other propositions using boolean operators, such as `&`, `|`, and `^`,
-and when evaluated will give concise explanations about why the result is true or false.
+In Motiv, propositions can be composed with other propositions using boolean operators, such as `&`, `|`, and `^`,
+and when evaluated will give concise explanations about the causes.
 
 ```csharp
-// compose propositions
-var expression = ((!hasSubscriptionExpired | isInGracePeriod) & !isSubscriptionCancelled) | isStaff;
+// Define clauses/propositions
+var isValid = Spec.Build((int n) => n is >= 0 and <= 11).Create("valid");
+var isEmpty = Spec.Build((int n) => n == 0).Create("empty");
+var isFull = Spec.Build((int n) => n == 11).Create("full");
 
-// define a new proposition
-var canViewContent = 
-    Spec.Build(expression)
-        .WhenTrue("can view content")
-        .WhenFalse("cannot view content")
-        .Create();
+// Compose new proposition
+var isPartiallyFull = isValid & !(isEmpty | isFull);
 
-// evaluate proposition
-var result = canViewContent.IsSatisfiedBy(subscription); 
+// Evaluate proposition
+var result = isPartiallyFull.IsSatisfiedBy(5);
 
-result.Satisfied;      // true
-result.Reason;         // "can view content"
-result.SubAssertions;  // ["subscription is within grace period", "subscription is not cancelled"]
-result.Justification;  // can view content
-                       //    OR
-                       //        AND
-                       //            OR
-                       //                subscription is within grace period
-                       //            subscription is not cancelled
+result.Satisfied;   // true
+result.Assertions;  // ["valid", "!empty", "!full"]
 ```
 
 #### Useful Links
@@ -68,12 +54,13 @@ important architectural concerns and opens doors to more exotic usages (such as 
 
 If your project requires two or more of the following, then Motiv is very likely to be a great fit.
 
-1. **Visibility**: You need to provide feedback in real-time regarding why a certain condition was met (or not).
-2. **Decomposition**: Your logic is either too complex or deeply nested to understand at a glance, so it needs
-   to be broken up in to meaningful parts.
-3. **Reusability**: You wish to re-use your logic in multiple places without having to re-implement it.
-4. **Modeling**: You need to explicitly model your domain logic.
-5. **Testing**: You want to thoroughly test your logic without having to mock or stub out dependencies.
+1. **Visibility**: Provide granular, real-time feedback about decisions made.
+2. **Decomposition**: Break down complex or deeply nested logic into meaningful subclauses for better readability.
+3. **Reusability**: Reuse your logic in multiple places to avoid duplication.
+4. **Modeling**: Explicitly model your domain logic (e.g.
+   [Domain Driven Design](https://en.wikipedia.org/wiki/Domain-driven_design)).
+5. **Testing**: Easily and thoroughly test your logic (especially by avoiding the need to mock or stub out
+   dependencies).
 
 ### What is wrong with regular booleans?
 
@@ -81,59 +68,39 @@ Regular boolean expressions will not explain _why_ they are `true` or `false`.
 If an expression only has one clause, then we can easily figure it out.
 However, if it is made up of multiple clauses, then at runtime it may not be obvious or even possible to determine the 
 underlying cause.
-Moreover, since Motiv requires that you break up your expressions in to meaningful propositions, it greatly improves 
-readability, in the same way that decomposing code into meaningful functions does.
 
 ### Isn't an if-statement visible enough?
 
-If-statements are only visible at design-time, and at runtime they are not (unless you are using a debugger).
-To provide runtime visibility, you would need to decompose the expression into clauses and evaluate them separately
-(so we can provide detailed explanations), and then recombine them to form the final result.
-This instantly compromises the (design-time) readability of the code.
-
-Furthermore, if the logic is sufficiently complex, then readability may already be challenging.
-This is especially true if the clauses themselves are complex, or if the logic is deeply nested, in which case it 
-may be hard to discern the boundaries between clauses.
+Your logical expressions are only visible at design-time, and at runtime they are not (unless you are using a 
+debugger). Your logical expression
 
 ### But we can decompose expressions into functions, can't we?
 
 Functions are great for encapsulating logic, but they do not natively provide a way to be logically composed together.
-Sure, we can create utility functions that do this for us, but in doing so we are unwittingly implementing a 
-functional version of the [Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern) ourselves —
-which is the pattern Motiv is based on.
-At this point, we might want to consider well-tested alternatives (such as Motiv).
-
-You may be wondering why we do not just eagerly evaluate the functions and avoid composition altogether.
-However, it places a burden on the caller, since it requires each function to be evaluated in turn, with the results 
-collated into the final result, which interferes with the readability of the code and invites human error.
-Removing this burden is very much the raison d'être of Motiv, which is also very much in the spirit of 
-monadic composition.
+Sure, we can create utility functions that remove this burden from us, but in doing so we are unwittingly 
+implementing a functional version of the [Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern)
+ourselves—which is similar to what Motiv is doing.
+At this point, we might want to consider well-tested alternatives!
 
 ### What is Motiv exactly?
 
 Motiv is a functional-ish/fluent version of the
-[Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern), that allows you to very easily model 
-your logic in a declarative way and then re-compose it to form new expressions.
-When it is time to evaluate whether a model is satisfied by the expression, the underlying causes are figured out 
-on your behalf, and any data associated with them is subsequently surfaced (which is typically a textual explanation).
+[Specification pattern](https://en.wikipedia.org/wiki/Specification_pattern).
+It allows you to very easily model your logic in a declarative way, and then re-compose it to form a new re-usable 
+expressions that when evaluated, will provide a detailed explanation about the causes.
 
 ### What can I use the Motiv for?
 
 Motiv can be used in a variety of scenarios, including:
 
-* **User feedback** - You require an application to provide detailed and accurate feedback to the user about why 
+* **User feedback** - You require your application to provide detailed and accurate feedback to the user about why 
   certain decisions were made. 
-* **Debugging** - Quickly understand why a certain condition was met (or not). When faced with deeply nested 
-  if-else statements it can be challenging to comprehend the bigger picture. Motiv gives you the wherewithal to 
-  separate the implementation details from the big-picture logical expression.
-* **Multilingual support** - Use custom POCO objects instead of strings to provide multi-language support.
-* **Decomposing complex logic or domain rules** - Whether you are faithfully modelling domain logic, or just trying to 
-  decompose an unwieldy logical expression, Motiv can help you to break it down into more manageable and 
-  understandable parts.
-* **Validation** - Ensure user input meets certain criteria and provide detailed feedback when it does not.  Because 
-  of the approach Motiv takes, it makes it relatively straightforward to convert existing logic into validation logic.
-* **Parsing CLI arguments** - The command line arguments array can be interrogated and mapped to state 
-  objects (metadata) to help conditionally drive behavior in the application.
+* **Debugging** - You want to understand why certain conditions were met (or not), but your logic is too complex to 
+  figure this out quickly using a debugger.
+* **Multilingual support** - You want to provide explanations in different languages.
+* **Validation** - Ensure user input meets certain criteria and provide detailed feedback when it does not.
+  Because of Motiv's design, it makes it relatively straightforward to convert existing logic into validation logic.
+* **Auditing** - You want to log _why_ something happened, and not just _what_ happened.
 
 You are encouraged to explore the library and find new and innovative ways to use it.
 
