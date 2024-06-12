@@ -3,8 +3,34 @@
 Motiv is a .NET library that enables you to write more expressive, maintainable, and testable boolean logic.
 Its fluent API allows you to effortlessly create and compose 
 [propositions](https://en.wikipedia.org/wiki/Proposition).
-When evaluated, Motiv generates human-readable explanations of the results, which can be presented to users or 
+If required, Motiv can generate human-readable explanations of the results, which can be presented to 
+users or 
 leveraged to gain valuable insights into the decision-making process.
+
+The following is a minimalist example of a proposition
+```csharp
+Spec.Build((int n) => n == 0).Create("empty");
+```
+
+Propositions can then be easily composed into new propositions without losing any context.
+
+```csharp
+// Define clauses/propositions
+var isValid = Spec.Build((int n) => n is >= 0 and <= 11).Create("valid");
+var isEmpty = Spec.Build((int n) => n == 0).Create("empty");
+var isFull = Spec.Build((int n) => n == 11).Create("full");
+
+// Compose new proposition
+var isPartiallyFull = isValid & !(isEmpty | isFull);
+
+// Evaluate proposition
+var result = isPartiallyFull.IsSatisfiedBy(5);
+
+result.Satisfied;   // true
+result.Assertions;  // ["valid", "!empty", "!full"]
+```
+
+You also have a lot more options at your disposal allowing you to craft results that suit your very specific needs.
 
 ### Contents
 1. [Spec](./Spec.html)

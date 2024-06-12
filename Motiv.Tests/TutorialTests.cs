@@ -523,4 +523,22 @@ public class TutorialTests
         act.Satisfied.Should().Be(expectedSatisfied);
         act.Reason.Should().Be(expectedReason);
     }
+
+    [Fact]
+    public void Should_evaluate_initial_example_in_docs()
+    {
+        // Define clauses
+        var isValid = Spec.Build((int n) => n is >= 0 and <= 11).Create("valid");
+        var isEmpty = Spec.Build((int n) => n == 0).Create("empty");
+        var isFull = Spec.Build((int n) => n == 11).Create("full");
+
+        // Compose new proposition
+        var isPartiallyFull = isValid & !(isEmpty | isFull);
+
+        // Evaluate proposition
+        var result = isPartiallyFull.IsSatisfiedBy(5);
+
+        result.Satisfied.Should().BeTrue();
+        result.Assertions.Should().BeEquivalentTo(["valid", "!empty", "!full"]);
+    }
 }
