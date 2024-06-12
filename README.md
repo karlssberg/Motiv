@@ -379,7 +379,7 @@ These are:
 - `AsNoneSatisfied()`: Creates a proposition that is satisfied when none of the models in a collection are satisfied.
 - `AsNSatisfied()`: Creates a proposition that is satisfied when exactly N models in a collection are satisfied.
 - `AsAtLeastNSatisfied()`: Creates a proposition that is satisfied when at least N models in a collection are satisfied.
-- `AsAtMostfNSatisfied()`: Creates a proposition that is satisfied when at most N models in a collection are satisfied.
+- `AsAtMostNSatisfied()`: Creates a proposition that is satisfied when at most N models in a collection are satisfied.
 
 ```csharp
 Spec.Build((int n) => n < 0)
