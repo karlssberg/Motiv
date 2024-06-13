@@ -1,4 +1,7 @@
-﻿# Logical OR `|`
+﻿---
+title: Or()
+---
+# Logical OR `|`
 
 You can perform a logical OR operation on two propositions in two ways:
 using the `|` operator `left | right` or the Or method `left.Or(right)`.

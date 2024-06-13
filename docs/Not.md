@@ -1,3 +1,6 @@
+---
+title: Not()
+---
 # Logical NOT `!`
 You can perform a logical NOT operation by using the using the `!` operator `!spec`,
 or alternatively using the method `proposition.Not()`.

@@ -1,4 +1,8 @@
-﻿# Supercharge your boolean logic
+﻿---
+layout: default
+title: Home
+---
+# Supercharge your boolean logic
 
 Motiv is a .NET library that enables you to write more expressive, maintainable, and testable boolean logic.
 Its fluent API allows you to effortlessly create and compose 
@@ -33,21 +37,7 @@ result.Assertions;  // ["valid", "!empty", "!full"]
 You also have a lot more options at your disposal allowing you to craft results that suit your very specific needs.
 
 ### Contents
-1. [Spec](./Spec.html)
-2. [Build()](./Build.html)
-3. [As()](./As.html)
-4. [WhenTrue()](./WhenTrue.html)
-5. [WhenTrueYield()](./WhenTrueYield.html)
-6. [WhenFalse()](./WhenFalse.html)
-7. [WhenFalseYield()](./WhenFalseYield.html)
-8. [Create()](./Create.html)
-9. [And](./And.html)
-10. [AndAlso](./AndAlso.html)
-11. [Or](./Or.html)
-12. [OrElse](./OrElse.html)
-13. [XOr](./XOr.html)
-14. [Not](./Not.html)
-15. [Collections](./Collections.html)
+
 
 ## Installation
 

@@ -1,4 +1,7 @@
-﻿# WhenFalse()
+﻿---
+title: WhenFalse()
+---
+# WhenFalse()
 
 The `WhenFalse()` method is used to yield values when the proposition is unsatisfied.
 It also implicitly sets `TMetadata` type for the rest of the proposition.

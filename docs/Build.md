@@ -1,4 +1,7 @@
-﻿# `Build()`
+﻿---
+title: Build()
+---
+# `Build()`
 
 New propositions are built using the `Spec.Build()` method.
 This method is overloaded and takes one of the following types of arguments:

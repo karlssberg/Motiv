@@ -1,4 +1,8 @@
-﻿# Logical AND `&`
+﻿---
+layout: default
+title: And()
+---
+# Logical AND `&`
 
 You can perform a logical AND operation on two propositions in two ways:
 using the `&` operator `left & right` or the And method `left.And(right)`.

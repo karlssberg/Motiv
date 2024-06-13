@@ -1,4 +1,8 @@
-﻿# Logical XOR `^`
+﻿---
+title: XOr()
+---
+
+# Logical XOR `^`
 
 You can perform a logical XOR operation on two propositions in two ways:
 using the `^` operator `left ^ right` or the XOr method `left.XOr(right)`.

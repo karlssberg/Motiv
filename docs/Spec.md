@@ -1,4 +1,7 @@
-﻿# Spec
+﻿---
+title: Spec
+---
+# Spec
 
 Instances of the `Spec` type are the building blocks of a _propositions_.
 They are the nodes of a logical syntax trees that collectively we call _propositions_.

@@ -1,3 +1,6 @@
+---
+title: As()
+---
 # `As()` (optional)
 
 This optional builder method creates [higher-order propositions](https://en.wikipedia.org/wiki/Higher-order_logic).

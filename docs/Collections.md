@@ -1,4 +1,7 @@
-﻿# Collections
+﻿---
+title: Collections Extensions
+---
+# Collections
 
 ## Generic Collections
 

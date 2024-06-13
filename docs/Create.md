@@ -1,20 +1,23 @@
-﻿# Create()
+﻿---
+title: Create()
+---
+# Create()
 
-### Default 
+## Default 
 
 `SpecBase<TModel, TMetadata> Create()`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
-    .WhenTrue("is even")    // The propositional statement is obtained here
+    .WhenTrue("is even")  // The propositional statement
     .WhenFalse("is odd")
-    .Create();              // no argument is required
+    .Create();            // no argument is required
 ```
 
 In the specific case of using the `WhenTrue(string assertion)` method, the `Create()` method can be called without 
 any arguments. This is because the propositional statement is obtained from the `WhenTrue()` method.
 
-### With an explicit propositional statement
+## With an explicit propositional statement
 
 `SpecBase<TModel, TMetadata> Create(string statement)`
 

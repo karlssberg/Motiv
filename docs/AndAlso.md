@@ -1,4 +1,8 @@
-﻿# Conditional AND
+﻿---
+layout: default
+title: AndAlso()
+---
+# Conditional AND
 
 You can perform a conditional AND operation on two propositions by using the method `left.AndAlso(right)`.
 It will produce a new proposition that represents the logical AND of the two input propositions.
