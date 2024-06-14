@@ -25,11 +25,11 @@ New propositions are created fluently by initially calling overloads of the `Spe
 
 Propositions can be operated on to form new propositions.
 
-| Operator                    | Syntax               | Description                                                   |
-|:----------------------------|----------------------|---------------------------------------------------------------|
-| [And()](./And.html)         | `left & right`       | Performs a logical AND on two propositions                    |
-| [AndAlso()](./AndAlso.html) | `left.AndAlso(right)` | Performs a short-circuiting logical AND on two propositions |
-| [Or()](./Or.html)           | `left | right`                                                        | Performs a logical OR upon two propositions |
-| [OrElse()](./OrElse.html)   | `left.OrElse(right)` | Performs a short-circuiting logical OR on two propositions  |
-| [XOr()](./XOr.html)         | `left ^ right`       | Performs a logical XOR on two propositions                  |
-| [Not()](./Not.html)         | `!proposition`       | Performs a logical NOT on a proposition                     |
+| Operator                    | Syntax             | Description                                                  |
+|:----------------------------|--------------------|--------------------------------------------------------------|
+| [And()](./And.html)         | `left & right`     | Performs a logical AND on two propositions                   |
+| [AndAlso()](./AndAlso.html) | `left.AndAlso(right)` | Performs a short-circuiting logical AND on two propositions  |
+| [Or()](./Or.html)           | `left | right`     | Performs a logical OR on two propositions                    |
+| [OrElse()](./OrElse.html)   | `left.OrElse(right)` | Performs a short-circuiting logical OR on two propositions   |
+| [XOr()](./XOr.html)         | `left ^ right`     | Performs a logical XOR on two propositions                   |
+| [Not()](./Not.html)         | `!proposition`     | Performs a logical NOT on a proposition                      |
