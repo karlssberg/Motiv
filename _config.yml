@@ -1,5 +1,4 @@
-﻿source: docs
-destination: _site
+﻿destination: _site
 remote_theme: jekyll/minima
 show_downloads: false
 title: Motiv
@@ -10,4 +9,9 @@ minima:
   skin: auto
 header_pages:
   - index.md
-  - API.md
+  - docs/API.md
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - _config.yml
+  - .gitignore
