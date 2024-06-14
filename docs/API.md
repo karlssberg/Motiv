@@ -1,12 +1,9 @@
 ﻿---
-title: Construction
-category: building
+title: API
 ---
-# Constructing a Proposition
+# Creation
 
-Propositions are constructed by referencing the `Spec` type and calling the various methods that follow.
-
-These are:
+New propositions are created fluently created by initially calling overloads of the `Spec.Build()` method.
 
 | Method                                               | Description                                                                                                           |
 |------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
@@ -23,3 +20,16 @@ These are:
 | [WhenFalse()](./WhenFalse.html)                      | (Optional) Defines the assertion when the proposition is not satisfied                                                |
 | [WhenFalseYield()](./WhenFalseYield.html)            | (Optional) Defines a collection of assertions to return when the proposition is not satisfied                         |
 | [Create()](./Create.html)                            | Completes the build process and returns the proposition                                                               |
+
+# Operations
+
+Propositions can be operated on to form new propositions.
+
+| Operator                    | Syntax                | Description           |
+|:----------------------------|-----------------------|-----------------------|
+| [And()](./And.html)         | `left & right`        | Performs a logical AND upon two propositions |
+| [AndAlso()](./AndAlso.html) | `left.AndAlso(right)` | Performs a short-circuiting logical AND upon two propositions |
+| [Or()](./Or.html)           | `left \| right`       | Performs a logical OR upon two propositions |
+| [OrElse()](./OrElse.html)   | `left.OrElse(right)`  | Performs a short-circuiting logical OR upon two propositions |
+| [XOr()](./XOr.html)         | `left ^ right`        | Performs a logical XOR upon two propositions |
+| [Not()](./Not.html)         | `!proposition`        | Performs a logical NOT upon a proposition |

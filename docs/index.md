@@ -36,9 +36,6 @@ result.Assertions;  // ["valid", "!empty", "!full"]
 
 You also have a lot more options at your disposal allowing you to craft results that suit your very specific needs.
 
-### Contents
-
-
 ## Installation
 
 Motiv is available as a [Nuget Package](https://www.nuget.org/packages/Motiv/)

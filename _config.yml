@@ -6,7 +6,8 @@ title: Motiv
 description: Supercharge your boolean logic!
 verbose: true
 baseurl: "/Motiv"
+minima:
+  skin: auto
 header_pages:
   - index.md
-  - Construction.md
-  - Operators.md
+  - API.md
