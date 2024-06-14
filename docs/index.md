@@ -1,5 +1,6 @@
 ﻿---
 title: Introduction
+layout: home
 ---
 # Supercharge your boolean logic
 
