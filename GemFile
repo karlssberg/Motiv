@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
-gem "minima"
 group :jekyll_plugins do
+  gem "minima"
   gem "github-pages"
   gem "jekyll-feed", "~> 0.12"
   gem "jekyll-remote-theme"
