@@ -2,8 +2,6 @@
 title: WhenFalseYield()
 category: building
 ---
-# WhenFalseYield()
-
 The difference between `WhenFalseYield` and `WhenFalse` is that `WhenFalseYield` is used to generate multiple 
 assertions/metadata. This may be, for instance, because you want to pass through the underlying assertions instead of 
 summarizing them, or maybe you are working with higher-order propositions and want assertions for each unsatisfied 

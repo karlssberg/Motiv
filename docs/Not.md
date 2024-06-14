@@ -2,7 +2,6 @@
 title: Not()
 category: operators
 ---
-# Logical NOT `!`
 You can perform a logical NOT operation by using the using the `!` operator `!spec`,
 or alternatively using the method `proposition.Not()`.
 This will produce a new proposition that is the logical NOT of the original.

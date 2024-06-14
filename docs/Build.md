@@ -2,8 +2,6 @@
 title: Build()
 category: building
 ---
-# `Build()`
-
 New propositions are built using the `Spec.Build()` method.
 This method is overloaded and takes one of the following types of arguments:
 * `Func<TModel, bool>` - a predicate that returns a boolean value.

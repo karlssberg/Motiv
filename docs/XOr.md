@@ -2,8 +2,6 @@
 title: XOr()
 category: operators
 ---
-# Logical XOR `^`
-
 You can perform a logical XOR operation on two propositions in two ways:
 using the `^` operator `left ^ right` or the XOr method `left.XOr(right)`.
 Both approaches produce a new proposition that represents the logical XOR of the two input propositions.

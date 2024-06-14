@@ -2,8 +2,6 @@
 title: Or()
 category: operators
 ---
-# Logical OR `|`
-
 You can perform a logical OR operation on two propositions in two ways:
 using the `|` operator `left | right` or the Or method `left.Or(right)`.
 Both approaches produce a new proposition that represents the logical OR of the two input propositions.

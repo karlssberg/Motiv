@@ -2,8 +2,6 @@
 title: AndAlso()
 category: operators
 ---
-# Conditional AND
-
 You can perform a conditional AND operation on two propositions by using the method `left.AndAlso(right)`.
 It will produce a new proposition that represents the logical AND of the two input propositions.
 When evaluating the resulting proposition, the right operand will only be evaluated if the left is satisfied.

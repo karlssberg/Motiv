@@ -2,8 +2,6 @@
 title: As()
 category: building
 ---
-# `As()` (optional)
-
 This optional builder method creates [higher-order propositions](https://en.wikipedia.org/wiki/Higher-order_logic).
 Higher-order propositions make statements about set of models.
 In contrast, first-order propositions make statements about individual models.

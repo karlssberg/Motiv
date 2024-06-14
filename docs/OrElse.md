@@ -2,8 +2,6 @@
 title: OrElse()
 category: operators
 ---
-# Conditional OR 
-
 You can perform a conditional OR operation on two propositions by using the method `left.OrElse(right)`.
 It will produce a new proposition that represents the logical OR of the two input propositions.
 When evaluating the resulting proposition, the right operand will only be evaluated if the left is not satisfied.

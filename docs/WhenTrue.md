@@ -2,8 +2,6 @@
 title: WhenTrue()
 category: building
 ---
-# WhenTrue()
-
 The `WhenTrue()` method is used to yield values when the proposition is satisfied. It also implicitly sets `TMetadata`
 type for the rest of the proposition. Any values yielded from underlying propositions (if they exist) will be supplanted
 by the new value from the

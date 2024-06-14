@@ -2,8 +2,6 @@
 title: Spec
 category: building
 ---
-# Spec
-
 Instances of the `Spec` type are the building blocks of a _propositions_.
 They are the nodes of a logical syntax trees that collectively we call _propositions_.
 There are three main ways to create a proposition.

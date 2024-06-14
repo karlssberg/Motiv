@@ -2,8 +2,6 @@
 title: WhenTrueYield()
 category: building
 ---
-# WhenTrueYield()
-
 The difference between `WhenTrueYield` and `WhenTrue` is that `WhenTrueYield` is used to generate multiple
 assertions/metadata. This may be, for instance, because you want to pass through the underlying assertions instead of
 summarizing them, or maybe you are working with higher-order propositions and want assertions for each unsatisfied

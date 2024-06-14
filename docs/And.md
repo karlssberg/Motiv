@@ -2,8 +2,6 @@
 title: And()
 category: operators
 ---
-# Logical AND `&`
-
 You can perform a logical AND operation on two propositions in two ways:
 using the `&` operator `left & right` or the And method `left.And(right)`.
 Both approaches produce a new proposition that represents the logical AND of the two input propositions.

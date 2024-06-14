@@ -2,8 +2,6 @@
 title: Create()
 category: building
 ---
-# Create()
-
 ## Default 
 
 `SpecBase<TModel, TMetadata> Create()`
