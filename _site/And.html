@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>And() | Motiv</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="And()" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Supercharge your boolean logic!" />
+<meta property="og:description" content="Supercharge your boolean logic!" />
+<link rel="canonical" href="http://localhost:4000/Motiv/And.html" />
+<meta property="og:url" content="http://localhost:4000/Motiv/And.html" />
+<meta property="og:site_name" content="Motiv" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="And()" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Supercharge your boolean logic!","headline":"And()","url":"http://localhost:4000/Motiv/And.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/Motiv/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/Motiv/feed.xml" title="Motiv" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/Motiv/">Motiv</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/Motiv/">Introduction</a><a class="page-link" href="/Motiv/API.html">API</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">And()</h1>
+  </header>
+
+  <div class="post-content">
+    <p>You can perform a logical AND operation on two propositions in two ways:
+using the <code class="language-plaintext highlighter-rouge">&amp;</code> operator <code class="language-plaintext highlighter-rouge">left &amp; right</code> or the And method <code class="language-plaintext highlighter-rouge">left.And(right)</code>.
+Both approaches produce a new proposition that represents the logical AND of the two input propositions.
+When evaluating the resulting proposition, both operands will be evaluated,
+regardless of the outcome of the left operand.
+In other words, the logical AND operation is not short-circuited.</p>
+
+<p>For example:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">hasSubscriptionStarted</span> <span class="p">=</span>
+    <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="n">Subscription</span> <span class="n">s</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">s</span><span class="p">.</span><span class="n">Start</span> <span class="p">&lt;</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">WhenTrue</span><span class="p">(</span><span class="s">"subscription has started"</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">WhenFalse</span><span class="p">(</span><span class="s">"subscription has not started"</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">Create</span><span class="p">();</span>
+
+<span class="kt">var</span> <span class="n">hasSubscriptionEnded</span> <span class="p">=</span>
+    <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="n">Subscription</span> <span class="n">s</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">s</span><span class="p">.</span><span class="n">End</span> <span class="p">&lt;</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">WhenTrue</span><span class="p">(</span><span class="s">"subscription has ended"</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">WhenFalse</span><span class="p">(</span><span class="s">"subscription has not ended"</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">Create</span><span class="p">();</span>
+
+<span class="kt">var</span> <span class="n">isActiveSubscription</span> <span class="p">=</span> <span class="n">hasSubscriptionStarted</span> <span class="p">&amp;</span> <span class="p">!</span><span class="n">hasSubscriptionEnded</span><span class="p">;</span>
+
+<span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="n">isActiveSubscription</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="n">activeSubscription</span><span class="p">);</span>
+
+<span class="n">result</span><span class="p">.</span><span class="n">Satisfied</span><span class="p">;</span> <span class="c1">// true</span>
+<span class="n">result</span><span class="p">.</span><span class="n">Reason</span><span class="p">;</span> <span class="c1">// "subscription has started &amp; subscription has not ended"</span>
+<span class="n">result</span><span class="p">.</span><span class="n">Assertions</span><span class="p">;</span> <span class="c1">// ["subscription has started", "subscription has not ended"]</span>
+</code></pre></div></div>
+<p>And when encountering an unsatisfied model:</p>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="n">isActiveSubscription</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="n">inactiveSubscription</span><span class="p">);</span>
+
+<span class="n">result</span><span class="p">.</span><span class="n">Satisfied</span><span class="p">;</span> <span class="c1">// false</span>
+<span class="n">result</span><span class="p">.</span><span class="n">Reason</span><span class="p">;</span> <span class="c1">// "subscription has ended"</span>
+<span class="n">result</span><span class="p">.</span><span class="n">Assertion</span><span class="p">;</span> <span class="c1">// ["subscription has ended"]</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">Reason</code> property of the result will contain descriptions of the underlying causes.
+If the result was caused by both operands, then the <code class="language-plaintext highlighter-rouge">Reason</code> property will contain both assertions separated by the 
+<code class="language-plaintext highlighter-rouge">&amp;</code> operator to indicate that both operands were responsible for the result, otherwise it will contain the single 
+assertion that was responsible.</p>
+
+<p>If you want to redefine a true or false <code class="language-plaintext highlighter-rouge">Reason</code> you can do so by wrapping it using a <code class="language-plaintext highlighter-rouge">Spec.Build()</code> method.</p>
+
+<p>For example:</p>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">isActiveSubscription</span> <span class="p">=</span>
+    <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">(</span><span class="n">hasSubscriptionStarted</span> <span class="p">&amp;</span> <span class="p">!</span><span class="n">hasSubscriptionEnded</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">WhenTrue</span><span class="p">(</span><span class="s">"subscription is active"</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">WhenFalse</span><span class="p">(</span><span class="s">"subscription is not active"</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">Create</span><span class="p">();</span>
+</code></pre></div></div>
+
+<p>You can also use the <code class="language-plaintext highlighter-rouge">&amp;</code> operator on the <code class="language-plaintext highlighter-rouge">BooleanResult&lt;T&gt;</code>s that are returned from the <code class="language-plaintext highlighter-rouge">IsSatisfiedBy()</code> method.
+This allows you to combine into a single result the evaluations of different model types (by different propositions).</p>
+
+<p>For example:</p>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">isValidLocation</span> <span class="p">=</span>
+    <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="n">Device</span> <span class="n">device</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">device</span><span class="p">.</span><span class="n">Country</span> <span class="p">==</span> <span class="n">Country</span><span class="p">.</span><span class="n">USA</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">WhenTrue</span><span class="p">(</span><span class="s">"device is permitted to play content within the USA"</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">WhenFalse</span><span class="p">(</span><span class="s">"device not permitted to play content outside of the USA"</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">Create</span><span class="p">();</span>
+
+<span class="kt">var</span> <span class="n">canViewContent</span> <span class="p">=</span> 
+    <span class="n">isValidLocation</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="n">device</span><span class="p">)</span> <span class="p">&amp;</span>
+    <span class="n">isActiveSubscription</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="n">subscription</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>The results of the <code class="language-plaintext highlighter-rouge">&amp;</code> operation being performed on two boolean results will be a new <code class="language-plaintext highlighter-rouge">BooleanResultBase&lt;T&gt;</code> 
+instance that contains the results of the two.
+The <code class="language-plaintext highlighter-rouge">Result</code> property will therefore contain the assertions of both underlying propositions.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="n">isActiveSubscriptionResult</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="n">activeSubscription</span><span class="p">);</span>
+<span class="n">result</span><span class="p">.</span><span class="n">Reason</span><span class="p">;</span> <span class="c1">// "subscription has started &amp; subscription has not ended"</span>
+</code></pre></div></div>
+
+<div style="display: flex; justify-content: space-between">
+    <a href="./Create.html">&lt; Previous</a>
+    <a href="./AndAlso.html">Next &gt;</a>
+</div>
+
+  </div>
+
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/Motiv/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Motiv</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Motiv</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Supercharge your boolean logic!</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

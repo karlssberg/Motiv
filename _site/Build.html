@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Build() | Motiv</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="Build()" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Supercharge your boolean logic!" />
+<meta property="og:description" content="Supercharge your boolean logic!" />
+<link rel="canonical" href="http://localhost:4000/Motiv/Build.html" />
+<meta property="og:url" content="http://localhost:4000/Motiv/Build.html" />
+<meta property="og:site_name" content="Motiv" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Build()" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Supercharge your boolean logic!","headline":"Build()","url":"http://localhost:4000/Motiv/Build.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/Motiv/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/Motiv/feed.xml" title="Motiv" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/Motiv/">Motiv</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/Motiv/">Introduction</a><a class="page-link" href="/Motiv/API.html">API</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Build()</h1>
+  </header>
+
+  <div class="post-content">
+    <p>New propositions are built using the <code class="language-plaintext highlighter-rouge">Spec.Build()</code> method.
+This method is overloaded and takes one of the following types of arguments:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">Func&lt;TModel, bool&gt;</code> - a predicate that returns a boolean value.</li>
+  <li><code class="language-plaintext highlighter-rouge">Func&lt;TModel, BooleanResultBase&lt;TMetadata&gt;</code> - a predicate that returns a <code class="language-plaintext highlighter-rouge">BooleanResultBase&lt;TMetadata&gt;</code> instance.</li>
+  <li><code class="language-plaintext highlighter-rouge">SpecBase&lt;TModel,TMetadata&gt;</code> - a proposition that has already been built.</li>
+  <li><code class="language-plaintext highlighter-rouge">Func&lt;SpecBase&lt;TModel, TMetadata&gt;&gt;</code> - a function that returns a proposition.</li>
+</ul>
+
+<p>All of these overloads can be used to create a new proposition with varying levels of expressiveness.</p>
+
+<h3 id="from-a-predicate-function">From a predicate function</h3>
+
+<p><code class="language-plaintext highlighter-rouge">.Build&lt;TModel&gt;(Func&lt;TModel, bool&gt; predicate)</code></p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">n</span> <span class="p">%</span> <span class="m">2</span> <span class="p">==</span> <span class="m">0</span><span class="p">)</span> 
+    <span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="s">"is even"</span><span class="p">);</span> 
+</code></pre></div></div>
+
+<p>Building using a predicate function is the canonical way of creating a proposition.
+Propositions built from these generally serve as the foundations to more complex propositions.</p>
+
+<h3 id="from-the-result-of-a-proposition">From the result of a proposition</h3>
+
+<p><code class="language-plaintext highlighter-rouge">.Build&lt;TModel, TMetadata&gt;(Func&lt;TModel, BooleanResultBase&lt;TMetadata&gt;&gt; predicate)</code></p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="nf">IsEvenProposition</span><span class="p">().</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="s">"is even (better)"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>This is semantically the same as the previous example, but uses a <code class="language-plaintext highlighter-rouge">BooleanResultBase&lt;TMetadata&gt;</code> to encapsulate the
+result of the proposition, instead of a raw <code class="language-plaintext highlighter-rouge">bool</code>.
+This would be typically generated by an evaluation of another predicate, but instantiating your own result object is 
+also possible.</p>
+
+<h3 id="from-an-existing-proposition">From an existing proposition</h3>
+
+<p><code class="language-plaintext highlighter-rouge">.Build&lt;TModel, TMetadata&gt;(SpecBase&lt;TModel,TMetadata&gt; proposition)</code></p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">(</span><span class="k">new</span> <span class="nf">IsEvenProposition</span><span class="p">())</span>
+    <span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="s">"is even (better)"</span><span class="p">);</span>
+</code></pre></div></div>
+<p>This is used to derive a proposition directly from another proposition.  It is commonly used to change the
+assertions or metadata to a different value or type, as well as to compose new propositions as a one-line expression.</p>
+
+<h3 id="from-a-proposition-factory">From a proposition factory</h3>
+
+<p><code class="language-plaintext highlighter-rouge">.Build&lt;TModel, TMetadata&gt;(Func&lt;SpecBase&lt;TModel, TMetadata&gt;&gt; factory)</code></p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">(()</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="nf">IsEvenProposition</span><span class="p">())</span>
+    <span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="s">"is even (better)"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>This is used to create a proposition from a factory function.
+The function is immediately invoked and the result is used to create the proposition.
+This doesn’t add any new capabilities, but is instead to assist with encapsuling</p>
+
+<div style="display: flex; justify-content: space-between">
+    <a href="./Spec.html">&lt; Previous</a>
+    <a href="./As.html">Next &gt;</a>
+</div>
+
+  </div>
+
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/Motiv/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Motiv</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Motiv</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Supercharge your boolean logic!</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Introduction | Motiv</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="Introduction" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Supercharge your boolean logic!" />
+<meta property="og:description" content="Supercharge your boolean logic!" />
+<link rel="canonical" href="http://localhost:4000/Motiv/" />
+<meta property="og:url" content="http://localhost:4000/Motiv/" />
+<meta property="og:site_name" content="Motiv" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Introduction" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","description":"Supercharge your boolean logic!","headline":"Introduction","name":"Motiv","url":"http://localhost:4000/Motiv/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/Motiv/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/Motiv/feed.xml" title="Motiv" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/Motiv/">Motiv</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/Motiv/">Introduction</a><a class="page-link" href="/Motiv/API.html">API</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="home"><h1 class="page-heading">Introduction</h1><h1 id="supercharge-your-boolean-logic">Supercharge your boolean logic</h1>
+
+<p>Motiv is a .NET library that enables you to write more expressive, maintainable, and testable boolean logic.
+Its fluent API allows you to effortlessly create and compose 
+<a href="https://en.wikipedia.org/wiki/Proposition">propositions</a>.
+If required, Motiv can generate human-readable explanations of the results, which can be presented to 
+users or 
+leveraged to gain valuable insights into the decision-making process.</p>
+
+<p>The following is a minimalist example of a proposition</p>
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">n</span> <span class="p">==</span> <span class="m">0</span><span class="p">).</span><span class="nf">Create</span><span class="p">(</span><span class="s">"empty"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Propositions can then be easily composed into new propositions without losing any context.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Define clauses/propositions</span>
+<span class="kt">var</span> <span class="n">isValid</span> <span class="p">=</span> <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">n</span> <span class="k">is</span> <span class="p">&gt;=</span> <span class="m">0</span> <span class="n">and</span> <span class="p">&lt;=</span> <span class="m">11</span><span class="p">).</span><span class="nf">Create</span><span class="p">(</span><span class="s">"valid"</span><span class="p">);</span>
+<span class="kt">var</span> <span class="n">isEmpty</span> <span class="p">=</span> <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">n</span> <span class="p">==</span> <span class="m">0</span><span class="p">).</span><span class="nf">Create</span><span class="p">(</span><span class="s">"empty"</span><span class="p">);</span>
+<span class="kt">var</span> <span class="n">isFull</span> <span class="p">=</span> <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">n</span> <span class="p">==</span> <span class="m">11</span><span class="p">).</span><span class="nf">Create</span><span class="p">(</span><span class="s">"full"</span><span class="p">);</span>
+
+<span class="c1">// Compose new proposition</span>
+<span class="kt">var</span> <span class="n">isPartiallyFull</span> <span class="p">=</span> <span class="n">isValid</span> <span class="p">&amp;</span> <span class="p">!(</span><span class="n">isEmpty</span> <span class="p">|</span> <span class="n">isFull</span><span class="p">);</span>
+
+<span class="c1">// Evaluate proposition</span>
+<span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="n">isPartiallyFull</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">5</span><span class="p">);</span>
+
+<span class="n">result</span><span class="p">.</span><span class="n">Satisfied</span><span class="p">;</span>   <span class="c1">// true</span>
+<span class="n">result</span><span class="p">.</span><span class="n">Assertions</span><span class="p">;</span>  <span class="c1">// ["valid", "!empty", "!full"]</span>
+</code></pre></div></div>
+
+<p>You also have a lot more options at your disposal allowing you to craft results that suit your very specific needs.</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>Motiv is available as a <a href="https://www.nuget.org/packages/Motiv/">Nuget Package</a>
+that can be installed via NuGet Package Manager Console by running the following command:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Install-Package Motiv
+</code></pre></div></div>
+<p>or by using the .NET CLI:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dotnet add package Motiv
+</code></pre></div></div>
+
+<h2 id="usage">Usage</h2>
+
+<h3 id="create-a-proposition">Create a proposition</h3>
+
+<p>Think of propositions as the fundamental building blocks of Motiv that can later be reused and composed to form new 
+propositions.
+Creating them is a fluid process, with a variety of methods available to cater to your specific needs.</p>
+
+<h4 id="minimal">Minimal</h4>
+
+<p>To create a proposition with the minimal of fuss, you can omit the <code class="language-plaintext highlighter-rouge">WhenTrue()</code> and <code class="language-plaintext highlighter-rouge">WhenFalse()</code> methods.
+In this case, Motiv will automatically use the propositional statement when the proposition is satisfied, and prefix 
+it with a “!” when it is not.</p>
+
+<p>For example, the following proposition will return “is even” when the number is even and “!is even” when it is not.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">isEven</span> <span class="p">=</span>
+    <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">n</span> <span class="p">%</span> <span class="m">2</span> <span class="p">==</span> <span class="m">0</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="s">"is even"</span><span class="p">);</span>
+
+<span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">2</span><span class="p">).</span><span class="n">Satisfied</span><span class="p">;</span>   <span class="c1">// true</span>
+<span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">2</span><span class="p">).</span><span class="n">Reason</span><span class="p">;</span>      <span class="c1">// "is even"</span>
+<span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">2</span><span class="p">).</span><span class="n">Assertions</span><span class="p">;</span>  <span class="c1">// ["is even"]</span>
+
+<span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">3</span><span class="p">).</span><span class="n">Satisfied</span><span class="p">;</span>   <span class="c1">// false</span>
+<span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">3</span><span class="p">).</span><span class="n">Reason</span><span class="p">;</span>      <span class="c1">// "!is even"</span>
+<span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">3</span><span class="p">).</span><span class="n">Assertions</span><span class="p">;</span>  <span class="c1">// ["!is even"]</span>
+</code></pre></div></div>
+
+<h4 id="explicit-assertions">Explicit Assertions</h4>
+
+<p>If you want a better explanation, you can use the <code class="language-plaintext highlighter-rouge">WhenTrue()</code> and <code class="language-plaintext highlighter-rouge">WhenFalse()</code> methods to explicitly define 
+the assertions that should be used when the proposition is satisfied or not</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// define a proposition</span>
+<span class="kt">var</span> <span class="n">isEven</span> <span class="p">=</span>
+    <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">n</span> <span class="p">%</span> <span class="m">2</span> <span class="p">==</span> <span class="m">0</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">WhenTrue</span><span class="p">(</span><span class="s">"is even"</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">WhenFalse</span><span class="p">(</span><span class="s">"is odd"</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">Create</span><span class="p">();</span>
+
+<span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">2</span><span class="p">).</span><span class="n">Satisfied</span><span class="p">;</span>  <span class="c1">// true</span>
+<span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">2</span><span class="p">).</span><span class="n">Reason</span><span class="p">;</span>     <span class="c1">// "is even"</span>
+<span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">2</span><span class="p">).</span><span class="n">Assertions</span><span class="p">;</span> <span class="c1">// ["is even"]</span>
+
+<span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">3</span><span class="p">).</span><span class="n">Satisfied</span><span class="p">;</span>  <span class="c1">// false</span>
+<span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">3</span><span class="p">).</span><span class="n">Reason</span><span class="p">;</span>     <span class="c1">// "is odd"</span>
+<span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">3</span><span class="p">).</span><span class="n">Assertions</span><span class="p">;</span> <span class="c1">// ["is odd"]</span>
+</code></pre></div></div>
+
+<h4 id="explicit-metadata">Explicit Metadata</h4>
+
+<p>Sometimes simple assertions are not enough, and you need to handle more context about the results.
+This is what we refer to as <em>metadata</em>.
+So instead of providing a string, you can provide a POCO object that will be treated in the same way.
+The only difference is that metadata will instead populate the <code class="language-plaintext highlighter-rouge">Metadata</code> property of the result.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// define a proposition</span>
+<span class="kt">var</span> <span class="n">isEven</span> <span class="p">=</span>
+    <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">n</span> <span class="p">%</span> <span class="m">2</span> <span class="p">==</span> <span class="m">0</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">WhenTrue</span><span class="p">(</span><span class="k">new</span> <span class="nf">MyMetadata</span><span class="p">(</span><span class="s">"is even"</span><span class="p">))</span>
+        <span class="p">.</span><span class="nf">WhenFalse</span><span class="p">(</span><span class="k">new</span> <span class="nf">MyMetadata</span><span class="p">(</span><span class="s">"is odd"</span><span class="p">))</span>
+        <span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="s">"is even"</span><span class="p">);</span>
+
+<span class="c1">// evaluate a model against the proposition</span>
+<span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="n">isEven</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">2</span><span class="p">);</span>
+
+<span class="n">result</span><span class="p">.</span><span class="n">Satisfied</span><span class="p">;</span>  <span class="c1">// true</span>
+<span class="n">result</span><span class="p">.</span><span class="n">Reason</span><span class="p">;</span>     <span class="c1">// "is even"</span>
+<span class="n">result</span><span class="p">.</span><span class="n">Assertions</span><span class="p">;</span> <span class="c1">// ["is even"]</span>
+<span class="n">result</span><span class="p">.</span><span class="n">Metadata</span><span class="p">;</span>   <span class="c1">// [{ Text: "is even" }]</span>
+</code></pre></div></div>
+
+<p>These examples serve as an introduction to the fundamental building blocks of Motiv, and should not be considered as 
+an alternative approach to the humble if-statement.</p>
+
+<h3 id="composing-propositions">Composing propositions</h3>
+
+<p>Motiv’s strengths really start to show as we scale up.</p>
+
+<p>The following is an example of solving the famous <a href="https://en.wikipedia.org/wiki/Fizz_buzz">Fizz Buzz</a> challenge 
+using Motiv.
+If you are unfamiliar, numbers that are multiples of 3 are replaced with “fizz”, numbers that are multiples of 5
+are replaced with “buzz”, and numbers that are multiples of both 3 and 5 are replaced with “fizzbuzz”.
+If none of these conditions are met, the number is returned as a string.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">isFizz</span> <span class="p">=</span> 
+    <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">n</span> <span class="p">%</span> <span class="m">3</span> <span class="p">==</span> <span class="m">0</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="s">"fizz"</span><span class="p">);</span>
+
+<span class="kt">var</span> <span class="n">isBuzz</span> <span class="p">=</span>
+    <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">((</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">n</span> <span class="p">%</span> <span class="m">5</span> <span class="p">==</span> <span class="m">0</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="s">"buzz"</span><span class="p">);</span>
+
+<span class="kt">var</span> <span class="n">isSubstitution</span> <span class="p">=</span> 
+    <span class="n">Spec</span><span class="p">.</span><span class="nf">Build</span><span class="p">(</span><span class="n">isFizz</span> <span class="p">|</span> <span class="n">isBuzz</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">WhenTrue</span><span class="p">((</span><span class="n">_</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="kt">string</span><span class="p">.</span><span class="nf">Concat</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">Assertions</span><span class="p">))</span>
+        <span class="p">.</span><span class="nf">WhenFalse</span><span class="p">(</span><span class="n">n</span> <span class="p">=&gt;</span> <span class="n">n</span><span class="p">.</span><span class="nf">ToString</span><span class="p">())</span>
+        <span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="s">"should substitute number"</span><span class="p">);</span>
+
+<span class="n">isSubstitution</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">2</span><span class="p">).</span><span class="n">Satisfied</span><span class="p">;</span>   <span class="c1">// false</span>
+<span class="n">isSubstitution</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">2</span><span class="p">).</span><span class="n">Reason</span><span class="p">;</span>      <span class="c1">// "2"</span>
+
+<span class="n">isSubstitution</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">3</span><span class="p">).</span><span class="n">Satisfied</span><span class="p">;</span>   <span class="c1">// true</span>
+<span class="n">isSubstitution</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">3</span><span class="p">).</span><span class="n">Reason</span><span class="p">;</span>      <span class="c1">// "fizz"</span>
+
+<span class="n">isSubstitution</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">4</span><span class="p">).</span><span class="n">Satisfied</span><span class="p">;</span>   <span class="c1">// false</span>
+<span class="n">isSubstitution</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">4</span><span class="p">).</span><span class="n">Reason</span><span class="p">;</span>      <span class="c1">// "4"</span>
+
+<span class="n">isSubstitution</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">5</span><span class="p">).</span><span class="n">Satisfied</span><span class="p">;</span>   <span class="c1">// true</span>
+<span class="n">isSubstitution</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">5</span><span class="p">).</span><span class="n">Reason</span><span class="p">;</span>      <span class="c1">// "buzz"</span>
+
+<span class="n">isSubstitution</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">15</span><span class="p">).</span><span class="n">Satisfied</span><span class="p">;</span>  <span class="c1">// true</span>
+<span class="n">isSubstitution</span><span class="p">.</span><span class="nf">IsSatisfiedBy</span><span class="p">(</span><span class="m">15</span><span class="p">).</span><span class="n">Reason</span><span class="p">;</span>     <span class="c1">// "fizzbuzz"</span>
+</code></pre></div></div>
+
+<p>While there might be more optimal solutions to Fizz Buzz out there, this example demonstrates how effortlessly you 
+can compose complex propositions from simpler ones using Motiv.</p>
+
+<h2 id="should-i-use-motiv">Should I use Motiv?</h2>
+
+<p>Motiv is not designed to completely replace regular boolean logic in all cases.
+If your logic is pretty straightforward or does not really need any feedback about the decisions being made, then you 
+might not see a big benefit from using Motiv.
+It is just another tool in your toolbox, and sometimes the simplest solution is the best fit.</p>
+
+<p>But when your needs are a bit more complex, that is where Motiv really shines.
+Its value will likely become clear if you are looking to achieve two or more of the following goals:</p>
+
+<ol>
+  <li><strong>Visibility</strong>: Provide granular, real-time feedback about decisions made.</li>
+  <li><strong>Decomposition</strong>: Break down complex or deeply nested logic into meaningful subclauses for better readability.</li>
+  <li><strong>Reusability</strong>: Reuse your logic in multiple places to avoid duplication.</li>
+  <li><strong>Modeling</strong>: Explicitly model your domain logic (e.g.
+<a href="https://en.wikipedia.org/wiki/Domain-driven_design">Domain Driven Design</a>).</li>
+  <li><strong>Testing</strong>: Easily and thoroughly test your logic (especially by avoiding the need to mock or stub out 
+dependencies).</li>
+</ol>
+
+<h3 id="tradeoffs">Tradeoffs</h3>
+
+<ol>
+  <li><strong>Performance</strong>: Motiv is not designed for high-performance scenarios where every nanosecond counts.
+Its focus is on maintainability and readability.
+That being said, for most use cases, the performance overhead is negligible.</li>
+  <li><strong>Dependency</strong>: Once embedded in your codebase, removing Motiv can be challenging.
+However, it does not depend on any third-party libraries itself, so it won’t bring any unexpected baggage.</li>
+  <li><strong>Learning Curve</strong>: If you are new to Motiv, you might take a moment to familiarize yourself with its approach,
+but the library has been carefully designed to be as intuitive as possible, with the aim being that developers can 
+quickly understand its concepts and start using it effectively from the get-go.</li>
+</ol>
+
+<div style="display: flex; justify-content: right;">
+    <a href="./Spec.html">Next &gt;</a>
+</div>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/Motiv/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Motiv</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Motiv</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Supercharge your boolean logic!</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
