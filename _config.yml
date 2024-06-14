@@ -8,7 +8,6 @@ baseurl: "/Motiv"
 minima:
   skin: auto
 header_pages:
-  - index.md
   - docs/API.md
 exclude:
   - Gemfile
