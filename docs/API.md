@@ -5,21 +5,21 @@ title: API
 
 New propositions are created fluently by initially calling overloads of the `Spec.Build()` method.
 
-| Method                                               | Description                                                                                                            |
-|------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| Method                                               | Description                                                                                                      |
+|------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
 | [Build()](./Build.html)                              | Initiates the build process based on a predicate or an existing proposition or one of its results.               |
-| [As()](./As.html)                                    | (Optional) Defines a custom higher order proposition.                                                                  |
+| [As()](./As.html)                                    | (Optional) Defines a custom higher order proposition.                                                            |
 | [AsAllSatisfied()](./As.html#all-satisfied)          | (Optional) Defines a proposition that is satisfied when all odels in the collection are satisfied.               |
 | [AsAnySatisfied()](./As.html#some-satisfied)         | (Optional) Defines a proposition that is satisfied when any of the models in the collection are satisfied.       |
 | [AsNoneSatisfied()](./As.html#none-satisfied)        | (Optional) Defines a proposition that is satisfied when none of the models in the collection are satisfied.      |
 | [AsAtLeastNSatisfied()](./As.html#minimum-satisfied) | (Optional) Defines a proposition that is satisfied when at least `n` models in the collection are satisfied.     |
 | [AsAtMostNSatisfied()](./As.html#maximum-satisfied)  | (Optional) Defines a proposition that is satisfied when no more than `n` models in the collection are satisfied. |
 | [AsNSatisfied()](./As.html#n-satisfied)              | (Optional) Defines a proposition that is satisfied when `n` number of models in the collection are satisfied.    |
-| [WhenTrue()](./WhenTrue.html)                        | (Optional) Defines the assertion when the proposition is satisfied.                                                    |
-| [WhenTrueYield()](./WhenTrueYield.html)              | (Optional) Defines a collection of assertions to return when.                                                          |
-| [WhenFalse()](./WhenFalse.html)                      | (Optional) Defines the assertion when the proposition is not satisfied.                                                |
+| [WhenTrue()](./WhenTrue.html)                        | (Optional) Defines the assertion when the proposition is satisfied.                                              |
+| [WhenTrueYield()](./WhenTrueYield.html)              | (Optional) Defines a collection of assertions to return when satisfied.                                          |
+| [WhenFalse()](./WhenFalse.html)                      | (Optional) Defines the assertion when the proposition is not satisfied.                                          |
 | [WhenFalseYield()](./WhenFalseYield.html)            | (Optional) Defines a collection of assertions to return when the proposition is not satisfied.                   |
-| [Create()](./Create.html)                            | Completes the build process and returns the proposition.                                                               |
+| [Create()](./Create.html)                            | Completes the build process and returns the proposition.                                                         |
 
 # Boolean Operations
 
