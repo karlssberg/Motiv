@@ -6,3 +6,4 @@ riderModule.iml
 *.DotSettings.user
 .idea
 /Motiv.sln.DotSettings
+_site/
