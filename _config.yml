@@ -1,6 +1,8 @@
 ﻿source: docs
 destination: _site
 remote_theme: jekyll/minima
+plugins:
+  - jekyll-remote-theme 
 show_downloads: false
 title: Motiv
 description: Supercharge your boolean logic!
