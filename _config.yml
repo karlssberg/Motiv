@@ -5,8 +5,7 @@ show_downloads: false
 title: Motiv
 description: Supercharge your boolean logic!
 verbose: true
-url: "https://karlssberg.github.io/Motiv"
-baseurl: ""
+baseurl: "/Motiv"
 header_pages:
   - index.md
   - Construction.md
