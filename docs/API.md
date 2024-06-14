@@ -21,15 +21,15 @@ New propositions are created fluently by initially calling overloads of the `Spe
 | [WhenFalseYield()](./WhenFalseYield.html)            | (Optional) Defines a collection of assertions to return when the proposition is not satisfied                         |
 | [Create()](./Create.html)                            | Completes the build process and returns the proposition                                                               |
 
-# Operations
+# Boolean Operations
 
 Propositions can be operated on to form new propositions.
 
-| Operator                    | Syntax                | Description           |
-|:----------------------------|-----------------------|-----------------------|
-| [And()](./And.html)         | `left & right`        | Performs a logical AND upon two propositions |
+| Operator                    | Syntax               | Description           |
+|:----------------------------|----------------------|-----------------------|
+| [And()](./And.html)         | `left & right`       | Performs a logical AND upon two propositions |
 | [AndAlso()](./AndAlso.html) | `left.AndAlso(right)` | Performs a short-circuiting logical AND upon two propositions |
-| [Or()](./Or.html)           | `left \| right`       | Performs a logical OR upon two propositions |
-| [OrElse()](./OrElse.html)   | `left.OrElse(right)`  | Performs a short-circuiting logical OR upon two propositions |
-| [XOr()](./XOr.html)         | `left ^ right`        | Performs a logical XOR upon two propositions |
-| [Not()](./Not.html)         | `!proposition`        | Performs a logical NOT upon a proposition |
+| [Or()](./Or.html)           | `left | right`       | Performs a logical OR upon two propositions |
+| [OrElse()](./OrElse.html)   | `left.OrElse(right)` | Performs a short-circuiting logical OR upon two propositions |
+| [XOr()](./XOr.html)         | `left ^ right`       | Performs a logical XOR upon two propositions |
+| [Not()](./Not.html)         | `!proposition`       | Performs a logical NOT upon a proposition |
