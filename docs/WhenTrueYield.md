@@ -1,5 +1,6 @@
 ﻿---
 title: WhenTrueYield()
+category: building
 ---
 # WhenTrueYield()
 

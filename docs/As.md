@@ -1,5 +1,6 @@
 ---
 title: As()
+category: building
 ---
 # `As()` (optional)
 
@@ -11,6 +12,17 @@ You can create higher-order propositions without using the As() method by defini
 However, at some point, you will likely want to surface the underlying assertions that contributed to determining 
 whether the higher-order proposition was satisfied or not.
 The As() method (and its extensions) makes it possible to subsequently access these assertions.
+
+| Method                                                    | Description                                                                                                |
+|-----------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| [As()](/As.html#custom-higher-order-propositions)         | Creates a custom higher-order proposition                                                                  |
+| [AsAllSatisfied()](./As.html#all-satisfied)               | Creates a proposition that is satisfied when all <br/> models in the collection are satisfied              |
+| [AsAnySatisfied()](./As.html#some-satisfied)              | Creates a proposition that is satisfied when any <br/> of the models in the collection are satisfied       |
+| [AsNoneSatisfied()](./As.html#none-satisfied)             | Creates a proposition that is satisfied when none <br/>of the models in the collection are satisfied       |
+| [AsAtLeastNSatisfied()](./As.html#minimum-satisfied) | Creates a proposition that is satisfied when at least `n` <br/>models in the collection are satisfied      |
+| [AsAtMostNSatisfied()](./As.html#maximum-satisfied)  | Creates a proposition that is satisfied when no more than `n` <br/> models in the collection are satisfied |
+| [AsNSatisfied()](./As.html#n-satisfied)              | Creates a proposition that is satisfied when `n` <br/>number of models in the collection are satisfied          |
+
 
 ### Custom higher-order propositions
 `.As(Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate)`

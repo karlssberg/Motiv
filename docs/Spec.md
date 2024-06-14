@@ -1,5 +1,6 @@
 ﻿---
 title: Spec
+category: building
 ---
 # Spec
 

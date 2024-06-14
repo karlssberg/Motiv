@@ -1,6 +1,6 @@
 ﻿---
-layout: default
 title: AndAlso()
+category: operators
 ---
 # Conditional AND
 

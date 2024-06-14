@@ -1,7 +1,8 @@
 ﻿---
 title: XOr()
+category: operators
 ---
-
+~~~~
 # Logical XOR `^`
 
 You can perform a logical XOR operation on two propositions in two ways:

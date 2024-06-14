@@ -1,6 +1,6 @@
 ﻿---
-layout: default
 title: And()
+category: operators
 ---
 # Logical AND `&`
 

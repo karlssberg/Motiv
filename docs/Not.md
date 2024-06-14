@@ -1,5 +1,6 @@
 ---
 title: Not()
+category: operators
 ---
 # Logical NOT `!`
 You can perform a logical NOT operation by using the using the `!` operator `!spec`,

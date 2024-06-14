@@ -1,5 +1,6 @@
 ﻿---
 title: WhenTrue()
+category: building
 ---
 # WhenTrue()
 

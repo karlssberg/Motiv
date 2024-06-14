@@ -1,5 +1,6 @@
 ﻿---
 title: Or()
+category: operators
 ---
 # Logical OR `|`
 

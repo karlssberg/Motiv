@@ -1,5 +1,6 @@
 ﻿---
 title: Collections Extensions
+category: Utility
 ---
 # Collections
 
