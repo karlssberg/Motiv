@@ -2,7 +2,8 @@
 title: Introduction
 layout: home
 ---
-# Turn your if-statements into why statements
+
+![Build Status](https://github.com/karlssberg/Motiv/actions/workflows/dotnet.yml/badge.svg) [![NuGet](https://img.shields.io/nuget/v/Motiv.svg)](https://www.nuget.org/packages/Motiv/) [![codecov](https://codecov.io/gh/karlssberg/Motiv/graph/badge.svg?token=XNN34D2JIP)](https://codecov.io/gh/karlssberg/Motiv)
 
 Motiv is a .NET library that enables you to write more expressive, maintainable, and testable boolean logic.
 Its fluent API allows you to effortlessly create and compose 
