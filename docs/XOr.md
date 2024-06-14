@@ -56,6 +56,6 @@ You can also use the `^` operator on the `BooleanResult<T>`s that are returned f
 so that you can still aggregate the results of specifications that interrogate different models.
 
 <div style="display: flex; justify-content: space-between">
-    <a href="./OrElse.html">&lt; Previous</a>
-    <a href="./Not.html">Next &gt;</a>
+    <a href="./docs/OrElse.html">&lt; Previous</a>
+    <a href="./docs/Not.html">Next &gt;</a>
 </div>
