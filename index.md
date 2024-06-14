@@ -177,7 +177,8 @@ can compose complex propositions from simpler ones using Motiv.
 
 ## Should I use Motiv?
 
-Motiv is not designed to completely replace regular boolean logic in all cases.
+Motiv is not designed to completely replace regular boolean logic.
+You should only use it when it makes sense to do so.
 If your logic is pretty straightforward or does not really need any feedback about the decisions being made, then you 
 might not see a big benefit from using Motiv.
 It is just another tool in your toolbox, and sometimes the simplest solution is the best fit.
