@@ -2,7 +2,7 @@
 title: Introduction
 layout: home
 ---
-# Supercharge your boolean logic
+# Turn your if-statements into why statements
 
 Motiv is a .NET library that enables you to write more expressive, maintainable, and testable boolean logic.
 Its fluent API allows you to effortlessly create and compose 
