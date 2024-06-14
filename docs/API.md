@@ -3,7 +3,7 @@ title: API
 ---
 # Creation
 
-New propositions are created fluently created by initially calling overloads of the `Spec.Build()` method.
+New propositions are created fluently by initially calling overloads of the `Spec.Build()` method.
 
 | Method                                               | Description                                                                                                           |
 |------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
