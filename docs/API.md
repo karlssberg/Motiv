@@ -23,7 +23,7 @@ New propositions are created fluently by initially calling overloads of the `Spe
 
 # Boolean Operations
 
-`Propositions can be logically operated on, and in doing so they form new propositions.
+Propositions can be logically operated on, and in doing so they form new propositions.
 You can also use boolean operators to combine the results (`BooleanResultBase`) return by propositions.
 This is useful when you have two propositions that work with completely different models, but they need to be logically 
 combined to give a single result.

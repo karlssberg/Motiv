@@ -9,7 +9,7 @@ This will produce a new proposition that is the logical NOT of the original.
 For example:
 
 ```csharp
-var isEvenSpec = Spec~~~~
+var isEvenSpec = Spec
     .Build((int n) => n % 2 == 0)
     .WhenTrue("even")
     .WhenFalse("odd")
