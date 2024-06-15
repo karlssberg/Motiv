@@ -13,7 +13,7 @@ public static class BooleanResultExtensions
     /// <returns>A single boolean result that is the logical AND of all the input boolean results.</returns>
     public static BooleanResultBase<TMetadata> AndTogether<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> booleanResults) =>
-        booleanResults.Aggregate((leftSpec, rightSpec) => leftSpec & rightSpec);
+        booleanResults.Aggregate((left, right) => left & right);
     
     /// <summary>
     /// Combines a collection of propositions using the conditional AND operator (i.e. `&amp;&amp;`).
@@ -23,7 +23,7 @@ public static class BooleanResultExtensions
     /// <returns>A single boolean result that is the conditional AND of all the input boolean results.</returns>
     public static BooleanResultBase<TMetadata> AndAlsoTogether<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> booleanResults) =>
-        booleanResults.Aggregate((leftSpec, rightSpec) => leftSpec.AndAlso(rightSpec));
+        booleanResults.Aggregate((left, right) => left.AndAlso(right));
 
     /// <summary>
     /// Combines a collection of boolean results using the logical OR operator (i.e. `|`).
@@ -33,7 +33,7 @@ public static class BooleanResultExtensions
     /// <returns>A single boolean result that is the logical OR of all the input propositions.</returns>
     public static BooleanResultBase<TMetadata> OrTogether<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> booleanResult) =>
-        booleanResult.Aggregate((leftSpec, rightSpec) => leftSpec | rightSpec);
+        booleanResult.Aggregate((left, right) => left | right);
 
     /// <summary>
     /// Combines a collection of boolean results using the conditional OR operator (i.e. `||`).
@@ -43,7 +43,7 @@ public static class BooleanResultExtensions
     /// <returns>A single boolean result that is the conditional OR of all the input propositions.</returns>
     public static BooleanResultBase<TMetadata> OrElseTogether<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> booleanResult) =>
-        booleanResult.Aggregate((leftSpec, rightSpec) => leftSpec.OrElse(rightSpec));
+        booleanResult.Aggregate((left, right) => left.OrElse(right));
     
     /// <summary>
     /// Filters a collection of boolean results, returning only those where the result is true.
