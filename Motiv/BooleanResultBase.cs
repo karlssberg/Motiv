@@ -36,8 +36,7 @@ public abstract class BooleanResultBase
     /// </para>
     /// <para>
     /// If the <c>WhenTrue()</c> or <c>WhenFalse()</c> methods received either a <c>string</c>, or a function that returns a
-    /// <c>string</c>, then the <see cref="Reason"/> property
-    /// will use these values.
+    /// <c>string</c>, then the <see cref="Reason"/> property will use these values.
     /// Otherwise, it will use the propositional statement provided to the <c>Create()</c> method,
     /// with negations prefixed with a <c>!</c>.
     /// For example, <c>"!is even"</c>.
