@@ -11,8 +11,7 @@ Motiv is a .NET library that enables you to write more expressive, maintainable,
 Its fluent API allows you to effortlessly create and compose 
 [propositions](https://en.wikipedia.org/wiki/Proposition).
 If required, Motiv can generate human-readable explanations of the results, which can be presented to 
-users or 
-leveraged to gain valuable insights into the decision-making process.
+users or leveraged to gain valuable insights into the decision-making process.
 
 The following is a minimalist example of a proposition
 ```csharp
@@ -37,7 +36,7 @@ result.Satisfied;   // true
 result.Assertions;  // ["valid", "!empty", "!full"]
 ```
 
-You also have a lot more options at your disposal allowing you to craft results that suit your very specific needs.
+You also have a lot more options at your disposal allowing you to craft results that suit your specific requirements.
 
 ## Installation
 

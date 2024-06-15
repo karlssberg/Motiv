@@ -4,41 +4,6 @@ category: Utility
 ---
 # Collections
 
-## Generic Collections
-
-### Where()
-
-`IEnumerable<T> Where<T>(this IEnumerable<T> enumerable, SpecBase<TModel, TMetadata> spec)`
-
-The `.Where()` extension method overload is used to filter a collection of values based on an existing specification.
-
-```csharp
-IEnumerable<int> evenNumbers = Enumerable
-    .Range(1, 10)
-    .Where(new IsEvenProposition());  // [ 2, 4, 6, 8, 10 ]
-```
-
-It serves as syntactic sugar for the following code:
-
-```csharp
-var isEven = new IsEvenProposition();
-IEnumerable<int> evenNumbers = Enumerable
-    .Range(1, 10)
-    .Where(n => isEven.IsSatisfiedBy(n));  // [ 2, 4, 6, 8, 10 ]
-```
-
-### ToEnumerable()
-
-`IEnumerable<T> ToEnumerable<T>(this T value)`
-
-The `.ToEnumerable()` extension method is used to encapsulate a single value as an `Enumerable<T>`.
-Internally, it yields a value instead of wrapping it in a collection data structure, and thus avoids an unnecessary
-memory allocation.
-
-```csharp
-IEnumberable<int> value = 42.ToEnumerable();  // [ 42 ]
-```
-
 ## Collections of Specifications
 
 ### OrTogether()
@@ -398,8 +363,8 @@ results.GetFalseAssertions();  // [ "is greater than 5" ]
 
 `IEnumerable<string> GetRootAssertions(this BooleanResultBase result)`
 
-The `.GetRootAssertions()` extension method is used to extract the assertions from the root causes.  Only the root 
-assertions that caused the final result to be satisfied or not are returned.
+The `.GetRootAssertions()` extension method is used to extract the assertions from the root causes.
+Only the root assertions that caused the final result to be satisfied or not are returned.
 
 ```csharp
 var isEven = 
@@ -442,6 +407,42 @@ var areEven =
 
 areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]).GetAllRootAssertions();  // [ "is even", "is odd" ]
 ```
+
+## Generic Collections
+
+### Where()
+
+`IEnumerable<T> Where<T>(this IEnumerable<T> enumerable, SpecBase<TModel, TMetadata> spec)`
+
+The `.Where()` extension method overload is used to filter a collection of values based on an existing specification.
+
+```csharp
+IEnumerable<int> evenNumbers = Enumerable
+    .Range(1, 10)
+    .Where(new IsEvenProposition());  // [ 2, 4, 6, 8, 10 ]
+```
+
+It serves as syntactic sugar for the following code:
+
+```csharp
+var isEven = new IsEvenProposition();
+IEnumerable<int> evenNumbers = Enumerable
+    .Range(1, 10)
+    .Where(n => isEven.IsSatisfiedBy(n));  // [ 2, 4, 6, 8, 10 ]
+```
+
+### ToEnumerable()
+
+`IEnumerable<T> ToEnumerable<T>(this T value)`
+
+The `.ToEnumerable()` extension method is used to encapsulate a single value as an `Enumerable<T>`.
+Internally, it yields a value instead of wrapping it in a collection data structure, and thus avoids an unnecessary
+memory allocation.
+
+```csharp
+IEnumberable<int> value = 42.ToEnumerable();  // [ 42 ]
+```
+
 <div style="display: flex; justify-content: left">
     <a href="./docs/Create.html">&lt; Previous</a>
 </div>

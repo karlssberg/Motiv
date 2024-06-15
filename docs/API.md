@@ -23,7 +23,7 @@ New propositions are created fluently by initially calling overloads of the `Spe
 
 # Boolean Operations
 
-Propositions can be operated on to form new propositions.
+`Propositions can be logically operated on, and in doing so they form new propositions.
 You can also use boolean operators to combine the results (`BooleanResultBase`) return by propositions.
 This is useful when you have two propositions that work with completely different models, but they need to be logically 
 combined to give a single result.
@@ -36,3 +36,29 @@ combined to give a single result.
 | [OrElse()](./OrElse.html)   | `left.OrElse(right)`  <br /> or <br /> `left                          || right` (results only)                                               | Performs a short-circuiting logical OR <br /> on two propositions/results.  |
 | [XOr()](./XOr.html)         | `left ^ right`                                                        | Performs a logical XOR <br /> on two propositions/results.                 |
 | [Not()](./Not.html)         | `!proposition`                                                        | Performs a logical NOT <br /> on a proposition/result.                     |
+
+# Collections Extension Methods
+
+Motiv provides a set of extension methods to improve the readability of your code when working with collections of 
+propositions or their results.
+
+| Method                                                            | Description                                                                                                                                                                                               |
+|-------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [Where&lt;T&gt;()](./Collections.html#where)                      | Filters an `IEnumerable<T>` using a proposition instead of a predicate function.                                                                                                                          |
+| [WhereTrue()](./Collections.html#wheretrue)                       | Filters a collection of `BooleanResultBase<TMetadata>` so that only satisfied remain.                                                                                                                     |
+| [WhereFalse()](./Collections.html#wherefalse)                     | Filters a collection of `BooleanResultBase<TMetadata>` so that only unsatisfied remain.                                                                                                                   |
+| [CountTrue()](./Collections.html#counttrue)                       | Counts the number of satisfied `BooleanResultBase<TMetadata>` in a collection.                                                                                                                            |
+| [CountFalse()](./Collections.html#countfalse)                     | Counts the number of unsatisfied `BooleanResultBase<TMetadata>` in a collection.                                                                                                                          |
+| [AllTrue()](./Collections.html#alltrue)                           | Determines whether all the BooleanResultBase<TMetadata>` in a collection are satisfied.                                                                                                                   |
+| [AllFalse()](./Collections.html#allfalse)                         | Determines whether all the `BooleanResultBase<TMetadata>` in a collection are unsatisfied.                                                                                                                |
+| [AnyTrue()](./Collections.html#anytrue)                           | Determines whether any `BooleanResultBase<TMetadata>` in a collection are satisfied.                                                                                                                      |
+| [AnyFalse()](./Collections.html#anyfalse)                         | Determines whether any `BooleanResultBase<TMetadata>` in a collection are unsatisfied.                                                                                                                    |
+| [GetAssertions()](./Collections.html#getassertions)               | Aggregates the assertions from a collection of `BooleanResultBase<TMetadata>`.                                                                                                                            |
+| [GetTrueAssertions()](./Collections.html#gettrueassertions)       | Aggregates the assertions from a collection of `BooleanResultBase<TMetadata>` filtered to only include satisfied results.                                                                                 |
+| [GetFalseAssertions()](./Collections.html#getfalseassertions)     | Aggregates the assertions from a collection of `BooleanResultBase<TMetadata>` filtered to only include unsatisfied results.                                                                               |
+| [GetRootAssertions()](./Collections.html#getrootassertions)       | Finds the `BooleanResultBase<TMetadata>` that are the root causes and aggregates their assertions.                                                                                                        |
+| [GetAllRootAssertions()](./Collections.html#getallrootassertions) | Finds all the `BooleanResultBase<TMetadata>` involved and aggregates their assertions (regardless of whether they helped determine the final results).                                                    |
+| [AndTogether()](./Collections.html#andtogether)                   | Creates a new proposition that is the logical [And()](./And.html) of the propositions in a collection. This also applies to [boolean results](./Collections.html#collections-of-boolean-results).         |
+| [AndAlsoTogether()](./Collections.html#andalsotogether)           | Creates a new proposition that is the logical [AndAlso()](./AndAlso.html) of the propositions in a collection. This also applies to [boolean results](./Collections.html#collections-of-boolean-results). |
+| [OrTogether()](./Collections.html#ortogether)                     | Creates a new proposition that is the logical [Or()](./Or.html) of the propositions in a collection. This also applies to [boolean results](./Collections.html#collections-of-boolean-results).           |
+| [OrElseTogether()](./Collections.html#orelsetogether)             | Creates a new proposition that is the logical [OrElse()](./OrElse.html) of the propositions in a collection. This also applies to [boolean results](./Collections.html#collections-of-boolean-results).   |
