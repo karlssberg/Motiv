@@ -168,6 +168,6 @@ This overload gives you access to the models and their results so that you can g
 objects.
 
 <div style="display: flex; justify-content: space-between">
-    <a href="./docs/WhenTrue.html">&lt; Previous</a>
-    <a href="./docs/WhenFalse.html">Next &gt;</a>
+    <a href="./WhenTrue.html">&lt; Previous</a>
+    <a href="./WhenFalse.html">Next &gt;</a>
 </div>

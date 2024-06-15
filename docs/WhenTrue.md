@@ -114,6 +114,6 @@ proposition is satisfied, the metadata returned by the factory function will pop
 result.
 
 <div style="display: flex; justify-content: space-between">
-    <a href="./docs/As.html">&lt; Previous</a>
-    <a href="./docs/WhenTrueYield.html">Next &gt;</a>
+    <a href="./As.html">&lt; Previous</a>
+    <a href="./WhenTrueYield.html">Next &gt;</a>
 </div>

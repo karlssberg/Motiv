@@ -205,5 +205,5 @@ Its value will likely become clear if you are looking to achieve two or more of 
    quickly understand its concepts and start using it effectively from the get-go.
 
 <div style="display: flex; justify-content: right;">
-    <a href="./docs/Spec.html">Next &gt;</a>
+    <a href="./Spec.html">Next &gt;</a>
 </div>

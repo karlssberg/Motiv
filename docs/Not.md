@@ -24,6 +24,6 @@ isOdd.Assertions; // ["odd"]
 ```
 
 <div style="display: flex; justify-content: space-between">
-    <a href="./docs/XOr.html">&lt; Previous</a>
-    <a href="./docs/Collections.html">Next &gt;</a>
+    <a href="./XOr.html">&lt; Previous</a>
+    <a href="./Collections.html">Next &gt;</a>
 </div>

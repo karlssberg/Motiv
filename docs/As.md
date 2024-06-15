@@ -118,6 +118,6 @@ The proposition is satisfied if `n` number of models in the collection are satis
 satisfied.
 
 <div style="display: flex; justify-content: space-between">
-    <a href="./docs/Build.html">&lt; Previous</a>
-    <a href="./docs/WhenTrue.html">Next &gt;</a>
+    <a href="./Build.html">&lt; Previous</a>
+    <a href="./WhenTrue.html">Next &gt;</a>
 </div>

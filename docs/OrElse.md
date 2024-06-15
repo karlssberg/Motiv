@@ -68,6 +68,6 @@ isExtraSecurityNeeded.Assertions; // ["the product is at risk of theft", "the st
 ```
 
 <div style="display: flex; justify-content: space-between">
-    <a href="./docs/Or.html">&lt; Previous</a>
-    <a href="./docs/XOr.html">Next &gt;</a>
+    <a href="./Or.html">&lt; Previous</a>
+    <a href="./XOr.html">Next &gt;</a>
 </div>

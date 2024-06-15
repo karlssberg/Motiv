@@ -84,6 +84,6 @@ result.Reason; // "subscription has started & subscription has not ended"
 ```
 
 <div style="display: flex; justify-content: space-between">
-    <a href="./docs/Create.html">&lt; Previous</a>
-    <a href="./docs/AndAlso.html">Next &gt;</a>
+    <a href="./Create.html">&lt; Previous</a>
+    <a href="./AndAlso.html">Next &gt;</a>
 </div>
