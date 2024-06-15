@@ -11,29 +11,38 @@ However, at some point, you will likely want to surface the underlying assertion
 whether the higher-order proposition was satisfied or not.
 The As() method (and its extensions) makes it possible to subsequently access these assertions.
 
-| Method                                               | Description                                                                                                |
-|------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| [As()](./As.html#custom-higher-order-propositions)   | Creates a custom higher-order proposition                                                                  |
-| [AsAllSatisfied()](./As.html#all-satisfied)          | Creates a proposition that is satisfied when all <br/> models in the collection are satisfied              |
-| [AsAnySatisfied()](./As.html#some-satisfied)         | Creates a proposition that is satisfied when any <br/> of the models in the collection are satisfied       |
-| [AsNoneSatisfied()](./As.html#none-satisfied)        | Creates a proposition that is satisfied when none <br/>of the models in the collection are satisfied       |
-| [AsAtLeastNSatisfied()](./As.html#minimum-satisfied) | Creates a proposition that is satisfied when at least `n` <br/>models in the collection are satisfied      |
-| [AsAtMostNSatisfied()](./As.html#maximum-satisfied)  | Creates a proposition that is satisfied when no more than `n` <br/> models in the collection are satisfied |
-| [AsNSatisfied()](./As.html#n-satisfied)              | Creates a proposition that is satisfied when `n` <br/>number of models in the collection are satisfied          |
+| Method                                                  | Description                                                                                                |
+|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| [As()](./As.html#custom-higher-order-propositions)      | Creates a custom higher-order proposition                                                                  |
+| [AsAllSatisfied()](./As.html#all-satisfied)             | Creates a proposition that is satisfied when all <br/> models in the collection are satisfied              |
+| [AsAnySatisfied()](./As.html#any-satisfied)             | Creates a proposition that is satisfied when any <br/> of the models in the collection are satisfied       |
+| [AsNoneSatisfied()](./As.html#none-satisfied)           | Creates a proposition that is satisfied when none <br/>of the models in the collection are satisfied       |
+| [AsAtLeastNSatisfied()](./As.html#at-least-n-satisfied) | Creates a proposition that is satisfied when at least `n` <br/>models in the collection are satisfied      |
+| [AsAtMostNSatisfied()](./As.html#at-most-n-satisfied)   | Creates a proposition that is satisfied when no more than `n` <br/> models in the collection are satisfied |
+| [AsNSatisfied()](./As.html#n-satisfied)                 | Creates a proposition that is satisfied when `n` <br/>number of models in the collection are satisfied          |
 
 
 ### Custom higher-order propositions
-`.As(Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate)`
+```csharp
+As(Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate)
+```
+
+The proposition is satisfied when the custom higher order predicate is satisfied, otherwise it is not satisfied.
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
     .As(results => results.CountTrue() == result.CountFalse())
     .Create("has equal amounts of odd and even")
 ```
-The proposition is satisfied when the custom higher order predicate is satisfied, otherwise it is not satisfied.
 
 ### Custom higher-order propositions with causal result selection
-`.As(Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,  Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)`
+```csharp
+As(
+    Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,  
+    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
+```
+
+The proposition is satisfied when the custom higher order predicate is satisfied, otherwise it is not satisfied.
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -41,11 +50,14 @@ Spec.Build((int n) => n % 2 == 0)
         (_, results) => results)
     .Create("has equal amounts of odd and even")
 ```
-The proposition is satisfied when the custom higher order predicate is satisfied, otherwise it is not satisfied.
 
 ### All satisfied
 
-`.AsAllSatified()`
+```csharp
+AsAllSatified()
+```
+
+The proposition is satisfied if all models in the collection are satisfied, otherwise it is not satisfied.
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -53,11 +65,13 @@ Spec.Build((int n) => n % 2 == 0)
     .Create("all are even")
 ```
 
-The proposition is satisfied if all models in the collection are satisfied, otherwise it is not satisfied.
+### Any satisfied
 
-### Some satisfied
+```csharp
+AsAnySatisfied()
+```
 
-`.AsAnySatisfied()`
+The proposition is satisfied if any of the models in the collection are satisfied, otherwise it is not satisfied.
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -65,11 +79,13 @@ Spec.Build((int n) => n % 2 == 0)
     .Create("some are even")
 ```
 
-The proposition is satisfied if any of the models in the collection are satisfied, otherwise it is not satisfied.
-
 ### None satisfied
 
-`.AsNoneSatisfied()`
+```csharp
+AsNoneSatisfied()
+```
+
+The proposition is satisfied if no models in the collection are satisfied, otherwise it is not satisfied.
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -77,11 +93,13 @@ Spec.Build((int n) => n % 2 == 0)
     .Create("none are even")
 ```
 
-The proposition is satisfied if no models in the collection are satisfied, otherwise it is not satisfied.
+### At least _n_ satisfied
 
-### Minimum satisfied
+```csharp
+AsAtLeastNSatisfied(int n)
+```
 
-`.AsAtLeastNSatisfied(int n)`
+The proposition is satisfied if at least `n` models in the collection are satisfied, otherwise it is not satisfied.
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -89,11 +107,14 @@ Spec.Build((int n) => n % 2 == 0)
     .Create("3 or more are even")
 ```
 
-The proposition is satisfied if at least `n` models in the collection are satisfied, otherwise it is not satisfied.
+### At most _n_ satisfied
 
-### Maximum satisfied
+```csharp
+AsAtMostNSatisfied(int n)
+```
 
-`.AsAtMostNSatisfied(int n)`
+The proposition is satisfied if no more than `n` models in the collection are satisfied, otherwise it is not
+satisfied.
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
@@ -101,21 +122,20 @@ Spec.Build((int n) => n % 2 == 0)
     .Create("3 or fewer are even")
 ```
 
-The proposition is satisfied if no more than `n` models in the collection are satisfied, otherwise it is not 
+### _n_ satisfied
+
+```csharp
+AsNSatisfied(int n)
+```
+
+The proposition is satisfied if `n` number of models in the collection are satisfied, otherwise it is not
 satisfied.
-
-### Exactly N satisfied
-
-`.AsNSatisfied(int n)`
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
     .AsNSatisfied(3)
     .Create("3 are even")
 ```
-
-The proposition is satisfied if `n` number of models in the collection are satisfied, otherwise it is not 
-satisfied.
 
 <div style="display: flex; justify-content: space-between">
     <a href="./Build.html">&lt; Previous</a>
