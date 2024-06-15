@@ -28,14 +28,14 @@ You can also use boolean operators to combine the results (`BooleanResultBase`) 
 This is useful when you have two propositions that work with completely different models, but they need to be logically 
 combined to give a single result.
 
-| Operator                    | Syntax                                                                | Description                                                                |
-|:----------------------------|:----------------------------------------------------------------------|----------------------------------------------------------------------------|
-| [And()](./And.html)         | `left.And(right)` <br/>or<br/> `left & right`                         | Performs a logical AND <br /> on two propositions/results.                 |
-| [AndAlso()](./AndAlso.html) | `left.AndAlso(right)` <br /> or <br /> `left && right` (results only) | Performs a short-circuiting logical AND <br />on two propositions/results. |
-| [Or()](./Or.html)           | `left.Or(right)`  <br /> or <br /> `left                              | right`                                                            | Performs a logical OR <br /> on two propositions/results.                    |
-| [OrElse()](./OrElse.html)   | `left.OrElse(right)`  <br /> or <br /> `left                          || right` (results only)                                               | Performs a short-circuiting logical OR <br /> on two propositions/results.  |
-| [XOr()](./XOr.html)         | `left ^ right`                                                        | Performs a logical XOR <br /> on two propositions/results.                 |
-| [Not()](./Not.html)         | `!proposition`                                                        | Performs a logical NOT <br /> on a proposition/result.                     |
+| Operator                    | Syntax                                                              | Description                                                                |
+|:----------------------------|:--------------------------------------------------------------------|----------------------------------------------------------------------------|
+| [And()](./And.html)         | `left.And(right)` <br/>or<br/>`left & right`                        | Performs a logical AND <br /> on two propositions/results.                 |
+| [AndAlso()](./AndAlso.html) | `left.AndAlso(right)` <br />or<br />`left && right` (results only)  | Performs a short-circuiting logical AND <br />on two propositions/results. |
+| [Or()](./Or.html)           | `left.Or(right)`  <br />or<br />`left                               | right`                                                            | Performs a logical OR <br /> on two propositions/results.                    |
+| [OrElse()](./OrElse.html)   | `left.OrElse(right)`  <br />or<br />`left                           || right` (results only)                                               | Performs a short-circuiting logical OR <br /> on two propositions/results.  |
+| [XOr()](./XOr.html)         | `left.XOr(right)`<br />or<br />`left ^ right`                       | Performs a logical XOR <br /> on two propositions/results.                 |
+| [Not()](./Not.html)         | `proposition.Not()`<br />or<br />`!proposition`                      | Performs a logical NOT <br /> on a proposition/result.                     |
 
 # Collections Extension Methods
 
