@@ -1,0 +1,9 @@
+### YamlMime:ManagedReference
+items:
+  - name: Propositions
+    href: propositions/toc.yml
+  - name: Boolean Results
+    href: results/toc.yml
+  - name: Generic
+    href: generic/toc.yml
+    

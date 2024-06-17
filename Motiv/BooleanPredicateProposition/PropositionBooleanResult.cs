@@ -8,7 +8,7 @@
 /// <param name="explanation">The explanation of the proposition.</param>
 /// <param name="reason">The reason for the proposition.</param>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-public sealed class PropositionBooleanResult<TMetadata>(
+internal sealed class PropositionBooleanResult<TMetadata>(
     bool value,
     MetadataNode<TMetadata> metadataTier,
     Explanation explanation,
