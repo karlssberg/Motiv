@@ -23,6 +23,9 @@ to understand the overall expression.
 While this problem exists regardless of how you decompose your logic, Motiv tries to mitigate this by allowing you to 
 inspect (at runtime) the proposition before it is used to evaluate models.
 
+The `Expression` property will provide a detailed breakdown of the proposition, including encapsulated propositions with
+differing metadata types.
+
 ```csharp
 var isRoyalFlush =
     Spec.Build(new IsHandFlushProposition() & new IsAceHighStraightBroadwayProposition())
@@ -44,35 +47,4 @@ isRoyalFlush.Expression; // is a royal flush hand
                          //                     is Spades
                          //         is Ace High Straight Broadway
                          //             all cards are Ace, King, Queen, Jack, and Ten
-
-```
-
-`Assertions` will give you a 
-friendly list of reasons, but sometimes you need more context.
-
-
-While `Reason` property will provide a simplified 
-explanation of what happened, the `Justification` will give you a thorough breakdown of the causes, including 
-encapsulated propositions with differing metadata types.
-Any propositions that did not influence the final result are omitted.
-
-```csharp
-var sut = new IsWinningHandProposition();
-
-var act = sut.IsSatisfiedBy(new Hand("KH, QH, JH, 10H, 9H");
-
-act.Justification; // is a winning poker hand
-                   //     OR
-                   //         is a royal flush hand
-                   //             AND
-                   //                 is a flush hand
-                   //                     OR
-                   //                         a flush of Hearts
-                   //                             AH is Hearts
-                   //                             KH is Hearts
-                   //                             QH is Hearts
-                   //                             JH is Hearts
-                   //                             10H is Hearts
-                   //                 is Ace High Straight Broadway
-                   //                     all cards are Ace, King, Queen, Jack, and Ten
 ```
