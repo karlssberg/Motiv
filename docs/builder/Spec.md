@@ -5,8 +5,8 @@ category: building
 
 # Spec
 
-While the `SpecBase` (or _specification_) is the base type for all  _propositions_, your direct interactions with it 
-will be through the `Spec` type., or one of its various generic versions.
+While the <xref:Motiv.SpecBase`2> (or _specification_) is the base type for all  _propositions_, your direct 
+interactions with it will be through the `Spec` type., or one of its various generic versions.
 For clarity, _specifications_ can be though of as the nodes in a logical syntax trees, with the tree itself being the 
 _proposition_.
 
@@ -25,8 +25,6 @@ Spec.Build((int n) => n % 2 == 0)  // Spec used as static type
 
 This type is only used for building propositions using the logical operators.
 As it is `static` it cannot be used to derive new types, but it can be used to compose new specifications.
-
-
 
 ### `Spec<TModel, TMetadata>`
 

@@ -1,5 +1,7 @@
 ### YamlMime:ManagedReference
 items:
+  - name: Tutorial
+    href: tutorial/
   - name: Docs
     href: docs/
   - name: API
