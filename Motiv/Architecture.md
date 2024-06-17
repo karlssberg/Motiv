@@ -26,7 +26,7 @@ occur are much easier to diagnose since they are typically isolated to a specifi
 The `Spec` class and its generic counterparts are the primary classes that developers will use to create propositions.
 To simplify the API surface area of Motiv, the `Spec` classes were all uniformly named _Spec_.
 Not only does it serve as a convenient cognitive starting point for building propositions, but it is easy to type and
-accurately alludes it being an implementation of the _specification pattern_.
+accurately alludes to it being an implementation of the _specification pattern_.
 The latter is important because it is a known pattern in the software development community, and for those that are 
 familiar with it, it will be immediately clear how Motiv generally works.
 Whilst the generic-less `Spec` class is used to fluently build new propositions, the generic `Spec` classes serve as 
@@ -36,22 +36,27 @@ integrated, such as with dependency injection frameworks.
 
 ### Composition
 The main way propositions can be composed is by using the `&`, `|`, `^`, operators (know in C# as the _boolean 
-logical operators_).
+logical operators_) as well as the methods `AndAlso()` and `OrElse()`.
 It's worth mentioning that _conditional boolean operators_, which are expressed as `&&`, `||`, 
 are subtly different in that they are short-circuiting operators - meaning it will not bother to evaluate the right 
-operand if the left operand is sufficient to determine the outcome.
-The _boolean logical operators_ on the other hand are not short-circuiting and will therefore always evaluate both 
+operand if the left operand is enough to determine the outcome.
+The _boolean logical operators_, on the other hand, are not short-circuiting and will therefore always evaluate both 
 operands regardless.
 Although Motiv supports the use of the _conditional boolean operators_ using the `AndAlso()` and `OrElse()` methods, 
-the operator overloads `&&` and `||` are not available since C# does not permit the overloading of these operators - 
-they only work with `bool` types.
-However, in most cases you will want to use the _boolean logical operators_ over the _conditional boolean operators_ 
+for the operators `&&` and `||` to participate, the two operands need to be immediately resolvable using the `true()`
+or `false()` operator overloads.
+Since propositions do not have this available while they are being constructed, it prevents the use of the `&&` 
+and `||` operators by them.
+This is not the case with <xref:Motiv.BooleanResultBase`1> instances, which can be composed using the _conditional
+boolean operators_ `&&` and `||`.
+
+In most cases you will want to use the _boolean logical operators_ over the _conditional boolean operators_ 
 since they ensure that all propositions are evaluated, and therefore the explanations will be complete.
-However, there may be occasions to use the _conditional boolean operators_, such as to filter out superfluous
-assertions/metadata from results.
+However, there may be occasions to use the _conditional boolean operators_, such as to filter out sanity checks
+after they are successful.
 
 Although Motiv is mainly used functionally, for pragmatic reasons a couple of classes are 
-nonetheless provided for sub-typing (`Spec<TMode>` and `Spec<TModel,TMetadata>`).
+nonetheless provided for sub-typing (<xref:Motiv.Spec`1> and <xref:Motiv.Spec`2>).
 These are for the express purpose of encapsulating compositions of propositions, rather than defining new behaviour 
 for the proposition itself (which is still technically possible).
 In essence, they allow us to give propositions a strongly typed name - otherwise we would only be able to work with
@@ -61,8 +66,8 @@ object instances, meaning re-use would be awkward.
 Propositions yielding _explanations_ are the main use-case of this library and double as a fallback when using 
 propositions with differing metadata types (to ensure explanations are as through as possible).
 They are therefore guaranteed to have meaningful and complete `Assertions`.
-Depending on how propositions are constructed, the `Assertions` may or may not be derived from the propositional 
-statement or the `WhenTrue()` and `WhenFalse()` methods (i.e. they may look like `"!is true"`).
+In the absence of assertions being explicit defined by the builder, the `Assertions` property will be derived from
+the _propositional statement_ supplied to the `Create()` method.
 
 ### Metadata
 Propositions yielding _Metadata_ are a more advanced use-case of this library and are used to provide arbitrary 
@@ -72,7 +77,7 @@ case.
 
 Metadata and explanation propositions all share the same base types to simplify interoperability.
 This means they share the same properties.
-When working with strings it may appear that the `Assertions` property contains the same data as the `Metadata` 
+When working with strings, it may appear that the `Assertions` property contains the same data as the `Metadata` 
 property, but this is not strictly the case.
 There is an overlap in the roles that the `Assertions` and `Metadata` properties perform, but the key difference is 
 that `Metadata` is an arbitrary type, and `Assertions` are always string.
