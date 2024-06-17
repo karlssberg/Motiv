@@ -26,8 +26,8 @@ public abstract class BooleanResultBase
 
     /// <summary>
     /// Gets a concise reason for the result. If the result is a proposition, then the reason will be a single
-    /// assertion. Otherwise, the result is boolean expression, and the reason will be a conjunction of assertions
-    /// using the logical operators (e.g., &amp;, |, ^).
+    /// assertion. Otherwise, the result is boolean expression, and the reason will be a composition of assertions
+    /// using the logical operators  &amp;, | and ^.
     /// </summary>
     /// <Remarks>
     /// <para>

@@ -10,7 +10,7 @@
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the boolean result.</typeparam>
-public sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
+internal sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> underlyingBooleanResultPredicate,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,

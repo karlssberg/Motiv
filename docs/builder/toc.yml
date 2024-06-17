@@ -1,0 +1,32 @@
+### YamlMime:ManagedReference
+items:
+  - name: Spec
+    href: Spec.md
+  - name: Build()
+    href: Build.md
+  - name: As()
+    href: As.md
+  - name: AsAllSatisfied()
+    href: AsAllSatisfied.md
+  - name: AsAnySatisfied()
+    href: AsAnySatisfied.md
+  - name: AsNoneSatisfied()
+    href: AsNoneSatisfied.md
+  - name: AsAtLeastNSatisfied()
+    href: AsAtLeastNSatisfied.md
+  - name: AsAtMostNSatisfied()
+    href: AsAtMostNSatisfied.md
+  - name: AsNSatisfied()
+    href: AsNSatisfied.md
+  - name: WhenTrue()
+    href: WhenTrue.md
+  - name: WhenTrueYield()
+    href: WhenTrueYield.md
+  - name: WhenFalse()
+    href: WhenFalse.md
+  - name: WhenFalseYield()
+    href: WhenFalseYield.md   
+  - name: Create()
+    href: Create.md
+  
+    

@@ -1,0 +1,38 @@
+### YamlMime:ManagedReference
+items:
+  - name: AndTogether()
+    href: AndTogether.md
+  - name: AndAlsoTogether()
+    href: AndAlsoTogether.md
+  - name: OrTogether()
+    href: OrTogether.md
+  - name: OrElseTogether()
+    href: OrElseTogether.md
+  - name: WhereTrue()
+    href: WhereTrue.md
+  - name: WhereFalse()
+    href: WhereFalse.md
+  - name: CountTrue()
+    href: CountTrue.md
+  - name: CountFalse()
+    href: CountFalse.md
+  - name: AllTrue()
+    href: AllTrue.md
+  - name: AllFalse()
+    href: AllFalse.md
+  - name: AnyTrue()
+    href: AnyTrue.md
+  - name: AnyFalse()
+    href: AnyFalse.md
+  - name: GetAssertions()
+    href: GetAssertions.md
+  - name: GetTrueAssertions()
+    href: GetTrueAssertions.md
+  - name: GetFalseAssertions()
+    href: GetFalseAssertions.md
+  - name: GetRootAssertions()
+    href: GetRootAssertions.md
+  - name: GetAllRootAssertions()
+    href: GetAllRootAssertions.md
+  
+    

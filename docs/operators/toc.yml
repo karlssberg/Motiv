@@ -1,0 +1,14 @@
+### YamlMime:ManagedReference
+items:
+  - name: And()
+    href: And.md
+  - name: AndAlso()
+    href: AndAlso.md
+  - name: Or()
+    href: Or.md
+  - name: OrElse()
+    href: OrElse.md
+  - name: XOr()
+    href: XOR.md
+  - name: Not()
+    href: Not.md

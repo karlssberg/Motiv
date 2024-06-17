@@ -541,4 +541,36 @@ public class TutorialTests
         result.Satisfied.Should().BeTrue();
         result.Assertions.Should().BeEquivalentTo(["valid", "!empty", "!full"]);
     }
+
+    [Fact]
+    public void Should_demonstrate_the_usage_of_GetTrueAssertions()
+    {
+        var left = Spec.Build((bool b) => b).Create("left");
+        var right = Spec.Build((bool b) => !b).Create("right");    
+
+        var spec =
+            Spec .Build(left ^ right)
+                .WhenTrueYield((_, result) => result.Causes.GetTrueAssertions())
+                .WhenFalse("none")
+                .Create("xor");
+
+        spec.IsSatisfiedBy(true).Assertions.Should().BeEquivalentTo("left");
+        spec.IsSatisfiedBy(false).Assertions.Should().BeEquivalentTo("right");
+    }
+
+    [Fact]
+    public void Should_demonstrate_the_usage_of_GetFalseAssertions()
+    {
+        var left = Spec.Build((bool b) => b).Create("left");
+        var right = Spec.Build((bool b) => !b).Create("right");    
+
+        var spec =
+            Spec .Build(left ^ right)
+                .WhenTrueYield((_, result) => result.Causes.GetFalseAssertions())
+                .WhenFalse("none")
+                .Create("xor");
+
+        spec.IsSatisfiedBy(true).Assertions.Should().BeEquivalentTo("!right");
+        spec.IsSatisfiedBy(false).Assertions.Should().BeEquivalentTo("!left");
+    }
 }

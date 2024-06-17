@@ -1,0 +1,10 @@
+### YamlMime:ManagedReference
+items:
+  - name: AndTogether()
+    href: AndTogether.md
+  - name: AndAlsoTogether()
+    href: AndAlsoTogether.md
+  - name: OrTogether()
+    href: OrTogether.md
+  - name: OrElseTogether()
+    href: OrElseTogether.md

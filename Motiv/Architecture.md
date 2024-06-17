@@ -81,17 +81,17 @@ whereas `Assertions` will always contain meaningful information, regardless of t
 in use.        
 
 ### Boolean Results
-Propositions, when evaluated, produce `BooleanResultBase<TMetadata>` instances.
+Propositions, when evaluated, produce <xref:Motiv.BooleanResultBase`1> instances.
 These model results are each sub-expression in the underlying logical syntax tree.
 This is so that the caller can inspect the underlying results at the various stages of evaluation (this avoids 
 having to step through the code in a debugger. 
 
-The `BooleanResultBase<TMetadata>` class is a generic class used to model the result of a proposition instead 
+The <xref:Motiv.BooleanResultBase`1> class is a generic class used to model the result of a proposition instead 
 of the native `bool` types.
 This is so that we don't lose the associated underlying metadata generated during the evaluation.
 An important design consideration of this type was to forego having the model as a generic parameter.
 This means that results generated from different types of models can still be compared and metadata aggregated.
-As such, the `BooleanResultBase<TMetadata>` class implements the `&`, `|`, `^`, and `!` operators to allow for the 
+As such, the <xref:Motiv.BooleanResultBase`1> class implements the `&`, `|`, `^`, and `!` operators to allow for the 
 logical combination of these dissimilar results, or when evaluations occur at different points in time, but the 
 results require further logical operations to be performed upon them.
 
