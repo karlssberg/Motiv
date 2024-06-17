@@ -396,4 +396,52 @@ public class SpecTests
                 is null
             """);
     }
+    
+    [Fact]
+    public void Should_ensure_that_brackets_are_applied_correctly_with_the_Statement_property_during_and_operation()
+    {
+        // Define clauses
+        var specA = Spec.Build((bool _) => true).Create("a");
+        var specB = Spec.Build((bool _) => false).Create("b");
+        var specC = Spec.Build((bool _) => false).Create("c");
+
+        // Compose new proposition
+        var sut = specA & !(specB | specC);
+
+        var act = sut.Statement;
+        
+        act.Should().Be("a & !(b | c)");
+    }
+
+    [Fact]
+    public void Should_ensure_that_brackets_are_applied_correctly_with_the_Statement_property_during_and_operation_with_triple_negation()
+    {
+        // Define clauses
+        var specA = Spec.Build((bool _) => true).Create("a");
+        var specB = Spec.Build((bool _) => false).Create("b");
+        var specC = Spec.Build((bool _) => false).Create("c");
+
+        // Compose new proposition
+        var sut = specA & !!!(specB | specC);
+
+        var act = sut.Statement;
+        
+        act.Should().Be("a & !(b | c)");
+    }
+    
+    [Fact]
+    public void Should_ensure_that_brackets_are_applied_correctly_with_the_Statement_property_during_and_operation_with_no_negation()
+    {
+        // Define clauses
+        var specA = Spec.Build((bool _) => true).Create("a");
+        var specB = Spec.Build((bool _) => false).Create("b");
+        var specC = Spec.Build((bool _) => false).Create("c");
+
+        // Compose new proposition
+        var sut = specA & (specB | specC);
+
+        var act = sut.Statement;
+        
+        act.Should().Be("a & (b | c)");
+    }
 }

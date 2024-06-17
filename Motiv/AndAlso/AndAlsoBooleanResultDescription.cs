@@ -28,8 +28,8 @@ internal sealed class AndAlsoBooleanResultDescription<TMetadata>(
                 andSpec.Description.Reason,
             AndAlsoBooleanResult<TMetadata> andAlsoSpec =>
                 andAlsoSpec.Description.Reason,
-            IBinaryBooleanOperationResult<TMetadata> { Description.CausalOperandCount: > 1 } binaryResult =>
-                $"({binaryResult.Description.Reason})",
+            _ when result.UnderlyingAssertionSources.Count() > 1 =>
+                $"({result.Description.Reason})",
             _ => result.Description.Reason
         };
     }

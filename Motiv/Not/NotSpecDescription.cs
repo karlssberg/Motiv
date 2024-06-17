@@ -34,6 +34,7 @@ internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMe
         spec switch 
         {
             IBinaryOperationSpec => true,
+            NotSpec<TModel, TMetadata> => false,
             _ => spec.Underlying.Any(ContainsBinaryOperation)
         };
     

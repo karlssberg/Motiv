@@ -1,4 +1,5 @@
 ﻿using Motiv.AndAlso;
+using Motiv.Not;
 
 namespace Motiv.And;
 
@@ -25,12 +26,12 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
     {
         return result switch 
         {
-            AndBooleanResult<TMetadata> andSpec =>
-                andSpec.Description.Reason,
-            AndAlsoBooleanResult<TMetadata> andAlsoSpec =>
-                andAlsoSpec.Description.Reason,
-            IBinaryBooleanOperationResult<TMetadata> { Description.CausalOperandCount: > 1 } binaryResult =>
-                $"({binaryResult.Description.Reason})",
+            AndBooleanResult<TMetadata> andResult =>
+                andResult.Description.Reason,
+            AndAlsoBooleanResult<TMetadata> andAlsoResult =>
+                andAlsoResult.Description.Reason,
+            _ when result.UnderlyingAssertionSources.Count() > 1 =>
+                $"({result.Description.Reason})",
             _ => result.Description.Reason
         };
     }
