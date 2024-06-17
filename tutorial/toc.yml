@@ -1,0 +1,20 @@
+### YamlMime:ManagedReference
+items:
+  - name: Introduction
+    href: Introduction.md
+  - name: Minimal Proposition
+    href: MinimalProposition.md
+  - name: Explanation Propositions
+    href: ExplanationProposition.md
+  - name: Explicit Propositional Statements
+    href: ExplicitPropositionalStatements.md
+  - name: Multiple Assertions
+    href: MultipleAssertions.md
+  - name: MetadataPropositions
+    href: MetadataProposition.md
+  - name: Derivatives
+    href: Derivatives.md
+  - name: Strongly Typed Derivatives
+    href: StronglyTypedDerivatives.md
+  - name: Operations
+    href: operations.md
