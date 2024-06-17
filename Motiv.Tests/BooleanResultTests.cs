@@ -250,4 +250,81 @@ public class BooleanResultTests
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
+
+    [Fact]
+    public void Should_ensure_that_brackets_are_applied_correctly_with_the_Reason_property_during_and_operation()
+    {
+        // Define clauses
+        var specA = Spec.Build((bool _) => true).Create("a");
+        var specB = Spec.Build((bool _) => false).Create("b");
+        var specC = Spec.Build((bool _) => false).Create("c");
+
+        // Compose new proposition
+        var spec = specA & !!!(specB | specC);
+
+        // Evaluate proposition
+        var sut = spec.IsSatisfiedBy(true);
+
+        var act = sut.Reason;
+        
+        act.Should().Be("a & (!b | !c)");
+    }
+    
+    [Fact]
+    public void Should_ensure_that_brackets_are_applied_correctly_with_the_Reason_property_during_andAlso_operation()
+    {
+        // Define clauses
+        var specA = Spec.Build((bool _) => true).Create("a");
+        var specB = Spec.Build((bool _) => false).Create("b");
+        var specC = Spec.Build((bool _) => false).Create("c");
+
+        // Compose new proposition
+        var spec = specA.AndAlso(!!!(specB | specC));
+
+        // Evaluate proposition
+        var sut = spec.IsSatisfiedBy(true);
+
+        var act = sut.Reason;
+        
+        act.Should().Be("a && (!b | !c)");
+    }
+    
+    [Fact]
+    public void Should_ensure_that_brackets_are_applied_correctly_with_the_Reason_property_during_or_operation()
+    {
+        // Define clauses
+        var specA = Spec.Build((bool _) => true).Create("a");
+        var specB = Spec.Build((bool _) => false).Create("b");
+        var specC = Spec.Build((bool _) => false).Create("c");
+
+        // Compose new proposition
+        var spec = specA | !!!(specB & specC);
+
+        // Evaluate proposition
+        var sut = spec.IsSatisfiedBy(true);
+
+        var act = sut.Reason;
+        
+        act.Should().Be("a | (!b & !c)");
+    }
+    
+    [Fact]
+    public void Should_ensure_that_brackets_are_applied_correctly_with_the_Reason_property_during_orElse_operation()
+    {
+        // Define clauses
+        var specA = Spec.Build((bool _) => false).Create("a");
+        var specB = Spec.Build((bool _) => true).Create("b");
+        var specC = Spec.Build((bool _) => true).Create("c");
+
+        // Compose new proposition
+        var spec = specA.OrElse(!!!(specB & specC));
+
+        // Evaluate proposition
+        var sut = spec.IsSatisfiedBy(true);
+
+        var act = sut.Reason;
+        
+        act.Should().Be("!a || (b & c)");
+    }
+
 }

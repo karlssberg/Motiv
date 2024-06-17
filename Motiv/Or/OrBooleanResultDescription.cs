@@ -29,8 +29,8 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
                 orResult.Description.Reason,
             OrElseBooleanResult<TMetadata> orElseResult =>
                 orElseResult.Description.Reason,
-            IBinaryBooleanOperationResult<TMetadata> { Description.CausalOperandCount: > 1 } binaryResult =>
-                $"({binaryResult.Description.Reason})",
+            _ when result.UnderlyingAssertionSources.Count() > 1 =>
+                $"({result.Description.Reason})",
             _ => result.Description.Reason
         };
     }

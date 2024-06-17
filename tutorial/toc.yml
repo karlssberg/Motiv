@@ -18,3 +18,7 @@ items:
     href: StronglyTypedDerivatives.md
   - name: Operations
     href: operations.md
+  - name: Proposition Visibility
+    href: PropositionVisibility.md
+  - name: Boolean Result Visibility
+    href: BooleanResultVisibility.md
