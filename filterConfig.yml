@@ -5,6 +5,4 @@ apiRules:
   - exclude:
       uidRegex: ^Motiv\.As\w+Extensions
   - exclude:
-      uidRegex: ^Motiv\.Spec$
-  - exclude:
       uidRegex: ^Motiv\.ISpecDescription$
