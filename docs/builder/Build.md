@@ -6,12 +6,12 @@ title: Build()
 New propositions are built using the `Spec.Build()` method.
 This method is overloaded and takes one of the following types of arguments:
 
-| Name                                                                    | Type                                        | Description                                                           |
-|-------------------------------------------------------------------------|---------------------------------------------|-----------------------------------------------------------------------|
-| [Boolean Predicate](./Build.md#from-a-predicate-function)               | `Func<TModel, bool>`                        | a predicate that returns a boolean value.                             |
-| [Boolean Result Predicate](./Build.md#from-the-result-of-a-proposition) | `Func<TModel, BooleanResultBase<TMetadata>` | a predicate that returns a <xref:Motiv.BooleanResultBase`1> instance. |
-| [Proposition](./Build.md#from-an-existing-proposition)                  | `SpecBase<TModel,TMetadata>`                | a proposition that has already been built.                            |
-| [Proposition Factory](./Build.md#from-a-proposition-factory)            | `Func<SpecBase<TModel, TMetadata>>`         | a factory function that returns a proposition.                        |
+| Name                                                                    | Type                                         | Description                                                           |
+|-------------------------------------------------------------------------|----------------------------------------------|-----------------------------------------------------------------------|
+| [Boolean Predicate](./Build.md#from-a-predicate-function)               | `Func<TModel, bool>`                         | a predicate that returns a boolean value.                             |
+| [Boolean Result Predicate](./Build.md#from-the-result-of-a-proposition) | `Func<TModel, BooleanResultBase<TMetadata>>` | a predicate that returns a <xref:Motiv.BooleanResultBase`1> instance. |
+| [Proposition](./Build.md#from-an-existing-proposition)                  | `SpecBase<TModel,TMetadata>`                 | a proposition that has already been built.                            |
+| [Proposition Factory](./Build.md#from-a-proposition-factory)            | `Func<SpecBase<TModel, TMetadata>>`          | a factory function that returns a proposition.                        |
 
 All of these overloads can be used to create a new proposition with varying levels of expressiveness.
 
