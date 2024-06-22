@@ -21,24 +21,25 @@ chosen.
 
 ### Reusing existing propositions or their results
 
-| Type                                                                 | Description                                                    |
-|----------------------------------------------------------------------|----------------------------------------------------------------|
-| `Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>`    | a factory function that returns multiple assertion statements. |
-| `Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>>` | a factory function that returns multiple metadata values.      |
+| Type                                                                 | Description                                                                                                           |
+|----------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| `Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>`    | a factory function that returns multiple <br/>assertion statements from a model and <xref:Motiv.BooleanResultBase`1>. |
+| `Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>>` | a factory function that returns multiple metadata values from a model and <xref:Motiv.BooleanResultBase`1>.           |
 
 ### Higher-order propositions from a predicate function
 
-| Type                                                                 | Description                                                    |
-|----------------------------------------------------------------------|----------------------------------------------------------------|
-| `Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>>`    | a factory function that returns multiple assertion statements. |
-| `Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>>` | a factory function that returns multiple metadata values.      |
+| Type                                                                 | Description                                                                                                                              |
+|----------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>>`    | a factory function that returns multiple assertion statements from a <xref:Motiv.HigherOrderProposition.HigherOrderBooleanEvaluation`1>. |
+| `Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>>` | a factory function that returns multiple metadata values from a <xref:Motiv.HigherOrderProposition.HigherOrderBooleanEvaluation`1>.                                                                                |
 
 ### Higher-order propositions from an existing proposition
 
 | Type                                                                     | Description                                                    |
 |--------------------------------------------------------------------------|----------------------------------------------------------------|
-| `Func<HigherOrderEvaluation<TModel>, IEnumerable<string>>`               | a factory function that returns multiple assertion statements. |
-| `Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<TMetadata>>` | a factory function that returns multiple metadata values.      |
+| `Func<HigherOrderEvaluation<TModel>, IEnumerable<string>>`               | a factory function that returns multiple assertion statements from a <xref:Motiv.HigherOrderProposition.HigherOrderEvaluation`2>. |
+| `Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<TMetadata>>` | a factory function that returns multiple metadata values from a <xref:Motiv.HigherOrderProposition.HigherOrderEvaluation`2>.      |
+
 
 ## Usage when building a new proposition
 

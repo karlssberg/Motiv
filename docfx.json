@@ -27,20 +27,33 @@
     "resource": [
       {
         "files": [
-          "images/**"
+          "images/**",
+          "css/fontawesome.css",
+          "webfonts/**"
         ]
       }
     ],
     "output": "_site",
     "template": [
       "default",
-      "modern"
+      "modern",
+      "template"
     ],
+    "postProcessors": [ "ExtractSearchIndex" ],
     "globalMetadata": {
       "_appName": "Motiv",
       "_appTitle": "Motiv",
+      "_appFooter": "&copy; 2024 Daniel Karlsson",
       "_appLogoPath": "images/motiv-logo.svg",
       "_appFaviconPath": "images/motiv-logo.svg",
+      "_gitContribute": {
+        "repo": "https://github.com/karlssberg/Motiv",
+        "branch": "main"
+      },
+      "_gitUrlPattern": "github",
+      "_disableNavbar": false,
+      "_enableSearch": true,
+      "disableGitFeatures": false,
       "pdf": true
     }
   }

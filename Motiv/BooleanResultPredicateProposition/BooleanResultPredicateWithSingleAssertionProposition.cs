@@ -15,17 +15,19 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
     {
         var booleanResult = predicate(model);
         
-        var assertion = new Lazy<string>(() => booleanResult.Satisfied switch
-        {
-            true => trueBecause,
-            false => whenFalse(model, booleanResult)
-        });
+        var assertion = new Lazy<string>(() =>
+            booleanResult.Satisfied switch
+            {
+                true => trueBecause,
+                false => whenFalse(model, booleanResult)
+            });
         
         var explanation = new Lazy<Explanation>(() => 
             new Explanation(assertion.Value, booleanResult.ToEnumerable()));
         
         var metadataTier = new Lazy<MetadataNode<string>>(() => 
-            new MetadataNode<string>(assertion.Value.ToEnumerable(), 
+            new MetadataNode<string>(
+                assertion.Value.ToEnumerable(), 
                 booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []));
 
         return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
