@@ -35,11 +35,12 @@ internal sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadat
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
         
-        var metadata = new Lazy<TMetadata[]>(() => booleanResult.Satisfied switch
-        {
-            true => whenTrue(model, booleanResult).ToArray(),
-            false => whenFalse(model, booleanResult).ToArray()
-        });
+        var metadata = new Lazy<TMetadata[]>(() =>
+            booleanResult.Satisfied switch
+            {
+                true => whenTrue(model, booleanResult).ToArray(),
+                false => whenFalse(model, booleanResult).ToArray()
+            });
 
         var assertions = new Lazy<string[]>(() => metadata.Value switch
         {
