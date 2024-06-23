@@ -1,24 +1,40 @@
-﻿# Supercharge Your Logic with Motiv
+﻿# Know _Why_, not just _What_
 
 [![Build Status](https://github.com/karlssberg/Motiv/actions/workflows/dotnet.yml/badge.svg)](https://github.com/karlssberg/Motiv)
 [![GitHub](https://img.shields.io/github/license/karlssberg/Motiv)](https://github.com/karlssberg/Motiv/blob/main/LICENSE)
 [![NuGet](https://img.shields.io/nuget/v/Motiv.svg)](https://www.nuget.org/packages/Motiv/)
 [![codecov](https://codecov.io/gh/karlssberg/Motiv/graph/badge.svg?token=XNN34D2JIP)](https://codecov.io/gh/karlssberg/Motiv)
 [![GitHub Repo stars](https://img.shields.io/github/stars/karlssberg/Motiv)](https://github.com/karlssberg/Motiv)
-<!-- Place this tag in your head or just before your close body tag. -->
-<script async defer src="https://buttons.github.io/buttons.js"></script>
-Motiv is a versatile .NET library designed to enhance the way you write, understand, and maintain important 
-logic.
-By composing logic from meaningful [propositions](https://en.wikipedia.org/wiki/Proposition), 
-Motiv will take on the task of figuring out what caused results so you can focus on customizing their output.
 
-### Key Features
+Motiv is a developer-first .NET library that transforms the way you work with boolean logic.
+It lets you form expressions from discrete [propositions](https://en.wikipedia.org/wiki/Proposition) so that you
+can explain _why_ decisions were made.
 
-- **Readability**: Write self-documenting logic
-- **Visibility**: Instantly get answers why certain decisions were made
-- **Flexibility**: Fluently customize propositions to suit your specific needs
-- **Composability**: Use familiar operators (`&`, `|`, `^`, `!`) to build complex logic
-- **Reuseability**: create ad-hoc expressions from a shared library of propositions
+First create [atomic propositions](https://en.wikipedia.org/wiki/Atomic_sentence):
+
+```csharp
+// Define propositions
+var isValid = Spec.Build((int n) => n is >= 0 and <= 11).Create("valid");
+var isEmpty = Spec.Build((int n) => n == 0).Create("empty");
+var isFull  = Spec.Build((int n) => n == 11).Create("full");
+```
+
+Then compose using operators (e.g., `&`, `|`, `^`):
+
+```csharp
+// Compose a new proposition
+var isPartiallyFull = isValid & !(isEmpty | isFull);
+```
+
+To get detailed feedback:
+
+```csharp
+// Evaluate the proposition
+var result = isPartiallyFull.IsSatisfiedBy(5);
+
+result.Satisfied;   // true
+result.Assertions;  // ["valid", "!empty", "!full"]
+```
 
 ## Installation
 
