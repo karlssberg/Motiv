@@ -19,7 +19,7 @@ var isEmpty = Spec.Build((int n) => n == 0).Create("empty");
 var isFull  = Spec.Build((int n) => n == 11).Create("full");
 ```
 
-Then compose using operators (e.g., `&`, `|`, `^`):
+Then compose using operators (e.g.,`!`, `&`, `|`, `^`):
 
 ```csharp
 // Compose a new proposition
