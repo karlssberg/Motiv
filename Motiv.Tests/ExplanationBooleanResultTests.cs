@@ -116,11 +116,11 @@ public class ExplanationBooleanResultTests
     }
     
     [Theory]
-    [InlineAutoData(false, false, false)]
-    [InlineAutoData(false, true, true)]
-    [InlineAutoData(true, false, true)]
-    [InlineAutoData(true, true, true)]
-    public void Should_assert_or_operation(bool left, bool right, bool expected)
+    [InlineAutoData(false, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(true, true)]
+    public void Should_assert_or_operation(bool left, bool right)
     {
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
@@ -178,11 +178,11 @@ public class ExplanationBooleanResultTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false)]
-    [InlineAutoData(false, true, true)]
-    [InlineAutoData(true, false, true)]
-    [InlineAutoData(true, true, false)]
-    public void Should_yield_assertions_for_xor_operation(bool left, bool right, bool expected)
+    [InlineAutoData(false, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(true, true)]
+    public void Should_yield_assertions_for_xor_operation(bool left, bool right)
     {
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
@@ -230,9 +230,9 @@ public class ExplanationBooleanResultTests
     }
 
     [Theory]
-    [InlineAutoData(false, true)]
-    [InlineAutoData(true, false)]
-    public void Should_yield_assertions_for_not_operation(bool operand, bool expected)
+    [InlineAutoData(false)]
+    [InlineAutoData(true)]
+    public void Should_yield_assertions_for_not_operation(bool operand)
     {
         // Arrange
         var operandResult = new  PropositionBooleanResult<string>(

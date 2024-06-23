@@ -40,14 +40,13 @@ public class XOrSpecTests
     }
     
     [Theory]
-    [InlineAutoData(true, true, false)]
-    [InlineAutoData(true, false, true)]
-    [InlineAutoData(false, true, true)]
-    [InlineAutoData(false, false, false)]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
     public void Should_yield_metadata(
         bool leftResult,
         bool rightResult,
-        bool expected,
         object model)
     {
         // Arrange

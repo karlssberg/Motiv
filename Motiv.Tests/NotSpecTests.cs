@@ -27,11 +27,10 @@ public class NotSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, false)]
-    [InlineAutoData(false, true)]
+    [InlineAutoData(true)]
+    [InlineAutoData(false)]
     public void Should_yield_metadata(
         bool operand,
-        bool expected,
         object model)
     {
         // Arrange
