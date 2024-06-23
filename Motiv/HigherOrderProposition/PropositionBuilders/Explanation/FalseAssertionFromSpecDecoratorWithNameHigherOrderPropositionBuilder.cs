@@ -36,13 +36,13 @@ public readonly ref struct FalseAssertionFromSpecDecoratorWithNameHigherOrderPro
             falseBecause,
             causeSelector);
 
-    /// <summary>Specifies an assertion to yield when the condition is false.</summary>
+    /// <summary>Specifies assertions to yield when the condition is false.</summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>
     /// An instance of
-    /// <see cref="MultiAssertionExplanationWithNameHigherOrderPropositionFactory{TModel,TUnderlyingMetadata}" />.
+    /// <see cref="MultiAssertionExplanationWithNameHigherOrderBooleanResultPropositionFactory{TModel,TUnderlyingMetadata}" />.
     /// </returns>
-    public MultiAssertionExplanationWithNameHigherOrderPropositionFactory<TModel, TUnderlyingMetadata> WhenFalseYield(
+    public MultiAssertionExplanationWithNameHigherOrderBooleanResultPropositionFactory<TModel, TUnderlyingMetadata> WhenFalseYield(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
         new(spec.IsSatisfiedBy,
             higherOrderPredicate,

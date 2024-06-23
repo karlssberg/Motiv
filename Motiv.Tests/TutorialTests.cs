@@ -573,4 +573,10 @@ public class TutorialTests
         spec.IsSatisfiedBy(true).Assertions.Should().BeEquivalentTo("!right");
         spec.IsSatisfiedBy(false).Assertions.Should().BeEquivalentTo("!left");
     }
+
+    [Fact]
+    public void Should_()
+    {
+        
+    }
 }

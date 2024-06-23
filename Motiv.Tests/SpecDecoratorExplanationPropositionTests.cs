@@ -363,9 +363,9 @@ public class SpecDecoratorExplanationPropositionTests
     }
 
     [Theory]
-    [InlineAutoData(true, "is true")]
-    [InlineAutoData(false, "!is true")]
-    public void Should_evaluate_minimally_defined_spec(bool model, string expectedReason)
+    [InlineAutoData(true)]
+    [InlineAutoData(false)]
+    public void Should_evaluate_minimally_defined_spec(bool model)
     {
         // Arrange
         var underlying = Spec

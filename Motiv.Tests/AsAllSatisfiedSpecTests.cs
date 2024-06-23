@@ -586,11 +586,11 @@ public class AsAllSatisfiedSpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "!all are true")]
-    [InlineAutoData(false, true, false, "!all are true")]
-    [InlineAutoData(true, false, false, "!all are true")]
-    [InlineAutoData(true, true, true, "all are true")]
-    public void Should_surface_boolean_results_created_from_underlyingResult(bool modelA, bool modelB, bool expected, string expectedAssertion)
+    [InlineAutoData(false, false, false)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(true, false, false)]
+    [InlineAutoData(true, true, true)]
+    public void Should_surface_boolean_results_created_from_underlyingResult(bool modelA, bool modelB, bool expected)
     {
         // Arrange
         var underlying = Spec
@@ -610,11 +610,11 @@ public class AsAllSatisfiedSpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "!all are true")]
-    [InlineAutoData(false, true, false, "!all are true")]
-    [InlineAutoData(true, false, false, "!all are true")]
-    [InlineAutoData(true, true, true, "all are true")]
-    public void Should_surface_reasons_from_underlyingResult(bool modelA, bool modelB, bool expected, string expectedAssertion)
+    [InlineAutoData(false, false, "!all are true")]
+    [InlineAutoData(false, true, "!all are true")]
+    [InlineAutoData(true, false, "!all are true")]
+    [InlineAutoData(true, true, "all are true")]
+    public void Should_surface_reasons_from_underlyingResult(bool modelA, bool modelB, string expectedAssertion)
     {
         // Arrange
         var underlying = Spec
