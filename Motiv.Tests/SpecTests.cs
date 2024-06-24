@@ -18,11 +18,11 @@ public class SpecTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(model);
     }
-    
+
     [Theory]
     [InlineAutoData(true)]
     [InlineAutoData(false)]
@@ -39,11 +39,11 @@ public class SpecTests
 
         // Act
         var act = result.Metadata;
-        
+
         // Assert
         act.Should().ContainSingle(model.ToString());
     }
-    
+
     [Theory]
     [InlineAutoData(true)]
     [InlineAutoData(false)]
@@ -55,7 +55,7 @@ public class SpecTests
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
-        
+
         var spec = Spec
             .Build(() => underlyingSpec)
             .WhenTrue("underlying true")
@@ -66,17 +66,17 @@ public class SpecTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(model);
     }
-    
+
     [Theory]
     [InlineAutoData(true, "underlying true")]
     [InlineAutoData(false, "underlying false")]
     public void Should_return_metadata(
         bool model,
-        string expectedAssertion)
+        string metadata)
     {
         // Arrange
         var underlyingSpec = Spec
@@ -84,7 +84,7 @@ public class SpecTests
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
-        
+
         var spec = Spec
             .Build(() => underlyingSpec)
             .WhenTrue("underlying true")
@@ -95,15 +95,15 @@ public class SpecTests
 
         // Act
         var act = result.Metadata;
-        
+
         // Assert
-        act.Should().ContainSingle(expectedAssertion);
+        act.Should().ContainSingle(metadata);
     }
 
     [Theory]
     [InlineAutoData(true, "true")]
     [InlineAutoData(false, "false")]
-    public void Should_return_the_underlying_metadata(bool model, string metadata)
+    public void Should_return_the_underlying_assertions_as_metadata(bool model, string metadata)
     {
         // Arrange
         var underlyingSpec = Spec
@@ -111,7 +111,7 @@ public class SpecTests
             .WhenTrue(metadata)
             .WhenFalse(metadata)
             .Create("is model value");
-        
+
         var spec = Spec
             .Build(() => underlyingSpec)
             .WhenTrue("underlying true")
@@ -122,10 +122,38 @@ public class SpecTests
 
         // Act
         var act = result.MetadataTier.Underlying.SelectMany(m => m.Metadata);
-        
+
         // Assert
         act.Should().BeEquivalentTo(metadata);
     }
+
+    [Theory]
+    [InlineAutoData(true)]
+    [InlineAutoData(false)]
+    public void Should_return_the_underlying_metadata(bool model, object metadata)
+    {
+        // Arrange
+        var underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(metadata)
+            .WhenFalse(metadata)
+            .Create("is model value");
+
+        var spec = Spec
+            .Build(() => underlyingSpec)
+            .WhenTrue(new object())
+            .WhenFalse(new object())
+            .Create("is true");
+
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.MetadataTier.Underlying.SelectMany(m => m.Metadata);
+
+        // Assert
+        act.Should().BeEquivalentTo([metadata]);
+    }
+
 
     [Theory]
     [InlineAutoData(true, "underlying true")]
@@ -140,7 +168,7 @@ public class SpecTests
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
-        
+
         var spec = Spec
             .Build(() => underlyingSpec)
             .WhenTrue("underlying true")
@@ -151,7 +179,7 @@ public class SpecTests
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expectedAssertion);
     }
@@ -167,7 +195,7 @@ public class SpecTests
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
-        
+
         var spec = Spec
             .Build(() => underlyingSpec)
             .WhenTrue("underlying true")
@@ -178,7 +206,7 @@ public class SpecTests
 
         // Act
         var act = result.Description.Reason;
-        
+
         // Assert
         act.Should().Be(expectedDescription);
     }
@@ -216,7 +244,7 @@ public class SpecTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(model);
     }
@@ -232,7 +260,7 @@ public class SpecTests
             .WhenTrue("is true")
             .WhenFalse("is false")
             .Create();
-        
+
         var spec = Spec
             .Build(underlyingSpec)
             .WhenTrue(true)
@@ -243,7 +271,7 @@ public class SpecTests
 
         // Act
         var act = result.Metadata;
-        
+
         // Assert
         act.Should().ContainSingle(model.ToString());
     }
@@ -256,7 +284,7 @@ public class SpecTests
                        .WhenTrue(true.ToString())
                        .WhenFalse(false.ToString())
                        .Create();
-        
+
         // Act
         var act = () => spec.IsSatisfiedBy(null);
 
@@ -320,7 +348,7 @@ public class SpecTests
             .WhenTrue("should be used in exception message")
             .WhenFalse("should not be used in exception message")
             .Create();
-        
+
         // Act
         var act = () => spec.IsSatisfiedBy(null);
 
@@ -337,7 +365,7 @@ public class SpecTests
     {
         // Arrange
         const string statement = "should be used in exception message";
-        
+
         var spec = Spec
             .Build((Func<string?, bool>)(_ => throw new Exception("should be wrapped")))
             .WhenTrue(true.ToString())
@@ -381,7 +409,7 @@ public class SpecTests
             .WhenTrue("is null")
             .WhenFalse("is not null")
             .Create();
-        
+
         var spec = Spec
             .Build(underlying)
             .Create("top-level proposition");
@@ -396,7 +424,7 @@ public class SpecTests
                 is null
             """);
     }
-    
+
     [Fact]
     public void Should_ensure_that_brackets_are_applied_correctly_with_the_Statement_property_during_and_operation()
     {
@@ -409,7 +437,7 @@ public class SpecTests
         var sut = specA & !(specB | specC);
 
         var act = sut.Statement;
-        
+
         act.Should().Be("a & !(b | c)");
     }
 
@@ -425,10 +453,10 @@ public class SpecTests
         var sut = specA & !!!(specB | specC);
 
         var act = sut.Statement;
-        
+
         act.Should().Be("a & !(b | c)");
     }
-    
+
     [Fact]
     public void Should_ensure_that_brackets_are_applied_correctly_with_the_Statement_property_during_and_operation_with_no_negation()
     {
@@ -441,7 +469,7 @@ public class SpecTests
         var sut = specA & (specB | specC);
 
         var act = sut.Statement;
-        
+
         act.Should().Be("a & (b | c)");
     }
 }

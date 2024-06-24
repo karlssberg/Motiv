@@ -1,4 +1,4 @@
-namespace Motiv;
+﻿namespace Motiv;
 
 /// <summary>
 /// Provides extension methods for working with enumerable collections.
@@ -14,7 +14,7 @@ public static class BooleanResultExtensions
     public static BooleanResultBase<TMetadata> AndTogether<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> booleanResults) =>
         booleanResults.Aggregate((left, right) => left & right);
-    
+
     /// <summary>
     /// Combines a collection of propositions using the conditional AND operator (i.e. `&amp;&amp;`).
     /// </summary>
@@ -44,7 +44,7 @@ public static class BooleanResultExtensions
     public static BooleanResultBase<TMetadata> OrElseTogether<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> booleanResult) =>
         booleanResult.Aggregate((left, right) => left.OrElse(right));
-    
+
     /// <summary>
     /// Filters a collection of boolean results, returning only those where the result is true.
     /// </summary>
@@ -55,7 +55,7 @@ public static class BooleanResultExtensions
         this IEnumerable<TBooleanResult> results)
         where TBooleanResult : BooleanResultBase =>
         results.Where(result => result.Satisfied);
-    
+
     /// <summary>
     /// Filters a collection of boolean results, returning only those where the result is false.
     /// </summary>
@@ -66,7 +66,7 @@ public static class BooleanResultExtensions
         this IEnumerable<TBooleanResult> results)
         where TBooleanResult : BooleanResultBase =>
         results.Where(result => !result.Satisfied);
-    
+
     /// <summary>
     /// Counts the number of boolean results in a collection where the result is true.
     /// </summary>
@@ -76,7 +76,7 @@ public static class BooleanResultExtensions
     public static int CountTrue<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results.Count(result => result.Satisfied);
-    
+
     /// <summary>
     /// Counts the number of boolean results in a collection where the result is false.
     /// </summary>
@@ -129,11 +129,11 @@ public static class BooleanResultExtensions
 
     internal static IEnumerable<string> GetBinaryJustificationAsLines(
         this IEnumerable<BooleanResultBase> causalResults,
-        string operation,
+        string conjunction,
         int level = 0)
     {
         var adjacentLineGroups = causalResults
-            .IdentifyCollapsible(operation)
+            .IdentifyCollapsible(conjunction)
             .Select(GetJustificationAsTuple)
             .GroupAdjacentBy((prev, next) => prev.op == next.op)
             .SelectMany(group =>
@@ -146,16 +146,16 @@ public static class BooleanResultExtensions
                 var detailsAsLines = groupArray.SelectMany(tuple => tuple.detailsAsLines);
                 return (op, detailsAsLines).ToEnumerable();
             });
-        
+
         foreach (var group in adjacentLineGroups)
         {
             if (group.op != OperationGroup.Collapsible && level == 0)
-                yield return operation;
-            
+                yield return conjunction;
+
             foreach (var line in group.detailsAsLines)
                 yield return line.Indent();
         }
-        
+
         yield break;
 
         (OperationGroup op, IEnumerable<string> detailsAsLines) GetJustificationAsTuple((OperationGroup, BooleanResultBase) tuple)
@@ -164,9 +164,9 @@ public static class BooleanResultExtensions
             var detailsAsLines = result switch
             {
                 IBinaryBooleanOperationResult binaryOperationResult
-                    when binaryOperationResult.Operation == operation
+                    when binaryOperationResult.Operation == conjunction
                          && binaryOperationResult.IsCollapsable =>
-                    result.ToEnumerable().GetBinaryJustificationAsLines(operation, level + 1),
+                    result.ToEnumerable().GetBinaryJustificationAsLines(conjunction, level + 1),
                 _ =>
                     result.Description.GetJustificationAsLines()
             };
@@ -211,9 +211,9 @@ public static class BooleanResultExtensions
         string operation)
     {
         var underlyingResults = binaryResult.Causes;
-    
+
         return underlyingResults
-            .SelectMany(underlyingResult => 
+            .SelectMany(underlyingResult =>
                 underlyingResult switch
                 {
                     IBinaryBooleanOperationResult binaryOperationResult

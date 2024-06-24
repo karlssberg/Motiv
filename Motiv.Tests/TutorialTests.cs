@@ -1,4 +1,4 @@
-namespace Motiv.Tests;
+﻿namespace Motiv.Tests;
 
 public class TutorialTests
 {
@@ -86,7 +86,7 @@ public class TutorialTests
         isPositiveAndEven.IsSatisfiedBy(2).Reason.Should().Be("the number is positive & the number is even");
         isPositiveAndEven.IsSatisfiedBy(2).Assertions.Should().BeEquivalentTo("the number is positive", "the number is even");
         isPositiveAndEven.IsSatisfiedBy(2).AllAssertions.Should().BeEquivalentTo("the number is positive", "the number is even");
-        
+
         isPositiveAndEven.IsSatisfiedBy(3).Satisfied.Should().BeFalse();
         isPositiveAndEven.IsSatisfiedBy(3).Reason.Should().Be("the number is odd");
         isPositiveAndEven.IsSatisfiedBy(3).Assertions.Should().BeEquivalentTo("the number is odd");
@@ -127,24 +127,24 @@ public class TutorialTests
     [Fact]
     public void Should_demonstrate_composition_using_spec_type()
     {
-        var isEvenSpec = 
+        var isEvenSpec =
             Spec.Build((int n) => n % 2 == 0)
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
-        
+
         var isPositiveSpec =
             Spec.Build((int n) => n > 0)
                 .WhenTrue("positive")
                 .WhenFalse("not positive")
                 .Create();
-        
+
         var isEvenAndPositiveSpec =
             Spec.Build(isEvenSpec & isPositiveSpec)
                 .WhenTrue("the number is even and positive")
                 .WhenFalse((_,evaluation) => $"the number is {evaluation.Assertions.Serialize()}")
                 .Create();
-        
+
         isEvenAndPositiveSpec.IsSatisfiedBy(2).Satisfied.Should().BeTrue();
         isEvenAndPositiveSpec.IsSatisfiedBy(2).Reason.Should().Be("the number is even and positive");
         isEvenAndPositiveSpec.IsSatisfiedBy(-2).Reason.Should().Be("the number is not positive");
@@ -171,7 +171,7 @@ public class TutorialTests
                 .WhenFalse(o => $"basket contains {o.Items.Count} items")
                 .Create();
 
-        var isFreeShippingSpec = 
+        var isFreeShippingSpec =
             Spec.Build((Basket b) => b.Items.All(i => i.FreeShipping))
                 .WhenTrue("free shipping")
                 .WhenFalse("shipping payment required")
@@ -180,7 +180,7 @@ public class TutorialTests
         var showShippingPageButton = (!isBasketEmptySpec).AndAlso(!isFreeShippingSpec);
 
         var result = showShippingPageButton.IsSatisfiedBy(emptyBasket);
-        
+
         result.Satisfied.Should().BeFalse();
         result.Reason.Should().Be("basket is empty");
         result.Reason.Should().BeEquivalentTo("basket is empty");
@@ -191,7 +191,7 @@ public class TutorialTests
             .WhenTrue(n => $"{n} is negative")
             .WhenFalse(n => $"{n} is not negative")
             .Create("is negative"));
-    
+
 #if !NETFRAMEWORK
 
     [Fact]
@@ -202,13 +202,13 @@ public class TutorialTests
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
-        
+
         var allAreEven =
             Spec.Build(isEven)
                 .AsAllSatisfied()
                 .WhenTrue(evaluation =>
-                    evaluation switch 
-                    { 
+                    evaluation switch
+                    {
                         { Count: 0 } => "the collection is empty",
                         { Models: [var n] } => $"{n} is even and is the only item",
                         _ => "all are even"
@@ -222,26 +222,26 @@ public class TutorialTests
                         _ => evaluation.FalseModels.Select(n => $"{n} is odd")
                     })
                 .Create("all are even");
-        
+
         allAreEven.IsSatisfiedBy([2, 4, 6, 8]).Satisfied.Should().BeTrue();
         allAreEven.IsSatisfiedBy([2, 4, 6, 8]).Assertions.Should().BeEquivalentTo("all are even");
-        
+
         allAreEven.IsSatisfiedBy([10]).Satisfied.Should().BeTrue();
         allAreEven.IsSatisfiedBy([10]).Assertions.Should().BeEquivalentTo("10 is even and is the only item");
-        
-        
+
+
         allAreEven.IsSatisfiedBy([11]).Satisfied.Should().BeFalse();
         allAreEven.IsSatisfiedBy([11]).Assertions.Should().BeEquivalentTo("11 is odd and is the only item");
-        
+
         allAreEven.IsSatisfiedBy([2, 4, 6, 9]).Satisfied.Should().BeFalse();
         allAreEven.IsSatisfiedBy([2, 4, 6, 9]).Assertions.Should().BeEquivalentTo("only 9 is odd");
-        
+
         allAreEven.IsSatisfiedBy([]).Satisfied.Should().BeTrue();
         allAreEven.IsSatisfiedBy([]).Assertions.Should().BeEquivalentTo("the collection is empty");
-        
+
         allAreEven.IsSatisfiedBy([1, 3, 5, 7]).Satisfied.Should().BeFalse();
         allAreEven.IsSatisfiedBy([1, 3, 5, 7]).Assertions.Should().BeEquivalentTo("all are odd");
-        
+
         allAreEven.IsSatisfiedBy([2, 4, 5, 7]).Satisfied.Should().BeFalse();
         allAreEven.IsSatisfiedBy([2, 4, 5, 7]).Assertions.Should().BeEquivalentTo("5 is odd", "7 is odd");
     }
@@ -253,7 +253,7 @@ public class TutorialTests
         var allAreNegative =
             Spec.Build(new IsNegativeIntegerProposition())
                 .AsAllSatisfied()
-                .WhenTrue(eval => 
+                .WhenTrue(eval =>
                     eval switch
                     {
                         { Count: 0 } => "there is an absence of numbers",
@@ -279,7 +279,7 @@ public class TutorialTests
         allAreNegative.IsSatisfiedBy([-10]).Satisfied.Should().BeTrue();
         allAreNegative.IsSatisfiedBy([-10]).Assertions.Should()
             .BeEquivalentTo("-10 is negative and is the only number");
-        
+
         allAreNegative.IsSatisfiedBy([-2, -4, -6, -8]).Satisfied.Should().BeTrue();
         allAreNegative.IsSatisfiedBy([-2, -4, -6, -8]).Assertions.Should().BeEquivalentTo("all are negative numbers");
 
@@ -290,13 +290,13 @@ public class TutorialTests
         allAreNegative.IsSatisfiedBy([11]).Satisfied.Should().BeFalse();
         allAreNegative.IsSatisfiedBy([11]).Assertions.Should()
             .BeEquivalentTo("11 is positive and is the only number");
-        
+
         allAreNegative.IsSatisfiedBy([0, 0, 0, 0]).Satisfied.Should().BeFalse();
         allAreNegative.IsSatisfiedBy([0, 0, 0, 0]).Assertions.Should().BeEquivalentTo("all are 0");
-        
+
         allAreNegative.IsSatisfiedBy([2, 4, 6, 8]).Satisfied.Should().BeFalse();
         allAreNegative.IsSatisfiedBy([2, 4, 6, 8]).Assertions.Should().BeEquivalentTo("all are positive numbers");
-        
+
         allAreNegative.IsSatisfiedBy([0, 1, 2, 3]).Satisfied.Should().BeFalse();
         allAreNegative.IsSatisfiedBy([0, 1, 2, 3]).Assertions.Should().BeEquivalentTo("none are negative numbers");
 
@@ -306,11 +306,11 @@ public class TutorialTests
     }
 
 #endif
-    
+
     [Fact]
     public void Should_harvest_assertions_from_a_boolean_result_predicate()
     {
-        var isLongEvenSpec = 
+        var isLongEvenSpec =
             Spec.Build((long n) => n % 2 == 0)
                 .WhenTrue("even")
                 .WhenFalse("odd")
@@ -322,10 +322,10 @@ public class TutorialTests
                 .WhenFalse("not positive")
                 .Create();
 
-        var isIntegerPositiveAndEvenSpec = 
+        var isIntegerPositiveAndEvenSpec =
             Spec.Build((int n) => isLongEvenSpec.IsSatisfiedBy(n) & isDecimalPositiveSpec.IsSatisfiedBy(n))
                 .Create("even and positive");
-        
+
         isIntegerPositiveAndEvenSpec.IsSatisfiedBy(2).AllRootAssertions.Should().BeEquivalentTo("even", "positive");
         isIntegerPositiveAndEvenSpec.IsSatisfiedBy(3).AllRootAssertions.Should().BeEquivalentTo("odd", "positive");
         isIntegerPositiveAndEvenSpec.IsSatisfiedBy(0).AllRootAssertions.Should().BeEquivalentTo("even", "not positive");
@@ -366,8 +366,8 @@ public class TutorialTests
         var canCheckInSpec = hasValidTicketSpec & !hasOutstandingFeesSpec & isCheckInOpenSpec;
 
         var validPassenger = new Passenger(true, 0, DateTime.Now.AddHours(1));
-        
-        
+
+
         var canCheckIn = canCheckInSpec.IsSatisfiedBy(validPassenger);
 
         canCheckIn.Satisfied.Should().Be(true);
@@ -395,15 +395,15 @@ public class TutorialTests
                 .WhenTrue("customer has sufficient income")
                 .WhenFalse("customer has insufficient income")
                 .Create();
-        
+
         var isEligibleForLoan =
-            Spec.Build(hasGoodCreditScore & hasSufficientIncome) 
+            Spec.Build(hasGoodCreditScore & hasSufficientIncome)
                 .WhenTrue("customer is eligible for a loan")
                 .WhenFalseYield((_, result) => result.Assertions) // reusing assertions from the original propositions
                 .Create();
-        
+
         var act = isEligibleForLoan.IsSatisfiedBy(new Customer(200, 20000));
-        
+
         act.Satisfied.Should().BeFalse();
 
         act.Justification.Should().Be(
@@ -424,8 +424,8 @@ public class TutorialTests
     public void Should_have_subscription_in_grace_period()
     {
         var hasSubscriptionInGracePeriod =
-        Spec.Build((Subscription subscription) => 
-                DateTime.Now is var now 
+        Spec.Build((Subscription subscription) =>
+                DateTime.Now is var now
                 && subscription.ExpiryDate < now
                 && now < subscription.ExpiryDate.AddDays(7))
             .WhenTrue("subscription is within grace period")
@@ -441,43 +441,43 @@ public class TutorialTests
     [Fact]
     public void Should_get_root_assertions()
     {
-        var isEven = 
+        var isEven =
             Spec.Build<int>(n => n % 2 == 0)
                 .WhenTrue("is even")
                 .WhenFalse("is odd")
                 .Create();
-        
-        var areEven = 
+
+        var areEven =
             Spec.Build(isEven)
                 .AsAnySatisfied()
                 .WhenTrue("some even")
                 .WhenFalse("all odd")
                 .Create();
-        
+
         var act = areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]);
-        
+
         act.GetRootAssertions().Should().BeEquivalentTo(["is even"]);
     }
-    
+
 
     [Fact]
     public void Should_get_all_root_assertions()
     {
-        var isEven = 
+        var isEven =
             Spec.Build<int>(n => n % 2 == 0)
                 .WhenTrue("is even")
                 .WhenFalse("is odd")
                 .Create();
-        
-        var areEven = 
+
+        var areEven =
             Spec.Build(isEven)
                 .AsAnySatisfied()
                 .WhenTrue("some even")
                 .WhenFalse("all odd")
                 .Create();
-        
+
         var act = areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]);
-        
+
         act.GetAllRootAssertions().Should().BeEquivalentTo(["is even", "is odd"]);
     }
 
@@ -504,22 +504,22 @@ public class TutorialTests
     [InlineData(20, true, "buzz")]
     public void Should_solve_fizzbuzz(int number, bool expectedSatisfied, string expectedReason)
     {
-        var isFizz = 
+        var isFizz =
             Spec.Build((int n) => n % 3 == 0)
                 .Create("fizz");
-        
+
         var isBuzz =
             Spec.Build((int n) => n % 5 == 0)
                 .Create("buzz");
-        
-        var isSubstitution = 
+
+        var isSubstitution =
             Spec.Build(isFizz | isBuzz)
                 .WhenTrue((_, result) => string.Concat(result.Assertions))
                 .WhenFalse(n => n.ToString())
                 .Create("should substitute number");
-        
+
         var act = isSubstitution.IsSatisfiedBy(number);
-        
+
         act.Satisfied.Should().Be(expectedSatisfied);
         act.Reason.Should().Be(expectedReason);
     }
@@ -544,7 +544,7 @@ public class TutorialTests
             """
             AND
                 valid
-                OR
+                NOR
                     !empty
                     !full
             """);
@@ -554,7 +554,7 @@ public class TutorialTests
     public void Should_demonstrate_the_usage_of_GetTrueAssertions()
     {
         var left = Spec.Build((bool b) => b).Create("left");
-        var right = Spec.Build((bool b) => !b).Create("right");    
+        var right = Spec.Build((bool b) => !b).Create("right");
 
         var spec =
             Spec .Build(left ^ right)
@@ -570,7 +570,7 @@ public class TutorialTests
     public void Should_demonstrate_the_usage_of_GetFalseAssertions()
     {
         var left = Spec.Build((bool b) => b).Create("left");
-        var right = Spec.Build((bool b) => !b).Create("right");    
+        var right = Spec.Build((bool b) => !b).Create("right");
 
         var spec =
             Spec .Build(left ^ right)

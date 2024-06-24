@@ -14,7 +14,7 @@ var specC = Spec.Build((bool b) => !b).Create("c");
 var spec = specA & !(specB | specC);
 
 var sut = spec.IsSatisfiedBy(true);
-   
+
 act.Reason; // "a & (!b | !c)"
 ```
 
@@ -26,8 +26,8 @@ the structure of the original proposition.
 
 ### Justification
 
-While `Reason` property will provide a simplified 
-explanation of what happened, the `Justification` will give you a thorough breakdown of the causes, including 
+While `Reason` property will provide a simplified
+explanation of what happened, the `Justification` will give you a thorough breakdown of the causes, including
 encapsulated propositions with differing metadata types.
 Any propositions that did not influence the final result are omitted.
 
@@ -38,16 +38,16 @@ var act = sut.IsSatisfiedBy(new Hand("KH, QH, JH, 10H, 9H");
 
 act.Justification; // is a winning poker hand
                    //     OR
-                   //         is a royal flush hand
+                   //         is a straight flush hand
                    //             AND
+                   //                 is a straight hand
+                   //                     OR
+                   //                         is King High Straight
+                   //                             all cards are King, Queen, Jack
                    //                 is a flush hand
                    //                     OR
                    //                         a flush of Hearts
-                   //                             AH is Hearts
                    //                             KH is Hearts
                    //                             QH is Hearts
                    //                             JH is Hearts
-                   //                             10H is Hearts
-                   //                 is Ace High Straight Broadway
-                   //                     all cards are Ace, King, Queen, Jack, and Ten
 ```
