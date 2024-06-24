@@ -1,4 +1,4 @@
-﻿# OrElseTogether()
+# OrElseTogether()
 
 ```csharp
 SpecBase<TModel, TMetadata> OrElseTogether<TModel, TMetadata>(

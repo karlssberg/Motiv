@@ -1,4 +1,4 @@
-﻿# Know _Why_, not just _What_
+# Know _Why_, not just _What_
 
 [![Build Status](https://github.com/karlssberg/Motiv/actions/workflows/dotnet.yml/badge.svg)](https://github.com/karlssberg/Motiv)
 [![GitHub](https://img.shields.io/github/license/karlssberg/Motiv)](https://github.com/karlssberg/Motiv/blob/main/LICENSE)

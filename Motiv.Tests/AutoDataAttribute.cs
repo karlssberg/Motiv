@@ -1,4 +1,4 @@
-﻿using AutoFixture;
+using AutoFixture;
 using AutoFixture.AutoNSubstitute;
 
 namespace Motiv.Tests;

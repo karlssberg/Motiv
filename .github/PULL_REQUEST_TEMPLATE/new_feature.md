@@ -1,4 +1,4 @@
-﻿# New Feature Pull Request Template
+# New Feature Pull Request Template
 
 ## Description
 Please provide a brief description of the new feature.

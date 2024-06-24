@@ -1,4 +1,4 @@
-﻿# AndTogether()
+# AndTogether()
 
 ```csharp
 SpecBase<TModel, TMetadata> AndTogether<TModel, TMetadata>(

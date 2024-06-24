@@ -1,4 +1,4 @@
-﻿namespace Motiv.Poker.Tests;
+namespace Motiv.Poker.Tests;
 
 public static class HandRanks
 {

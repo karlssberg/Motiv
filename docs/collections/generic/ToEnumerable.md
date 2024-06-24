@@ -1,4 +1,4 @@
-﻿# ToEnumerable()
+# ToEnumerable()
 
 ```csharp
 IEnumerable<T> ToEnumerable<T>(this T value)

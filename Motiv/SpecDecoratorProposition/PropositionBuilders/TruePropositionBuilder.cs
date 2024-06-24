@@ -1,4 +1,4 @@
-﻿using Motiv.HigherOrderProposition;
+using Motiv.HigherOrderProposition;
 using Motiv.HigherOrderProposition.PropositionBuilders;
 using Motiv.SpecDecoratorProposition.PropositionBuilders.Explanation;
 using Motiv.SpecDecoratorProposition.PropositionBuilders.Metadata;

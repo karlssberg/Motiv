@@ -1,4 +1,4 @@
-﻿# Explanation Propositions
+# Explanation Propositions
 
 Explanation propositions are the backbone of the Motiv library and are used to provide human-readable feedback to 
 users (or developers).

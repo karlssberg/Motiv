@@ -1,4 +1,4 @@
-﻿namespace Motiv.AndAlso;
+namespace Motiv.AndAlso;
 
 internal sealed class AndAlsoBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,

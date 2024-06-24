@@ -1,4 +1,4 @@
-﻿namespace Motiv.Tests;
+namespace Motiv.Tests;
 
 public class EnumerableExtensionsTests
 {

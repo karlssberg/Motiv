@@ -1,4 +1,4 @@
-﻿using Motiv.HigherOrderProposition.PropositionBuilders.Explanation;
+using Motiv.HigherOrderProposition.PropositionBuilders.Explanation;
 using Motiv.HigherOrderProposition.PropositionBuilders.Metadata;
 
 namespace Motiv.HigherOrderProposition.PropositionBuilders;

@@ -1,4 +1,4 @@
-﻿namespace Motiv.Not;
+namespace Motiv.Not;
 
 /// <summary>Represents the result of a logical NOT operation on a boolean result.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the result.</typeparam>

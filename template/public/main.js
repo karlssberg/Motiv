@@ -1,4 +1,4 @@
-﻿/* file: my-template/public/main.js */
+/* file: my-template/public/main.js */
 export default {
     defaultTheme: 'dark',
     iconLinks: [

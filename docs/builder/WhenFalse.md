@@ -1,4 +1,4 @@
-﻿---
+---
 title: WhenFalse()
 category: building
 ---

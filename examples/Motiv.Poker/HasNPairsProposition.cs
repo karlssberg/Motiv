@@ -1,4 +1,4 @@
-﻿namespace Motiv.Poker;
+namespace Motiv.Poker;
 
 public class HasNPairsProposition(int pairCount) : Spec<Hand>(
     Spec.Build((Hand hand) => 

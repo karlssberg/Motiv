@@ -1,4 +1,4 @@
-﻿# Derivatives
+# Derivatives
 
 In the same way that a regular predicate function (`Func<TModel, bool>`) can be used to create a proposition, a 
 proposition can be used to create a new proposition.

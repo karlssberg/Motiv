@@ -1,4 +1,4 @@
-﻿namespace Motiv;
+namespace Motiv;
 
 /// <summary>
 /// Represents the base class for a description of a <see cref="BooleanResultBase"/>.

@@ -1,4 +1,4 @@
-﻿# GetFalseAssertions()
+# GetFalseAssertions()
 
 ```csharp
 IEnumerable<string> GetFalseAssertions(this IEnumerable<BooleanResultBase> results)

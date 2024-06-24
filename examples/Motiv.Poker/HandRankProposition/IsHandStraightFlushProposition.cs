@@ -1,4 +1,4 @@
-﻿namespace Motiv.Poker.HandRankProposition;
+namespace Motiv.Poker.HandRankProposition;
 
 public class IsHandStraightFlushProposition() : Spec<Hand, HandRank>(
     Spec.Build(new IsHandStraightProposition() & new IsHandFlushProposition())

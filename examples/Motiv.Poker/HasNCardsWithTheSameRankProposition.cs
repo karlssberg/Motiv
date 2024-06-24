@@ -1,4 +1,4 @@
-﻿
+
 namespace Motiv.Poker;
 
 public class HasNCardsWithTheSameRankProposition(int sameRankCount) : Spec<Hand>(

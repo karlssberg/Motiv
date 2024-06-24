@@ -1,4 +1,4 @@
-﻿namespace Motiv.Not;
+namespace Motiv.Not;
 
 internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase operand) : ResultDescriptionBase
 {

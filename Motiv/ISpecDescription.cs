@@ -1,4 +1,4 @@
-﻿namespace Motiv;
+namespace Motiv;
 
 /// <summary>
 /// Represents a specification description.

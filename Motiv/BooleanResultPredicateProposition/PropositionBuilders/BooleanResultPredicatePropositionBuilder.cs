@@ -1,4 +1,4 @@
-﻿using Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanation;
+using Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanation;
 using Motiv.BooleanResultPredicateProposition.PropositionBuilders.Metadata;
 using Motiv.HigherOrderProposition;
 using Motiv.HigherOrderProposition.PropositionBuilders;

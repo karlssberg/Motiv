@@ -1,4 +1,4 @@
-﻿# AllFalse()
+# AllFalse()
 
 ```csharp
 bool AllFalse<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)

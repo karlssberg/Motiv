@@ -1,4 +1,4 @@
-﻿namespace Motiv.Poker;
+namespace Motiv.Poker;
 
 public record Card(Suit Suit, Rank Rank)
 {

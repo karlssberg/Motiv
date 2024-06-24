@@ -1,4 +1,4 @@
-﻿namespace Motiv.BooleanResultPredicateProposition;
+namespace Motiv.BooleanResultPredicateProposition;
 
 internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> predicate,

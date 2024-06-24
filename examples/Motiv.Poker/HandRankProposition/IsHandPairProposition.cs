@@ -1,4 +1,4 @@
-﻿namespace Motiv.Poker.HandRankProposition;
+namespace Motiv.Poker.HandRankProposition;
 
 public class IsHandPairProposition() : Spec<Hand, HandRank>(
     Spec.Build(new HasNPairsProposition(1))

@@ -1,4 +1,4 @@
-﻿# OrTogether()
+# OrTogether()
 
 ```csharp
 BooleanResultBase<TMetadata> OrTogether<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)

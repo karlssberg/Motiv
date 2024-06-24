@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Motiv.And;
 using Motiv.AndAlso;
 using Motiv.Not;

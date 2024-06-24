@@ -1,4 +1,4 @@
-﻿# Bug Fix Pull Request Template
+# Bug Fix Pull Request Template
 
 ## Description
 Please provide a brief description of the bug and how your changes fix it.

@@ -1,4 +1,4 @@
-﻿namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanation;
+namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanation;
 
 /// <summary>
 /// A factory for creating propositions based on the supplied proposition and explanation factories.

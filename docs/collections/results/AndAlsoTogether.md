@@ -1,4 +1,4 @@
-﻿# AndAlsoTogether()
+# AndAlsoTogether()
 
 ```csharp
 BooleanResultBase<TMetadata> AndAlsoTogether<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)

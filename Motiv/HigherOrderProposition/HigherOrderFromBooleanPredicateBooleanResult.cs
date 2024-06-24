@@ -1,4 +1,4 @@
-﻿namespace Motiv.HigherOrderProposition;
+namespace Motiv.HigherOrderProposition;
 
 internal sealed class HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
     bool isSatisfied,

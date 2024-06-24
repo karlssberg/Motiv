@@ -1,4 +1,4 @@
-﻿namespace Motiv;
+namespace Motiv;
 
 /// <summary>
 /// Represents errors that occur during the execution of a specification.

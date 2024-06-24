@@ -1,4 +1,4 @@
-﻿# Minimal proposition
+# Minimal proposition
 The most concise proposition can be created by providing a predicate and a propositional statement.
 It uses the minimum set of fluent builder methods to create a proposition.
 

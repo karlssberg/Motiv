@@ -1,4 +1,4 @@
-﻿namespace Motiv.Poker.HandRankProposition;
+namespace Motiv.Poker.HandRankProposition;
 
 public class IsHandFullHouseProposition() : Spec<Hand, HandRank>(() =>
     Spec.Build(new HasNCardsWithTheSameRankProposition(2) & new HasNCardsWithTheSameRankProposition(3))

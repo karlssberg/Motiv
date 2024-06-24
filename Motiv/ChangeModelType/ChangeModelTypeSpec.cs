@@ -1,4 +1,4 @@
-﻿namespace Motiv.ChangeModelType;
+namespace Motiv.ChangeModelType;
 
 internal sealed class ChangeModelTypeSpec<TParentModel, TModel, TMetadata>(
     SpecBase<TModel, TMetadata> spec,

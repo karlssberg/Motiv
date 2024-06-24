@@ -1,4 +1,4 @@
-﻿namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Metadata;
+namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Metadata;
 
 /// <summary>
 /// A factory for creating propositions based on the supplied predicate and metadata factories.

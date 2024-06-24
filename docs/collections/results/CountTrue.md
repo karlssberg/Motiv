@@ -1,4 +1,4 @@
-﻿# CountTrue()
+# CountTrue()
 
 ```csharp
 int CountFalse<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)

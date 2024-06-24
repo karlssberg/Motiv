@@ -1,4 +1,4 @@
-﻿# GetAssertions()
+# GetAssertions()
 
 ```csharp
 IEnumerable<string> GetAssertions(this IEnumerable<BooleanResultBase> results)

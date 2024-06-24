@@ -1,4 +1,4 @@
-﻿namespace Motiv.Not;
+namespace Motiv.Not;
 
 internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMetadata> operand) : ISpecDescription
 {

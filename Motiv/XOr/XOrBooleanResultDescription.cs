@@ -1,4 +1,4 @@
-﻿namespace Motiv.XOr;
+namespace Motiv.XOr;
 
 internal sealed class XOrBooleanResultDescription<TMetadata>(
     string operationName,

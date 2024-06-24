@@ -1,4 +1,4 @@
-﻿namespace Motiv;
+namespace Motiv;
 
 internal sealed class SpecDescription(string statement, ISpecDescription? underlyingDescription = null) : ISpecDescription
 {

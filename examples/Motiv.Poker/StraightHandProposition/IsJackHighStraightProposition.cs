@@ -1,4 +1,4 @@
-﻿namespace Motiv.Poker.StraightHandProposition;
+namespace Motiv.Poker.StraightHandProposition;
 
 public class IsJackHighStraightProposition() : Spec<Hand>(
     Spec.Build(new DoAllCardsMatchRanksProposition(JackHighStraight))

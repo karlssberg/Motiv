@@ -1,4 +1,4 @@
-﻿namespace Motiv.Poker.StraightHandProposition;
+namespace Motiv.Poker.StraightHandProposition;
 
 public class IsSevenHighStraightProposition() : Spec<Hand>(
     Spec.Build(new DoAllCardsMatchRanksProposition(SevenHighStraight))

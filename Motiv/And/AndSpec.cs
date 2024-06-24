@@ -1,4 +1,4 @@
-﻿namespace Motiv.And;
+namespace Motiv.And;
 
 internal sealed class AndSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
