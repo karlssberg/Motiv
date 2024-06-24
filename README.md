@@ -25,13 +25,18 @@ var isPartiallyFull = isValid & !(isEmpty | isFull);
 ```
 
 To get detailed feedback:
-
++
 ```csharp
 // Evaluate the proposition
 var result = isPartiallyFull.IsSatisfiedBy(5);
 
-result.Satisfied;   // true
-result.Assertions;  // ["valid", "!empty", "!full"]
+result.Satisfied;     // true
+result.Assertions;    // ["valid", "!empty", "!full"]
+result.Justifications // AND
+                      //     valid
+                      //     OR
+                      //         !empty
+                      //         !full
 ```
 
 ## Why Use Motiv?

@@ -540,6 +540,14 @@ public class TutorialTests
 
         result.Satisfied.Should().BeTrue();
         result.Assertions.Should().BeEquivalentTo(["valid", "!empty", "!full"]);
+        result.Justification.Should().Be(
+            """
+            AND
+                valid
+                OR
+                    !empty
+                    !full
+            """);
     }
 
     [Fact]
@@ -572,11 +580,5 @@ public class TutorialTests
 
         spec.IsSatisfiedBy(true).Assertions.Should().BeEquivalentTo("!right");
         spec.IsSatisfiedBy(false).Assertions.Should().BeEquivalentTo("!left");
-    }
-
-    [Fact]
-    public void Should_()
-    {
-        
     }
 }

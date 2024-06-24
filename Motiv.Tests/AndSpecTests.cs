@@ -544,4 +544,27 @@ public class AndSpecTests
         // Assert
         act.Should().BeEquivalentTo([left, right]);
     }
+    
+    [Fact]
+    public void Should_populate_underlying_results_with_metadata()
+    {
+        // Arrange
+        var left = Spec.Build<object>(_ => true).Create("left");
+        var right = Spec.Build<object>(_ => true).Create("right");
+        
+        IEnumerable<BooleanResultBase<string>> expected =
+        [
+            left.IsSatisfiedBy(new object()),
+            right.IsSatisfiedBy(new object())
+        ];
+        
+        var spec = left & right;
+        var result = spec.IsSatisfiedBy(new object());
+        
+        // Act
+        var act = result.UnderlyingWithMetadata;
+        
+        // Assert
+        act.Should().BeEquivalentTo(expected);
+    }
 }
