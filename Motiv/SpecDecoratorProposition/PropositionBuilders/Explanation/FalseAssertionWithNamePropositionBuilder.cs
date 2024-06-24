@@ -1,4 +1,4 @@
-﻿namespace Motiv.SpecDecoratorProposition.PropositionBuilders.Explanation;
+namespace Motiv.SpecDecoratorProposition.PropositionBuilders.Explanation;
 
 /// <summary>
 /// A builder for creating propositions based on a predicate and explanations for true and false conditions. This is

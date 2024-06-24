@@ -1,4 +1,4 @@
-﻿namespace Motiv;
+namespace Motiv;
 
 /// <summary>
 /// Provides extension methods for assertions.

@@ -1,4 +1,4 @@
-﻿namespace Motiv.Or;
+namespace Motiv.Or;
 
 internal sealed class OrSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,

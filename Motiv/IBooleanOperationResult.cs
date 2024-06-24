@@ -1,4 +1,4 @@
-﻿namespace Motiv;
+namespace Motiv;
 
 internal interface IBooleanOperationResult
 {

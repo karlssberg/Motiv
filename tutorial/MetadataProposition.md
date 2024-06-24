@@ -1,4 +1,4 @@
-﻿# Metadata Propositions
+# Metadata Propositions
 
 Metadata propositions allow custom POCO types, known as _metadata_, to be attached to the result.
 Much the same as [explanation propositions](ExplanationProposition.md), metadata propositions can be used to 

@@ -1,4 +1,4 @@
-﻿namespace Motiv.BooleanPredicateProposition;
+namespace Motiv.BooleanPredicateProposition;
 
 internal sealed class PropositionResultDescription(string reason)
     : ResultDescriptionBase

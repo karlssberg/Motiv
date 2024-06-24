@@ -1,4 +1,4 @@
-﻿# GetRootAssertions()
+# GetRootAssertions()
 
 ```csharp
 IEnumerable<string> GetRootAssertions(this BooleanResultBase result)

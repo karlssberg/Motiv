@@ -1,4 +1,4 @@
-﻿namespace Motiv.BooleanPredicateProposition;
+namespace Motiv.BooleanPredicateProposition;
 
 internal sealed class ExplanationProposition<TModel>(
     Func<TModel, bool> predicate,

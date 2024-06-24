@@ -1,4 +1,4 @@
-﻿---
+---
 title: AndAlso()
 category: operators
 ---

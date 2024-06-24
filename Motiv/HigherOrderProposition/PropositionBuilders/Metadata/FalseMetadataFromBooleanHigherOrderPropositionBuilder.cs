@@ -1,4 +1,4 @@
-﻿namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata;
+namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata;
 
 /// <summary>
 /// A builder for creating propositions based on a predicate and metadata factories. This is particularly useful

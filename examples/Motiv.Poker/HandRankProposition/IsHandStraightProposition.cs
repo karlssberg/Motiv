@@ -1,4 +1,4 @@
-﻿using Motiv.Poker.StraightHandProposition;
+using Motiv.Poker.StraightHandProposition;
 
 namespace Motiv.Poker.HandRankProposition;
 

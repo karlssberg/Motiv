@@ -1,4 +1,4 @@
-﻿#  WhereTrue()
+#  WhereTrue()
 
 ```csharp
 IEnumerable<BooleanResultBase<TMetadata>> WhereTrue<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)

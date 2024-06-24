@@ -1,4 +1,4 @@
-﻿namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanation;
+namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanation;
 
 /// <summary>
 /// A builder for creating propositions based on a predicate and explanations for true and false conditions. This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a proposition that covers every possibility, so instead it is done on a case-by-case basis.

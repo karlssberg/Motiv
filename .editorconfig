@@ -1,0 +1,43 @@
+# Top-most EditorConfig file
+root = true
+
+# All files
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# C# files
+[*.cs]
+end_of_line = crlf
+
+# Visual Studio Solution Files
+[*.sln]
+end_of_line = crlf
+
+# Visual Studio Project Files
+[*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]
+end_of_line = crlf
+
+# Config files
+[*.{config,resx}]
+end_of_line = crlf
+
+# XML files
+[*.{xml,xaml}]
+end_of_line = crlf
+
+# Batch scripts
+[*.{cmd,bat}]
+end_of_line = crlf
+
+# Bash scripts
+[*.sh]
+end_of_line = lf
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false

@@ -1,4 +1,4 @@
-﻿# WhereFalse()
+# WhereFalse()
 
 ```csharp
 IEnumerable<BooleanResultBase<TMetadata>> WhereFalse<TMetadata>(this IEnumerable<BooleanResultBase<TMetadata>> results)

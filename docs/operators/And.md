@@ -1,4 +1,4 @@
-﻿---
+---
 title: And()
 category: operators
 ---

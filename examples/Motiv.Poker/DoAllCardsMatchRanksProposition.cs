@@ -1,4 +1,4 @@
-﻿namespace Motiv.Poker;
+namespace Motiv.Poker;
 
 public class DoAllCardsMatchRanksProposition(ICollection<Rank> ranks) : Spec<Hand>(
     Spec.Build((Hand hand) =>

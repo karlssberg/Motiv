@@ -1,4 +1,4 @@
-﻿namespace Motiv.HigherOrderProposition;
+namespace Motiv.HigherOrderProposition;
 
 /// <summary>
 /// Represents a higher order boolean evaluation for a model.

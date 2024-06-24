@@ -1,4 +1,4 @@
-﻿# Motiv Architecture
+# Motiv Architecture
 
 ## Introduction
 At the heart of Motiv is the Specification Pattern—a well-established pattern for modelling domain propositions.

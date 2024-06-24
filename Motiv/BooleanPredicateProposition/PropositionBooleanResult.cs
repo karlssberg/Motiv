@@ -1,4 +1,4 @@
-﻿namespace Motiv.BooleanPredicateProposition;
+namespace Motiv.BooleanPredicateProposition;
 
 /// <summary>
 /// Represents a proposition that yields custom metadata based on the result of a boolean predicate.

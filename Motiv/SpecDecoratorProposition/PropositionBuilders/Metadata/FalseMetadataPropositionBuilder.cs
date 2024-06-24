@@ -1,4 +1,4 @@
-﻿namespace Motiv.SpecDecoratorProposition.PropositionBuilders.Metadata;
+namespace Motiv.SpecDecoratorProposition.PropositionBuilders.Metadata;
 
 /// <summary>
 /// A builder for creating propositions based on an existing proposition and metadata factories.

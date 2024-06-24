@@ -1,4 +1,4 @@
-﻿items:
+items:
   - name: Where()
     href: Where.md
   - name: ToEnumerable()

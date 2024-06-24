@@ -1,4 +1,4 @@
-﻿namespace Motiv.OrElse;
+namespace Motiv.OrElse;
 
 internal sealed class OrElseBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata> left,

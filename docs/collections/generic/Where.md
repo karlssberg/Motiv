@@ -1,4 +1,4 @@
-﻿# Where()
+# Where()
 
 ```csharp
 IEnumerable<T> Where<T>(this IEnumerable<T> enumerable, SpecBase<TModel, TMetadata> spec)

@@ -1,4 +1,4 @@
-﻿# OrTogether()
+# OrTogether()
 
 ```csharp
 SpecBase<TModel, TMetadata> OrTogether<TModel, TMetadata>(

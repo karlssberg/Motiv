@@ -1,4 +1,4 @@
-﻿# Operations
+# Operations
 
 Propositions can be logically operated on using either class methods on the <xref:Motiv.SpecBase`2> base class, or
 by using the overloaded logical operators `&`, `|`, `^`, `!`

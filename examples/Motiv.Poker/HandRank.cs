@@ -1,4 +1,4 @@
-﻿namespace Motiv.Poker;
+namespace Motiv.Poker;
 
 public enum HandRank
 {

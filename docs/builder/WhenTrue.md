@@ -1,4 +1,4 @@
-﻿---
+---
 title: WhenTrue()
 category: building
 ---

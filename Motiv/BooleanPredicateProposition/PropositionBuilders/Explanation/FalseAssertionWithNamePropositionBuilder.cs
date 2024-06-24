@@ -1,4 +1,4 @@
-﻿namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
+namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
 
 /// <summary>
 /// A builder for creating propositions based on a predicate and a true condition, or for further refining a proposition.

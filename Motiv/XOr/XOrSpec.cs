@@ -1,4 +1,4 @@
-﻿namespace Motiv.XOr;
+namespace Motiv.XOr;
 
 internal sealed class XOrSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,

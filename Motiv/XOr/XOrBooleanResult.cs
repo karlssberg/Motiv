@@ -1,4 +1,4 @@
-﻿namespace Motiv.XOr;
+namespace Motiv.XOr;
 
 /// <summary>Represents the result of a logical XOR (exclusive OR) operation.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the result.</typeparam>

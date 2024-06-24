@@ -1,4 +1,4 @@
-﻿using Motiv.And;
+using Motiv.And;
 
 namespace Motiv.AndAlso;
 

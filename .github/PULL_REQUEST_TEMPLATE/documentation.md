@@ -1,4 +1,4 @@
-﻿# Documentation Update Pull Request Template
+# Documentation Update Pull Request Template
 
 ## Description
 Please provide a brief description of the documentation changes.

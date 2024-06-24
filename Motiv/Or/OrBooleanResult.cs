@@ -1,4 +1,4 @@
-﻿namespace Motiv.Or;
+namespace Motiv.Or;
 
 /// <summary>Represents a boolean result that is the logical OR of two operand results.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the boolean result.</typeparam>

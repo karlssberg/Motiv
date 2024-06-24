@@ -1,4 +1,4 @@
-﻿using static System.StringSplitOptions;
+using static System.StringSplitOptions;
 
 namespace Motiv.Poker;
 

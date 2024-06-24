@@ -1,4 +1,4 @@
-﻿using Motiv.HigherOrderProposition;
+using Motiv.HigherOrderProposition;
 
 namespace Motiv;
 

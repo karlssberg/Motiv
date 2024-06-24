@@ -1,4 +1,4 @@
-﻿---
+---
 title: XOr()
 category: operators
 ---

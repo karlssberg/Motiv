@@ -1,4 +1,4 @@
-﻿# Introduction
+# Introduction
 
 This tutorial will guide you through the essential features of using Motiv, and how to use it.
 It briefly explains the basic concepts of propositions, assertions, and specifications, and how they are used in 

@@ -1,4 +1,4 @@
-﻿namespace Motiv.SpecDecoratorProposition;
+namespace Motiv.SpecDecoratorProposition;
 
 internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,

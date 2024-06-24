@@ -1,4 +1,4 @@
-﻿namespace Motiv.MetadataToExplanationAdapter;
+namespace Motiv.MetadataToExplanationAdapter;
 
 internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>(
     SpecBase<TModel, TUnderlyingModel> spec) 

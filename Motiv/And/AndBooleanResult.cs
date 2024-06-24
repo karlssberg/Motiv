@@ -1,4 +1,4 @@
-﻿namespace Motiv.And;
+namespace Motiv.And;
 
 /// <summary>
 ///     Represents the result of a boolean AND operation between two <see cref="BooleanResultBase{TMetadata}" />
