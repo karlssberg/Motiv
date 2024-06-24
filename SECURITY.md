@@ -6,7 +6,7 @@ We currently support the following versions of Motiv with security updates:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 7.0.x   | :white_check_mark: |
+| 7.x.x   | :white_check_mark: |
 | < 7.0   | :x:                |
 
 Only versions 7.0.x are actively maintained and receive security updates. We recommend using the latest version (currently 7.0.2) for the best security and feature set.
