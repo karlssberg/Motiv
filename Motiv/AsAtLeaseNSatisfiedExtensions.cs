@@ -79,7 +79,7 @@ public static class AsAtLeaseNSatisfiedExtensions
             {
                 var booleanResultsArray = booleanResults.ToArray();
                 return booleanResultsArray
-                    .Where(result => result.Satisfied)
+                    .WhereTrue()
                     .ElseIfEmpty(booleanResultsArray);
             });
     }

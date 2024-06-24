@@ -110,6 +110,38 @@ public class OrSpecTests
         act.Should().Be(expected);
     }
 
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_use_the_reason_property_for_ToString(
+        bool leftResult,
+        bool rightResult,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = left | right;
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.ToString();
+
+        // Assert
+        act.Should().Be(result.Reason);
+    }
 
     [Theory]
     [InlineAutoData(true, true, "left | right")]

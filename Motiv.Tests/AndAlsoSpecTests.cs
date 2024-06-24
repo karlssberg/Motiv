@@ -72,6 +72,39 @@ public class AndAlsoSpecTests
         act.Should().BeEquivalentTo(expectedSerialized);
     }
 
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_use_the_reason_property_for_ToString(
+        bool leftResult,
+        bool rightResult,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = left.AndAlso(right);
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.ToString();
+
+        // Assert
+        act.Should().Be(result.Reason);
+    }
+
     [Fact]
     public void Should_not_evaluate_the_right_operand_when_false()
     {
