@@ -13,11 +13,11 @@ public class BooleanResultTests
         var result = spec.IsSatisfiedBy(new object());
         // Act
         var act = result && result; // invokes true operator overload
-        
+
         // Assert
         act.Satisfied.Should().BeTrue();
     }
-    
+
     [Fact]
     public void Should_ensure_that_the_false_operator_overloads_are_correct()
     {
@@ -27,14 +27,14 @@ public class BooleanResultTests
             .Create("is model true");
 
         var result = spec.IsSatisfiedBy(new object());
-        
+
         // Act
         var act = !result && result; // invokes false operator overload
 
         // Assert
         act.Satisfied.Should().BeFalse();
     }
-    
+
     [Theory]
     [InlineData(false, false, false)]
     [InlineData(false, true, false)]
@@ -49,7 +49,7 @@ public class BooleanResultTests
             .WhenFalse("left is false")
             .Create()
             .IsSatisfiedBy(leftModel);
-        
+
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
@@ -63,7 +63,7 @@ public class BooleanResultTests
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, "left is false")]
     [InlineData(false, true, "left is false")]
@@ -78,7 +78,7 @@ public class BooleanResultTests
             .WhenFalse("left is false")
             .Create()
             .IsSatisfiedBy(leftModel);
-        
+
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
@@ -87,7 +87,7 @@ public class BooleanResultTests
             .IsSatisfiedBy(rightModel);
 
         var result = left.AndAlso(right);
-        
+
         // Act
         var act = result.Assertions;
 
@@ -108,7 +108,7 @@ public class BooleanResultTests
             .WhenFalse("left is false")
             .Create()
             .IsSatisfiedBy(leftModel);
-        
+
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
@@ -117,14 +117,14 @@ public class BooleanResultTests
             .IsSatisfiedBy(rightModel);
 
         var result = left && right;
-        
+
         // Act
         var act = result.Assertions;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, false)]
     [InlineData(false, true, false)]
@@ -142,7 +142,7 @@ public class BooleanResultTests
             .WhenFalse("left is false")
             .Create()
             .IsSatisfiedBy(leftModel);
-        
+
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
@@ -156,7 +156,7 @@ public class BooleanResultTests
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, false)]
     [InlineData(false, true, true)]
@@ -174,7 +174,7 @@ public class BooleanResultTests
             .WhenFalse("left is false")
             .Create()
             .IsSatisfiedBy(leftModel);
-        
+
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
@@ -188,7 +188,7 @@ public class BooleanResultTests
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, "left is false", "right is false")]
     [InlineData(false, true, "right is true")]
@@ -203,7 +203,7 @@ public class BooleanResultTests
             .WhenFalse("left is false")
             .Create()
             .IsSatisfiedBy(leftModel);
-        
+
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
@@ -212,14 +212,14 @@ public class BooleanResultTests
             .IsSatisfiedBy(rightModel);
 
         var result = left.OrElse(right);
-        
+
         // Act
         var act = result.Assertions;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, "left is false", "right is false")]
     [InlineData(false, true, "right is true")]
@@ -234,7 +234,7 @@ public class BooleanResultTests
             .WhenFalse("left is false")
             .Create()
             .IsSatisfiedBy(leftModel);
-        
+
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
@@ -243,7 +243,7 @@ public class BooleanResultTests
             .IsSatisfiedBy(rightModel);
 
         var result = left || right;
-        
+
         // Act
         var act = result.Assertions;
 
@@ -266,10 +266,10 @@ public class BooleanResultTests
         var sut = spec.IsSatisfiedBy(true);
 
         var act = sut.Reason;
-        
+
         act.Should().Be("a & (!b | !c)");
     }
-    
+
     [Fact]
     public void Should_ensure_that_brackets_are_applied_correctly_with_the_Reason_property_during_andAlso_operation()
     {
@@ -285,10 +285,10 @@ public class BooleanResultTests
         var sut = spec.IsSatisfiedBy(true);
 
         var act = sut.Reason;
-        
+
         act.Should().Be("a && (!b | !c)");
     }
-    
+
     [Fact]
     public void Should_ensure_that_brackets_are_applied_correctly_with_the_Reason_property_during_or_operation()
     {
@@ -304,10 +304,10 @@ public class BooleanResultTests
         var sut = spec.IsSatisfiedBy(true);
 
         var act = sut.Reason;
-        
+
         act.Should().Be("a | (!b & !c)");
     }
-    
+
     [Fact]
     public void Should_ensure_that_brackets_are_applied_correctly_with_the_Reason_property_during_orElse_operation()
     {
@@ -323,8 +323,159 @@ public class BooleanResultTests
         var sut = spec.IsSatisfiedBy(true);
 
         var act = sut.Reason;
-        
+
         act.Should().Be("!a || (b & c)");
     }
 
+    [Theory]
+    [InlineData(false, false, false, false)]
+    [InlineData(false, false, true, true)]
+    [InlineData(false, true, false, true)]
+    [InlineData(false, true, true, true)]
+    [InlineData(true, false, false, true)]
+    [InlineData(true, false, true, true)]
+    [InlineData(true, true, false, true)]
+    [InlineData(true, true, true, true)]
+    public void Should_or_together_multiple_boolean_results(bool right, bool middle, bool left, bool expected)
+    {
+        // Arrange
+        BooleanResultBase<string>[] results =
+            [
+                Spec.Build((bool b) => b)
+                    .WhenTrue("left is true")
+                    .WhenFalse("left is false")
+                    .Create()
+                    .IsSatisfiedBy(left),
+                Spec.Build((bool b) => b)
+                    .WhenTrue("middle is true")
+                    .WhenFalse("middle is false")
+                    .Create()
+                    .IsSatisfiedBy(middle),
+                Spec.Build((bool b) => b)
+                    .WhenTrue("right is true")
+                    .WhenFalse("right is false")
+                    .Create()
+                    .IsSatisfiedBy(right)
+            ];
+
+        // Act
+        var act = results.OrTogether();
+
+        // Assert
+        act.Satisfied.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(false, false, false, false)]
+    [InlineData(false, false, true, true)]
+    [InlineData(false, true, false, true)]
+    [InlineData(false, true, true, true)]
+    [InlineData(true, false, false, true)]
+    [InlineData(true, false, true, true)]
+    [InlineData(true, true, false, true)]
+    [InlineData(true, true, true, true)]
+    public void Should_orelse_together_multiple_boolean_results(bool right, bool middle, bool left, bool expected)
+    {
+        // Arrange
+        BooleanResultBase<string>[] results =
+        [
+            Spec.Build((bool b) => b)
+                .WhenTrue("left is true")
+                .WhenFalse("left is false")
+                .Create()
+                .IsSatisfiedBy(left),
+            Spec.Build((bool b) => b)
+                .WhenTrue("middle is true")
+                .WhenFalse("middle is false")
+                .Create()
+                .IsSatisfiedBy(middle),
+            Spec.Build((bool b) => b)
+                .WhenTrue("right is true")
+                .WhenFalse("right is false")
+                .Create()
+                .IsSatisfiedBy(right)
+        ];
+
+        // Act
+        var act = results.OrElseTogether();
+
+        // Assert
+        act.Satisfied.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(false, false, false, false)]
+    [InlineData(false, false, true, false)]
+    [InlineData(false, true, false, false)]
+    [InlineData(false, true, true, false)]
+    [InlineData(true, false, false, false)]
+    [InlineData(true, false, true, false)]
+    [InlineData(true, true, false, false)]
+    [InlineData(true, true, true, true)]
+    public void Should_and_together_multiple_boolean_results(bool right, bool middle, bool left, bool expected)
+    {
+        // Arrange
+        BooleanResultBase<string>[] results =
+        [
+            Spec.Build((bool b) => b)
+                .WhenTrue("left is true")
+                .WhenFalse("left is false")
+                .Create()
+                .IsSatisfiedBy(left),
+            Spec.Build((bool b) => b)
+                .WhenTrue("middle is true")
+                .WhenFalse("middle is false")
+                .Create()
+                .IsSatisfiedBy(middle),
+            Spec.Build((bool b) => b)
+                .WhenTrue("right is true")
+                .WhenFalse("right is false")
+                .Create()
+                .IsSatisfiedBy(right)
+        ];
+
+        // Act
+        var act = results.AndTogether();
+
+        // Assert
+        act.Satisfied.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(false, false, false, false)]
+    [InlineData(false, false, true, false)]
+    [InlineData(false, true, false, false)]
+    [InlineData(false, true, true, false)]
+    [InlineData(true, false, false, false)]
+    [InlineData(true, false, true, false)]
+    [InlineData(true, true, false, false)]
+    [InlineData(true, true, true, true)]
+    public void Should_andalso_together_multiple_boolean_results(bool right, bool middle, bool left, bool expected)
+    {
+        // Arrange
+        BooleanResultBase<string>[] results =
+        [
+            Spec.Build((bool b) => b)
+                .WhenTrue("left is true")
+                .WhenFalse("left is false")
+                .Create()
+                .IsSatisfiedBy(left),
+            Spec.Build((bool b) => b)
+                .WhenTrue("middle is true")
+                .WhenFalse("middle is false")
+                .Create()
+                .IsSatisfiedBy(middle),
+            Spec.Build((bool b) => b)
+                .WhenTrue("right is true")
+                .WhenFalse("right is false")
+                .Create()
+                .IsSatisfiedBy(right)
+        ];
+
+        // Act
+        var act = results.AndAlsoTogether();
+
+        // Assert
+        act.Satisfied.Should().Be(expected);
+    }
 }
