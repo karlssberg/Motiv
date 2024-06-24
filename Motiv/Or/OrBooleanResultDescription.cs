@@ -1,16 +1,16 @@
-using Motiv.OrElse;
+﻿using Motiv.OrElse;
 
 namespace Motiv.Or;
 
 internal sealed class OrBooleanResultDescription<TMetadata>(
     string operationName,
-    IEnumerable<BooleanResultBase<TMetadata>> causalResults) 
+    IEnumerable<BooleanResultBase<TMetadata>> causalResults)
     : ResultDescriptionBase
 {
-    
+
     internal override int CausalOperandCount => causalResults.Count();
-    
-    public override string Reason => 
+
+    public override string Reason =>
         CausalOperandCount switch
         {
             0 => "",
@@ -23,9 +23,9 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
 
     private static string ExplainReasons(BooleanResultBase<TMetadata> result)
     {
-        return result switch 
+        return result switch
         {
-            OrBooleanResult<TMetadata> orResult => 
+            OrBooleanResult<TMetadata> orResult =>
                 orResult.Description.Reason,
             OrElseBooleanResult<TMetadata> orElseResult =>
                 orElseResult.Description.Reason,

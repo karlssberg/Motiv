@@ -29,14 +29,14 @@ public class AndSpecTests
             .Create("right");
 
         var spec = left & right;
-        
+
         // Act
         var act = spec.IsSatisfiedBy(model).Satisfied;
 
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(true, true, true)]
     [InlineAutoData(true, false, false)]
@@ -193,7 +193,7 @@ public class AndSpecTests
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(true, true)]
     [InlineAutoData(true, false)]
@@ -261,7 +261,7 @@ public class AndSpecTests
 
         // Act
         var result = isActive.IsSatisfiedBy(subscription).Explanation.Underlying;
-        
+
         // Assert
         result.GetAssertions().Should().BeEquivalentTo(
         [
@@ -269,7 +269,7 @@ public class AndSpecTests
             "subscription has not ended"
         ]);
     }
-    
+
     [Fact]
     public void Should_evaluate_assertions_with_a_complex_model()
     {
@@ -330,7 +330,7 @@ public class AndSpecTests
         // Assert
         result.Should().Be("subscription has started & subscription has not ended & the location is in the USA");
     }
-    
+
     [Theory]
     [AutoData]
     public void Should_obtain_assertions_from_the_results_obtained_from_two_specs_of_different_models(DateTime now)
@@ -395,7 +395,7 @@ public class AndSpecTests
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, false)]
     [InlineAutoData(false, true, false)]
@@ -424,14 +424,14 @@ public class AndSpecTests
                 .Create("right");
 
         var spec = left & right;
-        
+
         // Act
         var act = spec.IsSatisfiedBy("").Satisfied;
 
         // Assert
         act.Should().Be(expectedSatisfied);
     }
-    
+
     [Theory]
     [InlineData(false, false, "!left", "!right")]
     [InlineData(false, true, "!left")]
@@ -456,13 +456,13 @@ public class AndSpecTests
                 .Create("right");
 
         var spec = left & right;
-        
+
         // Act
         var act = spec.IsSatisfiedBy("").Assertions;
 
         act.Should().BeEquivalentTo(expectedAssertions);
     }
-    
+
     [Theory]
     [InlineData(false, false, "!left", "!right")]
     [InlineData(false, true, "!left")]
@@ -487,14 +487,14 @@ public class AndSpecTests
                 .Create("right");
 
         var spec = left & right;
-        
+
         // Act
         var act = spec.IsSatisfiedBy("").Metadata;
 
         // Assert
         act.Should().BeEquivalentTo(expectedAssertions);
     }
-    
+
     [Fact]
     public void Should_not_collapse_ORELSE_operators_in_spec_description()
     {
@@ -502,11 +502,11 @@ public class AndSpecTests
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(_ => true)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(_ => true)
             .Create("third");
@@ -515,7 +515,7 @@ public class AndSpecTests
 
         // Act
         var act = spec.Expression;
-        
+
         // Assert
         act.Should().Be(
             """
@@ -525,7 +525,7 @@ public class AndSpecTests
                 third
             """);
     }
-    
+
     [Fact]
     public void Should_return_the_underlying_specs()
     {
@@ -533,38 +533,143 @@ public class AndSpecTests
         var left = Spec
             .Build<bool>(_ => true)
             .Create("left");
-        
+
         var right = Spec
             .Build<bool>(_ => true)
             .Create("right");
-        
+
         // Act
         var act = (left & right).Underlying;
-        
+
         // Assert
         act.Should().BeEquivalentTo([left, right]);
     }
-    
+
     [Fact]
     public void Should_populate_underlying_results_with_metadata()
     {
         // Arrange
         var left = Spec.Build<object>(_ => true).Create("left");
         var right = Spec.Build<object>(_ => true).Create("right");
-        
+
         IEnumerable<BooleanResultBase<string>> expected =
         [
             left.IsSatisfiedBy(new object()),
             right.IsSatisfiedBy(new object())
         ];
-        
+
         var spec = left & right;
         var result = spec.IsSatisfiedBy(new object());
-        
+
         // Act
         var act = result.UnderlyingWithMetadata;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        NAND
+            left
+            right
+        """)]
+    [InlineData(true, false,
+        """
+        NAND
+            !right
+        """)]
+    [InlineData(false, true,
+        """
+        NAND
+            !left
+        """)]
+    [InlineData(false, false,
+        """
+        NAND
+            !left
+            !right
+        """)]
+    public void Should_justify_a_nand_creation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !(left & right);
+
+        var result = spec.IsSatisfiedBy(false);
+
+        result.Justification.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        AND
+            left
+            right
+        """)]
+    [InlineData(true, false,
+        """
+        AND
+            !right
+        """)]
+    [InlineData(false, true,
+        """
+        AND
+            !left
+        """)]
+    [InlineData(false, false,
+        """
+        AND
+            !left
+            !right
+        """)]
+    public void Should_justify_a_nand_negation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !!(left & right);
+
+        var result = spec.IsSatisfiedBy(false);
+
+        result.Justification.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        NAND
+            left
+            right
+        """)]
+    [InlineData(true, false,
+        """
+        NAND
+            !right
+        """)]
+    [InlineData(false, true,
+        """
+        NAND
+            !left
+        """)]
+    [InlineData(false, false,
+        """
+        NAND
+            !left
+            !right
+        """)]
+    public void Should_justify_a_nand_double_negation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !!!(left & right);
+
+        var result = spec.IsSatisfiedBy(false);
+
+        result.Justification.Should().Be(expected);
     }
 }

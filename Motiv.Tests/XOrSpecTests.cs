@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace Motiv.Tests;
 
@@ -34,11 +34,11 @@ public class XOrSpecTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(true, true)]
     [InlineAutoData(true, false)]
@@ -68,17 +68,17 @@ public class XOrSpecTests
 
         // Act
         var act = result.Metadata;
-        
+
         // Assert
         act.Should().HaveCount(leftResult == rightResult ? 1 : 2)
             .And.Contain(leftResult)
             .And.Contain(rightResult);
     }
-    
+
     [Theory]
     [InlineAutoData(true, true, "left ^ right")]
     [InlineAutoData(true, false, "left ^ !right")]
-    [InlineAutoData(false, true, "!left ^ right")]  
+    [InlineAutoData(false, true, "!left ^ right")]
     [InlineAutoData(false, false, "!left ^ !right")]
     public void Should_serialize_the_result_of_the_xor_operation(
         bool leftResult,
@@ -105,15 +105,15 @@ public class XOrSpecTests
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(true, true, "none")]
     [InlineAutoData(true, false, "left")]
-    [InlineAutoData(false, true, "right")]  
+    [InlineAutoData(false, true, "right")]
     [InlineAutoData(false, false, "none")]
     public void Should_be_able_to_override_the_assertions_to_only_the_true_operand_has_its_output(
         bool leftResult,
@@ -144,7 +144,7 @@ public class XOrSpecTests
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
@@ -179,7 +179,7 @@ public class XOrSpecTests
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -214,7 +214,7 @@ public class XOrSpecTests
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -245,7 +245,7 @@ public class XOrSpecTests
 
         // Act
         var act = spec.Statement;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -276,7 +276,7 @@ public class XOrSpecTests
 
         // Act
         var act = spec.ToString();
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -307,7 +307,7 @@ public class XOrSpecTests
 
         // Act
         var act = spec.Statement;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -335,11 +335,11 @@ public class XOrSpecTests
 
         // Act
         var act = result.Description.CausalOperandCount;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, false)]
     [InlineAutoData(false, true, true)]
@@ -368,16 +368,16 @@ public class XOrSpecTests
                 .Create("right");
 
         var spec = left ^ right;
-        
+
         var result = spec.IsSatisfiedBy("");
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expectedSatisfied);
     }
-    
+
     [Theory]
     [InlineData(false, false, "!left", "!right")]
     [InlineData(false, true, "!left", "right")]
@@ -402,16 +402,16 @@ public class XOrSpecTests
                 .Create("right");
 
         var spec = left ^ right;
-        
+
         var result = spec.IsSatisfiedBy("");
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, "!left", "!right")]
     [InlineData(false, true, "!left", "right")]
@@ -436,16 +436,16 @@ public class XOrSpecTests
                 .Create("right");
 
         var spec = left ^ right;
-        
+
         var result = spec.IsSatisfiedBy("");
 
         // Act
         var act = result.Metadata;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Fact]
     public void Should_not_collapse_xor_operators_in_spec_result_description()
     {
@@ -453,25 +453,25 @@ public class XOrSpecTests
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(_ => true)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(_ => true)
             .Create("third");
-        
+
         var fourth = Spec
             .Build<bool>(_ => true)
             .Create("fourth");
 
-        var spec = first ^ second ^ third ^ fourth; 
+        var spec = first ^ second ^ third ^ fourth;
         var result = spec.IsSatisfiedBy(true);
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(
             """
@@ -507,12 +507,12 @@ public class XOrSpecTests
 
 
         var spec = first ^ second ^ (third ^ fourth);
-        
+
         var result = spec.IsSatisfiedBy(true);
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(
             """
@@ -525,7 +525,7 @@ public class XOrSpecTests
                     fourth
             """);
     }
-    
+
     [Fact]
     public void Should_not_collapse_xor_operators_in_spec_result_description_when_grouped_in_reverse_order()
     {
@@ -533,26 +533,26 @@ public class XOrSpecTests
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(_ => true)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(_ => true)
             .Create("third");
-        
+
         var fourth = Spec
             .Build<bool>(_ => true)
             .Create("fourth");
 
-        var spec = first ^ (second ^ (third ^ fourth)); 
-        
+        var spec = first ^ (second ^ (third ^ fourth));
+
         var result = spec.IsSatisfiedBy(true);
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(
             """
@@ -565,27 +565,139 @@ public class XOrSpecTests
                         fourth
             """);
     }
-    
+
     [Fact]
     public void Should_populate_underlying_results_with_metadata()
     {
         // Arrange
         var left = Spec.Build<object>(_ => true).Create("left");
         var right = Spec.Build<object>(_ => false).Create("right");
-        
+
         IEnumerable<BooleanResultBase<string>> expected =
         [
             left.IsSatisfiedBy(new object()),
             right.IsSatisfiedBy(new object())
         ];
-        
+
         var spec = left ^ right;
         var result = spec.IsSatisfiedBy(new object());
-        
+
         // Act
         var act = result.UnderlyingWithMetadata;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
+    }
+
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        XNOR
+            left
+            right
+        """)]
+    [InlineData(true, false,
+        """
+        XNOR
+            left
+            !right
+        """)]
+    [InlineData(false, true,
+        """
+        XNOR
+            !left
+            right
+        """)]
+    [InlineData(false, false,
+        """
+        XNOR
+            !left
+            !right
+        """)]
+    public void Should_justify_a_xnor_creation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !(left ^ right);
+
+        var result = spec.IsSatisfiedBy(false);
+
+        result.Justification.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        XOR
+            left
+            right
+        """)]
+    [InlineData(true, false,
+        """
+        XOR
+            left
+            !right
+        """)]
+    [InlineData(false, true,
+        """
+        XOR
+            !left
+            right
+        """)]
+    [InlineData(false, false,
+        """
+        XOR
+            !left
+            !right
+        """)]
+    public void Should_justify_a_xnor_negation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !!(left ^ right);
+
+        var result = spec.IsSatisfiedBy(false);
+
+        result.Justification.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        XNOR
+            left
+            right
+        """)]
+    [InlineData(true, false,
+        """
+        XNOR
+            left
+            !right
+        """)]
+    [InlineData(false, true,
+        """
+        XNOR
+            !left
+            right
+        """)]
+    [InlineData(false, false,
+        """
+        XNOR
+            !left
+            !right
+        """)]
+    public void Should_justify_a_xnor_double_negation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !!!(left ^ right);
+
+        var result = spec.IsSatisfiedBy(false);
+
+        result.Justification.Should().Be(expected);
     }
 }

@@ -1,4 +1,4 @@
-namespace Motiv.Tests;
+﻿namespace Motiv.Tests;
 
 public class PropositionResultDescriptionTests
 {
@@ -18,11 +18,11 @@ public class PropositionResultDescriptionTests
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(true, "is true")]
     [InlineAutoData(false, "is false")]
@@ -39,11 +39,11 @@ public class PropositionResultDescriptionTests
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
-    }  
-    
+    }
+
     [Theory]
     [InlineAutoData(true, "is true")]
     [InlineAutoData(false, "!is true")]
@@ -63,11 +63,11 @@ public class PropositionResultDescriptionTests
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, "!left is true | !right is true")]
     [InlineAutoData(false, true, "!left is true & right is true")]
@@ -83,22 +83,22 @@ public class PropositionResultDescriptionTests
         var left = Spec
             .Build<bool>(_ => leftResult)
             .Create("left is true");
-        
+
         var right = Spec
             .Build<bool>(_ => rightResult)
             .Create("right is true");
-        
+
         var spec = (left & !right) | (!left & right);
 
         var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, false, false, "(!first | !second) & (!third | !fourth)")]
     [InlineAutoData(false, false, false, true,  "!first | !second")]
@@ -106,7 +106,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(false, false, true, true,   "!first | !second")]
     [InlineAutoData(false, true, false, false,  "!third | !fourth")]
     [InlineAutoData(false, true, false, true,   "second & fourth")]
-    [InlineAutoData(false, true, true, false,   "second & third")]  
+    [InlineAutoData(false, true, true, false,   "second & third")]
     [InlineAutoData(false, true, true, true,    "second & (third | fourth)")]
     [InlineAutoData(true, false, false, false,  "!third | !fourth")]
     [InlineAutoData(true, false, false, true,   "first & fourth")]
@@ -128,30 +128,30 @@ public class PropositionResultDescriptionTests
         var first = Spec
             .Build<bool>(_ => firstValue)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(_ => secondValue)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(_ => thirdValue)
             .Create("third");
-        
+
         var fourth = Spec
             .Build<bool>(_ => fourthValue)
             .Create("fourth");
-        
+
         var spec = (first | second) & (third | fourth);
-        
+
         var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, false, false, "(not first | not second) & (not third | not fourth)")]
     [InlineAutoData(false, false, false, true,  "not first | not second")]
@@ -183,38 +183,38 @@ public class PropositionResultDescriptionTests
             .WhenTrue("is first")
             .WhenFalse("not first")
             .Create();
-        
+
         var second = Spec
             .Build<bool>(_ => secondValue)
             .WhenTrue("is second")
             .WhenFalse("not second")
             .Create();
-        
+
         var third = Spec
             .Build<bool>(_ => thirdValue)
             .WhenTrue("is third")
             .WhenFalse("not third")
             .Create();
-        
+
         var fourth = Spec
             .Build<bool>(_ => fourthValue)
             .WhenTrue("is fourth")
             .WhenFalse("not fourth")
             .Create();
-        
+
         var spec = (first | second) & (third | fourth);
-        
+
         var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
-    [InlineAutoData(false, false, false, false, 
+    [InlineAutoData(false, false, false, false,
         """
         some are false
             AND
@@ -364,26 +364,26 @@ public class PropositionResultDescriptionTests
         bool firstValue,
         bool secondValue,
         bool thirdValue,
-        bool fourthValue,  
+        bool fourthValue,
         string expected)
     {
         // Arrange
         var first = Spec
             .Build<bool>(val => firstValue & val)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(val => secondValue & val)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(val => thirdValue & val)
             .Create("third");
-        
+
         var fourth = Spec
             .Build<bool>(val => fourthValue & val)
             .Create("fourth");
-        
+
         var underlying = (first | second) & (third | fourth);
         var spec = Spec
             .Build(underlying)
@@ -391,21 +391,21 @@ public class PropositionResultDescriptionTests
             .WhenTrue("all are true")
             .WhenFalse("some are false")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy([true]);
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
-    [InlineAutoData(false, false, false, false, 
+    [InlineAutoData(false, false, false, false,
         """
         AND
-            OR
+            NOR
                 !fourth
         """)]
     [InlineAutoData(false, false, false, true,
@@ -413,21 +413,21 @@ public class PropositionResultDescriptionTests
         AND
             OR
                 !second
-            OR
+            NOR
                 !third
                 fourth
         """)]
     [InlineAutoData(false, false, true, false,
         """
         AND
-            OR
+            NOR
                 third
                 !fourth
         """)]
     [InlineAutoData(false, false, true, true,
         """
         AND
-            OR
+            NOR
                 third
         """)]
     [InlineAutoData(false, true, false, false,
@@ -436,7 +436,7 @@ public class PropositionResultDescriptionTests
             OR
                 !first
                 second
-            OR
+            NOR
                 !fourth
         """)]
     [InlineAutoData(false, true, false, true,
@@ -452,7 +452,7 @@ public class PropositionResultDescriptionTests
             OR
                 !first
                 second
-            OR
+            NOR
                 third
                 !fourth
         """)]
@@ -462,13 +462,13 @@ public class PropositionResultDescriptionTests
             OR
                 !first
                 second
-            OR
+            NOR
                 third
         """)]
     [InlineAutoData(true, false, false, false,
         """
         AND
-            OR
+            NOR
                 !fourth
         """)]
     [InlineAutoData(true, false, false, true,
@@ -477,27 +477,27 @@ public class PropositionResultDescriptionTests
             OR
                 first
                 !second
-            OR
+            NOR
                 !third
                 fourth
         """)]
     [InlineAutoData(true, false, true, false,
         """
         AND
-            OR
+            NOR
                 third
                 !fourth
         """)]
     [InlineAutoData(true, false, true, true,
         """
         AND
-            OR
+            NOR
                 third
         """)]
     [InlineAutoData(true, true, false, false,
         """
         AND
-            OR
+            NOR
                 !fourth
         """)]
     [InlineAutoData(true, true, false, true,
@@ -505,57 +505,57 @@ public class PropositionResultDescriptionTests
         AND
             OR
                 first
-            OR
+            NOR
                 !third
                 fourth
         """)]
     [InlineAutoData(true, true, true, false,
         """
         AND
-            OR
+            NOR
                 third
                 !fourth
         """)]
     [InlineAutoData(true, true, true, true,
         """
         AND
-            OR
+            NOR
                 third
         """)]
     public void Should_generate_a_detailed_description_from_a_complicated_composition_of_a_first_order_expression(
         bool firstValue,
         bool secondValue,
         bool thirdValue,
-        bool fourthValue,  
+        bool fourthValue,
         string expected)
     {
         // Arrange
         var first = Spec
             .Build<bool>(val => firstValue & val)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(val => secondValue & val)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(val => thirdValue & val)
             .Create("third");
-        
+
         var fourth = Spec
             .Build<bool>(val => fourthValue & val)
             .Create("fourth");
-        
+
         var spec = (first | !second) & !(third | !fourth);
         var result = spec.IsSatisfiedBy(true);
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [AutoData]
     public void Should_use_the_compact_description_as_the_toString_method(object model)
@@ -570,7 +570,7 @@ public class PropositionResultDescriptionTests
         var result = spec.IsSatisfiedBy(model);
 
         var act = result.Description.ToString();
-        
+
         // Assert
         act.Should().Be(result.Description.Reason);
     }
@@ -582,40 +582,40 @@ public class PropositionResultDescriptionTests
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(_ => true)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(_ => true)
             .Create("third");
-        
+
         var fourth = Spec
             .Build<bool>(_ => true)
             .Create("fourth");
-        
+
         var fifth = Spec
             .Build<bool>(_ => true)
             .Create("fifth");
-        
+
         var sixth = Spec
             .Build<bool>(_ => true)
             .Create("sixth");
-        
+
         var seventh = Spec
             .Build<bool>(_ => true)
             .Create("seventh");
-        
+
         var spec = !(first & second).AndAlso((third | fourth) & !(fifth | !sixth) & !!!!seventh);
 
         // Act
         var act = spec.Expression;
-        
+
         // Assert
         act.Should().Be(
             """
-            !AND ALSO
+            NAND ALSO
                 AND
                     first
                     second
@@ -623,13 +623,13 @@ public class PropositionResultDescriptionTests
                     OR
                         third
                         fourth
-                    !OR
+                    NOR
                         fifth
                         !sixth
                     seventh
             """);
     }
-    
+
     [Fact]
     public void Should_not_collapse_xor_operators_in_spec_description()
     {
@@ -637,15 +637,15 @@ public class PropositionResultDescriptionTests
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(_ => true)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(_ => true)
             .Create("third");
-        
+
         var fourth = Spec
             .Build<bool>(_ => true)
             .Create("fourth");
@@ -654,7 +654,7 @@ public class PropositionResultDescriptionTests
 
         // Act
         var act = spec.Expression;
-        
+
         // Assert
         act.Should().Be(
             """
@@ -667,7 +667,7 @@ public class PropositionResultDescriptionTests
                 fourth
             """);
     }
-    
+
     [Fact]
     public void Should_collapse_AND_and_ANDALSO_operators_in_spec_description()
     {
@@ -675,15 +675,15 @@ public class PropositionResultDescriptionTests
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(_ => true)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(_ => true)
             .Create("third");
-        
+
         var fourth = Spec
             .Build<bool>(_ => true)
             .Create("fourth");
@@ -693,7 +693,7 @@ public class PropositionResultDescriptionTests
 
         // Act
         var act = spec.Expression;
-        
+
         // Assert
         act.Should().Be(
             """
@@ -705,7 +705,7 @@ public class PropositionResultDescriptionTests
                     fourth
             """);
     }
-    
+
     [Fact]
     public void Should_collapse_OR_and_ORELSE_operators_in_spec_description()
     {
@@ -713,15 +713,15 @@ public class PropositionResultDescriptionTests
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(_ => true)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(_ => true)
             .Create("third");
-        
+
         var fourth = Spec
             .Build<bool>(_ => true)
             .Create("fourth");
@@ -730,7 +730,7 @@ public class PropositionResultDescriptionTests
 
         // Act
         var act = spec.Expression;
-        
+
         // Assert
         act.Should().Be(
             """
@@ -742,7 +742,7 @@ public class PropositionResultDescriptionTests
                     fourth
             """);
     }
-    
+
     [Fact]
     public void Should_collapse_operators_in_spec_result_description_to_improve_readability()
     {
@@ -750,37 +750,37 @@ public class PropositionResultDescriptionTests
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(_ => true)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(_ => true)
             .Create("third");
-        
+
         var fourth = Spec
             .Build<bool>(_ => true)
             .Create("fourth");
-        
+
         var fifth = Spec
             .Build<bool>(_ => true)
             .Create("fifth");
-        
+
         var sixth = Spec
             .Build<bool>(_ => true)
             .Create("sixth");
-        
+
         var seventh = Spec
             .Build<bool>(_ => true)
             .Create("seventh");
-        
+
         var spec = (first & second).AndAlso((third | fourth) & (fifth | sixth) & seventh);
         var result = spec.IsSatisfiedBy(true);
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(
             """
@@ -796,7 +796,7 @@ public class PropositionResultDescriptionTests
                 seventh
             """);
     }
-    
+
     [Fact]
     public void Should_collapse_AND_and_ANDALSO_operators_in_spec_result_description()
     {
@@ -804,26 +804,26 @@ public class PropositionResultDescriptionTests
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(_ => true)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(_ => true)
             .Create("third");
-        
+
         var fourth = Spec
             .Build<bool>(_ => true)
             .Create("fourth");
 
 
-        var spec = first.AndAlso(second & third & fourth); 
+        var spec = first.AndAlso(second & third & fourth);
         var result = spec.IsSatisfiedBy(true);
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(
             """
@@ -834,7 +834,7 @@ public class PropositionResultDescriptionTests
                 fourth
             """);
     }
-    
+
     [Fact]
     public void Should_collapse_OR_and_ORELSE_operators_in_spec_result_description()
     {
@@ -842,25 +842,25 @@ public class PropositionResultDescriptionTests
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(_ => true)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(_ => true)
             .Create("third");
-        
+
         var fourth = Spec
             .Build<bool>(_ => true)
             .Create("fourth");
 
-        var spec = first | (second | third | fourth); 
+        var spec = first | (second | third | fourth);
         var result = spec.IsSatisfiedBy(true);
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(
             """

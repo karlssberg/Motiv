@@ -11,16 +11,16 @@
         <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Motiv.xml</DocumentationFile>
         <PackageId>Motiv</PackageId>
         <Title>Motiv</Title>
-        <Description>Motiv is a developer-first .NET library that transforms the way you work with boolean logic. Expressions are formed of discrete propositions that together yield detailed explainations about results.</Description>
-        <Copyright>Copyright (c) 2024 karlssberg</Copyright>
-        <PackageProjectUrl>https://github.com/karlssberg/Motiv</PackageProjectUrl>
+        <Description>Transform the way you work with boolean logic by forming them from discrete propositions. This enables you to dynamically generate custom output, such as providing explanations about the causes behind a result.</Description>
+        <Copyright>Copyright (c) 2024 Daniel Karlsson</Copyright>
+        <PackageProjectUrl>https://karlssberg.github.io/Motiv</PackageProjectUrl>
         <PackageLicense>LICENSE</PackageLicense>
         <RepositoryUrl>https://github.com/karlssberg/Motiv</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>SpecificationPattern, DecisionMaking, Explanations, DesignPatterns, RulesEngine, BusinessLogic, Compliance, AuditTrails, RiskManagement, CSharp, .NET,  Developers, Architects, ProductManagement, Advanced, Intermediate, Propositions</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>7.0.4</Version>
+        <Version>7.1.0</Version>
     </PropertyGroup>
 
     <ItemGroup>

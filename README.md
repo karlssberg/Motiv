@@ -5,7 +5,7 @@
 ## Know _Why_, not just _What_
 
 Motiv is a developer-first .NET library that transforms the way you work with boolean logic.
-It lets you form expressions from discrete [propositions](https://en.wikipedia.org/wiki/Proposition) so that you 
+It lets you form expressions from discrete [propositions](https://en.wikipedia.org/wiki/Proposition) so that you
 can explain _why_ decisions were made.
 
 First create [atomic propositions](https://en.wikipedia.org/wiki/Atomic_sentence):
@@ -21,22 +21,24 @@ Then compose using operators (e.g., `!`,  `&`, `|`, `^`):
 
 ```csharp
 // Compose a new proposition
-var isPartiallyFull = isValid & !(isEmpty | isFull);
+var expression = isValid & !(isEmpty | isFull);
 ```
 
 To get detailed feedback:
-+
+
 ```csharp
-// Evaluate the proposition
+var isPartiallyFull =  Spec.Build(expression).Create("partial");
+
 var result = isPartiallyFull.IsSatisfiedBy(5);
 
 result.Satisfied;     // true
-result.Assertions;    // ["valid", "!empty", "!full"]
-result.Justifications // AND
-                      //     valid
-                      //     OR
-                      //         !empty
-                      //         !full
+result.Assertions;    // ["partial"]
+result.Justifications // partial
+                      //     AND
+                      //         valid
+                      //         NOR
+                      //             !empty
+                      //             !full
 ```
 
 ## Why Use Motiv?
@@ -82,7 +84,7 @@ Create and evaluate a basic proposition:
 
 ```csharp
 var isEligibleForLoan =
-    Spec.Build((Customer customer) => 
+    Spec.Build((Customer customer) =>
             customer is
             {
                 CreditScore: > 600,
@@ -90,7 +92,7 @@ var isEligibleForLoan =
             })
         .Create("eligible for loan");
 
-var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);   
+var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
 
 result.Satisfied;  // true
 result.Reason;     // "eligible for loan"
@@ -103,14 +105,14 @@ Use `WhenTrue()` and `WhenFalse()` for user-friendly explanations:
 
 ```csharp
 var isEligibleForLoan =
-    Spec.Build((Customer customer) => 
+    Spec.Build((Customer customer) =>
             customer is
             {
                 CreditScore: > 600,
                 Income: > 100000
             })
-        .WhenTrue("customer is eligible for a loan")
-        .WhenFalse("customer is not eligible for a loan")
+        .WhenTrue("eligible for a loan")
+        .WhenFalse("not eligible for a loan")
         .Create();
 ```
 
@@ -121,17 +123,23 @@ Combine propositions using boolean operators:
 ```csharp
 var hasGoodCreditScore =
     Spec.Build((Customer customer) => customer.CreditScore > 600)
-        .WhenTrue("customer has a good credit score")
-        .WhenFalse("customer has an inadequate credit score")
+        .WhenTrue("good credit score")
+        .WhenFalse("inadequate credit score")
         .Create();
 
 var hasSufficientIncome =
     Spec.Build((Customer customer) => customer.Income > 100000)
-        .WhenTrue("customer has sufficient income")
-        .WhenFalse("customer has insufficient income")
+        .WhenTrue("sufficient income")
+        .WhenFalse("insufficient income")
         .Create();
-    
-var isEligibleForLoan = hasGoodCreditScore & hasSufficientIncome; 
+
+var isEligibleForLoan = hasGoodCreditScore & hasSufficientIncome;
+
+var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
+
+result.Satisfied;  // true
+result.Reason;     // "good credit score & sufficient income"
+result.Assertions; // ["good credit score", "sufficient income"]
 ```
 
 ### Higher Order Logic
@@ -139,14 +147,15 @@ var isEligibleForLoan = hasGoodCreditScore & hasSufficientIncome;
 Provide facts about collections:
 
 ```csharp
-var allNegative = 
+var allNegative =
     Spec.Build((int n) => n < 0)
         .AsAllSatisfied()
         .WhenTrue("all are negative")
-        .WhenFalseYield(eval => eval.FalseModels.Select(m => $"{m} is not negative"))
+        .WhenFalseYield(eval => eval.FalseModels.Select(n => $"{n} is not negative"))
         .Create();
 
-var result = allNegative.IsSatisfiedBy(new[] { -1, 2, 3 });
+var result = allNegative.IsSatisfiedBy([-1, 2, 3]);
+
 result.Satisfied;  // false
 result.Assertions; // ["2 is not negative", "3 is not negative"]
 ```

@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace Motiv.Tests;
 
@@ -34,12 +34,12 @@ public class OrSpecTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
-    
+
+
     [Theory]
     [InlineAutoData(true, true, true)]
     [InlineAutoData(true, false, true)]
@@ -70,7 +70,7 @@ public class OrSpecTests
 
         // Act
         var act = result.Metadata;
-        
+
         // Assert
         act.Should().AllBeEquivalentTo(expected);
     }
@@ -105,7 +105,7 @@ public class OrSpecTests
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -138,7 +138,7 @@ public class OrSpecTests
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -173,7 +173,7 @@ public class OrSpecTests
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -204,7 +204,7 @@ public class OrSpecTests
 
         // Act
         var act = spec.Statement;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -235,7 +235,7 @@ public class OrSpecTests
 
         // Act
         var act = spec.ToString();
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -266,11 +266,11 @@ public class OrSpecTests
 
         // Act
         var act = spec.Statement;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(true, true)]
     [InlineAutoData(true, false)]
@@ -297,7 +297,7 @@ public class OrSpecTests
 
         // Act
         var act = spec.ToString();
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -325,7 +325,7 @@ public class OrSpecTests
 
         // Act
         var act = result.Description.CausalOperandCount;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -358,12 +358,12 @@ public class OrSpecTests
                 .Create("right");
 
         var spec = left | right;
-        
+
         var result = spec.IsSatisfiedBy("");
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expectedSatisfied);
     }
@@ -392,12 +392,12 @@ public class OrSpecTests
                 .Create("right");
 
         var spec = left | right;
-        
+
         var result = spec.IsSatisfiedBy("");
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expectedAssertions);
     }
@@ -426,16 +426,16 @@ public class OrSpecTests
                 .Create("right");
 
         var spec = left | right;
-        
+
         var result = spec.IsSatisfiedBy("");
 
         // Act
         var act = result.Metadata;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expectedAssertions);
     }
-    
+
     [Fact]
     public void Should_not_collapse_OR_operators_in_spec_description()
     {
@@ -443,11 +443,11 @@ public class OrSpecTests
         var first = Spec
             .Build<bool>(_ => true)
             .Create("first");
-        
+
         var second = Spec
             .Build<bool>(_ => true)
             .Create("second");
-        
+
         var third = Spec
             .Build<bool>(_ => true)
             .Create("third");
@@ -456,7 +456,7 @@ public class OrSpecTests
 
         // Act
         var act = spec.Expression;
-        
+
         // Assert
         act.Should().Be(
             """
@@ -473,43 +473,148 @@ public class OrSpecTests
         // Arrange
         var left = Spec.Build<object>(_ => true).Create("left");
         var right = Spec.Build<object>(_ => true).Create("right");
-        
+
         IEnumerable<BooleanResultBase<string>> expected =
         [
             left.IsSatisfiedBy(new object()),
             right.IsSatisfiedBy(new object())
         ];
-        
+
         var spec = left | right;
         var result = spec.IsSatisfiedBy(new object());
-        
+
         // Act
         var act = result.Underlying;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Fact]
     public void Should_populate_underlying_results_with_metadata()
     {
         // Arrange
         var left = Spec.Build<object>(_ => true).Create("left");
         var right = Spec.Build<object>(_ => true).Create("right");
-        
+
         IEnumerable<BooleanResultBase<string>> expected =
         [
             left.IsSatisfiedBy(new object()),
             right.IsSatisfiedBy(new object())
         ];
-        
+
         var spec = left | right;
         var result = spec.IsSatisfiedBy(new object());
-        
+
         // Act
         var act = result.UnderlyingWithMetadata;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        NOR
+            left
+            right
+        """)]
+    [InlineData(true, false,
+        """
+        NOR
+            left
+        """)]
+    [InlineData(false, true,
+        """
+        NOR
+            right
+        """)]
+    [InlineData(false, false,
+        """
+        NOR
+            !left
+            !right
+        """)]
+    public void Should_justify_a_nor_creation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !(left | right);
+
+        var result = spec.IsSatisfiedBy(false);
+
+        result.Justification.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        OR
+            left
+            right
+        """)]
+    [InlineData(true, false,
+        """
+        OR
+            left
+        """)]
+    [InlineData(false, true,
+        """
+        OR
+            right
+        """)]
+    [InlineData(false, false,
+        """
+        OR
+            !left
+            !right
+        """)]
+    public void Should_justify_a_nor_negation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !!(left | right);
+
+        var result = spec.IsSatisfiedBy(false);
+
+        result.Justification.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        NOR
+            left
+            right
+        """)]
+    [InlineData(true, false,
+        """
+        NOR
+            left
+        """)]
+    [InlineData(false, true,
+        """
+        NOR
+            right
+        """)]
+    [InlineData(false, false,
+        """
+        NOR
+            !left
+            !right
+        """)]
+    public void Should_justify_a_nor_double_negation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !!!(left | right);
+
+        var result = spec.IsSatisfiedBy(false);
+
+        result.Justification.Should().Be(expected);
     }
 }
