@@ -42,5 +42,5 @@ public static class AsAnySatisfiedExtensions
     /// <returns>The next build step.</returns>
     public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAnySatisfied<TModel>(
         this BooleanPredicatePropositionBuilder<TModel> builder) =>
-        builder.As(booleanResults => booleanResults.Any(result => result.Satisfied));
+        builder.As(booleanResults => booleanResults.AnyTrue());
 }

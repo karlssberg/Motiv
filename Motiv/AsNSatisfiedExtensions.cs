@@ -74,7 +74,7 @@ public static class AsNSatisfiedExtensions
     {
         n.ThrowIfLessThan(0, nameof(n));
         return builder.As(
-            booleanResults => booleanResults.Count(result => result.Satisfied) == n,
+            booleanResults => booleanResults.CountTrue() == n,
             (_, booleanResults) =>
             {
                 var booleanResultsArray = booleanResults.ToArray();

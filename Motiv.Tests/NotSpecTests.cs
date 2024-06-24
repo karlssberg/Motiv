@@ -96,30 +96,6 @@ public class NotSpecTests
         // Assert
         act.Should().Be(expected);
     }
-
-    [Theory]
-    [InlineAutoData(true, "True")]
-    [InlineAutoData(false, "False")]
-    public void Should_serialize_the_result_of_the_not_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
-        bool operand,
-        string expected,
-        object model)
-    {
-        // Arrange
-        var spec = Spec
-            .Build<object>(_ => operand)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
-            .Create();
-
-        var result = (!spec).IsSatisfiedBy(model);
-
-        // Act
-        var act = result.Reason;
-        
-        // Assert
-        act.Should().Be(expected);
-    }
     
     [Theory]
     [InlineData("is true", "!is true")]
@@ -182,5 +158,22 @@ public class NotSpecTests
         
         // Assert
         act.Should().BeEquivalentTo([underlying]);
+    }
+    
+    [Fact]
+    public void Should_populate_underlying_results_with_metadata()
+    {
+        // Arrange
+        var underlyingSpec = Spec.Build<object>(_ => true).Create("left");
+        var expected = underlyingSpec.IsSatisfiedBy(new object());
+        
+        var spec = !underlyingSpec;
+        var result = spec.IsSatisfiedBy(new object());
+        
+        // Act
+        var act = result.UnderlyingWithMetadata;
+        
+        // Assert
+        act.Should().BeEquivalentTo([expected]);
     }
 }

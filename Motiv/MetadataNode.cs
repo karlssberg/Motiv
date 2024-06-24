@@ -1,31 +1,12 @@
 ﻿namespace Motiv;
 
-/// <summary>
-/// Represents a node in the metadata hierarchy.
-/// </summary>
+/// <summary>Represents a node in the metadata hierarchy.</summary>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 public sealed class MetadataNode<TMetadata>
 {
-    /// <summary>
-    /// Gets the underlying metadata nodes.
-    /// </summary>
-    public IEnumerable<MetadataNode<TMetadata>> Underlying { get; }
-
-    /// <summary>
-    /// Gets the metadata associated with this node.
-    /// </summary>
-    public IEnumerable<TMetadata> Metadata => _metadataCollection;
-
-    /// <summary>
-    /// Gets the count of metadata items in this node.
-    /// </summary>
-    public int Count => _metadataCollection.Count;
-
     private readonly ISet<TMetadata> _metadataCollection;
-    
-    /// <summary>
-    /// Initializes a new instance of the MetadataNode class.
-    /// </summary>
+
+    /// <summary>Initializes a new instance of the MetadataNode class.</summary>
     /// <param name="metadata">The metadata to associate with this node.</param>
     /// <param name="causes">The causes of the metadata.</param>
     public MetadataNode(
@@ -33,7 +14,7 @@ public sealed class MetadataNode<TMetadata>
         IEnumerable<BooleanResultBase<TMetadata>> causes)
     {
         var metadataCollection = metadata as ICollection<TMetadata> ?? metadata.ToArray();
-        
+
         Underlying = ResolveUnderlying(metadataCollection, causes);
         _metadataCollection = metadata switch
         {
@@ -43,19 +24,21 @@ public sealed class MetadataNode<TMetadata>
         };
     }
 
-    /// <summary>
-    /// Initializes a new instance of the MetadataNode class with a single metadata item.
-    /// </summary>
+    /// <summary>Initializes a new instance of the MetadataNode class with a single metadata item.</summary>
     /// <param name="metadata">The metadata to associate with this node.</param>
     /// <param name="causes">The causes of the metadata.</param>
     public MetadataNode(TMetadata metadata, IEnumerable<BooleanResultBase<TMetadata>> causes)
         : this(metadata.ToEnumerable(), causes)
     {
     }
-    
-    /// <summary>
-    /// Returns a string that represents the current object.
-    /// </summary>
+
+    /// <summary>Gets the underlying metadata nodes.</summary>
+    public IEnumerable<MetadataNode<TMetadata>> Underlying { get; }
+
+    /// <summary>Gets the metadata associated with this node.</summary>
+    public IEnumerable<TMetadata> Metadata => _metadataCollection;
+
+    /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString() => GetDebugDisplay();
 

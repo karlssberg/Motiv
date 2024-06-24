@@ -1,4 +1,4 @@
-﻿using Motiv.And;
+using Motiv.And;
 using Motiv.AndAlso;
 using Motiv.ChangeModelType;
 using Motiv.MetadataToExplanationAdapter;
