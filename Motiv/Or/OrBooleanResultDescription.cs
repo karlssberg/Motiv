@@ -29,7 +29,7 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
                 orResult.Description.Reason,
             OrElseBooleanResult<TMetadata> orElseResult =>
                 orElseResult.Description.Reason,
-            _ when result.UnderlyingAssertionSources.Count() > 1 =>
+            _ when result.Causes.Count() > 1 =>
                 $"({result.Description.Reason})",
             _ => result.Description.Reason
         };

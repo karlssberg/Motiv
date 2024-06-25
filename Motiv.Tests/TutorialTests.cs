@@ -183,7 +183,6 @@ public class TutorialTests
 
         result.Satisfied.Should().BeFalse();
         result.Reason.Should().Be("basket is empty");
-        result.Reason.Should().BeEquivalentTo("basket is empty");
     }
 
     private class IsNegativeIntegerProposition() : Spec<int>(

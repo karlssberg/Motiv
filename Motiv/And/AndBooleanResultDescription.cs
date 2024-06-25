@@ -5,12 +5,12 @@ namespace Motiv.And;
 
 internal sealed class AndBooleanResultDescription<TMetadata>(
     string operationName,
-    IEnumerable<BooleanResultBase<TMetadata>> causalResults) 
+    IEnumerable<BooleanResultBase<TMetadata>> causalResults)
     : ResultDescriptionBase
 {
     internal override int CausalOperandCount => causalResults.Count();
 
-    public override string Reason => 
+    public override string Reason =>
         CausalOperandCount switch
         {
             0 => "",
@@ -18,19 +18,18 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
             _ =>  string.Join(" & ", causalResults.Select(ExplainReasons))
         };
 
-
     public override IEnumerable<string> GetJustificationAsLines() =>
         causalResults.GetBinaryJustificationAsLines(operationName);
-    
+
     private static string ExplainReasons(BooleanResultBase<TMetadata> result)
     {
-        return result switch 
+        return result switch
         {
             AndBooleanResult<TMetadata> andResult =>
                 andResult.Description.Reason,
             AndAlsoBooleanResult<TMetadata> andAlsoResult =>
                 andAlsoResult.Description.Reason,
-            _ when result.UnderlyingAssertionSources.Count() > 1 =>
+            IBooleanOperationResult when result.Causes.Count() > 1 =>
                 $"({result.Description.Reason})",
             _ => result.Description.Reason
         };

@@ -1,62 +1,73 @@
-# Introduction
+# Introduction to Motiv
 
-This tutorial will guide you through the essential features of using Motiv, and how to use it.
-It briefly explains the basic concepts of propositions, assertions, and specifications, and how they are used in 
-Motiv, and then goes on to show how to create and compose propositions and specifications.
+This tutorial will guide you through the essential features of Motiv and how to use it effectively.
+We'll explore the basic concepts of propositions, assertions, and specifications, and then demonstrate how to create and
+compose these elements within Motiv.
 
-# Definitions
+## Key Concepts
 
-## Propositions
+### Propositions
 
-In logic, a proposition is a declarative statement that can be either *true* or *false*. For example:
+In logic, a proposition is a declarative statement that can be either *true* or *false*.
+For example:
 
-* *Password must contain at least one number*
-* *Data processing is complete*
-* *User access is restricted to read-only*
-* *The product is in stock*
-* *Payment is successful*
+* "Password must contain at least one number"
+* "Data processing is complete"
+* "User access is restricted to read-only"
+* "The product is in stock"
+* "Payment is successful"
 
 Propositions can be combined to form more complex expressions, such as:
-> _the product is in stock_ **&** _the payment is successful_
+
+> _The product is in stock_ **&** _The payment is successful_
 
 It's important to note that propositions are unproven statements and need to be *evaluated* before they can assert
 facts.
+It may be helpful to think of them as terse _questions_ rather than _statements_.
 
-## Propositional Statement
+#### Propositional Statements
 
-In traditional propositional logic, _propositions_ are presented as human-readable textual statements.
-However, for our purposes, we want to model propositions as objects.
-We therefore explicitly introduce the concept of a _propositional statement_ to describe the textual form.
+While traditional propositional logic presents propositions as human-readable textual statements, Motiv models
+propositions as objects.
+Because of this, we introduce the concept of a _propositional statement_ to describe the textual form of a proposition.
 
-## Specifications
+### Specifications (Specs)
 
-Specifications (i.e., _Specs_) are the building blocks of propositions in Motiv.
+Specifications, or Specs, are the building blocks of propositions in Motiv.
 They are nodes in the logical syntax tree that together form propositions.
-In some instances they are equal, such as when creating
-[atomic propositions](https://en.wikipedia.org/wiki/Atomic_sentence).
+In some cases, such as when creating atomic propositions, specs and propositions are equivalent.
 
-## Assertions
+### Assertions
 
-Assertions are _statements of fact_ about a model.
-They are contained in the results returned when a proposition is evaluated against a model.
+`Assertions` are discrete _statements of fact_ about a model.
+Proposition can yield one or more assertions regarding their possible outcomes, and when a proposition is evaluated, it
+aggregates relevant underlying assertions to form a full explanation of the result.
 
-* the product is in stock
-* the payment is unsuccessful
+Examples of assertions include:
 
-When satisfied, an assertion statement often looks the same as its propositional statement.
-The main difference is that an assertion is a *statement of fact*, while a proposition is a *statement of possibility*.
+* "Canned tomatoes in stock"
+* "Payment is successful"
 
-## Metadata
+When satisfied, an assertion statement can sometimes be an exact copy of the propositional statement.
+The key difference is that an assertion is a *statement of fact*, while a proposition is a *statement of possibility*.
+Because of this, propositional statements are optional if they can be obtained from the assertion.
 
-In the context of Motiv, metadata is additional information attached to a proposition.
-It is typically a POCO (Plain Old CLR Object) used to provide more context about the proposition.
-When the metadata is a `string`, it is processed as an *assertion*.
+### Metadata
 
-## Reason
+In Motiv, the term _metadata_ describes POCO objects that are used in substitution of assertions.
+They provide rich contexts, principally for supporting multilingual explanations, that behave exactly same as
+assertions.
+However, their utility goes far beyond providing human-readable explanations, and can be instead used to conditionally
+compose dynamic states and/or behaviours.
 
-The *reason* is a human-readable explanation of why a proposition is satisfied or not.
-Unlike Assertions, _reasons_ are a serialized `string` explaining the causes.
-If a proposition generates multiple assertions, the proposition will be described using its (single) _propositional
-statement_.
-If propositions have been composed using logic operators, then the *reason* will serialize the entire expression, so
-preserve the relationship between clauses.
+### Reason
+
+A `Reason` is a human-readable `string` explaining why a proposition is satisfied or not.
+Depending on how the proposition is composed, a reason may be a single assertion or a composition of multiple
+assertions, or derived from the propositional statement.
+
+## Next Steps
+
+Now that we've covered the fundamental concepts, the following sections will demonstrate how to create and compose
+propositions and specifications in Motiv.
+We'll explore practical examples and best practices to help you leverage Motiv's capabilities effectively.
