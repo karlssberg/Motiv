@@ -539,6 +539,7 @@ public class TutorialTests
 
         result.Satisfied.Should().BeTrue();
         result.Assertions.Should().BeEquivalentTo(["valid", "!empty", "!full"]);
+        result.Reason.Should().Be("valid & !(!empty | !full)");
         result.Justification.Should().Be(
             """
             AND

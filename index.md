@@ -34,6 +34,7 @@ var result = isPartiallyFull.IsSatisfiedBy(5);
 
 result.Satisfied;   // true
 result.Assertions;  // ["valid", "!empty", "!full"]
+result.Reason;      // "valid & !(!empty | !full)"
 ```
 
 ## Installation
@@ -115,7 +116,7 @@ Motiv's true power shines when composing complex logic from simpler propositions
 var isFizz = Spec.Build((int n) => n % 3 == 0).Create("fizz");
 var isBuzz = Spec.Build((int n) => n % 5 == 0).Create("buzz");
 
-var isSubstitution = 
+var isSubstitution =
     Spec.Build(isFizz | isBuzz)
         .WhenTrue((_, result) => string.Concat(result.Assertions))
         .WhenFalse(n => n.ToString())
@@ -135,7 +136,7 @@ This example demonstrates how you can compose complex propositions from simpler 
 
 Motiv is not meant to replace all your boolean logic.
 You should only use it when it makes sense to do so.
-If your logic is pretty straightforward or does not really need any feedback about the decisions being made, then 
+If your logic is pretty straightforward or does not really need any feedback about the decisions being made, then
 you might not see a big benefit from using Motiv.
 It is just another tool in your toolbox, and sometimes the simplest solution is the best fit.
 
@@ -144,7 +145,7 @@ Consider using Motiv when you need two or more of the following:
 1. **Visibility**: Granular, real-time feedback about decisions
 2. **Decomposition**: Break down complex logic into meaningful subclauses
 3. **Reusability**: Avoid logic duplication across your codebase
-4. **Modeling**: Explicitly model your domain logic (e.g., for 
+4. **Modeling**: Explicitly model your domain logic (e.g., for
    [Domain-Driven Design](https://en.wikipedia.org/wiki/Domain-driven_design))
 5. **Testing**: Test your logic in isolation—without mocking dependencies
 
