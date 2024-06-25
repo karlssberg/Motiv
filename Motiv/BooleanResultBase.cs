@@ -90,7 +90,7 @@ public abstract class BooleanResultBase
             .SelectMany(booleanResult =>
                 booleanResult is IBooleanOperationResult
                     ? booleanResult.UnderlyingAssertionSources
-                    : this.ToEnumerable())
+                    : booleanResult.ToEnumerable())
             .ElseIfEmpty(this.ToEnumerable());
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" /> that contribute to this result.</summary>
@@ -135,7 +135,7 @@ public abstract class BooleanResultBase
     /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
     public static bool operator ==(bool left, BooleanResultBase right) =>
         left == right.Satisfied;
-    
+
     /// <summary>
     /// Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are not equal.
     /// </summary>
@@ -150,7 +150,7 @@ public abstract class BooleanResultBase
     /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
     public static bool operator ==(BooleanResultBase left, bool right) =>
         left.Satisfied == right;
-    
+
     /// <summary>
     /// Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are not equal.
     /// </summary>

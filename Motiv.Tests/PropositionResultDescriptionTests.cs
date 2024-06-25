@@ -69,10 +69,10 @@ public class PropositionResultDescriptionTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, "!left is true | !right is true")]
-    [InlineAutoData(false, true, "!left is true & right is true")]
-    [InlineAutoData(true, false, "left is true & !right is true")]
-    [InlineAutoData(true, true, "right is true | left is true")]
+    [InlineAutoData(false, false, "!left | !right")]
+    [InlineAutoData(false, true, "!left & right")]
+    [InlineAutoData(true, false, "left & !right")]
+    [InlineAutoData(true, true, "right | left")]
     public void Should_generate_a_description_from_a_composition(
         bool leftResult,
         bool rightResult,
@@ -82,11 +82,11 @@ public class PropositionResultDescriptionTests
         // Arrange
         var left = Spec
             .Build<bool>(_ => leftResult)
-            .Create("left is true");
+            .Create("left");
 
         var right = Spec
             .Build<bool>(_ => rightResult)
-            .Create("right is true");
+            .Create("right");
 
         var spec = (left & !right) | (!left & right);
 
@@ -870,5 +870,19 @@ public class PropositionResultDescriptionTests
                 third
                 fourth
             """);
+    }
+
+    [Fact]
+    public void Should_negate_a_binary_operation_results_that_contains_negated_proposition_statements()
+    {
+        var specA = Spec.Build((bool b) => b).Create("a");
+        var specB = Spec.Build((bool b) => !b).Create("b");
+        var specC = Spec.Build((bool b) => !b).Create("c");
+
+        var spec = specA & !(specB | specC);
+
+        var act = spec.IsSatisfiedBy(true);
+
+        act.Reason.Should().Be("a & !(!b | !c)");
     }
 }

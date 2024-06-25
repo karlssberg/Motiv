@@ -1,8 +1,8 @@
 # Explanation Propositions
 
-Explanation propositions are the backbone of the Motiv library and are used to provide human-readable feedback to 
-users (or developers).
-Whilst all propositions will populate the `Assertions` property with useful information, explanation propositions 
+_Explanation propositions_ are used to provide human-readable feedback to users (or developers).
+
+While all propositions will populate the `Assertions` property with useful information, _explanation propositions_
 populate `Assertions` with the strings obtained from their `WhenTrue()`, `WhenTrueYield()`, `WhenFalse()`, and
 `WhenFalseYield()` methods.
 

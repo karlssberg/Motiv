@@ -13,7 +13,7 @@ var specC = Spec.Build((bool b) => !b).Create("c");
 
 var spec = specA & !(specB | specC);
 
-var sut = spec.IsSatisfiedBy(true);
+var act = spec.IsSatisfiedBy(true);
 
 act.Reason; // "a & (!b | !c)"
 ```
@@ -30,6 +30,16 @@ While `Reason` property will provide a simplified
 explanation of what happened, the `Justification` will give you a thorough breakdown of the causes, including
 encapsulated propositions with differing metadata types.
 Any propositions that did not influence the final result are omitted.
+
+Note that the `Justification` property uses the prefix/polish notation
+(to balance readability with computational efficiency).
+
+    <statement/operator>
+        <first>
+        <second>
+        <third>
+
+Below is an example of identifying a _straight flush_ hand in a poker game.
 
 ```csharp
 var sut = new IsWinningHandProposition();
@@ -51,3 +61,6 @@ act.Justification; // is a winning poker hand
                    //                             QH is Hearts
                    //                             JH is Hearts
 ```
+
+Notice how the `Justification` property only shows the assertions that influenced the outcome, and that it withholds
+any assertions that may have been calculated but did not influence the final result.

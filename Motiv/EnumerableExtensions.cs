@@ -2,6 +2,7 @@
 
 using Motiv;
 
+// ReSharper disable once CheckNamespace
 namespace System.Collections.Generic;
 
 /// <summary>Provides extension methods for <see cref="IEnumerable{T}" />.</summary>
@@ -108,9 +109,8 @@ public static class EnumerableExtensions
         var uniqueItems = new HashSet<T>();
         foreach (var x in source)
         {
-            if (uniqueItems.Add(x)) 
+            if (uniqueItems.Add(x))
                 yield return x;
         }
     }
-        
 }

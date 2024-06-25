@@ -1,10 +1,10 @@
 # Strongly Typed Derivatives
 
 Whilst you can functionally redefine propositions based on an existing proposition, there may be
-times when you want your proposition to be a strongly typed class so that it can be independently instantiated.
+times when you want a proposition to be a strongly typed class so that it can be independently instantiated.
 Motiv has some classes to inherit from that provide this functionality.
-They ensure interoperability with existing propositions, so that you can still use the boolean operations to compose 
-further propositions later on 
+They ensure interoperability with existing propositions, so that you can still use the boolean operations to compose
+further propositions later on
 
 ## <xref:Motiv.Spec`2>
 

@@ -6,8 +6,8 @@ items:
     href: MinimalProposition.md
   - name: Explanation Propositions
     href: ExplanationProposition.md
-  - name: Explicit Propositional Statements
-    href: ExplicitPropositionalStatements.md
+  - name: Propositional Statements
+    href: PropositionalStatements.md
   - name: Multiple Assertions
     href: MultipleAssertions.md
   - name: MetadataPropositions

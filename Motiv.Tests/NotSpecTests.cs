@@ -21,7 +21,7 @@ public class NotSpecTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -44,7 +44,7 @@ public class NotSpecTests
 
         // Act
         var act = result.Metadata;
-        
+
         // Assert
         act.Should().AllBeEquivalentTo(operand);
     }
@@ -58,17 +58,19 @@ public class NotSpecTests
         object model)
     {
         // Arrange
-        var spec = Spec
+        var underlyingSpec = Spec
             .Build<object>(_ => operand)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("is true");
 
-        var result = (!spec).IsSatisfiedBy(model);
+        var spec = !underlyingSpec;
+
+        var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -82,21 +84,23 @@ public class NotSpecTests
         object model)
     {
         // Arrange
-        var spec = Spec
+        var underlyingSpec = Spec
             .Build<object>(_ => operand)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
 
-        var result = (!spec).IsSatisfiedBy(model);
+        var spec = !underlyingSpec;
+
+        var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData("is true", "!is true")]
     [InlineData("!is true", "is true")]
@@ -123,12 +127,12 @@ public class NotSpecTests
     public void Should_Format_Statement_Correctly_When_Operand_Is_BinaryOperationSpec()
     {
         // Arrange
-        var left = 
+        var left =
             Spec.Build<object>(_ => true)
                 .WhenTrue(true)
                 .WhenFalse(false)
                 .Create("is true");
-        
+
         var right =
             Spec.Build<object>(_ => false)
                 .WhenTrue(true)
@@ -143,7 +147,7 @@ public class NotSpecTests
         // Assert
         statement.Should().Be("!(is true & is false)");
     }
-    
+
 
     [Fact]
     public void Should_return_the_underlying_specs()
@@ -155,24 +159,24 @@ public class NotSpecTests
 
         // Act
         var act = (!underlying).Underlying;
-        
+
         // Assert
         act.Should().BeEquivalentTo([underlying]);
     }
-    
+
     [Fact]
     public void Should_populate_underlying_results_with_metadata()
     {
         // Arrange
         var underlyingSpec = Spec.Build<object>(_ => true).Create("left");
         var expected = underlyingSpec.IsSatisfiedBy(new object());
-        
+
         var spec = !underlyingSpec;
         var result = spec.IsSatisfiedBy(new object());
-        
+
         // Act
         var act = result.UnderlyingWithMetadata;
-        
+
         // Assert
         act.Should().BeEquivalentTo([expected]);
     }

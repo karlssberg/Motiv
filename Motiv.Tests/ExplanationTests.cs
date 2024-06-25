@@ -69,16 +69,16 @@ public class ExplanationTests
             .WhenTrue("is even")
             .WhenFalse("is odd")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy(n);
-        
+
         // Act
         var act = result.Explanation.Assertions;
-        
+
         // Assert
         act.Should().ContainSingle(expected);
     }
-    
+
     [Theory]
     [InlineData(2, "even whole number")]
     [InlineData(0, "not an even whole number")]
@@ -86,16 +86,16 @@ public class ExplanationTests
     {
         // Arrange
         var isEvenWholeNumber = new IsEvenWholeNumber();
-        
+
         var result = isEvenWholeNumber.IsSatisfiedBy(model);
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(2, "even", "positive")]
     [InlineData(3, "odd", "positive")]
@@ -105,18 +105,18 @@ public class ExplanationTests
     {
         // Arrange
         var isEvenWholeNumber = new IsEvenWholeNumber();
-        
+
         var result = isEvenWholeNumber.IsSatisfiedBy(model);
 
         // Act
         var act = result.AllRootAssertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
-    
-    
+
+
+
     [Theory]
     [InlineData(2, "even", "positive")]
     [InlineData(3, "odd")]
@@ -126,16 +126,16 @@ public class ExplanationTests
     {
         // Arrange
         var isEvenWholeNumber = new IsEvenWholeNumber();
-        
+
         var result = isEvenWholeNumber.IsSatisfiedBy(model);
 
         // Act
         var act = result.RootAssertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(2, "even and positive from predicate", "even and positive from change model method")]
     [InlineData(3, "not even and positive from predicate", "not even and positive from change model method")]
@@ -145,16 +145,16 @@ public class ExplanationTests
     {
         // Arrange
         var isEvenWholeNumber = new IsEvenWholeNumber();
-        
+
         var result = isEvenWholeNumber.IsSatisfiedBy(model);
 
         // Act
         var act = result.SubAssertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
 
     [Theory]
     [InlineData(6, "even", "positive", "divisible by 3")]
@@ -172,30 +172,30 @@ public class ExplanationTests
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
-        
+
         var isPositiveSpec =
             Spec.Build((int i) => i > 0)
                 .WhenTrue("positive")
                 .WhenFalse("not positive")
                 .Create();
-            
+
         var isDivisibleBy3Spec =
             Spec.Build((int i) => i % 3 == 0)
                 .WhenTrue("divisible by 3")
                 .WhenFalse("not divisible by 3")
                 .Create();
-        
+
         var spec = isEvenSpec & isPositiveSpec & isDivisibleBy3Spec;
-        
+
         var result = spec.IsSatisfiedBy(n);
 
         // Act
         var act = result.AllAssertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(6, "even", "positive", "divisible by 3")]
     [InlineData(4, "not divisible by 3")]
@@ -204,7 +204,7 @@ public class ExplanationTests
     [InlineData(0, "not positive")]
     [InlineData(-3, "odd", "not positive")]
     [InlineData(-5, "odd", "not positive", "not divisible by 3")]
-    public void Should_yeild_the_assertions_from_determinate_operands_when_using_sub_assertions(
+    public void Should_yield_the_assertions_from_determinate_operands_when_using_sub_assertions(
         int n,
         params string[] expected)
     {
@@ -214,34 +214,34 @@ public class ExplanationTests
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
-        
+
         var isPositiveSpec =
             Spec.Build((int i) => i > 0)
                 .WhenTrue("positive")
                 .WhenFalse("not positive")
                 .Create();
-        
+
         var isDivisibleBy3Spec =
             Spec.Build((int i) => i % 3 == 0)
                 .WhenTrue("divisible by 3")
                 .WhenFalse("not divisible by 3")
                 .Create();
-        
-        var spec = 
+
+        var spec =
             Spec.Build(isEvenSpec & isPositiveSpec & isDivisibleBy3Spec)
                 .WhenTrue("even, positive, and divisible by 3")
                 .WhenFalse("not even, positive, or divisible by 3")
                 .Create();
-        
+
         var result = spec.IsSatisfiedBy(n);
 
         // Act
         var act = result.SubAssertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(6, "even", "positive", "divisible by 3")]
     [InlineData(4, "even", "positive", "not divisible by 3")]
@@ -260,30 +260,30 @@ public class ExplanationTests
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
-        
+
         var isPositiveSpec =
             Spec.Build((int i) => i > 0)
                 .WhenTrue("positive")
                 .WhenFalse("not positive")
                 .Create();
-        
+
         var isDivisibleBy3Spec =
             Spec.Build((int i) => i % 3 == 0)
                 .WhenTrue("divisible by 3")
                 .WhenFalse("not divisible by 3")
                 .Create();
-        
-        var spec = 
+
+        var spec =
             Spec.Build(isEvenSpec & isPositiveSpec & isDivisibleBy3Spec)
                 .WhenTrue("even, positive, and divisible by 3")
                 .WhenFalse("not even, positive, or divisible by 3")
                 .Create();
-        
+
         var result = spec.IsSatisfiedBy(n);
 
         // Act
         var act = result.AllSubAssertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
@@ -299,25 +299,25 @@ public class ExplanationTests
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
-        
-        var isEvenWrapper1 = 
+
+        var isEvenWrapper1 =
             Spec.Build(isEven)
                 .Create("is even wrapper");
-        
+
         var isEvenWrapper2 =
             Spec.Build(isEvenWrapper1).WhenTrueYield<string>((_, result) => result.Assertions)
                 .WhenFalseYield((_, result) => result.Assertions)
                 .Create("is even wrapper 2");
-        
+
         var result = isEvenWrapper2.IsSatisfiedBy(model);
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(1, "odd")]
     [InlineData(2, "even")]
@@ -329,25 +329,25 @@ public class ExplanationTests
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
-        
-        var isEvenWrapper1 = 
+
+        var isEvenWrapper1 =
             Spec.Build(isEven)
                 .Create("is even wrapper");
-        
+
         var isEvenWrapper2 =
             Spec.Build(isEvenWrapper1)
                 .WhenTrueYield((_, result) => result.Assertions)
                 .WhenFalseYield((_, result) => result.Assertions)
                 .Create("is even wrapper 2");
-        
+
         var result = isEvenWrapper2.IsSatisfiedBy(model);
 
         // Act
         var act = result.Metadata;
-        
+
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(1, NumberType.Odd)]
     [InlineData(2, NumberType.Even)]
@@ -361,26 +361,26 @@ public class ExplanationTests
                 .WhenTrue(NumberType.Even)
                 .WhenFalse(NumberType.Odd)
                 .Create("is even");
-        
-        var isEvenWrapper1 = 
+
+        var isEvenWrapper1 =
             Spec.Build(isEven)
                 .Create("is even wrapper");
-        
+
         var isEvenWrapper2 =
             Spec.Build(isEvenWrapper1)
                 .WhenTrueYield((_, result) => result.Metadata)
                 .WhenFalseYield((_, result) => result.Metadata)
                 .Create("is even wrapper 2");
-        
+
         var result = isEvenWrapper2.IsSatisfiedBy(model);
 
         // Act
         var act = result.Metadata;
-        
+
         // Assert
         act.Should().BeEquivalentTo([expectedMetadata]);
     }
-    
+
     [Theory]
     [InlineData(1, "!is even wrapper 2")]
     [InlineData(2, "is even wrapper 2")]
@@ -394,26 +394,26 @@ public class ExplanationTests
                 .WhenTrue(NumberType.Even)
                 .WhenFalse(NumberType.Odd)
                 .Create("is even");
-        
-        var isEvenWrapper1 = 
+
+        var isEvenWrapper1 =
             Spec.Build(isEven)
                 .Create("is even wrapper");
-        
+
         var isEvenWrapper2 =
             Spec.Build(isEvenWrapper1)
                 .WhenTrueYield((_, result) => result.Metadata)
                 .WhenFalseYield((_, result) => result.Metadata)
                 .Create("is even wrapper 2");
-        
+
         var result = isEvenWrapper2.IsSatisfiedBy(model);
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo([expectedAssertion]);
     }
-    
+
     [Theory]
     [InlineData(2, "even")]
     [InlineData(3, "odd")]
@@ -425,37 +425,37 @@ public class ExplanationTests
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
-        
-        var allEven = 
+
+        var allEven =
             Spec.Build(isEven)
                 .AsAllSatisfied()
                 .Create("all even");
-        
-        var firstEven = 
+
+        var firstEven =
             Spec.Build(allEven)
                 .Create("first even");
-        
+
         var secondEven =
             Spec.Build(firstEven)
                 .WhenTrueYield((_, result) => result.Assertions)
                 .WhenFalseYield((_, result) => result.Assertions)
                 .Create("second even");
-        
+
         var thirdEven =
             Spec.Build(secondEven)
                 .WhenTrueYield((_, result) => result.Metadata)
                 .WhenFalseYield((_, result) => result.Metadata)
                 .Create("third even");
-        
+
         var result = thirdEven.IsSatisfiedBy([model]);
 
         // Act
         var act = result.Explanation.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(2, "even")]
     [InlineData(3, "odd")]
@@ -467,37 +467,37 @@ public class ExplanationTests
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
-        
-        var allEven = 
+
+        var allEven =
             Spec.Build(isEven)
                 .AsAllSatisfied()
                 .Create("all even");
-        
-        var firstEven = 
+
+        var firstEven =
             Spec.Build(allEven)
                 .Create("first even");
-        
+
         var secondEven =
             Spec.Build(firstEven)
                 .WhenTrueYield((_, result) => result.Assertions)
                 .WhenFalseYield((_, result) => result.Assertions)
                 .Create("second even");
-        
+
         var thirdEven =
             Spec.Build(secondEven)
                 .WhenTrueYield((_, result) => result.Metadata)
                 .WhenFalseYield((_, result) => result.Metadata)
                 .Create("third even");
-        
+
         var result = thirdEven.IsSatisfiedBy([model]);
 
         // Act
         var act = result.Explanation.Underlying.GetAssertions();
-        
+
         // Assert
         act.Should().NotBeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(2)]
     [InlineData(3)]
@@ -509,34 +509,34 @@ public class ExplanationTests
                 .WhenTrue("even")
                 .WhenFalse("odd")
                 .Create();
-        
-        var allEven = 
+
+        var allEven =
             Spec.Build(isEven)
                 .AsAllSatisfied()
                 .Create("all even");
-        
-        var firstEven = 
+
+        var firstEven =
             Spec.Build(allEven)
                 .Create("first even");
-        
+
         var secondEven =
             Spec.Build(firstEven)
                 .WhenTrueYield((_, result) => result.Assertions)
                 .WhenFalseYield((_, result) => result.Assertions)
                 .Create("second even");
-        
+
         var thirdEven =
             Spec.Build(secondEven)
                 .WhenTrueYield((_, result) => result.Metadata)
                 .WhenFalseYield((_, result) => result.Metadata)
                 .Create("third even");
-        
+
         var result = thirdEven.IsSatisfiedBy([model]);
 
         // Act
         var act = result.Explanation.Underlying.SelectMany(explanation => explanation.Underlying);
-        
+
         // Assert
         act.Should().BeEmpty();
     }
-} 
+}
