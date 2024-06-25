@@ -21,14 +21,13 @@ Then compose using operators (e.g., `!`,  `&`, `|`, `^`):
 
 ```csharp
 // Compose a new proposition
-var expression = isValid & !(isEmpty | isFull);
+var isPartiallyFull = Spec.Build(isValid & !(isEmpty | isFull))
+                          .Create("partial");
 ```
 
 To get detailed feedback:
 
 ```csharp
-var isPartiallyFull =  Spec.Build(expression).Create("partial");
-
 var result = isPartiallyFull.IsSatisfiedBy(5);
 
 result.Satisfied;     // true
