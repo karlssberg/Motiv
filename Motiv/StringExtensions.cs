@@ -5,9 +5,7 @@ namespace Motiv;
 /// </summary>
 public static class StringExtensions
 {
-    private const char Not = '\u00ac'; /* ¬ */
-
-    private static readonly HashSet<char> Characters = ['!', '(', ')', '&', '|', '^', Not ];
+    private static readonly HashSet<char> Characters = ['!', '(', ')', '&', '|', '^', '¬' ];
 
     /// <summary>
     /// Serializes a collection to a human-readable string.  It will separate the items with <c>", "</c> and the last
