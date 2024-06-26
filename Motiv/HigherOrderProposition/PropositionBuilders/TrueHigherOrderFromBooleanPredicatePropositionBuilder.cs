@@ -14,6 +14,8 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
     Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
 {
+    private const char Not = '\u00ac'; /* ¬ */
+
     /// <summary>Specifies the metadata to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">The metadata to use when the condition is true.</param>
@@ -21,7 +23,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
     public FalseMetadataFromBooleanHigherOrderPropositionBuilder<TModel, TMetadata> WhenTrue<TMetadata>(
         TMetadata whenTrue) =>
         new(predicate,
-            higherOrderPredicate, 
+            higherOrderPredicate,
             _ => whenTrue.ToEnumerable(),
             causeSelector);
 
@@ -41,8 +43,8 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
             higherOrderPredicate,
             whenTrue.ToEnumerableReturn(),
             causeSelector);
-    
-    
+
+
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
@@ -53,7 +55,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
             higherOrderPredicate,
             whenTrue,
             causeSelector);
-    
+
     /// <summary>
     /// Specifies an assertion to yield when the condition is true.  This will also be the name of the proposition, unless otherwise
     /// specified by the subsequent <c>Create(string statement)</c> method.
@@ -88,7 +90,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
             higherOrderPredicate,
             trueBecause,
             causeSelector);
-    
+
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
@@ -100,7 +102,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
             predicate,
             higherOrderPredicate,
             _ => statement.ToEnumerable(),
-            _ => $"!{statement}".ToEnumerable(),
+            _ => $"{Not}{statement}".ToEnumerable(),
             new SpecDescription(statement),
             causeSelector);
     }

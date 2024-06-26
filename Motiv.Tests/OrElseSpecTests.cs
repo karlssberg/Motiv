@@ -329,7 +329,7 @@ public class OrElseSpecTests
     }
 
     [Theory]
-    [InlineData(false, false, "!left", "!right")]
+    [InlineData(false, false, "¬left", "¬right")]
     [InlineData(false, true, "right")]
     [InlineData(true, false, "left")]
     [InlineData(true, true, "left")]
@@ -363,7 +363,7 @@ public class OrElseSpecTests
     }
 
     [Theory]
-    [InlineData(false, false, "!left", "!right")]
+    [InlineData(false, false, "¬left", "¬right")]
     [InlineData(false, true, "right")]
     [InlineData(true, false, "left")]
     [InlineData(true, true, "left")]
@@ -471,8 +471,8 @@ public class OrElseSpecTests
     [InlineData(false, false,
         """
         NOR
-            !left
-            !right
+            ¬left
+            ¬right
         """)]
     public void Should_justify_a_nor_creation(bool leftBool, bool rightBool, string expected)
     {
@@ -505,8 +505,8 @@ public class OrElseSpecTests
     [InlineData(false, false,
         """
         OR
-            !left
-            !right
+            ¬left
+            ¬right
         """)]
     public void Should_justify_a_nor_negation(bool leftBool, bool rightBool, string expected)
     {
@@ -539,8 +539,8 @@ public class OrElseSpecTests
     [InlineData(false, false,
         """
         NOR
-            !left
-            !right
+            ¬left
+            ¬right
         """)]
     public void Should_justify_a_nor_double_negation(bool leftBool, bool rightBool, string expected)
     {

@@ -5,7 +5,9 @@ namespace Motiv;
 /// </summary>
 public static class StringExtensions
 {
-    private static readonly HashSet<char> Characters = ['!', '(', ')', '&', '|', '^'];
+    private const char Not = '\u00ac'; /* ¬ */
+
+    private static readonly HashSet<char> Characters = ['!', '(', ')', '&', '|', '^', Not ];
 
     /// <summary>
     /// Serializes a collection to a human-readable string.  It will separate the items with <c>", "</c> and the last
@@ -51,7 +53,7 @@ public static class StringExtensions
             yield return delimiter;
             yield return " ";
         }
-        
+
         switch (size)
         {
             case 0:

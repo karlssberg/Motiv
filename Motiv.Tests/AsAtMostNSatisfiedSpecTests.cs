@@ -39,12 +39,12 @@ public class AsAtMostNSatisfiedSpecTests
             .WhenTrue("none are satisfied")
             .WhenFalse("one or more are satisfied")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -85,12 +85,12 @@ public class AsAtMostNSatisfiedSpecTests
             .WhenTrue("one is satisfied")
             .WhenFalse("none or more than one is not satisfied")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -131,12 +131,12 @@ public class AsAtMostNSatisfiedSpecTests
             .WhenTrue("at most two are satisfied")
             .WhenFalse("more than two are satisfied")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -178,12 +178,12 @@ public class AsAtMostNSatisfiedSpecTests
             .WhenTrue("at most four are satisfied")
             .WhenFalse("more than four are satisfied")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);
 
-        // Act  
+        // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -247,12 +247,12 @@ public class AsAtMostNSatisfiedSpecTests
             .WhenTrue("at most one is satisfied")
             .WhenFalse("more than one is satisfied")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy([first, second, third]);
-        
+
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -316,12 +316,12 @@ public class AsAtMostNSatisfiedSpecTests
             .WhenTrue("at most one is satisfied")
             .WhenFalse("more than one is satisfied")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -329,9 +329,9 @@ public class AsAtMostNSatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                             at most one is satisfied
-                                                !is true
-                                                !is true
-                                                !is true
+                                                ¬is true
+                                                ¬is true
+                                                ¬is true
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied
@@ -367,7 +367,7 @@ public class AsAtMostNSatisfiedSpecTests
                                                 is true
                                             """)]
     public void Should_serialize_the_result_of_the_all_operation(
-        bool first, 
+        bool first,
         bool second,
         bool third,
         string expected)
@@ -385,12 +385,12 @@ public class AsAtMostNSatisfiedSpecTests
             .WhenTrue("at most one is satisfied")
             .WhenFalse("more than one is satisfied")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -415,7 +415,7 @@ public class AsAtMostNSatisfiedSpecTests
 
         // Act
         var act = spec.Statement;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -440,11 +440,11 @@ public class AsAtMostNSatisfiedSpecTests
 
         // Act
         var act = spec.ToString();
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, false, 3)]
     [InlineAutoData(false, false, true, 1)]
@@ -464,7 +464,7 @@ public class AsAtMostNSatisfiedSpecTests
         var underlying = Spec
             .Build((bool m) => m)
             .Create("underlying");
-        
+
         var spec = Spec
             .Build(underlying)
             .AsAtMostNSatisfied(2)
@@ -474,11 +474,11 @@ public class AsAtMostNSatisfiedSpecTests
 
         // Act
         var act = result.Description.CausalOperandCount;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, false, true)]
     [InlineData(false, false, true, true)]
@@ -499,27 +499,27 @@ public class AsAtMostNSatisfiedSpecTests
             Spec.Build((bool m) => m)
                 .AsAtMostNSatisfied(1)
                 .WhenTrue(_ => "at most 1 true")
-                .WhenFalse(_ => "!at most 1 true")
-                .Create("at most 1 true");
+                .WhenFalse(_ => "¬at most 1 true")
+                .Create("at most 1 is true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, false, "at most 1 true")]
     [InlineData(false, false, true, "at most 1 true")]
     [InlineData(false, true, false, "at most 1 true")]
-    [InlineData(false, true, true, "!at most 1 true")]
+    [InlineData(false, true, true, "¬at most 1 true")]
     [InlineData(true, false, false, "at most 1 true")]
-    [InlineData(true, false, true, "!at most 1 true")]
-    [InlineData(true, true, false, "!at most 1 true")]
-    [InlineData(true, true, true, "!at most 1 true")]
+    [InlineData(true, false, true, "¬at most 1 true")]
+    [InlineData(true, true, false, "¬at most 1 true")]
+    [InlineData(true, true, true, "¬at most 1 true")]
     public void Should_provide_a_reason_for_an_at_most_n_satisfied_operation_when_using_a_boolean_predicate_function(
         bool first,
         bool second,
@@ -531,18 +531,18 @@ public class AsAtMostNSatisfiedSpecTests
             Spec.Build((bool m) => m)
                 .AsAtMostNSatisfied(1)
                 .WhenTrue(_ => "at most 1 true")
-                .WhenFalse(_ => "!at most 1 true")
-                .Create("at most 1 true");
+                .WhenFalse(_ => "¬at most 1 true")
+                .Create("at most 1 is true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expectedReason);
     }
-    
+
     [Theory]
     [InlineData(false, false, false, true)]
     [InlineData(false, false, true, true)]
@@ -567,27 +567,27 @@ public class AsAtMostNSatisfiedSpecTests
             Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
                 .AsAtMostNSatisfied(1)
                 .WhenTrue(_ => "at most 1 true")
-                .WhenFalse(_ => "!at most 1 true")
-                .Create("at most 1 true");
+                .WhenFalse(_ => "¬at most 1 true")
+                .Create("at most 1 is true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, false, "at most 1 true")]
     [InlineData(false, false, true, "at most 1 true")]
     [InlineData(false, true, false, "at most 1 true")]
-    [InlineData(false, true, true, "!at most 1 true")]
+    [InlineData(false, true, true, "¬at most 1 true")]
     [InlineData(true, false, false, "at most 1 true")]
-    [InlineData(true, false, true, "!at most 1 true")]
-    [InlineData(true, true, false, "!at most 1 true")]
-    [InlineData(true, true, true, "!at most 1 true")]
+    [InlineData(true, false, true, "¬at most 1 true")]
+    [InlineData(true, true, false, "¬at most 1 true")]
+    [InlineData(true, true, true, "¬at most 1 true")]
     public void Should_provide_a_reason_for_an_at_most_n_satisfied_operation_when_using_a_boolean_result_predicate_function(
         bool first,
         bool second,
@@ -603,13 +603,13 @@ public class AsAtMostNSatisfiedSpecTests
             Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
                 .AsAtMostNSatisfied(1)
                 .WhenTrue(_ => "at most 1 true")
-                .WhenFalse(_ => "!at most 1 true")
-                .Create("at most 1 true");
+                .WhenFalse(_ => "¬at most 1 true")
+                .Create("at most 1 is true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         var act = result.Reason;
-        
+
         act.Should().Be(expectedReason);
     }
 }

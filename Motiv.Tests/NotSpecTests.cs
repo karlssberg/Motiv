@@ -50,16 +50,16 @@ public class NotSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, "is true")]
-    [InlineAutoData(false, "!is true")]
+    [InlineAutoData(true, "!is true")]
+    [InlineAutoData(false, "!¬is true")]
     public void Should_serialize_the_result_of_the_not_operation(
-        bool operand,
+        bool predicateResult,
         string expected,
         object model)
     {
         // Arrange
         var underlyingSpec = Spec
-            .Build<object>(_ => operand)
+            .Build<object>(_ => predicateResult)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("is true");
@@ -76,8 +76,8 @@ public class NotSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, "True")]
-    [InlineAutoData(false, "False")]
+    [InlineAutoData(true, "!True")]
+    [InlineAutoData(false, "!False")]
     public void Should_serialize_the_result_of_the_not_operation_when_metadata_is_a_string(
         bool operand,
         string expected,

@@ -2,7 +2,7 @@
 
 ### Statement
 
-The `Statement` property will provide a simplified high-level representation of the proposition, while the 
+The `Statement` property will provide a simplified high-level representation of the proposition, while the
 `Expression` will go into more detail about the structure.
 
 ```csharp
@@ -12,7 +12,7 @@ var specC = Spec.Build((bool b) => !b).Create("c");
 
 var spec = specA & !(specB | specC);
 
-spec.Statement; // "a & !(b | c)"
+spec.Statement; // "a & !(¬b | ¬c)"
 ```
 
 ### Expression
@@ -20,7 +20,7 @@ spec.Statement; // "a & !(b | c)"
 Sometimes, this is not enough, and you need to understand the proposition in more detail.
 When building complicated expressions made up of many layers of encapsulated propositions, it can be challenging
 to understand the overall expression.
-While this problem exists regardless of how you decompose your logic, Motiv tries to mitigate this by allowing you to 
+While this problem exists regardless of how you decompose your logic, Motiv tries to mitigate this by allowing you to
 inspect (at runtime) the proposition before it is used to evaluate models.
 
 The `Expression` property will provide a detailed breakdown of the proposition, including encapsulated propositions with

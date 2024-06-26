@@ -33,7 +33,7 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -46,34 +46,34 @@ public class AsNoneSatisfiedSpecTests
                                              false
                                          """)]
     [InlineAutoData(false, false, true, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                         """)]
     [InlineAutoData(false, true, true, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                             true
                                         """)]
     [InlineAutoData(true, false, false, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                         """)]
     [InlineAutoData(true, false, true, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                             true
                                         """)]
     [InlineAutoData(true, true, false, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                             true
                                         """)]
     [InlineAutoData(true, true, true, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                             true
                                             true
@@ -102,7 +102,7 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -115,34 +115,34 @@ public class AsNoneSatisfiedSpecTests
                                             false
                                         """)]
     [InlineAutoData(false, false, true, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                         """)]
     [InlineAutoData(false, true, true, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                             true
                                         """)]
     [InlineAutoData(true, false, false, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                         """)]
     [InlineAutoData(true, false, true, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                             true
                                         """)]
     [InlineAutoData(true, true, false, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                             true
                                         """)]
     [InlineAutoData(true, true, true, """
-                                        !none are true
+                                        ¬none are true
                                             true
                                             true
                                             true
@@ -173,7 +173,7 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -181,39 +181,39 @@ public class AsNoneSatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                         none are true
-                                            !is true
-                                            !is true
-                                            !is true
+                                            ¬is true
+                                            ¬is true
+                                            ¬is true
                                         """)]
     [InlineAutoData(false, false, true, """
-                                        !none are true
+                                        ¬none are true
                                             is true
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        !none are true
+                                        ¬none are true
                                             is true
                                         """)]
     [InlineAutoData(false, true, true, """
-                                        !none are true
+                                        ¬none are true
                                             is true
                                             is true
                                         """)]
     [InlineAutoData(true, false, false, """
-                                        !none are true
+                                        ¬none are true
                                             is true
                                         """)]
     [InlineAutoData(true, false, true, """
-                                       !none are true
+                                       ¬none are true
                                            is true
                                            is true
                                        """)]
     [InlineAutoData(true, true, false, """
-                                       !none are true
+                                       ¬none are true
                                            is true
                                            is true
                                        """)]
     [InlineAutoData(true, true, true, """
-                                      !none are true
+                                      ¬none are true
                                           is true
                                           is true
                                           is true
@@ -242,7 +242,7 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -251,29 +251,29 @@ public class AsNoneSatisfiedSpecTests
     [InlineAutoData(false, false, false, """
                                         none are true
                                             AND
-                                                !left
-                                                !right
+                                                ¬left
+                                                ¬right
                                             AND
-                                                !left
-                                                !right
+                                                ¬left
+                                                ¬right
                                             AND
-                                                !left
-                                                !right
+                                                ¬left
+                                                ¬right
                                         """)]
     [InlineAutoData(false, false, true, """
-                                        !none are true
+                                        ¬none are true
                                             AND
                                                 left
                                                 right
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        !none are true
+                                        ¬none are true
                                             AND
                                                 left
                                                 right
                                         """)]
     [InlineAutoData(false, true, true, """
-                                        !none are true
+                                        ¬none are true
                                             AND
                                                 left
                                                 right
@@ -282,13 +282,13 @@ public class AsNoneSatisfiedSpecTests
                                                 right
                                         """)]
     [InlineAutoData(true, false, false, """
-                                        !none are true
+                                        ¬none are true
                                             AND
                                                 left
                                                 right
                                         """)]
     [InlineAutoData(true, false, true, """
-                                        !none are true
+                                        ¬none are true
                                             AND
                                                 left
                                                 right
@@ -297,7 +297,7 @@ public class AsNoneSatisfiedSpecTests
                                                 right
                                         """)]
     [InlineAutoData(true, true, false, """
-                                        !none are true
+                                        ¬none are true
                                             AND
                                                 left
                                                 right
@@ -306,7 +306,7 @@ public class AsNoneSatisfiedSpecTests
                                                 right
                                         """)]
     [InlineAutoData(true, true, true, """
-                                        !none are true
+                                        ¬none are true
                                             AND
                                                 left
                                                 right
@@ -347,20 +347,20 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
 
     [Theory]
     [InlineAutoData(false, false, false, "none are true")]
-    [InlineAutoData(false, false, true, "!none are true")]
-    [InlineAutoData(false, true, false, "!none are true")]
-    [InlineAutoData(false, true, true, "!none are true")]
-    [InlineAutoData(true, false, false, "!none are true")]
-    [InlineAutoData(true, false, true, "!none are true")]
-    [InlineAutoData(true, true, false, "!none are true")]
-    [InlineAutoData(true, true, true, "!none are true")]
+    [InlineAutoData(false, false, true, "¬none are true")]
+    [InlineAutoData(false, true, false, "¬none are true")]
+    [InlineAutoData(false, true, true, "¬none are true")]
+    [InlineAutoData(true, false, false, "¬none are true")]
+    [InlineAutoData(true, false, true, "¬none are true")]
+    [InlineAutoData(true, true, false, "¬none are true")]
+    [InlineAutoData(true, true, true, "¬none are true")]
     public void Should_Describe_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,
@@ -391,20 +391,20 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, false, "none are true")]
-    [InlineAutoData(false, false, true, "!none are true")]
-    [InlineAutoData(false, true, false, "!none are true")]
-    [InlineAutoData(false, true, true, "!none are true")]
-    [InlineAutoData(true, false, false, "!none are true")]
-    [InlineAutoData(true, false, true, "!none are true")]
-    [InlineAutoData(true, true, false, "!none are true")]
-    [InlineAutoData(true, true, true, "!none are true")]
+    [InlineAutoData(false, false, true, "¬none are true")]
+    [InlineAutoData(false, true, false, "¬none are true")]
+    [InlineAutoData(false, true, true, "¬none are true")]
+    [InlineAutoData(true, false, false, "¬none are true")]
+    [InlineAutoData(true, false, true, "¬none are true")]
+    [InlineAutoData(true, true, false, "¬none are true")]
+    [InlineAutoData(true, true, true, "¬none are true")]
     public void Should_serialize_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,
@@ -435,7 +435,7 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = result.ToString();
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -461,7 +461,7 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = spec.Statement;
-        
+
         // Assert
         act.Should().Be(expectedSummary);
     }
@@ -491,7 +491,7 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = spec.Expression;
-        
+
         // Assert
         act.Should().Be(expectedFull);
     }
@@ -517,7 +517,7 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = spec.Statement;
-        
+
         // Assert
         act.Should().Be(expectedSummary);
     }
@@ -547,7 +547,7 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = spec.Expression;
-        
+
         // Assert
         act.Should().Be(expectedFull);
     }
@@ -573,12 +573,12 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = spec.ToString();
-        
+
         // Assert
         act.Should().Be(expectedSummary);
     }
 
-    [Fact]  
+    [Fact]
     public void Should_provide_a_description_of_the_specification_when_metadata_is_a_string()
     {
         // Arrange
@@ -599,11 +599,11 @@ public class AsNoneSatisfiedSpecTests
 
         // Act
         var act = spec.ToString();
-        
+
         // Assert
         act.Should().Be(expectedSummary);
     }
-    
+
     [Theory]
     [InlineData(false, false, false, true)]
     [InlineData(false, false, true, false)]
@@ -624,27 +624,27 @@ public class AsNoneSatisfiedSpecTests
             Spec.Build((bool m) => m)
                 .AsNoneSatisfied()
                 .WhenTrue(_ => "none are true")
-                .WhenFalse(_ => "!none are true")
-                .Create("none are true");
+                .WhenFalse(_ => "¬none are true")
+                .Create("none true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
-        
+
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, false, "none are true")]
-    [InlineData(false, false, true, "!none are true")]
-    [InlineData(false, true, false, "!none are true")]
-    [InlineData(false, true, true, "!none are true")]
-    [InlineData(true, false, false, "!none are true")]
-    [InlineData(true, false, true, "!none are true")]
-    [InlineData(true, true, false, "!none are true")]
-    [InlineData(true, true, true, "!none are true")]
+    [InlineData(false, false, true, "¬none are true")]
+    [InlineData(false, true, false, "¬none are true")]
+    [InlineData(false, true, true, "¬none are true")]
+    [InlineData(true, false, false, "¬none are true")]
+    [InlineData(true, false, true, "¬none are true")]
+    [InlineData(true, true, false, "¬none are true")]
+    [InlineData(true, true, true, "¬none are true")]
     public void Should_provide_a_reason_for_a_none_satisfied_operation_when_using_a_boolean_predicate_function(
         bool first,
         bool second,
@@ -656,18 +656,18 @@ public class AsNoneSatisfiedSpecTests
             Spec.Build((bool m) => m)
                 .AsNoneSatisfied()
                 .WhenTrue(_ => "none are true")
-                .WhenFalse(_ => "!none are true")
-                .Create("none are true");
+                .WhenFalse(_ => "¬none are true")
+                .Create("none true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expectedReason);
     }
-    
+
     [Theory]
     [InlineData(false, false, false, true)]
     [InlineData(false, false, true, false)]
@@ -692,27 +692,27 @@ public class AsNoneSatisfiedSpecTests
             Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
                 .AsNoneSatisfied()
                 .WhenTrue(_ => "none are true")
-                .WhenFalse(_ => "!none are true")
-                .Create("none are true");
+                .WhenFalse(_ => "¬none are true")
+                .Create("none true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, false, "none are true")]
-    [InlineData(false, false, true, "!none are true")]
-    [InlineData(false, true, false, "!none are true")]
-    [InlineData(false, true, true, "!none are true")]
-    [InlineData(true, false, false, "!none are true")]
-    [InlineData(true, false, true, "!none are true")]
-    [InlineData(true, true, false, "!none are true")]
-    [InlineData(true, true, true, "!none are true")]
+    [InlineData(false, false, true, "¬none are true")]
+    [InlineData(false, true, false, "¬none are true")]
+    [InlineData(false, true, true, "¬none are true")]
+    [InlineData(true, false, false, "¬none are true")]
+    [InlineData(true, false, true, "¬none are true")]
+    [InlineData(true, true, false, "¬none are true")]
+    [InlineData(true, true, true, "¬none are true")]
     public void Should_provide_a_reason_for_a_none_satisfied_operation_when_using_a_boolean_result_predicate_function(
         bool first,
         bool second,
@@ -728,14 +728,14 @@ public class AsNoneSatisfiedSpecTests
             Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
                 .AsNoneSatisfied()
                 .WhenTrue(_ => "none are true")
-                .WhenFalse(_ => "!none are true")
-                .Create("none are true");
+                .WhenFalse(_ => "¬none are true")
+                .Create("none true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expectedReason);
     }

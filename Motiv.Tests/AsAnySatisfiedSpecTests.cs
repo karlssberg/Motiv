@@ -29,74 +29,74 @@ public class AsAnySatisfiedSpecTests
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("any satisfied");
-        
+
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Fact]
     public void Should_provide_a_high_level_statement_of_the_specification_when_metadata_is_a_string()
     {
         // Arrange
         const string expected = "high-level description";
-        
+
         var underlyingSpec = Spec
             .Build((bool m) => m)
-            .WhenTrue("boolean is true")   
+            .WhenTrue("boolean is true")
             .WhenFalse("boolean is false")
             .Create();
 
         var spec = Spec
             .Build(underlyingSpec)
-            .AsAnySatisfied()   
+            .AsAnySatisfied()
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("high-level description");
 
         // Act
         var act = spec.Statement;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Fact]
     public void Should_serialize_a_description_of_the_specification_when_metadata_is_a_string()
     {
         // Arrange
         const string expected = "high-level description";
-        
+
         var underlyingSpec = Spec
             .Build((bool m) => m)
-            .WhenTrue("boolean is true")   
+            .WhenTrue("boolean is true")
             .WhenFalse("boolean is false")
             .Create();
 
         var spec = Spec
             .Build(underlyingSpec)
-            .AsAnySatisfied()   
+            .AsAnySatisfied()
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("high-level description");
 
         // Act
         var act = spec.ToString();
-        
+
         // Assert
         act.Should().Be(expected);
     }
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            !any satisfied
-                                                !is true
-                                                !is true
-                                                !is true
+                                            ¬any satisfied
+                                                ¬is true
+                                                ¬is true
+                                                ¬is true
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             any satisfied
@@ -150,12 +150,12 @@ public class AsAnySatisfiedSpecTests
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("any satisfied");
-            
+
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -224,7 +224,7 @@ public class AsAnySatisfiedSpecTests
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -288,16 +288,16 @@ public class AsAnySatisfiedSpecTests
             .WhenTrue(_ => "any true")
             .WhenFalse(_ => "all false")
             .Create("any true");
-        
+
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, false, 3)]
     [InlineAutoData(false, false, true, 1)]
@@ -317,7 +317,7 @@ public class AsAnySatisfiedSpecTests
         var underlying = Spec
             .Build((bool m) => m)
             .Create("underlying");
-        
+
         var spec = Spec
             .Build(underlying)
             .AsAnySatisfied()
@@ -327,7 +327,7 @@ public class AsAnySatisfiedSpecTests
 
         // Act
         var act = result.Description.CausalOperandCount;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -349,16 +349,16 @@ public class AsAnySatisfiedSpecTests
             .Create("any true");
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
-    [InlineAutoData(false, false, "!any true")]
+    [InlineAutoData(false, false, "¬any true")]
     [InlineAutoData(false, true, "any true")]
     [InlineAutoData(true, false, "any true")]
     [InlineAutoData(true, true, "any true")]
@@ -375,10 +375,10 @@ public class AsAnySatisfiedSpecTests
             .Create("any true");
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expectedAssertion);
     }
@@ -406,14 +406,14 @@ public class AsAnySatisfiedSpecTests
             .Create();
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, "none are true")]
     [InlineAutoData(false, true, "some are true")]
@@ -437,14 +437,14 @@ public class AsAnySatisfiedSpecTests
             .Create();
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expectedAssertion);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, "none are true")]
     [InlineAutoData(false, true, "some are true")]
@@ -468,14 +468,14 @@ public class AsAnySatisfiedSpecTests
             .Create();
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo([expectedAssertion]);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, false)]
     [InlineAutoData(false, true, true)]
@@ -495,14 +495,14 @@ public class AsAnySatisfiedSpecTests
             .Create();
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, "none are true")]
     [InlineAutoData(false, true, "some are true")]
@@ -522,14 +522,14 @@ public class AsAnySatisfiedSpecTests
             .Create();
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expectedAssertion);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, "none are true")]
     [InlineAutoData(false, true, "some are true")]
@@ -549,14 +549,14 @@ public class AsAnySatisfiedSpecTests
             .Create();
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo([expectedAssertion]);
     }
-    
+
     [Theory]
     [InlineData(false, false, false)]
     [InlineData(false, true, true)]
@@ -574,16 +574,16 @@ public class AsAnySatisfiedSpecTests
             .WhenTrue("some are true")
             .WhenFalse("none are true")
             .Create("any true");
-        
+
         var result = spec.IsSatisfiedBy([modelA, modelB]);
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, "none are true")]
     [InlineData(false, true, "some are true")]
@@ -601,16 +601,16 @@ public class AsAnySatisfiedSpecTests
             .WhenTrue("some are true")
             .WhenFalse("none are true")
             .Create("any true");
-        
+
         var result = spec.IsSatisfiedBy([modelA, modelB]);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expectedReason);
     }
-    
+
     [Theory]
     [InlineData(false, false, "none are true")]
     [InlineData(false, true, "some are true")]
@@ -628,12 +628,12 @@ public class AsAnySatisfiedSpecTests
             .WhenTrue("some are true")
             .WhenFalse("none are true")
             .Create("any true");
-        
+
         var result = spec.IsSatisfiedBy([modelA, modelB]);
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo([expectedReason]);
     }

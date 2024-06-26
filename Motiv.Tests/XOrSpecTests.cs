@@ -77,9 +77,9 @@ public class XOrSpecTests
 
     [Theory]
     [InlineAutoData(true, true, "left ^ right")]
-    [InlineAutoData(true, false, "left ^ !right")]
-    [InlineAutoData(false, true, "!left ^ right")]
-    [InlineAutoData(false, false, "!left ^ !right")]
+    [InlineAutoData(true, false, "left ^ ¬right")]
+    [InlineAutoData(false, true, "¬left ^ right")]
+    [InlineAutoData(false, false, "¬left ^ ¬right")]
     public void Should_serialize_the_result_of_the_xor_operation(
         bool leftResult,
         bool rightResult,
@@ -412,9 +412,9 @@ public class XOrSpecTests
     }
 
     [Theory]
-    [InlineData(false, false, "!left", "!right")]
-    [InlineData(false, true, "!left", "right")]
-    [InlineData(true, false, "left", "!right")]
+    [InlineData(false, false, "¬left", "¬right")]
+    [InlineData(false, true, "¬left", "right")]
+    [InlineData(true, false, "left", "¬right")]
     [InlineData(true, true, "left", "right")]
     public void Should_perform_OrElse_on_specs_with_different_metadata_and_preserve_assertions(
         bool leftValue,
@@ -446,9 +446,9 @@ public class XOrSpecTests
     }
 
     [Theory]
-    [InlineData(false, false, "!left", "!right")]
-    [InlineData(false, true, "!left", "right")]
-    [InlineData(true, false, "left", "!right")]
+    [InlineData(false, false, "¬left", "¬right")]
+    [InlineData(false, true, "¬left", "right")]
+    [InlineData(true, false, "left", "¬right")]
     [InlineData(true, true, "left", "right")]
     public void Should_yield_metadata_as_a_string_when_specs_containing_different_metadata_types_are_composed(
         bool leftValue,
@@ -634,20 +634,21 @@ public class XOrSpecTests
         """
         XNOR
             left
-            !right
+            ¬right
         """)]
     [InlineData(false, true,
         """
         XNOR
-            !left
+            ¬left
             right
         """)]
     [InlineData(false, false,
         """
         XNOR
-            !left
-            !right
+            ¬left
+            ¬right
         """)]
+
     public void Should_justify_a_xnor_creation(bool leftBool, bool rightBool, string expected)
     {
         var left = Spec.Build((bool _) => leftBool).Create("left");
@@ -671,19 +672,19 @@ public class XOrSpecTests
         """
         XOR
             left
-            !right
+            ¬right
         """)]
     [InlineData(false, true,
         """
         XOR
-            !left
+            ¬left
             right
         """)]
     [InlineData(false, false,
         """
         XOR
-            !left
-            !right
+            ¬left
+            ¬right
         """)]
     public void Should_justify_a_xnor_negation(bool leftBool, bool rightBool, string expected)
     {
@@ -708,19 +709,19 @@ public class XOrSpecTests
         """
         XNOR
             left
-            !right
+            ¬right
         """)]
     [InlineData(false, true,
         """
         XNOR
-            !left
+            ¬left
             right
         """)]
     [InlineData(false, false,
         """
         XNOR
-            !left
-            !right
+            ¬left
+            ¬right
         """)]
     public void Should_justify_a_xnor_double_negation(bool leftBool, bool rightBool, string expected)
     {

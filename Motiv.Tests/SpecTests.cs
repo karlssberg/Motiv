@@ -186,7 +186,7 @@ public class SpecTests
 
     [Theory]
     [InlineAutoData(true, "is true")]
-    [InlineAutoData(false, "!is true")]
+    [InlineAutoData(false, "¬is true")]
     public void Should_return_a_result_that_explains_the_result(bool model,string expectedDescription)
     {
         // Arrange

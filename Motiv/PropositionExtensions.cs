@@ -13,10 +13,10 @@ internal static class PropositionExtensions
     {
         return isSatisfied switch
         {
-            true when PropositionContains('!') => $"({propositionStatement})",
+            true when PropositionContains('¬') => $"({propositionStatement})",
             true => propositionStatement,
-            false when PropositionContains('!') => $"!({propositionStatement})",
-            false => $"!{propositionStatement}"
+            false when PropositionContains('¬') => $"¬({propositionStatement})",
+            false => $"¬{propositionStatement}"
         };
 
         bool PropositionContains(char ch) => propositionStatement.Contains(ch);

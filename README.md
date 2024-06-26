@@ -36,8 +36,8 @@ result.Justifications // partial
                       //     AND
                       //         valid
                       //         NOR
-                      //             !empty
-                      //             !full
+                      //             ¬empty
+                      //             ¬full
 ```
 
 ## Why Use Motiv?
