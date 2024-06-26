@@ -189,15 +189,15 @@ public class HandTests
     [InlineData("AH, AD, AS, 10H, 9D", true, HandRank.ThreeOfAKind, "is a three of a kind hand")]
     [InlineData("AH, AD, QS, 10D, 10H", true, HandRank.TwoPair, "is a two pair hand")]
     [InlineData("AH, AD, 10S, 5C, 2H", true, HandRank.Pair, "is a pair hand")]
-    [InlineData("AH, 10D, 8S, 5C, 3D", false, HandRank.HighCard, "!is a royal flush hand",
-                                                                                            "!is a straight flush hand",
-                                                                                            "!is a four of a kind hand",
-                                                                                            "!is a full house hand",
-                                                                                            "!is a flush hand",
-                                                                                            "!is a straight hand",
-                                                                                            "!is a three of a kind hand",
-                                                                                            "!is a two pair hand",
-                                                                                            "!is a pair hand")]
+    [InlineData("AH, 10D, 8S, 5C, 3D", false, HandRank.HighCard, "¬is a royal flush hand",
+                                                                                            "¬is a straight flush hand",
+                                                                                            "¬is a four of a kind hand",
+                                                                                            "¬is a full house hand",
+                                                                                            "¬is a flush hand",
+                                                                                            "¬is a straight hand",
+                                                                                            "¬is a three of a kind hand",
+                                                                                            "¬is a two pair hand",
+                                                                                            "¬is a pair hand")]
     public void Should_evaluate_a_winning_hand(string handRanks, bool expected, HandRank expectedRank, params string[] expectedAssertion)
     {
         var cards = handRanks
