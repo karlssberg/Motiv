@@ -14,8 +14,6 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
     Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
 {
-    private const char Not = '\u00ac'; /* ¬ */
-
     /// <summary>Specifies the metadata to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">The metadata to use when the condition is true.</param>
@@ -102,7 +100,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
             predicate,
             higherOrderPredicate,
             _ => statement.ToEnumerable(),
-            _ => $"{Not}{statement}".ToEnumerable(),
+            _ => $"¬{statement}".ToEnumerable(),
             new SpecDescription(statement),
             causeSelector);
     }

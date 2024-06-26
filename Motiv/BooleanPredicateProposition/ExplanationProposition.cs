@@ -8,9 +8,7 @@ internal sealed class ExplanationProposition<TModel>(
     : SpecBase<TModel, string>
 {
 
-    private const char Not = '\u00ac'; /* ¬ */
-
-    public override IEnumerable<SpecBase> Underlying => Enumerable.Empty<SpecBase>();
+    public override IEnumerable<SpecBase> Underlying => [];
 
     internal ExplanationProposition(Func<TModel, bool> predicate, ISpecDescription specDescription)
         : this(
@@ -63,7 +61,7 @@ internal sealed class ExplanationProposition<TModel>(
         {
             (true, true) => $"({proposition})",
             (true, _)=> proposition,
-            (false, true) => $"{Not}({proposition})",
-            (false, _) => $"{Not}{proposition}"
+            (false, true) => $"¬({proposition})",
+            (false, _) => $"¬{proposition}"
         };
 }
