@@ -29,13 +29,13 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
             yield return line;
     }
 
-    private string FormatReason(BooleanResultBase result)
+    private static string FormatReason(BooleanResultBase result)
     {
         return result switch
         {
             NotBooleanResult<TMetadata> notResult => NegateNotOperator(notResult),
             IBooleanOperationResult =>  $"!({result.Reason})",
-            _ =>$"{result.Reason}"
+            _ =>$"!{result.Reason}"
         };
     }
 
@@ -48,8 +48,6 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
             count++;
             current = nested;
         }
-
-
 
         return (count % 2 == 0, current.Operand) switch
         {

@@ -267,7 +267,7 @@ public class BooleanResultTests
 
         var act = sut.Reason;
 
-        act.Should().Be("a & !(!b | !c)");
+        act.Should().Be("a & !(¬b | ¬c)");
     }
 
     [Fact]
@@ -286,7 +286,7 @@ public class BooleanResultTests
 
         var act = sut.Reason;
 
-        act.Should().Be("a && !(!b | !c)");
+        act.Should().Be("a && !(¬b | ¬c)");
     }
 
     [Fact]
@@ -305,7 +305,7 @@ public class BooleanResultTests
 
         var act = sut.Reason;
 
-        act.Should().Be("a | !(!b & !c)");
+        act.Should().Be("a | !(¬b & ¬c)");
     }
 
     [Fact]
@@ -324,7 +324,7 @@ public class BooleanResultTests
 
         var act = sut.Reason;
 
-        act.Should().Be("!a || !(b & c)");
+        act.Should().Be("¬a || !(b & c)");
     }
 
     [Theory]

@@ -7,17 +7,20 @@ internal sealed class ExplanationProposition<TModel>(
     ISpecDescription specDescription)
     : SpecBase<TModel, string>
 {
+
+    private const char Not = '\u00ac'; /* ¬ */
+
     public override IEnumerable<SpecBase> Underlying => Enumerable.Empty<SpecBase>();
-    
-    internal ExplanationProposition(Func<TModel, bool> predicate, ISpecDescription specDescription) 
+
+    internal ExplanationProposition(Func<TModel, bool> predicate, ISpecDescription specDescription)
         : this(
-            predicate, 
-            _ => ReasonFromPropositionStatement(true, specDescription.Statement), 
-            _ => ReasonFromPropositionStatement(false, specDescription.Statement), 
+            predicate,
+            _ => ReasonFromPropositionStatement(true, specDescription.Statement),
+            _ => ReasonFromPropositionStatement(false, specDescription.Statement),
             specDescription)
     {
     }
-    
+
     public override ISpecDescription Description => specDescription;
 
     public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
@@ -54,13 +57,13 @@ internal sealed class ExplanationProposition<TModel>(
             this,
             () => falseBecause(model),
             nameof(falseBecause));
-    
+
     private static string ReasonFromPropositionStatement(bool isSatisfied, string proposition) =>
         (isSatisfied, proposition.ContainsReservedCharacters()) switch
         {
             (true, true) => $"({proposition})",
             (true, _)=> proposition,
-            (false, true) => $"!({proposition})",
-            (false, _) => $"!{proposition}"
+            (false, true) => $"{Not}({proposition})",
+            (false, _) => $"{Not}{proposition}"
         };
 }

@@ -33,8 +33,8 @@ To get detailed feedback:
 var result = isPartiallyFull.IsSatisfiedBy(5);
 
 result.Satisfied;   // true
-result.Assertions;  // ["valid", "!empty", "!full"]
-result.Reason;      // "valid & !(!empty | !full)"
+result.Assertions;  // ["valid", "¬empty", "¬full"]
+result.Reason;      // "valid & !(¬empty | ¬full)"
 ```
 
 ## Installation

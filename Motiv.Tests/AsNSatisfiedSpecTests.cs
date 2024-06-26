@@ -30,11 +30,11 @@ public class AsNSatisfiedSpecTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData(1, 3, 5, 7, false)]
     [InlineData(1, 3, 5, 6, false)]
@@ -66,11 +66,11 @@ public class AsNSatisfiedSpecTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData(1, 3, 5, 7, "The pack does not contain exactly a pair of even numbers")]
     [InlineData(1, 3, 5, 6, "The pack does not contain exactly a pair of even numbers")]
@@ -102,11 +102,11 @@ public class AsNSatisfiedSpecTests
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expectedShallowAssertionSerialized);
     }
-    
+
     [Theory]
     [InlineData(1, 3, 5, 7, "1 is odd, 3 is odd, 5 is odd, 7 is odd")]
     [InlineData(1, 3, 5, 6, "6 is even")]
@@ -139,11 +139,11 @@ public class AsNSatisfiedSpecTests
 
         // Act
         var act = result.Explanation.Underlying;
-        
+
         // Assert
         act.GetAssertions().Should().BeEquivalentTo(expectedDeepAssertions);
     }
-    
+
     [Theory]
     [InlineAutoData(true, true, "2 even")]
     [InlineAutoData(true, false, "1 even and 1 odd")]
@@ -167,16 +167,16 @@ public class AsNSatisfiedSpecTests
             .WhenTrue("2 even")
             .WhenFalse(evaluation => $"{evaluation.TrueCount} even and {evaluation.FalseCount} odd")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy([first, second]);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Fact]
     public void Should_describe_an_NSatisfied_spec()
     {
@@ -196,11 +196,11 @@ public class AsNSatisfiedSpecTests
 
         // Act
         var act = spec.Statement;
-        
+
         // Assert
         act.Should().Be("a pair of even numbers");
     }
-    
+
     [Theory]
     [InlineData(false, false, false, false)]
     [InlineData(false, false, true, false)]
@@ -226,19 +226,19 @@ public class AsNSatisfiedSpecTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
-    [Theory]   [InlineData(false, false, false, "!2 are true")]
-    [InlineData(false, false, true, "!2 are true")]
-    [InlineData(false, true, false, "!2 are true")]
+
+    [Theory]   [InlineData(false, false, false, "¬2 are true")]
+    [InlineData(false, false, true, "¬2 are true")]
+    [InlineData(false, true, false, "¬2 are true")]
     [InlineData(false, true, true, "2 are true")]
-    [InlineData(true, false, false, "!2 are true")]
+    [InlineData(true, false, false, "¬2 are true")]
     [InlineData(true, false, true, "2 are true")]
     [InlineData(true, true, false, "2 are true")]
-    [InlineData(true, true, true, "!2 are true")]
+    [InlineData(true, true, true, "¬2 are true")]
     public void Should_perform_a_none_satisfied_operation_when_using_a_boolean_predicate_function(
         bool first,
         bool second,
@@ -255,11 +255,11 @@ public class AsNSatisfiedSpecTests
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expectedReason);
     }
-    
+
     [Theory]
     [InlineData(false, false, false, false)]
     [InlineData(false, false, true, false)]
@@ -280,27 +280,27 @@ public class AsNSatisfiedSpecTests
             Spec.Build((bool m) => m)
                 .AsNSatisfied(2)
                 .WhenTrue(_ => "2 are true")
-                .WhenFalse(_ => "!2 are true")
-                .Create("none are true");
+                .WhenFalse(_ => "¬2 are true")
+                .Create("none true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
-    [InlineData(false, false, false, "!2 are true")]
-    [InlineData(false, false, true, "!2 are true")]
-    [InlineData(false, true, false, "!2 are true")]
+    [InlineData(false, false, false, "¬2 are true")]
+    [InlineData(false, false, true, "¬2 are true")]
+    [InlineData(false, true, false, "¬2 are true")]
     [InlineData(false, true, true, "2 are true")]
-    [InlineData(true, false, false, "!2 are true")]
+    [InlineData(true, false, false, "¬2 are true")]
     [InlineData(true, false, true, "2 are true")]
     [InlineData(true, true, false, "2 are true")]
-    [InlineData(true, true, true, "!2 are true")]
+    [InlineData(true, true, true, "¬2 are true")]
     public void Should_provide_a_reason_for_an_n_satisfied_operation_when_using_a_boolean_result_predicate_function_with_metadata(
         bool first,
         bool second,
@@ -311,18 +311,18 @@ public class AsNSatisfiedSpecTests
             Spec.Build((bool m) => m)
                 .AsNSatisfied(2)
                 .WhenTrue(_ => "2 are true")
-                .WhenFalse(_ => "!2 are true")
-                .Create("none are true");
+                .WhenFalse(_ => "¬2 are true")
+                .Create("none true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expectedReason);
     }
-    
+
     [Theory]
     [InlineData(false, false, false, false)]
     [InlineData(false, false, true, false)]   [InlineData(false, true, false, false)]
@@ -346,27 +346,27 @@ public class AsNSatisfiedSpecTests
             Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
                 .AsNSatisfied(2)
                 .WhenTrue(_ => "2 are true")
-                .WhenFalse(_ => "!2 are true")
-                .Create("2 are true");
+                .WhenFalse(_ => "¬2 are true")
+                .Create("2 true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
-    [InlineData(false, false, false, "!2 are true")]
-    [InlineData(false, false, true, "!2 are true")]
-    [InlineData(false, true, false, "!2 are true")]
+    [InlineData(false, false, false, "¬2 are true")]
+    [InlineData(false, false, true, "¬2 are true")]
+    [InlineData(false, true, false, "¬2 are true")]
     [InlineData(false, true, true, "2 are true")]
-    [InlineData(true, false, false, "!2 are true")]
+    [InlineData(true, false, false, "¬2 are true")]
     [InlineData(true, false, true, "2 are true")]
     [InlineData(true, true, false, "2 are true")]
-    [InlineData(true, true, true, "!2 are true")]
+    [InlineData(true, true, true, "¬2 are true")]
     public void Should_provide_a_reason_an_n_satisfied_operation_when_using_a_boolean_result_predicate_function(
         bool first,
         bool second,
@@ -382,14 +382,14 @@ public class AsNSatisfiedSpecTests
             Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
                 .AsNSatisfied(2)
                 .WhenTrue(_ => "2 are true")
-                .WhenFalse(_ => "!2 are true")
-                .Create("2 are true");
+                .WhenFalse(_ => "¬2 are true")
+                .Create("2 true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expectedReason);
     }

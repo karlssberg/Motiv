@@ -40,36 +40,36 @@ public class AsAllSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            !all are true
+                                            ¬all are true
                                                 false
                                                 false
                                                 false
                                             """)]
     [InlineAutoData(false, false, true, """
-                                            !all are true
+                                            ¬all are true
                                                 false
                                                 false
                                             """)]
     [InlineAutoData(false, true, false, """
-                                            !all are true
+                                            ¬all are true
                                                 false
                                                 false
                                             """)]
     [InlineAutoData(false, true, true, """
-                                            !all are true
+                                            ¬all are true
                                                 false
                                             """)]
     [InlineAutoData(true, false, false, """
-                                            !all are true
+                                            ¬all are true
                                                 false
                                                 false
                                             """)]
     [InlineAutoData(true, false, true, """
-                                            !all are true
+                                            ¬all are true
                                                 false
                                             """)]
     [InlineAutoData(true, true, false, """
-                                            !all are true
+                                            ¬all are true
                                                 false
                                             """)]
     [InlineAutoData(true, true, true, """
@@ -97,7 +97,7 @@ public class AsAllSatisfiedSpecTests
             .WhenTrueYield(evaluation => evaluation.Metadata)
             .WhenFalseYield(evaluation => evaluation.Metadata)
             .Create("all are true");
-        
+
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
@@ -109,36 +109,36 @@ public class AsAllSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                        !all are true
+                                        ¬all are true
                                             false
                                             false
                                             false
                                         """)]
     [InlineAutoData(false, false, true, """
-                                        !all are true
+                                        ¬all are true
                                             false
                                             false
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        !all are true
+                                        ¬all are true
                                             false
                                             false
                                         """)]
     [InlineAutoData(false, true, true, """
-                                        !all are true
+                                        ¬all are true
                                             false
                                         """)]
     [InlineAutoData(true, false, false, """
-                                        !all are true
+                                        ¬all are true
                                             false
                                             false
                                         """)]
     [InlineAutoData(true, false, true, """
-                                        !all are true
+                                        ¬all are true
                                             false
                                         """)]
     [InlineAutoData(true, true, false, """
-                                        !all are true
+                                        ¬all are true
                                             false
                                         """)]
     [InlineAutoData(true, true, true, """
@@ -172,44 +172,44 @@ public class AsAllSatisfiedSpecTests
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                        !all are true
-                                            !is true
-                                            !is true
-                                            !is true
+                                        ¬all are true
+                                            ¬is true
+                                            ¬is true
+                                            ¬is true
                                         """)]
     [InlineAutoData(false, false, true, """
-                                        !all are true
-                                            !is true
-                                            !is true
+                                        ¬all are true
+                                            ¬is true
+                                            ¬is true
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        !all are true
-                                            !is true
-                                            !is true
+                                        ¬all are true
+                                            ¬is true
+                                            ¬is true
                                         """)]
     [InlineAutoData(false, true, true, """
-                                        !all are true
-                                            !is true
+                                        ¬all are true
+                                            ¬is true
                                         """)]
     [InlineAutoData(true, false, false, """
-                                        !all are true
-                                            !is true
-                                            !is true
+                                        ¬all are true
+                                            ¬is true
+                                            ¬is true
                                         """)]
     [InlineAutoData(true, false, true, """
-                                       !all are true
-                                           !is true
+                                       ¬all are true
+                                           ¬is true
                                        """)]
     [InlineAutoData(true, true, false, """
-                                       !all are true
-                                           !is true
+                                       ¬all are true
+                                           ¬is true
                                        """)]
     [InlineAutoData(true, true, true, """
                                       all are true
@@ -241,68 +241,68 @@ public class AsAllSatisfiedSpecTests
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            !all are true
+                                            ¬all are true
                                                 AND
-                                                    !left
-                                                    !right
+                                                    ¬left
+                                                    ¬right
                                                 AND
-                                                    !left
-                                                    !right
+                                                    ¬left
+                                                    ¬right
                                                 AND
-                                                    !left
-                                                    !right
+                                                    ¬left
+                                                    ¬right
                                             """)]
     [InlineAutoData(false, false, true, """
-                                            !all are true
+                                            ¬all are true
                                                 AND
-                                                    !left
-                                                    !right
+                                                    ¬left
+                                                    ¬right
                                                 AND
-                                                    !left
-                                                    !right
+                                                    ¬left
+                                                    ¬right
                                             """)]
     [InlineAutoData(false, true, false, """
-                                            !all are true
+                                            ¬all are true
                                                 AND
-                                                    !left
-                                                    !right
+                                                    ¬left
+                                                    ¬right
                                                 AND
-                                                    !left
-                                                    !right
+                                                    ¬left
+                                                    ¬right
                                             """)]
     [InlineAutoData(false, true, true, """
-                                            !all are true
+                                            ¬all are true
                                                 AND
-                                                    !left
-                                                    !right
+                                                    ¬left
+                                                    ¬right
                                             """)]
     [InlineAutoData(true, false, false, """
-                                            !all are true
+                                            ¬all are true
                                                 AND
-                                                    !left
-                                                    !right
+                                                    ¬left
+                                                    ¬right
                                                 AND
-                                                    !left
-                                                    !right
+                                                    ¬left
+                                                    ¬right
                                             """)]
     [InlineAutoData(true, false, true, """
-                                            !all are true
+                                            ¬all are true
                                                 AND
-                                                    !left
-                                                    !right
+                                                    ¬left
+                                                    ¬right
                                             """)]
     [InlineAutoData(true, true, false, """
-                                            !all are true
+                                            ¬all are true
                                                 AND
-                                                    !left
-                                                    !right
+                                                    ¬left
+                                                    ¬right
                                             """)]
     [InlineAutoData(true, true, true, """
                                             all are true
@@ -346,19 +346,19 @@ public class AsAllSatisfiedSpecTests
 
         // Act
         var act = result.Justification;
-        
+
         // Assert
         act.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, "!all are true")]
-    [InlineAutoData(false, false, true, "!all are true")]
-    [InlineAutoData(false, true, false, "!all are true")]
-    [InlineAutoData(false, true, true, "!all are true")]
-    [InlineAutoData(true, false, false, "!all are true")]
-    [InlineAutoData(true, false, true, "!all are true")]
-    [InlineAutoData(true, true, false, "!all are true")]
+    [InlineAutoData(false, false, false, "¬all are true")]
+    [InlineAutoData(false, false, true, "¬all are true")]
+    [InlineAutoData(false, true, false, "¬all are true")]
+    [InlineAutoData(false, true, true, "¬all are true")]
+    [InlineAutoData(true, false, false, "¬all are true")]
+    [InlineAutoData(true, false, true, "¬all are true")]
+    [InlineAutoData(true, true, false, "¬all are true")]
     [InlineAutoData(true, true, true, "all are true")]
     public void Should_Describe_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
@@ -390,19 +390,19 @@ public class AsAllSatisfiedSpecTests
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
-    [InlineAutoData(false, false, false, "!all are true")]
-    [InlineAutoData(false, false, true, "!all are true")]
-    [InlineAutoData(false, true, false, "!all are true")]
-    [InlineAutoData(false, true, true, "!all are true")]
-    [InlineAutoData(true, false, false, "!all are true")]
-    [InlineAutoData(true, false, true, "!all are true")]
-    [InlineAutoData(true, true, false, "!all are true")]
+    [InlineAutoData(false, false, false, "¬all are true")]
+    [InlineAutoData(false, false, true, "¬all are true")]
+    [InlineAutoData(false, true, false, "¬all are true")]
+    [InlineAutoData(false, true, true, "¬all are true")]
+    [InlineAutoData(true, false, false, "¬all are true")]
+    [InlineAutoData(true, false, true, "¬all are true")]
+    [InlineAutoData(true, true, false, "¬all are true")]
     [InlineAutoData(true, true, true, "all are true")]
     public void Should_serialize_the_result_of_the_all_operation_and_show_underlying_causes(
         bool first,
@@ -434,7 +434,7 @@ public class AsAllSatisfiedSpecTests
 
         // Act
         var act = result.ToString();
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -461,11 +461,11 @@ public class AsAllSatisfiedSpecTests
 
         // Act
         var act = sut.Statement;
-        
+
         // Assert
         act.Should().Be(expectedSummary);
     }
-    
+
     [Fact]
     public void Should_provide_a_serialized_expression_tree_of_the_specification()
     {
@@ -491,12 +491,12 @@ public class AsAllSatisfiedSpecTests
 
         // Act
         var act = spec.Expression;
-        
+
         // Assert
         act.Should().Be(expectedFull);
     }
-    
-    [Fact]  
+
+    [Fact]
     public void Should_provide_a_statement_of_the_specification_when_metadata_is_a_string()
     {
         // Arrange
@@ -517,12 +517,12 @@ public class AsAllSatisfiedSpecTests
 
         // Act
         var act = spec.Statement;
-        
+
         // Assert
         act.Should().Be(expectedSummary);
     }
-    
-    [Fact]  
+
+    [Fact]
     public void Should_provide_a_serialized_expression_tree_of_the_specification_when_metadata_is_a_string()
     {
         // Arrange
@@ -546,11 +546,11 @@ public class AsAllSatisfiedSpecTests
 
         // Act
         var act = spec.Expression;
-        
+
         // Assert
         act.Should().Be(expectedFull);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, false, 3)]
     [InlineAutoData(false, false, true, 2)]
@@ -570,7 +570,7 @@ public class AsAllSatisfiedSpecTests
         var underlying = Spec
             .Build((bool m) => m)
             .Create("underlying");
-        
+
         var spec = Spec
             .Build(underlying)
             .AsAllSatisfied()
@@ -580,7 +580,7 @@ public class AsAllSatisfiedSpecTests
 
         // Act
         var act = result.Description.CausalOperandCount;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -601,18 +601,18 @@ public class AsAllSatisfiedSpecTests
             .Build((bool m) => underlying.IsSatisfiedBy(m))
             .AsAllSatisfied()
             .Create("all are true");
-        
+
         // Act
         var act = spec.IsSatisfiedBy([modelA, modelB]).Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, "!all are true")]
-    [InlineAutoData(false, true, "!all are true")]
-    [InlineAutoData(true, false, "!all are true")]
+    [InlineAutoData(false, false, "¬all are true")]
+    [InlineAutoData(false, true, "¬all are true")]
+    [InlineAutoData(true, false, "¬all are true")]
     [InlineAutoData(true, true, "all are true")]
     public void Should_surface_reasons_from_underlyingResult(bool modelA, bool modelB, string expectedAssertion)
     {
@@ -625,10 +625,10 @@ public class AsAllSatisfiedSpecTests
             .Build((bool m) => underlying.IsSatisfiedBy(m))
             .AsAllSatisfied()
             .Create("all are true");
-        
+
         // Act
         var act = spec.IsSatisfiedBy([modelA, modelB]).Reason;
-        
+
         // Assert
         act.Should().Be(expectedAssertion);
     }
@@ -654,14 +654,14 @@ public class AsAllSatisfiedSpecTests
             .WhenTrue("all are true")
             .WhenFalse("not all are true")
             .Create();
-        
+
         // Act
         var act = spec.IsSatisfiedBy([modelA, modelB]).Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
 
     [Theory]
     [InlineAutoData(false, false, "not all are true")]
@@ -684,14 +684,14 @@ public class AsAllSatisfiedSpecTests
             .WhenTrue("all are true")
             .WhenFalse("not all are true")
             .Create();
-        
+
         // Act
         var act = spec.IsSatisfiedBy([modelA, modelB]).Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo([expectedAssertion]);
     }
-    
+
 
     [Theory]
     [InlineAutoData(false, false, "not all are true")]
@@ -714,14 +714,14 @@ public class AsAllSatisfiedSpecTests
             .WhenTrue("all are true")
             .WhenFalse("not all are true")
             .Create();
-        
+
         // Act
         var act = spec.IsSatisfiedBy([modelA, modelB]).Reason;
-        
+
         // Assert
         act.Should().Be(expectedAssertion);
     }
-   
+
     [Theory]
     [InlineAutoData(false, false, false)]
     [InlineAutoData(false, true, false)]
@@ -741,15 +741,15 @@ public class AsAllSatisfiedSpecTests
             .Create();
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
-    
+
+
     [Theory]
     [InlineAutoData(false, false, "not all are true")]
     [InlineAutoData(false, true, "not all are true")]
@@ -767,16 +767,16 @@ public class AsAllSatisfiedSpecTests
             .WhenTrue("all are true")
             .WhenFalse("not all are true")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy([modelA, modelB]);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expectedAssertion);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, "not all are true")]
     [InlineAutoData(false, true, "not all are true")]
@@ -796,14 +796,14 @@ public class AsAllSatisfiedSpecTests
             .Create();
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo([expectedAssertion]);
     }
-    
+
     [Theory]
     [InlineData(false, false, false)]
     [InlineData(false, true, false)]
@@ -823,14 +823,14 @@ public class AsAllSatisfiedSpecTests
             .Create("all true");
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, "not all are true")]
     [InlineData(false, true, "not all are true")]
@@ -849,14 +849,14 @@ public class AsAllSatisfiedSpecTests
             .Create("all true");
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expectedReason);
     }
-    
+
     [Theory]
     [InlineData(false, false, "not all are true")]
     [InlineData(false, true, "not all are true")]
@@ -876,10 +876,10 @@ public class AsAllSatisfiedSpecTests
             .Create("all true");
 
         var result = spec.IsSatisfiedBy([modelA, modelB]);
-        
+
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo([expectedAssertion]);
     }

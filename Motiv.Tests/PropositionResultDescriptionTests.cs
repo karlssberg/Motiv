@@ -46,7 +46,7 @@ public class PropositionResultDescriptionTests
 
     [Theory]
     [InlineAutoData(true, "is true")]
-    [InlineAutoData(false, "!is true")]
+    [InlineAutoData(false, "¬is true")]
     public void Should_generate_a_simple_description_using_proposition_when_metadata_is_not_a_string(
         bool isTrue,
         string expected,
@@ -69,10 +69,10 @@ public class PropositionResultDescriptionTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, "!left | !right")]
-    [InlineAutoData(false, true, "!left & right")]
-    [InlineAutoData(true, false, "left & !right")]
-    [InlineAutoData(true, true, "right | left")]
+    [InlineAutoData(false, false, "¬left | ¬right")]
+    [InlineAutoData(false, true, "!¬left & right")]
+    [InlineAutoData(true, false, "left & !¬right")]
+    [InlineAutoData(true, true, "!right | !left")]
     public void Should_generate_a_description_from_a_composition(
         bool leftResult,
         bool rightResult,
@@ -100,19 +100,19 @@ public class PropositionResultDescriptionTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, false, "(!first | !second) & (!third | !fourth)")]
-    [InlineAutoData(false, false, false, true,  "!first | !second")]
-    [InlineAutoData(false, false, true, false,  "!first | !second")]
-    [InlineAutoData(false, false, true, true,   "!first | !second")]
-    [InlineAutoData(false, true, false, false,  "!third | !fourth")]
+    [InlineAutoData(false, false, false, false, "(¬first | ¬second) & (¬third | ¬fourth)")]
+    [InlineAutoData(false, false, false, true,  "¬first | ¬second")]
+    [InlineAutoData(false, false, true, false,  "¬first | ¬second")]
+    [InlineAutoData(false, false, true, true,   "¬first | ¬second")]
+    [InlineAutoData(false, true, false, false,  "¬third | ¬fourth")]
     [InlineAutoData(false, true, false, true,   "second & fourth")]
     [InlineAutoData(false, true, true, false,   "second & third")]
     [InlineAutoData(false, true, true, true,    "second & (third | fourth)")]
-    [InlineAutoData(true, false, false, false,  "!third | !fourth")]
+    [InlineAutoData(true, false, false, false,  "¬third | ¬fourth")]
     [InlineAutoData(true, false, false, true,   "first & fourth")]
     [InlineAutoData(true, false, true, false,   "first & third")]
     [InlineAutoData(true, false, true, true,    "first & (third | fourth)")]
-    [InlineAutoData(true, true, false, false,   "!third | !fourth")]
+    [InlineAutoData(true, true, false, false,   "¬third | ¬fourth")]
     [InlineAutoData(true, true, false, true,    "(first | second) & fourth")]
     [InlineAutoData(true, true, true, false,    "(first | second) & third")]
     [InlineAutoData(true, true, true, true,     "(first | second) & (third | fourth)")]
@@ -219,43 +219,43 @@ public class PropositionResultDescriptionTests
         some are false
             AND
                 OR
-                    !first
-                    !second
+                    ¬first
+                    ¬second
                 OR
-                    !third
-                    !fourth
+                    ¬third
+                    ¬fourth
         """)]
     [InlineAutoData(false, false, false, true,
         """
         some are false
             AND
                 OR
-                    !first
-                    !second
+                    ¬first
+                    ¬second
         """)]
     [InlineAutoData(false, false, true, false,
         """
         some are false
             AND
                 OR
-                    !first
-                    !second
+                    ¬first
+                    ¬second
         """)]
     [InlineAutoData(false, false, true, true,
         """
         some are false
             AND
                 OR
-                    !first
-                    !second
+                    ¬first
+                    ¬second
         """)]
     [InlineAutoData(false, true, false, false,
         """
         some are false
             AND
                 OR
-                    !third
-                    !fourth
+                    ¬third
+                    ¬fourth
         """)]
     [InlineAutoData(false, true, false, true,
         """
@@ -290,8 +290,8 @@ public class PropositionResultDescriptionTests
         some are false
             AND
                 OR
-                    !third
-                    !fourth
+                    ¬third
+                    ¬fourth
         """)]
     [InlineAutoData(true, false, false, true,
         """
@@ -326,8 +326,8 @@ public class PropositionResultDescriptionTests
         some are false
             AND
                 OR
-                    !third
-                    !fourth
+                    ¬third
+                    ¬fourth
         """)]
     [InlineAutoData(true, true, false, true,
         """
@@ -406,15 +406,15 @@ public class PropositionResultDescriptionTests
         """
         AND
             NOR
-                !fourth
+                ¬fourth
         """)]
     [InlineAutoData(false, false, false, true,
         """
         AND
             OR
-                !second
+                ¬second
             NOR
-                !third
+                ¬third
                 fourth
         """)]
     [InlineAutoData(false, false, true, false,
@@ -422,7 +422,7 @@ public class PropositionResultDescriptionTests
         AND
             NOR
                 third
-                !fourth
+                ¬fourth
         """)]
     [InlineAutoData(false, false, true, true,
         """
@@ -434,33 +434,33 @@ public class PropositionResultDescriptionTests
         """
         AND
             OR
-                !first
+                ¬first
                 second
             NOR
-                !fourth
+                ¬fourth
         """)]
     [InlineAutoData(false, true, false, true,
         """
         AND
             OR
-                !first
+                ¬first
                 second
         """)]
     [InlineAutoData(false, true, true, false,
         """
         AND
             OR
-                !first
+                ¬first
                 second
             NOR
                 third
-                !fourth
+                ¬fourth
         """)]
     [InlineAutoData(false, true, true, true,
         """
         AND
             OR
-                !first
+                ¬first
                 second
             NOR
                 third
@@ -469,16 +469,16 @@ public class PropositionResultDescriptionTests
         """
         AND
             NOR
-                !fourth
+                ¬fourth
         """)]
     [InlineAutoData(true, false, false, true,
         """
         AND
             OR
                 first
-                !second
+                ¬second
             NOR
-                !third
+                ¬third
                 fourth
         """)]
     [InlineAutoData(true, false, true, false,
@@ -486,7 +486,7 @@ public class PropositionResultDescriptionTests
         AND
             NOR
                 third
-                !fourth
+                ¬fourth
         """)]
     [InlineAutoData(true, false, true, true,
         """
@@ -498,7 +498,7 @@ public class PropositionResultDescriptionTests
         """
         AND
             NOR
-                !fourth
+                ¬fourth
         """)]
     [InlineAutoData(true, true, false, true,
         """
@@ -506,7 +506,7 @@ public class PropositionResultDescriptionTests
             OR
                 first
             NOR
-                !third
+                ¬third
                 fourth
         """)]
     [InlineAutoData(true, true, true, false,
@@ -514,7 +514,7 @@ public class PropositionResultDescriptionTests
         AND
             NOR
                 third
-                !fourth
+                ¬fourth
         """)]
     [InlineAutoData(true, true, true, true,
         """
@@ -872,17 +872,127 @@ public class PropositionResultDescriptionTests
             """);
     }
 
-    [Fact]
-    public void Should_negate_a_binary_operation_results_that_contains_negated_proposition_statements()
+    [Theory]
+    [InlineData(true, true,"!(¬b | ¬c)", "¬b", "¬c")]
+    [InlineData(false, false,"!(b | c)", "b", "c")]
+    public void Should_negate_a_binary_operation_results_that_contains_negated_proposition_statements(
+        bool model,
+        bool expectedSatisfied,
+        string expectedReason,
+        params string[] expectedAssertions)
     {
-        var specA = Spec.Build((bool b) => b).Create("a");
         var specB = Spec.Build((bool b) => !b).Create("b");
         var specC = Spec.Build((bool b) => !b).Create("c");
 
-        var spec = specA & !(specB | specC);
+        var spec =  !(specB | specC);
 
-        var act = spec.IsSatisfiedBy(true);
+        var act = spec.IsSatisfiedBy(model);
 
-        act.Reason.Should().Be("a & !(!b | !c)");
+        act.Satisfied.Should().Be(expectedSatisfied);
+        act.Reason.Should().Be(expectedReason);
+        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
     }
+
+    [Theory]
+    [InlineData(true, false, "!(!¬b | !¬c)", "¬b", "¬c")]
+    [InlineData(false, true, "!(!b | !c)", "b", "c")]
+    public void Should_negate_a_binary_operation_results_that_contains_single_negated_proposition_statements(
+        bool model,
+        bool expectedSatisfied,
+        string expectedReason,
+        params string[] expectedAssertions)
+    {
+        var specB = Spec.Build((bool b) => !b).Create("b");
+        var specC = Spec.Build((bool b) => !b).Create("c");
+
+        var spec = !(!specB | !specC);
+
+        var act = spec.IsSatisfiedBy(model);
+
+        act.Satisfied.Should().Be(expectedSatisfied);
+        act.Reason.Should().Be(expectedReason);
+        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+    }
+
+
+    [Theory]
+    [InlineData(true, true,"!(¬b | ¬c)", "¬b", "¬c")]
+    [InlineData(false,  false,"!(b | c)", "b", "c")]
+    public void Should_negate_a_binary_operation_results_that_contains_double_negated_proposition_statements(
+        bool model,
+        bool expectedSatisfied,
+        string expectedReason,
+        params string[] expectedAssertions)
+    {
+        var specB = Spec.Build((bool b) => !b).Create("b");
+        var specC = Spec.Build((bool b) => !b).Create("c");
+
+        var spec = !(!!specB | !!specC);
+
+        var act = spec.IsSatisfiedBy(model);
+
+        act.Satisfied.Should().Be(expectedSatisfied);
+        act.Reason.Should().Be(expectedReason);
+        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+    }
+
+    [Theory]
+    [InlineData(true, false, "!(!b | !c)", "b", "c")]
+    [InlineData(false, true, "!(!B | !C)", "B", "C")]
+    public void Should_negate_a_binary_operation_results_that_contains_single_negated_proposition_statements_with_assertions(
+        bool model,
+        bool expectedSatisfied,
+        string expectedReason,
+        params string[] expectedAssertions)
+    {
+        var specB =
+            Spec.Build((bool b) => !b)
+                .WhenTrue("B")
+                .WhenFalse("b")
+                .Create("is b");
+        var specC =
+            Spec.Build((bool b) => !b)
+                .WhenTrue("C")
+                .WhenFalse("c")
+                .Create("is c");
+
+        var spec = !(!specB | !specC);
+
+        var act = spec.IsSatisfiedBy(model);
+
+        act.Satisfied.Should().Be(expectedSatisfied);
+        act.Reason.Should().Be(expectedReason);
+        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+    }
+
+    [Theory]
+    [InlineData(true, true, "!(b | c)", "b", "c")]
+    [InlineData(false, false, "!(B | C)", "B", "C")]
+    public void Should_negate_a_binary_operation_results_that_contains_double_negated_proposition_statements_with_assertions(
+        bool model,
+        bool expectedSatisfied,
+        string expectedReason,
+        params string[] expectedAssertions)
+    {
+        var specB =
+            Spec.Build((bool b) => !b)
+                .WhenTrue("B")
+                .WhenFalse("b")
+                .Create("is b");
+        var specC =
+            Spec.Build((bool b) => !b)
+                .WhenTrue("C")
+                .WhenFalse("c")
+                .Create("is c");
+
+        var spec = !(!!specB | !!specC);
+
+        var act = spec.IsSatisfiedBy(model);
+
+        act.Satisfied.Should().Be(expectedSatisfied);
+        act.Reason.Should().Be(expectedReason);
+        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+    }
+
+
 }

@@ -14,8 +14,8 @@ public class TutorialTests
         isEven.IsSatisfiedBy(2).Assertions.Should().BeEquivalentTo("is even");
 
         isEven.IsSatisfiedBy(3).Satisfied.Should().BeFalse();
-        isEven.IsSatisfiedBy(3).Reason.Should().BeEquivalentTo("!is even");
-        isEven.IsSatisfiedBy(3).Assertions.Should().BeEquivalentTo("!is even");
+        isEven.IsSatisfiedBy(3).Reason.Should().BeEquivalentTo("¬is even");
+        isEven.IsSatisfiedBy(3).Assertions.Should().BeEquivalentTo("¬is even");
     }
 
     [Fact]
@@ -182,7 +182,7 @@ public class TutorialTests
         var result = showShippingPageButton.IsSatisfiedBy(emptyBasket);
 
         result.Satisfied.Should().BeFalse();
-        result.Reason.Should().Be("basket is empty");
+        result.Reason.Should().Be("!basket is empty");
     }
 
     private class IsNegativeIntegerProposition() : Spec<int>(
@@ -370,7 +370,7 @@ public class TutorialTests
         var canCheckIn = canCheckInSpec.IsSatisfiedBy(validPassenger);
 
         canCheckIn.Satisfied.Should().Be(true);
-        canCheckIn.Reason.Should().BeEquivalentTo("has a valid ticket & does not have outstanding fees & check-in is open");
+        canCheckIn.Reason.Should().BeEquivalentTo("has a valid ticket & !does not have outstanding fees & check-in is open");
         canCheckIn.Assertions.Should().BeEquivalentTo("has a valid ticket", "does not have outstanding fees", "check-in is open");
     }
 
@@ -407,7 +407,7 @@ public class TutorialTests
 
         act.Justification.Should().Be(
             """
-            !customer is eligible for a loan
+            ¬customer is eligible for a loan
                 AND
                     customer has an inadequate credit score
                     customer has insufficient income
@@ -538,15 +538,15 @@ public class TutorialTests
         var result = isPartiallyFull.IsSatisfiedBy(5);
 
         result.Satisfied.Should().BeTrue();
-        result.Assertions.Should().BeEquivalentTo(["valid", "!empty", "!full"]);
-        result.Reason.Should().Be("valid & !(!empty | !full)");
+        result.Assertions.Should().BeEquivalentTo(["valid", "¬empty", "¬full"]);
+        result.Reason.Should().Be("valid & !(¬empty | ¬full)");
         result.Justification.Should().Be(
             """
             AND
                 valid
                 NOR
-                    !empty
-                    !full
+                    ¬empty
+                    ¬full
             """);
     }
 
@@ -578,7 +578,7 @@ public class TutorialTests
                 .WhenFalse("none")
                 .Create("xor");
 
-        spec.IsSatisfiedBy(true).Assertions.Should().BeEquivalentTo("!right");
-        spec.IsSatisfiedBy(false).Assertions.Should().BeEquivalentTo("!left");
+        spec.IsSatisfiedBy(true).Assertions.Should().BeEquivalentTo("¬right");
+        spec.IsSatisfiedBy(false).Assertions.Should().BeEquivalentTo("¬left");
     }
 }

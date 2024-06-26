@@ -79,7 +79,7 @@ public class OrSpecTests
     [InlineAutoData(true, true, "left | right")]
     [InlineAutoData(true, false, "left")]
     [InlineAutoData(false, true, "right")]
-    [InlineAutoData(false, false, "!left | !right")]
+    [InlineAutoData(false, false, "¬left | ¬right")]
     public void Should_serialize_the_result_of_the_or_operation(
         bool leftResult,
         bool rightResult,
@@ -147,7 +147,7 @@ public class OrSpecTests
     [InlineAutoData(true, true, "left | right")]
     [InlineAutoData(true, false, "left")]
     [InlineAutoData(false, true, "right")]
-    [InlineAutoData(false, false, "!left | !right")]
+    [InlineAutoData(false, false, "¬left | ¬right")]
     public void Should_serialize_the_result_of_the_or_operation_when_metadata_is_a_string(
         bool leftResult,
         bool rightResult,
@@ -401,7 +401,7 @@ public class OrSpecTests
     }
 
     [Theory]
-    [InlineData(false, false, "!left", "!right")]
+    [InlineData(false, false, "¬left", "¬right")]
     [InlineData(false, true, "right")]
     [InlineData(true, false, "left")]
     [InlineData(true, true, "left", "right")]
@@ -435,7 +435,7 @@ public class OrSpecTests
     }
 
     [Theory]
-    [InlineData(false, false, "!left", "!right")]
+    [InlineData(false, false, "¬left", "¬right")]
     [InlineData(false, true, "right")]
     [InlineData(true, false, "left")]
     [InlineData(true, true, "left", "right")]
@@ -565,8 +565,8 @@ public class OrSpecTests
     [InlineData(false, false,
         """
         NOR
-            !left
-            !right
+            ¬left
+            ¬right
         """)]
     public void Should_justify_a_nor_creation(bool leftBool, bool rightBool, string expected)
     {
@@ -600,8 +600,8 @@ public class OrSpecTests
     [InlineData(false, false,
         """
         OR
-            !left
-            !right
+            ¬left
+            ¬right
         """)]
     public void Should_justify_a_nor_negation(bool leftBool, bool rightBool, string expected)
     {
@@ -635,8 +635,8 @@ public class OrSpecTests
     [InlineData(false, false,
         """
         NOR
-            !left
-            !right
+            ¬left
+            ¬right
         """)]
     public void Should_justify_a_nor_double_negation(bool leftBool, bool rightBool, string expected)
     {

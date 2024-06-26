@@ -18,8 +18,8 @@ And when negated:
 ```csharp
 var result = isEven.IsSatisfiedBy(3);
 
-result.Reason;    // "!is even"
-result.Assertion; // ["!is even"]
+result.Reason;    // "¬is even"
+result.Assertion; // ["¬is even"]
 ```
 
 It will implicitly create a `WhenTrue()` and `WhenFalse()` method, using as assertions the propositional statement
@@ -37,6 +37,6 @@ This is functionally the same as:
 ```csharp
 Spec.Build((int n) => n % 2 == 0)   // predicate
     .WhenTrue("is even")            // propositional statement
-    .WhenFalse("!is even")          // negation of the propositional statement
+    .WhenFalse("¬is even")          // negation of the propositional statement
     .Create();
 ```
