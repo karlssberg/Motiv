@@ -1,16 +1,35 @@
-# Know _Why_, not just _What_
+# Motiv
 
-[![Build Status](https://github.com/karlssberg/Motiv/actions/workflows/dotnet.yml/badge.svg)](https://github.com/karlssberg/Motiv)
-[![GitHub](https://img.shields.io/github/license/karlssberg/Motiv)](https://github.com/karlssberg/Motiv/blob/main/LICENSE)
-[![NuGet](https://img.shields.io/nuget/v/Motiv.svg)](https://www.nuget.org/packages/Motiv/)
-[![codecov](https://codecov.io/gh/karlssberg/Motiv/graph/badge.svg?token=XNN34D2JIP)](https://codecov.io/gh/karlssberg/Motiv)
-[![GitHub Repo stars](https://img.shields.io/github/stars/karlssberg/Motiv)](https://github.com/karlssberg/Motiv)
+<div style="display: table; margin: auto">
+
+```mermaid
+flowchart BT
+
+    A --> P(((&nbsp;Why Motiv?&nbsp;)))
+    B([composable]) --> A((AND))
+    C((AND)) --> A
+    D([reusable]) --> C
+    E([explainable]) --> C
+
+
+    style E stroke:darkcyan
+    style D stroke:darkcyan
+    style B stroke:darkcyan
+    style P stroke:darkcyan
+```
+
+</div>
+
+### Know _Why_, not just _What_
+
+---
 
 Motiv is a developer-first .NET library that transforms the way you work with boolean logic.
 It lets you form expressions from discrete [propositions](https://en.wikipedia.org/wiki/Proposition) so that you
 can explain _why_ decisions were made.
 
-First create [atomic propositions](https://en.wikipedia.org/wiki/Atomic_sentence):
+To demonstrate Motiv in action,
+let's create some [atomic propositions](https://en.wikipedia.org/wiki/Atomic_sentence):
 
 ```csharp
 // Define propositions
@@ -19,14 +38,14 @@ var isEmpty = Spec.Build((int n) => n == 0).Create("empty");
 var isFull  = Spec.Build((int n) => n == 11).Create("full");
 ```
 
-Then compose using operators (e.g.,`!`, `&`, `|`, `^`):
+Then compose using boolean operators:
 
 ```csharp
 // Compose a new proposition
 var isPartiallyFull = isValid & !(isEmpty | isFull);
 ```
 
-To get detailed feedback:
+And evaluate to get detailed feedback:
 
 ```csharp
 // Evaluate the proposition
@@ -54,10 +73,23 @@ dotnet add package Motiv
 
 ## Basic Usage
 
-Let's start with a simple example to demonstrate Motiv's core concepts:
+
+Let's start with an example of a minimal/atomic proposition to demonstrate Motiv's core concepts.  Take the example of
+determining if a number is even:
+
+```mermaid
+flowchart BT
+
+    True([is even]) -->|true| P(((is even?)))
+    False([¬is even]) -->|false| P
+
+    style P stroke:darkcyan
+    style True stroke:darkgreen
+    style False stroke:darkred
+```
 
 ```csharp
-// Define a basic proposition
+// Define a atomic proposition
 var isEven = Spec.Build((int n) => n % 2 == 0).Create("is even");
 
 // Evaluate the proposition
@@ -74,7 +106,19 @@ This minimal example showcases how easily you can create and evaluate propositio
 
 ### Explicit Assertions
 
-For more descriptive results, use `WhenTrue()` and `WhenFalse()` to define custom assertions:
+For more descriptive results, use `WhenTrue()` and `WhenFalse()` to define custom assertions.
+Continuing with the previous example, let's provide more explicit feedback when the number is odd:
+
+```mermaid
+flowchart BT
+
+    True([is even]) -->|true| P(((is even?)))
+    False([is odd]) -->|false| P
+
+    style P stroke:darkcyan
+    style True stroke:darkgreen
+    style False stroke:darkred
+```
 
 ```csharp
 var isEven =
@@ -92,33 +136,78 @@ result.Assertions; // ["is odd"]
 
 ### Custom Metadata
 
-For scenarios requiring more context, you can use metadata instead of simple string assertions:
+For scenarios requiring more context, you can use metadata instead of simple string assertions.
+For example, let's instead attach _metadata_ to our example:
+
+```mermaid
+flowchart BT
+
+    True([new MyMetadata&lpar;&quot;is even&quot;&rpar;]) -->|true| P(((is even?)))
+    False([new MyMetadata&lpar;&quot;is odd&quot;&rpar;]) -->|false| P
+
+    style P stroke:darkcyan
+    style True stroke:darkgreen
+    style False stroke:darkred
+```
 
 ```csharp
 var isEven =
     Spec.Build((int n) => n % 2 == 0)
-        .WhenTrue(new MyMetadata("is even"))
-        .WhenFalse(new MyMetadata("is odd"))
+        .WhenTrue(new MyMetadata("even"))
+        .WhenFalse(new MyMetadata("odd"))
         .Create("is even");
 
 var result = isEven.IsSatisfiedBy(2);
 
 result.Satisfied;  // true
 result.Reason;     // "is even"
-result.Metadata;   // [{ Text: "is even" }]
+result.Assertions; // ["is even"]
+result.Metadata;   // [{ Text: "even" }]
 ```
 
 ### Composing Propositions
 
-Motiv's true power shines when composing complex logic from simpler propositions. Here's an example solving the classic [Fizz Buzz](https://en.wikipedia.org/wiki/Fizz_buzz) problem:
+Motiv's true power shines when composing logic from simpler propositions, and then using their results to create new
+assertions.
+To demonstrate this,
+we are going to solve the classic [Fizz Buzz](https://en.wikipedia.org/wiki/Fizz_buzz) problem using Motiv.
+In this problem, we need to determine if a number is divisible by 3, 5, or both,
+and then provide the appropriate feedback for each case.
+
+
+Below is the flowchart of our solution:
+
+```mermaid
+flowchart BT
+    TrueOr((OR)) -->|true| P(((is substitution?)))
+    FalseOr([n]) -->|false| P
+    TrueIsFizz(((fizz?))) -->|true| TrueOr
+    TrueIsBuzz(((buzz?))) -->|true| TrueOr
+    TrueIsFizzTrue([fizz]) -->|true| TrueIsFizz
+    TrueIsBuzzTrue([buzz]) -->|true| TrueIsBuzz
+
+
+    style P stroke:darkcyan
+    style TrueOr stroke:darkgreen
+    style TrueIsFizz stroke:darkgreen
+    style TrueIsBuzz stroke:darkgreen
+    style TrueIsFizzTrue stroke:darkgreen
+    style TrueIsBuzzTrue stroke:darkgreen
+
+    style FalseOr stroke:darkred
+```
+
+This is then implemented in code as follows:
 
 ```csharp
+// Define atomic propositions
 var isFizz = Spec.Build((int n) => n % 3 == 0).Create("fizz");
 var isBuzz = Spec.Build((int n) => n % 5 == 0).Create("buzz");
 
+// Compose atomic propositions and redefine assertions
 var isSubstitution =
     Spec.Build(isFizz | isBuzz)
-        .WhenTrue((_, result) => string.Concat(result.Assertions))
+        .WhenTrue((_, result) => string.Concat(result.Assertions))  // Concatenate "fizz" and/or "buzz"
         .WhenFalse(n => n.ToString())
         .Create("is substitution");
 

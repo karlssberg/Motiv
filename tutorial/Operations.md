@@ -3,6 +3,25 @@
 Propositions can be logically operated on using either the methods available on the <xref:Motiv.SpecBase`2> base
 class, or by using the overloaded logical operators `&`, `|`, `^`, `!`
 
+```mermaid
+flowchart BT
+    And((AND)) --> P(((Negative?)))
+    NotPositive((NOT)) --> And((AND))
+    NotZero((NOT)) --> And
+    IsPositive(((Positive?))) --> NotPositive
+    IsZero(((Zero?))) --> NotZero
+    TrueIsPositive([positive]) -->|true| IsPositive
+    FalseIsPositive([¬positive]) -->|false| IsPositive
+    TrueIsZero([zero]) -->|true| IsZero
+    FalseIsZero([¬zero]) -->|false| IsZero
+
+    style TrueIsZero stroke:darkgreen
+    style FalseIsZero stroke:darkred
+    style TrueIsPositive stroke:darkgreen
+    style FalseIsPositive stroke:darkred
+
+```
+
 ```csharp
 var isPositive = Spec.Build((int n) => n > 0).Create("positive");
 var isZero = Spec.Build((int n) => n == 0).Create("zero");

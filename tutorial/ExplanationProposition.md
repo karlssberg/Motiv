@@ -6,6 +6,18 @@ While all propositions will populate the `Assertions` property with useful infor
 populate `Assertions` with the strings obtained from their `WhenTrue()`, `WhenTrueYield()`, `WhenFalse()`, and
 `WhenFalseYield()` methods.
 
+For example, consider the following proposition:
+
+```mermaid
+flowchart BT
+    True([user is active]) -->|true| P(((user is active?)))
+    False([user is not active]) -->|false| P
+
+    style P stroke:darkcyan
+    style True stroke:darkgreen
+    style False stroke:darkred
+```
+
 ```csharp
 var isUserActive =
     Spec.Build((User user) => user.IsActive)
