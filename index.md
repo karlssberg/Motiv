@@ -142,8 +142,8 @@ For example, let's instead attach _metadata_ to our example:
 ```mermaid
 flowchart BT
 
-    True([new MyMetadata&lpar;&quot;is even&quot;&rpar;]) -->|true| P(((is even?)))
-    False([new MyMetadata&lpar;&quot;is odd&quot;&rpar;]) -->|false| P
+    True([new MyMetadata&lpar;&quot;even&quot;&rpar;]) -->|true| P(((is even?)))
+    False([new MyMetadata&lpar;&quot;odd&quot;&rpar;]) -->|false| P
 
     style P stroke:darkcyan
     style True stroke:darkgreen
