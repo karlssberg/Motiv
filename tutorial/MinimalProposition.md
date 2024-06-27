@@ -1,6 +1,16 @@
-# Minimal proposition
+# Minimal (atomic) proposition
 The most concise proposition can be created by providing only a predicate and a propositional statement.
 It uses the minimum set of fluent builder methods to create a proposition.
+
+```mermaid
+flowchart BT
+    True([is even]) -->|true| P(((is even?)))
+    False([¬is even]) -->|false| P
+
+    style P stroke:darkcyan
+    style True stroke:darkgreen
+    style False stroke:darkred
+```
 
 ```csharp
 var isEven =

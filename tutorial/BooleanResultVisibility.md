@@ -41,25 +41,28 @@ Note that the `Justification` property uses the prefix/polish notation
 Below is an example of identifying a _straight flush_ hand in a poker game.
 
 ```csharp
-var sut = new IsWinningHandProposition();
+var sut = new IsHandStraightFlushProposition();
 
 var act = sut.IsSatisfiedBy(new Hand("KH, QH, JH, 10H, 9H");
 
-act.Justification; // is a winning poker hand
-                   //     OR
-                   //         is a straight flush hand
-                   //             AND
-                   //                 is a straight hand
-                   //                     OR
-                   //                         is King High Straight
-                   //                             all cards are King, Queen, Jack
-                   //                 is a flush hand
-                   //                     OR
-                   //                         a flush of Hearts
-                   //                             KH is Hearts
-                   //                             QH is Hearts
-                   //                             JH is Hearts
+act.Justification; // is a straight flush hand
+                   //     AND
+                   //         is a straight hand
+                   //             OR
+                   //                 is King High Straight
+                   //                     all cards are King, Queen, Jack, Ten, and Nine
+                   //         is a flush hand
+                   //             OR
+                   //                 a flush of Hearts
+                   //                     KH is Hearts
+                   //                     QH is Hearts
+                   //                     JH is Hearts
+                   //                     10H is Hearts
+                   //                     9H is Hearts
 ```
+
 
 Notice how the `Justification` property only shows the assertions that influenced the outcome, and that it withholds
 any assertions that may have been calculated but did not influence the final result.
+This is to _de-noise_ the output and make it easier to understand the causes of the result.
+
