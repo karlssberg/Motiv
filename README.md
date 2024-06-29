@@ -11,7 +11,7 @@ can explain _why_ decisions were made.
 First create [atomic propositions](https://en.wikipedia.org/wiki/Atomic_sentence):
 
 ```csharp
-// Define propositions
+// Define atomic propositions
 var isValid = Spec.Build((int n) => n is >= 0 and <= 11).Create("valid");
 var isEmpty = Spec.Build((int n) => n == 0).Create("empty");
 var isFull  = Spec.Build((int n) => n == 11).Create("full");
@@ -20,14 +20,17 @@ var isFull  = Spec.Build((int n) => n == 11).Create("full");
 Then compose using operators (e.g., `!`,  `&`, `|`, `^`):
 
 ```csharp
-// Compose a new proposition
-var isPartiallyFull = Spec.Build(isValid & !(isEmpty | isFull))
-                          .Create("partial");
+// Compose a new ad-hoc proposition
+var composed = isValid & !(isEmpty | isFull);
+
+// Give it a new name
+var isPartiallyFull = Spec.Build(composed).Create("partial");
 ```
 
 To get detailed feedback:
 
 ```csharp
+// Evaluate the proposition against a model/value
 var result = isPartiallyFull.IsSatisfiedBy(5);
 
 result.Satisfied;     // true

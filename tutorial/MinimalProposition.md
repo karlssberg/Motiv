@@ -4,12 +4,12 @@ It uses the minimum set of fluent builder methods to create a proposition.
 
 ```mermaid
 flowchart BT
-    True([is even]) -->|true| P(((is even?)))
+    True([is even]) -->|true| P((is even?))
     False([¬is even]) -->|false| P
 
-    style P stroke:darkcyan
-    style True stroke:darkgreen
-    style False stroke:darkred
+    style P stroke:darkcyan,stroke-width:4px
+    style True stroke:darkgreen,stroke-width:2px
+    style False stroke:darkred,stroke-width:2px
 ```
 
 ```csharp

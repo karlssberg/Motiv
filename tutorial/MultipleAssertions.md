@@ -8,13 +8,13 @@ We want to ensure that in the event of the proposition being unsatisfied, we wan
 of the underlying models that do not satisfy the proposition.
 ```mermaid
 flowchart BT
-    True(["`all are even`"]) -->|true| P(((all are even?)))
-    False(["`_n_ is odd`"]) -->|false &lpar;multiple&rpar;| P
+    True([all are even]) -->|true| P((all are even?))
+    False([n is odd]) -->|false &lpar;multiple&rpar;| P
 
 
-    style P stroke:darkcyan
-    style True stroke:darkgreen
-    style False stroke:darkred
+    style P stroke:darkcyan,stroke-width:4px
+    style True stroke:darkgreen,stroke-width:2px
+    style False stroke:darkred,stroke-width:2px
 ```
 
 ```csharp

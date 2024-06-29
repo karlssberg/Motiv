@@ -5,21 +5,23 @@ class, or by using the overloaded logical operators `&`, `|`, `^`, `!`
 
 ```mermaid
 flowchart BT
-    And((AND)) --> P(((Negative?)))
+    And((AND)) --> P((Negative?))
     NotPositive((NOT)) --> And((AND))
     NotZero((NOT)) --> And
-    IsPositive(((Positive?))) --> NotPositive
-    IsZero(((Zero?))) --> NotZero
+    IsPositive((Positive?)) --> NotPositive
+    IsZero((Zero?)) --> NotZero
     TrueIsPositive([positive]) -->|true| IsPositive
     FalseIsPositive([¬positive]) -->|false| IsPositive
     TrueIsZero([zero]) -->|true| IsZero
     FalseIsZero([¬zero]) -->|false| IsZero
 
-    style TrueIsZero stroke:darkgreen
-    style FalseIsZero stroke:darkred
-    style TrueIsPositive stroke:darkgreen
-    style FalseIsPositive stroke:darkred
-
+    style P stroke:darkcyan,stroke-width:4px
+    style IsPositive stroke:darkcyan,stroke-width:4px
+    style IsZero stroke:darkcyan,stroke-width:4px
+    style TrueIsZero stroke:darkgreen,stroke-width:2px
+    style FalseIsZero stroke:darkred,stroke-width:2px
+    style TrueIsPositive stroke:darkgreen,stroke-width:2px
+    style FalseIsPositive stroke:darkred,stroke-width:2px
 ```
 
 ```csharp

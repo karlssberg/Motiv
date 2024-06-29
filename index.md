@@ -5,17 +5,17 @@
 ```mermaid
 flowchart BT
 
-    A --> P(((&nbsp;Why Motiv?&nbsp;)))
+    A --> P((&nbsp;Why Motiv?&nbsp;))
     B([composable]) --> A((AND))
     C((AND)) --> A
     D([reusable]) --> C
     E([explainable]) --> C
 
 
-    style E stroke:darkcyan
-    style D stroke:darkcyan
-    style B stroke:darkcyan
-    style P stroke:darkcyan
+    style E stroke:darkcyan,stroke-width:2px
+    style D stroke:darkcyan,stroke-width:2px
+    style B stroke:darkcyan,stroke-width:2px
+    style P stroke:darkcyan,stroke-width:4px
 ```
 
 </div>
@@ -80,12 +80,12 @@ determining if a number is even:
 ```mermaid
 flowchart BT
 
-    True([is even]) -->|true| P(((is even?)))
+    True([is even]) -->|true| P((is even?))
     False([¬is even]) -->|false| P
 
-    style P stroke:darkcyan
-    style True stroke:darkgreen
-    style False stroke:darkred
+    style P stroke:darkcyan,stroke-width:4px
+    style True stroke:darkgreen,stroke-width:2px
+    style False stroke:darkred,stroke-width:2px
 ```
 
 ```csharp
@@ -112,12 +112,12 @@ Continuing with the previous example, let's provide more explicit feedback when 
 ```mermaid
 flowchart BT
 
-    True([is even]) -->|true| P(((is even?)))
+    True([is even]) -->|true| P((is even?))
     False([is odd]) -->|false| P
 
-    style P stroke:darkcyan
-    style True stroke:darkgreen
-    style False stroke:darkred
+    style P stroke:darkcyan,stroke-width:4px
+    style True stroke:darkgreen,stroke-width:2px
+    style False stroke:darkred,stroke-width:2px
 ```
 
 ```csharp
@@ -142,12 +142,12 @@ For example, let's instead attach _metadata_ to our example:
 ```mermaid
 flowchart BT
 
-    True([new MyMetadata&lpar;&quot;even&quot;&rpar;]) -->|true| P(((is even?)))
+    True([new MyMetadata&lpar;&quot;even&quot;&rpar;]) -->|true| P((is even?))
     False([new MyMetadata&lpar;&quot;odd&quot;&rpar;]) -->|false| P
 
-    style P stroke:darkcyan
-    style True stroke:darkgreen
-    style False stroke:darkred
+    style P stroke:darkcyan,stroke-width:4px
+    style True stroke:darkgreen,stroke-width:2px
+    style False stroke:darkred,stroke-width:2px
 ```
 
 ```csharp
@@ -174,27 +174,26 @@ we are going to solve the classic [Fizz Buzz](https://en.wikipedia.org/wiki/Fizz
 In this problem, we need to determine if a number is divisible by 3, 5, or both,
 and then provide the appropriate feedback for each case.
 
-
 Below is the flowchart of our solution:
 
 ```mermaid
 flowchart BT
-    TrueOr((OR)) -->|true| P(((is substitution?)))
-    FalseOr([n]) -->|false| P
-    TrueIsFizz(((fizz?))) -->|true| TrueOr
-    TrueIsBuzz(((buzz?))) -->|true| TrueOr
+    TrueOr((OR)) -->|true| P((is substitution?))
+    False([n]) -->|false| P
+    TrueIsFizz((fizz?)) -->|true| TrueOr
+    TrueIsBuzz((buzz?)) -->|true| TrueOr
     TrueIsFizzTrue([fizz]) -->|true| TrueIsFizz
     TrueIsBuzzTrue([buzz]) -->|true| TrueIsBuzz
 
 
-    style P stroke:darkcyan
-    style TrueOr stroke:darkgreen
-    style TrueIsFizz stroke:darkgreen
-    style TrueIsBuzz stroke:darkgreen
-    style TrueIsFizzTrue stroke:darkgreen
-    style TrueIsBuzzTrue stroke:darkgreen
+    style P stroke:darkcyan,stroke-width:4px
+    style TrueOr stroke:darkgreen,stroke-width:2px
+    style TrueIsFizz stroke:darkgreen,stroke-width:4px
+    style TrueIsBuzz stroke:darkgreen,stroke-width:4px
+    style TrueIsFizzTrue stroke:darkgreen,stroke-width:2px
+    style TrueIsBuzzTrue stroke:darkgreen,stroke-width:2px
 
-    style FalseOr stroke:darkred
+    style False stroke:darkred,stroke-width:2px
 ```
 
 This is then implemented in code as follows:
