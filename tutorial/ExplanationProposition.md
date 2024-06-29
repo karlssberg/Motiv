@@ -10,12 +10,12 @@ For example, consider the following proposition:
 
 ```mermaid
 flowchart BT
-    True([user is active]) -->|true| P(((user is active?)))
+    True([user is active]) -->|true| P((user is active?))
     False([user is not active]) -->|false| P
 
-    style P stroke:darkcyan
-    style True stroke:darkgreen
-    style False stroke:darkred
+    style P stroke:darkcyan,stroke-width:4px
+    style True stroke:darkgreen,stroke-width:2px
+    style False stroke:darkred,stroke-width:2px
 ```
 
 ```csharp

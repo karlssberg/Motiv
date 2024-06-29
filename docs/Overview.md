@@ -28,13 +28,13 @@ New [propositions](xref:Motiv.SpecBase`2) are created fluently by initially call
 
 Propositions can be logically operated on, and in doing so they form new propositions.
 You can also use boolean operators to combine the [results](xref:Motiv.BooleanResultBase`1) return by propositions.
-This is useful when you have two propositions that work with completely different models, but they need to be logically 
+This is useful when you have two propositions that work with completely different models, but they need to be logically
 combined to give a single result.
 
 | Operator                            | Syntax                                                                                                                     | Description                                                                |
-|:------------------------------------|:---------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------| 
+|:------------------------------------|:---------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
 | [And()](./operators/And.md)         | `left.And(right)` <br/>or<br/>`left & right`                                                                               | Performs a logical AND on two propositions/results.                 |
-| [AndAlso()](./operators/AndAlso.md) | `left.AndAlso(right)` <br />or<br />`left && right` ([results](xref:Motiv.BooleanResultBase`1) only)                       | Performs a short-circuiting logical ANDon two propositions/results. | 
+| [AndAlso()](./operators/AndAlso.md) | `left.AndAlso(right)` <br />or<br />`left && right` ([results](xref:Motiv.BooleanResultBase`1) only)                       | Performs a short-circuiting logical AND on two propositions/results. |
 | [Or()](./operators/Or.md)           | `left.Or(right)`  <br />or<br /> <code>left &#124; right</code>                                                            | Performs a logical OR on two propositions/results.                  |
 | [OrElse()](./operators/OrElse.md)   | `left.OrElse(right)`  <br />or<br /><code>left &#124;&#124; right</code>  ([results](xref:Motiv.BooleanResultBase`1) only) | Performs a short-circuiting logical OR on two propositions/results. |
 | [XOr()](./operators/XOr.md)         | `left.XOr(right)`<br />or<br />`left ^ right`                                                                              | Performs a logical XOR on two propositions/results.                 |
@@ -42,7 +42,7 @@ combined to give a single result.
 
 ## Collections
 
-Motiv provides a set of extension methods to improve the readability of your code when working with collections of 
+Motiv provides a set of extension methods to improve the readability of your code when working with collections of
 propositions or their results.
 
 | Method                                                               | Description                                                                                                                                                                                                   |

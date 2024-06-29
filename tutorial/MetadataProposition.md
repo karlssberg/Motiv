@@ -7,12 +7,12 @@ provide feedback to the user, but instead using custom types to describe the sta
 ```mermaid
 flowchart BT
 
-    True([new MyMetadata&lpar;&quot;is even&quot;&rpar;]) -->|true| P(((is even?)))
+    True([new MyMetadata&lpar;&quot;is even&quot;&rpar;]) -->|true| P((is even?))
     False([new MyMetadata&lpar;&quot;is odd&quot;&rpar;]) -->|false| P
 
-    style P stroke:darkcyan
-    style True stroke:darkgreen
-    style False stroke:darkred
+    style P stroke:darkcyan,stroke-width:4px
+    style True stroke:darkgreen,stroke-width:2px
+    style False stroke:darkred,stroke-width:2px
 ```
 
 ```csharp
