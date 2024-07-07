@@ -23,26 +23,22 @@ internal sealed class PropositionBooleanResult<TMetadata>(
     /// <summary>
     /// Gets the underlying results of the result.
     /// </summary>
-    public override IEnumerable<BooleanResultBase> Underlying =>
-        Enumerable.Empty<BooleanResultBase>();
+    public override IEnumerable<BooleanResultBase> Underlying => [];
 
     /// <summary>
     /// Gets the underlying results that share the same metadata type.
     /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => 
-        Enumerable.Empty<BooleanResultBase<TMetadata>>();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => [];
 
     /// <summary>
     /// Gets the causes of the result.
     /// </summary>
-    public override IEnumerable<BooleanResultBase> Causes =>
-        Enumerable.Empty<BooleanResultBase>();
+    public override IEnumerable<BooleanResultBase> Causes => [];
 
     /// <summary>
     /// Gets the results that share the same metadata type that also helped determine the final result.
     /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
-        Enumerable.Empty<BooleanResultBase<TMetadata>>();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => [];
 
     /// <summary>Gets the reasons for the result.</summary>
     public override Explanation Explanation => explanation;

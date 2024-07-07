@@ -9,15 +9,15 @@ internal sealed class HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
 {
     public override MetadataNode<TMetadata> MetadataTier => metadata();
     
-    public override IEnumerable<BooleanResultBase> Underlying => Enumerable.Empty<BooleanResultBase>();
+    public override IEnumerable<BooleanResultBase> Underlying => [];
     
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
-        Enumerable.Empty<BooleanResultBase<TMetadata>>();
+        [];
     
-    public override IEnumerable<BooleanResultBase> Causes => Enumerable.Empty<BooleanResultBase>();
+    public override IEnumerable<BooleanResultBase> Causes => [];
 
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => 
-        Enumerable.Empty<BooleanResultBase<TMetadata>>();
+        [];
     
     public override bool Satisfied { get; } = isSatisfied;
 

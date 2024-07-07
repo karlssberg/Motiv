@@ -140,7 +140,7 @@ public static class BooleanResultExtensions
             {
                 var groupArray = group.ToArray();
                 if (groupArray.Length == 0)
-                    return Enumerable.Empty<(OperationGroup op, IEnumerable<string> detailsAsLines)>();
+                    return [];
 
                 var op = groupArray.First().op;
                 var detailsAsLines = groupArray.SelectMany(tuple => tuple.detailsAsLines);

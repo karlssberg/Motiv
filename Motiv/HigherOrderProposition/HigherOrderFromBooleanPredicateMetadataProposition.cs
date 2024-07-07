@@ -9,7 +9,7 @@ internal sealed class HigherOrderFromBooleanPredicateMetadataProposition<TModel,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    public override IEnumerable<SpecBase> Underlying => Enumerable.Empty<SpecBase>();
+    public override IEnumerable<SpecBase> Underlying => [];
     
     public override ISpecDescription Description => specDescription;
 
