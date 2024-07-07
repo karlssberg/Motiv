@@ -231,6 +231,9 @@
         <Compile Update="BooleanPredicateProposition\PropositionBuilders\Explanation\MultiAssertionExplanationWithNamePropositionFactory.cs">
           <DependentUpon>FalseAssertionWithNamePropositionBuilder.cs</DependentUpon>
         </Compile>
+        <Compile Update="BooleanResultPredicateProposition\PropositionBuilders\Explanation\ExplanationPropositionFactory.cs">
+          <DependentUpon>FalseAssertionExplanationPropositionBuilder.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>

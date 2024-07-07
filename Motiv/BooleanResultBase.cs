@@ -172,6 +172,82 @@ public abstract class BooleanResultBase
     public static explicit operator bool(BooleanResultBase result) =>
         result.Satisfied;
 
+    /// <summary>
+    /// Performs a logical AND operation between the current BooleanResultBase instance and another BooleanResultBase
+    /// instance.
+    /// </summary>
+    /// <param name="right">The other boolean result instance to perform the logical AND operation with.</param>
+    /// <returns>A new boolean result instance representing the result of the logical AND operation.</returns>
+    public BooleanResultBase<string> And(BooleanResultBase right) =>
+        new AndBooleanResult<string>(ToExplanationResult(), right.ToExplanationResult());
+
+    /// <summary>
+    /// Performs a conditional AND operation between the current BooleanResultBase instance and another
+    /// BooleanResultBase instance. This will short-circuit the evaluation of the right operand if the left operand is not
+    /// satisfied.
+    /// </summary>
+    /// <param name="right">The other boolean result instance to perform the logical AND operation with.</param>
+    /// <returns>A new boolean result instance representing the result of the logical AND operation.</returns>
+    public BooleanResultBase<string> AndAlso(BooleanResultBase right) => Satisfied
+        ? new AndAlsoBooleanResult<string>(ToExplanationResult(), right.ToExplanationResult())
+        : new AndAlsoBooleanResult<string>(ToExplanationResult());
+
+    /// <summary>
+    /// Performs a logical OR operation between the current BooleanResultBase instance and another BooleanResultBase
+    /// instance.
+    /// </summary>
+    /// <param name="right">The other boolean result instance to perform the OR operation with.</param>
+    /// <returns>A new boolean result instance representing the result of the OR operation.</returns>
+    public BooleanResultBase<string> Or(BooleanResultBase right) =>
+        new OrBooleanResult<string>(ToExplanationResult(), right.ToExplanationResult());
+
+    /// <summary>
+    /// Performs a conditional OR operation between the current BooleanResultBase instance and another
+    /// BooleanResultBase instance. This will short-circuit the evaluation of the right operand if the left operand is
+    /// satisfied.
+    /// </summary>
+    /// <param name="right">The other boolean result instance to perform the OR operation with.</param>
+    /// <returns>A new boolean result instance representing the result of the OR operation.</returns>
+    public BooleanResultBase<string> OrElse(BooleanResultBase right) => Satisfied
+        ? new OrElseBooleanResult<string>(ToExplanationResult())
+        : new OrElseBooleanResult<string>(ToExplanationResult(), right.ToExplanationResult());
+
+    /// <summary>
+    /// Performs a logical exclusive OR (XOR) operation between this BooleanResultBase instance and another
+    /// BooleanResultBase instance.
+    /// </summary>
+    /// <param name="right">The other boolean result instance to perform the XOR operation with.</param>
+    /// <returns>A new boolean result instance representing the result of the XOR operation.</returns>
+    public BooleanResultBase<string> XOr(BooleanResultBase right) =>
+        new XOrBooleanResult<string>(ToExplanationResult(), right.ToExplanationResult());
+
+    /// <summary>Overloads the bitwise AND operator to perform a logical AND operation on two BooleanResultBase instances.</summary>
+    /// <param name="left">The left boolean result instance.</param>
+    /// <param name="right">The right boolean result instance.</param>
+    /// <returns>A new BooleanResultBase instance representing the result of the logical AND operation.</returns>
+    public static BooleanResultBase<string> operator &(
+        BooleanResultBase left,
+        BooleanResultBase right) =>
+        left.And(right);
+
+    /// <summary>Overloads the logical OR operator (|) to perform a logical OR operation on two BooleanResultBase instances.</summary>
+    /// <param name="left">The left boolean result instance.</param>
+    /// <param name="right">The right boolean result instance.</param>
+    /// <returns>A new BooleanResultBase instance representing the result of the logical OR operation.</returns>
+    public static BooleanResultBase<string> operator |(
+        BooleanResultBase left,
+        BooleanResultBase right) =>
+        left.Or(right);
+
+    /// <summary>Overloads the ^ operator to perform an exclusive OR (XOR) operation on two BooleanResultBase instances.</summary>
+    /// <param name="left">The left boolean result operand.</param>
+    /// <param name="right">The right boolean result operand.</param>
+    /// <returns>A new BooleanResultBase instance representing the result of the XOR operation.</returns>
+    public static BooleanResultBase<string> operator ^(
+        BooleanResultBase left,
+        BooleanResultBase right) =>
+        left.XOr(right);
+
     /// <summary>Determines whether the current object is equal to another object.</summary>
     /// <param name="obj">The object to compare with the current object.</param>
     /// <returns>true if the specified object is equal to the current object; otherwise, false.</returns>
@@ -187,6 +263,8 @@ public abstract class BooleanResultBase
     /// <summary>Computes the hash code for the current BooleanResultBase object.</summary>
     /// <returns>A hash code for the current object.</returns>
     public override int GetHashCode() => Satisfied.GetHashCode();
+
+    internal BooleanResultBase<string> ToExplanationResult() => new ExplanationBooleanResult(this);
 
     /// <summary>Gets the lowercase display text for true or false states.</summary>
     protected string GetSatisfiedText() => Satisfied ? True : False;
