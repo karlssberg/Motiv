@@ -1,4 +1,4 @@
-namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanation;
+﻿namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanation;
 
 /// <summary>
 /// A factory for creating propositions based on the supplied proposition and explanation factories.
@@ -6,10 +6,10 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanatio
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
-public readonly ref struct MultiAssertionExplanationPropositionFactory<TModel, TUnderlyingMetadata>(
+public readonly ref struct ExplanationPropositionFactory<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> predicate,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> trueBecause,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> falseBecause)
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> falseBecause)
 {
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
@@ -20,7 +20,7 @@ public readonly ref struct MultiAssertionExplanationPropositionFactory<TModel, T
     public SpecBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new BooleanResultPredicateMetadataProposition<TModel, string, TUnderlyingMetadata>(
+        return new BooleanResultPredicateExplanationProposition<TModel, TUnderlyingMetadata>(
             predicate,
             trueBecause,
             falseBecause,
