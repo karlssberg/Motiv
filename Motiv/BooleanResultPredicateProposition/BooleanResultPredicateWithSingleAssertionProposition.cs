@@ -7,7 +7,7 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
     ISpecDescription specDescription)
     : SpecBase<TModel, string>
 {
-    public override IEnumerable<SpecBase> Underlying => Enumerable.Empty<SpecBase>();
+    public override IEnumerable<SpecBase> Underlying => [];
 
     public override ISpecDescription Description => specDescription;
     
