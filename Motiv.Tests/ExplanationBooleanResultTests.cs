@@ -4,6 +4,12 @@ namespace Motiv.Tests;
 
 public class ExplanationBooleanResultTests
 {
+    enum MyMetadata
+    {
+        True,
+        False
+    }
+
     [Theory]
     [InlineAutoData]
     public void Should_support_explicit_conversion_to_a_bool(
@@ -12,8 +18,8 @@ public class ExplanationBooleanResultTests
     {
         // Arrange
         var result = new PropositionBooleanResult<string>(
-            isSatisfied, 
-            new MetadataNode<string>(because, []), 
+            isSatisfied,
+            new MetadataNode<string>(because, []),
             new Explanation(because, []),
             because);
 
@@ -33,14 +39,14 @@ public class ExplanationBooleanResultTests
     {
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
-            left, 
-            new MetadataNode<string>(left.ToString(), []), 
+            left,
+            new MetadataNode<string>(left.ToString(), []),
             new Explanation(left.ToString(), []),
             left.ToString());
-        
+
         var rightResult = new  PropositionBooleanResult<string>(
-            right, 
-            new MetadataNode<string>(right.ToString(), []), 
+            right,
+            new MetadataNode<string>(right.ToString(), []),
             new Explanation(right.ToString(), []),
             right.ToString());
 
@@ -48,7 +54,7 @@ public class ExplanationBooleanResultTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -62,14 +68,14 @@ public class ExplanationBooleanResultTests
     {
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
-            left, 
-            new MetadataNode<string>(left.ToString(), []), 
+            left,
+            new MetadataNode<string>(left.ToString(), []),
             new Explanation(left.ToString(), []),
             left.ToString());
-        
+
         var rightResult = new  PropositionBooleanResult<string>(
-            right, 
-            new MetadataNode<string>(right.ToString(), []), 
+            right,
+            new MetadataNode<string>(right.ToString(), []),
             new Explanation(right.ToString(), []),
             right.ToString());
 
@@ -81,9 +87,39 @@ public class ExplanationBooleanResultTests
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().Contain(operands.GetAssertions());
+    }
+
+
+    [Theory]
+    [InlineAutoData(false, false, "False")]
+    [InlineAutoData(false, true, "False")]
+    [InlineAutoData(true, false, "False")]
+    [InlineAutoData(true, true, "True")]
+    public void Should_assert_and_operation_with_incompatible_metadata(bool left, bool right, params string[] expected)
+    {
+        // Arrange
+        var leftResult = new PropositionBooleanResult<bool>(
+            left,
+            new MetadataNode<bool>(left, []),
+            new Explanation(left.ToString(), []),
+            left.ToString());
+
+        var rightResult = new  PropositionBooleanResult<MyMetadata>(
+            right,
+            new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
+            new Explanation(right.ToString(), []),
+            right.ToString());
+
+        var result = leftResult & rightResult;
+
+        // Act
+        var act = result.Assertions;
+
+        // Assert
+        act.Should().Contain(expected);
     }
 
     [Theory]
@@ -95,14 +131,14 @@ public class ExplanationBooleanResultTests
     {
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
-            left, 
-            new MetadataNode<string>(left.ToString(), []), 
+            left,
+            new MetadataNode<string>(left.ToString(), []),
             new Explanation(left.ToString(), []),
             left.ToString());
-        
+
         var rightResult = new  PropositionBooleanResult<string>(
-            right, 
-            new MetadataNode<string>(right.ToString(), []), 
+            right,
+            new MetadataNode<string>(right.ToString(), []),
             new Explanation(right.ToString(), []),
             right.ToString());
 
@@ -110,11 +146,11 @@ public class ExplanationBooleanResultTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false)]
     [InlineAutoData(false, true)]
@@ -124,14 +160,14 @@ public class ExplanationBooleanResultTests
     {
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
-            left, 
-            new MetadataNode<string>(left.ToString(), []), 
+            left,
+            new MetadataNode<string>(left.ToString(), []),
             new Explanation(left.ToString(), []),
             left.ToString());
-        
+
         var rightResult = new  PropositionBooleanResult<string>(
-            right, 
-            new MetadataNode<string>(right.ToString(), []), 
+            right,
+            new MetadataNode<string>(right.ToString(), []),
             new Explanation(right.ToString(), []),
             right.ToString());
 
@@ -143,9 +179,38 @@ public class ExplanationBooleanResultTests
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, "False")]
+    [InlineAutoData(false, true, "True")]
+    [InlineAutoData(true, false, "True")]
+    [InlineAutoData(true, true, "True")]
+    public void Should_assert_or_operation_with_incompatible_metadata(bool left, bool right, params string[] expected)
+    {
+        // Arrange
+        var leftResult = new PropositionBooleanResult<bool>(
+            left,
+            new MetadataNode<bool>(left, []),
+            new Explanation(left.ToString(), []),
+            left.ToString());
+
+        var rightResult = new  PropositionBooleanResult<MyMetadata>(
+            right,
+            new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
+            new Explanation(right.ToString(), []),
+            right.ToString());
+
+        var result = leftResult | rightResult;
+
+        // Act
+        var act = result.Assertions;
+
+        // Assert
+        act.Should().Contain(expected);
     }
 
     [Theory]
@@ -157,14 +222,14 @@ public class ExplanationBooleanResultTests
     {
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
-            left, 
-            new MetadataNode<string>(left.ToString(), []), 
+            left,
+            new MetadataNode<string>(left.ToString(), []),
             new Explanation(left.ToString(), []),
             left.ToString());
-        
+
         var rightResult = new  PropositionBooleanResult<string>(
-            right, 
-            new MetadataNode<string>(right.ToString(), []), 
+            right,
+            new MetadataNode<string>(right.ToString(), []),
             new Explanation(right.ToString(), []),
             right.ToString());
 
@@ -172,7 +237,7 @@ public class ExplanationBooleanResultTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -186,14 +251,14 @@ public class ExplanationBooleanResultTests
     {
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
-            left, 
-            new MetadataNode<string>(left.ToString(), []), 
+            left,
+            new MetadataNode<string>(left.ToString(), []),
             new Explanation(left.ToString(), []),
             left.ToString());
-        
+
         var rightResult = new  PropositionBooleanResult<string>(
-            right, 
-            new MetadataNode<string>(right.ToString(), []), 
+            right,
+            new MetadataNode<string>(right.ToString(), []),
             new Explanation(right.ToString(), []),
             right.ToString());
 
@@ -203,9 +268,38 @@ public class ExplanationBooleanResultTests
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, "False")]
+    [InlineAutoData(false, true, "False", "True")]
+    [InlineAutoData(true, false, "True", "False")]
+    [InlineAutoData(true, true, "True")]
+    public void Should_assert_xor_operation_with_incompatible_metadata(bool left, bool right, params string[] expected)
+    {
+        // Arrange
+        var leftResult = new PropositionBooleanResult<bool>(
+            left,
+            new MetadataNode<bool>(left, []),
+            new Explanation(left.ToString(), []),
+            left.ToString());
+
+        var rightResult = new  PropositionBooleanResult<MyMetadata>(
+            right,
+            new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
+            new Explanation(right.ToString(), []),
+            right.ToString());
+
+        var result = leftResult ^ rightResult;
+
+        // Act
+        var act = result.Assertions;
+
+        // Assert
+        act.Should().Contain(expected);
     }
 
     [Theory]
@@ -215,8 +309,8 @@ public class ExplanationBooleanResultTests
     {
         // Arrange
         var operandResult = new  PropositionBooleanResult<string>(
-            operand, 
-            new MetadataNode<string>(operand.ToString(), []), 
+            operand,
+            new MetadataNode<string>(operand.ToString(), []),
             new Explanation(operand.ToString(), []),
             operand.ToString());
 
@@ -224,7 +318,7 @@ public class ExplanationBooleanResultTests
 
         // Act
         var act = result.Satisfied;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -236,8 +330,8 @@ public class ExplanationBooleanResultTests
     {
         // Arrange
         var operandResult = new  PropositionBooleanResult<string>(
-            operand, 
-            new MetadataNode<string>(operand.ToString(), []), 
+            operand,
+            new MetadataNode<string>(operand.ToString(), []),
             new Explanation(operand.ToString(), []),
             operand.ToString());
 
@@ -245,7 +339,7 @@ public class ExplanationBooleanResultTests
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().Contain(operandResult.Explanation.Assertions);
     }
@@ -272,7 +366,7 @@ public class ExplanationBooleanResultTests
 
         // Act
         var act = result.SubAssertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
@@ -292,19 +386,19 @@ public class ExplanationBooleanResultTests
             .Build((bool m) => m)
             .Create("left")
             .IsSatisfiedBy(leftSatisfied);
-        
+
         var rightResult= Spec
             .Build((bool m) => m)
             .Create("right")
             .IsSatisfiedBy(rightSatisfied);
-        
+
         // Act
         var act = leftResult.Equals(rightResult);
-        
+
         // Assert
         act.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineAutoData(false, false, true)]
     [InlineAutoData(false, true, false)]
@@ -320,17 +414,17 @@ public class ExplanationBooleanResultTests
             .Build((bool m) => m)
             .Create("left")
             .IsSatisfiedBy(leftSatisfied);
-        
+
         var rightResult= Spec
             .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("right")
             .IsSatisfiedBy(rightSatisfied);
-        
+
         // Act
         var act = leftResult == rightResult;
-        
+
         // Assert
         act.Should().Be(expected);
     }
