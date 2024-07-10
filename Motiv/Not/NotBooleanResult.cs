@@ -2,8 +2,8 @@
 
 /// <summary>Represents the result of a logical NOT operation on a boolean result.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the result.</typeparam>
-internal sealed class NotBooleanResult<TMetadata>(BooleanResultBase<TMetadata> operandResult)
-    : BooleanResultBase<TMetadata>, IBooleanOperationResult<TMetadata>
+internal sealed class NotBooleanOperationResult<TMetadata>(BooleanResultBase<TMetadata> operandResult)
+    : BooleanResultBase<TMetadata>, IBooleanOperationResult<TMetadata>, IUnaryOperationResult<TMetadata>
 {
     public BooleanResultBase<TMetadata> Operand => operandResult;
 

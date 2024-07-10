@@ -352,14 +352,14 @@ public abstract class BooleanResultBase<TMetadata>
         new XOrBooleanResult<TMetadata>(this, right);
 
     /// <summary>
-    /// Returns a new instance of <see cref="NotBooleanResult{TMetadata}" /> that represents the logical negation of
+    /// Returns a new instance of <see cref="NotBooleanOperationResult{TMetadata}" /> that represents the logical negation of
     /// the current instance.
     /// </summary>
     /// <returns>
-    /// A new instance of <see cref="NotBooleanResult{TMetadata}" /> that represents the logical negation of the
+    /// A new instance of <see cref="NotBooleanOperationResult{TMetadata}" /> that represents the logical negation of the
     /// current instance.
     /// </returns>
-    public BooleanResultBase<TMetadata> Not() => new NotBooleanResult<TMetadata>(this);
+    public BooleanResultBase<TMetadata> Not() => new NotBooleanOperationResult<TMetadata>(this);
 
     /// <summary>Overloads the bitwise AND operator to perform a logical AND operation on two BooleanResultBase instances.</summary>
     /// <param name="left">The left boolean result instance.</param>

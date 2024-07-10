@@ -28,30 +28,30 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
-    /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata}" />.</returns>
-    public FalseMetadataPropositionBuilder<TModel, string> WhenTrueYield(
+    /// <returns>An instance of <see cref="FalseMultiMetadataPropositionBuilder{TModel,TMetadata}" />.</returns>
+    public FalseMultiMetadataPropositionBuilder<TModel, string> WhenTrueYield(
         Func<TModel, IEnumerable<string>> whenTrue)
     {
         whenTrue.ThrowIfNull(nameof(whenTrue));
-        return new FalseMetadataPropositionBuilder<TModel, string>(predicate, whenTrue);
+        return new FalseMultiMetadataPropositionBuilder<TModel, string>(predicate, whenTrue);
     }
 
     /// <summary>Specifies the metadata to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">The metadata to use when the condition is true.</param>
-    /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata}" />.</returns>
+    /// <returns>An instance of <see cref="FalseMultiMetadataPropositionBuilder{TModel,TMetadata}" />.</returns>
     public FalseMetadataPropositionBuilder<TModel, TMetadata> WhenTrue<TMetadata>(TMetadata whenTrue)
     {
         whenTrue.ThrowIfNull(nameof(whenTrue));
         return new FalseMetadataPropositionBuilder<TModel, TMetadata>(
             predicate,
-            _ => whenTrue.ToEnumerable());
+            _ => whenTrue);
     }
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates metadata when the condition is true.</param>
-    /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata}" />.</returns>
+    /// <returns>An instance of <see cref="FalseMultiMetadataPropositionBuilder{TModel,TMetadata}" />.</returns>
     /// <remarks>
     /// <para>
     /// If you wish to return a collection of metadata items, you will need to use the <c>WhenTrueYield()</c>
@@ -63,18 +63,18 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
         whenTrue.ThrowIfNull(nameof(whenTrue));
         return new FalseMetadataPropositionBuilder<TModel, TMetadata>(
             predicate,
-            whenTrue.ToEnumerableReturn());
+            whenTrue);
     }
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
-    /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata}" />.</returns>
-    public FalseMetadataPropositionBuilder<TModel, TMetadata> WhenTrueYield<TMetadata>(
+    /// <returns>An instance of <see cref="FalseMultiMetadataPropositionBuilder{TModel,TMetadata}" />.</returns>
+    public FalseMultiMetadataPropositionBuilder<TModel, TMetadata> WhenTrueYield<TMetadata>(
         Func<TModel, IEnumerable<TMetadata>> whenTrue)
     {
         whenTrue.ThrowIfNull(nameof(whenTrue));
-        return new FalseMetadataPropositionBuilder<TModel, TMetadata>(predicate, whenTrue);
+        return new FalseMultiMetadataPropositionBuilder<TModel, TMetadata>(predicate, whenTrue);
     }
 
     /// <summary>Specifies a higher order predicate for the proposition.</summary>
@@ -99,7 +99,7 @@ public readonly ref struct BooleanPredicatePropositionBuilder<TModel>(Func<TMode
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create(string statement)
+    public PolicyBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new ExplanationProposition<TModel>(

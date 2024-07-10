@@ -5,37 +5,50 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
     string trueBecause,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> whenFalse,
     ISpecDescription specDescription)
-    : SpecBase<TModel, string>
+    : PolicyBase<TModel, string>
 {
     public override IEnumerable<SpecBase> Underlying => [];
 
+
     public override ISpecDescription Description => specDescription;
-    
-    public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
+
+    public override PolicyResultBase<string> Execute(TModel model)
     {
-        var booleanResult = predicate(model);
-        
-        var assertion = new Lazy<string>(() =>
+        var predicateResult = predicate(model);
+
+        var assertion = GetLazyAssertion(model, predicateResult);
+
+        return CreatePolicyResult(assertion, predicateResult);
+    }
+
+    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) => Execute(model);
+
+    private Lazy<string> GetLazyAssertion(TModel model, BooleanResultBase<TUnderlyingMetadata> booleanResult) =>
+        new(() =>
             booleanResult.Satisfied switch
             {
                 true => trueBecause,
                 false => whenFalse(model, booleanResult)
             });
-        
-        var explanation = new Lazy<Explanation>(() => 
+
+    private static PolicyResultBase<string> CreatePolicyResult(Lazy<string> assertion, BooleanResultBase<TUnderlyingMetadata> booleanResult)
+    {
+        var explanation = new Lazy<Explanation>(() =>
             new Explanation(assertion.Value, booleanResult.ToEnumerable()));
-        
-        var metadataTier = new Lazy<MetadataNode<string>>(() => 
+
+        var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(
-                assertion.Value.ToEnumerable(), 
+                assertion.Value.ToEnumerable(),
                 booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []));
 
-        return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
+        return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
             booleanResult,
+            Value,
             MetadataTier,
             Explanation,
             Reason);
 
+        string Value() => assertion.Value;
         MetadataNode<string> MetadataTier() => metadataTier.Value;
         Explanation Explanation() => explanation.Value;
         string Reason() => assertion.Value;

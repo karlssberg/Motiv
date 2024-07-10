@@ -1,26 +1,40 @@
 namespace Motiv.HigherOrderProposition;
 
 internal sealed class HigherOrderFromBooleanPredicateMetadataProposition<TModel, TMetadata>(
-    Func<TModel,bool> predicate, 
-    Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
-    Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenTrue, 
-    Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenFalse,
+    Func<TModel,bool> predicate,
+    Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,
+    Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenTrue,
+    Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenFalse,
     ISpecDescription specDescription,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
-    : SpecBase<IEnumerable<TModel>, TMetadata>
+    : PolicyBase<IEnumerable<TModel>, TMetadata>
 {
     public override IEnumerable<SpecBase> Underlying => [];
-    
+
     public override ISpecDescription Description => specDescription;
 
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
+    public override PolicyResultBase<TMetadata> Execute(IEnumerable<TModel> models)
     {
-        var underlyingResults = models
+        var underlyingResults = EvaluateModels(models);
+        var isSatisfied = higherOrderPredicate(underlyingResults);
+        var metadata = GetLazyMetadata(isSatisfied, underlyingResults);
+
+        return CreateBooleanResult(isSatisfied, metadata);
+    }
+
+    public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models) =>
+        Execute(models);
+
+    private ModelResult<TModel>[] EvaluateModels(IEnumerable<TModel> models)
+    {
+        return models
             .Select(model => new ModelResult<TModel>(model, predicate(model)))
             .ToArray();
-        
-        var isSatisfied = higherOrderPredicate(underlyingResults);
-        var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
+    }
+
+    private Lazy<TMetadata> GetLazyMetadata(bool isSatisfied, ModelResult<TModel>[] underlyingResults)
+    {
+        var metadata = new Lazy<TMetadata>(() =>
         {
             var causes = causeSelector(isSatisfied, underlyingResults).ToArray();
             var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
@@ -29,22 +43,21 @@ internal sealed class HigherOrderFromBooleanPredicateMetadataProposition<TModel,
                 ? whenTrue(evaluation)
                 : whenFalse(evaluation);
         });
-        
-        var assertion = new Lazy<IEnumerable<string>>(() => 
-            metadata.Value switch
-            {                   
-                IEnumerable<string> because => because,
-                _ => specDescription.ToReason(isSatisfied).ToEnumerable()
-            });
+        return metadata;
+    }
 
-        return new HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
+    private PolicyResultBase<TMetadata> CreateBooleanResult(bool isSatisfied, Lazy<TMetadata> metadata)
+    {
+        return new HigherOrderFromBooleanPredicatePolicyResult<TMetadata>(
             isSatisfied,
+            Value,
             Metadata,
             Explanation,
             Reason);
 
+        TMetadata Value() => metadata.Value;
         MetadataNode<TMetadata> Metadata() => new(metadata.Value, []);
-        Explanation Explanation() => new(assertion.Value, []);
+        Explanation Explanation() => new(specDescription.ToReason(isSatisfied), []);
         string Reason() => specDescription.ToReason(isSatisfied);
     }
 }

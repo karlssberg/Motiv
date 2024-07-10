@@ -1,6 +1,6 @@
 namespace Motiv.Tests;
 
-public class BooleanResultPredicateMetadataPropositionTests
+public class BooleanResultPredicateMultiMetadataPropositionTests
 {
     public enum Metadata
     {
@@ -115,7 +115,7 @@ public class BooleanResultPredicateMetadataPropositionTests
     [Theory]
     [InlineData(true, "propositional statement")]
     [InlineData(false, "¬propositional statement")]
-    public void Should_use_the_propositional_statement_in_the_reason_when_false_assertiom_is_callback(
+    public void Should_use_the_propositional_statement_in_the_reason_when_false_metadata_is_callback(
         bool model,
         string expectedReasonStatement)
     {
@@ -368,6 +368,88 @@ public class BooleanResultPredicateMetadataPropositionTests
 
         // Assert
         act.Should().BeEquivalentTo([expectedMetadata]);
+    }
+
+    [Theory]
+    [InlineData(true, Metadata.True)]
+    [InlineData(false, Metadata.False)]
+    public void Should_yield_the_appropriate_metadata_as_a_policy_when_using_a_two_parameter_when_false_callback(
+        bool model,
+        Metadata expectedMetadata)
+    {
+        // Arrange
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+
+        var spec =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue(Metadata.True)
+                .WhenFalse((_, _) => Metadata.False)
+                .Create("propositional statement");
+
+        var result = spec.Execute(model);
+
+        // Act
+        var act = result.Value;
+
+        // Assert
+        act.Should().Be(expectedMetadata);
+    }
+
+    [Theory]
+    [InlineData(true, Metadata.True)]
+    [InlineData(false, Metadata.False)]
+    public void Should_yield_the_appropriate_metadata_as_a_policy_when_using_a_metadata_object_directly_when_false(
+        bool model,
+        Metadata expectedMetadata)
+    {
+        // Arrange
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+
+        var spec =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue(Metadata.True)
+                .WhenFalse(Metadata.False)
+                .Create("propositional statement");
+
+        var result = spec.Execute(model);
+
+        // Act
+        var act = result.Value;
+
+        // Assert
+        act.Should().Be(expectedMetadata);
+    }
+
+    [Theory]
+    [InlineData(true, Metadata.True)]
+    [InlineData(false, Metadata.False)]
+    public void Should_yield_the_appropriate_metadata_as_a_policy_when_using_a_one_parameter_when_false_callback(
+        bool model,
+        Metadata expectedMetadata)
+    {
+        // Arrange
+        var underlying =
+            Spec.Build((bool m) => m)
+                .Create("is underlying true");
+
+
+        var spec =
+            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+                .WhenTrue(Metadata.True)
+                .WhenFalse(_ => Metadata.False)
+                .Create("propositional statement");
+
+        var result = spec.Execute(model);
+
+        // Act
+        var act = result.Value;
+
+        // Assert
+        act.Should().Be(expectedMetadata);
     }
 
     [Theory]

@@ -8,7 +8,7 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Metadata;
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
 public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> predicate,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue)
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue)
 {
     /// <summary>
     /// Specifies the metadata to use when the condition is false.
@@ -19,7 +19,7 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata, TU
         TMetadata whenFalse) =>
         new(predicate,
             whenTrue,
-            (_, _) => whenFalse.ToEnumerable());
+            (_, _) => whenFalse);
 
     /// <summary>
     /// Specifies a metadata factory function to use when the condition is false.
@@ -30,7 +30,7 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata, TU
         Func<TModel, TMetadata> whenFalse) =>
         new(predicate,
             whenTrue,
-            (model, _) => whenFalse(model).ToEnumerable());
+            (model, _) => whenFalse(model));
 
     /// <summary>
     /// Specifies a metadata factory function to use when the condition is false.
@@ -41,16 +41,16 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata, TU
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenFalse) =>
         new(predicate,
             whenTrue,
-            (model, result) => whenFalse(model, result).ToEnumerable());
+            whenFalse);
 
     /// <summary>
     /// Specifies a metadata factory function to use when the condition is false.
     /// </summary>
     /// <param name="whenFalse">A function that generates a collection of metadata when the condition is false.</param>
     /// <returns>A factory for creating propositions based on the supplied proposition and metadata factories.</returns>
-    public MetadataPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalseYield(
+    public MultiMetadataPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalseYield(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse) =>
         new(predicate,
-            whenTrue,
+            whenTrue.ToEnumerableReturn(),
             whenFalse);
 }

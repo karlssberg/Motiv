@@ -9,8 +9,8 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata;
 /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
 public readonly ref struct FalseMetadataFromBooleanHigherOrderPropositionBuilder<TModel, TMetadata>(
     Func<TModel, bool> resultResolver,
-    Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
-    Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenTrue, 
+    Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,
+    Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenTrue,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
 {
     /// <summary>Specifies the metadata to use when the condition is false.</summary>
@@ -20,7 +20,7 @@ public readonly ref struct FalseMetadataFromBooleanHigherOrderPropositionBuilder
         new(resultResolver,
             higherOrderPredicate,
             whenTrue,
-            _ => whenFalse.ToEnumerable(),
+            _ => whenFalse,
             causeSelector);
 
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
@@ -31,17 +31,17 @@ public readonly ref struct FalseMetadataFromBooleanHigherOrderPropositionBuilder
         new(resultResolver,
             higherOrderPredicate,
             whenTrue,
-            whenFalse.ToEnumerableReturn(),
+            whenFalse,
             causeSelector);
-    
+
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
     /// <param name="whenFalse">A function that generates a collecton of metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public MetadataFromBooleanHigherOrderPropositionFactory<TModel, TMetadata> WhenFalseYield(
+    public MultiMetadataFromBooleanHigherOrderPropositionFactory<TModel, TMetadata> WhenFalseYield(
         Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenFalse) =>
         new(resultResolver,
             higherOrderPredicate,
-            whenTrue,
+            whenTrue.ToEnumerableReturn(),
             whenFalse,
             causeSelector);
 }

@@ -20,7 +20,7 @@ public readonly ref struct ExplanationFromBooleanResultWithNameHigherOrderPropos
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create() =>
+    public PolicyBase<IEnumerable<TModel>, string> Create() =>
         new HigherOrderFromBooleanResultExplanationProposition<TModel, TUnderlyingMetadata>(
             resultResolver,
             higherOrderPredicate,
@@ -36,7 +36,7 @@ public readonly ref struct ExplanationFromBooleanResultWithNameHigherOrderPropos
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create(string statement)
+    public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanResultExplanationProposition<TModel, TUnderlyingMetadata>(

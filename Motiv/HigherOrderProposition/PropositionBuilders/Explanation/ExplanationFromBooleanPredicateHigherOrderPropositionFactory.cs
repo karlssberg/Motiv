@@ -5,8 +5,8 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation;
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 public readonly ref struct ExplanationFromBooleanPredicateHigherOrderPropositionFactory<TModel>(
-    Func<TModel,bool> predicate, 
-    Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
+    Func<TModel,bool> predicate,
+    Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,
     Func<HigherOrderBooleanEvaluation<TModel>, string> trueBecause,
     Func<HigherOrderBooleanEvaluation<TModel>, string> falseBecause,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
@@ -17,7 +17,7 @@ public readonly ref struct ExplanationFromBooleanPredicateHigherOrderProposition
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create(string statement)
+    public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanPredicateExplanationProposition<TModel>(

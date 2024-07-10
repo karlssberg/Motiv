@@ -12,7 +12,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata;
 public readonly ref struct FalseMetadataFromBooleanResultHigherOrderSpecBuilder<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
+    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
@@ -23,7 +23,7 @@ public readonly ref struct FalseMetadataFromBooleanResultHigherOrderSpecBuilder<
         new(resultResolver,
             higherOrderPredicate,
             whenTrue,
-            _ => whenFalse.ToEnumerable(),
+            _ => whenFalse,
             causeSelector);
 
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
@@ -34,17 +34,17 @@ public readonly ref struct FalseMetadataFromBooleanResultHigherOrderSpecBuilder<
         new(resultResolver,
             higherOrderPredicate,
             whenTrue,
-            results => whenFalse(results).ToEnumerable(),
+            results => whenFalse(results),
             causeSelector);
 
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
     /// <param name="whenFalse">A function that generates a collection of metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public MetadataFromBooleanResultHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalseYield(
+    public MultiMetadataFromBooleanResultHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalseYield(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse) =>
         new(resultResolver,
             higherOrderPredicate,
-            whenTrue,
+            whenTrue.ToEnumerableReturn(),
             whenFalse,
             causeSelector);
 }

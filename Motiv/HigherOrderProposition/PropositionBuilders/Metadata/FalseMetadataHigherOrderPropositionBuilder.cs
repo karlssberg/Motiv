@@ -11,7 +11,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata;
 public readonly ref struct FalseMetadataHigherOrderPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
+    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
@@ -22,7 +22,7 @@ public readonly ref struct FalseMetadataHigherOrderPropositionBuilder<TModel, TM
         new(spec,
             higherOrderPredicate,
             whenTrue,
-            _ => whenFalse.ToEnumerable(),
+            _ => whenFalse,
             causeSelector);
 
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
@@ -33,17 +33,17 @@ public readonly ref struct FalseMetadataHigherOrderPropositionBuilder<TModel, TM
         new(spec,
             higherOrderPredicate,
             whenTrue,
-            results => whenFalse(results).ToEnumerable(),
+            whenFalse,
             causeSelector);
 
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
     /// <param name="whenFalse">A function that generates a collection of metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public MetadataHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalseYield(
+    public MultiMetadataHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalseYield(
         Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse) =>
         new(spec,
             higherOrderPredicate,
-            whenTrue,
+            whenTrue.ToEnumerableReturn(),
             whenFalse,
             causeSelector);
 }

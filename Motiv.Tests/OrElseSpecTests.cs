@@ -28,7 +28,7 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var spec = left.OrElse(right);
+        var spec = left.OrElse((SpecBase<object, string>)right);
 
         var result = spec.IsSatisfiedBy(model);
 
@@ -63,7 +63,7 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var spec = left.OrElse(right);
+        var spec = left.OrElse((SpecBase<object, string>)right);
 
         var result = spec.IsSatisfiedBy(model);
 
@@ -97,7 +97,7 @@ public class OrElseSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var spec = left.OrElse(right);
+        var spec = left.OrElse((SpecBase<object, bool>)right);
         var result = spec.IsSatisfiedBy(model);
 
         // Act
@@ -123,7 +123,7 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var spec = left.OrElse(right);
+        var spec = left.OrElse((SpecBase<object, string>)right);
 
         // Act
         Action act = () => spec.IsSatisfiedBy(new object());
@@ -148,7 +148,7 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var spec = left.OrElse(right);
+        var spec = left.OrElse((SpecBase<bool, string>)right);
 
         // Act
         var act = spec.Statement;
@@ -180,7 +180,7 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var spec = left.OrElse(right);
+        var spec = left.OrElse((SpecBase<bool, string>)right);
 
         // Act
         var act = spec.Expression;
@@ -207,7 +207,7 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var spec = left.OrElse(right);
+        var spec = left.OrElse((SpecBase<bool, string>)right);
 
         var result = spec.IsSatisfiedBy(model);
 
@@ -242,7 +242,7 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var spec = left.OrElse(right);
+        var spec = left.OrElse((SpecBase<bool, string>)right);
 
         var result = spec.IsSatisfiedBy(model);
 
@@ -278,7 +278,7 @@ public class OrElseSpecTests
                 .WhenFalse("not right assertion statement")
                 .Create();
 
-        var spec = left.OrElse(right);
+        var spec = left.OrElse((SpecBase<bool, string>)right);
 
         var result = spec.IsSatisfiedBy(model);
 
@@ -397,7 +397,7 @@ public class OrElseSpecTests
     }
 
     [Fact]
-    public void Should_not_collapse_ORELSE_operators_in_spec_description()
+    public void Should_collapse_OR_ELSE_operators_in_spec_description()
     {
         // Arrange
         var first = Spec
@@ -440,7 +440,7 @@ public class OrElseSpecTests
             right.IsSatisfiedBy(new object())
         ];
 
-        var spec = left.OrElse(right);
+        var spec = left.OrElse((SpecBase<object, string>)right);
         var result = spec.IsSatisfiedBy(new object());
 
         // Act
@@ -479,7 +479,7 @@ public class OrElseSpecTests
         var left = Spec.Build((bool _) => leftBool).Create("left");
         var right = Spec.Build((bool _) => rightBool).Create("right");
 
-        var spec = !(left.OrElse(right));
+        var spec = !(left.OrElse((SpecBase<bool, string>)right));
 
         var result = spec.IsSatisfiedBy(false);
 
@@ -513,7 +513,7 @@ public class OrElseSpecTests
         var left = Spec.Build((bool _) => leftBool).Create("left");
         var right = Spec.Build((bool _) => rightBool).Create("right");
 
-        var spec = !!(left.OrElse(right));
+        var spec = !!(left.OrElse((SpecBase<bool, string>)right));
 
         var result = spec.IsSatisfiedBy(false);
 
@@ -547,7 +547,7 @@ public class OrElseSpecTests
         var left = Spec.Build((bool _) => leftBool).Create("left");
         var right = Spec.Build((bool _) => rightBool).Create("right");
 
-        var spec = !!!(left.OrElse(right));
+        var spec = !!!(left.OrElse((SpecBase<bool, string>)right));
 
         var result = spec.IsSatisfiedBy(false);
 

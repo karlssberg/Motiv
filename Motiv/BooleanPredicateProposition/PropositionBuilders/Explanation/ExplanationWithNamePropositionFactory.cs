@@ -12,7 +12,7 @@ public readonly ref struct ExplanationWithNamePropositionFactory<TModel>(
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<TModel, string> Create() =>
+    public PolicyBase<TModel, string> Create() =>
         new ExplanationProposition<TModel>(
             predicate,
             trueBecause.ToFunc<TModel, string>(),
@@ -26,7 +26,7 @@ public readonly ref struct ExplanationWithNamePropositionFactory<TModel>(
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<TModel, string> Create(string statement)
+    public PolicyBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new ExplanationProposition<TModel>(

@@ -13,7 +13,7 @@ public readonly ref struct MultiAssertionExplanationWithNamePropositionFactory<T
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<TModel, string> Create() =>
-        new MetadataProposition<TModel, string>(
+        new MultiMetadataProposition<TModel, string>(
             predicate,
             trueBecause
                 .ToEnumerable()
@@ -31,7 +31,7 @@ public readonly ref struct MultiAssertionExplanationWithNamePropositionFactory<T
     public SpecBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new MetadataProposition<TModel, string>(
+        return new MultiMetadataProposition<TModel, string>(
             predicate,
             trueBecause.ToEnumerable().ToFunc<TModel, IEnumerable<string>>(),
             falseBecause,

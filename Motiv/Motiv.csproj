@@ -234,6 +234,27 @@
         <Compile Update="BooleanResultPredicateProposition\PropositionBuilders\Explanation\ExplanationPropositionFactory.cs">
           <DependentUpon>FalseAssertionExplanationPropositionBuilder.cs</DependentUpon>
         </Compile>
+        <Compile Update="BooleanPredicateProposition\PropositionBuilders\Metadata\MultiMetadataPropositionFactory.cs">
+          <DependentUpon>FalseMultiMetadataPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicateProposition\PropositionBuilders\Metadata\MultiMetadataPropositionFactory.cs">
+          <DependentUpon>FalseMultiMetadataPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecDecoratorProposition\PropositionBuilders\Metadata\MultiMetadataPropositionFactory.cs">
+          <DependentUpon>FalseMultiMetadataPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Metadata\MultiMetadataFromBooleanHigherOrderPropositionFactory.cs">
+          <DependentUpon>FalseMultiMetadataFromBooleanHigherOrderPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Metadata\MultiMetadataFromBooleanResultHigherOrderPropositionFactory.cs">
+          <DependentUpon>FalseMultiMetadataFromBooleanResultHigherOrderSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Metadata\MultiMetadataHigherOrderPropositionFactory.cs">
+          <DependentUpon>FalseMultiMetadataHigherOrderPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicateProposition\PropositionBuilders\Explanation\ExplanationPropositionFactory.cs">
+          <DependentUpon>FalseAssertionExplanationPropositionBuilder.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>

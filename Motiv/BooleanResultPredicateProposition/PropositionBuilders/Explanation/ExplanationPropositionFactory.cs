@@ -17,7 +17,7 @@ public readonly ref struct ExplanationPropositionFactory<TModel, TUnderlyingMeta
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create(string statement)
+    public PolicyBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new BooleanResultPredicateExplanationProposition<TModel, TUnderlyingMetadata>(
