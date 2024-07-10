@@ -43,10 +43,10 @@ public readonly ref struct FalseAssertionPropositionBuilder<TModel>(
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationPropositionFactory{TModel}" />.</returns>
-    public MetadataPropositionFactory<TModel, string> WhenFalseYield(Func<TModel, IEnumerable<string>> falseBecause)
+    public MultiMetadataPropositionFactory<TModel, string> WhenFalseYield(Func<TModel, IEnumerable<string>> falseBecause)
     {
         falseBecause.ThrowIfNull(nameof(falseBecause));
-        return new MetadataPropositionFactory<TModel, string>(
+        return new MultiMetadataPropositionFactory<TModel, string>(
             predicate,
             trueBecause.ToEnumerableReturn(),
             falseBecause);

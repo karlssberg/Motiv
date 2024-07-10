@@ -4,7 +4,7 @@ namespace Motiv.Tests;
 
 public class ExplanationBooleanResultTests
 {
-    enum MyMetadata
+    private enum MyMetadata
     {
         True,
         False
@@ -19,9 +19,9 @@ public class ExplanationBooleanResultTests
         // Arrange
         var result = new PropositionBooleanResult<string>(
             isSatisfied,
-            new MetadataNode<string>(because, []),
-            new Explanation(because, []),
-            because);
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(because, [])),
+            new Lazy<Explanation>(() => new Explanation(because, [])),
+            new Lazy<string>(() => because));
 
         // Act
         var act = (bool)result;
@@ -40,15 +40,15 @@ public class ExplanationBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
             left,
-            new MetadataNode<string>(left.ToString(), []),
-            new Explanation(left.ToString(), []),
-            left.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
+            new Lazy<string>(() => left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
-            new MetadataNode<string>(right.ToString(), []),
-            new Explanation(right.ToString(), []),
-            right.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
+            new Lazy<string>(() => right.ToString()));
 
         var result = leftResult & rightResult;
 
@@ -69,15 +69,15 @@ public class ExplanationBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
             left,
-            new MetadataNode<string>(left.ToString(), []),
-            new Explanation(left.ToString(), []),
-            left.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
+            new Lazy<string>(() => left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
-            new MetadataNode<string>(right.ToString(), []),
-            new Explanation(right.ToString(), []),
-            right.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
+            new Lazy<string>(() => right.ToString()));
 
         var result = leftResult & rightResult;
 
@@ -103,15 +103,15 @@ public class ExplanationBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<bool>(
             left,
-            new MetadataNode<bool>(left, []),
-            new Explanation(left.ToString(), []),
-            left.ToString());
+            new Lazy<MetadataNode<bool>>(() => new MetadataNode<bool>(left, [])),
+            new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
+            new Lazy<string>(() => left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<MyMetadata>(
             right,
-            new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
-            new Explanation(right.ToString(), []),
-            right.ToString());
+            new Lazy<MetadataNode<MyMetadata>>(() => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, [])),
+            new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
+            new Lazy<string>(() => right.ToString()));
 
         var result = leftResult & rightResult;
 
@@ -132,15 +132,15 @@ public class ExplanationBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
             left,
-            new MetadataNode<string>(left.ToString(), []),
-            new Explanation(left.ToString(), []),
-            left.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
+            new Lazy<string>(() => left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
-            new MetadataNode<string>(right.ToString(), []),
-            new Explanation(right.ToString(), []),
-            right.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
+            new Lazy<string>(() => right.ToString()));
 
         var result = leftResult | rightResult;
 
@@ -161,15 +161,15 @@ public class ExplanationBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
             left,
-            new MetadataNode<string>(left.ToString(), []),
-            new Explanation(left.ToString(), []),
-            left.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
+            new Lazy<string>(() => left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
-            new MetadataNode<string>(right.ToString(), []),
-            new Explanation(right.ToString(), []),
-            right.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
+            new Lazy<string>(() => right.ToString()));
 
         var result = leftResult | rightResult;
 
@@ -194,15 +194,15 @@ public class ExplanationBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<bool>(
             left,
-            new MetadataNode<bool>(left, []),
-            new Explanation(left.ToString(), []),
-            left.ToString());
+            new Lazy<MetadataNode<bool>>(() => new MetadataNode<bool>(left, [])),
+            new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
+            new Lazy<string>(() => left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<MyMetadata>(
             right,
-            new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
-            new Explanation(right.ToString(), []),
-            right.ToString());
+            new Lazy<MetadataNode<MyMetadata>>(() => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, [])),
+            new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
+            new Lazy<string>(() => right.ToString()));
 
         var result = leftResult | rightResult;
 
@@ -223,15 +223,15 @@ public class ExplanationBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
             left,
-            new MetadataNode<string>(left.ToString(), []),
-            new Explanation(left.ToString(), []),
-            left.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
+            new Lazy<string>(() => left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
-            new MetadataNode<string>(right.ToString(), []),
-            new Explanation(right.ToString(), []),
-            right.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
+            new Lazy<string>(() => right.ToString()));
 
         var result = leftResult ^ rightResult;
 
@@ -252,15 +252,15 @@ public class ExplanationBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
             left,
-            new MetadataNode<string>(left.ToString(), []),
-            new Explanation(left.ToString(), []),
-            left.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
+            new Lazy<string>(() => left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
-            new MetadataNode<string>(right.ToString(), []),
-            new Explanation(right.ToString(), []),
-            right.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
+            new Lazy<string>(() => right.ToString()));
 
         var result = leftResult ^ rightResult;
 
@@ -283,15 +283,15 @@ public class ExplanationBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<bool>(
             left,
-            new MetadataNode<bool>(left, []),
-            new Explanation(left.ToString(), []),
-            left.ToString());
+            new Lazy<MetadataNode<bool>>(() => new MetadataNode<bool>(left, [])),
+            new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
+            new Lazy<string>(() => left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<MyMetadata>(
             right,
-            new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
-            new Explanation(right.ToString(), []),
-            right.ToString());
+            new Lazy<MetadataNode<MyMetadata>>(() => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, [])),
+            new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
+            new Lazy<string>(() => right.ToString()));
 
         var result = leftResult ^ rightResult;
 
@@ -310,9 +310,9 @@ public class ExplanationBooleanResultTests
         // Arrange
         var operandResult = new  PropositionBooleanResult<string>(
             operand,
-            new MetadataNode<string>(operand.ToString(), []),
-            new Explanation(operand.ToString(), []),
-            operand.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(operand.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(operand.ToString(), [])),
+            new Lazy<string>(() => operand.ToString()));
 
         var result = !operandResult;
 
@@ -331,9 +331,9 @@ public class ExplanationBooleanResultTests
         // Arrange
         var operandResult = new  PropositionBooleanResult<string>(
             operand,
-            new MetadataNode<string>(operand.ToString(), []),
-            new Explanation(operand.ToString(), []),
-            operand.ToString());
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(operand.ToString(), [])),
+            new Lazy<Explanation>(() => new Explanation(operand.ToString(), [])),
+            new Lazy<string>(() => operand.ToString()));
 
         var result = !operandResult;
 

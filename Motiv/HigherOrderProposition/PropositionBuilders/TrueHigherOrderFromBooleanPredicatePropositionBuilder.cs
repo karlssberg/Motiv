@@ -22,7 +22,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
         TMetadata whenTrue) =>
         new(predicate,
             higherOrderPredicate,
-            _ => whenTrue.ToEnumerable(),
+            _ => whenTrue,
             causeSelector);
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
@@ -39,7 +39,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
         Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenTrue) =>
         new(predicate,
             higherOrderPredicate,
-            whenTrue.ToEnumerableReturn(),
+            whenTrue,
             causeSelector);
 
 
@@ -47,7 +47,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataFromBooleanHigherOrderPropositionBuilder<TModel, TMetadata> WhenTrueYield<TMetadata>(
+    public FalseMultiMetadataFromBooleanHigherOrderPropositionBuilder<TModel, TMetadata> WhenTrueYield<TMetadata>(
         Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenTrue) =>
         new(predicate,
             higherOrderPredicate,
@@ -82,7 +82,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A function that generates a collection of reasons when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionFromBooleanResultHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataFromBooleanHigherOrderPropositionBuilder<TModel, string> WhenTrueYield(
+    public FalseMultiMetadataFromBooleanHigherOrderPropositionBuilder<TModel, string> WhenTrueYield(
         Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> trueBecause) =>
         new(predicate,
             higherOrderPredicate,
@@ -99,8 +99,8 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
         return new HigherOrderFromBooleanPredicateMetadataProposition<TModel, string>(
             predicate,
             higherOrderPredicate,
-            _ => statement.ToEnumerable(),
-            _ => $"¬{statement}".ToEnumerable(),
+            _ => statement,
+            _ => $"¬{statement}",
             new SpecDescription(statement),
             causeSelector);
     }

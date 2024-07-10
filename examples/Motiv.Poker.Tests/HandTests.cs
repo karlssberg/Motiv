@@ -1,5 +1,6 @@
+
 using FluentAssertions;
-using Motiv.Poker.HandRankProposition;
+using Motiv.Poker.Models;
 using static Motiv.Poker.Tests.HandRanks;
 
 namespace Motiv.Poker.Tests;
@@ -7,9 +8,9 @@ namespace Motiv.Poker.Tests;
 public class HandTests
 {
     [Theory]
-    [InlineData("A, A, A, A, 2", false, HandRank.Unknown)]
-    [InlineData("K, A, A, 2, 2", false, HandRank.Unknown)]
-    [InlineData("K, A, 2, 2, 2", false, HandRank.Unknown)]
+    [InlineData("A, A, A, A, 2", false, HandRank.HighCard)]
+    [InlineData("K, A, A, 2, 2", false, HandRank.HighCard)]
+    [InlineData("K, A, 2, 2, 2", false, HandRank.HighCard)]
     [InlineData("A, A, K, Q, 10", true, HandRank.Pair)]
     [InlineData("A, K, K, Q, 10", true, HandRank.Pair)]
     [InlineData("A, K, Q, Q, 10", true, HandRank.Pair)]
@@ -22,12 +23,12 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandPairProposition();
+        var sut = new IsPairRule();
 
-        var act = sut.IsSatisfiedBy(hand);
+        var act = sut.Execute(hand);
 
         act.Satisfied.Should().Be(expected);
-        act.Metadata.Should().AllBeEquivalentTo(expectedRank);
+        act.Value.Should().Be(expectedRank);
     }
 
     [Theory]
@@ -35,9 +36,9 @@ public class HandTests
     [InlineData("K, K, 3, 2, 2", true, HandRank.TwoPair)]
     [InlineData("K, K, A, A, 2", true, HandRank.TwoPair)]
     [InlineData("4, K, A, A, 4", true, HandRank.TwoPair)]
-    [InlineData("4, 4, 5, 6, 7", false, HandRank.Unknown)]
-    [InlineData("A, A, 8, K, 2", false, HandRank.Unknown)]
-    [InlineData("A, A, A, K, 2", false, HandRank.Unknown)]
+    [InlineData("4, 4, 5, 6, 7", false, HandRank.HighCard)]
+    [InlineData("A, A, 8, K, 2", false, HandRank.HighCard)]
+    [InlineData("A, A, A, K, 2", false, HandRank.HighCard)]
     public void Should_evaluate_two_pairs(string handRanks, bool expected, HandRank expectedRank)
     {
         var cards = handRanks
@@ -47,7 +48,7 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandTwoPairProposition();
+        var sut = new IsTwoPairRule();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -75,7 +76,7 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandStraightProposition();
+        var sut = new IsStraightRule();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -101,7 +102,7 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandStraightProposition();
+        var sut = new IsStraightRule();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -125,7 +126,7 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsHandFlushProposition();
+        var sut = new IsFlushRuleRule();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -151,7 +152,7 @@ public class HandTests
             .Select(rank => new Card(rank, flushSuit))
             .ToList());
 
-        var sut = new IsHandStraightFlushProposition();
+        var sut = new IsStraightFlushRule();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -171,7 +172,7 @@ public class HandTests
             new("J", flushSuit),
             new("10", flushSuit)
         });
-        var sut = new IsHandRoyalFlushProposition();
+        var sut = new IsRoyalFlushRule();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -207,42 +208,40 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new IsWinningHandProposition();
+        var sut = new WinningHandRules();
 
-        var act = sut.IsSatisfiedBy(hand);
+        var act = sut.Execute(hand);
 
-        act.Justification.Should().NotBeNullOrEmpty();
         act.Satisfied.Should().Be(expected);
-        act.Metadata.Max().Should().Be(expectedRank);
-        act.Explanation.Underlying.GetAssertions().Should().BeEquivalentTo(expectedAssertion);
-        act.SubAssertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Value.Should().Be(expectedRank);
+        act.Justification.Should().NotBeNullOrEmpty();
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
     }
 
     [Fact]
     public void Should_demo_winning_hand()
     {
-        var sut = new IsWinningHandProposition();
+        var sut = new WinningHandRules();
 
         var act = sut.IsSatisfiedBy(new Hand("KH, QH, JH, 10H, 9H"));
 
         act.Justification.Should().StartWith(
             """
-            is a winning poker hand
-                OR
-                    is a straight flush hand
-                        AND
-                            is a straight hand
-                                OR
-                                    is King High Straight
-                                        all cards are King, Queen, Jack, Ten, and Nine
-                            is a flush hand
-                                OR
-                                    a flush of Hearts
-                                        KH is Hearts
-                                        QH is Hearts
-                                        JH is Hearts
-                                        10H is Hearts
-                                        9H is Hearts
+            OR
+                is a straight flush hand
+                    AND
+                        is a straight hand
+                            OR
+                                is King High Straight
+                                    all cards are King, Queen, Jack, Ten, and Nine
+                        is a flush hand
+                            OR
+                                a flush of Hearts
+                                    KH is Hearts
+                                    QH is Hearts
+                                    JH is Hearts
+                                    10H is Hearts
+                                    9H is Hearts
             """);
     }
 }

@@ -196,7 +196,7 @@ public class SpecDecoratorMetadataPropositionTests
     [Theory]
     [InlineAutoData(true,  Metadata.True)]
     [InlineAutoData(false, Metadata.False)]
-    public void Should_accept_single_parameter_assertion_factory_when_true_for_spec_decorators(bool model, Metadata expected)
+    public void Should_accept_single_parameter_metadata_factory_when_true_for_spec_decorators(bool model, Metadata expected)
     {
         // Arrange
         var underlying = Spec
@@ -221,7 +221,32 @@ public class SpecDecoratorMetadataPropositionTests
     [Theory]
     [InlineAutoData(true,  Metadata.True)]
     [InlineAutoData(false, Metadata.False)]
-    public void Should__double_parameter_assertion_factory_when_true_for_spec_decorators(bool model, Metadata expected)
+    public void Should_accept_single_parameter_metadata_factory_when_true_for_spec_decorator_policies(bool model, Metadata expected)
+    {
+        // Arrange
+        var underlying = Spec
+            .Build((bool m) => m)
+            .Create("is underlying true");
+
+        var spec = Spec
+            .Build(underlying)
+            .WhenTrue(_ => Metadata.True)
+            .WhenFalse(_ => Metadata.False)
+            .Create("is true");
+
+        var result = spec.Execute(model);
+
+        // Act
+        var act = result.Value;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true,  Metadata.True)]
+    [InlineAutoData(false, Metadata.False)]
+    public void Should__double_parameter_metadata_factory_when_true_for_spec_decorators(bool model, Metadata expected)
     {
         // Arrange
         var underlying = Spec
@@ -248,7 +273,7 @@ public class SpecDecoratorMetadataPropositionTests
     [Theory]
     [AutoData]
     public void
-        Should_accept_double_parameter_assertion_factory_that_returns_a_collection_of_assertions_when_true_for_spec_decorators(
+        Should_accept_double_parameter_metadata_factory_that_returns_a_collection_of_assertions_when_true_for_spec_decorators(
             string model)
     {
         // Arrange
@@ -301,32 +326,6 @@ public class SpecDecoratorMetadataPropositionTests
 
     [Theory]
     [AutoData]
-    public void Should_accept_single_parameter_metadata_factory_when_true_for_spec_decorators(
-        Guid guidModel,
-        Guid isFalseMetadata)
-    {
-        // Arrange
-        var underlying = Spec
-            .Build<Guid>(_ => true)
-            .Create("is underlying true");
-
-        var spec = Spec
-            .Build(underlying)
-            .WhenTrue(model => model)
-            .WhenFalse(isFalseMetadata)
-            .Create("is true");
-
-        var result = spec.IsSatisfiedBy(guidModel);
-
-        // Act
-        var act = result.Metadata;
-
-        // Assert
-        act.Should().BeEquivalentTo([guidModel]);
-    }
-
-    [Theory]
-    [AutoData]
     public void Should_accept_double_parameter_metadata_factory_when_true_for_spec_decorators(
         Guid underlyingTrueGuid,
         Guid underlyingFalseGuid,
@@ -353,6 +352,38 @@ public class SpecDecoratorMetadataPropositionTests
 
         // Assert
         act.Should().BeEquivalentTo([(guidModel, underlyingTrueGuid)]);
+    }
+
+
+
+    [Theory]
+    [AutoData]
+    public void Should_accept_double_parameter_metadata_factory_when_true_for_spec_decorators_as_policies(
+        Guid underlyingTrueGuid,
+        Guid underlyingFalseGuid,
+        Guid guidModel,
+        Guid isFalseMetadata)
+    {
+        // Arrange
+        var underlying = Spec
+            .Build<Guid>(_ => true)
+            .WhenTrue(underlyingTrueGuid)
+            .WhenFalse(underlyingFalseGuid)
+            .Create("is underlying true");
+
+        var spec = Spec
+            .Build(underlying)
+            .WhenTrue((model, result) => result.Metadata.Select(meta => (model, meta)).First())
+            .WhenFalse(model => (model, isFalseMetadata))
+            .Create("is true");
+
+        var result = spec.Execute(guidModel);
+
+        // Act
+        var act = result.Value;
+
+        // Assert
+        act.Should().Be((guidModel, underlyingTrueGuid));
     }
 
     [Theory]
@@ -411,58 +442,8 @@ public class SpecDecoratorMetadataPropositionTests
 
     [Theory]
     [AutoData]
-    public void Should_accept_single_parameter_assertion_factory_when_false_for_spec_decorators(string model)
-    {
-        // Arrange
-        var underlying = Spec
-            .Build<string>(_ => false)
-            .Create("is underlying true");
-
-        var spec = Spec
-            .Build(underlying)
-            .WhenTrue("true")
-            .WhenFalse(m => m)
-            .Create("is false");
-
-        var result = spec.IsSatisfiedBy(model);
-
-        // Act
-        var act = result.Metadata;
-
-        // Assert
-        act.Should().BeEquivalentTo(model);
-    }
-
-    [Theory]
-    [AutoData]
-    public void Should_accept_double_parameter_assertion_factory_when_false_for_spec_decorators(string model)
-    {
-        // Arrange
-        var underlying = Spec
-            .Build<string>(_ => false)
-            .WhenTrue("underlying true")
-            .WhenFalse("underlying false")
-            .Create();
-
-        var spec = Spec
-            .Build(underlying)
-            .WhenTrue("true")
-            .WhenFalseYield((falseModel, result) => result.Metadata.Select(meta => $"{falseModel} - {meta}"))
-            .Create("is true");
-
-        var result = spec.IsSatisfiedBy(model);
-
-        // Act
-        var act = result.Metadata;
-
-        // Assert
-        act.Should().BeEquivalentTo($"{model} - underlying false");
-    }
-
-    [Theory]
-    [AutoData]
     public void
-        Should_accept_double_parameter_assertion_factory_that_returns_a_collection_of_assertions_when_false_for_spec_decorators(
+        Should_accept_double_parameter_metadata_factory_that_returns_a_collection_of_assertions_when_false_for_spec_decorators(
             string model)
     {
         // Arrange
@@ -541,7 +522,7 @@ public class SpecDecoratorMetadataPropositionTests
 
     [Theory]
     [AutoData]
-    public void Should_accept_double_parameter_metadata_factory_when_false_for_spec_decorators(
+    public void Should_accept_double_parameter_metadata_factory_when_false_for_spec_decorators_as_policies(
         Guid underlyingTrueGuid,
         Guid underlyingFalseGuid,
         Guid guidModel,
@@ -560,13 +541,13 @@ public class SpecDecoratorMetadataPropositionTests
             .WhenFalse((model, result) => result.Metadata.Select(meta => (model, meta)).First())
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Execute(guidModel);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Value;
 
         // Assert
-        act.Should().BeEquivalentTo([(guidModel, underlyingFalseGuid)]);
+        act.Should().Be((guidModel, underlyingFalseGuid));
     }
 
     [Theory]

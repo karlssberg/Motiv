@@ -8,7 +8,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 public readonly ref struct FalseAssertionFromBooleanPredicateHigherOrderPropositionBuilder<TModel>(
     Func<TModel, bool> predicate,
-    Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate, 
+    Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,
     Func<HigherOrderBooleanEvaluation<TModel>, string> trueBecause,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
 {
@@ -36,13 +36,13 @@ public readonly ref struct FalseAssertionFromBooleanPredicateHigherOrderProposit
             trueBecause,
             falseBecause,
             causeSelector);
-    
+
     /// <summary>
     /// Specifies assertions to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reasons when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationHigherOrderPropositionFactory{TModel,TUnderlyingMetadata}" />.</returns>
-    public MetadataFromBooleanHigherOrderPropositionFactory<TModel, string> WhenFalseYield(
+    public MultiMetadataFromBooleanHigherOrderPropositionFactory<TModel, string> WhenFalseYield(
         Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> falseBecause) =>
         new(predicate,
             higherOrderPredicate,

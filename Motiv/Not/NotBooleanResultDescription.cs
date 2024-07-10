@@ -2,15 +2,7 @@
 
 internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase operand) : ResultDescriptionBase
 {
-    private readonly Dictionary<string, string> _negations = new()
-    {
-        ["NAND"] = "AND",
-        ["NOR"] = "OR",
-        ["XNOR"] = "XOR",
-        ["AND"] = "NAND",
-        ["OR"] = "NOR",
-        ["XOR"] = "XNOR"
-    };
+    private readonly JustificationNegationMappings _negations = new();
 
     internal override int CausalOperandCount => 1;
 
@@ -33,17 +25,18 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
     {
         return result switch
         {
-            NotBooleanResult<TMetadata> notResult => NegateNotOperator(notResult),
+            NotPolicyResult<TMetadata> notResult => NegateNotOperator(notResult),
+            NotBooleanOperationResult<TMetadata> notResult => NegateNotOperator(notResult),
             IBooleanOperationResult =>  $"!({result.Reason})",
             _ =>$"!{result.Reason}"
         };
     }
 
-    private static string NegateNotOperator(NotBooleanResult<TMetadata> notResult)
+    private static string NegateNotOperator(IUnaryOperationResult<TMetadata> notOperationResult)
     {
         var count = 0;
-        var current = notResult;
-        while (current.Operand is NotBooleanResult<TMetadata> nested)
+        var current = notOperationResult;
+        while (current.Operand is IUnaryOperationResult<TMetadata> nested)
         {
             count++;
             current = nested;

@@ -5,10 +5,10 @@ internal sealed class OrSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> right)
     : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>
 {
-    
+
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
-    
-    public override ISpecDescription Description => 
+
+    public override ISpecDescription Description =>
         new OrSpecDescription<TModel, TMetadata>(left, right);
 
     public string Operation => "OR";
@@ -25,3 +25,4 @@ internal sealed class OrSpec<TModel, TMetadata>(
     public SpecBase<TModel, TMetadata> Left => left;
     public SpecBase<TModel, TMetadata> Right => right;
 }
+

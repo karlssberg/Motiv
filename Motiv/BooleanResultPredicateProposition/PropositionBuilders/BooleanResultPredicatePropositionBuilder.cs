@@ -35,7 +35,7 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
             predicate,
             (model, _) => trueBecause(model));
     }
-    
+
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
@@ -58,7 +58,7 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
         whenTrue.ThrowIfNull(nameof(whenTrue));
         return new FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata>(
             predicate,
-            (_, _) => whenTrue.ToEnumerable());
+            (_, _) => whenTrue);
     }
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
@@ -71,13 +71,13 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
         whenTrue.ThrowIfNull(nameof(whenTrue));
         return new FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata>(
             predicate,
-            (model, _) => whenTrue(model).ToEnumerable());
+            (model, _) => whenTrue(model));
     }
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrueYield(
+    public FalseMultiMetadataPropositionBuilder<TModel, string, TUnderlyingMetadata> WhenTrueYield(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<string>> whenTrue) =>
         new(predicate, whenTrue.ThrowIfNull(nameof(whenTrue)));
 
@@ -97,14 +97,14 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
         whenTrue.ThrowIfNull(nameof(whenTrue));
         return new FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata>(
             predicate,
-            whenTrue.ToEnumerableReturn());
+            whenTrue);
     }
 
     /// <summary>Specifies a metadata factory function to use when the condition is true.</summary>
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrueYield<TMetadata>(
+    public FalseMultiMetadataPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata> WhenTrueYield<TMetadata>(
         Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue) =>
         new(predicate, whenTrue.ThrowIfNull(nameof(whenTrue)));
 
@@ -134,7 +134,7 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
     public SpecBase<TModel, TUnderlyingMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new BooleanResultPredicateMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
+        return new BooleanResultPredicateMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             predicate,
             (_, result) => result.Metadata,
             (_, result) => result.Metadata,

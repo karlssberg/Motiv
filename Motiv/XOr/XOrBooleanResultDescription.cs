@@ -34,7 +34,7 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
         result switch
         {
             IBinaryBooleanOperationResult => true,
-            NotBooleanResult<TMetadata> => false,
+            NotBooleanOperationResult<TMetadata> => false,
             _ => result.Underlying.Any(ContainsBinaryOperation)
         };
 }

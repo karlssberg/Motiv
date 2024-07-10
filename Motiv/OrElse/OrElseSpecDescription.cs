@@ -23,6 +23,8 @@ internal sealed class OrElseSpecDescription<TModel, TMetadata>(
         {
             OrSpec<TModel, TMetadata> orSpec =>
                 orSpec.Statement,
+            OrElsePolicy<TModel, TMetadata> orElseSpec =>
+                orElseSpec.Statement,
             OrElseSpec<TModel, TMetadata> orElseSpec =>
                 orElseSpec.Statement,
             IBinaryOperationSpec binarySpec =>

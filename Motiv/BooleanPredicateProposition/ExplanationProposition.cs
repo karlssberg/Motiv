@@ -5,7 +5,7 @@ internal sealed class ExplanationProposition<TModel>(
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,
     ISpecDescription specDescription)
-    : SpecBase<TModel, string>
+    : PolicyBase<TModel, string>
 {
 
     public override IEnumerable<SpecBase> Underlying => [];
@@ -19,24 +19,35 @@ internal sealed class ExplanationProposition<TModel>(
     {
     }
 
+
     public override ISpecDescription Description => specDescription;
 
-    public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
+    public override PolicyResultBase<string> Execute(TModel model)
     {
         var isSatisfied = InvokePredicate(model);
 
-        var assertion = isSatisfied switch
-        {
-            true => InvokeTrueBecauseFunction(model),
-            false => InvokeFalseBecauseFunction(model)
-        };
+        var assertion = GetAssertion(model, isSatisfied);
 
-        return new PropositionBooleanResult<string>(
-            isSatisfied,
-            new MetadataNode<string>(assertion, []),
-            new Explanation(assertion, []),
-            assertion);
+        return CreatePolicyResult(isSatisfied, assertion);
     }
+
+    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) => Execute(model);
+
+    private Lazy<string> GetAssertion(TModel model, bool isSatisfied) =>
+        new(() =>
+            isSatisfied switch
+            {
+                true => InvokeTrueBecauseFunction(model),
+                false => InvokeFalseBecauseFunction(model)
+            });
+
+    private static PolicyResultBase<string> CreatePolicyResult(bool isSatisfied, Lazy<string> assertion) =>
+        new PropositionPolicyResult<string>(
+            isSatisfied,
+            assertion,
+            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(assertion.Value, [])),
+            new Lazy<Explanation>(() => new Explanation(assertion.Value, [])),
+            assertion);
 
     private bool InvokePredicate(TModel model) =>
         WrapException.CatchFuncExceptionOnBehalfOfSpecType(

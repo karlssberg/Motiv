@@ -85,7 +85,7 @@ dotnet add package Motiv
 Create and evaluate a basic proposition:
 
 ```csharp
-var isEligibleForLoan =
+PolicyBase<Customer, string> isEligibleForLoan =
     Spec.Build((Customer customer) =>
             customer is
             {
@@ -94,7 +94,7 @@ var isEligibleForLoan =
             })
         .Create("eligible for loan");
 
-var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
+PolicyResult<string> result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
 
 result.Satisfied;  // true
 result.Reason;     // "eligible for loan"
@@ -106,7 +106,7 @@ result.Assertions; // ["eligible for loan"]
 Use `WhenTrue()` and `WhenFalse()` for user-friendly explanations:
 
 ```csharp
-var isEligibleForLoan =
+PolicyBase<Customer, string> isEligibleForLoan =
     Spec.Build((Customer customer) =>
             customer is
             {
@@ -116,28 +116,79 @@ var isEligibleForLoan =
         .WhenTrue("eligible for a loan")
         .WhenFalse("not eligible for a loan")
         .Create();
+
+BooleanResult<string> result = isEligibleForLoanPolicy.IsSatisfiedBy(ineligibleCustomer);
+
+result.Satisfied;  // false
+result.Reason;     // "not eligible for a loan"
 ```
+
+### Propositions with Custom Metadata
+
+Use `WhenTrue()` and `WhenFalse()` with types other than `string`:
+
+```csharp
+PolicyBase<Customer, MyEnum> isEligibleForLoanPolicy =
+    Spec.Build((Customer customer) =>
+            customer is
+            {
+                CreditScore: > 600,
+                Income: > 100000
+            })
+        .WhenTrue(MyEnum.EligibleForLoan)
+        .WhenFalse(MyEnum.NotEligibleForLoan)
+        .Create("eligible for a loan");
+
+BooleanResult<MyEnum> result = isEligibleForLoanPolicy.IsSatisfiedBy(eligibleCustomer);
+
+result.Satisfied;  // true
+result.Reason;     // "eligible for a loan"
+result.Metadata;   // [MyEnum.EligibleForLoan]
+```
+
+#### Policies
+
+Propositions come in two flavors:
+
+* _Spec_ - A foundational proposition that returns a `BooleanResult<T>` object.
+    All other kinds of propositions derive from this and therefore its behaviors.
+* _Policy_ - A proposition that yields scalar values
+    (in n other words, it does not use `WhenTrueYield()` or `WhenFalseYield()` to build the proposition).
+    It extends _Spec_ with the `Execute()` method that returns a `PolicyResult<T>` object.
+    This object contains the result of the proposition as a scalar `Value`.
+
+Using the previous example:
+
+```csharp
+PolicyResult<MyEnum> result = isEligibleForLoanPolicy.Execute(eligibleCustomer);
+
+result.Value;      // MyEnum.EligibleForLoan
+```
+
+The `Execute()` method is available if we forgo using the `WhenTrueYield()` or `WhenFalseYield()` methods to
+build the proposition.
+We referred to this kind of proposition as a _policy_.
 
 ### Composing Propositions
 
 Combine propositions using boolean operators:
 
 ```csharp
-var hasGoodCreditScore =
+PolicyBase<Customer, string> hasGoodCreditScore =
     Spec.Build((Customer customer) => customer.CreditScore > 600)
         .WhenTrue("good credit score")
         .WhenFalse("inadequate credit score")
         .Create();
 
-var hasSufficientIncome =
+PolicyBase<Customer, string> hasSufficientIncome =
     Spec.Build((Customer customer) => customer.Income > 100000)
         .WhenTrue("sufficient income")
         .WhenFalse("insufficient income")
         .Create();
 
-var isEligibleForLoan = hasGoodCreditScore & hasSufficientIncome;
+SpecBase<Customer, string> isEligibleForLoan = hasGoodCreditScore & hasSufficientIncome;
 
-var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
+BooleanResult<string> result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
 
 result.Satisfied;  // true
 result.Reason;     // "good credit score & sufficient income"
@@ -149,14 +200,14 @@ result.Assertions; // ["good credit score", "sufficient income"]
 Provide facts about collections:
 
 ```csharp
-var allNegative =
+SpecBase<int, string> allNegative =
     Spec.Build((int n) => n < 0)
         .AsAllSatisfied()
         .WhenTrue("all are negative")
         .WhenFalseYield(eval => eval.FalseModels.Select(n => $"{n} is not negative"))
         .Create();
 
-var result = allNegative.IsSatisfiedBy([-1, 2, 3]);
+BooleanResult<string> result = allNegative.IsSatisfiedBy([-1, 2, 3]);
 
 result.Satisfied;  // false
 result.Assertions; // ["2 is not negative", "3 is not negative"]

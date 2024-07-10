@@ -5,38 +5,53 @@ internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMet
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> trueBecause,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> falseBecause,
     ISpecDescription description)
-    : SpecBase<TModel, string>
+    : PolicyBase<TModel, string>
 {
     public override IEnumerable<SpecBase> Underlying => UnderlyingSpec.ToEnumerable();
-    
+
+
     public override ISpecDescription Description => description;
 
     public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
 
-    public override BooleanResultBase<string> IsSatisfiedBy(TModel model)
+    public override PolicyResultBase<string> Execute(TModel model)
     {
-        var booleanResult = UnderlyingSpec.IsSatisfiedBy(model);
+        var predicateResult = UnderlyingSpec.IsSatisfiedBy(model);
+        var assertion = GetLazyAssertion(model, predicateResult);
 
-        var assertion = new Lazy<string>(() =>
-            booleanResult.Satisfied switch
+        return CreatePolicyResult(assertion, predicateResult);
+    }
+
+    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
+        Execute(model);
+
+    private Lazy<string> GetLazyAssertion(TModel model, BooleanResultBase<TUnderlyingMetadata> predicateResult)
+    {
+        return new Lazy<string>(() =>
+            predicateResult.Satisfied switch
             {
-                true => trueBecause(model, booleanResult),
-                false => falseBecause(model, booleanResult)
+                true => trueBecause(model, predicateResult),
+                false => falseBecause(model, predicateResult)
             });
+    }
 
+    private static PolicyResultBase<string> CreatePolicyResult(Lazy<string> assertion, BooleanResultBase<TUnderlyingMetadata> booleanResult)
+    {
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(assertion.Value, booleanResult.ToEnumerable()));
-        
-        var metadataTier = new Lazy<MetadataNode<string>>(() => 
-            new MetadataNode<string>(assertion.Value.ToEnumerable(), 
+
+        var metadataTier = new Lazy<MetadataNode<string>>(() =>
+            new MetadataNode<string>(assertion.Value.ToEnumerable(),
                 booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []));
 
-        return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
-            booleanResult, 
+        return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
+            booleanResult,
+            Value,
             MetadataTier,
             Explanation,
             Reason);
-        
+
+        string Value() => assertion.Value;
         MetadataNode<string> MetadataTier() => metadataTier.Value;
         Explanation Explanation() => explanation.Value;
         string Reason() => assertion.Value;

@@ -18,6 +18,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FilesystemRoot", "Filesyste
 		LICENSE = LICENSE
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.ECommerce", "examples\Motiv.ECommerce\Motiv.ECommerce.csproj", "{3FF41067-FFD5-426D-B9F0-8730828BEC1A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.ECommerce.Tests", "examples\Motiv.ECommerce.Tests\Motiv.ECommerce.Tests.csproj", "{CA781147-E817-44BD-8970-A81142945377}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,9 +44,19 @@ Global
 		{D50C77D6-83D2-4B41-9F28-2D55B5CB365C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D50C77D6-83D2-4B41-9F28-2D55B5CB365C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D50C77D6-83D2-4B41-9F28-2D55B5CB365C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FF41067-FFD5-426D-B9F0-8730828BEC1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FF41067-FFD5-426D-B9F0-8730828BEC1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FF41067-FFD5-426D-B9F0-8730828BEC1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FF41067-FFD5-426D-B9F0-8730828BEC1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA781147-E817-44BD-8970-A81142945377}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA781147-E817-44BD-8970-A81142945377}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA781147-E817-44BD-8970-A81142945377}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA781147-E817-44BD-8970-A81142945377}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3DE80EE6-5C49-48D4-A76E-570BEDFE3CF2} = {E076512D-63A8-45CA-86B2-8E8E85716CBA}
 		{D50C77D6-83D2-4B41-9F28-2D55B5CB365C} = {E076512D-63A8-45CA-86B2-8E8E85716CBA}
+		{3FF41067-FFD5-426D-B9F0-8730828BEC1A} = {E076512D-63A8-45CA-86B2-8E8E85716CBA}
+		{CA781147-E817-44BD-8970-A81142945377} = {E076512D-63A8-45CA-86B2-8E8E85716CBA}
 	EndGlobalSection
 EndGlobal

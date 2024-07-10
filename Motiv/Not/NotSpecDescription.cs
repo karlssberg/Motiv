@@ -2,20 +2,7 @@ namespace Motiv.Not;
 
 internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMetadata> operand) : ISpecDescription
 {
-    private readonly Dictionary<string, string> _negations = new()
-    {
-        ["NAND"] = "AND",
-        ["NAND ALSO"] = "NAND ALSO",
-        ["NOR"] = "OR",
-        ["NOR ELSE"] = "OR ELSE",
-        ["XNOR"] = "XOR",
-        ["AND"] = "NAND",
-        ["AND ALSO"] = "NAND ALSO",
-        ["OR"] = "NOR",
-        ["OR ELSE"] = "NOR ELSE",
-        ["XOR"] = "XNOR"
-    };
-
+    private readonly ExpressionNegationMappings _negations = new();
     public string Statement => FormatStatement();
 
     public string Detailed => string.Join(Environment.NewLine, GetDetailsAsLines());

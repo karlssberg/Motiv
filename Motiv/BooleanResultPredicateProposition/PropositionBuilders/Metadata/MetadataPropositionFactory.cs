@@ -8,14 +8,14 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Metadata;
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
 public readonly ref struct MetadataPropositionFactory<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> spec,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse)
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenFalse)
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, TMetadata> Create(string statement)
+    public PolicyBase<TModel, TMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new BooleanResultPredicateMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(

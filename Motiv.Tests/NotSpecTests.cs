@@ -14,7 +14,7 @@ public class NotSpecTests
         var spec = Spec
             .Build<object>(_ => operand)
             .WhenTrue(true)
-            .WhenFalse(false)
+            .WhenFalseYield(_ => [false])
             .Create($"is {operand}");
 
         var result = (!spec).IsSatisfiedBy(model);
@@ -37,7 +37,7 @@ public class NotSpecTests
         var spec = Spec
             .Build<object>(_ => operand)
             .WhenTrue(true)
-            .WhenFalse(false)
+            .WhenFalseYield(_ => [false])
             .Create($"is {operand}");
 
         var result = (!spec).IsSatisfiedBy(model);
@@ -61,7 +61,7 @@ public class NotSpecTests
         var underlyingSpec = Spec
             .Build<object>(_ => predicateResult)
             .WhenTrue(true)
-            .WhenFalse(false)
+            .WhenFalseYield(_ => [false])
             .Create("is true");
 
         var spec = !underlyingSpec;
@@ -84,13 +84,13 @@ public class NotSpecTests
         object model)
     {
         // Arrange
-        var underlyingSpec = Spec
+        SpecBase<object, string> underlyingSpec = Spec
             .Build<object>(_ => operand)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
             .Create();
 
-        var spec = !underlyingSpec;
+        var spec = underlyingSpec.Not();
 
         var result = spec.IsSatisfiedBy(model);
 
@@ -110,7 +110,7 @@ public class NotSpecTests
         // Arrange
         var operand = Spec
             .Build<object>(_ => true)
-            .WhenTrue(true)
+            .WhenTrueYield(_ => true.ToEnumerable())
             .WhenFalse(false)
             .Create(operandStatement);
 
@@ -129,13 +129,13 @@ public class NotSpecTests
         // Arrange
         var left =
             Spec.Build<object>(_ => true)
-                .WhenTrue(true)
+                .WhenTrueYield(_ => true.ToEnumerable())
                 .WhenFalse(false)
                 .Create("is true");
 
         var right =
             Spec.Build<object>(_ => false)
-                .WhenTrue(true)
+                .WhenTrueYield(_ => true.ToEnumerable())
                 .WhenFalse(false)
                 .Create("is false");
 
@@ -155,7 +155,9 @@ public class NotSpecTests
         // Arrange
         var underlying = Spec
             .Build<bool>(_ => true)
-            .Create("left");
+            .WhenTrueYield(_ => true.ToEnumerable())
+            .WhenFalse(false)
+            .Create("underlying");
 
         // Act
         var act = (!underlying).Underlying;
@@ -168,7 +170,12 @@ public class NotSpecTests
     public void Should_populate_underlying_results_with_metadata()
     {
         // Arrange
-        var underlyingSpec = Spec.Build<object>(_ => true).Create("left");
+        var underlyingSpec = Spec
+            .Build<object>(_ => true)
+            .WhenTrueYield(_ => true.ToEnumerable())
+            .WhenFalse(false)
+            .Create("underlying");
+
         var expected = underlyingSpec.IsSatisfiedBy(new object());
 
         var spec = !underlyingSpec;

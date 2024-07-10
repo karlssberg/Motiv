@@ -26,6 +26,8 @@ internal sealed class OrElseBooleanResultDescription<TMetadata>(
         {
             OrBooleanResult<TMetadata> orResult =>
                 orResult.Description.Reason,
+            OrElsePolicyResult<TMetadata> elseResult =>
+                elseResult.Description.Reason,
             OrElseBooleanResult<TMetadata> orElseResult =>
                 orElseResult.Description.Reason,
             _ when result.Causes.Count() > 1 =>
