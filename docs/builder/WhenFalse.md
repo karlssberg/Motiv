@@ -2,18 +2,20 @@
 title: WhenFalse()
 category: building
 ---
-# WhenFalse() 
+# WhenFalse()
 
 The `WhenFalse()` method is used to yield values when the proposition is unsatisfied.
 It also implicitly sets `TMetadata` type for the rest of the proposition.
-Any values yielded from underlying propositions (if they exist) will be supplanted by the new value from the 
+Any values yielded from underlying propositions (if they exist) will be supplanted by the new value from the
 `WhenFalse()` method.
 However, should the underlying yielded values still be required, then it is still possible to re-yield them.
 
 Whilst the `WhenFalse()` method overloads remains broadly consistent across the various ways a proposition can be built,
 there are nuances to be aware of that are as a result of prior builder method calls.
-The outliers are the Higher-Order propositions, which require the pairing of models and results to be preserved for 
-them to be useful.
+The outliers are the Higher-Order propositions, which require the pairing of models and results to be preserved for
+them to be useful, and atomic propositions that have no underlying propositions to yield assertions/metadata
+from.
+
 
 This method is overloaded and takes one of the following types
 
@@ -180,7 +182,7 @@ WhenFalse(Func<HigherOrderEvaluation<TModel>, string> factory)
 
 This overload generates an assertion statement based on the model and the result of the underlying proposition when the
 proposition is not satisfied.
-When the proposition is not satisfied, the metadata returned by the factory function will be used to populate the 
+When the proposition is not satisfied, the metadata returned by the factory function will be used to populate the
 `Reason`, `Assertions` and `Metadata` properties of the result.
 
 ```csharp
@@ -199,7 +201,7 @@ WhenFalse(Func<HigherOrderEvaluation<TModel>, TMetadata> factory)
 
 This overload generates a metadata value based on the model and the result of the underlying proposition when the
 proposition is not satisfied.
-When the proposition is not satisfied, the metadata returned by the factory function will populate the `Metadata` 
+When the proposition is not satisfied, the metadata returned by the factory function will populate the `Metadata`
 property of the result.
 
 ```csharp

@@ -12,7 +12,7 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
 
     public override ISpecDescription Description => specDescription;
 
-    public override PolicyResultBase<string> Execute(TModel model)
+    public override PolicyResultBase<string> IsSatisfiedBy(TModel model)
     {
         var predicateResult = predicate(model);
 
@@ -20,8 +20,6 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
 
         return CreatePolicyResult(assertion, predicateResult);
     }
-
-    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) => Execute(model);
 
     private Lazy<string> GetLazyAssertion(TModel model, BooleanResultBase<TUnderlyingMetadata> booleanResult) =>
         new(() =>

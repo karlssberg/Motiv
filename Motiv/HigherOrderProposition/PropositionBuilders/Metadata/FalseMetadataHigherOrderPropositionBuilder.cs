@@ -11,7 +11,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata;
 public readonly ref struct FalseMetadataHigherOrderPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue,
+    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
@@ -29,7 +29,7 @@ public readonly ref struct FalseMetadataHigherOrderPropositionBuilder<TModel, TM
     /// <param name="whenFalse">A function that generates metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
     public MetadataHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(
-        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenFalse) =>
+        Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenFalse) =>
         new(spec,
             higherOrderPredicate,
             whenTrue,
@@ -39,8 +39,8 @@ public readonly ref struct FalseMetadataHigherOrderPropositionBuilder<TModel, TM
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
     /// <param name="whenFalse">A function that generates a collection of metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public MultiMetadataHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalseYield(
-        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse) =>
+    public MultiMetadataFromSpecHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalseYield(
+        Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse) =>
         new(spec,
             higherOrderPredicate,
             whenTrue.ToEnumerableReturn(),

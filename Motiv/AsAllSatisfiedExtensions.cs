@@ -25,6 +25,19 @@ public static class AsAllSatisfiedExtensions
         builder.As(booleanResults => booleanResults.AllTrue());
 
     /// <summary>
+    /// Converts a <see cref="TruePolicyBuilder{TModel,TUnderlyingMetadata}" /> into a proposition that is
+    /// satisfied if all the underlying propositions are satisfied.
+    /// </summary>
+    /// <param name="builder">The previous build step.</param>
+    /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata.</typeparam>
+    /// <returns>The next build step.</returns>
+    public static TrueHigherOrderFromPolicyPropositionBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel,
+        TUnderlyingMetadata>(
+        this TruePolicyBuilder<TModel, TUnderlyingMetadata> builder) =>
+        builder.As(policyResults => policyResults.AllTrue());
+
+    /// <summary>
     /// Converts a <see cref="BooleanResultPredicatePropositionBuilder{TModel,TUnderlyingMetadata}" /> into a
     /// proposition that is satisfied if all the underlying propositions are satisfied.
     /// </summary>
@@ -35,7 +48,19 @@ public static class AsAllSatisfiedExtensions
     public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
         this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
         builder.As(booleanResults => booleanResults.AllTrue());
-    
+
+    /// <summary>
+    /// Converts a <see cref="PolicyResultPredicatePropositionBuilder{TModel,TUnderlyingMetadata}" /> into a
+    /// proposition that is satisfied if all the underlying propositions are satisfied.
+    /// </summary>
+    /// <param name="builder">The previous build step.</param>
+    /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata.</typeparam>
+    /// <returns>The next build step.</returns>
+    public static TrueHigherOrderFromPolicyResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>(
+        this PolicyResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder) =>
+        builder.As(policyResults => policyResults.AllTrue());
+
     /// <summary>
     /// Converts a <see cref="BooleanResultPredicatePropositionBuilder{TModel,TUnderlyingMetadata}" /> into a
     /// proposition that is satisfied if all the underlying propositions are satisfied.

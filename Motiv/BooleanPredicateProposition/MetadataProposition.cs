@@ -19,7 +19,7 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
     /// <summary>Gets or sets the description of the proposition.</summary>
     public override ISpecDescription Description => specDescription;
 
-    public override PolicyResultBase<TMetadata> Execute(TModel model)
+    public override PolicyResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
         var isSatisfied = InvokePredicate(model);
 
@@ -27,11 +27,6 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
 
         return CreatePolicyResult(metadata, isSatisfied);
     }
-
-    /// <summary>Determines if the specified model satisfies the proposition.</summary>
-    /// <param name="model">The model to be evaluated.</param>
-    /// <returns>A BooleanResultBase object containing the result of the evaluation.</returns>
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)  => Execute(model);
 
     private Lazy<TMetadata> ResolveMetadata(TModel model, bool isSatisfied)
     {

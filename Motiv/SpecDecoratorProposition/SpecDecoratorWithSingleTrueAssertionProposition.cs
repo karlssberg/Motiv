@@ -14,7 +14,7 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
             propositionalStatement ?? trueBecause,
             underlyingSpec.Description);
 
-    public override PolicyResultBase<string> Execute(TModel model)
+    public override PolicyResultBase<string> IsSatisfiedBy(TModel model)
     {
         var underlyingResult = underlyingSpec.IsSatisfiedBy(model);
 
@@ -22,9 +22,6 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
 
         return CreatePolicyResult(underlyingResult, assertion);
     }
-
-    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
-        Execute(model);
 
     private Lazy<string> GetLazyAssertion(TModel model, BooleanResultBase<TUnderlyingMetadata> booleanResult)
     {

@@ -4,5 +4,5 @@ public class ThrowingSpec<TModel, TMetadata>(string description, Exception excep
 {
     public override IEnumerable<SpecBase> Underlying => Enumerable.Empty<SpecBase>();
     public override ISpecDescription Description => new SpecDescription(description);
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => throw exception;
+    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model) => throw exception;
 }

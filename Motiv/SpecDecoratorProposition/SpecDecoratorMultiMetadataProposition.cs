@@ -11,17 +11,17 @@ internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, T
 
     public override ISpecDescription Description => description;
 
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
+    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model)
     {
         var booleanResult = underlyingSpec.IsSatisfiedBy(model);
-        
+
         var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
             booleanResult.Satisfied switch
             {
                 true => whenTrue(model, booleanResult),
                 false => whenFalse(model, booleanResult)
             });
-        
+
         var assertions = new Lazy<string[]>(() =>
             metadata.Value switch
             {
@@ -29,11 +29,11 @@ internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, T
                 _ => [Description.ToReason(booleanResult.Satisfied)]
             });
 
-        var explanation = new Lazy<Explanation>(() => 
+        var explanation = new Lazy<Explanation>(() =>
             new Explanation(assertions.Value, booleanResult.ToEnumerable()));
-        
-        var metadataTier = new Lazy<MetadataNode<TMetadata>>(() => 
-            new MetadataNode<TMetadata>(metadata.Value, 
+
+        var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
+            new MetadataNode<TMetadata>(metadata.Value,
                 booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []));
 
         return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(

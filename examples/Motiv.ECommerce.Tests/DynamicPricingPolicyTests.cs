@@ -85,7 +85,7 @@ public class DynamicPricingPolicyTests
         // Arrange
         var sut = new DynamicPricingPolicy(CompetitorsProducts);
 
-        var result = sut.Execute(context);
+        var result = sut.IsSatisfiedBy(context);
 
         // Act
         var act = result.Value;

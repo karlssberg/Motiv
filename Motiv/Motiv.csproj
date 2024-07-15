@@ -180,9 +180,6 @@
         <Compile Update="HigherOrderProposition\PropositionBuilders\Explanation\ExplanationWithNameHigherOrderPropositionFactory.cs">
           <DependentUpon>FalseAssertionFromSpecDecoratorWithNameHigherOrderPropositionBuilder.cs</DependentUpon>
         </Compile>
-        <Compile Update="HigherOrderProposition\PropositionBuilders\Explanation\MultiAssertionExplanationHigherOrderBooleanResultPropositionFactory.cs">
-          <DependentUpon>FalseAssertionPropositionBuilder.cs</DependentUpon>
-        </Compile>
         <Compile Update="HigherOrderProposition\PropositionBuilders\Metadata\MetadataHigherOrderPropositionFactory.cs">
           <DependentUpon>FalseMetadataHigherOrderPropositionBuilder.cs</DependentUpon>
         </Compile>
@@ -249,11 +246,71 @@
         <Compile Update="HigherOrderProposition\PropositionBuilders\Metadata\MultiMetadataFromBooleanResultHigherOrderPropositionFactory.cs">
           <DependentUpon>FalseMultiMetadataFromBooleanResultHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>
-        <Compile Update="HigherOrderProposition\PropositionBuilders\Metadata\MultiMetadataHigherOrderPropositionFactory.cs">
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Metadata\MultiMetadataFromSpecHigherOrderPropositionFactory.cs">
           <DependentUpon>FalseMultiMetadataHigherOrderPropositionBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="BooleanResultPredicateProposition\PropositionBuilders\Explanation\ExplanationPropositionFactory.cs">
           <DependentUpon>FalseAssertionExplanationPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecDecoratorProposition\PropositionBuilders\Metadata\MultiMetadataFromPolicyPropositionFactory.cs">
+          <DependentUpon>FalseMultiMetadataFromPolicyPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecDecoratorProposition\PropositionBuilders\Metadata\MetadataPolicyFactory.cs">
+          <DependentUpon>FalseMetadataPolicyBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecDecoratorProposition\PropositionBuilders\Explanation\ExplanationPolicyFactory.cs">
+          <DependentUpon>FalseAssertionPolicyBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SpecDecoratorProposition\PropositionBuilders\Explanation\MultiAssertionExplanationFromPolicyPropositionFactory.cs">
+          <DependentUpon>FalseAssertionPolicyBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Metadata\MultiMetadataFromPolicyHigherOrderPropositionFactory.cs">
+          <DependentUpon>FalseMetadataHigherOrderFromPolicyPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Metadata\MetadataFromPolicyHigherOrderPropositionFactory.cs">
+          <DependentUpon>FalseMultiMetadataFromPolicyHigherOrderPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Explanation\ExplanationFromPolicyWithNameHigherOrderPropositionFactory.cs">
+          <DependentUpon>FalseAssertionFromPolicyWithNameHigherOrderPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Explanation\MultiAssertionExplanationWithNameHigherOrderPropositionFactory.cs">
+          <DependentUpon>FalseAssertionFromBooleanPredicateWithNameHigherOrderPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Explanation\MultiAssertionExplanationWithNameHigherOrderPolicyResultPropositionFactory.cs">
+          <DependentUpon>FalseAssertionFromPolicyWithNameHigherOrderPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Explanation\MultiAssertionExplanationFromBooleanResultHigherOrderPropositionFactory.cs">
+          <DependentUpon>FalseAssertionFromBooleanResultHigherOrderPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Explanation\ExplanationFromPolicyResultHigherOrderPropositionFactory.cs">
+          <DependentUpon>FalseAssertionFromPolicyResultHigherOrderPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Explanation\MultiAssertionFromPolicyResultExplanationHigherOrderPropositionFactory.cs">
+          <DependentUpon>FalseAssertionFromPolicyResultHigherOrderPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicateProposition\PropositionBuilders\Explanation\ExplanationFromPolicyWithNamePropositionFactory.cs">
+          <DependentUpon>FalseAssertionFromPolicyResultWithNamePropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicateProposition\PropositionBuilders\Explanation\MultiAssertionExplanationFromPolicyResultWithNamePropositionFactory.cs">
+          <DependentUpon>FalseAssertionFromPolicyResultWithNamePropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicateProposition\PropositionBuilders\Explanation\ExplanationFromPolicyResultPropositionFactory.cs">
+          <DependentUpon>FalseAssertionExplanationFromPolicyResultPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicateProposition\PropositionBuilders\Explanation\MultiAssertionExplanationFromPolicyPropositionFactory.cs">
+          <DependentUpon>FalseAssertionExplanationFromPolicyResultPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicateProposition\PropositionBuilders\Metadata\MetadataFromPolicyResultPropositionFactory.cs">
+          <DependentUpon>FalseMetadataFromPolicyResultPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BooleanResultPredicateProposition\PropositionBuilders\Metadata\MultiMetadataFromPolicyResultPropositionFactory.cs">
+          <DependentUpon>FalseMultiMetadataFromPolicyResultPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Metadata\MetadataFromPolicyResultHigherOrderPropositionFactory.cs">
+          <DependentUpon>FalseMetadataFromPolicyResultHigherOrderSpecBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="HigherOrderProposition\PropositionBuilders\Metadata\MultiMetadataFromPolicyResultHigherOrderPropositionFactory.cs">
+          <DependentUpon>FalseMultiMetadataFromPolicyResultHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 

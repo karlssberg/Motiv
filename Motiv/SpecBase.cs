@@ -19,16 +19,16 @@ public abstract class SpecBase
     internal SpecBase()
     {
     }
-    
+
     /// <summary>Gets a description of the specification.  This is used for debugging/logging purposes.</summary>
     public abstract ISpecDescription Description { get; }
-    
+
     /// <summary>Gets the propositional statement.</summary>
     public string Statement => Description.Statement;
-    
+
     /// <summary>Gets the propositional statement.</summary>
     public string Expression => Description.Detailed;
-    
+
     /// <summary>
     /// Gets the underlying specifications that make up this composite proposition.
     /// </summary>
@@ -52,7 +52,7 @@ public abstract class SpecBase<TModel> : SpecBase
     internal SpecBase()
     {
     }
-    
+
     /// <summary>
     /// Converts this specification to an explanation specification (i.e., Spec&lt;TModel, string&gt;).
     /// This is necessary when establishing a "lowest-common-denominator" between very different specification.
@@ -158,7 +158,9 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    public abstract BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model);
+    public BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => IsSatisfiedByInternal(model);
+
+    internal abstract BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model);
 
     /// <summary>
     /// Combines this specification with another specification using the logical AND operator. Both operands will be

@@ -25,7 +25,7 @@ public class HandTests
 
         var sut = new IsPairRule();
 
-        var act = sut.Execute(hand);
+        var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().Be(expected);
         act.Value.Should().Be(expectedRank);
@@ -53,7 +53,7 @@ public class HandTests
         var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().Be(expected);
-        act.Metadata.Should().AllBeEquivalentTo(expectedRank);
+        act.Values.Should().AllBeEquivalentTo(expectedRank);
     }
 
     [Theory]
@@ -81,7 +81,7 @@ public class HandTests
         var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().BeTrue();
-        act.Metadata.Max().Should().Be(HandRank.Straight);
+        act.Values.Max().Should().Be(HandRank.Straight);
     }
 
     [Theory]
@@ -131,7 +131,7 @@ public class HandTests
         var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().BeTrue();
-        act.Metadata.Max().Should().Be(HandRank.Flush);
+        act.Values.Max().Should().Be(HandRank.Flush);
     }
 
     [Theory]
@@ -157,7 +157,7 @@ public class HandTests
         var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().BeTrue();
-        act.Metadata.Max().Should().Be(HandRank.StraightFlush);
+        act.Values.Max().Should().Be(HandRank.StraightFlush);
     }
 
     [Theory]
@@ -177,7 +177,7 @@ public class HandTests
         var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().BeTrue();
-        act.Metadata.Max().Should().Be(HandRank.RoyalFlush);
+        act.Values.Max().Should().Be(HandRank.RoyalFlush);
     }
 
     [Theory]
@@ -210,7 +210,7 @@ public class HandTests
 
         var sut = new WinningHandRules();
 
-        var act = sut.Execute(hand);
+        var act = sut.IsSatisfiedBy(hand);
 
         act.Satisfied.Should().Be(expected);
         act.Value.Should().Be(expectedRank);

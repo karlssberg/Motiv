@@ -104,7 +104,7 @@ public class SpecDecoratorMetadataPropositionTests
         var result = spec.IsSatisfiedBy("model");
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expectation);
@@ -164,7 +164,7 @@ public class SpecDecoratorMetadataPropositionTests
             : falseReason);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expectation);
@@ -187,7 +187,7 @@ public class SpecDecoratorMetadataPropositionTests
         var result = spec.IsSatisfiedBy("model");
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([Metadata.True]);
@@ -212,7 +212,7 @@ public class SpecDecoratorMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected.ToEnumerable());
@@ -234,7 +234,7 @@ public class SpecDecoratorMetadataPropositionTests
             .WhenFalse(_ => Metadata.False)
             .Create("is true");
 
-        var result = spec.Execute(model);
+        var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Value;
@@ -257,14 +257,14 @@ public class SpecDecoratorMetadataPropositionTests
 
         var spec = Spec
             .Build(underlying)
-            .WhenTrue((m, r) => (Model: m, r.Metadata))
-            .WhenFalse((m, r) => (Model: m, r.Metadata))
+            .WhenTrue((m, r) => (Model: m, Metadata: r.Values))
+            .WhenFalse((m, r) => (Model: m, Metadata: r.Values))
             .Create("is outer on");
 
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([(model, expected.ToEnumerable())]);
@@ -285,14 +285,14 @@ public class SpecDecoratorMetadataPropositionTests
 
         var spec = Spec
             .Build(underlying)
-            .WhenTrue((trueModel, result) => result.Metadata.Select(meta => $"{trueModel} - {meta}").First())
+            .WhenTrue((trueModel, result) => result.Values.Select(meta => $"{trueModel} - {meta}").First())
             .WhenFalse("false")
             .Create("is true");
 
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo($"{model} - underlying true");
@@ -318,7 +318,7 @@ public class SpecDecoratorMetadataPropositionTests
         var result = spec.IsSatisfiedBy("model");
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([isTrueMetadata]);
@@ -341,14 +341,14 @@ public class SpecDecoratorMetadataPropositionTests
 
         var spec = Spec
             .Build(underlying)
-            .WhenTrue((model, result) => result.Metadata.Select(meta => (model, meta)).First())
+            .WhenTrue((model, result) => result.Values.Select(meta => (model, meta)).First())
             .WhenFalse(model => (model, isFalseMetadata))
             .Create("is true");
 
         var result = spec.IsSatisfiedBy(guidModel);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([(guidModel, underlyingTrueGuid)]);
@@ -373,11 +373,11 @@ public class SpecDecoratorMetadataPropositionTests
 
         var spec = Spec
             .Build(underlying)
-            .WhenTrue((model, result) => result.Metadata.Select(meta => (model, meta)).First())
+            .WhenTrue((model, result) => result.Values.Select(meta => (model, meta)).First())
             .WhenFalse(model => (model, isFalseMetadata))
             .Create("is true");
 
-        var result = spec.Execute(guidModel);
+        var result = spec.IsSatisfiedBy(guidModel);
 
         // Act
         var act = result.Value;
@@ -404,14 +404,14 @@ public class SpecDecoratorMetadataPropositionTests
 
         var spec = Spec
             .Build(underlying)
-            .WhenTrueYield((model, result) => result.Metadata.Select(meta => (model, meta)))
+            .WhenTrueYield((model, result) => result.Values.Select(meta => (model, meta)))
             .WhenFalse(model => (model, isFalseMetadata))
             .Create("is true");
 
         var result = spec.IsSatisfiedBy(guidModel);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([(guidModel, underlyingTrueGuid)]);
@@ -434,7 +434,7 @@ public class SpecDecoratorMetadataPropositionTests
         var result = spec.IsSatisfiedBy("model");
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo("false");
@@ -456,13 +456,13 @@ public class SpecDecoratorMetadataPropositionTests
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
-            .WhenFalse((falseResult, result) => result.Metadata.Select(meta => $"{falseResult} - {meta}").First())
+            .WhenFalse((falseResult, result) => result.Values.Select(meta => $"{falseResult} - {meta}").First())
             .Create("is true");
 
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo($"{model} - underlying false");
@@ -488,7 +488,7 @@ public class SpecDecoratorMetadataPropositionTests
         var result = spec.IsSatisfiedBy("model");
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([isFalseMetadata]);
@@ -514,7 +514,7 @@ public class SpecDecoratorMetadataPropositionTests
         var result = spec.IsSatisfiedBy(guidModel);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([guidModel]);
@@ -538,10 +538,10 @@ public class SpecDecoratorMetadataPropositionTests
         var spec = Spec
             .Build(underlying)
             .WhenTrue(model => (model, isTrueMetadata))
-            .WhenFalse((model, result) => result.Metadata.Select(meta => (model, meta)).First())
+            .WhenFalse((model, result) => result.Values.Select(meta => (model, meta)).First())
             .Create("is true");
 
-        var result = spec.Execute(guidModel);
+        var result = spec.IsSatisfiedBy(guidModel);
 
         // Act
         var act = result.Value;
@@ -569,13 +569,13 @@ public class SpecDecoratorMetadataPropositionTests
         var spec = Spec
             .Build(underlying)
             .WhenTrue(model => (model, isFalseMetadata))
-            .WhenFalseYield((model, result) => result.Metadata.Select(meta => (model, meta)))
+            .WhenFalseYield((model, result) => result.Values.Select(meta => (model, meta)))
             .Create("is true");
 
         var result = spec.IsSatisfiedBy(guidModel);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([(guidModel, underlyingFalseGuid)]);

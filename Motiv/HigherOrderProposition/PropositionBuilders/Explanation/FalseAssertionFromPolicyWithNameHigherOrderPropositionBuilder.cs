@@ -1,4 +1,4 @@
-namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation;
+﻿namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation;
 
 /// <summary>
 /// A builder for creating specifications based on a predicate and explanations for true and false conditions.
@@ -7,19 +7,20 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation;
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct FalseAssertionFromSpecDecoratorWithNameHigherOrderPropositionBuilder<TModel, TUnderlyingMetadata>(
-    SpecBase<TModel, TUnderlyingMetadata> spec,
-    Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
+public readonly ref struct FalseAssertionFromPolicyWithNameHigherOrderPropositionBuilder<TModel, TUnderlyingMetadata>(
+    PolicyBase<TModel, TUnderlyingMetadata> policy,
+    Func<IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     string trueBecause,
-    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
-        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
+    Func<bool,
+        IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>,
+        IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
     /// <summary>Specifies an assertion to yield when the condition is false.</summary>
     /// <param name="falseBecause">A human-readable reason why the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationWithNameHigherOrderPropositionFactory{TModel,TUnderlyingMetadata}" />.</returns>
-    public ExplanationWithNameHigherOrderPropositionFactory<TModel, TUnderlyingMetadata>
+    public ExplanationFromPolicyWithNameHigherOrderPropositionFactory<TModel, TUnderlyingMetadata>
         WhenFalse(string falseBecause) =>
-        new(spec,
+        new(policy,
             higherOrderPredicate,
             trueBecause,
             _ => falseBecause,
@@ -28,9 +29,9 @@ public readonly ref struct FalseAssertionFromSpecDecoratorWithNameHigherOrderPro
     /// <summary>Specifies an assertion to yield when the condition is false.</summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationWithNameHigherOrderPropositionFactory{TModel,TUnderlyingMetadata}" />.</returns>
-    public ExplanationWithNameHigherOrderPropositionFactory<TModel, TUnderlyingMetadata> WhenFalse(
-        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause) =>
-        new(spec,
+    public ExplanationFromPolicyWithNameHigherOrderPropositionFactory<TModel, TUnderlyingMetadata> WhenFalse(
+        Func<HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause) =>
+        new(policy,
             higherOrderPredicate,
             trueBecause,
             falseBecause,
@@ -40,11 +41,11 @@ public readonly ref struct FalseAssertionFromSpecDecoratorWithNameHigherOrderPro
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>
     /// An instance of
-    /// <see cref="MultiAssertionExplanationWithNameHigherOrderBooleanResultPropositionFactory{TModel,TUnderlyingMetadata}" />.
+    /// <see cref="MultiAssertionExplanationFromBooleanResultWithNameHigherOrderPropositionFactory{TModel,TUnderlyingMetadata}" />.
     /// </returns>
-    public MultiAssertionExplanationWithNameHigherOrderBooleanResultPropositionFactory<TModel, TUnderlyingMetadata> WhenFalseYield(
-        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
-        new(spec.IsSatisfiedBy,
+    public MultiAssertionExplanationWithNameHigherOrderPolicyResultPropositionFactory<TModel, TUnderlyingMetadata> WhenFalseYield(
+        Func<HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
+        new(policy.IsSatisfiedBy,
             higherOrderPredicate,
             trueBecause,
             falseBecause,

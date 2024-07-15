@@ -1,13 +1,13 @@
 ﻿namespace Motiv.HigherOrderProposition;
 
-internal sealed class HigherOrderPolicyResult<TModel, TMetadata, TUnderlyingMetadata>(
+internal sealed class HigherOrderPolicyResult<TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
     Func<TMetadata> value,
     Func<IEnumerable<TMetadata>> metadataFn,
     Func<IEnumerable<string>> assertionsFn,
     Func<string> reasonFn,
-    IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> underlyingResults,
-    Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causesFn)
+    IEnumerable<BooleanResultBase<TUnderlyingMetadata>> underlyingResults,
+    Func<IEnumerable<BooleanResultBase<TUnderlyingMetadata>>> causesFn)
     : PolicyResultBase<TMetadata>
 {
     public override TMetadata Value => value();
@@ -39,7 +39,7 @@ internal sealed class HigherOrderPolicyResult<TModel, TMetadata, TUnderlyingMeta
 
 
     public override ResultDescriptionBase Description =>
-        new HigherOrderResultDescription<TModel, TUnderlyingMetadata>(
+        new HigherOrderResultDescription<TUnderlyingMetadata>(
             reasonFn(),
             causesFn());
 }

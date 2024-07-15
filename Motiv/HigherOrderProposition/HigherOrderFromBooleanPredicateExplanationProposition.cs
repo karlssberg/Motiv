@@ -14,7 +14,7 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
 
     public override ISpecDescription Description => specDescription;
 
-    public override PolicyResultBase<string> Execute(IEnumerable<TModel> models)
+    public override PolicyResultBase<string> IsSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = EvaluateModels(models);
         var isSatisfied = higherOrderPredicate(underlyingResults);
@@ -22,9 +22,6 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
 
         return CreatePolicyResult(assertion, isSatisfied);
     }
-
-    public override BooleanResultBase<string> IsSatisfiedBy(IEnumerable<TModel> models) =>
-        Execute(models);
 
     private ModelResult<TModel>[] EvaluateModels(IEnumerable<TModel> models) =>
         models

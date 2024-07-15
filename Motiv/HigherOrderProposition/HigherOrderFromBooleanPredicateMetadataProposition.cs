@@ -13,7 +13,7 @@ internal sealed class HigherOrderFromBooleanPredicateMetadataProposition<TModel,
 
     public override ISpecDescription Description => specDescription;
 
-    public override PolicyResultBase<TMetadata> Execute(IEnumerable<TModel> models)
+    public override PolicyResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = EvaluateModels(models);
         var isSatisfied = higherOrderPredicate(underlyingResults);
@@ -21,9 +21,6 @@ internal sealed class HigherOrderFromBooleanPredicateMetadataProposition<TModel,
 
         return CreateBooleanResult(isSatisfied, metadata);
     }
-
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models) =>
-        Execute(models);
 
     private ModelResult<TModel>[] EvaluateModels(IEnumerable<TModel> models)
     {

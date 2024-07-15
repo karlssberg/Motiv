@@ -34,7 +34,8 @@ To get detailed feedback:
 var result = isPartiallyFull.IsSatisfiedBy(5);
 
 result.Satisfied;     // true
-result.Assertions;    // ["partial"]
+result.Reason;        // "partial"
+result.SubAssertions; // ["valid", "¬empty", "¬full"]
 result.Justifications // partial
                       //     AND
                       //         valid
@@ -80,12 +81,25 @@ dotnet add package Motiv
 
 ## Usage
 
+There are two broad categories of propositions in Motiv:
+
+* #### `SpecBase<TModel, TMetadata>`
+
+  These are the base class for every proposition in Motiv.
+  They aggregate multiple assertion or metadata objects into a single proposition.
+
+* #### `PolicyBase<TModel, TMetadata>`
+
+  These are a specialized form of `SpecBase<TModel, TMetadata>` that are created when it is only possible for one
+  assertion or metadata object to be yielded (i.e., a scalar value).
+  It comes with an `Execute()` method that returns a `PolicyResultBase<TMetadata>` containing the scalar `Value`.
+
 ### Basic Proposition
 
 Create and evaluate a basic proposition:
 
 ```csharp
-PolicyBase<Customer, string> isEligibleForLoan =
+var isEligibleForLoan =
     Spec.Build((Customer customer) =>
             customer is
             {
@@ -94,7 +108,7 @@ PolicyBase<Customer, string> isEligibleForLoan =
             })
         .Create("eligible for loan");
 
-PolicyResult<string> result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
+var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
 
 result.Satisfied;  // true
 result.Reason;     // "eligible for loan"
@@ -106,7 +120,7 @@ result.Assertions; // ["eligible for loan"]
 Use `WhenTrue()` and `WhenFalse()` for user-friendly explanations:
 
 ```csharp
-PolicyBase<Customer, string> isEligibleForLoan =
+var isEligibleForLoan =
     Spec.Build((Customer customer) =>
             customer is
             {
@@ -117,7 +131,7 @@ PolicyBase<Customer, string> isEligibleForLoan =
         .WhenFalse("not eligible for a loan")
         .Create();
 
-BooleanResult<string> result = isEligibleForLoanPolicy.IsSatisfiedBy(ineligibleCustomer);
+var result = isEligibleForLoanPolicy.IsSatisfiedBy(ineligibleCustomer);
 
 result.Satisfied;  // false
 result.Reason;     // "not eligible for a loan"
@@ -139,35 +153,12 @@ PolicyBase<Customer, MyEnum> isEligibleForLoanPolicy =
         .WhenFalse(MyEnum.NotEligibleForLoan)
         .Create("eligible for a loan");
 
-BooleanResult<MyEnum> result = isEligibleForLoanPolicy.IsSatisfiedBy(eligibleCustomer);
+PolicyResultBase<MyEnum> result = isEligibleForLoanPolicy.IsSatisfiedBy(eligibleCustomer);
 
 result.Satisfied;  // true
-result.Reason;     // "eligible for a loan"
-result.Metadata;   // [MyEnum.EligibleForLoan]
-```
-
-#### Policies
-
-Propositions come in two flavors:
-
-* _Spec_ - A foundational proposition that returns a `BooleanResult<T>` object.
-    All other kinds of propositions derive from this and therefore its behaviors.
-* _Policy_ - A proposition that yields scalar values
-    (in n other words, it does not use `WhenTrueYield()` or `WhenFalseYield()` to build the proposition).
-    It extends _Spec_ with the `Execute()` method that returns a `PolicyResult<T>` object.
-    This object contains the result of the proposition as a scalar `Value`.
-
-Using the previous example:
-
-```csharp
-PolicyResult<MyEnum> result = isEligibleForLoanPolicy.Execute(eligibleCustomer);
-
 result.Value;      // MyEnum.EligibleForLoan
+result.Reason;     // "eligible for a loan"
 ```
-
-The `Execute()` method is available if we forgo using the `WhenTrueYield()` or `WhenFalseYield()` methods to
-build the proposition.
-We referred to this kind of proposition as a _policy_.
 
 ### Composing Propositions
 
@@ -188,7 +179,7 @@ PolicyBase<Customer, string> hasSufficientIncome =
 
 SpecBase<Customer, string> isEligibleForLoan = hasGoodCreditScore & hasSufficientIncome;
 
-BooleanResult<string> result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
+BooleanResultBase<string> result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
 
 result.Satisfied;  // true
 result.Reason;     // "good credit score & sufficient income"
@@ -200,16 +191,17 @@ result.Assertions; // ["good credit score", "sufficient income"]
 Provide facts about collections:
 
 ```csharp
-SpecBase<int, string> allNegative =
+SpecBase<IEnumerable<int>, string> allNegative =
     Spec.Build((int n) => n < 0)
         .AsAllSatisfied()
         .WhenTrue("all are negative")
         .WhenFalseYield(eval => eval.FalseModels.Select(n => $"{n} is not negative"))
         .Create();
 
-BooleanResult<string> result = allNegative.IsSatisfiedBy([-1, 2, 3]);
+BooleanResultBase<string> result = allNegative.IsSatisfiedBy([-1, 2, 3]);
 
 result.Satisfied;  // false
+result.Reason;     // "¬all are negative"
 result.Assertions; // ["2 is not negative", "3 is not negative"]
 ```
 
@@ -223,7 +215,7 @@ Consider these potential tradeoffs when using Motiv:
 
 ## License
 
-Motiv is released under the MIT License. See the [LICENSE](LICENSE) file for details.
+Motiv is released under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
 ## Resources
 

@@ -1,3 +1,9 @@
+<style>
+.mermaid {
+    width: 80%;
+    margin-left: 10%;
+}
+</style>
 # Motiv Architecture
 
 ## Introduction
@@ -129,8 +135,10 @@ The important thing here is to strike a balance since neither extreme is desirab
 
 The following is a simplified diagram showing how the builder process fans out to many different propositions
 
+
 ```mermaid
 
+%%{init: { 'themeVariables': { 'fontSize': '13px' }}}%%
 flowchart LR
     FluentBuilder((Spec class)) --> PredicateBuilder(Build with Predicate function)
     FluentBuilder --> ResultBuilder(Build with Boolean Result Predicate function)

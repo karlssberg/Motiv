@@ -374,7 +374,7 @@ public class AndAlsoSpecTests
         var spec = left.AndAlso(right);
 
         // Act
-        var act = spec.IsSatisfiedBy("").Metadata;
+        var act = spec.IsSatisfiedBy("").Values;
 
         // Assert
         act.Should().BeEquivalentTo(expectedAssertions);

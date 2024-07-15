@@ -38,7 +38,7 @@ var context = new DynamicPricingPolicy.Context(
     new User("John", new HashSet<Product> { stock.First() }),
     DateTime.Now);
 
-var result = new DynamicPricingPolicy(competitorsProducts).Execute(context);
+var result = new DynamicPricingPolicy(competitorsProducts).IsSatisfiedBy(context);
 
 Console.WriteLine($"The new price of {context.Product.Brand} {context.Product.Model} is {result.Value} (originally {context.Product.Price})");
 

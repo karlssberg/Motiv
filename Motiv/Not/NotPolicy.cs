@@ -5,12 +5,10 @@ internal sealed class NotPolicy<TModel, TMetadata>(
     : PolicyBase<TModel, TMetadata>
 {
     public override IEnumerable<SpecBase> Underlying => operand.ToEnumerable();
-    
-    public override ISpecDescription Description => 
+
+    public override ISpecDescription Description =>
         new NotSpecDescription<TModel, TMetadata>(operand);
 
-    public override PolicyResultBase<TMetadata> Execute(TModel model) => 
-        operand.Execute(model).Not();
-
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => Execute(model);
+    public override PolicyResultBase<TMetadata> IsSatisfiedBy(TModel model) =>
+        operand.IsSatisfiedBy(model).Not();
 }

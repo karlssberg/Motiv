@@ -29,7 +29,7 @@ public readonly ref struct FalseAssertionFromBooleanResultWithNameHigherOrderPro
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationWithNameHigherOrderPropositionFactory{TModel,TUnderlyingMetadata}" />.</returns>
     public ExplanationFromBooleanResultWithNameHigherOrderPropositionFactory<TModel, TUnderlyingMetadata> WhenFalse(
-        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause) =>
+        Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause) =>
         new(resultResolver,
             higherOrderPredicate,
             trueBecause,
@@ -40,9 +40,9 @@ public readonly ref struct FalseAssertionFromBooleanResultWithNameHigherOrderPro
     /// Specifies assertions to yield when the condition is false.
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
-    /// <returns>An instance of <see cref="MultiAssertionExplanationWithNameHigherOrderBooleanResultPropositionFactory{TModel,TUnderlyingMetadata}" />.</returns>
-    public MultiAssertionExplanationWithNameHigherOrderBooleanResultPropositionFactory<TModel, TUnderlyingMetadata> WhenFalseYield(
-        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
+    /// <returns>An instance of <see cref="MultiAssertionExplanationFromBooleanResultWithNameHigherOrderPropositionFactory{TModel,TUnderlyingMetadata}" />.</returns>
+    public MultiAssertionExplanationFromBooleanResultWithNameHigherOrderPropositionFactory<TModel, TUnderlyingMetadata> WhenFalseYield(
+        Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<string>> falseBecause) =>
         new(resultResolver,
             higherOrderPredicate,
             trueBecause,

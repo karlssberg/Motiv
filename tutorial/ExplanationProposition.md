@@ -1,5 +1,17 @@
 # Explanation Propositions
 
+```mermaid
+%%{init: { 'themeVariables': { 'fontSize': '13px' }}}%%
+flowchart BT
+    True(["&quot;true assertion&quot;"]) -->|true| P((is satisfied?))
+    False(["&quot;false assertion&quot;"]) -->|false| P
+
+    style P stroke:darkcyan,stroke-width:4px
+    style True stroke:darkgreen,stroke-width:2px
+    style False stroke:darkred,stroke-width:2px
+```
+
+
 _Explanation propositions_ are used to provide human-readable feedback to users (or developers).
 
 While all propositions will populate the `Assertions` property with useful information, _explanation propositions_
@@ -7,16 +19,6 @@ populate `Assertions` with the strings obtained from their `WhenTrue()`, `WhenTr
 `WhenFalseYield()` methods.
 
 For example, consider the following proposition:
-
-```mermaid
-flowchart BT
-    True([user is active]) -->|true| P((user is active?))
-    False([user is not active]) -->|false| P
-
-    style P stroke:darkcyan,stroke-width:4px
-    style True stroke:darkgreen,stroke-width:2px
-    style False stroke:darkred,stroke-width:2px
-```
 
 ```csharp
 var isUserActive =

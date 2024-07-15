@@ -11,16 +11,13 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
 
     public override ISpecDescription Description => specDescription;
 
-    public override PolicyResultBase<string> Execute(TModel model)
+    public override PolicyResultBase<string> IsSatisfiedBy(TModel model)
     {
         var predicateResult = predicate(model);
         var assertion = GetLazyAssertion(model, predicateResult);
 
         return CreatePolicyResult(assertion, predicateResult);
     }
-
-    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
-        Execute(model);
 
     private Lazy<string> GetLazyAssertion(TModel model, BooleanResultBase<TUnderlyingMetadata> booleanResult)
     {

@@ -12,7 +12,7 @@ public class DynamicPricingPolicy(Dictionary<ProductId, PricedProduct> competito
                    | IsNightOwlTimeDiscount
                    | IsPreviouslyAbandonedProductDiscount
                    | IsLowStockDiscount)
-            .WhenTrue((ctx, result) => ctx.Product.Price * (1 - result.Metadata.Sum()))
+            .WhenTrue((ctx, result) => ctx.Product.Price * (1 - result.Values.Sum()))
             .WhenFalse(ctx => ctx.Product.Price)
             .Create("a discount is applied");
 

@@ -98,7 +98,7 @@ public class HigherOrderBooleanEvaluationTests
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
@@ -125,7 +125,7 @@ public class HigherOrderBooleanEvaluationTests
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
@@ -152,7 +152,7 @@ public class HigherOrderBooleanEvaluationTests
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected.AsEnumerable());
@@ -181,7 +181,7 @@ public class HigherOrderBooleanEvaluationTests
         var result = higherOrder.IsSatisfiedBy(models);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
@@ -209,7 +209,7 @@ public class HigherOrderBooleanEvaluationTests
         var result = higherOrder.IsSatisfiedBy(models);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([2]);
@@ -238,7 +238,7 @@ public class HigherOrderBooleanEvaluationTests
         var result = higherOrder.IsSatisfiedBy(models);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expectedCount]);
@@ -267,7 +267,7 @@ public class HigherOrderBooleanEvaluationTests
         var result = higherOrder.IsSatisfiedBy(models);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expectedCount]);

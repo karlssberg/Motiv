@@ -8,17 +8,17 @@
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct FalseMultiMetadataHigherOrderPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata>(
-    SpecBase<TModel, TUnderlyingMetadata> spec,
-    Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
-    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
-        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
+public readonly ref struct FalseMultiMetadataFromPolicyHigherOrderPropositionBuilder<TModel, TMetadata, TUnderlyingMetadata>(
+    PolicyBase<TModel, TUnderlyingMetadata> spec,
+    Func<IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
+    Func<HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
+    Func<bool, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>,
+        IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
     /// <summary>Specifies the metadata to use when the condition is false.</summary>
     /// <param name="whenFalse">The metadata to use when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public MultiMetadataHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(TMetadata whenFalse) =>
+    public MultiMetadataFromPolicyHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(TMetadata whenFalse) =>
         new(spec,
             higherOrderPredicate,
             whenTrue,
@@ -28,8 +28,8 @@ public readonly ref struct FalseMultiMetadataHigherOrderPropositionBuilder<TMode
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
     /// <param name="whenFalse">A function that generates metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public MultiMetadataHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(
-        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenFalse) =>
+    public MultiMetadataFromPolicyHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalse(
+        Func<HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenFalse) =>
         new(spec,
             higherOrderPredicate,
             whenTrue,
@@ -39,8 +39,8 @@ public readonly ref struct FalseMultiMetadataHigherOrderPropositionBuilder<TMode
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
     /// <param name="whenFalse">A function that generates a collection of metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public MultiMetadataHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalseYield(
-        Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse) =>
+    public MultiMetadataFromPolicyHigherOrderPropositionFactory<TModel, TMetadata, TUnderlyingMetadata> WhenFalseYield(
+        Func<HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse) =>
         new(spec,
             higherOrderPredicate,
             whenTrue,

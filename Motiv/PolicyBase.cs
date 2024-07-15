@@ -11,6 +11,8 @@ namespace Motiv;
 /// <typeparam name="TMetadata">The metadata type that the policy returns.</typeparam>
 public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata>
 {
+    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model) => IsSatisfiedBy(model);
+
     /// <summary>
     /// Executes the proposition as a policy and returns a <see cref="PolicyResultBase{TMetadata}" /> primarily
     /// containing a single metadata instance.
@@ -21,7 +23,7 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// </remarks>
     /// <param name="model">The model to evaluate</param>
     /// <returns>A <see cref="PolicyResultBase{TMetadata}" /> containing the metadata instance and the boolean result.</returns>
-    public abstract PolicyResultBase<TMetadata> Execute(TModel model);
+    public new abstract PolicyResultBase<TMetadata> IsSatisfiedBy(TModel model);
 
     /// <summary>
     /// Creates a new policy that is equivalent to a conditional "OR" of the current policy and the alternative

@@ -105,7 +105,7 @@ public class ChangeModelTypeSpecTests
         var result = isAllLetters.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
         
         // Assert
         act.Should().BeEquivalentTo(expected);

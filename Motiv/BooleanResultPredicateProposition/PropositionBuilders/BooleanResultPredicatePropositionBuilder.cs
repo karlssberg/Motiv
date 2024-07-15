@@ -136,8 +136,8 @@ public readonly ref struct BooleanResultPredicatePropositionBuilder<TModel, TUnd
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new BooleanResultPredicateMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             predicate,
-            (_, result) => result.Metadata,
-            (_, result) => result.Metadata,
+            (_, result) => result.Values,
+            (_, result) => result.Values,
             new SpecDescription(statement));
     }
 }

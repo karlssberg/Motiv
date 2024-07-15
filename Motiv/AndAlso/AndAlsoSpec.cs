@@ -6,14 +6,14 @@ internal sealed class AndAlsoSpec<TModel, TMetadata>(
     : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>
 {
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
-    
-    public override ISpecDescription Description => 
+
+    public override ISpecDescription Description =>
         new AndAlsoSpecDescription<TModel, TMetadata>(left, right);
 
     public string Operation => "AND ALSO";
     public bool IsCollapsable => true;
 
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
+    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model)
     {
         var leftResult = left.IsSatisfiedBy(model);
         return leftResult.Satisfied switch

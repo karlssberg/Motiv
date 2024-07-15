@@ -31,10 +31,10 @@ internal sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMe
     ///     A <see cref="BooleanResultBase{TMetadata}" /> indicating if the proposition is satisfied and the resulting
     ///     metadata.
     /// </returns>
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
+    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model)
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
-        
+
         var metadata = new Lazy<TMetadata[]>(() =>
             booleanResult.Satisfied switch
             {
@@ -47,8 +47,8 @@ internal sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMe
             IEnumerable<string> assertion => assertion.ToArray(),
             _ => [Description.ToReason(booleanResult.Satisfied)]
         });
-        
-        var explanation = new Lazy<Explanation>(() => 
+
+        var explanation = new Lazy<Explanation>(() =>
             new Explanation(assertions.Value, booleanResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>

@@ -364,7 +364,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expectedMetadata]);
@@ -388,7 +388,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
-        var result = spec.Execute(model);
+        var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Value;
@@ -415,7 +415,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
-        var result = spec.Execute(model);
+        var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Value;
@@ -443,7 +443,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
-        var result = spec.Execute(model);
+        var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Value;
@@ -546,7 +546,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expectedMetadata]);
@@ -646,7 +646,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expectedMetadata]);
@@ -746,7 +746,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expectedMetadata]);

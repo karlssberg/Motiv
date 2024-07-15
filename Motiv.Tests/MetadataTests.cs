@@ -29,14 +29,14 @@ public class MetadataTests
         
         var secondEven =
             Spec.Build(firstEven)
-                .WhenTrueYield((_, result) => result.Metadata)
-                .WhenFalseYield((_, result) => result.Metadata)
+                .WhenTrueYield((_, result) => result.Values)
+                .WhenFalseYield((_, result) => result.Values)
                 .Create("second even");
         
         var thirdEven =
             Spec.Build(secondEven)
-                .WhenTrueYield((_, result) => result.Metadata)
-                .WhenFalseYield((_, result) => result.Metadata)
+                .WhenTrueYield((_, result) => result.Values)
+                .WhenFalseYield((_, result) => result.Values)
                 .Create("third even");
         
         var result = thirdEven.IsSatisfiedBy([model]);
@@ -68,14 +68,14 @@ public class MetadataTests
         
         var secondEven =
             Spec.Build(firstEven)
-                .WhenTrueYield((_, result) => result.Metadata)
-                .WhenFalseYield((_, result) => result.Metadata)
+                .WhenTrueYield((_, result) => result.Values)
+                .WhenFalseYield((_, result) => result.Values)
                 .Create("second even");
         
         var thirdEven =
             Spec.Build(secondEven)
-                .WhenTrueYield((_, result) => result.Metadata)
-                .WhenFalseYield((_, result) => result.Metadata)
+                .WhenTrueYield((_, result) => result.Values)
+                .WhenFalseYield((_, result) => result.Values)
                 .Create("third even");
         
         var result = thirdEven.IsSatisfiedBy([model]);
@@ -107,14 +107,14 @@ public class MetadataTests
         
         var secondEven =
             Spec.Build(firstEven)
-                .WhenTrueYield((_, result) => result.Metadata)
-                .WhenFalseYield((_, result) => result.Metadata)
+                .WhenTrueYield((_, result) => result.Values)
+                .WhenFalseYield((_, result) => result.Values)
                 .Create("second even");
         
         var thirdEven =
             Spec.Build(secondEven)
-                .WhenTrueYield((_, result) => result.Metadata)
-                .WhenFalseYield((_, result) => result.Metadata)
+                .WhenTrueYield((_, result) => result.Values)
+                .WhenFalseYield((_, result) => result.Values)
                 .Create("third even");
         
         var result = thirdEven.IsSatisfiedBy([model]);

@@ -30,7 +30,7 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnd
         new(predicate,
             trueBecause,
             (model, _) => falseBecause(model));
-    
+
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
     /// </summary>
@@ -41,7 +41,7 @@ public readonly ref struct FalseAssertionWithNamePropositionBuilder<TModel, TUnd
         new(predicate,
             trueBecause,
             falseBecause);
-    
+
     /// <summary>
     /// Specifies an assertion to yield when the condition is false.
     /// </summary>
