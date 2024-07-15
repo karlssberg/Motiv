@@ -1,6 +1,6 @@
 namespace Motiv.Tests;
 
-public class HigherOrderEvaluationTests
+public class HigherOrderBooleanResultEvaluationTests
 {
     public class Metadata(string text)
     {
@@ -27,7 +27,7 @@ public class HigherOrderEvaluationTests
         var result = higherOrder.IsSatisfiedBy([true]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([new Metadata("is true")]);
@@ -60,7 +60,7 @@ public class HigherOrderEvaluationTests
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
@@ -93,7 +93,7 @@ public class HigherOrderEvaluationTests
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
@@ -183,7 +183,7 @@ public class HigherOrderEvaluationTests
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
@@ -216,7 +216,7 @@ public class HigherOrderEvaluationTests
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
@@ -249,7 +249,7 @@ public class HigherOrderEvaluationTests
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
@@ -282,7 +282,7 @@ public class HigherOrderEvaluationTests
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected);

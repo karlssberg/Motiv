@@ -11,7 +11,7 @@ public readonly ref struct ExplanationFromBooleanResultWithNameHigherOrderPropos
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     string trueBecause,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
+    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
@@ -24,7 +24,7 @@ public readonly ref struct ExplanationFromBooleanResultWithNameHigherOrderPropos
         new HigherOrderFromBooleanResultExplanationProposition<TModel, TUnderlyingMetadata>(
             resultResolver,
             higherOrderPredicate,
-            trueBecause.ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string>(),
+            trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, string>(),
             falseBecause,
             new SpecDescription(trueBecause),
             causeSelector);
@@ -42,7 +42,7 @@ public readonly ref struct ExplanationFromBooleanResultWithNameHigherOrderPropos
         return new HigherOrderFromBooleanResultExplanationProposition<TModel, TUnderlyingMetadata>(
             resultResolver,
             higherOrderPredicate,
-            trueBecause.ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string>(),
+            trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, string>(),
             falseBecause,
             new SpecDescription(statement),
             causeSelector);

@@ -280,11 +280,15 @@ public abstract class BooleanResultBase<TMetadata>
     {
     }
 
+    /// <summary>Gets the metadata/assertions yielded by results that caused the outcome.</summary>
+    public IEnumerable<TMetadata> Values => MetadataTier.Metadata;
+
     /// <summary>Gets the metadata yielded by results that caused the outcome.</summary>
-    public IEnumerable<TMetadata> Metadata => MetadataTier.Metadata;
+    [Obsolete("Use the Values property instead.")]
+    public IEnumerable<TMetadata> Metadata => Values;
 
     /// <summary>Gets the metadata yielded by all results that evaulated.</summary>
-    public IEnumerable<TMetadata> RootMetadata => this.GetRootMetadata().ElseIfEmpty(Metadata);
+    public IEnumerable<TMetadata> RootMetadata => this.GetRootMetadata().ElseIfEmpty(Values);
 
     /// <summary>Gets the metadata tree associated with this result.</summary>
     public abstract MetadataNode<TMetadata> MetadataTier { get; }
@@ -292,7 +296,7 @@ public abstract class BooleanResultBase<TMetadata>
     /// <summary>Gets the underlying causes with metadata that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata { get; }
 
-    /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Metadata" />.</summary>
+    /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Values" />.</summary>
     public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingMetadataSources =>
         CausesWithMetadata.SelectMany(booleanResult =>
             booleanResult is IBooleanOperationResult

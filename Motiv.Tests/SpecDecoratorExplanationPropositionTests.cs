@@ -94,7 +94,7 @@ public class SpecDecoratorExplanationPropositionTests
         var result = spec.IsSatisfiedBy("model");
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
@@ -153,7 +153,7 @@ public class SpecDecoratorExplanationPropositionTests
             : falseReason);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expectation);
@@ -176,7 +176,7 @@ public class SpecDecoratorExplanationPropositionTests
         var result = spec.IsSatisfiedBy("model");
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo("true");
@@ -200,7 +200,7 @@ public class SpecDecoratorExplanationPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(model);
@@ -219,14 +219,14 @@ public class SpecDecoratorExplanationPropositionTests
 
         var spec = Spec
             .Build(underlying)
-            .WhenTrueYield((trueModel, result) => result.Metadata.Select(meta => $"{trueModel} - {meta}"))
+            .WhenTrueYield((trueModel, result) => result.Values.Select(meta => $"{trueModel} - {meta}"))
             .WhenFalse("false")
             .Create("is true");
 
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo($"{model} - underlying true");
@@ -247,14 +247,14 @@ public class SpecDecoratorExplanationPropositionTests
 
         var spec = Spec
             .Build(underlying)
-            .WhenTrue((trueModel, result) => result.Metadata.Select(meta => $"{trueModel} - {meta}").First())
+            .WhenTrue((trueModel, result) => result.Values.Select(meta => $"{trueModel} - {meta}").First())
             .WhenFalse("false")
             .Create("is true");
 
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo($"{model} - underlying true");
@@ -278,7 +278,7 @@ public class SpecDecoratorExplanationPropositionTests
         var result = spec.IsSatisfiedBy("model");
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo("false");
@@ -302,7 +302,7 @@ public class SpecDecoratorExplanationPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(model);
@@ -322,13 +322,13 @@ public class SpecDecoratorExplanationPropositionTests
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
-            .WhenFalseYield((falseModel, result) => result.Metadata.Select(meta => $"{falseModel} - {meta}"))
+            .WhenFalseYield((falseModel, result) => result.Values.Select(meta => $"{falseModel} - {meta}"))
             .Create("is true");
 
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo($"{model} - underlying false");
@@ -350,13 +350,13 @@ public class SpecDecoratorExplanationPropositionTests
         var spec = Spec
             .Build(underlying)
             .WhenTrue("true")
-            .WhenFalse((falseResult, result) => result.Metadata.Select(meta => $"{falseResult} - {meta}").First())
+            .WhenFalse((falseResult, result) => result.Values.Select(meta => $"{falseResult} - {meta}").First())
             .Create("is true");
 
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo($"{model} - underlying false");

@@ -38,7 +38,7 @@ public class SpecTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().ContainSingle(model.ToString());
@@ -94,7 +94,7 @@ public class SpecTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().ContainSingle(metadata);
@@ -270,7 +270,7 @@ public class SpecTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().ContainSingle(model.ToString());

@@ -15,7 +15,7 @@ public static class SpecExtensions
     public static SpecBase<TModel, TMetadata> AndTogether<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec & rightSpec);
-    
+
     /// <summary>
     /// Combines a collection of propositions using the conditional AND operator (i.e. `&amp;&amp;`).
     /// </summary>
@@ -26,7 +26,7 @@ public static class SpecExtensions
     public static SpecBase<TModel, TMetadata> AndAlsoTogether<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec.AndAlso(rightSpec));
-    
+
     /// <summary>
     /// Combines a collection of propositions using the logical OR operator (i.e. `|`).
     /// </summary>
@@ -37,7 +37,7 @@ public static class SpecExtensions
     public static SpecBase<TModel, TMetadata> OrTogether<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec | rightSpec);
-        
+
     /// <summary>
     /// Combines a collection of propositions using the conditional OR operator (i.e. `||`).
     /// </summary>
@@ -49,10 +49,7 @@ public static class SpecExtensions
         this IEnumerable<SpecBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec.OrElse(rightSpec));
 
-    internal static Func<TModel, BooleanResultBase<TMetadata>> ToBooleanResultPredicate<TModel, TMetadata>(
-        this SpecBase<TModel, TMetadata> spec) =>
-        spec.IsSatisfiedBy;
-    
+
     internal static IEnumerable<string> GetBinaryJustificationAsLines<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> specs,
         string operation,
@@ -72,19 +69,19 @@ public static class SpecExtensions
                 var detailsAsLines = groupArray.SelectMany(tuple => tuple.detailsAsLines);
                 return (op, detailsAsLines).ToEnumerable();
             });
-        
-        
+
+
         foreach (var group in adjacentLineGroups)
         {
             if (group.op != OperationGroup.Collapsible && level == 0)
             {
                 yield return operation;
             }
-            
+
             foreach (var line in group.detailsAsLines)
                 yield return line.Indent();
         }
-        
+
         yield break;
 
         (OperationGroup op, IEnumerable<string> detailsAsLines) GetJustificationAsTuple((OperationGroup, SpecBase<TModel, TMetadata>) tuple)
@@ -93,7 +90,7 @@ public static class SpecExtensions
             var detailsAsLines = spec switch
             {
                 IBinaryOperationSpec<TModel, TMetadata> binaryOperationSpec
-                    when binaryOperationSpec.Operation == operation 
+                    when binaryOperationSpec.Operation == operation
                          && binaryOperationSpec.IsCollapsable =>
                     spec.ToEnumerable().GetBinaryJustificationAsLines(operation, level + 1),
                 _ =>
@@ -103,15 +100,15 @@ public static class SpecExtensions
             return (op, detailsAsLines);
         }
     }
-    
+
     private static IEnumerable<(OperationGroup, SpecBase<TModel, TMetadata>)> IdentifyCollapsible<TModel, TMetadata>(
         this IBinaryOperationSpec<TModel, TMetadata> spec,
         string operation)
     {
         var underlyingSpecs = spec.Left.ToEnumerable().Append(spec.Right);
-    
+
         return underlyingSpecs
-            .SelectMany(underlyingSpec => 
+            .SelectMany(underlyingSpec =>
                 underlyingSpec switch
                 {
                     IBinaryOperationSpec<TModel, TMetadata> binaryOperationSpec

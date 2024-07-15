@@ -94,8 +94,8 @@ public class AsAllSatisfiedSpecTests
         var spec = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
-            .WhenTrueYield(evaluation => evaluation.Metadata)
-            .WhenFalseYield(evaluation => evaluation.Metadata)
+            .WhenTrueYield(evaluation => evaluation.Values)
+            .WhenFalseYield(evaluation => evaluation.Values)
             .Create("all are true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
@@ -164,8 +164,8 @@ public class AsAllSatisfiedSpecTests
         var spec = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
-            .WhenTrueYield(evaluation => evaluation.Metadata)
-            .WhenFalseYield(evaluation => evaluation.Metadata)
+            .WhenTrueYield(evaluation => evaluation.Values)
+            .WhenFalseYield(evaluation => evaluation.Values)
             .Create("all are true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);

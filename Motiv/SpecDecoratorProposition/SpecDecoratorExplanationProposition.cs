@@ -14,16 +14,13 @@ internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMet
 
     public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
 
-    public override PolicyResultBase<string> Execute(TModel model)
+    public override PolicyResultBase<string> IsSatisfiedBy(TModel model)
     {
         var predicateResult = UnderlyingSpec.IsSatisfiedBy(model);
         var assertion = GetLazyAssertion(model, predicateResult);
 
         return CreatePolicyResult(assertion, predicateResult);
     }
-
-    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
-        Execute(model);
 
     private Lazy<string> GetLazyAssertion(TModel model, BooleanResultBase<TUnderlyingMetadata> predicateResult)
     {

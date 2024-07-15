@@ -1,16 +1,15 @@
 # Motiv
 
-<div style="display: table; margin: auto">
+<div style="display: flex; justify-content: center;">
 
 ```mermaid
 flowchart BT
 
-    A --> P((&nbsp;Why Motiv?&nbsp;))
-    B([composable]) --> A((AND))
+    A --> P(("&nbsp;Why Motiv?&nbsp;"))
+    B(["composable"]) --> A((AND))
     C((AND)) --> A
-    D([reusable]) --> C
-    E([explainable]) --> C
-
+    D(["reusable"]) --> C
+    E(["explainable"]) --> C
 
     style E stroke:darkcyan,stroke-width:2px
     style D stroke:darkcyan,stroke-width:2px
@@ -56,6 +55,28 @@ result.Assertions;  // ["valid", "¬empty", "¬full"]
 result.Reason;      // "valid & !(¬empty | ¬full)"
 ```
 
+Assertions will bubble up the root of the proposition tree (if they contributed to the final results).
+This can be seen in the following flowchart:
+
+
+```mermaid
+%%{init: { 'themeVariables': { 'fontSize': '13px' }}}%%
+flowchart BT
+
+    AND --> P(("&nbsp;Is partially&nbsp;\n full?"))
+    B(["&quot;valid&quot;"]) --> AND((AND))
+    NOT((NOT)) --> AND
+    OR((OR)) --> NOT
+    D(["&quot;¬empty&quot;"]) --> OR
+    E(["&quot;¬full&quot;"]) --> OR
+
+    style E stroke:darkcyan,stroke-width:2px
+    style D stroke:darkcyan,stroke-width:2px
+    style B stroke:darkcyan,stroke-width:2px
+    style P stroke:darkcyan,stroke-width:4px
+```
+
+
 ## Installation
 
 Motiv is available as a [NuGet Package](https://www.nuget.org/packages/Motiv/).
@@ -77,16 +98,19 @@ dotnet add package Motiv
 Let's start with an example of a minimal/atomic proposition to demonstrate Motiv's core concepts.  Take the example of
 determining if a number is even:
 
+
 ```mermaid
+%%{init: { 'themeVariables': { 'fontSize': '13px' }}}%%
 flowchart BT
 
-    True([is even]) -->|true| P((is even?))
-    False([¬is even]) -->|false| P
+    True(["&quot;is even&quot;"]) -->|true| P(("is even?"))
+    False(["&quot;¬is even&quot;"]) -->|false| P
 
     style P stroke:darkcyan,stroke-width:4px
     style True stroke:darkgreen,stroke-width:2px
     style False stroke:darkred,stroke-width:2px
 ```
+
 
 ```csharp
 // Define a atomic proposition
@@ -109,16 +133,19 @@ This minimal example showcases how easily you can create and evaluate propositio
 For more descriptive results, use `WhenTrue()` and `WhenFalse()` to define custom assertions.
 Continuing with the previous example, let's provide more explicit feedback when the number is odd:
 
+
 ```mermaid
+%%{init: { 'themeVariables': { 'fontSize': '13px' }}}%%
 flowchart BT
 
-    True([is even]) -->|true| P((is even?))
-    False([is odd]) -->|false| P
+    True(["&quot;is even&quot;"]) -->|true| P(("is even?"))
+    False(["&quot;is odd&quot;"]) -->|false| P
 
     style P stroke:darkcyan,stroke-width:4px
     style True stroke:darkgreen,stroke-width:2px
     style False stroke:darkred,stroke-width:2px
 ```
+
 
 ```csharp
 var isEven =
@@ -139,16 +166,19 @@ result.Assertions; // ["is odd"]
 For scenarios requiring more context, you can use metadata instead of simple string assertions.
 For example, let's instead attach _metadata_ to our example:
 
+
 ```mermaid
+%%{init: { 'themeVariables': { 'fontSize': '13px' }}}%%
 flowchart BT
 
-    True([new MyMetadata&lpar;&quot;even&quot;&rpar;]) -->|true| P((is even?))
-    False([new MyMetadata&lpar;&quot;odd&quot;&rpar;]) -->|false| P
+    True(["new MyMetadata&lpar;&quot;even&quot;&rpar;"]) -->|true| P(("is even?"))
+    False(["new MyMetadata&lpar;&quot;odd&quot;&rpar;"]) -->|false| P
 
     style P stroke:darkcyan,stroke-width:4px
     style True stroke:darkgreen,stroke-width:2px
     style False stroke:darkred,stroke-width:2px
 ```
+
 
 ```csharp
 var isEven =
@@ -162,7 +192,7 @@ var result = isEven.IsSatisfiedBy(2);
 result.Satisfied;  // true
 result.Reason;     // "is even"
 result.Assertions; // ["is even"]
-result.Metadata;   // [{ Text: "even" }]
+result.Values;     // [{ Text: "even" }]
 ```
 
 ### Composing Propositions
@@ -176,14 +206,16 @@ and then provide the appropriate feedback for each case.
 
 Below is the flowchart of our solution:
 
+
 ```mermaid
+%%{init: { 'themeVariables': { 'fontSize': '13px' }}}%%
 flowchart BT
-    TrueOr((OR)) -->|true| P((is substitution?))
-    False([n]) -->|false| P
-    TrueIsFizz((fizz?)) -->|true| TrueOr
-    TrueIsBuzz((buzz?)) -->|true| TrueOr
-    TrueIsFizzTrue([fizz]) -->|true| TrueIsFizz
-    TrueIsBuzzTrue([buzz]) -->|true| TrueIsBuzz
+    TrueOr((OR)) -->|true| P(("is substitution?"))
+    False(["n"]) -->|false| P
+    TrueIsFizz(("fizz?")) -->|true| TrueOr
+    TrueIsBuzz(("buzz?")) -->|true| TrueOr
+    TrueIsFizzTrue(["&quot;fizz&quot;"]) -->|true| TrueIsFizz
+    TrueIsBuzzTrue(["&quot;buzz&quot;"]) -->|true| TrueIsBuzz
 
 
     style P stroke:darkcyan,stroke-width:4px
@@ -195,6 +227,7 @@ flowchart BT
 
     style False stroke:darkred,stroke-width:2px
 ```
+
 
 This is then implemented in code as follows:
 

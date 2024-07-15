@@ -33,7 +33,7 @@ public class HigherOrderMetadataSpecTests
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expected]);
@@ -109,7 +109,7 @@ public class HigherOrderMetadataSpecTests
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expected]);
@@ -232,7 +232,7 @@ public class HigherOrderMetadataSpecTests
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expectedMetadata]);

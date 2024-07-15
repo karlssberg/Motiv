@@ -44,6 +44,31 @@ public static class AsAtMostNSatisfiedExtensions
     /// <param name="builder">The proposition builder.</param>
     /// <param name="n">The maximum number of underlying propositions that can be satisfied.</param>
     /// <returns>The next build step.</returns>
+    public static TrueHigherOrderFromPolicyPropositionBuilder<TModel, TUnderlyingMetadata> AsAtMostNSatisfied<TModel,
+        TUnderlyingMetadata>(
+        this TruePolicyBuilder<TModel, TUnderlyingMetadata> builder,
+        int n)
+    {
+        n.ThrowIfLessThan(0, nameof(n));
+        return builder.As(
+            policyResults => policyResults.CountTrue() <= n,
+            (_, policyResults) =>
+            {
+                var policyResultsArray = policyResults.ToArray();
+                return policyResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(policyResultsArray);
+            });
+    }
+
+    /// <summary>
+    /// Creates a higher order proposition that is satisfied if at most 'n' of the underlying propositions are satisfied.
+    /// </summary>
+    /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata.</typeparam>
+    /// <param name="builder">The proposition builder.</param>
+    /// <param name="n">The maximum number of underlying propositions that can be satisfied.</param>
+    /// <returns>The next build step.</returns>
     public static TrueHigherOrderFromBooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata>
         AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
             this BooleanResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder,
@@ -58,6 +83,31 @@ public static class AsAtMostNSatisfiedExtensions
                 return booleanResultsArray
                     .WhereTrue()
                     .ElseIfEmpty(booleanResultsArray);
+            });
+    }
+
+    /// <summary>
+    /// Creates a higher order proposition that is satisfied if at most 'n' of the underlying propositions are satisfied.
+    /// </summary>
+    /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata.</typeparam>
+    /// <param name="builder">The proposition builder.</param>
+    /// <param name="n">The maximum number of underlying propositions that can be satisfied.</param>
+    /// <returns>The next build step.</returns>
+    public static TrueHigherOrderFromPolicyResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata>
+        AsAtMostNSatisfied<TModel, TUnderlyingMetadata>(
+            this PolicyResultPredicatePropositionBuilder<TModel, TUnderlyingMetadata> builder,
+            int n)
+    {
+        n.ThrowIfLessThan(0, nameof(n));
+        return builder.As(
+            policyResults => policyResults.CountTrue() <= n,
+            (_, policyResults) =>
+            {
+                var policyResultsArray = policyResults.ToArray();
+                return policyResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(policyResultsArray);
             });
     }
 

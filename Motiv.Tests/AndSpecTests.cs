@@ -64,7 +64,7 @@ public class AndSpecTests
         var spec = left & right;
 
         // Act
-        var act = spec.IsSatisfiedBy(model).Metadata;
+        var act = spec.IsSatisfiedBy(model).Values;
 
         // Assert
         act.Should().AllBeEquivalentTo(expected);
@@ -523,7 +523,7 @@ public class AndSpecTests
         var spec = left & right;
 
         // Act
-        var act = spec.IsSatisfiedBy("").Metadata;
+        var act = spec.IsSatisfiedBy("").Values;
 
         // Assert
         act.Should().BeEquivalentTo(expectedAssertions);

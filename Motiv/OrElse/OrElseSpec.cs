@@ -5,16 +5,16 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> right)
     : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>
 {
-    
+
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
-    
-    public override ISpecDescription Description => 
+
+    public override ISpecDescription Description =>
         new OrElseSpecDescription<TModel, TMetadata>(left, right);
 
     public string Operation => "OR ELSE";
     public bool IsCollapsable => true;
 
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model)
+    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model)
     {
         var leftResult = left.IsSatisfiedBy(model);
         return leftResult.Satisfied switch

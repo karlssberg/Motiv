@@ -8,8 +8,8 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation;
 public readonly ref struct ExplanationHigherOrderPropositionFactory<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
+    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause,
+    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
     /// <summary>

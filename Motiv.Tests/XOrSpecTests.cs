@@ -67,7 +67,7 @@ public class XOrSpecTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().HaveCount(leftResult == rightResult ? 1 : 2)
@@ -473,7 +473,7 @@ public class XOrSpecTests
         var result = spec.IsSatisfiedBy("");
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo(expected);

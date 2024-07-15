@@ -1,6 +1,5 @@
 namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation;
 
-
 /// <summary>
 /// A factory for creating specifications based on a predicate and explanations for true and false conditions.
 /// This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a
@@ -12,7 +11,7 @@ public readonly ref struct ExplanationWithNameHigherOrderPropositionFactory<TMod
     SpecBase<TModel, TUnderlyingMetadata> spec,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
     string trueBecause,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
+    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
 {
@@ -25,7 +24,7 @@ public readonly ref struct ExplanationWithNameHigherOrderPropositionFactory<TMod
         new HigherOrderFromBooleanResultExplanationProposition<TModel, TUnderlyingMetadata>(
             spec.IsSatisfiedBy,
             higherOrderPredicate,
-            trueBecause.ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string>(),
+            trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, string>(),
             falseBecause,
             new SpecDescription(trueBecause, spec.Description),
             causeSelector);
@@ -43,7 +42,7 @@ public readonly ref struct ExplanationWithNameHigherOrderPropositionFactory<TMod
         return new HigherOrderFromBooleanResultExplanationProposition<TModel, TUnderlyingMetadata>(
             spec.IsSatisfiedBy,
             higherOrderPredicate,
-            trueBecause.ToFunc<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string>(),
+            trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, string>(),
             falseBecause,
             new SpecDescription(statement, spec.Description),
             causeSelector);

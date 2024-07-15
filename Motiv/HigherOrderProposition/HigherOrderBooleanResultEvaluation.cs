@@ -1,11 +1,15 @@
 namespace Motiv.HigherOrderProposition;
 
 /// <summary>
-/// The result of a higher order evaluation so 
+/// The meta-result of a higher order evaluation.
 /// </summary>
-/// <typeparam name="TModel"></typeparam>
-/// <typeparam name="TMetadata"></typeparam>
-public class HigherOrderEvaluation<TModel, TMetadata>
+/// <typeparam name="TModel">
+/// The type of the model.
+/// </typeparam>
+/// <typeparam name="TMetadata">
+/// The type of the metadata associated with the evaluation.
+/// </typeparam>
+public class HigherOrderBooleanResultEvaluation<TModel, TMetadata>
 {
     private readonly Lazy<IReadOnlyList<TModel>> _lazyAllModels;
 
@@ -23,12 +27,12 @@ public class HigherOrderEvaluation<TModel, TMetadata>
     private readonly IReadOnlyList<BooleanResult<TModel, TMetadata>> _results;
     private readonly IReadOnlyList<BooleanResult<TModel, TMetadata>> _causalResults;
 
-    internal HigherOrderEvaluation(IReadOnlyList<BooleanResult<TModel, TMetadata>> results,
+    internal HigherOrderBooleanResultEvaluation(IReadOnlyList<BooleanResult<TModel, TMetadata>> results,
         IReadOnlyList<BooleanResult<TModel, TMetadata>> causalResults)
     {
         _results = results;
         _causalResults = causalResults;
-        
+
         _lazyAllModels = new Lazy<IReadOnlyList<TModel>>(() =>
             results.Select(result => result.Model).ToArray());
         _lazyAllSatisfied = new Lazy<bool>(() =>
@@ -37,7 +41,7 @@ public class HigherOrderEvaluation<TModel, TMetadata>
             results.Any(result => result.Satisfied));
         _lazyNoneSatisfied = new Lazy<bool>(() =>
             results.All(result => !result.Satisfied));
-        
+
         _lazyCausalModels = new Lazy<IReadOnlyList<TModel>>(() =>
             causalResults.Select(result => result.Model).ToArray());
         _lazyTrueResults = new Lazy<IReadOnlyList<BooleanResult<TModel, TMetadata>>>(() =>
@@ -53,12 +57,12 @@ public class HigherOrderEvaluation<TModel, TMetadata>
         _lazyMetadata = new Lazy<IReadOnlyList<TMetadata>>(() =>
             causalResults.SelectMany(result => result.MetadataTier.Metadata).ToArray());
     }
-    
+
     /// <summary>
     /// Gets a value indicating whether all results are satisfied.
     /// </summary>
     public bool AllSatisfied => _lazyAllSatisfied.Value;
-    
+
     /// <summary>
     /// Gets a value indicating whether any results are satisfied.
     /// </summary>
@@ -118,7 +122,7 @@ public class HigherOrderEvaluation<TModel, TMetadata>
     /// Gets the list of causal results.
     /// </summary>
     public IEnumerable<BooleanResult<TModel, TMetadata>> CausalResults => _causalResults;
-    
+
     /// <summary>
     /// Gets the total count of results.
     /// </summary>

@@ -23,7 +23,7 @@ public static class MetadataExtensions
     /// <returns>A collection of metadata from the boolean results.</returns>
     public static IEnumerable<TMetadata> GetMetadata<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
-        results.SelectMany(e => e.Metadata);
+        results.SelectMany(e => e.Values);
 
     /// <summary>
     /// Get the metadata from a collection of boolean results that are true.
@@ -35,7 +35,7 @@ public static class MetadataExtensions
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results
             .Where(r => r.Satisfied)
-            .SelectMany(e => e.Metadata);
+            .SelectMany(e => e.Values);
 
     /// <summary>
     /// Get the metadata from a collection of boolean results that are false.
@@ -47,7 +47,7 @@ public static class MetadataExtensions
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results
             .Where(r => !r.Satisfied)
-            .SelectMany(e => e.Metadata);
+            .SelectMany(e => e.Values);
 
     internal static IEnumerable<TMetadata> GetRootMetadata<TMetadata>(
         this BooleanResultBase<TMetadata> result) =>

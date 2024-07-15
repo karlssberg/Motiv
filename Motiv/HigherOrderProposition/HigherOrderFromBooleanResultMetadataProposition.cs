@@ -3,18 +3,17 @@ namespace Motiv.HigherOrderProposition;
 internal sealed class HigherOrderFromBooleanResultMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenFalse,
+    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue,
+    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenFalse,
     ISpecDescription specDescription,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
     : PolicyBase<IEnumerable<TModel>, TMetadata>
 {
     public override IEnumerable<SpecBase> Underlying => [];
 
-
     public override ISpecDescription Description => specDescription;
 
-    public override PolicyResultBase<TMetadata> Execute(IEnumerable<TModel> models)
+    public override PolicyResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = EvaluateModels(models);
         var isSatisfied = higherOrderPredicate(underlyingResults);
@@ -23,9 +22,6 @@ internal sealed class HigherOrderFromBooleanResultMetadataProposition<TModel, TM
 
         return CreatePolicyResult(metadata, isSatisfied, underlyingResults, causes);
     }
-
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(IEnumerable<TModel> models) =>
-        Execute(models);
 
     private BooleanResult<TModel, TUnderlyingMetadata>[] EvaluateModels(IEnumerable<TModel> models) =>
         models
@@ -46,7 +42,7 @@ internal sealed class HigherOrderFromBooleanResultMetadataProposition<TModel, TM
     {
         return new Lazy<TMetadata>(() =>
         {
-            var evaluation = new HigherOrderEvaluation<TModel, TUnderlyingMetadata>(
+            var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(
                 underlyingResults,
                 causes.Value);
 
@@ -69,7 +65,7 @@ internal sealed class HigherOrderFromBooleanResultMetadataProposition<TModel, TM
                 _ => specDescription.ToReason(isSatisfied).ToEnumerable()
             });
 
-        return new HigherOrderPolicyResult<TModel, TMetadata, TUnderlyingMetadata>(
+        return new HigherOrderPolicyResult<TMetadata, TUnderlyingMetadata>(
             isSatisfied,
             Value,
             Metadata,

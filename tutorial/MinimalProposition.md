@@ -1,21 +1,25 @@
-# Minimal (atomic) proposition
-The most concise proposition can be created by providing only a predicate and a propositional statement.
-It uses the minimum set of fluent builder methods to create a proposition.
+# Minimal proposition
+
 
 ```mermaid
+%%{init: { 'themeVariables': { 'fontSize': '13px' }}}%%
 flowchart BT
-    True([is even]) -->|true| P((is even?))
-    False([¬is even]) -->|false| P
+    True(["&quot;is satisfied&quot;"]) -->|true| P((is satisfied?))
+    False(["&quot;¬is satisfied&quot;"]) -->|false| P
 
     style P stroke:darkcyan,stroke-width:4px
     style True stroke:darkgreen,stroke-width:2px
     style False stroke:darkred,stroke-width:2px
 ```
 
+The most concise proposition can be created by providing only a predicate and a propositional statement.
+It uses the minimum set of fluent builder methods to create a proposition.
+
+
 ```csharp
 var isEven =
     Spec.Build((int n) => n % 2 == 0)   // predicate
-        .Create("is even");             // propositional statement
+        .Create("is even");             // propositional-statement/name
 
 var result = isEven.IsSatisfiedBy(2);
 

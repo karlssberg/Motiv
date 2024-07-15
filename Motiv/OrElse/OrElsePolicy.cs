@@ -14,17 +14,15 @@ internal sealed class OrElsePolicy<TModel, TMetadata>(
     public string Operation => "OR ELSE";
     public bool IsCollapsable => true;
 
-    public override PolicyResultBase<TMetadata> Execute(TModel model)
+    public override PolicyResultBase<TMetadata> IsSatisfiedBy(TModel model)
     {
-        var leftResult = left.Execute(model);
+        var leftResult = left.IsSatisfiedBy(model);
         return leftResult.Satisfied switch
         {
             true => new OrElsePolicyResult<TMetadata>(leftResult),
-            false => new OrElsePolicyResult<TMetadata>(leftResult, right.Execute(model))
+            false => new OrElsePolicyResult<TMetadata>(leftResult, right.IsSatisfiedBy(model))
         };
     }
-
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => Execute(model);
 
     public SpecBase<TModel, TMetadata> Left => left;
     public SpecBase<TModel, TMetadata> Right => right;

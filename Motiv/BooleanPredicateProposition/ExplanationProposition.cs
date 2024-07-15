@@ -22,7 +22,7 @@ internal sealed class ExplanationProposition<TModel>(
 
     public override ISpecDescription Description => specDescription;
 
-    public override PolicyResultBase<string> Execute(TModel model)
+    public override PolicyResultBase<string> IsSatisfiedBy(TModel model)
     {
         var isSatisfied = InvokePredicate(model);
 
@@ -30,8 +30,6 @@ internal sealed class ExplanationProposition<TModel>(
 
         return CreatePolicyResult(isSatisfied, assertion);
     }
-
-    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) => Execute(model);
 
     private Lazy<string> GetAssertion(TModel model, bool isSatisfied) =>
         new(() =>

@@ -52,7 +52,7 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     /// </summary>
     /// <param name="model">The model to be checked against the proposition.</param>
     /// <returns>A BooleanResultBase containing the result of the proposition check and the associated metadata.</returns>
-    public override BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) =>
+    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model) =>
         _spec.IsSatisfiedBy(model);
 }
 
@@ -106,7 +106,7 @@ public class Spec<TModel> : SpecBase<TModel, string>
     /// <returns>
     /// A BooleanResultBase containing the result of the proposition being applied to a moel and the associated metadata.
     /// </returns>
-    public override BooleanResultBase<string> IsSatisfiedBy(TModel model) => _spec.IsSatisfiedBy(model);
+    internal override BooleanResultBase<string> IsSatisfiedByInternal(TModel model) => _spec.IsSatisfiedByInternal(model);
 }
 
 /// <summary>
@@ -138,6 +138,18 @@ public static class Spec
     }
 
     /// <summary>
+    /// Commences the construction of a proposition using a predicate function that returns a <see cref="BooleanResultBase{TMetadata}"/>.
+    /// </summary>
+    /// <param name="predicate">The predicate function to be used in the proposition.</param>
+    /// <returns>A TrueFirstOrderSpecBuilder instance for further proposition building.</returns>
+    public static PolicyResultPredicatePropositionBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+        Func<TModel, PolicyResultBase<TMetadata>> predicate)
+    {
+        predicate.ThrowIfNull(nameof(predicate));
+        return new PolicyResultPredicatePropositionBuilder<TModel, TMetadata>(predicate);
+    }
+
+    /// <summary>
     /// Commences the construction of a specification using a specification factory function.
     /// </summary>
     /// <param name="factory">The specification factory function to be used in the specification.</param>
@@ -152,24 +164,36 @@ public static class Spec
     /// <summary>
     /// Commences the construction of a specification using a specification factory function.
     /// </summary>
-    /// <param name="factory">The specification factory function to be used in the specification.</param>
+    /// <param name="policyFactory">The specification factory function to be used in the specification.</param>
     /// <returns>A TrueCompositeFactorySpecBuilder instance for further specification building.</returns>
-    public static TruePropositionBuilder<TModel, string> Build<TModel>(
-        Func<SpecBase<TModel, string>> factory)
+    public static TruePolicyBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+        Func<PolicyBase<TModel, TMetadata>> policyFactory)
     {
-        factory.ThrowIfNull(nameof(factory));
-        return new TruePropositionBuilder<TModel, string>(factory());
+        policyFactory.ThrowIfNull(nameof(policyFactory));
+        return new TruePolicyBuilder<TModel, TMetadata>(policyFactory());
     }
 
     /// <summary>
     /// Commences the construction of a specificaton that is derived from an existing specifcation.
     /// </summary>
-    /// <param name="proposition">The proposition upon which to derive a new proposition.</param>
+    /// <param name="policy">The proposition upon which to derive a new proposition.</param>
     /// <returns>A TrueCompositeSpecBuilder instance for further specification building.</returns>
     public static TruePropositionBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
-        SpecBase<TModel, TMetadata> proposition)
+        SpecBase<TModel, TMetadata> policy)
     {
-        proposition.ThrowIfNull(nameof(proposition));
-        return new TruePropositionBuilder<TModel, TMetadata>(proposition);
+        policy.ThrowIfNull(nameof(policy));
+        return new TruePropositionBuilder<TModel, TMetadata>(policy);
+    }
+
+    /// <summary>
+    /// Commences the construction of a specificaton that is derived from an existing specifcation.
+    /// </summary>
+    /// <param name="policy">The proposition upon which to derive a new proposition.</param>
+    /// <returns>A TrueCompositeSpecBuilder instance for further specification building.</returns>
+    public static TruePolicyBuilder<TModel, TMetadata> Build<TModel, TMetadata>(
+        PolicyBase<TModel, TMetadata> policy)
+    {
+        policy.ThrowIfNull(nameof(policy));
+        return new TruePolicyBuilder<TModel, TMetadata>(policy);
     }
 }

@@ -3,17 +3,27 @@
 Propositions can be logically operated on using either the methods available on the <xref:Motiv.SpecBase`2> base
 class, or by using the overloaded logical operators `&`, `|`, `^`, `!`
 
+```csharp
+var isPositive = Spec.Build((int n) => n > 0).Create("positive");
+var isZero = Spec.Build((int n) => n == 0).Create("zero");
+
+var isNegative = !isPositive & !isZero;
+```
+
+The names are yielded in the same way as assertions created using the `WhenTrue()` and `WhenFalse()` methods.
+
 ```mermaid
+%%{init: { 'themeVariables': { 'fontSize': '13px' }}}%%
 flowchart BT
     And((AND)) --> P((Negative?))
     NotPositive((NOT)) --> And((AND))
     NotZero((NOT)) --> And
     IsPositive((Positive?)) --> NotPositive
     IsZero((Zero?)) --> NotZero
-    TrueIsPositive([positive]) -->|true| IsPositive
-    FalseIsPositive([¬positive]) -->|false| IsPositive
-    TrueIsZero([zero]) -->|true| IsZero
-    FalseIsZero([¬zero]) -->|false| IsZero
+    TrueIsPositive(["&quot;positive&quot;"]) -->|true| IsPositive
+    FalseIsPositive(["&quot;¬positive&quot;"]) -->|false| IsPositive
+    TrueIsZero(["&quot;zero&quot;"]) -->|true| IsZero
+    FalseIsZero(["&quot;¬zero&quot;"]) -->|false| IsZero
 
     style P stroke:darkcyan,stroke-width:4px
     style IsPositive stroke:darkcyan,stroke-width:4px
@@ -24,14 +34,8 @@ flowchart BT
     style FalseIsPositive stroke:darkred,stroke-width:2px
 ```
 
-```csharp
-var isPositive = Spec.Build((int n) => n > 0).Create("positive");
-var isZero = Spec.Build((int n) => n == 0).Create("zero");
 
-var isNegative = !isPositive & !isZero;
-```
-
-Boolean results can also be operated upon in the same way
+Like specifications, boolean results can also be operated upon in the same way
 
 ```csharp
 var isPositiveResult = isPositive.IsSatisfiedBy(5);
@@ -48,3 +52,18 @@ is not possible for propositions use them.
 For propositions, you will have to use the methods `AndAlso()` and `OrElse()` instead.
 However, this limitation does not apply to <xref:Motiv.BooleanResultBase> types (or derivatives) so they can use the
 `&&` and `||` operators to short-circuit evaluations.
+
+
+### Policies
+
+Policies are a special type of proposition that only yields a single assertion or metadata (instead of multiple).
+Boolean operations on policies will generally return a non-policy proposition, except for when using the `!`, `Not()
+`, `OrElse()` operations, in which case they will return a `PolicyBase<TModel, TMetadata>` type.
+
+```csharp
+PolicyBase<TModel, TMetadata> isNegative = Spec.Build((int n) => n < 0).Create("negative");
+PolicyBase<TModel, TMetadata> isZero     = Spec.Build((int n) => n == 0).Create("zero");
+
+PolicyBase<TModel, TMetadata> isPositive = !isZero.OrElse(!isNegative);
+```
+

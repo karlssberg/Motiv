@@ -3,8 +3,8 @@ namespace Motiv.HigherOrderProposition;
 internal sealed class HigherOrderFromBooleanResultExplanationProposition<TModel, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
     Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause,
-    Func<HigherOrderEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
+    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, string> trueBecause,
+    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, string> falseBecause,
     ISpecDescription specDescription,
     Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>,
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
@@ -15,7 +15,7 @@ internal sealed class HigherOrderFromBooleanResultExplanationProposition<TModel,
 
     public override ISpecDescription Description => specDescription;
 
-    public override PolicyResultBase<string> Execute(IEnumerable<TModel> models)
+    public override PolicyResultBase<string> IsSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = EvaluateModels(models);
 
@@ -27,9 +27,6 @@ internal sealed class HigherOrderFromBooleanResultExplanationProposition<TModel,
 
         return CreatePolicyResult(isSatisfied, underlyingResults, assertion, causes);
     }
-
-    public override BooleanResultBase<string> IsSatisfiedBy(IEnumerable<TModel> models) =>
-        Execute(models);
 
     private BooleanResult<TModel, TUnderlyingMetadata>[] EvaluateModels(IEnumerable<TModel> models)
     {
@@ -51,7 +48,7 @@ internal sealed class HigherOrderFromBooleanResultExplanationProposition<TModel,
     {
         return new Lazy<string>(() =>
         {
-            var booleanCollectionResults = new HigherOrderEvaluation<TModel, TUnderlyingMetadata>(
+            var booleanCollectionResults = new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(
                 underlyingResults,
                 causes.Value);
 
@@ -65,7 +62,7 @@ internal sealed class HigherOrderFromBooleanResultExplanationProposition<TModel,
         BooleanResult<TModel, TUnderlyingMetadata>[] underlyingResults,
         Lazy<string> assertion, Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]> causes)
     {
-        return new HigherOrderPolicyResult<TModel, string, TUnderlyingMetadata>(
+        return new HigherOrderPolicyResult<string, TUnderlyingMetadata>(
             isSatisfied,
             Value,
             Metadata,

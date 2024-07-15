@@ -106,7 +106,7 @@ public readonly ref struct TruePropositionBuilder<TModel, TUnderlyingMetadata>(
     public SpecBase<TModel, TUnderlyingMetadata> Create(string statement) =>
         new SpecDecoratorMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             spec,
-            (_, result) => result.Metadata,
-            (_, result) => result.Metadata,
+            (_, result) => result.Values,
+            (_, result) => result.Values,
             new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description));
 }

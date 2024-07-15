@@ -60,7 +60,7 @@ public readonly ref struct TrueHigherOrderFromBooleanPredicatePropositionBuilder
     /// </summary>
     /// <param name="metadata">the metadata to yield when the condition is true.</param>
     /// <returns>
-    /// An instance of <see cref="FalseAssertionFromSpecDecoratorWithNameHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.
+    /// An instance of <see cref="FalseAssertionFromSpecWithNameHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.
     /// </returns>
     public FalseAssertionFromBooleanPredicateWithNameHigherOrderPropositionBuilder<TModel> WhenTrue(
         string metadata) =>

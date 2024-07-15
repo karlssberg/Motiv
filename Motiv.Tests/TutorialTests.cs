@@ -61,8 +61,8 @@ public class TutorialTests
 
         isEven.IsSatisfiedBy(2).Satisfied.Should().BeTrue();
         isEven.IsSatisfiedBy(2).Reason.Should().Be("is even number");
-        isEven.IsSatisfiedBy(2).Metadata.Select(m => m.English).Should().BeEquivalentTo("the number is even");
-        isEven.IsSatisfiedBy(2).Metadata.Select(m => m.Spanish).Should().BeEquivalentTo("el número es par");
+        isEven.IsSatisfiedBy(2).Values.Select(m => m.English).Should().BeEquivalentTo("the number is even");
+        isEven.IsSatisfiedBy(2).Values.Select(m => m.Spanish).Should().BeEquivalentTo("el número es par");
     }
 
     [Fact]
@@ -581,4 +581,22 @@ public class TutorialTests
         spec.IsSatisfiedBy(true).Assertions.Should().BeEquivalentTo("¬right");
         spec.IsSatisfiedBy(false).Assertions.Should().BeEquivalentTo("¬left");
     }
+
+    [Fact]
+    public void Should_demonstrate_higher_order_operation_in_readme()
+    {
+        SpecBase<IEnumerable<int>, string> allNegative =
+            Spec.Build((int n) => n < 0)
+                .AsAllSatisfied()
+                .WhenTrue("all are negative")
+                .WhenFalseYield(eval => eval.FalseModels.Select(n => $"{n} is not negative"))
+                .Create();
+
+        BooleanResultBase<string> result = allNegative.IsSatisfiedBy([-1, 2, 3]);
+
+        result.Satisfied.Should().BeFalse();
+        result.Reason.Should().Be("¬all are negative");
+        result.Assertions.Should().BeEquivalentTo("2 is not negative", "3 is not negative");
+    }
+
 }

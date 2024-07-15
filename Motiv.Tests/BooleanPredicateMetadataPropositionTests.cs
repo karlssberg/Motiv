@@ -258,7 +258,7 @@ public class BooleanPredicateMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expectedMetadata]);
@@ -279,7 +279,7 @@ public class BooleanPredicateMetadataPropositionTests
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
-        var result = spec.Execute(model);
+        var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Value;
@@ -304,7 +304,7 @@ public class BooleanPredicateMetadataPropositionTests
                 .Create("propositional statement");
 
 
-        var result = spec.Execute(model);
+        var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Value;
@@ -369,7 +369,7 @@ public class BooleanPredicateMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expectedMetadata]);
@@ -431,7 +431,7 @@ public class BooleanPredicateMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expectedMetadata]);
@@ -493,7 +493,7 @@ public class BooleanPredicateMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Metadata;
+        var act = result.Values;
 
         // Assert
         act.Should().BeEquivalentTo([expectedMetadata]);
