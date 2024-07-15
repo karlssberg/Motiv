@@ -16,7 +16,7 @@ internal sealed class AndSpec<TModel, TMetadata>(
     public SpecBase<TModel, TMetadata> Left => left;
     public SpecBase<TModel, TMetadata> Right => right;
 
-    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model)
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var leftResult = left.IsSatisfiedBy(model);
         var rightResult = right.IsSatisfiedBy(model);

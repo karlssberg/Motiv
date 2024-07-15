@@ -52,7 +52,7 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     /// </summary>
     /// <param name="model">The model to be checked against the proposition.</param>
     /// <returns>A BooleanResultBase containing the result of the proposition check and the associated metadata.</returns>
-    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model) =>
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model) =>
         _spec.IsSatisfiedBy(model);
 }
 
@@ -106,7 +106,7 @@ public class Spec<TModel> : SpecBase<TModel, string>
     /// <returns>
     /// A BooleanResultBase containing the result of the proposition being applied to a moel and the associated metadata.
     /// </returns>
-    internal override BooleanResultBase<string> IsSatisfiedByInternal(TModel model) => _spec.IsSatisfiedByInternal(model);
+    protected override BooleanResultBase<string> IsSpecSatisfiedBy(TModel model) => _spec.IsSatisfiedBy(model);
 }
 
 /// <summary>

@@ -14,7 +14,7 @@ internal sealed class OrSpec<TModel, TMetadata>(
     public string Operation => "OR";
     public bool IsCollapsable => true;
 
-    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model)
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var leftResult =  left.IsSatisfiedBy(model);
         var rightResult = right.IsSatisfiedBy(model);

@@ -11,19 +11,23 @@ namespace Motiv;
 /// <typeparam name="TMetadata">The metadata type that the policy returns.</typeparam>
 public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata>
 {
-    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model) => IsSatisfiedBy(model);
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model) => IsPolicySatisfiedBy(model);
 
     /// <summary>
     /// Executes the proposition as a policy and returns a <see cref="PolicyResultBase{TMetadata}" /> primarily
     /// containing a single metadata instance.
     /// </summary>
-    /// <remarks>
-    /// The <see cref="Execute" /> method is only available in situations where the proposition yields a single
-    /// metadata instance from the <c>WhenTrue</c> and <c>WhenFalse</c> methods.
-    /// </remarks>
     /// <param name="model">The model to evaluate</param>
     /// <returns>A <see cref="PolicyResultBase{TMetadata}" /> containing the metadata instance and the boolean result.</returns>
-    public new abstract PolicyResultBase<TMetadata> IsSatisfiedBy(TModel model);
+    public new PolicyResultBase<TMetadata> IsSatisfiedBy(TModel model) => IsPolicySatisfiedBy(model);
+
+    /// <summary>
+    /// Executes the policy as a policy and returns a <see cref="PolicyResultBase{TMetadata}" /> primarily
+    /// containing a single metadata instance.
+    /// </summary>
+    /// <param name="model">The model to evaluate</param>
+    /// <returns>A <see cref="PolicyResultBase{TMetadata}" /> containing the metadata instance and the boolean result.</returns>
+    protected abstract PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model);
 
     /// <summary>
     /// Creates a new policy that is equivalent to a conditional "OR" of the current policy and the alternative

@@ -13,7 +13,7 @@ internal sealed class HigherOrderFromBooleanPredicateMultiMetadataProposition<TM
 
     public override ISpecDescription Description => specDescription;
 
-    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(IEnumerable<TModel> models)
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
             .Select(model => new ModelResult<TModel>(model, predicate(model)))

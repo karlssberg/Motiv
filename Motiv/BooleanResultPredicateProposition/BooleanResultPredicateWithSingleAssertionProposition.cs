@@ -12,7 +12,7 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
 
     public override ISpecDescription Description => specDescription;
 
-    public override PolicyResultBase<string> IsSatisfiedBy(TModel model)
+    protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
     {
         var predicateResult = predicate(model);
 

@@ -13,7 +13,7 @@ internal sealed class PolicyDecoratorExplanationProposition<TModel, TUnderlyingM
 
     public PolicyBase<TModel, TUnderlyingMetadata> UnderlyingPolicy { get; } = underlyingSpec;
 
-    public override PolicyResultBase<string> IsSatisfiedBy(TModel model)
+    protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
     {
         var predicateResult = UnderlyingPolicy.IsSatisfiedBy(model);
         var assertion = GetLazyAssertion(model, predicateResult);

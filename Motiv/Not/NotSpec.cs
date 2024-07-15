@@ -9,6 +9,6 @@ internal sealed class NotSpec<TModel, TMetadata>(
     public override ISpecDescription Description =>
         new NotSpecDescription<TModel, TMetadata>(operand);
 
-    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model) =>
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model) =>
         operand.IsSatisfiedBy(model).Not();
 }

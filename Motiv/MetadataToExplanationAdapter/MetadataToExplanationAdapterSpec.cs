@@ -8,7 +8,7 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>
 
     public override ISpecDescription Description => spec.Description;
 
-    internal override BooleanResultBase<string> IsSatisfiedByInternal(TModel model)
+    protected override BooleanResultBase<string> IsSpecSatisfiedBy(TModel model)
     {
         var result = spec.IsSatisfiedBy(model);
 

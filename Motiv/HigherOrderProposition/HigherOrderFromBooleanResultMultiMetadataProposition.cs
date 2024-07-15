@@ -13,7 +13,7 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
 
     public override ISpecDescription Description => specDescription;
 
-    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(IEnumerable<TModel> models)
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
             .Select(model => new BooleanResult<TModel, TUnderlyingMetadata>(model,  resultResolver(model)))
@@ -70,7 +70,7 @@ internal sealed class HigherOrderFromPolicyResultMultiMetadataProposition<TModel
 
     public override ISpecDescription Description => specDescription;
 
-    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(IEnumerable<TModel> models)
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
             .Select(model => new PolicyResult<TModel, TUnderlyingMetadata>(model,  resultResolver(model)))

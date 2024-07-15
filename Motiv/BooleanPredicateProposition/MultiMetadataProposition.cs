@@ -22,7 +22,7 @@ internal sealed class MultiMetadataProposition<TModel, TMetadata>(
     /// <summary>Determines if the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be evaluated.</param>
     /// <returns>A BooleanResultBase object containing the result of the evaluation.</returns>
-    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model)
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var isSatisfied = InvokePredicate(model);
 

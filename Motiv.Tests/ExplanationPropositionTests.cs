@@ -12,12 +12,12 @@ public class ExplanationPropositionTests
             .WhenTrue("is even")
             .WhenFalse("is odd")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
@@ -32,12 +32,12 @@ public class ExplanationPropositionTests
             .WhenTrue("is even")
             .WhenFalse("is odd")
             .Create();
-        
+
         var result = spec.IsSatisfiedBy(model);
 
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -52,12 +52,12 @@ public class ExplanationPropositionTests
             .WhenTrue("even")
             .WhenFalse("odd")
             .Create("is even");
-        
+
         var result = spec.IsSatisfiedBy(model);
-        
+
         // Act
         var act = result.Reason;
-        
+
         // Assert
         act.Should().Be(expected);
     }
@@ -73,11 +73,11 @@ public class ExplanationPropositionTests
 
         // Act
         var act = spec.Statement;
-        
+
         // Assert
         act.Should().Be("is even");
     }
-    
+
     [Theory]
     [InlineData(true,  "first is true", "second is true", "third is true")]
     [InlineData(false, "first is false", "second is false", "third is false")]
@@ -110,9 +110,9 @@ public class ExplanationPropositionTests
 
         // Act
         var act = result.Assertions;
-        
+
         // Assert
         act.Should().BeEquivalentTo(expectedAssertions);
     }
-    
+
 }

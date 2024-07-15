@@ -7,9 +7,6 @@ internal sealed class ExplanationProposition<TModel>(
     ISpecDescription specDescription)
     : PolicyBase<TModel, string>
 {
-
-    public override IEnumerable<SpecBase> Underlying => [];
-
     internal ExplanationProposition(Func<TModel, bool> predicate, ISpecDescription specDescription)
         : this(
             predicate,
@@ -19,10 +16,12 @@ internal sealed class ExplanationProposition<TModel>(
     {
     }
 
+    public override IEnumerable<SpecBase> Underlying => [];
+
 
     public override ISpecDescription Description => specDescription;
 
-    public override PolicyResultBase<string> IsSatisfiedBy(TModel model)
+    protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
     {
         var isSatisfied = InvokePredicate(model);
 
@@ -69,7 +68,7 @@ internal sealed class ExplanationProposition<TModel>(
         (isSatisfied, proposition.ContainsReservedCharacters()) switch
         {
             (true, true) => $"({proposition})",
-            (true, _)=> proposition,
+            (true, _) => proposition,
             (false, true) => $"¬({proposition})",
             (false, _) => $"¬{proposition}"
         };

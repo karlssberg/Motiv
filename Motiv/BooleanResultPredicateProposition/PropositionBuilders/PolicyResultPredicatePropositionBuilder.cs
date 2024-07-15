@@ -127,8 +127,6 @@ public readonly ref struct PolicyResultPredicatePropositionBuilder<TModel, TUnde
             IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>> causeSelector) =>
         new(predicate, higherOrderPredicate, causeSelector);
 
-
-
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
