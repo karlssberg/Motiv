@@ -233,8 +233,8 @@ public class AsAllSatisfiedSpecTests
         var spec = Spec
             .Build(underlyingSpec)
             .AsAllSatisfied()
-            .WhenTrueYield(evaluation => evaluation.Metadata)
-            .WhenFalseYield(evaluation => evaluation.Metadata)
+            .WhenTrueYield(evaluation => evaluation.Values)
+            .WhenFalseYield(evaluation => evaluation.Values)
             .Create("all are true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
@@ -338,8 +338,8 @@ public class AsAllSatisfiedSpecTests
         var sut = Spec
             .Build(left & right)
             .AsAllSatisfied()
-            .WhenTrueYield(evaluation => evaluation.Metadata)
-            .WhenFalseYield(evaluation => evaluation.Metadata)
+            .WhenTrueYield(evaluation => evaluation.Values)
+            .WhenFalseYield(evaluation => evaluation.Values)
             .Create("all are true");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
@@ -382,8 +382,8 @@ public class AsAllSatisfiedSpecTests
         var sut = Spec
             .Build(underlyingSpecLeft & underlyingSpecRight)
             .AsAllSatisfied()
-            .WhenTrueYield(evaluation => evaluation.Metadata)
-            .WhenFalseYield(evaluation => evaluation.Metadata)
+            .WhenTrueYield(evaluation => evaluation.Values)
+            .WhenFalseYield(evaluation => evaluation.Values)
             .Create("all are true");
 
         var result = sut.IsSatisfiedBy([first, second, third]);
@@ -426,8 +426,8 @@ public class AsAllSatisfiedSpecTests
         var sut = Spec
             .Build(underlyingSpecLeft & underlyingSpecRight)
             .AsAllSatisfied()
-            .WhenTrueYield(evaluation => evaluation.Metadata)
-            .WhenFalseYield(evaluation => evaluation.Metadata)
+            .WhenTrueYield(evaluation => evaluation.Values)
+            .WhenFalseYield(evaluation => evaluation.Values)
             .Create("all are true");
 
         var result = sut.IsSatisfiedBy([first, second, third]);

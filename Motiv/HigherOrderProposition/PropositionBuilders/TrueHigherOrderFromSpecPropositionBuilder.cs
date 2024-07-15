@@ -98,8 +98,8 @@ public readonly ref struct TrueHigherOrderFromSpecPropositionBuilder<TModel, TUn
         new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             spec.IsSatisfiedBy,
             higherOrderPredicate,
-            eval => eval.Metadata,
-            eval => eval.Metadata,
+            eval => eval.Values,
+            eval => eval.Values,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
                 spec.Description),

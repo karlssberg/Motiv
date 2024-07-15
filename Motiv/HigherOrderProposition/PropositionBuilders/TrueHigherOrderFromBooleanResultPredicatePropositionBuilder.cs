@@ -97,8 +97,8 @@ public readonly ref struct TrueHigherOrderFromBooleanResultPredicatePropositionB
         return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             resultResolver,
             higherOrderPredicate,
-            eval => eval.Metadata,
-            eval => eval.Metadata,
+            eval => eval.Values,
+            eval => eval.Values,
             new SpecDescription(statement),
                 causeSelector);
     }

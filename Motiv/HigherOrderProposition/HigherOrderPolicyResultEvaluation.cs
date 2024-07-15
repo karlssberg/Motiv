@@ -57,7 +57,7 @@ public class HigherOrderPolicyResultEvaluation<TModel, TMetadata>
     /// <summary>
     /// Gets the underlying <see cref="PolicyResult{TModel,TMetadata}.Value" /> from each models' evaluation.
     /// </summary>
-    public IEnumerable<TMetadata> Values => _results.Select(result => result.Value);
+    public IEnumerable<TMetadata> Metadata => _lazyMetadata.Value;
 
     /// <summary>
     /// Gets a value indicating whether all results are satisfied.
@@ -97,7 +97,7 @@ public class HigherOrderPolicyResultEvaluation<TModel, TMetadata>
     /// <summary>
     /// Gets the metadata associated with the evaluation.
     /// </summary>
-    public IEnumerable<TMetadata> Metadata => _lazyMetadata.Value;
+    public IEnumerable<TMetadata> Values => _results.Select(result => result.Value);
 
     /// <summary>
     /// Gets the assertions made during the evaluation.

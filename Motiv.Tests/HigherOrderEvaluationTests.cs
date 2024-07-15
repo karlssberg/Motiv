@@ -20,7 +20,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var higherOrder = Spec
             .Build(underlying)
             .AsAllSatisfied()
-            .WhenTrueYield(eval => eval.Metadata)
+            .WhenTrueYield(eval => eval.Values)
             .WhenFalseYield(eval => eval.Metadata)
             .Create("all true");
 
