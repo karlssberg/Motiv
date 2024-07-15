@@ -25,7 +25,7 @@ internal sealed class PolicyResultPredicateMetadataProposition<TModel, TMetadata
     /// <summary>Gets the name of the proposition.</summary>
     public override ISpecDescription Description => specDescription;
 
-    public override PolicyResultBase<TMetadata> IsSatisfiedBy(TModel model)
+    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var booleanResult = underlyingPolicyResultPredicate(model);
 

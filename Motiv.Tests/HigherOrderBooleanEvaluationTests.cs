@@ -6,7 +6,7 @@ public class HigherOrderBooleanEvaluationTests
     {
         public string Text => text;
     }
-    
+
     [Theory]
     [InlineData(true, true, "all true")]
     [InlineData(true, false, "some false")]
@@ -52,7 +52,7 @@ public class HigherOrderBooleanEvaluationTests
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(false, false, "none true")]
     [InlineData(false, true, "some true")]
@@ -130,7 +130,7 @@ public class HigherOrderBooleanEvaluationTests
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(true, true)]
     [InlineData(true, false, false)]
@@ -157,7 +157,7 @@ public class HigherOrderBooleanEvaluationTests
         // Assert
         act.Should().BeEquivalentTo(expected.AsEnumerable());
     }
-    
+
     [Theory]
     [InlineData(true, true)]
     [InlineData(true, false)]
@@ -186,7 +186,7 @@ public class HigherOrderBooleanEvaluationTests
         // Assert
         act.Should().BeEquivalentTo(expected);
     }
-    
+
     [Theory]
     [InlineData(true, true)]
     [InlineData(true, false)]
@@ -198,7 +198,7 @@ public class HigherOrderBooleanEvaluationTests
     {
         // Arrange
         List<bool> models = [modelA, modelB];
-        
+
         var higherOrder = Spec
             .Build((bool b) => b)
             .AsAllSatisfied()
@@ -214,7 +214,7 @@ public class HigherOrderBooleanEvaluationTests
         // Assert
         act.Should().BeEquivalentTo([2]);
     }
-    
+
     [Theory]
     [InlineData(true, true, 2)]
     [InlineData(true, false, 1)]
@@ -227,7 +227,7 @@ public class HigherOrderBooleanEvaluationTests
     {
         // Arrange
         List<bool> models = [modelA, modelB];
-        
+
         var higherOrder = Spec
             .Build((bool b) => b)
             .AsAllSatisfied()
@@ -243,7 +243,7 @@ public class HigherOrderBooleanEvaluationTests
         // Assert
         act.Should().BeEquivalentTo([expectedCount]);
     }
-    
+
     [Theory]
     [InlineData(true, true, 0)]
     [InlineData(true, false, 1)]
@@ -256,7 +256,7 @@ public class HigherOrderBooleanEvaluationTests
     {
         // Arrange
         List<bool> models = [modelA, modelB];
-        
+
         var higherOrder = Spec
             .Build((bool b) => b)
             .AsAllSatisfied()

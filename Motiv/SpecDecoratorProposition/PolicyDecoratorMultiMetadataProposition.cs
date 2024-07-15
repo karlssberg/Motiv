@@ -11,7 +11,7 @@ internal sealed class PolicyDecoratorMultiMetadataProposition<TModel, TMetadata,
 
     public override ISpecDescription Description => description;
 
-    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model)
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var booleanResult = underlyingSpec.IsSatisfiedBy(model);
 

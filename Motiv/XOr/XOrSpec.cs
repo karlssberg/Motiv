@@ -13,7 +13,7 @@ internal sealed class XOrSpec<TModel, TMetadata>(
     public string Operation => "XOR";
     public bool IsCollapsable => false;
 
-    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model)
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var leftResult = left.IsSatisfiedBy(model);
         var rightResult = right.IsSatisfiedBy(model);

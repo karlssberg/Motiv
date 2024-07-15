@@ -14,7 +14,7 @@ internal sealed class OrElsePolicy<TModel, TMetadata>(
     public string Operation => "OR ELSE";
     public bool IsCollapsable => true;
 
-    public override PolicyResultBase<TMetadata> IsSatisfiedBy(TModel model)
+    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var leftResult = left.IsSatisfiedBy(model);
         return leftResult.Satisfied switch

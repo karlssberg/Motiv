@@ -10,8 +10,8 @@ using Motiv.XOr;
 namespace Motiv;
 
 /// <summary>
-/// The generic-less base class for all specifications. It ensures that all specifications have a description and a
-/// statement, without requiring knowledge of the model type.
+/// The generic-less base class for all specifications. It ensures that all specifications have a description and
+/// a statement, without requiring knowledge of the model type.
 /// </summary>
 public abstract class SpecBase
 {
@@ -29,21 +29,17 @@ public abstract class SpecBase
     /// <summary>Gets the propositional statement.</summary>
     public string Expression => Description.Detailed;
 
-    /// <summary>
-    /// Gets the underlying specifications that make up this composite proposition.
-    /// </summary>
-    /// <remarks>
-    /// This will yield an empty collection if the specification is dynamically generated at evaluation-time.
-    /// </remarks>
+    /// <summary>Gets the underlying specifications that make up this composite proposition.</summary>
+    /// <remarks>This will yield an empty collection if the specification is dynamically generated at evaluation-time.</remarks>
     public abstract IEnumerable<SpecBase> Underlying { get; }
 }
 
 /// <summary>
-/// The base class for all specifications. At its most basic, a 'Spec' is an encapsulated predicate function that can
-/// be evaluated against a model.  When the predicate is evaluated, it returns a result that contains the Boolean
+/// The base class for all specifications. At its most basic, a 'Spec' is an encapsulated predicate function that
+/// can be evaluated against a model.  When the predicate is evaluated, it returns a result that contains the Boolean
 /// result of the predicate as well as metadata that captures the meaning behind the predicate.  By encapsulating the
-/// predicate we can supply methods to assist with combining specifications together to form more complex
-/// specifications, which together ultimately model the desired logical proposition.
+/// predicate we can supply methods to assist with combining specifications together to form more complex specifications,
+/// which together ultimately model the desired logical proposition.
 /// </summary>
 /// <typeparam name="TModel">The model type that the specification will evaluate against</typeparam>
 public abstract class SpecBase<TModel> : SpecBase
@@ -54,10 +50,9 @@ public abstract class SpecBase<TModel> : SpecBase
     }
 
     /// <summary>
-    /// Converts this specification to an explanation specification (i.e., Spec&lt;TModel, string&gt;).
-    /// This is necessary when establishing a "lowest-common-denominator" between very different specification.
-    /// Therefore, specifications with different metadata types will be wrapped in a spec that uses string as the
-    /// metadata type.
+    /// Converts this specification to an explanation specification (i.e., Spec&lt;TModel, string&gt;). This is
+    /// necessary when establishing a "lowest-common-denominator" between very different specification. Therefore,
+    /// specifications with different metadata types will be wrapped in a spec that uses string as the metadata type.
     /// </summary>
     /// <returns></returns>
     public abstract SpecBase<TModel, string> ToExplanationSpec();
@@ -69,14 +64,12 @@ public abstract class SpecBase<TModel> : SpecBase
         new AndSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
     /// <summary>
-    /// Combines this specification with another specification using the conditional AND operator.
-    /// The left operand will only be evaluated only if the right operand evaluates to <c>true</c>.
-    /// This is commonly referred to as "short-circuiting".
+    /// Combines this specification with another specification using the conditional AND operator. The left operand
+    /// will only be evaluated only if the right operand evaluates to <c>true</c>. This is commonly referred to as
+    /// "short-circuiting".
     /// </summary>
     /// <param name="spec">The specification to combine with this specification.</param>
-    /// <returns>
-    /// A new specification that represents the conditional AND of this specification and the other specification.
-    /// </returns>
+    /// <returns>A new specification that represents the conditional AND of this specification and the other specification.</returns>
     public SpecBase<TModel, string> AndAlso(SpecBase<TModel> spec) =>
         new AndAlsoSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
@@ -87,14 +80,12 @@ public abstract class SpecBase<TModel> : SpecBase
         new OrSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
     /// <summary>
-    /// Combines this specification with another specification using the conditional OR operator.
-    /// The left operand will only be evaluated only if the right operand evaluates to <c>false</c>.
-    /// This is commonly referred to as "short-circuiting".
+    /// Combines this specification with another specification using the conditional OR operator. The left operand
+    /// will only be evaluated only if the right operand evaluates to <c>false</c>. This is commonly referred to as
+    /// "short-circuiting".
     /// </summary>
     /// <param name="spec">The specification to combine with this specification.</param>
-    /// <returns>
-    /// A new specification that represents the conditional OR of this specification and the other specification.
-    /// </returns>
+    /// <returns>A new specification that represents the conditional OR of this specification and the other specification.</returns>
     public SpecBase<TModel, string> OrElse(SpecBase<TModel> spec) =>
         new OrElseSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
@@ -156,11 +147,18 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// Evaluates the specification against the model and returns a result that contains the Boolean result of the
     /// predicate in addition to the metadata.
     /// </summary>
-    /// <param name="model"></param>
-    /// <returns></returns>
-    public BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => IsSatisfiedByInternal(model);
+    /// <param name="model">The model to evaluate the specification against.</param>
+    /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
+    public BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => IsSpecSatisfiedBy(model);
 
-    internal abstract BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model);
+
+    /// <summary>
+    /// Evaluates the specification against the model and returns a result that contains the Boolean result of the
+    /// predicate in addition to the metadata.
+    /// </summary>
+    /// <param name="model">The model to evaluate the specification against.</param>
+    /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
+    protected abstract BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model);
 
     /// <summary>
     /// Combines this specification with another specification using the logical AND operator. Both operands will be
@@ -173,8 +171,8 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
 
     /// <summary>
     /// Combines this specification with another specification using the logical AND operator. The operands are
-    /// short-circuted, meaning that if the left operand resolves to <c>false</c> then it is not possible for the AND
-    /// operation to return <c>true</c>.  Therefore the compiler does not bother evaluating the right operand.
+    /// short-circuted, meaning that if the left operand resolves to <c>false</c> then it is not possible for the AND operation
+    /// to return <c>true</c>.  Therefore the compiler does not bother evaluating the right operand.
     /// </summary>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
@@ -189,8 +187,8 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
 
     /// <summary>
     /// Combines this specification with another specification using the logical OR operator. The operands are
-    /// short-circuted, meaning that if the left operand resolves to <c>false</c> then it is not possible for the OR
-    /// operation to return <c>true</c>.  Therefore the compiler does not bother evaluating the right operand.
+    /// short-circuted, meaning that if the left operand resolves to <c>false</c> then it is not possible for the OR operation
+    /// to return <c>true</c>.  Therefore the compiler does not bother evaluating the right operand.
     /// </summary>
     /// <param name="spec">The right operand.</param>
     /// <returns>A new specification that represents the logical PR of this specification and the other specification.</returns>
@@ -239,10 +237,9 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
         new ChangeModelTypeSpec<TDerivedModel, TModel, TMetadata>(this, model => model);
 
     /// <summary>
-    /// Converts this specification to an explanation specification (i.e., Spec&lt;TModel, string&gt;).
-    /// This is necessary when establishing a "lowest-common-denominator" between very different specification.
-    /// Therefore, specifications with different metadata types will be wrapped in a spec that uses string as the
-    /// metadata type.
+    /// Converts this specification to an explanation specification (i.e., Spec&lt;TModel, string&gt;). This is
+    /// necessary when establishing a "lowest-common-denominator" between very different specification. Therefore,
+    /// specifications with different metadata types will be wrapped in a spec that uses string as the metadata type.
     /// </summary>
     /// <returns></returns>
     public override SpecBase<TModel, string> ToExplanationSpec() =>

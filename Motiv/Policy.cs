@@ -46,7 +46,7 @@ public class Policy<TModel, TMetadata> : PolicyBase<TModel, TMetadata>
     }
 
     /// <inheritdoc/>
-    public override PolicyResultBase<TMetadata> IsSatisfiedBy(TModel model) =>
+    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model) =>
         _policy.IsSatisfiedBy(model);
 
     /// <inheritdoc/>

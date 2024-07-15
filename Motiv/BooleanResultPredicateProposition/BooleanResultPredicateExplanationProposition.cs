@@ -11,7 +11,7 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
 
     public override ISpecDescription Description => specDescription;
 
-    public override PolicyResultBase<string> IsSatisfiedBy(TModel model)
+    protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
     {
         var predicateResult = predicate(model);
         var assertion = GetLazyAssertion(model, predicateResult);

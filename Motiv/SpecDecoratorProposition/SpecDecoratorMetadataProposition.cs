@@ -12,7 +12,7 @@ internal sealed class SpecDecoratorMetadataProposition<TModel, TMetadata, TUnder
 
     public override ISpecDescription Description => description;
 
-    public override PolicyResultBase<TMetadata> IsSatisfiedBy(TModel model)
+    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var booleanResult = underlyingSpec.IsSatisfiedBy(model);
         var lazyMetadata = CreateLazyMetadata(model, booleanResult);

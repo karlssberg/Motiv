@@ -14,7 +14,7 @@ internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMet
 
     public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
 
-    public override PolicyResultBase<string> IsSatisfiedBy(TModel model)
+    protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
     {
         var predicateResult = UnderlyingSpec.IsSatisfiedBy(model);
         var assertion = GetLazyAssertion(model, predicateResult);

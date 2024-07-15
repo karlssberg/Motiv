@@ -13,7 +13,7 @@ internal sealed class AndAlsoSpec<TModel, TMetadata>(
     public string Operation => "AND ALSO";
     public bool IsCollapsable => true;
 
-    internal override BooleanResultBase<TMetadata> IsSatisfiedByInternal(TModel model)
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var leftResult = left.IsSatisfiedBy(model);
         return leftResult.Satisfied switch
