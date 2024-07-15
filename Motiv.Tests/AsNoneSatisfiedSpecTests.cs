@@ -339,8 +339,8 @@ public class AsNoneSatisfiedSpecTests
         var spec = Spec
             .Build(underlyingSpecLeft & underlyingSpecRight)
             .AsNoneSatisfied()
-            .WhenTrueYield(evaluation => evaluation.Metadata)
-            .WhenFalseYield(evaluation => evaluation.Metadata)
+            .WhenTrueYield(evaluation => evaluation.Values)
+            .WhenFalseYield(evaluation => evaluation.Values)
             .Create("none are true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
@@ -383,8 +383,8 @@ public class AsNoneSatisfiedSpecTests
         var spec =
             Spec.Build(underlyingSpecLeft & underlyingSpecRight)
                 .AsNoneSatisfied()
-                .WhenTrueYield(evaluation => evaluation.Metadata)
-                .WhenFalseYield(evaluation => evaluation.Metadata)
+                .WhenTrueYield(evaluation => evaluation.Values)
+                .WhenFalseYield(evaluation => evaluation.Values)
                 .Create("none are true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
@@ -427,8 +427,8 @@ public class AsNoneSatisfiedSpecTests
         var spec =
             Spec.Build(underlyingSpecLeft & underlyingSpecRight)
                 .AsNoneSatisfied()
-                .WhenTrueYield(evaluation => evaluation.Metadata)
-                .WhenFalseYield(evaluation => evaluation.Metadata)
+                .WhenTrueYield(evaluation => evaluation.Values)
+                .WhenFalseYield(evaluation => evaluation.Values)
                 .Create("none are true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);

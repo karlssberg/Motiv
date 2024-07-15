@@ -91,7 +91,7 @@ public class PolicyTests
 
         var policy =
             Spec.Build(underlyingPolicy)
-                .WhenTrueYield((_, result) => result.Value.ToEnumerable())
+                .WhenTrueYield((_, result) => result.Values)
                 .WhenFalse((_, result) => result.Value)
                 .Create("is even policy");
 

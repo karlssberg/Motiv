@@ -94,8 +94,15 @@ public class HigherOrderBooleanResultEvaluation<TModel, TMetadata>
     public IReadOnlyList<TModel> CausalModels => _lazyCausalModels.Value;
 
     /// <summary>
+    /// Gets the values associated with the evaluation.
+    /// </summary>
+    public IEnumerable<TMetadata> Values => _lazyMetadata.Value;
+
+
+    /// <summary>
     /// Gets the metadata associated with the evaluation.
     /// </summary>
+    [Obsolete("Use Values instead.")]
     public IEnumerable<TMetadata> Metadata => _lazyMetadata.Value;
 
     /// <summary>
