@@ -81,19 +81,6 @@ dotnet add package Motiv
 
 ## Usage
 
-There are two broad categories of propositions in Motiv:
-
-* #### `SpecBase<TModel, TMetadata>`
-
-  These are the base class for every proposition in Motiv.
-  They aggregate multiple assertion or metadata objects into a single proposition.
-
-* #### `PolicyBase<TModel, TMetadata>`
-
-  These are a specialized form of `SpecBase<TModel, TMetadata>` that are created when it is only possible for one
-  assertion or metadata object to be yielded (i.e., a scalar value).
-  It comes with an `Execute()` method that returns a `PolicyResultBase<TMetadata>` containing the scalar `Value`.
-
 ### Basic Proposition
 
 Create and evaluate a basic proposition:
@@ -142,7 +129,7 @@ result.Reason;     // "not eligible for a loan"
 Use `WhenTrue()` and `WhenFalse()` with types other than `string`:
 
 ```csharp
-PolicyBase<Customer, MyEnum> isEligibleForLoanPolicy =
+var isEligibleForLoanPolicy =
     Spec.Build((Customer customer) =>
             customer is
             {
@@ -153,7 +140,7 @@ PolicyBase<Customer, MyEnum> isEligibleForLoanPolicy =
         .WhenFalse(MyEnum.NotEligibleForLoan)
         .Create("eligible for a loan");
 
-PolicyResultBase<MyEnum> result = isEligibleForLoanPolicy.IsSatisfiedBy(eligibleCustomer);
+var result = isEligibleForLoanPolicy.IsSatisfiedBy(eligibleCustomer);
 
 result.Satisfied;  // true
 result.Value;      // MyEnum.EligibleForLoan
@@ -165,21 +152,21 @@ result.Reason;     // "eligible for a loan"
 Combine propositions using boolean operators:
 
 ```csharp
-PolicyBase<Customer, string> hasGoodCreditScore =
+var hasGoodCreditScore =
     Spec.Build((Customer customer) => customer.CreditScore > 600)
         .WhenTrue("good credit score")
         .WhenFalse("inadequate credit score")
         .Create();
 
-PolicyBase<Customer, string> hasSufficientIncome =
+var hasSufficientIncome =
     Spec.Build((Customer customer) => customer.Income > 100000)
         .WhenTrue("sufficient income")
         .WhenFalse("insufficient income")
         .Create();
 
-SpecBase<Customer, string> isEligibleForLoan = hasGoodCreditScore & hasSufficientIncome;
+var isEligibleForLoan = hasGoodCreditScore & hasSufficientIncome;
 
-BooleanResultBase<string> result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
+var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
 
 result.Satisfied;  // true
 result.Reason;     // "good credit score & sufficient income"
@@ -191,14 +178,14 @@ result.Assertions; // ["good credit score", "sufficient income"]
 Provide facts about collections:
 
 ```csharp
-SpecBase<IEnumerable<int>, string> allNegative =
+var allNegative =
     Spec.Build((int n) => n < 0)
         .AsAllSatisfied()
         .WhenTrue("all are negative")
         .WhenFalseYield(eval => eval.FalseModels.Select(n => $"{n} is not negative"))
         .Create();
 
-BooleanResultBase<string> result = allNegative.IsSatisfiedBy([-1, 2, 3]);
+var result = allNegative.IsSatisfiedBy([-1, 2, 3]);
 
 result.Satisfied;  // false
 result.Reason;     // "¬all are negative"
