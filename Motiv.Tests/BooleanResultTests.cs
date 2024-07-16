@@ -438,6 +438,44 @@ public class BooleanResultTests
 
     [Theory]
     [InlineData(false, false, false, false)]
+    [InlineData(false, false, true, true)]
+    [InlineData(false, true, false, true)]
+    [InlineData(false, true, true, true)]
+    [InlineData(true, false, false, true)]
+    [InlineData(true, false, true, true)]
+    [InlineData(true, true, false, true)]
+    [InlineData(true, true, true, true)]
+    public void Should_orelse_together_multiple_policy_results(bool right, bool middle, bool left, bool expected)
+    {
+        // Arrange
+        PolicyResultBase<string>[] results =
+        [
+            Spec.Build((bool b) => b)
+                .WhenTrue("left is true")
+                .WhenFalse("left is false")
+                .Create()
+                .IsSatisfiedBy(left),
+            Spec.Build((bool b) => b)
+                .WhenTrue("middle is true")
+                .WhenFalse("middle is false")
+                .Create()
+                .IsSatisfiedBy(middle),
+            Spec.Build((bool b) => b)
+                .WhenTrue("right is true")
+                .WhenFalse("right is false")
+                .Create()
+                .IsSatisfiedBy(right)
+        ];
+
+        // Act
+        var act = results.OrElseTogether();
+
+        // Assert
+        act.Satisfied.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(false, false, false, false)]
     [InlineData(false, false, true, false)]
     [InlineData(false, true, false, false)]
     [InlineData(false, true, true, false)]

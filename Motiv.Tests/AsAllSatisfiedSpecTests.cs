@@ -11,14 +11,14 @@ public class AsAllSatisfiedSpecTests
     [InlineAutoData(true, false, true, false)]
     [InlineAutoData(true, true, false, false)]
     [InlineAutoData(true, true, true, true)]
-    public void Should_perform_the_logical_operation_All(
+    public void Should_perform_upon_a_policy_the_logical_operation_All(
         bool first,
         bool second,
         bool third,
         bool expected)
     {
         // Arrange
-        var underlyingSpec = Spec
+        PolicyBase<bool, string> underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
@@ -28,6 +28,114 @@ public class AsAllSatisfiedSpecTests
 
         var spec = Spec
             .Build(underlyingSpec)
+            .AsAllSatisfied()
+            .Create("all are true");
+
+        // Act
+        var act = spec.IsSatisfiedBy(models).Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false)]
+    [InlineAutoData(false, false, true, false)]
+    [InlineAutoData(false, true, false, false)]
+    [InlineAutoData(false, true, true, false)]
+    [InlineAutoData(true, false, false, false)]
+    [InlineAutoData(true, false, true, false)]
+    [InlineAutoData(true, true, false, false)]
+    [InlineAutoData(true, true, true, true)]
+    public void Should_perform_upon_a_spec_the_logical_operation_All(
+        bool first,
+        bool second,
+        bool third,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool, string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        bool[] models = [first, second, third];
+
+        var spec = Spec
+            .Build(underlyingSpec)
+            .AsAllSatisfied()
+            .Create("all are true");
+
+        // Act
+        var act = spec.IsSatisfiedBy(models).Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false)]
+    [InlineAutoData(false, false, true, false)]
+    [InlineAutoData(false, true, false, false)]
+    [InlineAutoData(false, true, true, false)]
+    [InlineAutoData(true, false, false, false)]
+    [InlineAutoData(true, false, true, false)]
+    [InlineAutoData(true, true, false, false)]
+    [InlineAutoData(true, true, true, true)]
+    public void Should_perform_upon_a_boolean_result_the_logical_operation_All(
+        bool first,
+        bool second,
+        bool third,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        bool[] models = [first, second, third];
+
+        var spec = Spec
+            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .AsAllSatisfied()
+            .Create("all are true");
+
+        // Act
+        var act = spec.IsSatisfiedBy(models).Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false)]
+    [InlineAutoData(false, false, true, false)]
+    [InlineAutoData(false, true, false, false)]
+    [InlineAutoData(false, true, true, false)]
+    [InlineAutoData(true, false, false, false)]
+    [InlineAutoData(true, false, true, false)]
+    [InlineAutoData(true, true, false, false)]
+    [InlineAutoData(true, true, true, true)]
+    public void Should_perform_upon_a_policy_result_the_logical_operation_All(
+        bool first,
+        bool second,
+        bool third,
+        bool expected)
+    {
+        // Arrange
+        PolicyBase<bool, string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        bool[] models = [first, second, third];
+
+        var spec = Spec
+            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
             .AsAllSatisfied()
             .Create("all are true");
 
