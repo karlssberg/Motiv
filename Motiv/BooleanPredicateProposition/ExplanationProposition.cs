@@ -38,13 +38,14 @@ internal sealed class ExplanationProposition<TModel>(
                 false => InvokeFalseBecauseFunction(model)
             });
 
-    private static PolicyResultBase<string> CreatePolicyResult(bool isSatisfied, Lazy<string> assertion) =>
+    private PolicyResultBase<string> CreatePolicyResult(bool isSatisfied, Lazy<string> assertion) =>
         new PropositionPolicyResult<string>(
             isSatisfied,
             assertion,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(assertion.Value, [])),
             new Lazy<Explanation>(() => new Explanation(assertion.Value, [])),
-            assertion);
+            new Lazy<ResultDescriptionBase>(() =>
+                new PropositionResultDescription(assertion.Value, Description.Statement)));
 
     private bool InvokePredicate(TModel model) =>
         WrapException.CatchFuncExceptionOnBehalfOfSpecType(

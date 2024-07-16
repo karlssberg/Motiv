@@ -7,6 +7,7 @@ internal sealed class HigherOrderResultDescription<TUnderlyingMetadata>(
 {
     private readonly ICollection<BooleanResultBase<TUnderlyingMetadata>> _causes = causes.ToArray();
     internal override int CausalOperandCount => _causes.Count;
+    internal override string Statement { get; }
 
     public override string Reason => reason;
 

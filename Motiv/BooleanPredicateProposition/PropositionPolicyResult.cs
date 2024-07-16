@@ -6,14 +6,14 @@
 /// <param name="satisfied">The value of the proposition.</param>
 /// <param name="metadataTier">The metadata to yield when the predicate is true.</param>
 /// <param name="explanation">The explanation of the proposition.</param>
-/// <param name="reason">The reason for the proposition.</param>
+/// <param name="description">The description of the proposition result.</param>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 internal sealed class PropositionPolicyResult<TMetadata>(
     bool satisfied,
     Lazy<TMetadata> lazyValue,
     Lazy<MetadataNode<TMetadata>> metadataTier,
     Lazy<Explanation> explanation,
-    Lazy<string> reason)
+    Lazy<ResultDescriptionBase> description)
     : PolicyResultBase<TMetadata>
 {
     /// <inheritdoc />
@@ -51,5 +51,5 @@ internal sealed class PropositionPolicyResult<TMetadata>(
     public override bool Satisfied { get; } = satisfied;
 
     /// <summary>Gets the description of the result.</summary>
-    public override ResultDescriptionBase Description => new PropositionResultDescription(reason.Value);
+    public override ResultDescriptionBase Description => description.Value;
 }

@@ -5,7 +5,7 @@ internal sealed class HigherOrderFromBooleanPredicatePolicyResult<TMetadata>(
     Func<TMetadata> value,
     Func<MetadataNode<TMetadata>> metadata,
     Func<Explanation> explanation,
-    Func<string> reason)
+    Func<ResultDescriptionBase> description)
     : PolicyResultBase<TMetadata>
 {
     public override TMetadata Value => value();
@@ -26,7 +26,7 @@ internal sealed class HigherOrderFromBooleanPredicatePolicyResult<TMetadata>(
 
     public override bool Satisfied { get; } = isSatisfied;
 
-    public override ResultDescriptionBase Description => new BooleanResultDescription(reason());
+    public override ResultDescriptionBase Description => description();
 
     public override Explanation Explanation => explanation();
 }

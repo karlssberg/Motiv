@@ -40,7 +40,7 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
                 : falseBecause(evaluation);
         });
 
-    private static PolicyResultBase<string> CreatePolicyResult(Lazy<string> assertion, bool isSatisfied)
+    private PolicyResultBase<string> CreatePolicyResult(Lazy<string> assertion, bool isSatisfied)
     {
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(assertion.Value, []));
@@ -48,16 +48,19 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(assertion.Value, []));
 
+        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
+            new BooleanResultDescription(assertion.Value, Description.Statement));
+
         return new HigherOrderFromBooleanPredicatePolicyResult<string>(
             isSatisfied,
             Value,
             Metadata,
             Explanation,
-            Reason);
+            ResultDescription);
 
         string Value() => assertion.Value;
         MetadataNode<string> Metadata() => metadataTier.Value;
         Explanation Explanation() => explanation.Value;
-        string Reason() => assertion.Value;
+        ResultDescriptionBase ResultDescription() => resultDescription.Value;
     }
 }

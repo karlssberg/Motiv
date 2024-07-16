@@ -5,6 +5,7 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
     private readonly JustificationNegationMappings _negations = new();
 
     internal override int CausalOperandCount => 1;
+    internal override string Statement => "NOT";
 
     public override string Reason => FormatReason(operand);
 

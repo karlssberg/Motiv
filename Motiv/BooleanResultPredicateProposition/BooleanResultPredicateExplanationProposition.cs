@@ -29,7 +29,7 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
             });
     }
 
-    private static PolicyResultBase<string> CreatePolicyResult(Lazy<string> assertion, BooleanResultBase<TUnderlyingMetadata> booleanResult)
+    private PolicyResultBase<string> CreatePolicyResult(Lazy<string> assertion, BooleanResultBase<TUnderlyingMetadata> booleanResult)
     {
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(assertion.Value, booleanResult.ToEnumerable()));
@@ -39,16 +39,22 @@ internal sealed class BooleanResultPredicateExplanationProposition<TModel, TUnde
                 assertion.Value.ToEnumerable(),
                 booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []));
 
+        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
+            new BooleanResultDescriptionWithUnderlying(
+                booleanResult,
+                assertion.Value,
+                Description.Statement));
+
         return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
             booleanResult,
             Value,
             MetadataTier,
             Explanation,
-            Reason);
+            ResultDescription);
 
         string Value() => assertion.Value;
         MetadataNode<string> MetadataTier() => metadataTier.Value;
         Explanation Explanation() => explanation.Value;
-        string Reason() => assertion.Value;
+        ResultDescriptionBase ResultDescription() => resultDescription.Value;
     }
 }

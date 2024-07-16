@@ -4,6 +4,14 @@ namespace Motiv.Tests;
 
 public class ExplanationBooleanResultTests
 {
+    public class ResultDescription(string reason, string statement) : ResultDescriptionBase
+    {
+        public override string Reason => reason;
+        internal override int CausalOperandCount { get; } = 1;
+        internal override string Statement => statement;
+        public override IEnumerable<string> GetJustificationAsLines() => [reason];
+    }
+
     private enum MyMetadata
     {
         True,
@@ -14,14 +22,15 @@ public class ExplanationBooleanResultTests
     [InlineAutoData]
     public void Should_support_explicit_conversion_to_a_bool(
         bool isSatisfied,
-        string because)
+        string because,
+        ResultDescription resultDescription)
     {
         // Arrange
         var result = new PropositionBooleanResult<string>(
             isSatisfied,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(because, [])),
             new Lazy<Explanation>(() => new Explanation(because, [])),
-            new Lazy<string>(() => because));
+            new Lazy<ResultDescriptionBase>(() => resultDescription));
 
         // Act
         var act = (bool)result;
@@ -42,13 +51,15 @@ public class ExplanationBooleanResultTests
             left,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
-            new Lazy<string>(() => left.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(left.ToString(), left.ToString())));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
-            new Lazy<string>(() => right.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(right.ToString(), right.ToString())));
 
         var result = leftResult & rightResult;
 
@@ -71,13 +82,15 @@ public class ExplanationBooleanResultTests
             left,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
-            new Lazy<string>(() => left.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(left.ToString(), left.ToString())));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
-            new Lazy<string>(() => right.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(right.ToString(), right.ToString())));
 
         var result = leftResult & rightResult;
 
@@ -105,13 +118,14 @@ public class ExplanationBooleanResultTests
             left,
             new Lazy<MetadataNode<bool>>(() => new MetadataNode<bool>(left, [])),
             new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
-            new Lazy<string>(() => left.ToString()));
-
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(left.ToString(), left.ToString())));
         var rightResult = new  PropositionBooleanResult<MyMetadata>(
             right,
             new Lazy<MetadataNode<MyMetadata>>(() => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, [])),
             new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
-            new Lazy<string>(() => right.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(right.ToString(), right.ToString())));
 
         var result = leftResult & rightResult;
 
@@ -134,13 +148,15 @@ public class ExplanationBooleanResultTests
             left,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
-            new Lazy<string>(() => left.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(left.ToString(), left.ToString())));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
-            new Lazy<string>(() => right.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(right.ToString(), right.ToString())));
 
         var result = leftResult | rightResult;
 
@@ -163,13 +179,15 @@ public class ExplanationBooleanResultTests
             left,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
-            new Lazy<string>(() => left.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(left.ToString(), left.ToString())));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
-            new Lazy<string>(() => right.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(right.ToString(), right.ToString())));
 
         var result = leftResult | rightResult;
 
@@ -196,13 +214,14 @@ public class ExplanationBooleanResultTests
             left,
             new Lazy<MetadataNode<bool>>(() => new MetadataNode<bool>(left, [])),
             new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
-            new Lazy<string>(() => left.ToString()));
-
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(left.ToString(), left.ToString())));
         var rightResult = new  PropositionBooleanResult<MyMetadata>(
             right,
             new Lazy<MetadataNode<MyMetadata>>(() => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, [])),
             new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
-            new Lazy<string>(() => right.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(right.ToString(), right.ToString())));
 
         var result = leftResult | rightResult;
 
@@ -225,13 +244,15 @@ public class ExplanationBooleanResultTests
             left,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
-            new Lazy<string>(() => left.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(left.ToString(), left.ToString())));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
-            new Lazy<string>(() => right.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(right.ToString(), right.ToString())));
 
         var result = leftResult ^ rightResult;
 
@@ -254,13 +275,15 @@ public class ExplanationBooleanResultTests
             left,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
-            new Lazy<string>(() => left.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(left.ToString(), left.ToString())));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
-            new Lazy<string>(() => right.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(right.ToString(), right.ToString())));
 
         var result = leftResult ^ rightResult;
 
@@ -285,13 +308,15 @@ public class ExplanationBooleanResultTests
             left,
             new Lazy<MetadataNode<bool>>(() => new MetadataNode<bool>(left, [])),
             new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
-            new Lazy<string>(() => left.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(left.ToString(), left.ToString())));
 
         var rightResult = new  PropositionBooleanResult<MyMetadata>(
             right,
             new Lazy<MetadataNode<MyMetadata>>(() => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, [])),
             new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
-            new Lazy<string>(() => right.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(right.ToString(), right.ToString())));
 
         var result = leftResult ^ rightResult;
 
@@ -312,7 +337,8 @@ public class ExplanationBooleanResultTests
             operand,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(operand.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(operand.ToString(), [])),
-            new Lazy<string>(() => operand.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(operand.ToString(), operand.ToString())));
 
         var result = !operandResult;
 
@@ -333,7 +359,8 @@ public class ExplanationBooleanResultTests
             operand,
             new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(operand.ToString(), [])),
             new Lazy<Explanation>(() => new Explanation(operand.ToString(), [])),
-            new Lazy<string>(() => operand.ToString()));
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(operand.ToString(), operand.ToString())));
 
         var result = !operandResult;
 
@@ -427,5 +454,187 @@ public class ExplanationBooleanResultTests
 
         // Assert
         act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false)]
+    [InlineAutoData(true)]
+    public void Should_provide_reason_to_explanation_boolean_result(bool satisfied)
+    {
+        // Arrange
+        var result = Spec
+            .Build((bool m) => m)
+            .WhenTrue(m => m.ToString())
+            .WhenFalse(m => m.ToString())
+            .Create("policy")
+            .IsSatisfiedBy(satisfied);
+
+        // Act
+        var act = result.ToExplanationResult().Reason;
+
+        // Assert
+        act.Should().Be(satisfied.ToString());
+    }
+
+    [Theory]
+    [InlineAutoData(false)]
+    [InlineAutoData(true)]
+    public void Should_provide_serialize_description_of_explanation_boolean_result(bool satisfied)
+    {
+        // Arrange
+        var result = Spec
+            .Build((bool m) => m)
+            .WhenTrue(m => m.ToString())
+            .WhenFalse(m => m.ToString())
+            .Create("policy")
+            .IsSatisfiedBy(satisfied);
+
+        // Act
+        var act = result.ToExplanationResult().Description.ToString();
+
+        // Assert
+        act.Should().Be(satisfied.ToString());
+    }
+
+    [Theory]
+    [InlineAutoData(false)]
+    [InlineAutoData(true)]
+    public void Should_provide_justification_to_explanation_boolean_result(bool satisfied)
+    {
+        // Arrange
+        var result = Spec
+            .Build((bool m) => m)
+            .WhenTrue(m => m.ToString())
+            .WhenFalse(m => m.ToString())
+            .Create("policy")
+            .IsSatisfiedBy(satisfied);
+
+        // Act
+        var act = result.ToExplanationResult().Justification;
+
+        // Assert
+        act.Should().Be(satisfied.ToString());
+    }
+
+    [Theory]
+    [InlineAutoData(false)]
+    [InlineAutoData(true)]
+    public void Should_provide_underlying_result_to_explanation_boolean_result(bool satisfied,
+        string randomText)
+    {
+        // Arrange
+        var underlying = Spec.Build((bool m) => m)
+            .WhenTrue(m => m.ToString())
+            .WhenFalse(m => m.ToString())
+            .Create("underlying");
+
+        var result = Spec
+            .Build(underlying)
+            .WhenTrue(randomText)
+            .WhenFalse(randomText)
+            .Create("policy")
+            .IsSatisfiedBy(satisfied);
+
+        // Act
+        var act = result.ToExplanationResult().Underlying.First().Reason;
+
+        // Assert
+        act.Should().Be(satisfied.ToString());
+    }
+
+    [Theory]
+    [InlineAutoData(false)]
+    [InlineAutoData(true)]
+    public void Should_provide_underlying_with_metadata_result_to_explanation_boolean_result(bool satisfied,
+        string randomText)
+    {
+        // Arrange
+        var underlying = Spec.Build((bool m) => m)
+            .WhenTrue(m => m.ToString())
+            .WhenFalse(m => m.ToString())
+            .Create("underlying");
+
+        var result = Spec
+            .Build(underlying)
+            .WhenTrue(randomText)
+            .WhenFalse(randomText)
+            .Create("policy")
+            .IsSatisfiedBy(satisfied);
+
+        // Act
+        var act = result.ToExplanationResult().UnderlyingWithMetadata.First().Reason;
+
+        // Assert
+        act.Should().Be(satisfied.ToString());
+    }
+
+    [Theory]
+    [InlineAutoData(false)]
+    [InlineAutoData(true)]
+    public void Should_provide_metadata_to_explanation_boolean_result(bool satisfied)
+    {
+        // Arrange
+        var result = Spec
+            .Build((bool m) => m)
+            .WhenTrue(m => m.ToString())
+            .WhenFalse(m => m.ToString())
+            .Create("policy")
+            .IsSatisfiedBy(satisfied);
+
+        // Act
+        var act = result.ToExplanationResult().Values;
+
+        // Assert
+        act.Should().BeEquivalentTo(satisfied.ToString().ToEnumerable());
+    }
+
+    [Theory]
+    [InlineAutoData(false)]
+    [InlineAutoData(true)]
+    public void Should_provide_causes_of_explanation_boolean_result(bool satisfied, string randomText)
+    {
+        // Arrange
+        var underlying = Spec.Build((bool m) => m)
+            .WhenTrue(m => m.ToString())
+            .WhenFalse(m => m.ToString())
+            .Create("underlying");
+
+        var result = Spec
+            .Build(underlying)
+            .WhenTrue(randomText)
+            .WhenFalse(randomText)
+            .Create("policy")
+            .IsSatisfiedBy(satisfied);
+
+        // Act
+        var act = result.ToExplanationResult().Causes.First().Reason;
+
+        // Assert
+        act.Should().Be(satisfied.ToString());
+    }
+
+    [Theory]
+    [InlineAutoData(false)]
+    [InlineAutoData(true)]
+    public void Should_provide_causes_with_metadata_of_explanation_boolean_result(bool satisfied, string randomText)
+    {
+        // Arrange
+        var underlying = Spec.Build((bool m) => m)
+            .WhenTrue(m => m.ToString())
+            .WhenFalse(m => m.ToString())
+            .Create("underlying");
+
+        var result = Spec
+            .Build(underlying)
+            .WhenTrue(randomText)
+            .WhenFalse(randomText)
+            .Create("policy")
+            .IsSatisfiedBy(satisfied);
+
+        // Act
+        var act = result.ToExplanationResult().CausesWithMetadata.First().Reason;
+
+        // Assert
+        act.Should().Be(satisfied.ToString());
     }
 }

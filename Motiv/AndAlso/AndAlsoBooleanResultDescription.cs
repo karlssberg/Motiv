@@ -8,6 +8,7 @@ internal sealed class AndAlsoBooleanResultDescription<TMetadata>(
     : ResultDescriptionBase
 {
     internal override int CausalOperandCount => causalResults.Count();
+    internal override string Statement => "AND ALSO";
 
     public override string Reason =>
         CausalOperandCount switch

@@ -12,7 +12,7 @@ internal sealed class PropositionBooleanResult<TMetadata>(
     bool satisfied,
     Lazy<MetadataNode<TMetadata>> metadataTier,
     Lazy<Explanation> explanation,
-    Lazy<string> reason)
+    Lazy<ResultDescriptionBase> description)
     : BooleanResultBase<TMetadata>
 {
 
@@ -48,5 +48,5 @@ internal sealed class PropositionBooleanResult<TMetadata>(
     public override bool Satisfied { get; } = satisfied;
 
     /// <summary>Gets the description of the result.</summary>
-    public override ResultDescriptionBase Description => new PropositionResultDescription(reason.Value);
+    public override ResultDescriptionBase Description => description.Value;
 }

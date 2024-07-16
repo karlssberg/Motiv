@@ -36,14 +36,20 @@ internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, T
             new MetadataNode<TMetadata>(metadata.Value,
                 booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []));
 
+        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
+            new BooleanResultDescriptionWithUnderlying(
+                booleanResult,
+                Description.ToReason(booleanResult.Satisfied),
+                Description.Statement));
+
         return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,
             MetadataTier,
             Explanation,
-            Reason);
+            ResultDescription);
 
-        string Reason() =>  Description.ToReason(booleanResult.Satisfied);
         Explanation Explanation() => explanation.Value;
         MetadataNode<TMetadata> MetadataTier() => metadataTier.Value;
+        ResultDescriptionBase ResultDescription() => resultDescription.Value;
     }
 }

@@ -59,16 +59,22 @@ internal sealed class PolicyResultPredicateMetadataProposition<TModel, TMetadata
             new MetadataNode<TMetadata>(metadata.Value,
                 booleanResult.ToEnumerable() as IEnumerable<PolicyResultBase<TMetadata>> ?? []));
 
+        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
+            new BooleanResultDescriptionWithUnderlying(
+                booleanResult,
+                Description.ToReason(booleanResult.Satisfied),
+                Description.Statement));
+
         return new PolicyResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,
             Value,
             MetadataTier,
             Explanation,
-            Reason);
+            ResultDescription);
 
         TMetadata Value() => metadata.Value;
         MetadataNode<TMetadata> MetadataTier() => metadataTier.Value;
         Explanation Explanation() => explanation.Value;
-        string Reason() => Description.ToReason(booleanResult.Satisfied);
+        ResultDescriptionBase ResultDescription() => resultDescription.Value;
     }
 }
