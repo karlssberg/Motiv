@@ -2,6 +2,39 @@ namespace Motiv.Tests;
 
 public class SpecTests
 {
+    public class TestSpec() : Spec<bool, string>(
+        Spec.Build(UnderlyingSpec)
+            .WhenTrue(True)
+            .WhenFalse(False)
+            .Create(PrimaryStatement))
+    {
+        public const string True = "true";
+        public const string False = "false";
+        public const string UnderlyingStatement = "underlying";
+        public const string PrimaryStatement = "is true";
+
+        public static SpecBase<bool, string> UnderlyingSpec => Spec
+            .Build((bool b) => b)
+            .Create(UnderlyingStatement);
+    }
+
+
+    public class TestFromFactorySpec() : Spec<bool, string>(() =>
+        Spec.Build(UnderlyingSpec)
+            .WhenTrue(True)
+            .WhenFalse(False)
+            .Create(PrimaryStatement))
+    {
+        public const string True = "true";
+        public const string False = "false";
+        public const string UnderlyingStatement = "underlying";
+        public const string PrimaryStatement = "is true";
+
+        public static SpecBase<bool, string> UnderlyingSpec => Spec
+            .Build((bool b) => b)
+            .Create(UnderlyingStatement);
+    }
+
     [Theory]
     [InlineAutoData(true)]
     [InlineAutoData(false)]
@@ -100,6 +133,32 @@ public class SpecTests
         act.Should().ContainSingle(metadata);
     }
 
+
+    [Theory]
+    [InlineAutoData(true)]
+    [InlineAutoData(false)]
+    public void Should_yield_the_underlying_proposition_results(bool model)
+    {
+        // Arrange
+        var underlyingSpec = Spec
+            .Build((bool m) => m)
+            .Create("underlying");
+
+        var spec = Spec
+            .Build(underlyingSpec)
+            .WhenTrue("underlying true")
+            .WhenFalse("underlying false")
+            .Create("is true");
+
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Underlying.First().Description.Statement;
+
+        // Assert
+        act.Should().Be("underlying");
+    }
+
     [Fact]
     public void Should_yield_the_underlying_propositions()
     {
@@ -114,15 +173,54 @@ public class SpecTests
             .WhenFalse("underlying false")
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(true);
-
         // Act
-        var act = result.Underlying.First().Reason;
+        var act = spec.Underlying.First().Statement;
 
         // Assert
         act.Should().Be("underlying");
     }
 
+    [Fact]
+    public void Should_yield_underlying_from_custom_spec_class()
+    {
+        // Arrange
+        var spec = new TestFromFactorySpec();
+
+        // Act
+        var act = spec.Underlying.First().Statement;
+
+        // Assert
+        act.Should().Be(TestSpec.UnderlyingStatement);
+    }
+
+    [Fact]
+    public void Should_yield_statement_from_custom_spec_class()
+    {
+        // Arrange
+        var spec = new TestSpec();
+
+        // Act
+        var act = spec.Statement;
+
+        // Assert
+        act.Should().Be(TestSpec.PrimaryStatement);
+    }
+
+    [Theory]
+    [InlineAutoData(true, TestSpec.True)]
+    [InlineAutoData(false, TestSpec.False)]
+    public void Should_evaluate_a_custom_spec_results(bool model, string expected)
+    {
+        // Arrange
+        var spec = new TestSpec();
+        var results = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = results.Values.First();
+
+        // Assert
+        act.Should().Be(expected);
+    }
 
     [Theory]
     [InlineAutoData(true, "true")]
