@@ -15,7 +15,7 @@ public readonly ref struct ExplanationWithNamePropositionFactory<TModel, TUnderl
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create() =>
+    public PolicyBase<TModel, string> Create() =>
         new SpecDecoratorWithSingleTrueAssertionProposition<TModel,TUnderlyingMetadata>(
             spec,
             trueBecause,
@@ -28,7 +28,7 @@ public readonly ref struct ExplanationWithNamePropositionFactory<TModel, TUnderl
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create(string statement) =>
+    public PolicyBase<TModel, string> Create(string statement) =>
         new SpecDecoratorWithSingleTrueAssertionProposition<TModel, TUnderlyingMetadata>(
             spec,
             trueBecause,

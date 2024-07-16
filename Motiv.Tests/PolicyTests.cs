@@ -2,6 +2,38 @@
 
 public class PolicyTests
 {
+    public class TestPolicy() : Policy<bool>(
+        Spec.Build(UnderlyingSpec)
+            .WhenTrue(True)
+            .WhenFalse(False)
+            .Create(PrimaryStatement))
+    {
+        public const string True = "true";
+        public const string False = "false";
+        public const string UnderlyingStatement = "underlying";
+        public const string PrimaryStatement = "is true";
+
+        public static PolicyBase<bool, string> UnderlyingSpec => Spec
+            .Build((bool b) => b)
+            .Create(UnderlyingStatement);
+    }
+
+    public class TestFromFactoryPolicy() : Policy<bool>(() =>
+        Spec.Build(UnderlyingSpec)
+            .WhenTrue(True)
+            .WhenFalse(False)
+            .Create(PrimaryStatement))
+    {
+        public const string True = "true";
+        public const string False = "false";
+        public const string UnderlyingStatement = "underlying";
+        public const string PrimaryStatement = "is true";
+
+        public static PolicyBase<bool, string> UnderlyingSpec => Spec
+            .Build((bool b) => b)
+            .Create(UnderlyingStatement);
+    }
+
     [Theory, AutoData]
     public void Should_allow_access_to_underlying_policy_assertion_value(
         string trueResult,
@@ -150,5 +182,73 @@ public class PolicyTests
 
         // Assert
         result.Value.Should().Be(trueResult);
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public void Should_permit_a_policy_in_custom_policy_constructor(
+        bool model,
+        bool expected)
+    {
+        // Arrange
+        var policy = new TestPolicy();
+
+        // Act
+        var result = policy.IsSatisfiedBy(model);
+
+        // Assert
+        result.Satisfied.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(true, TestPolicy.True)]
+    [InlineData(false, TestPolicy.False)]
+    public void Should_yield_value_for_a_policy_in_custom_policy_constructor(
+        bool model,
+        string expected)
+    {
+        // Arrange
+        var policy = new TestPolicy();
+
+        // Act
+        var result = policy.IsSatisfiedBy(model);
+
+        // Assert
+        result.Value.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public void Should_permit_a_policy_factory_in_custom_policy_constructor(
+        bool model,
+        bool expected)
+    {
+        // Arrange
+        var policy = new TestFromFactoryPolicy();
+
+        // Act
+        var result = policy.IsSatisfiedBy(model);
+
+        // Assert
+        result.Satisfied.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(true, TestFromFactoryPolicy.True)]
+    [InlineData(false, TestFromFactoryPolicy.False)]
+    public void Should_yield_value_for_a_policy_factory_in_custom_policy_constructor(
+        bool model,
+        string expected)
+    {
+        // Arrange
+        var policy = new TestFromFactoryPolicy();
+
+        // Act
+        var result = policy.IsSatisfiedBy(model);
+
+        // Assert
+        result.Value.Should().Be(expected);
     }
 }
