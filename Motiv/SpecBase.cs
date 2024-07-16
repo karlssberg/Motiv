@@ -206,7 +206,6 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     public SpecBase<TModel, TMetadata> Not() =>
         new NotSpec<TModel, TMetadata>(this);
 
-
     /// <summary>Changes the <typeparamref name="TModel" /> <see cref="Type" /> of the specification.</summary>
     /// <param name="childModelSelector">
     /// A function that takes the model and returns the child model to evaluate the

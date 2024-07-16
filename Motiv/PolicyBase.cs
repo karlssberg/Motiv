@@ -1,4 +1,5 @@
-﻿using Motiv.Not;
+﻿using Motiv.ChangeModelType;
+using Motiv.Not;
 using Motiv.OrElse;
 
 namespace Motiv;
@@ -28,6 +29,33 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// <param name="model">The model to evaluate</param>
     /// <returns>A <see cref="PolicyResultBase{TMetadata}" /> containing the metadata instance and the boolean result.</returns>
     protected abstract PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model);
+
+    /// <summary>Changes the <typeparamref name="TModel" /> <see cref="Type" /> of the policy.</summary>
+    /// <param name="childModelSelector">
+    /// A function that takes the model and returns the child model to evaluate the
+    /// specification against.
+    /// </param>
+    /// <typeparam name="TNewModel"></typeparam>
+    /// <returns>
+    /// A new specification that represents the same specification but with a different <typeparamref name="TModel" />.
+    /// </returns>
+    public new PolicyBase<TNewModel, TMetadata> ChangeModelTo<TNewModel>(
+        Func<TNewModel, TModel> childModelSelector) =>
+        new ChangeModelTypePolicy<TNewModel, TModel, TMetadata>(
+            this,
+            childModelSelector.ThrowIfNull(nameof(childModelSelector)));
+
+    /// <summary>Changes the <typeparamref name="TModel" /> <see cref="Type" /> of the policy.</summary>
+    /// <typeparam name="TDerivedModel">
+    /// The type to change the <typeparamref name="TModel" /> to. This type must be a subclass
+    /// of <typeparamref name="TModel" />.
+    /// </typeparam>
+    /// <returns>
+    /// A new specification that represents the same specification but with a different <typeparamref name="TModel" />.
+    /// </returns>
+    public new PolicyBase<TDerivedModel, TMetadata> ChangeModelTo<TDerivedModel>()
+        where TDerivedModel : TModel =>
+        new ChangeModelTypePolicy<TDerivedModel, TModel, TMetadata>(this, model => model);
 
     /// <summary>
     /// Creates a new policy that is equivalent to a conditional "OR" of the current policy and the alternative
