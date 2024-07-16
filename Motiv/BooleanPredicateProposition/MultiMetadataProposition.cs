@@ -42,7 +42,8 @@ internal sealed class MultiMetadataProposition<TModel, TMetadata>(
             isSatisfied,
             new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata, [])),
             new Lazy<Explanation>(() => new Explanation(assertion, [])),
-            new Lazy<string>(() => Description.ToReason(isSatisfied)));
+            new Lazy<ResultDescriptionBase>(() =>
+                new PropositionResultDescription(Description.ToReason(isSatisfied), Description.Statement)));
     }
 
     private bool InvokePredicate(TModel model) =>

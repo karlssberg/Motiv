@@ -1,10 +1,10 @@
 namespace Motiv.HigherOrderProposition;
 
-internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
+internal sealed class HigherOrderBooleanResult<TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,
     Func<IEnumerable<TMetadata>> metadataFn,
     Func<IEnumerable<string>> assertionsFn,
-    Func<string> reasonFn,
+    Func<ResultDescriptionBase> descriptionFn,
     IEnumerable<BooleanResultBase<TUnderlyingMetadata>> underlyingResults,
     Func<IEnumerable<BooleanResultBase<TUnderlyingMetadata>>> causesFn)
     : BooleanResultBase<TMetadata>
@@ -32,8 +32,5 @@ internal sealed class HigherOrderBooleanResult<TModel, TMetadata, TUnderlyingMet
 
     public override bool Satisfied { get; } = isSatisfied;
 
-    public override ResultDescriptionBase Description =>
-        new HigherOrderResultDescription<TUnderlyingMetadata>(
-            reasonFn(),
-            causesFn());
+    public override ResultDescriptionBase Description => descriptionFn();
 }

@@ -7,6 +7,8 @@ public abstract class ResultDescriptionBase
 {
     internal abstract int CausalOperandCount { get; }
 
+    internal abstract string Statement { get; }
+
     /// <summary>
     /// Gets the reason for the result.
     /// </summary>

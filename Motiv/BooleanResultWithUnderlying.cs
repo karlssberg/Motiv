@@ -7,28 +7,25 @@ internal sealed class BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
     Func<MetadataNode<TMetadata>> metadataTier,
     Func<Explanation> explanation,
-    Func<string> reason)
+    Func<ResultDescriptionBase> description)
     : BooleanResultBase<TMetadata>
 {
     public override bool Satisfied { get; } = booleanResult.Satisfied;
 
-    public override ResultDescriptionBase Description =>
-        new BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(
-            booleanResult,
-            reason());
+    public override ResultDescriptionBase Description => description();
 
     public override Explanation Explanation => explanation();
 
     public override MetadataNode<TMetadata> MetadataTier => metadataTier();
-    
+
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
-    
+
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
         booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? [];
-    
+
     public override IEnumerable<BooleanResultBase> Causes => booleanResult.ToEnumerable();
 
-    
+
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
         booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? [];
 }

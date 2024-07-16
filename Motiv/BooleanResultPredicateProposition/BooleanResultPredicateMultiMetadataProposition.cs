@@ -55,14 +55,20 @@ internal sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMe
             new MetadataNode<TMetadata>(metadata.Value,
                 booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []));
 
+        var description = new Lazy<ResultDescriptionBase>(() =>
+            new BooleanResultDescriptionWithUnderlying(
+                booleanResult,
+                Description.ToReason(booleanResult.Satisfied),
+                Description.Statement));
+
         return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,
             MetadataTier,
             Explanation,
-            Reason);
+            ResultDescription);
 
         MetadataNode<TMetadata> MetadataTier() => metadataTier.Value;
         Explanation Explanation() => explanation.Value;
-        string Reason() => Description.ToReason(booleanResult.Satisfied);
+        ResultDescriptionBase ResultDescription() => description.Value;
     }
 }

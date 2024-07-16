@@ -214,6 +214,67 @@ public class PropositionResultDescriptionTests
     }
 
     [Theory]
+    [InlineAutoData(false, false, false, false, "(not first | not second) & (not third | not fourth)")]
+    [InlineAutoData(false, false, false, true,  "not first | not second")]
+    [InlineAutoData(false, false, true, false,  "not first | not second")]
+    [InlineAutoData(false, false, true, true,   "not first | not second")]
+    [InlineAutoData(false, true, false, false,  "not third | not fourth")]
+    [InlineAutoData(false, true, false, true,   "is second & is fourth")]
+    [InlineAutoData(false, true, true, false,   "is second & is third")]
+    [InlineAutoData(false, true, true, true,    "is second & (is third | is fourth)")]
+    [InlineAutoData(true, false, false, false,  "not third | not fourth")]
+    [InlineAutoData(true, false, false, true,   "is first & is fourth")]
+    [InlineAutoData(true, false, true, false,   "is first & is third")]
+    [InlineAutoData(true, false, true, true,    "is first & (is third | is fourth)")]
+    [InlineAutoData(true, true, false, false,   "not third | not fourth")]
+    [InlineAutoData(true, true, false, true,    "(is first | is second) & is fourth")]
+    [InlineAutoData(true, true, true, false,    "(is first | is second) & is third")]
+    [InlineAutoData(true, true, true, true,     "(is first | is second) & (is third | is fourth)")]
+    public void Should_serialize_the_description_from_a_complicated_composition(
+        bool firstValue,
+        bool secondValue,
+        bool thirdValue,
+        bool fourthValue,
+        string expected,
+        bool model)
+    {
+        // Arrange
+        var first = Spec
+            .Build<bool>(_ => firstValue)
+            .WhenTrue("is first")
+            .WhenFalse("not first")
+            .Create();
+
+        var second = Spec
+            .Build<bool>(_ => secondValue)
+            .WhenTrue("is second")
+            .WhenFalse("not second")
+            .Create();
+
+        var third = Spec
+            .Build<bool>(_ => thirdValue)
+            .WhenTrue("is third")
+            .WhenFalse("not third")
+            .Create();
+
+        var fourth = Spec
+            .Build<bool>(_ => fourthValue)
+            .WhenTrue("is fourth")
+            .WhenFalse("not fourth")
+            .Create();
+
+        var spec = (first | second) & (third | fourth);
+
+        var result = spec.IsSatisfiedBy(model);
+
+        // Act
+        var act = result.Description.ToString();
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
     [InlineAutoData(false, false, false, false,
         """
         some are false

@@ -1,7 +1,7 @@
 namespace Motiv.MetadataToExplanationAdapter;
 
-internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>(
-    SpecBase<TModel, TUnderlyingModel> spec)
+internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingMetadata>(
+    SpecBase<TModel, TUnderlyingMetadata> spec)
     : SpecBase<TModel, string>
 {
     public override IEnumerable<SpecBase> Underlying => spec.ToEnumerable();
@@ -17,14 +17,20 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingModel>
                 result.Assertions,
                 result.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []));
 
-        return new BooleanResultWithUnderlying<string, TUnderlyingModel>(
+        var description = new Lazy<ResultDescriptionBase>(() =>
+            new BooleanResultDescriptionWithUnderlying(
+                result,
+                Description.ToReason(result.Satisfied),
+                Description.Statement));
+
+        return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
             result,
             MetadataTier,
             Explanation,
-            Reason);
+            ResultDescription);
 
         MetadataNode<string> MetadataTier() => metadataTier.Value;
         Explanation Explanation() => result.Explanation;
-        string Reason() => spec.Description.ToReason(result.Satisfied);
+        ResultDescriptionBase ResultDescription() => description.Value;
     }
 }

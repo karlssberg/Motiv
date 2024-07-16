@@ -100,6 +100,30 @@ public class SpecTests
         act.Should().ContainSingle(metadata);
     }
 
+    [Fact]
+    public void Should_yield_the_underlying_propositions()
+    {
+        // Arrange
+        var underlyingSpec = Spec
+            .Build((bool m) => m)
+            .Create("underlying");
+
+        var spec = Spec
+            .Build(underlyingSpec)
+            .WhenTrue("underlying true")
+            .WhenFalse("underlying false")
+            .Create("is true");
+
+        var result = spec.IsSatisfiedBy(true);
+
+        // Act
+        var act = result.Underlying.First().Reason;
+
+        // Assert
+        act.Should().Be("underlying");
+    }
+
+
     [Theory]
     [InlineAutoData(true, "true")]
     [InlineAutoData(false, "false")]

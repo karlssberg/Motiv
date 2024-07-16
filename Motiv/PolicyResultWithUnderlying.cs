@@ -8,18 +8,15 @@ internal sealed class PolicyResultWithUnderlying<TMetadata, TUnderlyingMetadata>
     Func<TMetadata> value,
     Func<MetadataNode<TMetadata>> metadataTier,
     Func<Explanation> explanation,
-    Func<string> reason)
+    Func<ResultDescriptionBase> description)
     : PolicyResultBase<TMetadata>
 {
     public override TMetadata Value => value();
-    
+
     public override bool Satisfied { get; } = booleanResult.Satisfied;
 
 
-    public override ResultDescriptionBase Description =>
-        new BooleanResultDescriptionWithUnderlying<TUnderlyingMetadata>(
-            booleanResult,
-            reason());
+    public override ResultDescriptionBase Description => description();
 
     public override Explanation Explanation => explanation();
 
