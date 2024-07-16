@@ -38,7 +38,7 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// </param>
     /// <typeparam name="TNewModel"></typeparam>
     /// <returns>
-    /// A new specification that represents the same specification but with a different <typeparamref name="TModel" />.
+    /// A new policy that represents the same policy but with a different <typeparamref name="TModel" />.
     /// </returns>
     public new PolicyBase<TNewModel, TMetadata> ChangeModelTo<TNewModel>(
         Func<TNewModel, TModel> childModelSelector) =>
@@ -52,7 +52,7 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// of <typeparamref name="TModel" />.
     /// </typeparam>
     /// <returns>
-    /// A new specification that represents the same specification but with a different <typeparamref name="TModel" />.
+    /// A new policy that represents the same policy but with a different <typeparamref name="TModel" />.
     /// </returns>
     public new PolicyBase<TDerivedModel, TMetadata> ChangeModelTo<TDerivedModel>()
         where TDerivedModel : TModel =>
