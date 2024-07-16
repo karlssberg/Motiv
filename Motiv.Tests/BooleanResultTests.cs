@@ -183,6 +183,39 @@ public class BooleanResultTests
             .IsSatisfiedBy(rightModel);
 
         // Act
+        var act = left.OrElse((BooleanResultBase<string>) right);
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+
+    [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(false, true, true)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public void Should_perform_or_else_on_policy_results(
+        bool leftModel,
+        bool rightModel,
+        bool expected)
+    {
+        // Arrange
+        var left = Spec
+            .Build((bool b) => b)
+            .WhenTrue("left is true")
+            .WhenFalse("left is false")
+            .Create()
+            .IsSatisfiedBy(leftModel);
+
+        var right = Spec
+            .Build((bool b) => b)
+            .WhenTrue("right is true")
+            .WhenFalse("right is false")
+            .Create()
+            .IsSatisfiedBy(rightModel);
+
+        // Act
         var act = left.OrElse(right);
 
         // Assert

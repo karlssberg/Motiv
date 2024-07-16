@@ -1,4 +1,5 @@
 ﻿using Motiv.Not;
+using Motiv.OrElse;
 
 namespace Motiv;
 
@@ -22,4 +23,15 @@ public abstract class PolicyResultBase<TMetadata> : BooleanResultBase<TMetadata>
     /// current instance.
     /// </returns>
     public new PolicyResultBase<TMetadata> Not() => new NotPolicyResult<TMetadata>(this);
+
+    /// <summary>
+    /// Performs a conditional OR operation between the current PolicyResultBase instance and another
+    /// PolicyResultBase instance. This will short-circuit the evaluation of the right operand if the left operand is
+    /// satisfied.
+    /// </summary>
+    /// <param name="right">The other policy result instance to perform the OR operation with.</param>
+    /// <returns>A new policy result instance representing the result of the OR operation.</returns>
+    public PolicyResultBase<TMetadata> OrElse(PolicyResultBase<TMetadata> right) => Satisfied
+        ? new OrElsePolicyResult<TMetadata>(this)
+        : new OrElsePolicyResult<TMetadata>(this, right);
 }

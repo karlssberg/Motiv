@@ -123,7 +123,7 @@ public class OrElseSpecTests
                 .WhenFalse("not right")
                 .Create();
 
-        var spec = left.OrElse((SpecBase<object, string>)right);
+        var spec = left.OrElse(right);
 
         // Act
         Action act = () => spec.IsSatisfiedBy(new object());
