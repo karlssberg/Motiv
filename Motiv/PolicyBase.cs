@@ -12,6 +12,7 @@ namespace Motiv;
 /// <typeparam name="TMetadata">The metadata type that the policy returns.</typeparam>
 public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata>
 {
+    /// <inheritdoc />
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model) => IsPolicySatisfiedBy(model);
 
     /// <summary>
