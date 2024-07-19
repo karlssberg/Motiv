@@ -33,15 +33,16 @@ To get detailed feedback:
 // Evaluate the proposition against a model/value
 var result = isPartiallyFull.IsSatisfiedBy(5);
 
-result.Satisfied;     // true
-result.Reason;        // "partial"
-result.SubAssertions; // ["valid", "¬empty", "¬full"]
-result.Justifications // partial
-                      //     AND
-                      //         valid
-                      //         NOR
-                      //             ¬empty
-                      //             ¬full
+result.Satisfied;         // true
+result.Reason;            // "partial"
+result.SubAssertions;     // ["valid", "¬empty", "¬full"]
+result.UnderlyingReasons; // ["valid & !(¬empty | ¬full)"]
+result.Justifications     // partial
+                          //     AND
+                          //         valid
+                          //         NOR
+                          //             ¬empty
+                          //             ¬full
 ```
 
 ## Why Use Motiv?
@@ -66,6 +67,7 @@ Motiv can be applied in various scenarios, including:
 * **Debugging**: Quickly find out the causes from complex logic.
 * **Multilingual Support**: Offer explanations in different languages.
 * **Validation**: Ensure user input meets specific criteria and provide detailed feedback.
+* **Rules Engine**: Declaratively define and compose complex _if-then_ rules.
 * **Auditing**: Log _why_ something happened, and not just _what_.
 
 ## Installation

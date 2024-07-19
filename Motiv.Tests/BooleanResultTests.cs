@@ -549,4 +549,45 @@ public class BooleanResultTests
         // Assert
         act.Satisfied.Should().Be(expected);
     }
+
+    [Fact]
+    public void Should_ensure_that_underlying_expression_property_reveals_the_boolean_expression()
+    {
+        // Define clauses
+        var specA = Spec.Build((bool _) => false).Create("a");
+        var specB = Spec.Build((bool _) => true).Create("b");
+        var specC = Spec.Build((bool _) => true).Create("c");
+
+        // Compose new proposition
+        var spec = Spec.Build(specA.OrElse(!!!(specB & specC))).Create("parent");
+
+        // Evaluate proposition
+        var sut = spec.IsSatisfiedBy(true);
+
+        var act = sut.UnderlyingReasons;
+
+        act.Should().BeEquivalentTo("¬a || !(b & c)");
+    }
+
+
+    [Fact]
+    public void Should_ensure_that_nested_underlying_expression_property_reveals_the_boolean_expression()
+    {
+        // Define clauses
+        var specA = Spec.Build((bool _) => false).Create("a");
+        var specB = Spec.Build((bool _) => true).Create("b");
+        var specC = Spec.Build((bool _) => true).Create("c");
+
+        // Compose new proposition
+        var parent = Spec.Build(specA.OrElse(!!!(specB & specC))).Create("parent");
+
+        var spec = Spec.Build(!parent | !specA & specB & !!specC).Create("grandparent");
+
+        // Evaluate proposition
+        var sut = spec.IsSatisfiedBy(true);
+
+        var act = sut.UnderlyingReasons;
+
+        act.Should().BeEquivalentTo("!¬parent | (!¬a & b & c)", "¬a || !(b & c)");
+    }
 }

@@ -44,6 +44,19 @@ public abstract class BooleanResultBase
     /// </Remarks>
     public string Reason => Description.Reason;
 
+    /// <summary>
+    /// Gets a set of human-readable expressions that represent the underlying resons/boolean-expressons of the result.
+    /// </summary>
+    public IEnumerable<string> UnderlyingReasons =>
+        Causes
+            .SelectMany(booleanResult =>
+                (this, booleanResult) switch
+                {
+                    (not IBooleanOperationResult, IBooleanOperationResult) =>
+                        booleanResult.Reason.ToEnumerable().Concat(booleanResult.UnderlyingReasons),
+                    _ => booleanResult.UnderlyingReasons,
+                });
+
     /// <summary>Gets a full hierarchical breakdown of the reasons for the result.</summary>
     public string Justification => Description.Justification;
 
