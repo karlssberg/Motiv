@@ -404,6 +404,3 @@ public class HigherOrderBooleanResultEvaluationTests
     }
 }
 
-public class TestModel
-{
-}
