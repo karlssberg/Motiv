@@ -26,11 +26,11 @@ internal sealed class OrElseBooleanResult<TMetadata>(
     
     public override IEnumerable<BooleanResultBase> Underlying => GetUnderlying();
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetUnderlying();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => GetUnderlying();
     
     public override IEnumerable<BooleanResultBase> Causes => GetCauses();
     
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => GetCauses();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => GetCauses();
     
     private IEnumerable<BooleanResultBase<TMetadata>> GetCauses()
     {
@@ -50,5 +50,5 @@ internal sealed class OrElseBooleanResult<TMetadata>(
     }
     
     private MetadataNode<TMetadata> CreateMetadataTier() =>
-        new(CausesWithMetadata.GetMetadata(), CausesWithMetadata);
+        new(CausesWithValues.GetValues(), CausesWithValues);
 }

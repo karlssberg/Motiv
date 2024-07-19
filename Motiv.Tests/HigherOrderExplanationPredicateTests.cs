@@ -79,7 +79,7 @@ public class HigherOrderExplanationPredicateTests
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
-        var act = result.Explanation.Assertions;
+        var act = result.Assertions;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
@@ -119,7 +119,7 @@ public class HigherOrderExplanationPredicateTests
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
-        var act = result.GetRootAssertions();
+        var act = result.RootAssertions;
 
         // Assert
         act.Should().BeEquivalentTo(expected);

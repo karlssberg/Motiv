@@ -11,7 +11,6 @@ internal sealed class HigherOrderFromPolicyResultMetadataProposition<TModel, TMe
 {
     public override IEnumerable<SpecBase> Underlying => [];
 
-
     public override ISpecDescription Description => specDescription;
 
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(IEnumerable<TModel> models)

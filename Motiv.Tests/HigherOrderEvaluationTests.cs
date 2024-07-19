@@ -53,8 +53,8 @@ public class HigherOrderBooleanResultEvaluationTests
         var higherOrder = Spec
             .Build(underlying)
             .AsAllSatisfied()
-            .WhenTrueYield(eval => eval.TrueResults.GetMetadata())
-            .WhenFalseYield(eval => eval.TrueResults.GetMetadata())
+            .WhenTrueYield(eval => eval.TrueResults.GetValues())
+            .WhenFalseYield(eval => eval.TrueResults.GetValues())
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
@@ -86,8 +86,8 @@ public class HigherOrderBooleanResultEvaluationTests
         var higherOrder = Spec
             .Build(underlying)
             .AsAllSatisfied()
-            .WhenTrueYield(eval => eval.FalseResults.GetMetadata())
-            .WhenFalseYield(eval => eval.FalseResults.GetMetadata())
+            .WhenTrueYield(eval => eval.FalseResults.GetValues())
+            .WhenFalseYield(eval => eval.FalseResults.GetValues())
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
@@ -176,8 +176,8 @@ public class HigherOrderBooleanResultEvaluationTests
         var higherOrder = Spec
             .Build(underlying)
             .AsAnySatisfied()
-            .WhenTrueYield(eval => eval.CausalResults.GetMetadata().Select(m => m.Text))
-            .WhenFalseYield(eval => eval.CausalResults.GetMetadata().Select(m => m.Text))
+            .WhenTrueYield(eval => eval.CausalResults.GetValues().Select(m => m.Text))
+            .WhenFalseYield(eval => eval.CausalResults.GetValues().Select(m => m.Text))
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
@@ -242,8 +242,8 @@ public class HigherOrderBooleanResultEvaluationTests
         var higherOrder = Spec
             .Build(underlying)
             .AsAnySatisfied()
-            .WhenTrueYield(eval => eval.Results.GetMetadata().Select(m => m.Text))
-            .WhenFalseYield(eval => eval.Results.GetMetadata().Select(m => m.Text))
+            .WhenTrueYield(eval => eval.Results.GetValues().Select(m => m.Text))
+            .WhenFalseYield(eval => eval.Results.GetValues().Select(m => m.Text))
             .Create("all true");
 
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);

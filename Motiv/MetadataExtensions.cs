@@ -11,7 +11,7 @@ public static class MetadataExtensions
     /// <param name="results">The metadata nodes.</param>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
     /// <returns>The aggregation of the metadata contained within the supplied metadata nodes.</returns>
-    public static IEnumerable<TMetadata> GetMetadata<TMetadata>(
+    public static IEnumerable<TMetadata> GetValues<TMetadata>(
         this IEnumerable<MetadataNode<TMetadata>> results) =>
         results.SelectMany(e => e.Metadata);
 
@@ -21,7 +21,7 @@ public static class MetadataExtensions
     /// <param name="results">The collection of <see cref="BooleanResultBase{TMetadata}"/> to get metadata from.</param>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
     /// <returns>A collection of metadata from the boolean results.</returns>
-    public static IEnumerable<TMetadata> GetMetadata<TMetadata>(
+    public static IEnumerable<TMetadata> GetValues<TMetadata>(
         this IEnumerable<BooleanResultBase<TMetadata>> results) =>
         results.SelectMany(e => e.Values);
 
@@ -49,18 +49,18 @@ public static class MetadataExtensions
             .Where(r => !r.Satisfied)
             .SelectMany(e => e.Values);
 
-    internal static IEnumerable<TMetadata> GetRootMetadata<TMetadata>(
+    internal static IEnumerable<TMetadata> GetRootValues<TMetadata>(
         this BooleanResultBase<TMetadata> result) =>
         result.MetadataTier
             .Underlying
-            .GetRootMetadata()
+            .GetRootValues()
             .ElseIfEmpty(result.MetadataTier.Metadata)
             .DistinctWithOrderPreserved();
 
-    private static IEnumerable<TMetadata> GetRootMetadata<TMetadata>(
+    private static IEnumerable<TMetadata> GetRootValues<TMetadata>(
         this IEnumerable<MetadataNode<TMetadata>> metadataTiers) =>
         metadataTiers.SelectMany(metadataTier => metadataTier
             .Underlying
-            .GetRootMetadata()
+            .GetRootValues()
             .ElseIfEmpty(metadataTier.Metadata));
 }

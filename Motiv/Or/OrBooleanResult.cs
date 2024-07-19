@@ -24,11 +24,11 @@ internal sealed class OrBooleanResult<TMetadata>(
     public string Operation => "OR";
     public bool IsCollapsable => true;
     
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => GetResults();
     
     public override IEnumerable<BooleanResultBase> Causes => GetCausalResults();
     
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => GetCausalResults();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => GetCausalResults();
 
     public override bool Satisfied { get; } = left.Satisfied || right.Satisfied;
 
@@ -50,5 +50,5 @@ internal sealed class OrBooleanResult<TMetadata>(
     }
     
     private MetadataNode<TMetadata> CreateMetadataTier() =>
-        new(CausesWithMetadata.GetMetadata(), CausesWithMetadata);
+        new(CausesWithValues.GetValues(), CausesWithValues);
 }

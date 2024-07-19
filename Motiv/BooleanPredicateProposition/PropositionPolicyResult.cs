@@ -32,7 +32,7 @@ internal sealed class PropositionPolicyResult<TMetadata>(
     /// <summary>
     /// Gets the underlying results that share the same metadata type.
     /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => [];
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => [];
 
     /// <summary>
     /// Gets the causes of the result.
@@ -42,7 +42,7 @@ internal sealed class PropositionPolicyResult<TMetadata>(
     /// <summary>
     /// Gets the results that share the same metadata type that also helped determine the final result.
     /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => [];
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => [];
 
     /// <summary>Gets the reasons for the result.</summary>
     public override Explanation Explanation => explanation.Value;

@@ -98,8 +98,8 @@ public readonly ref struct TrueHigherOrderFromPolicyResultPredicatePropositionBu
         return new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             resultResolver,
             higherOrderPredicate,
-            eval => eval.Metadata,
-            eval => eval.Metadata,
+            eval => eval.Values,
+            eval => eval.Values,
             new SpecDescription(statement),
             causeSelector);
     }

@@ -14,15 +14,11 @@ internal sealed class HigherOrderFromBooleanPredicatePolicyResult<TMetadata>(
 
     public override IEnumerable<BooleanResultBase> Underlying => [];
 
-
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
-        [];
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => [];
 
     public override IEnumerable<BooleanResultBase> Causes => [];
 
-
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
-        [];
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => [];
 
     public override bool Satisfied { get; } = isSatisfied;
 

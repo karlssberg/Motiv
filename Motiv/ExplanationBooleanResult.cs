@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Motiv;
+﻿namespace Motiv;
 
 internal sealed class ExplanationBooleanResult(BooleanResultBase booleanResult) : BooleanResultBase<string>
 {
@@ -17,17 +15,17 @@ internal sealed class ExplanationBooleanResult(BooleanResultBase booleanResult) 
     public override MetadataNode<string> MetadataTier =>
         new(booleanResult.Explanation.Assertions, []);
 
-    public override IEnumerable<BooleanResultBase<string>> CausesWithMetadata =>
+    public override IEnumerable<BooleanResultBase<string>> CausesWithValues =>
         booleanResult switch
         {
-            BooleanResultBase<string> stringResult => stringResult.CausesWithMetadata,
+            BooleanResultBase<string> stringResult => stringResult.CausesWithValues,
             _ => []
         };
 
-    public override IEnumerable<BooleanResultBase<string>> UnderlyingWithMetadata =>
+    public override IEnumerable<BooleanResultBase<string>> UnderlyingWithValues =>
         booleanResult switch
         {
-            BooleanResultBase<string> stringResult => stringResult.UnderlyingWithMetadata,
+            BooleanResultBase<string> stringResult => stringResult.UnderlyingWithValues,
             _ => []
         };
 }

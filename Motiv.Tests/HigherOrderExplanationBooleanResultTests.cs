@@ -10,7 +10,7 @@ public class HigherOrderExplanationBooleanResultTests
     public void Should_supplant_metadata_from_a_higher_order_spec(int first, int second, int third, int fourth, string expected)
     {
         // Arrange
-        var underlying =
+        SpecBase<int, string> underlying =
             Spec.Build((int i) => i % 2 == 0)
                 .WhenTrue(i => $"{i} is even")
                 .WhenFalse(i => $"{i} is odd")
@@ -36,7 +36,7 @@ public class HigherOrderExplanationBooleanResultTests
     public void Should_preserve_the_description_of_the_underlying_()
     {
         // Arrange
-        var underlying =
+        SpecBase<int, string> underlying =
             Spec.Build((int i) => i % 2 == 0)
                 .WhenTrue("is even")
                 .WhenFalse("is odd")
@@ -68,7 +68,7 @@ public class HigherOrderExplanationBooleanResultTests
     public void Should_only_yield_the_most_recent_when_multiple_yields_are_chained(bool first, bool second, bool third, string expected)
     {
         // Arrange
-        var underlying =
+        SpecBase<bool, string> underlying =
             Spec.Build((bool b) => b)
                 .WhenTrue("is true")
                 .WhenFalse("is false")
@@ -114,7 +114,7 @@ public class HigherOrderExplanationBooleanResultTests
     public void Should_yield_the_most_deeply_nested_reason_when_requested(bool first, bool second, bool third, string expected)
     {
         // Arrange
-        var underlying =
+        SpecBase<bool, string> underlying =
             Spec.Build<bool>(b => b)
                 .WhenTrue("is true")
                 .WhenFalse("is false")
@@ -162,7 +162,7 @@ public class HigherOrderExplanationBooleanResultTests
         bool expected)
     {
         // Arrange
-        var underlying =
+        SpecBase<int, string> underlying =
             Spec.Build((int i) => i % 2 == 0)
                 .WhenTrue(i => $"{i} is even")
                 .WhenFalse(i => $"{i} is odd")
@@ -206,7 +206,7 @@ public class HigherOrderExplanationBooleanResultTests
         string expectedReason)
     {
         // Arrange
-        var underlying =
+        SpecBase<int, string> underlying =
             Spec.Build((int i) => i % 2 == 0)
                 .WhenTrue(i => $"{i} is even")
                 .WhenFalse(i => $"{i} is odd")
@@ -246,7 +246,7 @@ public class HigherOrderExplanationBooleanResultTests
         // Arrange
         var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2));
 
-        var underlying =
+        SpecBase<bool, string> underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
 
@@ -291,7 +291,7 @@ public class HigherOrderExplanationBooleanResultTests
             expectedReasonStatement,
             expectedImplicitAssertion);
 
-        var underlying =
+        SpecBase<bool, string> underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
 
@@ -352,7 +352,7 @@ public class HigherOrderExplanationBooleanResultTests
             expectedAssertion,
             expectedReasonStatement);
 
-        var underlying =
+        SpecBase<bool, string> underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
 
@@ -413,7 +413,7 @@ public class HigherOrderExplanationBooleanResultTests
             expectedAssertion,
             expectedReasonStatement);
 
-        var underlying =
+        SpecBase<bool, string> underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
 
@@ -469,7 +469,7 @@ public class HigherOrderExplanationBooleanResultTests
         // Arrange
         var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
 
-        var underlying =
+        SpecBase<bool, string> underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
 
@@ -486,7 +486,6 @@ public class HigherOrderExplanationBooleanResultTests
                 .WhenTrueYield(_ => ["true assertion"])
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
-
 
         var withFalseAsCallbackThatReturnsACollection =
             Spec.Build((bool m) => underlying.IsSatisfiedBy(m))

@@ -1429,7 +1429,7 @@ public class SpecDecoratorMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.UnderlyingWithMetadata;
+        var act = result.UnderlyingWithValues;
 
         // Assert
         act.Should().BeEquivalentTo([expected]);
@@ -1460,7 +1460,7 @@ public class SpecDecoratorMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.UnderlyingWithMetadata;
+        var act = result.UnderlyingWithValues;
 
         // Assert
         act.Should().BeEquivalentTo([expected]);
@@ -1602,7 +1602,7 @@ public class SpecDecoratorMetadataPropositionTests
 
         var orSpec = left | right;
 
-        var expected = orSpec.IsSatisfiedBy(model).CausesWithMetadata;
+        var expected = orSpec.IsSatisfiedBy(model).CausesWithValues;
 
         var spec = Spec
             .Build(orSpec)
@@ -1611,7 +1611,7 @@ public class SpecDecoratorMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.CausesWithMetadata;
+        var act = result.CausesWithValues;
 
         // Assert
         act.Should().BeEquivalentTo(expected);
@@ -1633,7 +1633,7 @@ public class SpecDecoratorMetadataPropositionTests
 
         var orSpec = left | right;
 
-        var expected = orSpec.IsSatisfiedBy(model).CausesWithMetadata;
+        var expected = orSpec.IsSatisfiedBy(model).CausesWithValues;
 
         var spec = Spec
             .Build(orSpec)
@@ -1642,7 +1642,7 @@ public class SpecDecoratorMetadataPropositionTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.CausesWithMetadata;
+        var act = result.CausesWithValues;
 
         // Assert
         act.Should().BeEquivalentTo(expected);

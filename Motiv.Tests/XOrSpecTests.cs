@@ -616,7 +616,7 @@ public class XOrSpecTests
         var result = spec.IsSatisfiedBy(new object());
 
         // Act
-        var act = result.UnderlyingWithMetadata;
+        var act = result.UnderlyingWithValues;
 
         // Assert
         act.Should().BeEquivalentTo(expected);

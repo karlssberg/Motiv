@@ -80,7 +80,7 @@ public class MetadataTests
         
         var result = thirdEven.IsSatisfiedBy([model]);
 
-        var act = result.MetadataTier.Underlying.GetMetadata();
+        var act = result.MetadataTier.Underlying.GetValues();
         
         act.Should().NotBeEquivalentTo(expected);
     }

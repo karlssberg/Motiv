@@ -32,11 +32,11 @@ internal sealed class AndBooleanResult<TMetadata>(
     public string Operation => "AND";
     public bool IsCollapsable => true;
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => GetResults();
 
     public override IEnumerable<BooleanResultBase> Causes => GetCausalResults();
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => GetCausalResults();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => GetCausalResults();
 
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {
@@ -53,5 +53,5 @@ internal sealed class AndBooleanResult<TMetadata>(
     }
 
     private MetadataNode<TMetadata> CreateMetadataTier() => 
-        new(CausesWithMetadata.GetMetadata(), CausesWithMetadata);
+        new(CausesWithValues.GetValues(), CausesWithValues);
 }

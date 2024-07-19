@@ -20,9 +20,9 @@ internal sealed class NotBooleanOperationResult<TMetadata>(BooleanResultBase<TMe
 
     public override IEnumerable<BooleanResultBase> Underlying => Operand.ToEnumerable();
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => Operand.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => Operand.ToEnumerable();
 
     public override IEnumerable<BooleanResultBase> Causes => Operand.ToEnumerable();
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => Operand.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => Operand.ToEnumerable();
 }

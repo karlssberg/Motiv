@@ -46,7 +46,7 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     /// <summary>
     /// Gets the underlying boolean result that led to this result, that also shares the same metadata type.
     /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues =>
         _underlyingResult.ToEnumerable();
 
     /// <summary>
@@ -58,5 +58,5 @@ public sealed class BooleanResult<TModel, TMetadata> : BooleanResultBase<TMetada
     /// Gets the causes of the result, with metadata.  These are the underlying results that determined the final
     /// result.
     /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => _underlyingResult.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => _underlyingResult.ToEnumerable();
 }

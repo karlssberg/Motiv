@@ -12,7 +12,7 @@ namespace Motiv;
 public static class AsAtMostNSatisfiedExtensions
 {
     /// <summary>
-    /// Creates a higher order proposition that is satisfied if at most 'n' of the underlying propositions are satisfied.
+    /// Creates a higher order proposition which is satisfied if at most 'n' of the underlying propositions are satisfied.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata.</typeparam>
@@ -37,7 +37,7 @@ public static class AsAtMostNSatisfiedExtensions
     }
 
     /// <summary>
-    /// Creates a higher order proposition that is satisfied if at most 'n' of the underlying propositions are satisfied.
+    /// Creates a higher order proposition which is satisfied if at most 'n' of the underlying propositions are satisfied.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata.</typeparam>
@@ -62,7 +62,7 @@ public static class AsAtMostNSatisfiedExtensions
     }
 
     /// <summary>
-    /// Creates a higher order proposition that is satisfied if at most 'n' of the underlying propositions are satisfied.
+    /// Creates a higher order proposition which is satisfied if at most 'n' of the underlying propositions are satisfied.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata.</typeparam>
@@ -87,7 +87,7 @@ public static class AsAtMostNSatisfiedExtensions
     }
 
     /// <summary>
-    /// Creates a higher order proposition that is satisfied if at most 'n' of the underlying propositions are satisfied.
+    /// Creates a higher order proposition which is satisfied if at most 'n' of the underlying propositions are satisfied.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata.</typeparam>
@@ -112,7 +112,7 @@ public static class AsAtMostNSatisfiedExtensions
     }
 
     /// <summary>
-    /// Creates a higher order proposition that is satisfied if at most 'n' of the underlying propositions are satisfied.
+    /// Creates a higher order proposition which is satisfied if at most 'n' of the underlying propositions are satisfied.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <param name="builder">The proposition builder.</param>
