@@ -9,7 +9,6 @@ internal sealed class NotPolicyResult<TMetadata>(PolicyResultBase<TMetadata> ope
 
     public BooleanResultBase<TMetadata> Operand => operandResult;
 
-
     /// <summary>Gets a value indicating whether the negation is satisfied.</summary>
     public override bool Satisfied { get; } = !operandResult.Satisfied;
 
@@ -23,9 +22,9 @@ internal sealed class NotPolicyResult<TMetadata>(PolicyResultBase<TMetadata> ope
 
     public override IEnumerable<BooleanResultBase> Underlying => Operand.ToEnumerable();
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => Operand.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => Operand.ToEnumerable();
 
     public override IEnumerable<BooleanResultBase> Causes => Operand.ToEnumerable();
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => Operand.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => Operand.ToEnumerable();
 }

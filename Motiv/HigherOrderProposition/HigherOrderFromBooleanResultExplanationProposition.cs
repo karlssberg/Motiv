@@ -12,7 +12,6 @@ internal sealed class HigherOrderFromBooleanResultExplanationProposition<TModel,
 {
     public override IEnumerable<SpecBase> Underlying => [];
 
-
     public override ISpecDescription Description => specDescription;
 
     protected override PolicyResultBase<string> IsPolicySatisfiedBy(IEnumerable<TModel> models)

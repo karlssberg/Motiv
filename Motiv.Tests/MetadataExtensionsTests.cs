@@ -16,7 +16,7 @@ public class MetadataExtensionsTests
         var booleanResultsCollection = models.Select(spec.IsSatisfiedBy);
 
         // Act
-        var act = booleanResultsCollection.GetMetadata();
+        var act = booleanResultsCollection.GetValues();
 
         // Assert
         act.Should().BeEquivalentTo(models);
@@ -75,7 +75,7 @@ public class MetadataExtensionsTests
         var expected = metadataNodes.SelectMany(e => e.Metadata);
 
         // Act
-        var act = metadataNodes.GetMetadata();
+        var act = metadataNodes.GetValues();
 
         // Assert
         act.Should().BeEquivalentTo(expected);

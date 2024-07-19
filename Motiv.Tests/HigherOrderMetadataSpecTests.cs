@@ -17,7 +17,7 @@ public class HigherOrderMetadataSpecTests
     public void Should_supplant_metadata_from_a_higher_order_spec(int first, int second, int third, int fourth, Metadata expected)
     {
         // Arrange
-        var underlyingSpec =
+        SpecBase<int,Guid> underlyingSpec =
             Spec.Build<int>(i => i % 2 == 0)
                 .WhenTrue(_ => Guid.NewGuid())
                 .WhenFalse(_ => Guid.NewGuid())
@@ -43,7 +43,7 @@ public class HigherOrderMetadataSpecTests
     public void Should_preserve_the_description_of_the_underlying_()
     {
         // Arrange
-        var underlyingSpec =
+        SpecBase<int,Guid> underlyingSpec =
             Spec.Build<int>(i => i % 2 == 0)
                 .WhenTrue(_ => Guid.NewGuid())
                 .WhenFalse(_ => Guid.NewGuid())
@@ -81,7 +81,7 @@ public class HigherOrderMetadataSpecTests
         // Arrange
         var expected = (3, expectedMetadata);
 
-        var underlying =
+        SpecBase<bool,Guid> underlying =
             Spec.Build((bool b) => b)
                 .WhenTrue(_ => Guid.NewGuid())
                 .WhenFalse(_ => Guid.NewGuid())
@@ -131,8 +131,7 @@ public class HigherOrderMetadataSpecTests
         Metadata expectedMetadata)
     {
         // Arrange
-        var expected = (0, expectedMetadata);
-        var underlying =
+        SpecBase<bool,(int, Metadata True)> underlying =
             Spec.Build((bool b) => b)
                 .WhenTrue(_ => (0, Metadata.True))
                 .WhenFalse(_ => (0, Metadata.False))
@@ -160,10 +159,10 @@ public class HigherOrderMetadataSpecTests
         var result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
-        var act = result.RootMetadata;
+        var act = result.RootValues;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.Should().BeEquivalentTo([(0, expectedMetadata)]);
     }
 
     [Theory]
@@ -180,7 +179,7 @@ public class HigherOrderMetadataSpecTests
         bool expected)
     {
         // Arrange
-        var underlyingSpec =
+        SpecBase<int,Metadata> underlyingSpec =
             Spec.Build<int>(i => i % 2 == 0)
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
@@ -190,7 +189,7 @@ public class HigherOrderMetadataSpecTests
             Spec.Build(underlyingSpec)
                 .AsAllSatisfied()
                 .WhenTrue(Metadata.True)
-                .WhenFalseYield(results => results.Metadata)
+                .WhenFalseYield(results => results.Values)
                 .Create("all are even");
 
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);
@@ -216,7 +215,7 @@ public class HigherOrderMetadataSpecTests
         Metadata expectedMetadata)
     {
         // Arrange
-        var underlyingSpec =
+        SpecBase<int,Metadata> underlyingSpec =
             Spec.Build<int>(i => i % 2 == 0)
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
@@ -226,7 +225,7 @@ public class HigherOrderMetadataSpecTests
             Spec.Build(underlyingSpec)
                 .AsAllSatisfied()
                 .WhenTrue(Metadata.True)
-                .WhenFalseYield(results => results.Metadata)
+                .WhenFalseYield(results => results.Values)
                 .Create("all are even");
 
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);
@@ -252,7 +251,7 @@ public class HigherOrderMetadataSpecTests
         string expectedMetadata)
     {
         // Arrange
-        var underlyingSpec =
+        SpecBase<int,Metadata> underlyingSpec =
             Spec.Build<int>(i => i % 2 == 0)
                 .WhenTrue(Metadata.True)
                 .WhenFalse(Metadata.False)
@@ -268,7 +267,7 @@ public class HigherOrderMetadataSpecTests
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);
 
         // Act
-        var act = result.CausesWithMetadata;
+        var act = result.CausesWithValues;
 
         // Assert
         act.Should().AllSatisfy(x => x.Reason.Should().Be(expectedMetadata));

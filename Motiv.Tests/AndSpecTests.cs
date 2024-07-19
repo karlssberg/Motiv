@@ -596,7 +596,7 @@ public class AndSpecTests
         var result = spec.IsSatisfiedBy(new object());
 
         // Act
-        var act = result.UnderlyingWithMetadata;
+        var act = result.UnderlyingWithValues;
 
         // Assert
         act.Should().BeEquivalentTo(expected);

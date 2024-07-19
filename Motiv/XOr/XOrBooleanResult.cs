@@ -28,14 +28,14 @@ internal sealed class XOrBooleanResult<TMetadata>(
 
     public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => GetResults();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => GetResults();
     public override IEnumerable<BooleanResultBase> Causes => GetResults();
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => GetResults();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => GetResults();
     
     private IEnumerable<BooleanResultBase<TMetadata>> GetResults() => 
         Left.ToEnumerable()
             .Append(Right);
 
     private MetadataNode<TMetadata> CreateMetadataTier() =>
-        new(CausesWithMetadata.GetMetadata(), CausesWithMetadata);
+        new(CausesWithValues.GetValues(), CausesWithValues);
 }

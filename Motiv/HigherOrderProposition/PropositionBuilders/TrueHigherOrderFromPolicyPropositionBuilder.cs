@@ -98,8 +98,8 @@ public readonly ref struct TrueHigherOrderFromPolicyPropositionBuilder<TModel, T
         new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
             policy.IsSatisfiedBy,
             higherOrderPredicate,
-            eval => eval.Metadata,
-            eval => eval.Metadata,
+            eval => eval.Values,
+            eval => eval.Values,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
                 policy.Description),

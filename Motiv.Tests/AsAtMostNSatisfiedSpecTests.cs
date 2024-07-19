@@ -19,7 +19,7 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(true,  true,  false, true,  false)]
     [InlineAutoData(true,  true,  true,  false, false)]
     [InlineAutoData(true,  true,  true,  true,  false)]
-    public void Should_perform_the_logical_operation_at_most_when_0_is_supplied_as_the_maximum(
+    public void Should_perform_upon_policy_the_logical_operation_at_most_when_0_is_supplied_as_the_maximum(
         bool first,
         bool second,
         bool third,
@@ -27,7 +27,7 @@ public class AsAtMostNSatisfiedSpecTests
         bool expected)
     {
         // Arrange
-        var underlyingSpec = Spec
+        PolicyBase<bool,string> underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
@@ -35,6 +35,147 @@ public class AsAtMostNSatisfiedSpecTests
 
         var spec = Spec
             .Build(underlyingSpec)
+            .AsAtMostNSatisfied(0)
+            .WhenTrue("none are satisfied")
+            .WhenFalse("one or more are satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  false)]
+    [InlineAutoData(false, false, true,  false, false)]
+    [InlineAutoData(false, false, true,  true,  false)]
+    [InlineAutoData(false, true,  false, false, false)]
+    [InlineAutoData(false, true,  false, true,  false)]
+    [InlineAutoData(false, true,  true,  false, false)]
+    [InlineAutoData(false, true,  true,  true,  false)]
+    [InlineAutoData(true,  false, false, false, false)]
+    [InlineAutoData(true,  false, false, true,  false)]
+    [InlineAutoData(true,  false, true,  false, false)]
+    [InlineAutoData(true,  false, true,  true,  false)]
+    [InlineAutoData(true,  true,  false, false, false)]
+    [InlineAutoData(true,  true,  false, true,  false)]
+    [InlineAutoData(true,  true,  true,  false, false)]
+    [InlineAutoData(true,  true,  true,  true,  false)]
+    public void Should_perform_upon_spec_the_logical_operation_at_most_when_0_is_supplied_as_the_maximum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build(underlyingSpec)
+            .AsAtMostNSatisfied(0)
+            .WhenTrue("none are satisfied")
+            .WhenFalse("one or more are satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  false)]
+    [InlineAutoData(false, false, true,  false, false)]
+    [InlineAutoData(false, false, true,  true,  false)]
+    [InlineAutoData(false, true,  false, false, false)]
+    [InlineAutoData(false, true,  false, true,  false)]
+    [InlineAutoData(false, true,  true,  false, false)]
+    [InlineAutoData(false, true,  true,  true,  false)]
+    [InlineAutoData(true,  false, false, false, false)]
+    [InlineAutoData(true,  false, false, true,  false)]
+    [InlineAutoData(true,  false, true,  false, false)]
+    [InlineAutoData(true,  false, true,  true,  false)]
+    [InlineAutoData(true,  true,  false, false, false)]
+    [InlineAutoData(true,  true,  false, true,  false)]
+    [InlineAutoData(true,  true,  true,  false, false)]
+    [InlineAutoData(true,  true,  true,  true,  false)]
+    public void Should_perform_upon_policy_result_the_logical_operation_at_most_when_0_is_supplied_as_the_maximum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        PolicyBase<bool,string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .AsAtMostNSatisfied(0)
+            .WhenTrue("none are satisfied")
+            .WhenFalse("one or more are satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  false)]
+    [InlineAutoData(false, false, true,  false, false)]
+    [InlineAutoData(false, false, true,  true,  false)]
+    [InlineAutoData(false, true,  false, false, false)]
+    [InlineAutoData(false, true,  false, true,  false)]
+    [InlineAutoData(false, true,  true,  false, false)]
+    [InlineAutoData(false, true,  true,  true,  false)]
+    [InlineAutoData(true,  false, false, false, false)]
+    [InlineAutoData(true,  false, false, true,  false)]
+    [InlineAutoData(true,  false, true,  false, false)]
+    [InlineAutoData(true,  false, true,  true,  false)]
+    [InlineAutoData(true,  true,  false, false, false)]
+    [InlineAutoData(true,  true,  false, true,  false)]
+    [InlineAutoData(true,  true,  true,  false, false)]
+    [InlineAutoData(true,  true,  true,  true,  false)]
+    public void Should_perform_upon_boolean_result_the_logical_operation_at_most_when_0_is_supplied_as_the_maximum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
             .AsAtMostNSatisfied(0)
             .WhenTrue("none are satisfied")
             .WhenFalse("one or more are satisfied")
@@ -66,7 +207,7 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(true,  true,  false, true,  false)]
     [InlineAutoData(true,  true,  true,  false, false)]
     [InlineAutoData(true,  true,  true,  true,  false)]
-    public void Should_perform_the_logical_operation_at_most_when_1_is_supplied_as_the_maximum(
+    public void Should_perform_upon_policy_the_logical_operation_at_most_when_1_is_supplied_as_the_maximum(
         bool first,
         bool second,
         bool third,
@@ -74,7 +215,7 @@ public class AsAtMostNSatisfiedSpecTests
         bool expected)
     {
         // Arrange
-        var underlyingSpec = Spec
+        PolicyBase<bool,string> underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
@@ -85,6 +226,146 @@ public class AsAtMostNSatisfiedSpecTests
             .WhenTrue("one is satisfied")
             .WhenFalse("none or more than one is not satisfied")
             .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  true )]
+    [InlineAutoData(false, false, true,  false, true )]
+    [InlineAutoData(false, false, true,  true,  false)]
+    [InlineAutoData(false, true,  false, false, true )]
+    [InlineAutoData(false, true,  false, true,  false)]
+    [InlineAutoData(false, true,  true,  false, false)]
+    [InlineAutoData(false, true,  true,  true,  false)]
+    [InlineAutoData(true,  false, false, false, true )]
+    [InlineAutoData(true,  false, false, true,  false)]
+    [InlineAutoData(true,  false, true,  false, false)]
+    [InlineAutoData(true,  false, true,  true,  false)]
+    [InlineAutoData(true,  true,  false, false, false)]
+    [InlineAutoData(true,  true,  false, true,  false)]
+    [InlineAutoData(true,  true,  true,  false, false)]
+    [InlineAutoData(true,  true,  true,  true,  false)]
+    public void Should_perform_upon_spec_the_logical_operation_at_most_when_1_is_supplied_as_the_maximum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec.Build(underlyingSpec)
+            .AsAtMostNSatisfied(1)
+            .WhenTrue("one is satisfied")
+            .WhenFalse("none or more than one is not satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  true )]
+    [InlineAutoData(false, false, true,  false, true )]
+    [InlineAutoData(false, false, true,  true,  false)]
+    [InlineAutoData(false, true,  false, false, true )]
+    [InlineAutoData(false, true,  false, true,  false)]
+    [InlineAutoData(false, true,  true,  false, false)]
+    [InlineAutoData(false, true,  true,  true,  false)]
+    [InlineAutoData(true,  false, false, false, true )]
+    [InlineAutoData(true,  false, false, true,  false)]
+    [InlineAutoData(true,  false, true,  false, false)]
+    [InlineAutoData(true,  false, true,  true,  false)]
+    [InlineAutoData(true,  true,  false, false, false)]
+    [InlineAutoData(true,  true,  false, true,  false)]
+    [InlineAutoData(true,  true,  true,  false, false)]
+    [InlineAutoData(true,  true,  true,  true,  false)]
+    public void Should_perform_upon_policy_result_the_logical_operation_at_most_when_1_is_supplied_as_the_maximum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        PolicyBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString())
+                .WhenFalse(false.ToString())
+                .Create("returns the model");
+
+        var spec =
+            Spec.Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+                .AsAtMostNSatisfied(1)
+                .WhenTrue("one is satisfied")
+                .WhenFalse("none or more than one is not satisfied")
+                .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  true )]
+    [InlineAutoData(false, false, true,  false, true )]
+    [InlineAutoData(false, false, true,  true,  false)]
+    [InlineAutoData(false, true,  false, false, true )]
+    [InlineAutoData(false, true,  false, true,  false)]
+    [InlineAutoData(false, true,  true,  false, false)]
+    [InlineAutoData(false, true,  true,  true,  false)]
+    [InlineAutoData(true,  false, false, false, true )]
+    [InlineAutoData(true,  false, false, true,  false)]
+    [InlineAutoData(true,  false, true,  false, false)]
+    [InlineAutoData(true,  false, true,  true,  false)]
+    [InlineAutoData(true,  true,  false, false, false)]
+    [InlineAutoData(true,  true,  false, true,  false)]
+    [InlineAutoData(true,  true,  true,  false, false)]
+    [InlineAutoData(true,  true,  true,  true,  false)]
+    public void Should_perform_upon_boolean_result_the_logical_operation_at_most_when_1_is_supplied_as_the_maximum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString())
+                .WhenFalse(false.ToString())
+                .Create("returns the model");
+
+        var spec =
+            Spec.Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+                .AsAtMostNSatisfied(1)
+                .WhenTrue("one is satisfied")
+                .WhenFalse("none or more than one is not satisfied")
+                .Create();
 
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);
 
@@ -112,7 +393,7 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(true,  true,  false, true,  false)]
     [InlineAutoData(true,  true,  true,  false, false)]
     [InlineAutoData(true,  true,  true,  true,  false)]
-    public void Should_perform_the_logical_operation_at_most_when_2_is_supplied_as_the_maximum(
+    public void Should_perform_upon_policy_the_logical_operation_at_most_when_2_is_supplied_as_the_maximum(
         bool first,
         bool second,
         bool third,
@@ -120,7 +401,7 @@ public class AsAtMostNSatisfiedSpecTests
         bool expected)
     {
         // Arrange
-        var underlyingSpec = Spec
+        PolicyBase<bool,string> underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
@@ -149,6 +430,146 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(false, true,  false, false, true )]
     [InlineAutoData(false, true,  false, true,  true )]
     [InlineAutoData(false, true,  true,  false, true )]
+    [InlineAutoData(false, true,  true,  true,  false)]
+    [InlineAutoData(true,  false, false, false, true )]
+    [InlineAutoData(true,  false, false, true,  true )]
+    [InlineAutoData(true,  false, true,  false, true )]
+    [InlineAutoData(true,  false, true,  true,  false)]
+    [InlineAutoData(true,  true,  false, false, true )]
+    [InlineAutoData(true,  true,  false, true,  false)]
+    [InlineAutoData(true,  true,  true,  false, false)]
+    [InlineAutoData(true,  true,  true,  true,  false)]
+    public void Should_perform_upon_spec_the_logical_operation_at_most_when_2_is_supplied_as_the_maximum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec.Build(underlyingSpec)
+            .AsAtMostNSatisfied(2)
+            .WhenTrue("at most two are satisfied")
+            .WhenFalse("more than two are satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  true )]
+    [InlineAutoData(false, false, true,  false, true )]
+    [InlineAutoData(false, false, true,  true,  true )]
+    [InlineAutoData(false, true,  false, false, true )]
+    [InlineAutoData(false, true,  false, true,  true )]
+    [InlineAutoData(false, true,  true,  false, true )]
+    [InlineAutoData(false, true,  true,  true,  false)]
+    [InlineAutoData(true,  false, false, false, true )]
+    [InlineAutoData(true,  false, false, true,  true )]
+    [InlineAutoData(true,  false, true,  false, true )]
+    [InlineAutoData(true,  false, true,  true,  false)]
+    [InlineAutoData(true,  true,  false, false, true )]
+    [InlineAutoData(true,  true,  false, true,  false)]
+    [InlineAutoData(true,  true,  true,  false, false)]
+    [InlineAutoData(true,  true,  true,  true,  false)]
+    public void Should_perform_upon_policy_result_the_logical_operation_at_most_when_2_is_supplied_as_the_maximum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        PolicyBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString())
+                .WhenFalse(false.ToString())
+                .Create("returns the model");
+
+        var spec =
+            Spec.Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+                .AsAtMostNSatisfied(2)
+                .WhenTrue("at most two are satisfied")
+                .WhenFalse("more than two are satisfied")
+                .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  true )]
+    [InlineAutoData(false, false, true,  false, true )]
+    [InlineAutoData(false, false, true,  true,  true )]
+    [InlineAutoData(false, true,  false, false, true )]
+    [InlineAutoData(false, true,  false, true,  true )]
+    [InlineAutoData(false, true,  true,  false, true )]
+    [InlineAutoData(false, true,  true,  true,  false)]
+    [InlineAutoData(true,  false, false, false, true )]
+    [InlineAutoData(true,  false, false, true,  true )]
+    [InlineAutoData(true,  false, true,  false, true )]
+    [InlineAutoData(true,  false, true,  true,  false)]
+    [InlineAutoData(true,  true,  false, false, true )]
+    [InlineAutoData(true,  true,  false, true,  false)]
+    [InlineAutoData(true,  true,  true,  false, false)]
+    [InlineAutoData(true,  true,  true,  true,  false)]
+    public void Should_perform_upon_boolean_result_the_logical_operation_at_most_when_2_is_supplied_as_the_maximum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString())
+                .WhenFalse(false.ToString())
+                .Create("returns the model");
+
+        var spec =
+            Spec.Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+                .AsAtMostNSatisfied(2)
+                .WhenTrue("at most two are satisfied")
+                .WhenFalse("more than two are satisfied")
+                .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  true )]
+    [InlineAutoData(false, false, true,  false, true )]
+    [InlineAutoData(false, false, true,  true,  true )]
+    [InlineAutoData(false, true,  false, false, true )]
+    [InlineAutoData(false, true,  false, true,  true )]
+    [InlineAutoData(false, true,  true,  false, true )]
     [InlineAutoData(false, true,  true,  true,  true )]
     [InlineAutoData(true,  false, false, false, true )]
     [InlineAutoData(true,  false, false, true,  true )]
@@ -158,7 +579,7 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(true,  true,  false, true,  true )]
     [InlineAutoData(true,  true,  true,  false, true )]
     [InlineAutoData(true,  true,  true,  true,  true )]
-    public void Should_perform_the_logical_operation_at_most_when_the_set_size_is_supplied_as_the_maximum(
+    public void Should_perform_upon_policy_the_logical_operation_at_most_when_the_set_size_is_supplied_as_the_maximum(
         bool first,
         bool second,
         bool third,
@@ -166,18 +587,159 @@ public class AsAtMostNSatisfiedSpecTests
         bool expected)
     {
         // Arrange
-        var underlyingSpec = Spec
-            .Build((bool m) => m)
-            .WhenTrue(true.ToString())
-            .WhenFalse(false.ToString())
-            .Create("returns the model");
+        PolicyBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString())
+                .WhenFalse(false.ToString())
+                .Create("returns the model");
 
-        var spec = Spec
-            .Build(underlyingSpec)
-            .AsAtMostNSatisfied(4)
-            .WhenTrue("at most four are satisfied")
-            .WhenFalse("more than four are satisfied")
-            .Create();
+        var spec =
+            Spec.Build(underlyingSpec)
+                .AsAtMostNSatisfied(4)
+                .WhenTrue("at most four are satisfied")
+                .WhenFalse("more than four are satisfied")
+                .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  true )]
+    [InlineAutoData(false, false, true,  false, true )]
+    [InlineAutoData(false, false, true,  true,  true )]
+    [InlineAutoData(false, true,  false, false, true )]
+    [InlineAutoData(false, true,  false, true,  true )]
+    [InlineAutoData(false, true,  true,  false, true )]
+    [InlineAutoData(false, true,  true,  true,  true )]
+    [InlineAutoData(true,  false, false, false, true )]
+    [InlineAutoData(true,  false, false, true,  true )]
+    [InlineAutoData(true,  false, true,  false, true )]
+    [InlineAutoData(true,  false, true,  true,  true )]
+    [InlineAutoData(true,  true,  false, false, true )]
+    [InlineAutoData(true,  true,  false, true,  true )]
+    [InlineAutoData(true,  true,  true,  false, true )]
+    [InlineAutoData(true,  true,  true,  true,  true )]
+    public void Should_perform_upon_spec_the_logical_operation_at_most_when_the_set_size_is_supplied_as_the_maximum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString())
+                .WhenFalse(false.ToString())
+                .Create("returns the model");
+
+        var spec =
+            Spec.Build(underlyingSpec)
+                .AsAtMostNSatisfied(4)
+                .WhenTrue("at most four are satisfied")
+                .WhenFalse("more than four are satisfied")
+                .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  true )]
+    [InlineAutoData(false, false, true,  false, true )]
+    [InlineAutoData(false, false, true,  true,  true )]
+    [InlineAutoData(false, true,  false, false, true )]
+    [InlineAutoData(false, true,  false, true,  true )]
+    [InlineAutoData(false, true,  true,  false, true )]
+    [InlineAutoData(false, true,  true,  true,  true )]
+    [InlineAutoData(true,  false, false, false, true )]
+    [InlineAutoData(true,  false, false, true,  true )]
+    [InlineAutoData(true,  false, true,  false, true )]
+    [InlineAutoData(true,  false, true,  true,  true )]
+    [InlineAutoData(true,  true,  false, false, true )]
+    [InlineAutoData(true,  true,  false, true,  true )]
+    [InlineAutoData(true,  true,  true,  false, true )]
+    [InlineAutoData(true,  true,  true,  true,  true )]
+    public void Should_perform_upon_policy_result_the_logical_operation_at_most_when_the_set_size_is_supplied_as_the_maximum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        PolicyBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString())
+                .WhenFalse(false.ToString())
+                .Create("returns the model");
+
+        var spec =
+            Spec.Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+                .AsAtMostNSatisfied(4)
+                .WhenTrue("at most four are satisfied")
+                .WhenFalse("more than four are satisfied")
+                .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true )]
+    [InlineAutoData(false, false, false, true,  true )]
+    [InlineAutoData(false, false, true,  false, true )]
+    [InlineAutoData(false, false, true,  true,  true )]
+    [InlineAutoData(false, true,  false, false, true )]
+    [InlineAutoData(false, true,  false, true,  true )]
+    [InlineAutoData(false, true,  true,  false, true )]
+    [InlineAutoData(false, true,  true,  true,  true )]
+    [InlineAutoData(true,  false, false, false, true )]
+    [InlineAutoData(true,  false, false, true,  true )]
+    [InlineAutoData(true,  false, true,  false, true )]
+    [InlineAutoData(true,  false, true,  true,  true )]
+    [InlineAutoData(true,  true,  false, false, true )]
+    [InlineAutoData(true,  true,  false, true,  true )]
+    [InlineAutoData(true,  true,  true,  false, true )]
+    [InlineAutoData(true,  true,  true,  true,  true )]
+    public void Should_perform_upon_boolean_result_the_logical_operation_at_most_when_the_set_size_is_supplied_as_the_maximum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString())
+                .WhenFalse(false.ToString())
+                .Create("returns the model");
+
+        var spec =
+            Spec.Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+                .AsAtMostNSatisfied(4)
+                .WhenTrue("at most four are satisfied")
+                .WhenFalse("more than four are satisfied")
+                .Create();
 
         var result = spec.IsSatisfiedBy([first, second, third, fourth]);
 

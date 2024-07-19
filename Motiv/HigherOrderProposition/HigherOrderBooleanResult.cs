@@ -22,12 +22,12 @@ internal sealed class HigherOrderBooleanResult<TMetadata, TUnderlyingMetadata>(
     public override Explanation Explanation => _explanation.Value;
     public override IEnumerable<BooleanResultBase> Underlying => underlyingResults;
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues =>
         underlyingResults as IEnumerable<BooleanResultBase<TMetadata>> ?? [];
 
     public override IEnumerable<BooleanResultBase> Causes => causesFn();
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues =>
         causesFn() as IEnumerable<BooleanResultBase<TMetadata>> ?? [];
 
     public override bool Satisfied { get; } = isSatisfied;

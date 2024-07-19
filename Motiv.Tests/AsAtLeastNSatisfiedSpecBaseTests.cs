@@ -19,7 +19,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(true, true, false, true, true)]
     [InlineAutoData(true, true, true, false, true)]
     [InlineAutoData(true, true, true, true, true)]
-    public void Should_perform_the_logical_operation_at_least_when_0_is_supplied_as_the_minimum(
+    public void Should_perform_upon_policy_the_logical_operation_at_least_when_0_is_supplied_as_the_minimum(
         bool first,
         bool second,
         bool third,
@@ -27,7 +27,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         bool expected)
     {
         // Arrange
-        var underlyingSpec = Spec
+        PolicyBase<bool,string> underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
@@ -35,6 +35,149 @@ public class AsAtLeastNSatisfiedSpecBaseTests
 
         var spec = Spec
             .Build(underlyingSpec)
+            .AsAtLeastNSatisfied(0)
+            .WhenTrue("none satisfied")
+            .WhenFalse("at least one satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true)]
+    [InlineAutoData(false, false, false, true, true)]
+    [InlineAutoData(false, false, true, false, true)]
+    [InlineAutoData(false, false, true, true, true)]
+    [InlineAutoData(false, true, false, false, true)]
+    [InlineAutoData(false, true, false, true, true)]
+    [InlineAutoData(false, true, true, false, true)]
+    [InlineAutoData(false, true, true, true, true)]
+    [InlineAutoData(true, false, false, false, true)]
+    [InlineAutoData(true, false, false, true, true)]
+    [InlineAutoData(true, false, true, false, true)]
+    [InlineAutoData(true, false, true, true, true)]
+    [InlineAutoData(true, true, false, false, true)]
+    [InlineAutoData(true, true, false, true, true)]
+    [InlineAutoData(true, true, true, false, true)]
+    [InlineAutoData(true, true, true, true, true)]
+    public void Should_perform_upon_spec_the_logical_operation_at_least_when_0_is_supplied_as_the_minimum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build(underlyingSpec)
+            .AsAtLeastNSatisfied(0)
+            .WhenTrue("none satisfied")
+            .WhenFalse("at least one satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true)]
+    [InlineAutoData(false, false, false, true, true)]
+    [InlineAutoData(false, false, true, false, true)]
+    [InlineAutoData(false, false, true, true, true)]
+    [InlineAutoData(false, true, false, false, true)]
+    [InlineAutoData(false, true, false, true, true)]
+    [InlineAutoData(false, true, true, false, true)]
+    [InlineAutoData(false, true, true, true, true)]
+    [InlineAutoData(true, false, false, false, true)]
+    [InlineAutoData(true, false, false, true, true)]
+    [InlineAutoData(true, false, true, false, true)]
+    [InlineAutoData(true, false, true, true, true)]
+    [InlineAutoData(true, true, false, false, true)]
+    [InlineAutoData(true, true, false, true, true)]
+    [InlineAutoData(true, true, true, false, true)]
+    [InlineAutoData(true, true, true, true, true)]
+    public void Should_perform_upon_policy_result_the_logical_operation_at_least_when_0_is_supplied_as_the_minimum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        PolicyBase<bool,string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .AsAtLeastNSatisfied(0)
+            .WhenTrue("none satisfied")
+            .WhenFalse("at least one satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, true)]
+    [InlineAutoData(false, false, false, true, true)]
+    [InlineAutoData(false, false, true, false, true)]
+    [InlineAutoData(false, false, true, true, true)]
+    [InlineAutoData(false, true, false, false, true)]
+    [InlineAutoData(false, true, false, true, true)]
+    [InlineAutoData(false, true, true, false, true)]
+    [InlineAutoData(false, true, true, true, true)]
+    [InlineAutoData(true, false, false, false, true)]
+    [InlineAutoData(true, false, false, true, true)]
+    [InlineAutoData(true, false, true, false, true)]
+    [InlineAutoData(true, false, true, true, true)]
+    [InlineAutoData(true, true, false, false, true)]
+    [InlineAutoData(true, true, false, true, true)]
+    [InlineAutoData(true, true, true, false, true)]
+    [InlineAutoData(true, true, true, true, true)]
+    public void Should_perform_upon_boolean_result_the_logical_operation_at_least_when_0_is_supplied_as_the_minimum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
             .AsAtLeastNSatisfied(0)
             .WhenTrue("none satisfied")
             .WhenFalse("at least one satisfied")
@@ -66,7 +209,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(true, true, false, true, true)]
     [InlineAutoData(true, true, true, false, true)]
     [InlineAutoData(true, true, true, true, true)]
-    public void Should_perform_the_logical_operation_at_least_when_1_is_supplied_as_the_minimum(
+    public void Should_perform_upon_policy_the_logical_operation_at_least_when_1_is_supplied_as_the_minimum(
         bool first,
         bool second,
         bool third,
@@ -74,7 +217,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         bool expected)
     {
         // Arrange
-        var underlyingSpec = Spec
+        PolicyBase<bool,string> underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
@@ -82,6 +225,149 @@ public class AsAtLeastNSatisfiedSpecBaseTests
 
         var spec = Spec
             .Build(underlyingSpec)
+            .AsAtLeastNSatisfied(1)
+            .WhenTrue("One satisfied")
+            .WhenFalse("None or more than one satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, false)]
+    [InlineAutoData(false, false, false, true, true)]
+    [InlineAutoData(false, false, true, false, true)]
+    [InlineAutoData(false, false, true, true, true)]
+    [InlineAutoData(false, true, false, false, true)]
+    [InlineAutoData(false, true, false, true, true)]
+    [InlineAutoData(false, true, true, false, true)]
+    [InlineAutoData(false, true, true, true, true)]
+    [InlineAutoData(true, false, false, false, true)]
+    [InlineAutoData(true, false, false, true, true)]
+    [InlineAutoData(true, false, true, false, true)]
+    [InlineAutoData(true, false, true, true, true)]
+    [InlineAutoData(true, true, false, false, true)]
+    [InlineAutoData(true, true, false, true, true)]
+    [InlineAutoData(true, true, true, false, true)]
+    [InlineAutoData(true, true, true, true, true)]
+    public void Should_perform_upon_spec_the_logical_operation_at_least_when_1_is_supplied_as_the_minimum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build(underlyingSpec)
+            .AsAtLeastNSatisfied(1)
+            .WhenTrue("One satisfied")
+            .WhenFalse("None or more than one satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, false)]
+    [InlineAutoData(false, false, false, true, true)]
+    [InlineAutoData(false, false, true, false, true)]
+    [InlineAutoData(false, false, true, true, true)]
+    [InlineAutoData(false, true, false, false, true)]
+    [InlineAutoData(false, true, false, true, true)]
+    [InlineAutoData(false, true, true, false, true)]
+    [InlineAutoData(false, true, true, true, true)]
+    [InlineAutoData(true, false, false, false, true)]
+    [InlineAutoData(true, false, false, true, true)]
+    [InlineAutoData(true, false, true, false, true)]
+    [InlineAutoData(true, false, true, true, true)]
+    [InlineAutoData(true, true, false, false, true)]
+    [InlineAutoData(true, true, false, true, true)]
+    [InlineAutoData(true, true, true, false, true)]
+    [InlineAutoData(true, true, true, true, true)]
+    public void Should_perform_upon_policy_result_the_logical_operation_at_least_when_1_is_supplied_as_the_minimum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        PolicyBase<bool,string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .AsAtLeastNSatisfied(1)
+            .WhenTrue("One satisfied")
+            .WhenFalse("None or more than one satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, false)]
+    [InlineAutoData(false, false, false, true, true)]
+    [InlineAutoData(false, false, true, false, true)]
+    [InlineAutoData(false, false, true, true, true)]
+    [InlineAutoData(false, true, false, false, true)]
+    [InlineAutoData(false, true, false, true, true)]
+    [InlineAutoData(false, true, true, false, true)]
+    [InlineAutoData(false, true, true, true, true)]
+    [InlineAutoData(true, false, false, false, true)]
+    [InlineAutoData(true, false, false, true, true)]
+    [InlineAutoData(true, false, true, false, true)]
+    [InlineAutoData(true, false, true, true, true)]
+    [InlineAutoData(true, true, false, false, true)]
+    [InlineAutoData(true, true, false, true, true)]
+    [InlineAutoData(true, true, true, false, true)]
+    [InlineAutoData(true, true, true, true, true)]
+    public void Should_perform_upon_boolean_result_the_logical_operation_at_least_when_1_is_supplied_as_the_minimum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
             .AsAtLeastNSatisfied(1)
             .WhenTrue("One satisfied")
             .WhenFalse("None or more than one satisfied")
@@ -113,7 +399,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(true, true, false, true, true)]
     [InlineAutoData(true, true, true, false, true)]
     [InlineAutoData(true, true, true, true, true)]
-    public void Should_perform_the_logical_operation_at_least_when_2_is_supplied_as_the_minimum(
+    public void Should_perform_upon_policy_the_logical_operation_at_least_when_2_is_supplied_as_the_minimum(
         bool first,
         bool second,
         bool third,
@@ -121,7 +407,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         bool expected)
     {
         // Arrange
-        var underlyingSpec = Spec
+        PolicyBase<bool, string> underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
@@ -129,6 +415,148 @@ public class AsAtLeastNSatisfiedSpecBaseTests
 
         var spec = Spec
             .Build(underlyingSpec)
+            .AsAtLeastNSatisfied(2)
+            .WhenTrue("At least two satisfied")
+            .WhenFalse("Less than two satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, false)]
+    [InlineAutoData(false, false, false, true, false)]
+    [InlineAutoData(false, false, true, false, false)]
+    [InlineAutoData(false, false, true, true, true)]
+    [InlineAutoData(false, true, false, false, false)]
+    [InlineAutoData(false, true, false, true, true)]
+    [InlineAutoData(false, true, true, false, true)]
+    [InlineAutoData(false, true, true, true, true)]
+    [InlineAutoData(true, false, false, false, false)]
+    [InlineAutoData(true, false, false, true, true)]
+    [InlineAutoData(true, false, true, false, true)]
+    [InlineAutoData(true, false, true, true, true)]
+    [InlineAutoData(true, true, false, false, true)]
+    [InlineAutoData(true, true, false, true, true)]
+    [InlineAutoData(true, true, true, false, true)]
+    [InlineAutoData(true, true, true, true, true)]
+    public void Should_perform_upon_spec_the_logical_operation_at_least_when_2_is_supplied_as_the_minimum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool, string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build(underlyingSpec)
+            .AsAtLeastNSatisfied(2)
+            .WhenTrue("At least two satisfied")
+            .WhenFalse("Less than two satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, false)]
+    [InlineAutoData(false, false, false, true, false)]
+    [InlineAutoData(false, false, true, false, false)]
+    [InlineAutoData(false, false, true, true, true)]
+    [InlineAutoData(false, true, false, false, false)]
+    [InlineAutoData(false, true, false, true, true)]
+    [InlineAutoData(false, true, true, false, true)]
+    [InlineAutoData(false, true, true, true, true)]
+    [InlineAutoData(true, false, false, false, false)]
+    [InlineAutoData(true, false, false, true, true)]
+    [InlineAutoData(true, false, true, false, true)]
+    [InlineAutoData(true, false, true, true, true)]
+    [InlineAutoData(true, true, false, false, true)]
+    [InlineAutoData(true, true, false, true, true)]
+    [InlineAutoData(true, true, true, false, true)]
+    [InlineAutoData(true, true, true, true, true)]
+    public void Should_perform_upon_policy_result_the_logical_operation_at_least_when_2_is_supplied_as_the_minimum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        PolicyBase<bool, string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .AsAtLeastNSatisfied(2)
+            .WhenTrue("At least two satisfied")
+            .WhenFalse("Less than two satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, false)]
+    [InlineAutoData(false, false, false, true, false)]
+    [InlineAutoData(false, false, true, false, false)]
+    [InlineAutoData(false, false, true, true, true)]
+    [InlineAutoData(false, true, false, false, false)]
+    [InlineAutoData(false, true, false, true, true)]
+    [InlineAutoData(false, true, true, false, true)]
+    [InlineAutoData(false, true, true, true, true)]
+    [InlineAutoData(true, false, false, false, false)]
+    [InlineAutoData(true, false, false, true, true)]
+    [InlineAutoData(true, false, true, false, true)]
+    [InlineAutoData(true, false, true, true, true)]
+    [InlineAutoData(true, true, false, false, true)]
+    [InlineAutoData(true, true, false, true, true)]
+    [InlineAutoData(true, true, true, false, true)]
+    [InlineAutoData(true, true, true, true, true)]
+    public void Should_perform_upon_boolean_result_the_logical_operation_at_least_when_2_is_supplied_as_the_minimum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool, string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
             .AsAtLeastNSatisfied(2)
             .WhenTrue("At least two satisfied")
             .WhenFalse("Less than two satisfied")
@@ -160,7 +588,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(true, true, false, true, false)]
     [InlineAutoData(true, true, true, false, false)]
     [InlineAutoData(true, true, true, true, true)]
-    public void Should_perform_the_logical_operation_at_least_when_the_set_size_is_supplied_as_the_minimum(
+    public void Should_perform_upon_policy_the_logical_operation_at_least_when_the_set_size_is_supplied_as_the_minimum(
         bool first,
         bool second,
         bool third,
@@ -168,7 +596,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         bool expected)
     {
         // Arrange
-        var underlyingSpec = Spec
+        PolicyBase<bool, string> underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
@@ -176,6 +604,147 @@ public class AsAtLeastNSatisfiedSpecBaseTests
 
         var spec = Spec
             .Build(underlyingSpec)
+            .AsAtLeastNSatisfied(4)
+            .WhenTrue("All satisfied")
+            .WhenFalse("Not all satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, false)]
+    [InlineAutoData(false, false, false, true, false)]
+    [InlineAutoData(false, false, true, false, false)]
+    [InlineAutoData(false, false, true, true, false)]
+    [InlineAutoData(false, true, false, false, false)]
+    [InlineAutoData(false, true, false, true, false)]
+    [InlineAutoData(false, true, true, false, false)]
+    [InlineAutoData(false, true, true, true, false)]
+    [InlineAutoData(true, false, false, false, false)]
+    [InlineAutoData(true, false, false, true, false)]
+    [InlineAutoData(true, false, true, false, false)]
+    [InlineAutoData(true, false, true, true, false)]
+    [InlineAutoData(true, true, false, false, false)]
+    [InlineAutoData(true, true, false, true, false)]
+    [InlineAutoData(true, true, true, false, false)]
+    [InlineAutoData(true, true, true, true, true)]
+    public void Should_perform_upon_spec_the_logical_operation_at_least_when_the_set_size_is_supplied_as_the_minimum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool, string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build(underlyingSpec)
+            .AsAtLeastNSatisfied(4)
+            .WhenTrue("All satisfied")
+            .WhenFalse("Not all satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, false)]
+    [InlineAutoData(false, false, false, true, false)]
+    [InlineAutoData(false, false, true, false, false)]
+    [InlineAutoData(false, false, true, true, false)]
+    [InlineAutoData(false, true, false, false, false)]
+    [InlineAutoData(false, true, false, true, false)]
+    [InlineAutoData(false, true, true, false, false)]
+    [InlineAutoData(false, true, true, true, false)]
+    [InlineAutoData(true, false, false, false, false)]
+    [InlineAutoData(true, false, false, true, false)]
+    [InlineAutoData(true, false, true, false, false)]
+    [InlineAutoData(true, false, true, true, false)]
+    [InlineAutoData(true, true, false, false, false)]
+    [InlineAutoData(true, true, false, true, false)]
+    [InlineAutoData(true, true, true, false, false)]
+    [InlineAutoData(true, true, true, true, true)]
+    public void Should_perform_upon_policy_result_the_logical_operation_at_least_when_the_set_size_is_supplied_as_the_minimum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        PolicyBase<bool, string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .AsAtLeastNSatisfied(4)
+            .WhenTrue("All satisfied")
+            .WhenFalse("Not all satisfied")
+            .Create();
+
+        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false, false)]
+    [InlineAutoData(false, false, false, true, false)]
+    [InlineAutoData(false, false, true, false, false)]
+    [InlineAutoData(false, false, true, true, false)]
+    [InlineAutoData(false, true, false, false, false)]
+    [InlineAutoData(false, true, false, true, false)]
+    [InlineAutoData(false, true, true, false, false)]
+    [InlineAutoData(false, true, true, true, false)]
+    [InlineAutoData(true, false, false, false, false)]
+    [InlineAutoData(true, false, false, true, false)]
+    [InlineAutoData(true, false, true, false, false)]
+    [InlineAutoData(true, false, true, true, false)]
+    [InlineAutoData(true, true, false, false, false)]
+    [InlineAutoData(true, true, false, true, false)]
+    [InlineAutoData(true, true, true, false, false)]
+    [InlineAutoData(true, true, true, true, true)]
+    public void Should_perform_upon_boolean_result_the_logical_operation_at_least_when_the_set_size_is_supplied_as_the_minimum(
+        bool first,
+        bool second,
+        bool third,
+        bool fourth,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool, string> underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create("returns the model");
+
+        var spec = Spec
+            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
             .AsAtLeastNSatisfied(4)
             .WhenTrue("All satisfied")
             .WhenFalse("Not all satisfied")

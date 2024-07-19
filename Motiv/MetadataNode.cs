@@ -2,9 +2,11 @@ namespace Motiv;
 
 /// <summary>Represents a node in the metadata hierarchy.</summary>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-public sealed class MetadataNode<TMetadata>
+public class MetadataNode<TMetadata>
 {
-    private readonly ISet<TMetadata> _metadataCollection;
+    private readonly Lazy<ISet<TMetadata>> _lazyMetadataCollection;
+
+    private readonly Lazy<IEnumerable<MetadataNode<TMetadata>>> _lazyUnderlying;
 
     /// <summary>Initializes a new instance of the MetadataNode class.</summary>
     /// <param name="metadata">The metadata to associate with this node.</param>
@@ -13,15 +15,19 @@ public sealed class MetadataNode<TMetadata>
         IEnumerable<TMetadata> metadata,
         IEnumerable<BooleanResultBase<TMetadata>> causes)
     {
-        var metadataCollection = metadata as ICollection<TMetadata> ?? metadata.ToArray();
+        var lazyMetadata = new Lazy<IEnumerable<TMetadata>>(() =>
+            metadata as ICollection<TMetadata> ?? metadata.ToArray());
 
-        Underlying = ResolveUnderlying(metadataCollection, causes);
-        _metadataCollection = metadata switch
-        {
-            ISet<TMetadata> metadataTier => metadataTier,
-            IEnumerable<IComparable<TMetadata>> => new SortedSet<TMetadata>(metadataCollection),
-            _ => new HashSet<TMetadata>(metadataCollection)
-        };
+        _lazyUnderlying = new Lazy<IEnumerable<MetadataNode<TMetadata>>>(() =>
+            ResolveUnderlying(lazyMetadata.Value, causes));
+
+        _lazyMetadataCollection = new Lazy<ISet<TMetadata>>(() =>
+            metadata switch
+            {
+                ISet<TMetadata> metadataTier => metadataTier,
+                IEnumerable<IComparable<TMetadata>> => new SortedSet<TMetadata>(lazyMetadata.Value),
+                _ => new HashSet<TMetadata>(lazyMetadata.Value)
+            });
     }
 
     /// <summary>Initializes a new instance of the MetadataNode class with a single metadata item.</summary>
@@ -33,10 +39,10 @@ public sealed class MetadataNode<TMetadata>
     }
 
     /// <summary>Gets the underlying metadata nodes.</summary>
-    public IEnumerable<MetadataNode<TMetadata>> Underlying { get; }
+    public IEnumerable<MetadataNode<TMetadata>> Underlying => _lazyUnderlying.Value;
 
     /// <summary>Gets the metadata associated with this node.</summary>
-    public IEnumerable<TMetadata> Metadata => _metadataCollection;
+    public IEnumerable<TMetadata> Metadata => _lazyMetadataCollection.Value;
 
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -71,7 +77,7 @@ public sealed class MetadataNode<TMetadata>
 
     private string GetDebugDisplay()
     {
-        return _metadataCollection switch
+        return _lazyMetadataCollection.Value switch
         {
             IEnumerable<string> assertions => assertions.Serialize(),
             IEnumerable<byte> numerics => numerics.Serialize(),
@@ -89,7 +95,7 @@ public sealed class MetadataNode<TMetadata>
             IEnumerable<bool> booleans => booleans.Serialize(),
             IEnumerable<DateTime> dateTimes => dateTimes.Serialize(),
             IEnumerable<TimeSpan> timeSpans => timeSpans.Serialize(),
-            _ when typeof(TMetadata).IsEnum => _metadataCollection.Serialize(),
+            _ when typeof(TMetadata).IsEnum => _lazyMetadataCollection.Value.Serialize(),
             _ => base.ToString() ?? ""
         };
     }

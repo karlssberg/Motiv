@@ -11,14 +11,14 @@ public class AsAnySatisfiedSpecTests
     [InlineAutoData(true, false, true, true)]
     [InlineAutoData(true, true, false, true)]
     [InlineAutoData(true, true, true, true)]
-    public void Should_perform_the_logical_operation_Any(
+    public void Should_perform_upon_a_policy_the_logical_operation_Any(
         bool first,
         bool second,
         bool third,
         bool expected)
     {
         // Arrange
-        var underlyingSpec = Spec
+        PolicyBase<bool,string> underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true.ToString())
             .WhenFalse(false.ToString())
@@ -39,27 +39,193 @@ public class AsAnySatisfiedSpecTests
         act.Should().Be(expected);
     }
 
+    [Theory]
+    [InlineAutoData(false, false, false, false)]
+    [InlineAutoData(false, false, true, true)]
+    [InlineAutoData(false, true, false, true)]
+    [InlineAutoData(false, true, true, true)]
+    [InlineAutoData(true, false, false, true)]
+    [InlineAutoData(true, false, true, true)]
+    [InlineAutoData(true, true, false, true)]
+    [InlineAutoData(true, true, true, true)]
+    public void Should_perform_upon_a_policy_result_the_logical_operation_Any(
+        bool first,
+        bool second,
+        bool third,
+        bool expected)
+    {
+        // Arrange
+        PolicyBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString())
+                .WhenFalse(false.ToString())
+                .Create();
+
+        var spec =
+            Spec.Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+                .AsAnySatisfied()
+                .WhenTrue(true)
+                .WhenFalse(false)
+                .Create("any satisfied");
+
+        var result = spec.IsSatisfiedBy([first, second, third]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false)]
+    [InlineAutoData(false, false, true, true)]
+    [InlineAutoData(false, true, false, true)]
+    [InlineAutoData(false, true, true, true)]
+    [InlineAutoData(true, false, false, true)]
+    [InlineAutoData(true, false, true, true)]
+    [InlineAutoData(true, true, false, true)]
+    [InlineAutoData(true, true, true, true)]
+    public void Should_perform_upon_a_spec_the_logical_operation_Any(
+        bool first,
+        bool second,
+        bool third,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString())
+                .WhenFalse(false.ToString())
+                .Create();
+
+        var spec =
+            Spec.Build(underlyingSpec)
+                .AsAnySatisfied()
+                .WhenTrue(true)
+                .WhenFalse(false)
+                .Create("any satisfied");
+
+        var result = spec.IsSatisfiedBy([first, second, third]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, false)]
+    [InlineAutoData(false, false, true, true)]
+    [InlineAutoData(false, true, false, true)]
+    [InlineAutoData(false, true, true, true)]
+    [InlineAutoData(true, false, false, true)]
+    [InlineAutoData(true, false, true, true)]
+    [InlineAutoData(true, true, false, true)]
+    [InlineAutoData(true, true, true, true)]
+    public void Should_perform_upon_a_boolean_result_the_logical_operation_Any(
+        bool first,
+        bool second,
+        bool third,
+        bool expected)
+    {
+        // Arrange
+        SpecBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue(true.ToString())
+                .WhenFalse(false.ToString())
+                .Create();
+
+        var spec =
+            Spec.Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+                .AsAnySatisfied()
+                .WhenTrue(true)
+                .WhenFalse(false)
+                .Create("any satisfied");
+
+        var result = spec.IsSatisfiedBy([first, second, third]);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Fact]
+    public void Should_provide_a_high_level_statement_of_the_policy_when_metadata_is_a_string()
+    {
+        // Arrange
+        const string expected = "high-level description";
+
+        PolicyBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue("boolean is true")
+                .WhenFalse("boolean is false")
+                .Create();
+
+        var spec =
+            Spec.Build(underlyingSpec)
+                .AsAnySatisfied()
+                .WhenTrue(true)
+                .WhenFalse(false)
+                .Create("high-level description");
+
+        // Act
+        var act = spec.Statement;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
     [Fact]
     public void Should_provide_a_high_level_statement_of_the_specification_when_metadata_is_a_string()
     {
         // Arrange
         const string expected = "high-level description";
 
-        var underlyingSpec = Spec
-            .Build((bool m) => m)
-            .WhenTrue("boolean is true")
-            .WhenFalse("boolean is false")
-            .Create();
+        SpecBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue("boolean is true")
+                .WhenFalse("boolean is false")
+                .Create();
 
-        var spec = Spec
-            .Build(underlyingSpec)
-            .AsAnySatisfied()
-            .WhenTrue(true)
-            .WhenFalse(false)
-            .Create("high-level description");
+        var spec =
+            Spec.Build(underlyingSpec)
+                .AsAnySatisfied()
+                .WhenTrue(true)
+                .WhenFalse(false)
+                .Create("high-level description");
 
         // Act
         var act = spec.Statement;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Fact]
+    public void Should_serialize_a_description_of_the_policy_when_metadata_is_a_string()
+    {
+        // Arrange
+        const string expected = "high-level description";
+
+        PolicyBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue("boolean is true")
+                .WhenFalse("boolean is false")
+                .Create();
+
+        var spec =
+            Spec.Build(underlyingSpec)
+                .AsAnySatisfied()
+                .WhenTrue(true)
+                .WhenFalse(false)
+                .Create("high-level description");
+
+        // Act
+        var act = spec.ToString();
 
         // Assert
         act.Should().Be(expected);
@@ -71,18 +237,18 @@ public class AsAnySatisfiedSpecTests
         // Arrange
         const string expected = "high-level description";
 
-        var underlyingSpec = Spec
-            .Build((bool m) => m)
-            .WhenTrue("boolean is true")
-            .WhenFalse("boolean is false")
-            .Create();
+        SpecBase<bool,string> underlyingSpec =
+            Spec.Build((bool m) => m)
+                .WhenTrue("boolean is true")
+                .WhenFalse("boolean is false")
+                .Create();
 
-        var spec = Spec
-            .Build(underlyingSpec)
-            .AsAnySatisfied()
-            .WhenTrue(true)
-            .WhenFalse(false)
-            .Create("high-level description");
+        var spec =
+            Spec.Build(underlyingSpec)
+                .AsAnySatisfied()
+                .WhenTrue(true)
+                .WhenFalse(false)
+                .Create("high-level description");
 
         // Act
         var act = spec.ToString();
@@ -131,14 +297,14 @@ public class AsAnySatisfiedSpecTests
                                                 is true
                                                 is true
                                             """)]
-    public void Should_serialize_the_result_of_the_any_operation(
+    public void Should_serialize_the_policy_result_of_the_any_operation(
         bool first,
         bool second,
         bool third,
         string expected)
     {
         // Arrange
-        var underlyingSpec = Spec
+        SpecBase<bool,bool> underlyingSpec = Spec
             .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
@@ -289,10 +455,114 @@ public class AsAnySatisfiedSpecTests
             .WhenFalse(_ => "all false")
             .Create("any true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        PolicyResultBase<string> result = spec.IsSatisfiedBy([first, second, third]);
 
         // Act
         var act = result.Justification;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, """
+                                            all false
+                                                is false
+                                                is false
+                                                is false
+                                            """)]
+    [InlineAutoData(false, false, true,  """
+                                            any true
+                                                is true
+                                            """)]
+    [InlineAutoData(false, true, false,  """
+                                            any true
+                                                is true
+                                            """)]
+    [InlineAutoData(false, true, true,   """
+                                            any true
+                                                is true
+                                                is true
+                                            """)]
+    [InlineAutoData(true, false, false,  """
+                                            any true
+                                                is true
+                                            """)]
+    [InlineAutoData(true, false, true,   """
+                                            any true
+                                                is true
+                                                is true
+                                            """)]
+    [InlineAutoData(true, true, false,   """
+                                            any true
+                                                is true
+                                                is true
+                                            """)]
+    [InlineAutoData(true, true, true,    """
+                                            any true
+                                                is true
+                                                is true
+                                                is true
+                                            """)]
+    public void Should_serialize_the_boolean_result_of_the_any_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
+        bool first,
+        bool second,
+        bool third,
+        string expected)
+    {
+        // Arrange
+        var underlyingSpec = Spec
+            .Build((bool m) => m)
+            .WhenTrue("is true")
+            .WhenFalse("is false")
+            .Create("is true");
+
+        var spec = Spec
+            .Build(underlyingSpec)
+            .AsAnySatisfied()
+            .WhenTrue(_ => "any true")
+            .WhenFalse(_ => "all false")
+            .Create("any true")
+            .ToExplanationSpec();
+
+        BooleanResultBase<string> result = spec.IsSatisfiedBy([first, second, third]);
+
+        // Act
+        var act = result.Justification;
+
+        // Assert
+        act.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false, 3)]
+    [InlineAutoData(false, false, true, 1)]
+    [InlineAutoData(false, true, false, 1)]
+    [InlineAutoData(false, true, true, 2)]
+    [InlineAutoData(true, false, false, 1)]
+    [InlineAutoData(true, false, true, 2)]
+    [InlineAutoData(true, true, false, 2)]
+    [InlineAutoData(true, true, true, 3)]
+    public void Should_accurately_report_the_number_of_causal_operands_for_boolean(
+        bool firstModel,
+        bool secondModel,
+        bool thirdModel,
+        int expected)
+    {
+        // Arrange
+        var underlying = Spec
+            .Build((bool m) => m)
+            .Create("underlying");
+
+        var spec = Spec
+            .Build(underlying)
+            .AsAnySatisfied()
+            .Create("any are true");
+
+        var result = spec.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
+
+        // Act
+        var act = result.Description.CausalOperandCount;
 
         // Assert
         act.Should().Be(expected);

@@ -20,12 +20,12 @@ internal sealed class BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata
 
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata =>
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues =>
         booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? [];
 
     public override IEnumerable<BooleanResultBase> Causes => booleanResult.ToEnumerable();
 
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata =>
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues =>
         booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? [];
 }

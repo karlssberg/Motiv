@@ -2,7 +2,7 @@ using Motiv.BooleanPredicateProposition;
 
 namespace Motiv.Tests;
 
-public class ExplanationBooleanResultTests
+public class IncompatibleBooleanResultTests
 {
     public class ResultDescription(string reason, string statement) : ResultDescriptionBase
     {
@@ -105,13 +105,12 @@ public class ExplanationBooleanResultTests
         act.Should().Contain(operands.GetAssertions());
     }
 
-
     [Theory]
     [InlineAutoData(false, false, "False")]
     [InlineAutoData(false, true, "False")]
     [InlineAutoData(true, false, "False")]
     [InlineAutoData(true, true, "True")]
-    public void Should_assert_and_operation_with_incompatible_metadata(bool left, bool right, params string[] expected)
+    public void Should_assert_with_incompatible_metadata(bool left, bool right, params string[] expected)
     {
         // Arrange
         var leftResult = new PropositionBooleanResult<bool>(
@@ -131,6 +130,36 @@ public class ExplanationBooleanResultTests
 
         // Act
         var act = result.Assertions;
+
+        // Assert
+        act.Should().Contain(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, "False")]
+    [InlineAutoData(false, true, "False")]
+    [InlineAutoData(true, false, "False")]
+    [InlineAutoData(true, true, "True")]
+    public void Should_determine_causes_with_incompatible_metadata(bool left, bool right, params string[] expected)
+    {
+        // Arrange
+        var leftResult = new PropositionBooleanResult<bool>(
+            left,
+            new Lazy<MetadataNode<bool>>(() => new MetadataNode<bool>(left, [])),
+            new Lazy<Explanation>(() => new Explanation(left.ToString(), [])),
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(left.ToString(), left.ToString())));
+        var rightResult = new  PropositionBooleanResult<MyMetadata>(
+            right,
+            new Lazy<MetadataNode<MyMetadata>>(() => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, [])),
+            new Lazy<Explanation>(() => new Explanation(right.ToString(), [])),
+            new Lazy<ResultDescriptionBase>(() =>
+                new BooleanResultDescription(right.ToString(), right.ToString())));
+
+        var result = leftResult & rightResult;
+
+        // Act
+        var act = result.Causes.Select(cause => cause.Description.Statement);
 
         // Assert
         act.Should().Contain(expected);
@@ -562,7 +591,7 @@ public class ExplanationBooleanResultTests
             .IsSatisfiedBy(satisfied);
 
         // Act
-        var act = result.ToExplanationResult().UnderlyingWithMetadata.First().Reason;
+        var act = result.ToExplanationResult().UnderlyingWithValues.First().Reason;
 
         // Assert
         act.Should().Be(satisfied.ToString());
@@ -632,7 +661,7 @@ public class ExplanationBooleanResultTests
             .IsSatisfiedBy(satisfied);
 
         // Act
-        var act = result.ToExplanationResult().CausesWithMetadata.First().Reason;
+        var act = result.ToExplanationResult().CausesWithValues.First().Reason;
 
         // Assert
         act.Should().Be(satisfied.ToString());
