@@ -34,7 +34,7 @@ internal sealed class PolicyDecoratorExplanationProposition<TModel, TUnderlyingM
     private PolicyResultBase<string> CreatePolicyResult(Lazy<string> assertion, PolicyResultBase<TUnderlyingMetadata> policyResult)
     {
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertion.Value, policyResult.ToEnumerable()));
+            new Explanation(assertion.Value, policyResult.ToEnumerable(), policyResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(assertion.Value.ToEnumerable(),

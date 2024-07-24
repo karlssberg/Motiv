@@ -1,12 +1,12 @@
 ﻿using Motiv.ECommerce.Behaviors;
 using Motiv.ECommerce.Models;
 
-namespace Motiv.ECommerce;
+namespace Motiv.ECommerce.Policies;
 
 public class ShouldDeliverSameDayPolicy() : Policy<FulfillmentContext, IBehavior>(
     Spec.Build(IsSameDayDelivery)
         .WhenTrue(new SameDayDeliveryBehavior() as IBehavior)
-        .WhenFalse( new NullBehavior())
+        .WhenFalse( new DefaultBehavior())
         .Create("should deliver same day"))
 {
     private static SpecBase<FulfillmentContext, string> IsSameDayDelivery { get; } =

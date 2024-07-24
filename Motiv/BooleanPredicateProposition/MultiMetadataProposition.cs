@@ -41,7 +41,7 @@ internal sealed class MultiMetadataProposition<TModel, TMetadata>(
         return new PropositionBooleanResult<TMetadata>(
             isSatisfied,
             new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata, [])),
-            new Lazy<Explanation>(() => new Explanation(assertion, [])),
+            new Lazy<Explanation>(() => new Explanation(assertion, [], [])),
             new Lazy<ResultDescriptionBase>(() =>
                 new PropositionResultDescription(Description.ToReason(isSatisfied), Description.Statement)));
     }

@@ -10,4 +10,37 @@
         <ProjectReference Include="..\..\Motiv\Motiv.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="IsFlushRuleRule.cs">
+        <DependentUpon>PokerRules.cs</DependentUpon>
+      </Compile>
+      <Compile Update="IsFourOfAKindRule.cs">
+        <DependentUpon>PokerRules.cs</DependentUpon>
+      </Compile>
+      <Compile Update="IsFullHouseRule.cs">
+        <DependentUpon>PokerRules.cs</DependentUpon>
+      </Compile>
+      <Compile Update="IsHighCard.cs">
+        <DependentUpon>PokerRules.cs</DependentUpon>
+      </Compile>
+      <Compile Update="IsPairRule.cs">
+        <DependentUpon>PokerRules.cs</DependentUpon>
+      </Compile>
+      <Compile Update="IsRoyalFlushRule.cs">
+        <DependentUpon>PokerRules.cs</DependentUpon>
+      </Compile>
+      <Compile Update="IsStraightFlushRule.cs">
+        <DependentUpon>PokerRules.cs</DependentUpon>
+      </Compile>
+      <Compile Update="IsStraightRule.cs">
+        <DependentUpon>PokerRules.cs</DependentUpon>
+      </Compile>
+      <Compile Update="IsThreeOfAKindRule.cs">
+        <DependentUpon>PokerRules.cs</DependentUpon>
+      </Compile>
+      <Compile Update="IsTwoPairRule.cs">
+        <DependentUpon>PokerRules.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

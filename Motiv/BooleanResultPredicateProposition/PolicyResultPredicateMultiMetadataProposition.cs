@@ -49,7 +49,7 @@ internal sealed class PolicyResultPredicateMultiMetadataProposition<TModel, TMet
         });
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertions.Value, policyResult.ToEnumerable()));
+            new Explanation(assertions.Value, policyResult.ToEnumerable(), policyResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(metadata.Value,

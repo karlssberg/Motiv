@@ -40,7 +40,7 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
             : assertion.Value;
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertion.Value, booleanResult.ToEnumerable()));
+            new Explanation(assertion.Value, booleanResult.ToEnumerable(), booleanResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(assertion.Value,

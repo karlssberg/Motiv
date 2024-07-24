@@ -44,29 +44,29 @@ internal sealed class PolicyResultPredicateMetadataProposition<TModel, TMetadata
             });
     }
 
-    private PolicyResultBase<TMetadata> CreatePolicyResult(Lazy<TMetadata> metadata, PolicyResultBase<TUnderlyingMetadata> booleanResult)
+    private PolicyResultBase<TMetadata> CreatePolicyResult(Lazy<TMetadata> metadata, PolicyResultBase<TUnderlyingMetadata> policyResult)
     {
         var assertions = new Lazy<string[]>(() => metadata.Value switch
         {
             IEnumerable<string> assertion => assertion.ToArray(),
-            _ => [Description.ToReason(booleanResult.Satisfied)]
+            _ => [Description.ToReason(policyResult.Satisfied)]
         });
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertions.Value, booleanResult.ToEnumerable()));
+            new Explanation(assertions.Value, policyResult.ToEnumerable(), policyResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(metadata.Value,
-                booleanResult.ToEnumerable() as IEnumerable<PolicyResultBase<TMetadata>> ?? []));
+                policyResult.ToEnumerable() as IEnumerable<PolicyResultBase<TMetadata>> ?? []));
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
-                booleanResult,
-                Description.ToReason(booleanResult.Satisfied),
+                policyResult,
+                Description.ToReason(policyResult.Satisfied),
                 Description.Statement));
 
         return new PolicyResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
-            booleanResult,
+            policyResult,
             Value,
             MetadataTier,
             Explanation,

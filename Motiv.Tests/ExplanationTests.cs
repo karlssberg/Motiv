@@ -288,6 +288,7 @@ public class ExplanationTests
         act.Should().BeEquivalentTo(expected);
     }
 
+
     [Theory]
     [InlineData(1, "odd")]
     [InlineData(2, "even")]

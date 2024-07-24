@@ -65,19 +65,26 @@ internal sealed class HigherOrderFromBooleanResultMetadataProposition<TModel, TM
                 _ => specDescription.ToReason(isSatisfied).ToEnumerable()
             });
 
+
+        var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
+            new HigherOrderResultDescription<TUnderlyingMetadata>(
+                specDescription.ToReason(isSatisfied),
+                causes.Value,
+                Description.Statement));
+
         return new HigherOrderPolicyResult<TMetadata, TUnderlyingMetadata>(
             isSatisfied,
             Value,
             Metadata,
             Assertions,
-            Reason,
+            ResultDescription,
             underlyingResults,
             GetCauses);
 
         TMetadata Value() => metadata.Value;
         IEnumerable<TMetadata> Metadata() => metadata.Value.ToEnumerable();
         IEnumerable<string> Assertions() => assertions.Value;
-        string Reason() => specDescription.ToReason(isSatisfied);
+        ResultDescriptionBase ResultDescription() => lazyDescription.Value;
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> GetCauses() => causes.Value;
     }
 }

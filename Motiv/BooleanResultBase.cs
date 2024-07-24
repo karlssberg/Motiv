@@ -47,14 +47,17 @@ public abstract class BooleanResultBase
     /// <summary>
     /// Gets a set of human-readable expressions that represent the underlying resons/boolean-expressons of the result.
     /// </summary>
-    public IEnumerable<string> UnderlyingReasons =>
+    public IEnumerable<string> UnderlyingReasons => UnderlyingExpressionResults.Select(result => result.Reason);
+
+    /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that .</summary>
+    public IEnumerable<BooleanResultBase> UnderlyingExpressionResults =>
         Causes
             .SelectMany(booleanResult =>
                 (this, booleanResult) switch
                 {
                     (not IBooleanOperationResult, IBooleanOperationResult) =>
-                        booleanResult.Reason.ToEnumerable().Concat(booleanResult.UnderlyingReasons),
-                    _ => booleanResult.UnderlyingReasons,
+                        booleanResult.ToEnumerable().Concat(booleanResult.UnderlyingExpressionResults),
+                    _ => booleanResult.UnderlyingExpressionResults,
                 });
 
     /// <summary>Gets a full hierarchical breakdown of the reasons for the result.</summary>
@@ -76,7 +79,7 @@ public abstract class BooleanResultBase
     public IEnumerable<string> SubAssertions => Explanation.Underlying.GetAssertions();
 
     /// <summary>Gets all the assertions from the underlying results.</summary>
-    public IEnumerable<string> AllSubAssertions => Underlying.SelectMany(r => r.AllAssertions);
+    public IEnumerable<string> AllSubAssertions => Explanation.AllUnderlying.GetAllAssertions();
 
     /// <summary>Gets all the assertions returned from atomic propositions.</summary>
     public IEnumerable<string> RootAssertions => this.GetRootAssertions();
@@ -103,6 +106,15 @@ public abstract class BooleanResultBase
             .SelectMany(booleanResult =>
                 booleanResult is IBooleanOperationResult
                     ? booleanResult.UnderlyingAssertionSources
+                    : booleanResult.ToEnumerable())
+            .ElseIfEmpty(this.ToEnumerable());
+
+    /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Assertions" />.</summary>
+    public IEnumerable<BooleanResultBase> UnderlyingAllAssertionSources =>
+        Underlying
+            .SelectMany(booleanResult =>
+                booleanResult is IBooleanOperationResult
+                    ? booleanResult.UnderlyingAllAssertionSources
                     : booleanResult.ToEnumerable())
             .ElseIfEmpty(this.ToEnumerable());
 

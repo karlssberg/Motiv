@@ -40,7 +40,7 @@ internal sealed class SpecDecoratorMetadataProposition<TModel, TMetadata, TUnder
             });
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertions.Value, booleanResult.ToEnumerable()));
+            new Explanation(assertions.Value, booleanResult.ToEnumerable(), booleanResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(metadata.Value,

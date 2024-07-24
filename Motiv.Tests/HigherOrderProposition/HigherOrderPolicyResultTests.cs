@@ -1,4 +1,5 @@
 ﻿using Motiv.HigherOrderProposition;
+using Motiv.Tests.Customizations;
 
 namespace Motiv.Tests.HigherOrderProposition;
 
@@ -12,7 +13,7 @@ namespace Motiv.Tests.HigherOrderProposition;
             TestMetadata? value = null,
             IEnumerable<TestMetadata>? metadata = null,
             IEnumerable<string>? assertions = null,
-            string reason = "Default Reason",
+            string? reason = null,
             IEnumerable<BooleanResultBase<TestUnderlyingMetadata>>? underlyingResults = null,
             IEnumerable<BooleanResultBase<TestUnderlyingMetadata>>? causes = null)
         {
@@ -21,7 +22,7 @@ namespace Motiv.Tests.HigherOrderProposition;
                 () => value ?? new TestMetadata(),
                 () => metadata ?? new List<TestMetadata>(),
                 () => assertions ?? new List<string>(),
-                () => reason,
+                () => new HigherOrderResultDescription<TestUnderlyingMetadata>(reason ?? "", causes ?? [], ""),
                 underlyingResults ?? new List<BooleanResultBase<TestUnderlyingMetadata>>(),
                 () => causes ?? new List<BooleanResultBase<TestUnderlyingMetadata>>());
         }

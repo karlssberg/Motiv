@@ -9,25 +9,49 @@ namespace Motiv;
 public sealed class Explanation
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="Explanation"/> class.
+    /// Initializes a new instance of the <see cref="Explanation"/> class that redefines assertions.
     /// </summary>
     /// <param name="assertion">The assertion.</param>
     /// <param name="causes">The causes.</param>
-    internal Explanation(string assertion, IEnumerable<BooleanResultBase> causes)
-        : this(assertion.ToEnumerable(), causes)
+    /// <param name="results">The results that took part in the evaluation.</param>
+    internal Explanation(string assertion, IEnumerable<BooleanResultBase> causes, IEnumerable<BooleanResultBase> results)
+        : this(assertion.ToEnumerable(), causes, results)
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Explanation"/> class.
+    /// Initializes a new instance of the <see cref="Explanation"/> class that redefines assertions.
     /// </summary>
     /// <param name="assertions">The assertions.</param>
     /// <param name="causes">The causes.</param>
-    internal Explanation(IEnumerable<string> assertions, IEnumerable<BooleanResultBase> causes)
+    /// <param name="results">The results that took part in the evaluation.</param>
+    internal Explanation(IEnumerable<string> assertions, IEnumerable<BooleanResultBase> causes, IEnumerable<BooleanResultBase> results)
     {
-        var assertionsArray = assertions as string[] ?? assertions.ToArray();
+        var distinctAssertions = assertions.DistinctWithOrderPreserved().ToArray();
+
         Causes = causes;
-        Assertions = assertionsArray.DistinctWithOrderPreserved();
+        Results = results;
+        Assertions = distinctAssertions;
+        AllAssertions = distinctAssertions;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Explanation"/> class, which co-opts the assertions from the causes.
+    /// </summary>
+    /// <param name="causes">The causes.</param>
+    /// <param name="results">The results that took part in the evaluation.</param>
+    internal Explanation(IEnumerable<BooleanResultBase> causes, IEnumerable<BooleanResultBase> results)
+    {
+        var causeCollection = causes as ICollection<BooleanResultBase> ?? causes.ToArray();
+        var assertions = causeCollection.GetAssertions();
+
+        var allResult = results as ICollection<BooleanResultBase> ?? results.ToArray();
+        var allAssertions = allResult.GetAllAssertions();
+
+        Assertions = assertions;
+        AllAssertions = allAssertions;
+        Causes = causeCollection;
+        Results = allResult;
     }
 
     /// <summary>
@@ -36,14 +60,29 @@ public sealed class Explanation
     public IEnumerable<BooleanResultBase> Causes { get; }
 
     /// <summary>
-    /// Gets the assertions.
+    /// Gets the causes.
+    /// </summary>
+    public IEnumerable<BooleanResultBase> Results { get; }
+
+    /// <summary>
+    /// Gets the assertions yielded from results that determined the outcome.
     /// </summary>
     public IEnumerable<string> Assertions { get; }
 
     /// <summary>
-    /// Gets the underlying explanations.
+    /// Gets the assertions yielded from all results that took part in the evaluation.
+    /// </summary>
+    public IEnumerable<string> AllAssertions { get; }
+
+    /// <summary>
+    /// Gets the underlying explanations of the causes.
     /// </summary>
     public IEnumerable<Explanation> Underlying => ResolveUnderlying(Assertions, Causes);
+
+    /// <summary>
+    /// Gets the all underlying explanations, regardless of whether they determined the outcome.
+    /// </summary>
+    public IEnumerable<Explanation> AllUnderlying => ResolveAllUnderlying(Assertions, Results);
 
     /// <summary>
     /// Returns a string that represents the current object.
@@ -51,12 +90,6 @@ public sealed class Explanation
     /// <returns>A string that represents the current object.</returns>
     public override string ToString() => Assertions.Serialize();
 
-    /// <summary>
-    /// Resolves the underlying explanations.
-    /// </summary>
-    /// <param name="assertions">The assertions.</param>
-    /// <param name="causes">The causes.</param>
-    /// <returns>The underlying explanations.</returns>
     private static IEnumerable<Explanation> ResolveUnderlying(
         IEnumerable<string> assertions,
         IEnumerable<BooleanResultBase> causes)
@@ -80,6 +113,31 @@ public sealed class Explanation
         return doesParentEqualChildAssertion
             ? underlying.SelectMany(result => result.Underlying)
             : underlying;
+    }
+
+    private static IEnumerable<Explanation> ResolveAllUnderlying(
+        IEnumerable<string> assertions,
+        IEnumerable<BooleanResultBase> results)
+    {
+        var allUnderlying = results
+            .SelectMany(result =>
+                result switch
+                {
+                    IBooleanOperationResult => result.UnderlyingAllAssertionSources,
+                    _ => result.ToEnumerable()
+                })
+            .Select(cause => cause.Explanation)
+            .ToArray();
+
+        var allUnderlyingAssertions = allUnderlying
+            .SelectMany(explanation => explanation.AllAssertions)
+            .DistinctWithOrderPreserved();
+
+        var doesParentEqualChildAssertion = allUnderlyingAssertions.SequenceEqual(assertions);
+
+        return doesParentEqualChildAssertion
+            ? allUnderlying.SelectMany(result => result.AllUnderlying)
+            : allUnderlying;
     }
 
     /// <summary>

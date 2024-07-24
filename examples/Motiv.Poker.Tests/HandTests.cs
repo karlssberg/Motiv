@@ -8,9 +8,9 @@ namespace Motiv.Poker.Tests;
 public class HandTests
 {
     [Theory]
-    [InlineData("A, A, A, A, 2", false, HandRank.HighCard)]
-    [InlineData("K, A, A, 2, 2", false, HandRank.HighCard)]
-    [InlineData("K, A, 2, 2, 2", false, HandRank.HighCard)]
+    [InlineData("A, A, A, A, 2", false, HandRank.Unknown)]
+    [InlineData("K, A, A, 2, 2", false, HandRank.Unknown)]
+    [InlineData("K, A, 2, 2, 2", false, HandRank.Unknown)]
     [InlineData("A, A, K, Q, 10", true, HandRank.Pair)]
     [InlineData("A, K, K, Q, 10", true, HandRank.Pair)]
     [InlineData("A, K, Q, Q, 10", true, HandRank.Pair)]
@@ -36,9 +36,9 @@ public class HandTests
     [InlineData("K, K, 3, 2, 2", true, HandRank.TwoPair)]
     [InlineData("K, K, A, A, 2", true, HandRank.TwoPair)]
     [InlineData("4, K, A, A, 4", true, HandRank.TwoPair)]
-    [InlineData("4, 4, 5, 6, 7", false, HandRank.HighCard)]
-    [InlineData("A, A, 8, K, 2", false, HandRank.HighCard)]
-    [InlineData("A, A, A, K, 2", false, HandRank.HighCard)]
+    [InlineData("4, 4, 5, 6, 7", false, HandRank.Unknown)]
+    [InlineData("A, A, 8, K, 2", false, HandRank.Unknown)]
+    [InlineData("A, A, A, K, 2", false, HandRank.Unknown)]
     public void Should_evaluate_two_pairs(string handRanks, bool expected, HandRank expectedRank)
     {
         var cards = handRanks
@@ -190,16 +190,8 @@ public class HandTests
     [InlineData("AH, AD, AS, 10H, 9D", true, HandRank.ThreeOfAKind, "is a three of a kind hand")]
     [InlineData("AH, AD, QS, 10D, 10H", true, HandRank.TwoPair, "is a two pair hand")]
     [InlineData("AH, AD, 10S, 5C, 2H", true, HandRank.Pair, "is a pair hand")]
-    [InlineData("AH, 10D, 8S, 5C, 3D", false, HandRank.HighCard, "¬is a royal flush hand",
-                                                                                            "¬is a straight flush hand",
-                                                                                            "¬is a four of a kind hand",
-                                                                                            "¬is a full house hand",
-                                                                                            "¬is a flush hand",
-                                                                                            "¬is a straight hand",
-                                                                                            "¬is a three of a kind hand",
-                                                                                            "¬is a two pair hand",
-                                                                                            "¬is a pair hand")]
-    public void Should_evaluate_a_winning_hand(string handRanks, bool expected, HandRank expectedRank, params string[] expectedAssertion)
+    [InlineData("AH, 10D, 8S, 5C, 3D", true, HandRank.HighCard, "is a high card hand")]
+    public void Should_evaluate_a_playable_hand(string handRanks, bool expected, HandRank expectedRank, params string[] expectedAssertion)
     {
         var cards = handRanks
             .Split(", ")
@@ -208,7 +200,7 @@ public class HandTests
 
         var hand = new Hand(cards);
 
-        var sut = new WinningHandRules();
+        var sut = new PokerRules();
 
         var act = sut.IsSatisfiedBy(hand);
 
@@ -221,7 +213,7 @@ public class HandTests
     [Fact]
     public void Should_demo_winning_hand()
     {
-        var sut = new WinningHandRules();
+        var sut = new PokerRules();
 
         var act = sut.IsSatisfiedBy(new Hand("KH, QH, JH, 10H, 9H"));
 
