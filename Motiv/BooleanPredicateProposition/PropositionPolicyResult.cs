@@ -4,6 +4,7 @@
 /// Represents a proposition that yields custom metadata based on the result of a boolean predicate.
 /// </summary>
 /// <param name="satisfied">The value of the proposition.</param>
+/// <param name="lazyValue">The value of the policy result.</param>
 /// <param name="metadataTier">The metadata to yield when the predicate is true.</param>
 /// <param name="explanation">The explanation of the proposition.</param>
 /// <param name="description">The description of the proposition result.</param>

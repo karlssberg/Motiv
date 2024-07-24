@@ -6,14 +6,13 @@ namespace Motiv.Tests.HigherOrderProposition;
 
 public class PolicyResultTests
 {
-    [Theory]
-    [AutoData]
+    [Fact]
     public void Constructor_ShouldThrowArgumentNullException_WhenModelIsNull()
     {
         // Act & Assert
         var underlyingResult = Substitute.For<PolicyResultBase<TestMetadata>>();
 
-        Action act = () => new PolicyResult<TestModel, TestMetadata>(null, underlyingResult);
+        var act = () => new PolicyResult<TestModel, TestMetadata>(null!, underlyingResult);
 
         act.Should().Throw<ArgumentNullException>();
     }
@@ -24,7 +23,7 @@ public class PolicyResultTests
         TestModel model)
     {
         // Act & Assert
-        Action act = () => new PolicyResult<TestModel, TestMetadata>(model, null);
+        var act = () => new PolicyResult<TestModel, TestMetadata>(model, null!);
         act.Should().Throw<ArgumentNullException>();
     }
 

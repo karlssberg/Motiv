@@ -6,7 +6,7 @@ namespace Motiv.BooleanPredicateProposition;
 /// <param name="satisfied">The value of the proposition.</param>
 /// <param name="metadataTier">The metadata to yield when the predicate is true.</param>
 /// <param name="explanation">The explanation of the proposition.</param>
-/// <param name="reason">The reason for the proposition.</param>
+/// <param name="description">The reasons for the result.</param>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 internal sealed class PropositionBooleanResult<TMetadata>(
     bool satisfied,
