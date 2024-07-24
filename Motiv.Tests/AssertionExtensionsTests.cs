@@ -69,7 +69,7 @@ public class AssertionExtensionsTests
     {
         // Arrange
         var metadataNodes = assertions
-            .Select(assertion => new Explanation(assertion, Array.Empty<BooleanResultBase<string>>()))
+            .Select(assertion => new Explanation(assertion, [], []))
             .ToArray();
 
         var expected = metadataNodes.SelectMany(e => e.Assertions);

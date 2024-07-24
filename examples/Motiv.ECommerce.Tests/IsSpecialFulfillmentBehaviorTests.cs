@@ -1,21 +1,42 @@
-﻿using FluentAssertions;
+﻿using AutoFixture;
+using FluentAssertions;
 using Motiv.ECommerce.Models;
+using Motiv.ECommerce.Policies;
 
 namespace Motiv.ECommerce.Tests;
 
 public class IsSpecialFulfillmentBehaviorTests
 {
+    [Theory, MemberData(nameof(AllContexts))]
+    public void Should_perform_a_special_fulfillment(
+        FulfillmentContext deliveryContext)
+    {
+        // Arrange
+        var sut = new IsSpecialFulfillmentBehavior();
+
+        var result = sut.IsSatisfiedBy(deliveryContext);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.Should().BeTrue();
+    }
+
     [Theory, AutoData]
     public void Should_ship_from_store(
         ShouldShipSomeProductsFromStorePolicy sut,
         FulfillmentContext context)
     {
+        // Arrange
         var deliveryContext = ToShipFromStoreContext(context);
 
         var result = sut.IsSatisfiedBy(deliveryContext);
 
+        // Act
         var act = result.Justification;
 
+        // Assert
         act.Should().BeEquivalentTo(
             """
             should ship from store
@@ -31,12 +52,15 @@ public class IsSpecialFulfillmentBehaviorTests
         ShouldDeliverSameDayPolicy sut,
         FulfillmentContext context)
     {
+        // Arrange
         var deliveryContext = ToSameDayDeliveryContext(context);
 
         var result = sut.IsSatisfiedBy(deliveryContext);
 
+        // Act
         var act = result.Justification;
 
+        // Assert
         act.Should().BeEquivalentTo(
             """
             should deliver same day
@@ -49,12 +73,15 @@ public class IsSpecialFulfillmentBehaviorTests
         ShouldSplitOrderPolicy sut,
         FulfillmentContext context)
     {
+        // Arrange
         var deliveryContext = ToSplitOrderContext(context);
 
         var result = sut.IsSatisfiedBy(deliveryContext);
 
+        // Act
         var act = result.Justification;
 
+        // Assert
         act.Should().BeEquivalentTo(
             """
             should split order
@@ -67,12 +94,15 @@ public class IsSpecialFulfillmentBehaviorTests
         ShouldFulfillLocallyPolicy sut,
         FulfillmentContext context)
     {
+        // Arrange
         var deliveryContext = ToLocalDeliveryContext(context);
 
         var result = sut.IsSatisfiedBy(deliveryContext);
 
+        // Act
         var act = result.Justification;
 
+        // Assert
         act.Should().BeEquivalentTo(
             """
             should locally fulfill
@@ -149,6 +179,15 @@ public class IsSpecialFulfillmentBehaviorTests
                 ]
             }
         };
+
+    public static IEnumerable<object[]> AllContexts()
+    {
+        var fixture = new Fixture();
+        yield return [ToLocalDeliveryContext(fixture.Create<FulfillmentContext>())];
+        yield return [ToSplitOrderContext(fixture.Create<FulfillmentContext>())];
+        yield return [ToShipFromStoreContext(fixture.Create<FulfillmentContext>())];
+        yield return [ToSameDayDeliveryContext(fixture.Create<FulfillmentContext>())];
+    }
 
     private static FulfillmentContext ToSameDayDeliveryContext(FulfillmentContext context) =>
         context with

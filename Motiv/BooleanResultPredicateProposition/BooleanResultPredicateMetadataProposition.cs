@@ -53,7 +53,7 @@ internal sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadat
         });
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertions.Value, booleanResult.ToEnumerable()));
+            new Explanation(assertions.Value, booleanResult.ToEnumerable(), booleanResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(metadata.Value,

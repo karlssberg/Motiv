@@ -57,23 +57,29 @@ internal sealed class HigherOrderFromBooleanResultExplanationProposition<TModel,
         });
     }
 
-    private static PolicyResultBase<string> CreatePolicyResult(bool isSatisfied,
+    private PolicyResultBase<string> CreatePolicyResult(bool isSatisfied,
         BooleanResult<TModel, TUnderlyingMetadata>[] underlyingResults,
         Lazy<string> assertion, Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]> causes)
     {
+        var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
+            new HigherOrderResultDescription<TUnderlyingMetadata>(
+                assertion.Value,
+                causes.Value,
+                Description.Statement));
+
         return new HigherOrderPolicyResult<string, TUnderlyingMetadata>(
             isSatisfied,
             Value,
             Metadata,
             Assertions,
-            Reason,
+            ResultDescription,
             underlyingResults,
             GetCauses);
 
         string Value() => assertion.Value;
         IEnumerable<string> Metadata() => assertion.Value.ToEnumerable();
         IEnumerable<string> Assertions() => assertion.Value.ToEnumerable();
-        string Reason() => assertion.Value;
+        ResultDescriptionBase ResultDescription() => lazyDescription.Value;
         IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> GetCauses() => causes.Value;
     }
 }

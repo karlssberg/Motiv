@@ -2,7 +2,7 @@
 
 namespace Motiv.ECommerce.Behaviors;
 
-public class NullBehavior : IBehavior
+public class DefaultBehavior : IBehavior
 {
     public Task PrepareShipment(ShippingDetails details) => throw new NotImplementedException();
 }

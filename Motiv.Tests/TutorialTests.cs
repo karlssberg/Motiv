@@ -520,7 +520,7 @@ public class TutorialTests
         var act = isSubstitution.IsSatisfiedBy(number);
 
         act.Satisfied.Should().Be(expectedSatisfied);
-        act.Reason.Should().Be(expectedReason);
+        act.Value.Should().Be(expectedReason);
     }
 
     [Fact]

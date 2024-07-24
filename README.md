@@ -35,8 +35,8 @@ var result = isPartiallyFull.IsSatisfiedBy(5);
 
 result.Satisfied;         // true
 result.Reason;            // "partial"
-result.SubAssertions;     // ["valid", "¬empty", "¬full"]
 result.UnderlyingReasons; // ["valid & !(¬empty | ¬full)"]
+result.SubAssertions;     // ["valid", "¬empty", "¬full"]
 result.Justifications     // partial
                           //     AND
                           //         valid
@@ -49,7 +49,8 @@ result.Justifications     // partial
 
 Motiv primarily gives you visibility into your application's decision-making process.
 By decomposing expressions into propositions,
-it addresses important architectural concerns and enables more advanced use cases, such as implementing rules engines.
+it addresses important architectural concerns and enables more advanced use cases,
+such as implementing dynamic logic or determining state.
 
 Consider using Motiv if your project requires two or more of the following:
 
@@ -57,7 +58,7 @@ Consider using Motiv if your project requires two or more of the following:
 2. **Decomposition**: Break down complex logic into meaningful subclauses for improved readability.
 3. **Reusability**: Reuse logic across multiple locations to reduce duplication.
 4. **Modeling**: Explicitly model your domain logic.
-5. **Testing**: Easily test your logic without mocking or stubbing dependencies.
+5. **Testing**: Simplify the testing your logic without mocking or stubbing dependencies.
 
 ## Use Cases
 
@@ -67,8 +68,10 @@ Motiv can be applied in various scenarios, including:
 * **Debugging**: Quickly find out the causes from complex logic.
 * **Multilingual Support**: Offer explanations in different languages.
 * **Validation**: Ensure user input meets specific criteria and provide detailed feedback.
-* **Rules Engine**: Declaratively define and compose complex _if-then_ rules.
-* **Auditing**: Log _why_ something happened, and not just _what_.
+* **Dynamic Logic**: Compose logic at runtime based on user input.
+* **Rules Processing**: Declaratively define and compose complex _if-then_ rules.
+* **Conditional State**: Yield different states based on complex criteria.
+* **Auditing**: Log _why_ something happened, instead of _what_ happened.
 
 ## Installation
 

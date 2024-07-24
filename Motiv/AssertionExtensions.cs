@@ -20,6 +20,22 @@ public static class AssertionExtensions
                     _ => result.Assertions
                 });
 
+
+    /// <summary>
+    /// Gets the assertions from a collection of boolean results.
+    /// </summary>
+    /// <param name="results">The collection of <see cref="BooleanResultBase{TMetadata}"/> to get all assertions from.</param>
+    /// <returns>A collection of all assertions yielded during the creation of the boolean results.</returns>
+    public static IEnumerable<string> GetAllAssertions(
+        this IEnumerable<BooleanResultBase> results) =>
+        results
+            .SelectMany(result =>
+                result switch
+                {
+                    IBooleanOperationResult operationResult => operationResult.Underlying.GetAllAssertions(),
+                    _ => result.AllAssertions
+                });
+
     /// <summary>
     /// Get the assertions from a collection of boolean results that are true.
     /// </summary>

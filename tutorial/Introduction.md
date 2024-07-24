@@ -31,11 +31,20 @@ While traditional propositional logic presents propositions as human-readable te
 propositions as objects.
 Because of this, we introduce the concept of a _propositional statement_ to describe the textual form of a proposition.
 
-### Specifications (Specs)
+### Specifications (Spec)
 
 Specifications, or Specs, are the building blocks of propositions in Motiv.
 They are nodes in the logical syntax tree that together form propositions.
 In some cases, such as when creating atomic propositions, specs and propositions are equivalent.
+
+### Policies (Policy)
+
+Policies are a type of proposition that derive from the `SpecBase<TModel, TMetadata>` class.
+They are created by building propositions that only return a single assertion/metadata-object.
+This means that will be created when both the `WhenTrue()` and `WhenFalse()` methods are used together,
+or if a minimal proposition is built from a predicate function.
+Otherwise,
+a regular specification will be created that is a collection/aggregate of multiple assertions/metadata-objects.
 
 ### Assertions
 

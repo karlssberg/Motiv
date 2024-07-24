@@ -45,7 +45,8 @@ internal sealed class HigherOrderFromPolicyResultMultiMetadataProposition<TModel
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderResultDescription<TUnderlyingMetadata>(
                 specDescription.ToReason(isSatisfied),
-                causes.Value));
+                causes.Value,
+                Description.Statement));
 
         return new HigherOrderBooleanResult<TMetadata, TUnderlyingMetadata>(
             isSatisfied,

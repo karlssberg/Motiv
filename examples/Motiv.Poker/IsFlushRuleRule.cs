@@ -5,7 +5,7 @@ namespace Motiv.Poker;
 public class IsFlushRuleRule() : Policy<Hand, HandRank>(
     Spec.Build(IsAFlush)
         .WhenTrue(HandRank.Flush)
-        .WhenFalse(HandRank.HighCard)
+        .WhenFalse(HandRank.Unknown)
         .Create("is a flush hand"))
 {
     private static SpecBase<Hand, string> IsAFlush =>

@@ -144,21 +144,12 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     }
 
     /// <summary>
-    /// Evaluates the specification against the model and returns a result that contains the Boolean result of the
+    /// Evaluates the proposition against the model and returns a result that contains the Boolean result of the
     /// predicate in addition to the metadata.
     /// </summary>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
     public BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => IsSpecSatisfiedBy(model);
-
-
-    /// <summary>
-    /// Evaluates the specification against the model and returns a result that contains the Boolean result of the
-    /// predicate in addition to the metadata.
-    /// </summary>
-    /// <param name="model">The model to evaluate the specification against.</param>
-    /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    protected abstract BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model);
 
     /// <summary>
     /// Combines this specification with another specification using the logical AND operator. Both operands will be
@@ -285,4 +276,12 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     public static SpecBase<TModel, TMetadata> operator !(
         SpecBase<TModel, TMetadata> spec) =>
         spec.Not();
+
+    /// <summary>
+    /// Evaluates the specification against the model and returns a result that contains the Boolean result of the
+    /// predicate in addition to the metadata.
+    /// </summary>
+    /// <param name="model">The model to evaluate the specification against.</param>
+    /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
+    protected abstract BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model);
 }

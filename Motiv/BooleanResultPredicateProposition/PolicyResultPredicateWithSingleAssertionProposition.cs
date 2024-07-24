@@ -32,7 +32,7 @@ internal sealed class PolicyResultPredicateWithSingleAssertionProposition<TModel
     private PolicyResultBase<string> CreatePolicyResult(Lazy<string> assertion, PolicyResultBase<TUnderlyingMetadata> policyResult)
     {
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertion.Value, policyResult.ToEnumerable()));
+            new Explanation(assertion.Value, policyResult.ToEnumerable(), policyResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(
@@ -55,7 +55,6 @@ internal sealed class PolicyResultPredicateWithSingleAssertionProposition<TModel
         string Value() => assertion.Value;
         MetadataNode<string> MetadataTier() => metadataTier.Value;
         Explanation Explanation() => explanation.Value;
-        string Reason() => assertion.Value;
         ResultDescriptionBase ResultDescription() => resultDescription.Value;
     }
 }

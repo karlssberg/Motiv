@@ -11,22 +11,22 @@ internal sealed class AndBooleanResult<TMetadata>(
     : BooleanResultBase<TMetadata>, IBinaryBooleanOperationResult<TMetadata>
 {
     public override bool Satisfied { get; } = left.Satisfied && right.Satisfied;
-    
+
     public override ResultDescriptionBase Description =>
         new AndBooleanResultDescription<TMetadata>(Operation, GetCausalResults());
 
-    public override Explanation Explanation => GetCausalResults().CreateExplanation();
+    public override Explanation Explanation => new(GetCausalResults(), Underlying);
 
     public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
-    
+
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
-    
+
     public BooleanResultBase<TMetadata> Left { get; } = left;
 
     public BooleanResultBase<TMetadata> Right { get; } = right;
 
     BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
-    
+
     BooleanResultBase IBinaryBooleanOperationResult.Right => Right;
 
     public string Operation => "AND";
@@ -52,6 +52,6 @@ internal sealed class AndBooleanResult<TMetadata>(
         yield return Right;
     }
 
-    private MetadataNode<TMetadata> CreateMetadataTier() => 
+    private MetadataNode<TMetadata> CreateMetadataTier() =>
         new(CausesWithValues.GetValues(), CausesWithValues);
 }

@@ -1,12 +1,12 @@
 ﻿using Motiv.ECommerce.Behaviors;
 using Motiv.ECommerce.Models;
 
-namespace Motiv.ECommerce;
+namespace Motiv.ECommerce.Policies;
 
 public class ShouldFulfillLocallyPolicy() : Policy<FulfillmentContext, IBehavior>(
     Spec.Build(AnyPerishable)
         .WhenTrue(new PerishableBehavior() as IBehavior)
-        .WhenFalse(new NullBehavior())
+        .WhenFalse(new DefaultBehavior())
         .Create("should locally fulfill"))
 {
     private static SpecBase<FulfillmentContext, string> AnyPerishable { get; } =

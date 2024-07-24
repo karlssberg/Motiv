@@ -177,7 +177,7 @@ public class BooleanResultWithUnderlyingTests
 
     private static MetadataNode<TMetadata> CreateMetadataNode<TMetadata>() => new([], []);
 
-    private static Explanation CreateExplanation() => new(Enumerable.Empty<string>(), []);
+    private static Explanation CreateExplanation() => new(Enumerable.Empty<string>(), [], []);
 
     public class TestMetadata
     {

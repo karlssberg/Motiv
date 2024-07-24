@@ -192,7 +192,7 @@ var result = isEven.IsSatisfiedBy(2);
 result.Satisfied;  // true
 result.Reason;     // "is even"
 result.Assertions; // ["is even"]
-result.Values;     // [{ Text: "even" }]
+result.Value;      // { Text: "even" }
 ```
 
 ### Composing Propositions
@@ -243,13 +243,30 @@ var isSubstitution =
         .WhenFalse(n => n.ToString())
         .Create("is substitution");
 
-isSubstitution.IsSatisfiedBy(15).Reason;  // "fizzbuzz"
-isSubstitution.IsSatisfiedBy(3).Reason;   // "fizz"
-isSubstitution.IsSatisfiedBy(5).Reason;   // "buzz"
-isSubstitution.IsSatisfiedBy(2).Reason;   // "2"
+isSubstitution.IsSatisfiedBy(15).Value;  // "fizzbuzz"
+isSubstitution.IsSatisfiedBy(3).Value;   // "fizz"
+isSubstitution.IsSatisfiedBy(5).Value;   // "buzz"
+isSubstitution.IsSatisfiedBy(2).Value;   // "2"
 ```
 
 This example demonstrates how you can compose complex propositions from simpler ones using Motiv.
+
+### Custom Types and Reuse
+
+Motiv provides some classes to inherit from so that you can create your own strongly typed propositions which
+can be reused across your codebase.
+
+For example, let's create a strongly typed proposition to determine if a number is even:
+
+```csharp
+public class IsEven() : Spec<int>(
+    Spec.Build((int n) => n % 2 == 0)
+        .WhenTrue("is even")
+        .WhenFalse("is odd")
+        .Create();
+```
+This can then be instantiated where needed and used as-is.
+Also, by making it strongly typed, you can ensure that there is no ambiguity when registering it with a DI container.
 
 ---
 

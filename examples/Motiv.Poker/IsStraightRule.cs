@@ -6,7 +6,7 @@ namespace Motiv.Poker;
 public class IsStraightRule() : Policy<Hand, HandRank>(
     Spec.Build(StraightPropositions.OrTogether())
         .WhenTrue(HandRank.Straight)
-        .WhenFalse(HandRank.HighCard)
+        .WhenFalse(HandRank.Unknown)
         .Create("is a straight hand"))
 {
     private static readonly Spec<Hand>[] StraightPropositions =

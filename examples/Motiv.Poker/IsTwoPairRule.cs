@@ -7,5 +7,5 @@ namespace Motiv.Poker;
 public class IsTwoPairRule() : Policy<Hand, HandRank>(
     Spec.Build(new HasNPairsProposition(2))
         .WhenTrue(TwoPair)
-        .WhenFalse(HighCard)
+        .WhenFalse(Unknown)
         .Create("is a two pair hand"));

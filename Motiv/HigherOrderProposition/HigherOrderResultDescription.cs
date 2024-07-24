@@ -2,12 +2,15 @@ namespace Motiv.HigherOrderProposition;
 
 internal sealed class HigherOrderResultDescription<TUnderlyingMetadata>(
     string reason,
-    IEnumerable<BooleanResultBase<TUnderlyingMetadata>> causes)
+    IEnumerable<BooleanResultBase<TUnderlyingMetadata>> causes,
+    string propositionStatement)
     : ResultDescriptionBase
 {
     private readonly ICollection<BooleanResultBase<TUnderlyingMetadata>> _causes = causes.ToArray();
+
     internal override int CausalOperandCount => _causes.Count;
-    internal override string Statement { get; }
+
+    internal override string Statement => propositionStatement;
 
     public override string Reason => reason;
 

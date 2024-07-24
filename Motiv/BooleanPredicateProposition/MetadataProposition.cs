@@ -49,7 +49,7 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
             isSatisfied,
             metadata,
             new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata.Value, [])),
-            new Lazy<Explanation>(() => new Explanation(assertion.Value, [])),
+            new Lazy<Explanation>(() => new Explanation(assertion.Value, [], [])),
             new Lazy<ResultDescriptionBase>(() =>
                 new PropositionResultDescription(Description.ToReason(isSatisfied), Description.Statement)));
     }

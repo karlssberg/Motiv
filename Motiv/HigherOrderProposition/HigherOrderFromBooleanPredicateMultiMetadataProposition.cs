@@ -52,7 +52,7 @@ internal sealed class HigherOrderFromBooleanPredicateMultiMetadataProposition<TM
             ResultDescription);
 
         MetadataNode<TMetadata> Metadata() => new(lazyMetadata.Value, []);
-        Explanation Explanation() => new(lazyAssertion.Value, []);
+        Explanation Explanation() => new(lazyAssertion.Value, [], []);
         BooleanResultDescription ResultDescription() => lazyDescription.Value;
     }
 }

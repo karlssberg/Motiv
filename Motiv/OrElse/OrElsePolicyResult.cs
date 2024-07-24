@@ -12,7 +12,7 @@ internal sealed class OrElsePolicyResult<TMetadata>(
     public override ResultDescriptionBase Description =>
         new OrElseBooleanResultDescription<TMetadata>(Operation, GetCauses());
 
-    public override Explanation Explanation => GetCauses().CreateExplanation();
+    public override Explanation Explanation => new(GetCauses(), Underlying);
 
     public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
 

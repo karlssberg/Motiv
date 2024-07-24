@@ -1,4 +1,4 @@
-# Multiple assertions
+# Multiple Assertions and Metadata
 
 
 ```mermaid
@@ -12,12 +12,14 @@ flowchart BT
     style False stroke:darkred,stroke-width:2px
 ```
 
-Sometimes you will want to generate multiple assertion statements.  This is done using the `WhenTrueYield()` and the
-`WhenFalseYield()` methods.  These methods take a factory function that returns an `IEnumerable<string>`.
+Sometimes you will want to yield multiple assertion statements or metadata objects.
+This is done using the`WhenTrueYield()` and the `WhenFalseYield()` methods.
+These methods take a factory function that returns an `IEnumerable<string>` or `IEnumerable<TMetadata>` if custom
+metadata is used.
 
 For example, consider the following proposition.
-We want to ensure that in the event of the proposition being unsatisfied, we want to yield detailed feedback about each
-of the underlying models that do not satisfy the proposition.
+We want to ensure that in the event of the proposition being unsatisfied,
+we want to yield detailed feedback about each of the underlying models that do not satisfy the proposition.
 
 ```csharp
 var allEven =

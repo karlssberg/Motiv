@@ -5,7 +5,7 @@ internal sealed class HigherOrderPolicyResult<TMetadata, TUnderlyingMetadata>(
     Func<TMetadata> value,
     Func<IEnumerable<TMetadata>> metadataFn,
     Func<IEnumerable<string>> assertionsFn,
-    Func<string> reasonFn,
+    Func<ResultDescriptionBase> descriptionFn,
     IEnumerable<BooleanResultBase<TUnderlyingMetadata>> underlyingResults,
     Func<IEnumerable<BooleanResultBase<TUnderlyingMetadata>>> causesFn)
     : PolicyResultBase<TMetadata>
@@ -18,7 +18,7 @@ internal sealed class HigherOrderPolicyResult<TMetadata, TUnderlyingMetadata>(
             causesFn() as IEnumerable<BooleanResultBase<TMetadata>> ?? []));
 
     private readonly Lazy<Explanation> _explanation =
-        new (() => new Explanation(assertionsFn(), causesFn()));
+        new (() => new Explanation(assertionsFn(), causesFn(), underlyingResults));
 
     public override MetadataNode<TMetadata> MetadataTier => _metadataTier.Value;
 
@@ -38,8 +38,5 @@ internal sealed class HigherOrderPolicyResult<TMetadata, TUnderlyingMetadata>(
     public override bool Satisfied { get; } = isSatisfied;
 
 
-    public override ResultDescriptionBase Description =>
-        new HigherOrderResultDescription<TUnderlyingMetadata>(
-            reasonFn(),
-            causesFn());
+    public override ResultDescriptionBase Description => descriptionFn();
 }
