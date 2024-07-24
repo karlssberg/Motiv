@@ -26,7 +26,7 @@ public class BooleanResultTests
     public void Constructor_WhenGivenNullModel_ThrowsArgumentNullException(
         BooleanResultBase<string> underlyingResult)
     {
-        Action act = () => new BooleanResult<string, string>(null, underlyingResult);
+        var act = () => new BooleanResult<string, string>(null!, underlyingResult);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("model");
     }
@@ -35,7 +35,7 @@ public class BooleanResultTests
     public void Constructor_WhenGivenNullUnderlyingResult_ThrowsArgumentNullException(
         string model)
     {
-        Action act = () => new BooleanResult<string, string>(model, null);
+        var act = () => new BooleanResult<string, string>(model, null!);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("underlyingResult");
     }
