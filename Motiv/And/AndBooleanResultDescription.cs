@@ -8,7 +8,8 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
     : ResultDescriptionBase
 {
     internal override int CausalOperandCount => causalResults.Count();
-    internal override string Statement => "AND";
+
+    internal override string Statement => Operator.And;
 
     public override string Reason =>
         CausalOperandCount switch

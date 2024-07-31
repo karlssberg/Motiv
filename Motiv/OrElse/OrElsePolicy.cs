@@ -3,7 +3,7 @@ namespace Motiv.OrElse;
 internal sealed class OrElsePolicy<TModel, TMetadata>(
     PolicyBase<TModel, TMetadata> left,
     PolicyBase<TModel, TMetadata> right)
-    : PolicyBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>
+    : PolicyBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>, IBinaryOperationSpec<TModel>
 {
 
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
@@ -11,7 +11,8 @@ internal sealed class OrElsePolicy<TModel, TMetadata>(
     public override ISpecDescription Description =>
         new OrElseSpecDescription<TModel, TMetadata>(left, right);
 
-    public string Operation => "OR ELSE";
+    public string Operation => Operator.OrElse;
+
     public bool IsCollapsable => true;
 
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
@@ -25,5 +26,10 @@ internal sealed class OrElsePolicy<TModel, TMetadata>(
     }
 
     public SpecBase<TModel, TMetadata> Left => left;
+
     public SpecBase<TModel, TMetadata> Right => right;
+
+    SpecBase<TModel> IBinaryOperationSpec<TModel>.Right => Right;
+
+    SpecBase<TModel> IBinaryOperationSpec<TModel>.Left => Left;
 }

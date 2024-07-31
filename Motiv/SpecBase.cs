@@ -50,6 +50,19 @@ public abstract class SpecBase<TModel> : SpecBase
     }
 
     /// <summary>
+    /// Evaluates the proposition against the model and returns a result that contains the Boolean result of the
+    /// predicate and an explanation of the result.
+    /// </summary>
+    /// <param name="model">The model to evaluate the specification against.</param>
+    /// <returns>A result that contains the Boolean result of the predicate and an explanation of the result.</returns>
+    public BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
+        this switch
+        {
+            SpecBase<TModel, string> explanationSpec => explanationSpec.IsSatisfiedBy(model),
+            _ => ToExplanationSpec().IsSatisfiedBy(model)
+        };
+
+    /// <summary>
     /// Converts this specification to an explanation specification (i.e., Spec&lt;TModel, string&gt;). This is
     /// necessary when establishing a "lowest-common-denominator" between very different specification. Therefore,
     /// specifications with different metadata types will be wrapped in a spec that uses string as the metadata type.
@@ -149,7 +162,7 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// </summary>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    public BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => IsSpecSatisfiedBy(model);
+    public new BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => IsSpecSatisfiedBy(model);
 
     /// <summary>
     /// Combines this specification with another specification using the logical AND operator. Both operands will be

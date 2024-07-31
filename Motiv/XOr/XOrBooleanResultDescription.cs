@@ -8,9 +8,9 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
     BooleanResultBase<TMetadata> right)
     : ResultDescriptionBase
 {
-
     internal override int CausalOperandCount => Results.Count();
-    internal override string Statement => "XOR";
+
+    internal override string Statement => Operator.XOr;
 
     public override string Reason => string.Join(" ^ ", Results.Select(result =>
         ContainsBinaryOperation(result) switch

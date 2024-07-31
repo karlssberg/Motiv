@@ -15,9 +15,11 @@ internal sealed class OrElseBooleanResult<TMetadata>(
     public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
 
     public BooleanResultBase<TMetadata> Left { get; } = left;
+
     public BooleanResultBase<TMetadata>? Right { get; } = right;
 
-    public string Operation => "OR";
+    public string Operation => Operator.Or;
+
     public bool IsCollapsable => true;
 
     BooleanResultBase IBinaryBooleanOperationResult.Left => Left;

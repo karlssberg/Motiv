@@ -21,7 +21,7 @@ internal sealed class OrBooleanResult<TMetadata>(
 
     BooleanResultBase IBinaryBooleanOperationResult.Right => Right;
 
-    public string Operation => "OR";
+    public string Operation => Operator.Or;
     public bool IsCollapsable => true;
 
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => GetResults();
