@@ -23,7 +23,7 @@ internal sealed class OrElsePolicyResult<TMetadata>(
 
     BooleanResultBase<TMetadata>? IBinaryBooleanOperationResult<TMetadata>.Right { get; } = right;
 
-    public string Operation => "OR";
+    public string Operation => Operator.Or;
     public bool IsCollapsable => true;
 
     BooleanResultBase IBinaryBooleanOperationResult.Left => Left;

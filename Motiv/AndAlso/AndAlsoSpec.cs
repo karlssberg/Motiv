@@ -3,14 +3,15 @@ namespace Motiv.AndAlso;
 internal sealed class AndAlsoSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
     SpecBase<TModel, TMetadata> right)
-    : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>
+    : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>, IBinaryOperationSpec<TModel>
 {
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
 
     public override ISpecDescription Description =>
         new AndAlsoSpecDescription<TModel, TMetadata>(left, right);
 
-    public string Operation => "AND ALSO";
+    public string Operation => Operator.AndAlso;
+
     public bool IsCollapsable => true;
 
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
@@ -26,5 +27,10 @@ internal sealed class AndAlsoSpec<TModel, TMetadata>(
     }
 
     public SpecBase<TModel, TMetadata> Left => left;
+
     public SpecBase<TModel, TMetadata> Right => right;
+
+    SpecBase<TModel> IBinaryOperationSpec<TModel>.Right => Right;
+
+    SpecBase<TModel> IBinaryOperationSpec<TModel>.Left => Left;
 }

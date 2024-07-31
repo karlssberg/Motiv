@@ -594,4 +594,34 @@ public class SpecTests
 
         act.Should().Be("a & (b | c)");
     }
+
+    [Fact]
+    public void Should_evaluate_specs_that_don_not_have_a_metadata_defined_and_assume_metadata_is_a_string()
+    {
+        // Arrange
+        SpecBase<bool> sut = Spec.Build((bool _) => true).Create("is true");
+
+        // Act
+        var act = sut.IsSatisfiedBy(false);
+
+        // Assert
+        act.Values.Should().ContainSingle("¬is true");
+    }
+
+    [Fact]
+    public void Should_evaluate_metadata_specs_that_don_not_have_a_metadata_defined_and_assume_metadata_is_a_string()
+    {
+        // Arrange
+        SpecBase<bool> sut = Spec.Build((bool _) => true)
+            .WhenTrue(new object())
+            .WhenFalse(new object())
+            .Create("is true");
+
+        // Act
+        var act = sut.IsSatisfiedBy(false);
+
+        // Assert
+        act.Values.Should().ContainSingle("¬is true");
+    }
+
 }

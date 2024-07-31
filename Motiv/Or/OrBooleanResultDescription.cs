@@ -7,9 +7,9 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
     IEnumerable<BooleanResultBase<TMetadata>> causalResults)
     : ResultDescriptionBase
 {
-
     internal override int CausalOperandCount => causalResults.Count();
-    internal override string Statement => "OR";
+
+    internal override string Statement => Operator.Or;
 
     public override string Reason =>
         CausalOperandCount switch

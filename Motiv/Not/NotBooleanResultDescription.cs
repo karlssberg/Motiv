@@ -2,10 +2,9 @@
 
 internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase operand) : ResultDescriptionBase
 {
-    private readonly JustificationNegationMappings _negations = new();
-
     internal override int CausalOperandCount => 1;
-    internal override string Statement => "NOT";
+
+    internal override string Statement => Operator.Not;
 
     public override string Reason => FormatReason(operand);
 
@@ -14,7 +13,7 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
         var lines = operand.Description
             .GetJustificationAsLines()
             .ReplaceFirstLine(firstLine =>
-                _negations.TryGetValue(firstLine, out var negated)
+                JustificationNegationMappings.Instance.TryGetValue(firstLine, out var negated)
                     ? negated
                     : firstLine);
 

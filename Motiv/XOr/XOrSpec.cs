@@ -3,14 +3,14 @@ namespace Motiv.XOr;
 internal sealed class XOrSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
     SpecBase<TModel, TMetadata> right)
-    : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>
+    : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>, IBinaryOperationSpec<TModel>
 {
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
 
     public override ISpecDescription Description =>
         new XOrSpecDescription<TModel, TMetadata>(left, right);
 
-    public string Operation => "XOR";
+    public string Operation => Operator.XOr;
     public bool IsCollapsable => false;
 
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
@@ -22,5 +22,10 @@ internal sealed class XOrSpec<TModel, TMetadata>(
     }
 
     public SpecBase<TModel, TMetadata> Left => left;
+
     public SpecBase<TModel, TMetadata> Right => right;
+
+    SpecBase<TModel> IBinaryOperationSpec<TModel>.Right => Right;
+
+    SpecBase<TModel> IBinaryOperationSpec<TModel>.Left => Left;
 }

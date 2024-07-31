@@ -19,7 +19,7 @@ internal sealed class XOrBooleanResult<TMetadata>(
     public BooleanResultBase<TMetadata> Left { get; } = left;
 
     public BooleanResultBase<TMetadata> Right { get; } = right;
-    public string Operation => "XOR";
+    public string Operation => Operator.XOr;
     public bool IsCollapsable => false;
 
     BooleanResultBase IBinaryBooleanOperationResult.Left => Left;
@@ -27,9 +27,13 @@ internal sealed class XOrBooleanResult<TMetadata>(
     BooleanResultBase IBinaryBooleanOperationResult.Right => Right;
 
     public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
+
     public override IEnumerable<BooleanResultBase> Underlying => GetResults();
+
     public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => GetResults();
+
     public override IEnumerable<BooleanResultBase> Causes => GetResults();
+
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => GetResults();
 
     private IEnumerable<BooleanResultBase<TMetadata>> GetResults() =>

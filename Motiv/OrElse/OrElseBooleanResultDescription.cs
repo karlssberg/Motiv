@@ -9,7 +9,7 @@ internal sealed class OrElseBooleanResultDescription<TMetadata>(
 {
     internal override int CausalOperandCount => causalResults.Count();
 
-    internal override string Statement => "OR ELSE";
+    internal override string Statement => Operator.OrElse;
 
     public override string Reason =>
         CausalOperandCount switch

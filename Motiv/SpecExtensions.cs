@@ -128,7 +128,7 @@ public static class SpecExtensions
             {
                 IBinaryOperationSpec<TModel, TMetadata> binaryOperationSpec
                     when binaryOperationSpec.Operation == operation
-                         && binaryOperationSpec.IsCollapsable=>
+                         && binaryOperationSpec.IsCollapsable =>
                     IdentifyCollapsible(binaryOperationSpec, operation),
                 _ =>
                     (OtherSpecs: OperationGroup.Other, spec).ToEnumerable()

@@ -1,7 +1,7 @@
 namespace Motiv.XOr;
 
 internal sealed class XOrSpecDescription<TModel, TMetadata>(
-    SpecBase<TModel, TMetadata> left, 
+    SpecBase<TModel, TMetadata> left,
     SpecBase<TModel, TMetadata> right)
     : ISpecDescription
 {
@@ -12,18 +12,18 @@ internal sealed class XOrSpecDescription<TModel, TMetadata>(
     public IEnumerable<string> GetDetailsAsLines()
     {
         var specs = left.ToEnumerable().Append(right); // reverse order for easier reading
-        return specs.GetBinaryJustificationAsLines("XOR");
+        return specs.GetBinaryJustificationAsLines(Operator.XOr);
     }
 
     private static string Summarize(SpecBase<TModel> operand)
     {
-        return operand switch 
+        return operand switch
         {
             XOrSpec<TModel, TMetadata> xOrSpec => xOrSpec.Statement,
-            IBinaryOperationSpec binarySpec => $"({binarySpec.Description.Statement})",
+            IBinaryOperationSpec<TModel> binarySpec => $"({binarySpec.Description.Statement})",
             _ => operand.Statement
         };
     }
-    
+
     public override string ToString() => Statement;
 }

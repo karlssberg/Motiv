@@ -11,4 +11,7 @@ internal class JustificationNegationMappings() : ReadOnlyDictionary<string, stri
         ["AND"] = "NAND",
         ["OR"] = "NOR",
         ["XOR"] = "XNOR"
-    });
+    })
+{
+    public static JustificationNegationMappings Instance { get; } = new();
+}

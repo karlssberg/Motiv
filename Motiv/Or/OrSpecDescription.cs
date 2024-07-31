@@ -14,7 +14,7 @@ internal sealed class OrSpecDescription<TModel, TMetadata>(
     public IEnumerable<string> GetDetailsAsLines()
     {
         IEnumerable<SpecBase<TModel, TMetadata>> specs = [left, right];
-        return specs.GetBinaryJustificationAsLines("OR");
+        return specs.GetBinaryJustificationAsLines(Operator.Or);
     }
 
     private static string Summarize(SpecBase<TModel> operand)
@@ -25,7 +25,9 @@ internal sealed class OrSpecDescription<TModel, TMetadata>(
                 orSpec.Statement,
             OrElseSpec<TModel, TMetadata> orElseSpec =>
                 orElseSpec.Statement,
-            IBinaryOperationSpec binarySpec =>
+            OrElsePolicy<TModel, TMetadata> orElsePolicy =>
+                orElsePolicy.Statement,
+            IBinaryOperationSpec<TModel> binarySpec =>
                 $"({binarySpec.Description.Statement})",
             _ => operand.Statement
         };

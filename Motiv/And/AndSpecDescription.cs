@@ -14,7 +14,7 @@ internal sealed class AndSpecDescription<TModel, TMetadata>(
     public IEnumerable<string> GetDetailsAsLines()
     {
         IEnumerable<SpecBase<TModel, TMetadata>> specs = [left, right];
-        return specs.GetBinaryJustificationAsLines("AND");
+        return specs.GetBinaryJustificationAsLines(Operator.And);
     }
 
     private static string Summarize(SpecBase<TModel> operand)
@@ -25,7 +25,7 @@ internal sealed class AndSpecDescription<TModel, TMetadata>(
                 andSpec.Statement,
             AndAlsoSpec<TModel, TMetadata> andAlsoSpec =>
                 andAlsoSpec.Statement,
-            IBinaryOperationSpec binarySpec =>
+            IBinaryOperationSpec<TModel> binarySpec =>
                 $"({binarySpec.Description.Statement})",
             _ => operand.Statement
         };

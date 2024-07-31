@@ -3,7 +3,7 @@ namespace Motiv.OrElse;
 internal sealed class OrElseSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
     SpecBase<TModel, TMetadata> right)
-    : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>
+    : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>, IBinaryOperationSpec<TModel>
 {
 
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
@@ -11,7 +11,8 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
     public override ISpecDescription Description =>
         new OrElseSpecDescription<TModel, TMetadata>(left, right);
 
-    public string Operation => "OR ELSE";
+    public string Operation => Operator.OrElse;
+
     public bool IsCollapsable => true;
 
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
@@ -27,5 +28,9 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
     }
 
     public SpecBase<TModel, TMetadata> Left => left;
+    SpecBase<TModel> IBinaryOperationSpec<TModel>.Right => Right;
+
+    SpecBase<TModel> IBinaryOperationSpec<TModel>.Left => Left;
+
     public SpecBase<TModel, TMetadata> Right => right;
 }
