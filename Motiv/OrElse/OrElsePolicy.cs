@@ -28,9 +28,13 @@ internal sealed class OrElsePolicy<TModel, TMetadata>(
         };
     }
 
-    public SpecBase<TModel, TMetadata> Left => left;
+    public PolicyBase<TModel, TMetadata> Left => left;
 
-    public SpecBase<TModel, TMetadata> Right => right;
+    public PolicyBase<TModel, TMetadata> Right => right;
+
+    SpecBase<TModel, TMetadata> IBinaryOperationSpec<TModel, TMetadata>.Left => left;
+
+    SpecBase<TModel, TMetadata> IBinaryOperationSpec<TModel, TMetadata>.Right => right;
 
     SpecBase<TModel> IBinaryOperationSpec<TModel>.Right => Right;
 

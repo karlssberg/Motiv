@@ -19,7 +19,9 @@ internal sealed class NotPolicy<TModel, TMetadata>(
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model) =>
         operand.IsSatisfiedBy(model).Not();
 
-    public SpecBase<TModel, TMetadata> Operand => operand;
+    public PolicyBase<TModel, TMetadata> Operand => operand;
+
+    SpecBase<TModel, TMetadata> IUnaryOperationSpec<TModel, TMetadata>.Operand => operand;
 
     SpecBase<TModel> IUnaryOperationSpec<TModel>.Operand => operand;
 
