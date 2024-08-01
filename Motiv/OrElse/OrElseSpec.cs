@@ -3,7 +3,10 @@ namespace Motiv.OrElse;
 internal sealed class OrElseSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
     SpecBase<TModel, TMetadata> right)
-    : SpecBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>, IBinaryOperationSpec<TModel>
+    : SpecBase<TModel, TMetadata>,
+        IBinaryOperationSpec<TModel, TMetadata>,
+        IBinaryOperationSpec<TModel>,
+        IBinaryOperationSpec
 {
 
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
@@ -33,4 +36,8 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
     SpecBase<TModel> IBinaryOperationSpec<TModel>.Left => Left;
 
     public SpecBase<TModel, TMetadata> Right => right;
+
+    SpecBase IBinaryOperationSpec.Right => Right;
+
+    SpecBase IBinaryOperationSpec.Left => Left;
 }

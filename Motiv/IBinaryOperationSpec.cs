@@ -6,6 +6,25 @@ namespace Motiv;
 /// <typeparam name="TModel">
 /// The type of the model.
 /// </typeparam>
+public interface IBinaryOperationSpec : IBooleanOperationSpec
+{
+    /// <summary>
+    /// The left side of the binary operation.
+    /// </summary>
+    SpecBase Left { get; }
+
+    /// <summary>
+    /// The right side of the binary operation.
+    /// </summary>
+    SpecBase Right { get; }
+}
+
+/// <summary>
+/// Represents a binary operation specification.
+/// </summary>
+/// <typeparam name="TModel">
+/// The type of the model.
+/// </typeparam>
 public interface IBinaryOperationSpec<TModel> : IBooleanOperationSpec
 {
     /// <summary>
