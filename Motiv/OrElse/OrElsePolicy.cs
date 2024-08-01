@@ -3,7 +3,10 @@ namespace Motiv.OrElse;
 internal sealed class OrElsePolicy<TModel, TMetadata>(
     PolicyBase<TModel, TMetadata> left,
     PolicyBase<TModel, TMetadata> right)
-    : PolicyBase<TModel, TMetadata>, IBinaryOperationSpec<TModel, TMetadata>, IBinaryOperationSpec<TModel>
+    : PolicyBase<TModel, TMetadata>,
+        IBinaryOperationSpec<TModel, TMetadata>,
+        IBinaryOperationSpec<TModel>,
+        IBinaryOperationSpec
 {
 
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
@@ -32,4 +35,8 @@ internal sealed class OrElsePolicy<TModel, TMetadata>(
     SpecBase<TModel> IBinaryOperationSpec<TModel>.Right => Right;
 
     SpecBase<TModel> IBinaryOperationSpec<TModel>.Left => Left;
+
+    SpecBase IBinaryOperationSpec.Right => Right;
+
+    SpecBase IBinaryOperationSpec.Left => Left;
 }
