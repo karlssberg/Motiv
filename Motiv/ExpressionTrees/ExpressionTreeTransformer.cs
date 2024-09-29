@@ -61,9 +61,7 @@ internal class ExpressionTreeTransformer<TModel>(
         var ifTrue = Transform(expression.IfTrue, parameter);
         var ifFalse = Transform(expression.IfFalse, parameter);
 
-        var expressionTest = Humanize(expression.Test);
-        var expressionIfTrue = Humanize(expression.IfTrue);
-        var expressionIfFalse = Humanize(expression.IfFalse);
+        var whenConditional = Humanize(expression);
 
         return Spec.Build((TModel model) =>
             {
@@ -75,26 +73,38 @@ internal class ExpressionTreeTransformer<TModel>(
             })
             .WhenTrueYield((_, result) => result.Assertions)
             .WhenFalseYield((_, result) => result.Assertions)
-            .Create($"{expressionTest} ? {expressionIfTrue} : {expressionIfFalse}");
+            .Create(whenConditional);
     }
 
     private SpecBase<TModel, string> TransformEqualsExpression(
         BinaryExpression expression,
-        ParameterExpression parameter) =>
-        CreateEqualitySpec(
-            expression,
-            parameter,
-            _options.EqualsToken,
-            _options.NotEqualsToken);
+        ParameterExpression parameter)
+    {
+        var predicate = CreatePredicate(expression, parameter);
+        var trueBecause = Humanize(Expression.Equal(expression.Left, expression.Right));
+        var falseBecause = Humanize(Expression.NotEqual(expression.Left, expression.Right));
+
+        return
+            Spec.Build(predicate)
+                .WhenTrue(trueBecause)
+                .WhenFalse(falseBecause)
+                .Create();
+    }
 
     private SpecBase<TModel, string> TransformNotEqualsExpression(
         BinaryExpression expression,
-        ParameterExpression parameter) =>
-        CreateEqualitySpec(
-            expression,
-            parameter,
-            _options.NotEqualsToken,
-            _options.EqualsToken);
+        ParameterExpression parameter)
+    {
+        var predicate = CreatePredicate(expression, parameter);
+        var trueBecause = Humanize(Expression.NotEqual(expression.Left, expression.Right));
+        var falseBecause = Humanize(Expression.Equal(expression.Left, expression.Right));
+
+        return
+            Spec.Build(predicate)
+                .WhenTrue(trueBecause)
+                .WhenFalse(falseBecause)
+                .Create();
+    }
 
     private SpecBase<TModel, string> TransformGreaterThanExpression(
         BinaryExpression expression,
@@ -102,15 +112,15 @@ internal class ExpressionTreeTransformer<TModel>(
     {
         var predicate = CreatePredicate(expression, parameter);
         var equals = CreateEqualsFunction(expression, parameter);
-        var expressionLeft = Humanize(expression.Left);
-        var expressionRight = Humanize(expression.Right);
+
+        var whenGreaterThan = Humanize(Expression.GreaterThan(expression.Left, expression.Right));
+        var whenEqual = Humanize(Expression.Equal(expression.Left, expression.Right));
+        var whenLessThan = Humanize(Expression.LessThan(expression.Left, expression.Right));
 
         return
             Spec.Build(predicate)
-                .WhenTrue($"{expressionLeft} > {expressionRight}")
-                .WhenFalse(model => equals(model)
-                    ? $"{expressionLeft} {_options.EqualsToken} {expressionRight}"
-                    : $"{expressionLeft} {_options.LessThanToken} {expressionRight}")
+                .WhenTrue(whenGreaterThan)
+                .WhenFalse(model => equals(model) ? whenEqual : whenLessThan)
                 .Create();
     }
 
@@ -120,16 +130,17 @@ internal class ExpressionTreeTransformer<TModel>(
     {
         var predicate = CreatePredicate(expression, parameter);
         var equals = CreateEqualsFunction(expression, parameter);
-        var expressionLeft = Humanize(expression.Left);
-        var expressionRight = Humanize(expression.Right);
+
+        var whenGreaterThanOrEqual = Humanize(Expression.GreaterThanOrEqual(expression.Left, expression.Right));
+        var whenGreaterThan = Humanize(Expression.GreaterThan(expression.Left, expression.Right));
+        var whenEqual = Humanize(Expression.Equal(expression.Left, expression.Right));
+        var whenLessThan = Humanize(Expression.LessThan(expression.Left, expression.Right));
 
         return
             Spec.Build(predicate)
-                .WhenTrue(model => equals(model)
-                    ? $"{expressionLeft} {_options.EqualsToken} {expressionRight}"
-                    : $"{expressionLeft} {_options.GreaterThanToken} {expressionRight}")
-                .WhenFalse($"{expressionLeft} {_options.LessThanToken} {expressionRight}")
-                .Create($"{expressionLeft} {_options.GreaterThanOrEqualToken} {expressionRight}");
+                .WhenTrue(model => equals(model) ? whenEqual : whenGreaterThan)
+                .WhenFalse(whenLessThan)
+                .Create(whenGreaterThanOrEqual);
     }
 
     private SpecBase<TModel, string> TransformLessThanExpression(
@@ -138,15 +149,15 @@ internal class ExpressionTreeTransformer<TModel>(
     {
         var predicate = CreatePredicate(expression, parameter);
         var equals = CreateEqualsFunction(expression, parameter);
-        var expressionLeft = Humanize(expression.Left);
-        var expressionRight = Humanize(expression.Right);
+
+        var whenGreaterThan = Humanize(Expression.GreaterThan(expression.Left, expression.Right));
+        var whenEqual = Humanize(Expression.Equal(expression.Left, expression.Right));
+        var whenLessThan = Humanize(Expression.LessThan(expression.Left, expression.Right));
 
         return
             Spec.Build(predicate)
-                .WhenTrue($"{expressionLeft} {_options.LessThanToken} {expressionRight}")
-                .WhenFalse(model => equals(model)
-                    ? $"{expressionLeft} {_options.EqualsToken} {expressionRight}"
-                    : $"{expressionLeft} {_options.GreaterThanToken} {expressionRight}")
+                .WhenTrue(whenLessThan)
+                .WhenFalse(model => equals(model) ? whenEqual : whenGreaterThan)
                 .Create();
     }
 
@@ -156,16 +167,17 @@ internal class ExpressionTreeTransformer<TModel>(
     {
         var predicate = CreatePredicate(expression, parameter);
         var equals = CreateEqualsFunction(expression, parameter);
-        var expressionLeft = Humanize(expression.Left);
-        var expressionRight = Humanize(expression.Right);
+
+        var whenLessThanOrEqual = Humanize(Expression.LessThanOrEqual(expression.Left, expression.Right));
+        var whenGreaterThan = Humanize(Expression.GreaterThan(expression.Left, expression.Right));
+        var whenEqual = Humanize(Expression.Equal(expression.Left, expression.Right));
+        var whenLessThan = Humanize(Expression.LessThan(expression.Left, expression.Right));
 
         return
             Spec.Build(predicate)
-                .WhenTrue(model => equals(model)
-                    ? $"{expressionLeft} {_options.EqualsToken} {expressionRight}"
-                    : $"{expressionLeft} {_options.LessThanToken} {expressionRight}")
-                .WhenFalse($"{expressionLeft} {_options.GreaterThanToken} {expressionRight}")
-                .Create($"{expressionLeft} {_options.LessThanOrEqualToken} {expressionRight}");
+                .WhenTrue(model => equals(model) ? whenEqual : whenLessThan)
+                .WhenFalse(whenGreaterThan)
+                .Create(whenLessThanOrEqual);
     }
 
     private SpecBase<TModel, string> TransformUnaryExpression(
@@ -187,22 +199,6 @@ internal class ExpressionTreeTransformer<TModel>(
             .WhenTrue(Humanize(Expression.Equal(expression, Expression.Constant(true))))
             .WhenFalse(Humanize(Expression.Equal(expression, Expression.Constant(false))))
             .Create();
-
-    private SpecBase<TModel, string> CreateEqualitySpec(
-        BinaryExpression expression,
-        ParameterExpression parameter,
-        string comparisonSymbol,
-        string inverseComparisonSymbol)
-    {
-        var predicate = CreatePredicate(expression, parameter);
-        var expressionLeft = Humanize(expression.Left);
-        var expressionRight = Humanize(expression.Right);
-        return
-            Spec.Build(predicate)
-                .WhenTrue($"{expressionLeft} {comparisonSymbol} {expressionRight}")
-                .WhenFalse($"{expressionLeft} {inverseComparisonSymbol} {expressionRight}")
-                .Create();
-    }
 
     private Func<TModel, bool> CreatePredicate(
         Expression expression,

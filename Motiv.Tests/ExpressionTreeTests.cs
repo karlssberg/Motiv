@@ -380,13 +380,13 @@ public class ExpressionTreeTests
     }
 
     [Theory]
-    [InlineData(3, "new int[] { 1, 2, 3 }.Length == n")]
-    [InlineData(0, "new int[] { 1, 2, 3 }.Length != n")]
-    public void Should_assert_expressions_containing_a_new_array_expression(int model, string expectedAssertion)
+    [InlineData("Moe", """new string[] { "Moe", "Larry", "Curly" }.Contains<string>(name) == true""")]
+    [InlineData("Joe", """new string[] { "Moe", "Larry", "Curly" }.Contains<string>(name) == false""")]
+    public void Should_assert_expressions_containing_a_new_array_expression(string model, string expectedAssertion)
     {
         // Assemble
         var sut = Spec
-            .From((int n) => new[] { 1, 2, 3 }.Length == n)
+            .From((string name) => new [] { "Moe", "Larry", "Curly" }.Contains(name))
             .Create("new-array-expression");
 
         // Act
@@ -474,6 +474,23 @@ public class ExpressionTreeTests
         var sut = Spec
             .From((int index) => new List<int> { 1, 2, 3 }[index] == query)
             .Create("index-expression");
+
+        // Act
+        var act = sut.IsSatisfiedBy(model);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData(3, 3, "(default(int?) ?? 3) == n")]
+    [InlineData(0, 1, "(default(int?) ?? 1) != n")]
+    public void Should_assert_expressions_containing_a_coalesce_expression(int model, int substitution, params string[] expectedAssertion)
+    {
+        // Assemble
+        var sut = Spec
+            .From((int n) => (default(int?) ?? substitution) == n)
+            .Create("coalesce_expression");
 
         // Act
         var act = sut.IsSatisfiedBy(model);

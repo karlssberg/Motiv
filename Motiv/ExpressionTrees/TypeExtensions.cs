@@ -6,15 +6,19 @@ internal static class TypeExtensions
 {
     internal static string ToCSharpName(this Type type)
     {
+        var isNullableType = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        var nullableSuffix = isNullableType ? "?" : string.Empty;
+        type = isNullableType ? Nullable.GetUnderlyingType(type)! : type;
+
         var typeName = GetTypeKeyword(type);
         if (!type.IsGenericType)
         {
-            return typeName;
+            return $"{typeName}{nullableSuffix}";
         }
 
         var genericTypeName = typeName.Substring(0, type.Name.IndexOf('`'));
         var genericArguments = type.GetGenericArguments().Select(ToCSharpName);
-        return $"{genericTypeName}<{string.Join(", ", genericArguments)}>";
+        return $"{genericTypeName}<{string.Join(", ", genericArguments)}>{nullableSuffix}";
     }
 
 

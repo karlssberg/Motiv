@@ -128,14 +128,15 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
             return node;
         }
 
-        var constantExpressionValue = GetConstantExpressionValue(node.Member.Name, constantExpression);
-        if (!IsSupported(constantExpressionValue))
+        var (value, valueType) = GetConstantExpressionValue(node.Member.Name, constantExpression);
+        if (!IsSupported(value))
         {
             _stringBuilder.Append(node.Member.Name);
             return node;
         }
 
-        _stringBuilder.Append(SerializeSupported(constantExpressionValue) ?? constantExpressionValue);
+        var serializeSupported = SerializeSupported(value, valueType);
+        _stringBuilder.Append(serializeSupported);
 
         return node;
     }
@@ -179,7 +180,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
     protected override Expression VisitConstant(ConstantExpression node)
     {
-        var serialization = SerializeSupported(node.Value) ?? node.Value.ToString();
+        var serialization = SerializeSupported(node.Value, node.Type) ?? node.Value.ToString();
         _stringBuilder.Append(serialization);
         return node;
     }
@@ -268,18 +269,19 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         }
     }
 
-    private static object? GetConstantExpressionValue(string capturedVariableName,
+    private static (object?, Type) GetConstantExpressionValue(string capturedVariableName,
         ConstantExpression constantExpression)
     {
         var value = constantExpression.Value;
+        var valueType = constantExpression.Type;
 
-        if (value == null || !IsClosureObject(value.GetType())) return value; // not a closure
+        if (value == null || !IsClosureObject(value.GetType())) return (value, valueType); // not a closure
 
         var capturedField = GetCapturedField(capturedVariableName, value);
 
         return capturedField != null
-            ? capturedField.GetValue(value)
-            : value; // If no suitable field found, return the closure object itself
+            ? (capturedField.GetValue(value), capturedField.FieldType)
+            : (value, valueType); // If no suitable field found, return the closure object itself
     }
 
     private static FieldInfo? GetCapturedField(string capturedVariableName, object value) =>
@@ -313,6 +315,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
             ExpressionType.Not => "!",
             ExpressionType.Negate => "-",
             ExpressionType.Quote => "\"",
+            ExpressionType.Coalesce => "??",
             _ => nodeType.ToString()
         };
 
@@ -454,11 +457,11 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
             or Regex
             or Type;
 
-    private static string? SerializeSupported<T>(T obj)
+    private static string? SerializeSupported(object? obj, Type declaredType)
     {
         return obj switch
         {
-            null => "null",
+            null => $"default({declaredType.ToCSharpName()})",
             bool b => b ? "true" : "false",
             char ch => $"'{ch}'",
             string s => $"\"{s}\"",
@@ -482,8 +485,6 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         node.NodeType switch
         {
             ExpressionType.Quote => true,
-            ExpressionType.TypeAs => true,
-            ExpressionType.Coalesce => true,
             ExpressionType.IsTrue => true,
             ExpressionType.IsFalse => true,
             ExpressionType.ConvertChecked => true,
