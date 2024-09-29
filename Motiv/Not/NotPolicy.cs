@@ -1,4 +1,6 @@
-﻿namespace Motiv.Not;
+﻿using Motiv.Traversal;
+
+namespace Motiv.Not;
 
 internal sealed class NotPolicy<TModel, TMetadata>(
     PolicyBase<TModel, TMetadata> operand)

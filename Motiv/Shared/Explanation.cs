@@ -1,6 +1,7 @@
 using System.Diagnostics;
+using Motiv.Traversal;
 
-namespace Motiv;
+namespace Motiv.Shared;
 
 /// <summary>
 /// Represents an explanation for a boolean result, whilst also encapsulating underlying explanations (if any).

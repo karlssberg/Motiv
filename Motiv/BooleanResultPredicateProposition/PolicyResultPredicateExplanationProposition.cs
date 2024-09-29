@@ -1,4 +1,6 @@
-﻿namespace Motiv.BooleanResultPredicateProposition;
+﻿using Motiv.Shared;
+
+namespace Motiv.BooleanResultPredicateProposition;
 
 internal sealed class PolicyResultPredicateExplanationProposition<TModel, TUnderlyingMetadata>(
     Func<TModel, PolicyResultBase<TUnderlyingMetadata>> predicate,

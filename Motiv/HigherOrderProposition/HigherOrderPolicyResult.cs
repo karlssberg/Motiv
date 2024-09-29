@@ -1,4 +1,6 @@
-﻿namespace Motiv.HigherOrderProposition;
+﻿using Motiv.Shared;
+
+namespace Motiv.HigherOrderProposition;
 
 internal sealed class HigherOrderPolicyResult<TMetadata, TUnderlyingMetadata>(
     bool isSatisfied,

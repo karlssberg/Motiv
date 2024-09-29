@@ -1,3 +1,5 @@
+using Motiv.Shared;
+
 namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanation;
 
 /// <summary>

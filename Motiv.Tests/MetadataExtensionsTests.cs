@@ -1,3 +1,5 @@
+using Motiv.Shared;
+
 namespace Motiv.Tests;
 
 public class MetadataExtensionsTests

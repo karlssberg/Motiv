@@ -1,4 +1,6 @@
-﻿namespace Motiv.HigherOrderProposition;
+﻿using Motiv.Shared;
+
+namespace Motiv.HigherOrderProposition;
 
 /// <summary>Represents a boolean result with an associated model and metadata.</summary>
 /// <typeparam name="TModel">The type of the associated model.</typeparam>

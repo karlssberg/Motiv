@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+
 namespace Motiv.Tests;
 
 public class SpecTests
@@ -623,5 +625,4 @@ public class SpecTests
         // Assert
         act.Values.Should().ContainSingle("¬is true");
     }
-
 }

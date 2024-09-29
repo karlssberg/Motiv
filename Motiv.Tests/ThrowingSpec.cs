@@ -1,3 +1,5 @@
+using Motiv.Shared;
+
 namespace Motiv.Tests;
 
 public class ThrowingSpec<TModel, TMetadata>(string description, Exception exception) : SpecBase<TModel, TMetadata>

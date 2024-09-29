@@ -1,3 +1,5 @@
+using Motiv.Shared;
+
 namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
 
 /// <summary>A factory for creating propositions based on a predicate and explanations for true and false conditions.</summary>

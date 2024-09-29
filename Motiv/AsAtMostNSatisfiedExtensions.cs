@@ -1,6 +1,7 @@
 using Motiv.BooleanPredicateProposition.PropositionBuilders;
 using Motiv.BooleanResultPredicateProposition.PropositionBuilders;
 using Motiv.HigherOrderProposition.PropositionBuilders;
+using Motiv.Shared;
 using Motiv.SpecDecoratorProposition.PropositionBuilders;
 
 namespace Motiv;

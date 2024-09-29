@@ -1,4 +1,6 @@
-namespace Motiv;
+using Motiv.Traversal;
+
+namespace Motiv.Shared;
 
 /// <summary>Represents a node in the metadata hierarchy.</summary>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>

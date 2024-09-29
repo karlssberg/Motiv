@@ -1,4 +1,6 @@
-﻿namespace Motiv.SpecDecoratorProposition;
+﻿using Motiv.Shared;
+
+namespace Motiv.SpecDecoratorProposition;
 
 internal sealed class SpecDecoratorMetadataPolicy<TModel, TMetadata, TUnderlyingMetadata>(
     PolicyBase<TModel, TUnderlyingMetadata> underlyingSpec,

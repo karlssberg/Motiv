@@ -4,6 +4,8 @@ using Motiv.AndAlso;
 using Motiv.Not;
 using Motiv.Or;
 using Motiv.OrElse;
+using Motiv.Shared;
+using Motiv.Traversal;
 using Motiv.XOr;
 
 namespace Motiv;
@@ -191,10 +193,10 @@ public abstract class BooleanResultBase
     public static bool operator !=(BooleanResultBase left, BooleanResultBase right) =>
         !(left == right);
 
-    /// <summary>Defines an explicit conversion from <see cref="BooleanResultBase{TMetadata}" /> to <see cref="bool" />.</summary>
+    /// <summary>Defines an implicit conversion from <see cref="BooleanResultBase{TMetadata}" /> to <see cref="bool" />.</summary>
     /// <param name="result">The <see cref="BooleanResultBase{TMetadata}" /> instance to convert.</param>
     /// <returns>The boolean value indicating whether the result is satisfied.</returns>
-    public static explicit operator bool(BooleanResultBase result) =>
+    public static implicit operator bool(BooleanResultBase result) =>
         result.Satisfied;
 
     /// <summary>

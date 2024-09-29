@@ -1,3 +1,5 @@
+using Motiv.Shared;
+
 namespace Motiv.BooleanPredicateProposition;
 
 internal sealed class ExplanationProposition<TModel>(

@@ -1,3 +1,5 @@
+using Motiv.Traversal;
+
 namespace Motiv.Not;
 
 internal sealed class NotSpec<TModel, TMetadata>(

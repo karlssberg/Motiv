@@ -1,3 +1,6 @@
+using Motiv.Shared;
+using Motiv.Traversal;
+
 namespace Motiv.XOr;
 
 /// <summary>Represents the result of a logical XOR (exclusive OR) operation.</summary>

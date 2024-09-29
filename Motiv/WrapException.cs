@@ -14,7 +14,7 @@ internal static class WrapException
             var message = CreateErrorMessageForPredicateExceptionOnBehalfOfSpecType(underlyingSpec, callbackName, ex);
             throw new SpecException(message, ex);
         });
-    } 
+    }
 
     private static string CreateErrorMessageForPredicateExceptionOnBehalfOfSpecType<TModel>(
         SpecBase<TModel> underlyingSpec,
@@ -41,7 +41,7 @@ internal static class WrapException
     }
 
     private static TResult TryCatchThrow<TResult, TException>(
-        Func<TResult> tryThisFn, 
+        Func<TResult> tryThisFn,
         Func<Exception, TException> throwThisFn)
         where TException : Exception
     {

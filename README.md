@@ -1,6 +1,12 @@
 # Motiv
 
 ![Build Status](https://github.com/karlssberg/Motiv/actions/workflows/dotnet.yml/badge.svg) [![NuGet](https://img.shields.io/nuget/v/Motiv.svg)](https://www.nuget.org/packages/Motiv/) [![codecov](https://codecov.io/gh/karlssberg/Motiv/graph/badge.svg?token=XNN34D2JIP)](https://codecov.io/gh/karlssberg/Motiv)
+### Quick Links
+
+- [Documentation](https://karlssberg.github.io/Motiv/)
+- [Try Motiv Online](https://dotnetfiddle.net/knykpD)
+- [NuGet Package](https://www.nuget.org/packages/Motiv/)
+- [Official GitHub Repository](https://github.com/karlssberg/Motiv)
 
 ## Know _Why_, not just _What_
 
@@ -208,9 +214,3 @@ Consider these potential tradeoffs when using Motiv:
 ## License
 
 Motiv is released under the MIT License. See the [LICENSE](./LICENSE) file for details.
-
-## Resources
-
-- [Documentation](https://karlssberg.github.io/Motiv/)
-- [NuGet Package](https://www.nuget.org/packages/Motiv/)
-- [Official GitHub Repository](https://github.com/karlssberg/Motiv)

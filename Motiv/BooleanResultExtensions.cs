@@ -1,4 +1,7 @@
-﻿namespace Motiv;
+﻿using Motiv.Shared;
+using Motiv.Traversal;
+
+namespace Motiv;
 
 /// <summary>
 /// Provides extension methods for working with enumerable collections.

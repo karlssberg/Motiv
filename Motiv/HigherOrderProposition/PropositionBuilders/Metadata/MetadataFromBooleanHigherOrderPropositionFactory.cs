@@ -1,3 +1,5 @@
+using Motiv.Shared;
+
 namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata;
 
 /// <summary>

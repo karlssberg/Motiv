@@ -1,5 +1,8 @@
+using System.Linq.Expressions;
 using Motiv.BooleanPredicateProposition.PropositionBuilders;
 using Motiv.BooleanResultPredicateProposition.PropositionBuilders;
+using Motiv.ExpressionTrees;
+using Motiv.Shared;
 using Motiv.SpecDecoratorProposition.PropositionBuilders;
 
 namespace Motiv;
@@ -195,5 +198,18 @@ public static class Spec
     {
         policy.ThrowIfNull(nameof(policy));
         return new TruePolicyBuilder<TModel, TMetadata>(policy);
+    }
+
+    /// <summary>
+    /// Transforms a lambda expression tree into a tree of propositions.
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <returns></returns>
+    public static TruePropositionBuilder<TModel, string> From<TModel>(
+        Expression<Func<TModel, bool>> expression)
+    {
+        expression.ThrowIfNull(nameof(expression));
+        var spec = expression.ToSpec();
+        return Build(spec);
     }
 }

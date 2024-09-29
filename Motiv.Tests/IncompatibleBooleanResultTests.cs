@@ -1,4 +1,5 @@
 using Motiv.BooleanPredicateProposition;
+using Motiv.Shared;
 
 namespace Motiv.Tests;
 

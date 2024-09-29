@@ -1,3 +1,5 @@
+using Motiv.Shared;
+
 namespace Motiv.SpecDecoratorProposition;
 
 internal sealed class SpecDecoratorExplanationProposition<TModel, TUnderlyingMetadata>(

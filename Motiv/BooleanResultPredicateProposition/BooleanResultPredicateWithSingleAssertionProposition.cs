@@ -1,3 +1,5 @@
+using Motiv.Shared;
+
 namespace Motiv.BooleanResultPredicateProposition;
 
 internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TModel, TUnderlyingMetadata>(

@@ -41,7 +41,7 @@ internal static class Throw
 
         return value;
     }
-    
+
     internal static T ThrowIfLessThan<T>(this T value, T minimum, string paramName) where T : IComparable<T>
     {
         if (value.CompareTo(minimum) < 0)

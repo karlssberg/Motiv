@@ -1,4 +1,6 @@
-﻿namespace Motiv.SpecDecoratorProposition.PropositionBuilders.Explanation;
+﻿using Motiv.Shared;
+
+namespace Motiv.SpecDecoratorProposition.PropositionBuilders.Explanation;
 
 /// <summary>
 /// A factory for creating propositions based on the supplied proposition and explanation factories.

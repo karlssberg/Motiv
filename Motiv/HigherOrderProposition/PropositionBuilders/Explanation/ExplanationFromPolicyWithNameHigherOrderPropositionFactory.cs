@@ -1,4 +1,6 @@
-﻿namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation;
+﻿using Motiv.Shared;
+
+namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation;
 
 /// <summary>
 /// A factory for creating specifications based on a predicate and explanations for true and false conditions.

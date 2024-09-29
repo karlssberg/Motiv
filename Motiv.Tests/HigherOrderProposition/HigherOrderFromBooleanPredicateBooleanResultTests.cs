@@ -1,6 +1,7 @@
 ﻿using AutoFixture;
 using AutoFixture.Xunit2;
 using Motiv.HigherOrderProposition;
+using Motiv.Shared;
 
 namespace Motiv.Tests.HigherOrderProposition;
 

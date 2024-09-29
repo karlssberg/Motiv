@@ -1,5 +1,6 @@
 ﻿using AutoFixture;
 using AutoFixture.Kernel;
+using Motiv.Shared;
 
 namespace Motiv.Tests.Customizations;
 

@@ -1,4 +1,4 @@
-namespace Motiv;
+namespace Motiv.Traversal;
 
 /// <summary>
 /// Represents a binary operation specification.

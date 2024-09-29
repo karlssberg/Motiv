@@ -312,6 +312,9 @@
         <Compile Update="HigherOrderProposition\PropositionBuilders\Metadata\MultiMetadataFromPolicyResultHigherOrderPropositionFactory.cs">
           <DependentUpon>FalseMultiMetadataFromPolicyResultHigherOrderSpecBuilder.cs</DependentUpon>
         </Compile>
+        <Compile Update="ExpressionTrees\SpecTransformerOptions.cs">
+          <DependentUpon>ExpressionTreeTransformer.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>

@@ -1,3 +1,5 @@
+using Motiv.Traversal;
+
 namespace Motiv.And;
 
 internal sealed class AndSpec<TModel, TMetadata>(

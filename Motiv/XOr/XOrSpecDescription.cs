@@ -1,3 +1,5 @@
+using Motiv.Traversal;
+
 namespace Motiv.XOr;
 
 internal sealed class XOrSpecDescription<TModel, TMetadata>(

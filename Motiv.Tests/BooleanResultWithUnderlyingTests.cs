@@ -1,4 +1,5 @@
 ﻿using AutoFixture;
+using Motiv.Shared;
 using Motiv.Tests.Customizations;
 using NSubstitute;
 

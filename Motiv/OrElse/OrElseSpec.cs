@@ -1,3 +1,5 @@
+using Motiv.Traversal;
+
 namespace Motiv.OrElse;
 
 internal sealed class OrElseSpec<TModel, TMetadata>(

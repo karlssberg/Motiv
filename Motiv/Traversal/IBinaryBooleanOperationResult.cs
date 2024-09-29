@@ -1,13 +1,13 @@
-namespace Motiv;
+namespace Motiv.Traversal;
 
 internal interface IBinaryBooleanOperationResult : IBooleanOperationResult
 {
     BooleanResultBase Left { get; }
-    
+
     BooleanResultBase? Right { get; }
-    
+
     string Operation { get; }
-    
+
     bool IsCollapsable { get; }
 }
 

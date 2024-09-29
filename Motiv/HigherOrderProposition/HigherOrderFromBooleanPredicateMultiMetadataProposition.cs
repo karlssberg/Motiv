@@ -1,4 +1,6 @@
-﻿namespace Motiv.HigherOrderProposition;
+﻿using Motiv.Shared;
+
+namespace Motiv.HigherOrderProposition;
 
 internal sealed class HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel, TMetadata>(
     Func<TModel, bool> predicate,

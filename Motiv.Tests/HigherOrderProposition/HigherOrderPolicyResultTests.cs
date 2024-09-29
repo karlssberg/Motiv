@@ -1,4 +1,5 @@
 ﻿using Motiv.HigherOrderProposition;
+using Motiv.Shared;
 using Motiv.Tests.Customizations;
 
 namespace Motiv.Tests.HigherOrderProposition;

@@ -1,4 +1,4 @@
-﻿namespace Motiv;
+﻿namespace Motiv.Traversal;
 
 internal interface IUnaryOperationResult<TMetadata>
 {

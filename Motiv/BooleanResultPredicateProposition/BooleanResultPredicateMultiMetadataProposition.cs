@@ -1,4 +1,6 @@
-﻿namespace Motiv.BooleanResultPredicateProposition;
+﻿using Motiv.Shared;
+
+namespace Motiv.BooleanResultPredicateProposition;
 
 /// <summary>
 /// Represents a proposition that yields a collection of metadata based on the result of a boolean predicate.

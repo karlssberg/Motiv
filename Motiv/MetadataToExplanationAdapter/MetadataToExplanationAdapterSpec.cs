@@ -1,3 +1,5 @@
+using Motiv.Shared;
+
 namespace Motiv.MetadataToExplanationAdapter;
 
 internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingMetadata>(

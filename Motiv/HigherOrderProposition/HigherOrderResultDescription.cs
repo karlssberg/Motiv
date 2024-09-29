@@ -1,3 +1,5 @@
+using Motiv.Shared;
+
 namespace Motiv.HigherOrderProposition;
 
 internal sealed class HigherOrderResultDescription<TUnderlyingMetadata>(

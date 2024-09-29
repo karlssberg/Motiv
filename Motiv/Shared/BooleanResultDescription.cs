@@ -1,4 +1,4 @@
-namespace Motiv;
+namespace Motiv.Shared;
 
 internal sealed class BooleanResultDescription(
     string reason,

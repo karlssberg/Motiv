@@ -231,23 +231,7 @@ flowchart BT
 
 This is then implemented in code as follows:
 
-```csharp
-// Define atomic propositions
-var isFizz = Spec.Build((int n) => n % 3 == 0).Create("fizz");
-var isBuzz = Spec.Build((int n) => n % 5 == 0).Create("buzz");
-
-// Compose atomic propositions and redefine assertions
-var isSubstitution =
-    Spec.Build(isFizz | isBuzz)
-        .WhenTrue((_, result) => string.Concat(result.Assertions))  // Concatenate "fizz" and/or "buzz"
-        .WhenFalse(n => n.ToString())
-        .Create("is substitution");
-
-isSubstitution.IsSatisfiedBy(15).Value;  // "fizzbuzz"
-isSubstitution.IsSatisfiedBy(3).Value;   // "fizz"
-isSubstitution.IsSatisfiedBy(5).Value;   // "buzz"
-isSubstitution.IsSatisfiedBy(2).Value;   // "2"
-```
+<iframe width="100%" height="475" src="https://dotnetfiddle.net/Widget/uYefQ8" frameborder="0"></iframe>
 
 This example demonstrates how you can compose complex propositions from simpler ones using Motiv.
 

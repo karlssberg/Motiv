@@ -1,3 +1,5 @@
+using Motiv.Traversal;
+
 namespace Motiv.Or;
 
 internal sealed class OrSpec<TModel, TMetadata>(

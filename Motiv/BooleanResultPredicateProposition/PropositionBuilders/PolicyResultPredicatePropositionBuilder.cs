@@ -2,6 +2,7 @@
 using Motiv.BooleanResultPredicateProposition.PropositionBuilders.Metadata;
 using Motiv.HigherOrderProposition;
 using Motiv.HigherOrderProposition.PropositionBuilders;
+using Motiv.Shared;
 
 namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders;
 
