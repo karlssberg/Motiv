@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+﻿using System.Linq.Expressions;
 
 namespace Motiv.ExpressionTrees;
 
@@ -11,32 +11,19 @@ internal static class TypeExtensions
         type = isNullableType ? Nullable.GetUnderlyingType(type)! : type;
 
         var typeName = GetTypeKeyword(type);
-        if (!type.IsGenericType)
-        {
-            return $"{typeName}{nullableSuffix}";
-        }
+        if (!type.IsGenericType) return $"{typeName}{nullableSuffix}";
 
         var genericTypeName = typeName.Substring(0, type.Name.IndexOf('`'));
         var genericArguments = type.GetGenericArguments().Select(ToCSharpName);
         return $"{genericTypeName}<{string.Join(", ", genericArguments)}>{nullableSuffix}";
     }
 
-
-    internal static string ToCSharpName(this MethodInfo method)
+    internal static string ToCSharpName(this MethodCallExpression methodCallExpression)
     {
-        if (!method.IsGenericMethod)
-        {
-            return method.Name;
-        }
-
-        var genericArgs = method
-            .GetGenericArguments()
-            .Select(ToCSharpName);
-
-        return $"{method.Name}<{string.Join(", ", genericArgs)}>";
+        return methodCallExpression.Method.Name;
     }
 
-    public static string GetTypeKeyword(Type type)
+    private static string GetTypeKeyword(Type type)
     {
         return type switch
         {
@@ -78,6 +65,4 @@ internal static class TypeExtensions
             _ => type.Name
         };
     }
-
-
 }

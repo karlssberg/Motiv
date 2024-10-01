@@ -63,16 +63,17 @@ internal class ExpressionTreeTransformer<TModel>(
 
         var whenConditional = Humanize(expression);
 
-        return Spec.Build((TModel model) =>
-            {
-                var antecedent = test.IsSatisfiedBy(model);
-                if (antecedent) return antecedent & ifTrue.IsSatisfiedBy(model);
+        return
+            Spec.Build((TModel model) =>
+                {
+                    var antecedent = test.IsSatisfiedBy(model);
+                    if (antecedent) return antecedent & ifTrue.IsSatisfiedBy(model);
 
-                var consequent = ifFalse.IsSatisfiedBy(model);
-                return (antecedent & consequent) | (antecedent & !consequent);
-            })
-            .WhenTrueYield((_, result) => result.Assertions)
-            .WhenFalseYield((_, result) => result.Assertions)
+                    var consequent = ifFalse.IsSatisfiedBy(model);
+                    return (antecedent & consequent) | (antecedent & !consequent);
+                })
+                .WhenTrueYield((_, result) => result.Assertions)
+                .WhenFalseYield((_, result) => result.Assertions)
             .Create(whenConditional);
     }
 
@@ -194,11 +195,17 @@ internal class ExpressionTreeTransformer<TModel>(
 
     private SpecBase<TModel, string> TransformQuasiProposition(
         Expression expression,
-        ParameterExpression parameter) =>
-        Spec.Build(CreatePredicate(expression, parameter))
-            .WhenTrue(Humanize(Expression.Equal(expression, Expression.Constant(true))))
-            .WhenFalse(Humanize(Expression.Equal(expression, Expression.Constant(false))))
-            .Create();
+        ParameterExpression parameter)
+    {
+        var trueBecause = Humanize(Expression.Equal(expression, Expression.Constant(true)));
+        var falseBecause = Humanize(Expression.Equal(expression, Expression.Constant(false)));
+
+        return
+            Spec.Build(CreatePredicate(expression, parameter))
+                .WhenTrue(trueBecause)
+                .WhenFalse(falseBecause)
+                .Create();
+    }
 
     private Func<TModel, bool> CreatePredicate(
         Expression expression,

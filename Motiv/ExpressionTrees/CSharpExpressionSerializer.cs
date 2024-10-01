@@ -21,15 +21,16 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
     {
         _stringBuilder.Append("new ");
         _stringBuilder.Append(node.Type.ToCSharpName());
-        _stringBuilder.Append("(");
+        _stringBuilder.Append('(');
 
         VisitSpreadOfExpressions(node.Arguments.ToArray());
 
-        _stringBuilder.Append(")");
+        _stringBuilder.Append(')');
 
         return node;
     }
-    protected virtual Expression VisitNewInListInit(NewExpression node)
+
+    protected virtual Expression VisitNewWithInitialization(NewExpression node)
     {
         _stringBuilder.Append("new ");
         _stringBuilder.Append(node.Type.ToCSharpName());
@@ -55,18 +56,6 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         }
         switch (node.NodeType)
         {
-            case ExpressionType.Not:
-                _stringBuilder.Append('+');
-                _stringBuilder.Append('!');
-                Visit(node.Operand);
-                break;
-            case ExpressionType.Negate:
-                _stringBuilder.Append('-');
-                Visit(node.Operand);
-                break;
-            case ExpressionType.UnaryPlus:
-                Visit(node.Operand);
-                break;
             case ExpressionType.ArrayLength:
                 Visit(node.Operand);
                 _stringBuilder.Append(".Length");
@@ -76,8 +65,66 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
                 Visit(node.Operand);
                 _stringBuilder.Append(']');
                 break;
+            case ExpressionType.ConvertChecked
+                or ExpressionType.Convert:
+                Visit(node.Operand);
+                break;
+            case ExpressionType.Negate:
+                _stringBuilder.Append('-');
+                Visit(node.Operand);
+                break;
+            case ExpressionType.UnaryPlus:
+                _stringBuilder.Append('+');
+                Visit(node.Operand);
+                break;
+            case ExpressionType.NegateChecked:
+                _stringBuilder.Append("checked(-");
+                Visit(node.Operand);
+                break;
+            case ExpressionType.Not:
+                _stringBuilder.Append('!');
+                Visit(node.Operand);
+                break;
+            case ExpressionType.Quote:
+                _stringBuilder.Append('"');
+                Visit(node.Operand);
+                _stringBuilder.Append('"');
+                break;
+            case ExpressionType.TypeAs:
+                Visit(node.Operand);
+                _stringBuilder.Append(" as ");
+                _stringBuilder.Append(node.Type.ToCSharpName());
+                break;
+            case ExpressionType.OnesComplement:
+                _stringBuilder.Append('~');
+                Visit(node.Operand);
+                break;
+            case ExpressionType.Increment or ExpressionType.PreIncrementAssign:
+                _stringBuilder.Append("++");
+                Visit(node.Operand);
+                break;
+            case ExpressionType.Decrement or ExpressionType.PreDecrementAssign:
+                _stringBuilder.Append("--");
+                Visit(node.Operand);
+                break;
+            case ExpressionType.PostIncrementAssign:
+                Visit(node.Operand);
+                _stringBuilder.Append("++");
+                break;
+            case ExpressionType.PostDecrementAssign:
+                Visit(node.Operand);
+                _stringBuilder.Append("--");
+                break;
+            case ExpressionType.Unbox
+                or ExpressionType.IsTrue
+                or ExpressionType.IsFalse:
+                break;
+            case ExpressionType.Throw:
+                _stringBuilder.Append("throw ");
+                Visit(node.Operand);
+                break;
             default:
-                _stringBuilder.Append(node.NodeType.ToString());
+                Visit(node.Operand);
                 break;
         }
 
@@ -122,29 +169,66 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
     {
         if (node.Expression is not ConstantExpression constantExpression)
         {
-            Visit(node.Expression);
+            if (node.Expression is null)
+                _stringBuilder.Append(node.Member.DeclaringType?.Name);
+            else
+                Visit(node.Expression);
+
             _stringBuilder.Append('.');
             _stringBuilder.Append(node.Member.Name);
             return node;
         }
 
-        var (value, valueType) = GetConstantExpressionValue(node.Member.Name, constantExpression);
-        if (!IsSupported(value))
-        {
-            _stringBuilder.Append(node.Member.Name);
-            return node;
-        }
+        _stringBuilder.Append(node.Member.Name);
+        return node;
+    }
 
-        var serializeSupported = SerializeSupported(value, valueType);
-        _stringBuilder.Append(serializeSupported);
+    protected override Expression VisitMemberInit(MemberInitExpression node)
+    {
+        VisitNewWithInitialization(node.NewExpression);
+        _stringBuilder.Append(" ");
+        VisitMemberBindings(node.Bindings);
 
         return node;
+    }
+
+    private void VisitMemberBindings(IEnumerable<MemberBinding> bindings)
+    {
+        _stringBuilder.Append("{ ");
+        var isFirst = true;
+        foreach (var binding in bindings)
+        {
+            _stringBuilder.Append(isFirst ? "" : ", ");
+            isFirst = false;
+
+            switch (binding)
+            {
+                case MemberAssignment assignment:
+                    _stringBuilder.Append(assignment.Member.Name);
+                    _stringBuilder.Append(" = ");
+                    Visit(assignment.Expression);
+                    break;
+                case MemberListBinding listBinding:
+                    _stringBuilder.Append(listBinding.Member.Name);
+                    _stringBuilder.Append(" = { ");
+                    VisitSpreadOfExpressions(listBinding.Initializers.SelectMany(init => init.Arguments));
+                    _stringBuilder.Append(" }");
+                    break;
+                case MemberMemberBinding memberMemberBinding:
+                    _stringBuilder.Append(memberMemberBinding.Member.Name);
+                    _stringBuilder.Append(" = { ");
+                    VisitMemberBindings(memberMemberBinding.Bindings);
+                    _stringBuilder.Append(" }");
+                    break;
+            }
+        }
+        _stringBuilder.Append(" }");
     }
 
     protected override Expression VisitListInit(ListInitExpression node)
     {
         var arguments = node.Initializers.SelectMany(init => init.Arguments).ToArray();
-        VisitNewInListInit(node.NewExpression);
+        VisitNewWithInitialization(node.NewExpression);
         _stringBuilder.Append(" { ");
         VisitSpreadOfExpressions(arguments);
         _stringBuilder.Append(" }");
@@ -187,14 +271,11 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
     protected override Expression VisitLambda<T>(Expression<T> node)
     {
-        var hasSingleParameter = node.Parameters.Count == 1;
-        if (!hasSingleParameter)
-            _stringBuilder.Append('(');
+        _stringBuilder.Append('(');
 
-        VisitSpreadOfExpressions(node.Parameters);
+        VisitSpreadOfParameterExpressions(node.Parameters);
 
-        if (!hasSingleParameter)
-            _stringBuilder.Append(')');
+        _stringBuilder.Append(')');
 
         _stringBuilder.Append(" => ");
 
@@ -214,19 +295,137 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
-        if (node.Method.IsSpecialName && node.Method.Name == "get_Item")
-            return VisitObjectIndex(node);
+        switch (node.Method)
+        {
+            case { IsSpecialName: true, Name: "get_Item" }:
+                return VisitObjectIndex(node);
+            case { DeclaringType.FullName: "System.String", Name: nameof(string.Format) }:
+                return VisitStringInterpolation(node);
+            case { DeclaringType.FullName: "Motiv.ExpressionTrees.Serialize", Name: nameof(ExpressionTrees.Serialize.AsValue) }:
+                return VisitSerializeAsValue(node);
+        }
 
         var isExtensionMethod = node.Method.IsDefined(typeof(ExtensionAttribute), false);
         var instanceObject = isExtensionMethod ? node.Arguments[0] : node.Object;
         var arguments = isExtensionMethod ? node.Arguments.Skip(1) : node.Arguments;
 
-        Visit(instanceObject);
+        if (node.Method.IsStatic && !isExtensionMethod)
+        {
+            _stringBuilder.Append(node.Method.DeclaringType!.ToCSharpName());
+        }
+        else
+        {
+            Visit(instanceObject);
+        }
+
         _stringBuilder.Append('.');
-        _stringBuilder.Append(node.Method.ToCSharpName());
+        _stringBuilder.Append(node.ToCSharpName());
         _stringBuilder.Append("(");
         VisitSpreadOfExpressions(arguments.ToArray());
         _stringBuilder.Append(")");
+
+        return node;
+    }
+
+    private Expression VisitSerializeAsValue(MethodCallExpression node)
+    {
+        if (node.Arguments.Count != 1)
+            throw new InvalidOperationException("Serialize.AsName<T>(T arg) should have exactly one argument");
+
+        var arg = ResolveVisibleNode(node.Arguments[0]);
+
+        switch (arg)
+        {
+            case ParameterExpression parameterExpression:
+                _stringBuilder.Append(parameterExpression.Name);
+                break;
+            case MemberExpression memberExpression and { Expression: ConstantExpression constantExpression }:
+
+                var (value, valueType) = GetConstantExpressionValue(memberExpression.Member.Name, constantExpression);
+                if (IsSupported(value))
+                {
+                    var serializeSupported = SerializeSupported(value, valueType);
+                    _stringBuilder.Append(serializeSupported);
+                    break;
+                }
+                _stringBuilder.Append(value);
+                break;
+            case ConstantExpression constantExpression:
+                var serialization = SerializeSupported(constantExpression.Value, constantExpression.Type) ??
+                                    constantExpression.Value.ToString();
+                _stringBuilder.Append(serialization);
+                break;
+            default:
+                Visit(arg);
+                break;
+        }
+
+        return node;
+    }
+
+    private Expression VisitSerializeAsName(MethodCallExpression node)
+    {
+        if (node.Arguments.Count != 1)
+            throw new InvalidOperationException("Serialize.AsName<T>(T arg) should have exactly one argument");
+
+        var arg = ResolveVisibleNode(node.Arguments[0]);
+
+        switch (arg)
+        {
+            case ParameterExpression parameterExpression:
+                _stringBuilder.Append(parameterExpression.Name);
+                break;
+            case MemberExpression memberExpression:
+                _stringBuilder.Append(memberExpression.Member.Name);
+                break;
+            case ConstantExpression constantExpression:
+                _stringBuilder.Append(constantExpression.Value);
+                break;
+            default:
+                Visit(arg);
+                break;
+        }
+
+        return node;
+    }
+
+    protected override Expression VisitConditional(ConditionalExpression node)
+    {
+        Visit(node.Test);
+        _stringBuilder.Append(" ? ");
+        Visit(node.IfTrue);
+        _stringBuilder.Append(" : ");
+        Visit(node.IfFalse);
+        return node;
+    }
+
+    private Expression VisitStringInterpolation(MethodCallExpression node)
+    {
+        if (node.Arguments[0] is not ConstantExpression patternExpression || patternExpression.Type != typeof(string))
+        {
+            _stringBuilder.Append("string.Format(");
+            VisitSpreadOfExpressions(node.Arguments);
+            _stringBuilder.Append(')');
+            return node;
+        }
+
+        var format = (string) patternExpression.Value!;
+        var shouldSubstituteToken = false;
+        var splitFormat = Regex.Split(format, @"(?<=[{])(\s*?\d+\s*?)(?=[:}])");
+
+        _stringBuilder.Append("$\"");
+        foreach(var part in splitFormat)
+        {
+            if (shouldSubstituteToken)
+            {
+                Visit(node.Arguments[int.Parse(part)+1]);
+            }
+            else
+                _stringBuilder.Append(part);
+
+            shouldSubstituteToken = !shouldSubstituteToken;
+        }
+        _stringBuilder.Append('"');
 
         return node;
     }
@@ -266,6 +465,19 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
             _stringBuilder.Append(", ");
             Visit(arg);
+        }
+    }
+
+    private void VisitSpreadOfParameterExpressions(IEnumerable<ParameterExpression> parameterExpressions)
+    {
+        var isFirst = true;
+        foreach (var parameterExpression in parameterExpressions)
+        {
+            _stringBuilder.Append(isFirst ? "" : ", ");
+            isFirst = false;
+            _stringBuilder.Append(parameterExpression.Type.ToCSharpName());
+            _stringBuilder.Append(' ');
+            VisitParameter(parameterExpression);
         }
     }
 
@@ -461,21 +673,17 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
     {
         return obj switch
         {
-            null => $"default({declaredType.ToCSharpName()})",
+            null => "null",
             bool b => b ? "true" : "false",
             char ch => $"'{ch}'",
             string s => $"\"{s}\"",
-            float f => $"{f}f",
-            double d => $"{d}d",
-            decimal d => $"{d}m",
-            long l => $"{l}L",
-            ulong ul => $"{ul}UL",
             Guid guid => $"Guid.Parse({guid})",
             DateTime dateTime => $"DateTime.Parse(\"{dateTime:O}\")",
             DateTimeOffset dateTimeOffset => $"DateTimeOffset.Parse(\"{dateTimeOffset:O}\")",
             TimeSpan timespan => $"TimeSpan.Parse(\"{timespan}\")",
             Regex regex => $"new Regex(@\"{regex}\")",
             Type t => $"typeof({t.FullName})",
+            _ when declaredType.IsEnum => $"{declaredType.Name}.{obj}",
             _ when IsSupported(obj) => obj.ToString(),
             _ => null
         };
@@ -487,8 +695,6 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
             ExpressionType.Quote => true,
             ExpressionType.IsTrue => true,
             ExpressionType.IsFalse => true,
-            ExpressionType.ConvertChecked => true,
-            ExpressionType.Convert => true,
             _ => false
         };
 

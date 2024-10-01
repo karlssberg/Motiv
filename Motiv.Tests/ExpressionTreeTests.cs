@@ -1,6 +1,8 @@
 ﻿using System.Drawing;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
+using Motiv.ExpressionTrees;
 
 namespace Motiv.Tests;
 
@@ -94,6 +96,23 @@ public class ExpressionTreeTests
     public void Should_perform_text_search(string searchTerm, string expectedAssertion)
     {
         var sut =
+            Spec.From((string txt) => txt.Contains(Serialize.AsValue(searchTerm)))
+                .Create("text-search");
+
+        // Act
+        var act = sut.IsSatisfiedBy("the quick brown fox jumps over the lazy dog");
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData("quick", """txt.Contains(searchTerm) == true""")]
+    [InlineData("brown", """txt.Contains(searchTerm) == true""")]
+    [InlineData("pink", """txt.Contains(searchTerm) == false""")]
+    public void Should_serialize_a_variable_name(string searchTerm, string expectedAssertion)
+    {
+        var sut =
             Spec.From((string txt) => txt.Contains(searchTerm))
                 .Create("text-search");
 
@@ -105,10 +124,10 @@ public class ExpressionTreeTests
     }
 
     [Theory]
-    [InlineData("hello", 2, "txt.Count<char>(ch => vowels.Contains(ch)) == 2")]
-    [InlineData("world", 2, "txt.Count<char>(ch => vowels.Contains(ch)) < 2")]
-    [InlineData("high-roller", 2, "txt.Count<char>(ch => vowels.Contains(ch)) > 2")]
-    public void Should_display_nested_function_expression(string model, uint threshold, string expectedAssertion)
+    [InlineData("hello", 2, "txt.Count((char ch) => vowels.Contains(ch)) == threshold")]
+    [InlineData("world", 2, "txt.Count((char ch) => vowels.Contains(ch)) < threshold")]
+    [InlineData("high-roller", 2, "txt.Count((char ch) => vowels.Contains(ch)) > threshold")]
+    public void Should_display_nested_function_expression(string model, int threshold, string expectedAssertion)
     {
         // Assemble
         var vowels = new HashSet<char>("aeiouAEIOU");
@@ -233,9 +252,9 @@ public class ExpressionTreeTests
     }
 
     [Theory]
-    [InlineData(0, "n + 1 < 2")]
-    [InlineData(1, "n + 1 == 2")]
-    [InlineData(2, "n + 1 > 2")]
+    [InlineData(0, "n + 1 < threshold")]
+    [InlineData(1, "n + 1 == threshold")]
+    [InlineData(2, "n + 1 > threshold")]
     public void Should_assert_expressions_containing_a_constant_expression(int model, string expectedAssertion)
     {
         // Assemble
@@ -252,9 +271,9 @@ public class ExpressionTreeTests
     }
 
     [Theory]
-    [InlineData(0, "list.Count<int>(i => i > n) > 2")]
-    [InlineData(1, "list.Count<int>(i => i > n) == 2")]
-    [InlineData(2, "list.Count<int>(i => i > n) < 2")]
+    [InlineData(0, "list.Count((int i) => i > n) > threshold")]
+    [InlineData(1, "list.Count((int i) => i > n) == threshold")]
+    [InlineData(2, "list.Count((int i) => i > n) < threshold")]
     public void Should_assert_expressions_containing_a_parameter_expression(int model, string expectedAssertion)
     {
         // Assemble
@@ -380,8 +399,8 @@ public class ExpressionTreeTests
     }
 
     [Theory]
-    [InlineData("Moe", """new string[] { "Moe", "Larry", "Curly" }.Contains<string>(name) == true""")]
-    [InlineData("Joe", """new string[] { "Moe", "Larry", "Curly" }.Contains<string>(name) == false""")]
+    [InlineData("Moe", """new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true""")]
+    [InlineData("Joe", """new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false""")]
     public void Should_assert_expressions_containing_a_new_array_expression(string model, string expectedAssertion)
     {
         // Assemble
@@ -432,8 +451,8 @@ public class ExpressionTreeTests
     }
 
     [Theory]
-    [InlineData(3, "(num => num < 3)(n) == false")]
-    [InlineData(2, "(num => num < 3)(n) == true")]
+    [InlineData(3, "((int num) => num < 3)(n) == false")]
+    [InlineData(2, "((int num) => num < 3)(n) == true")]
     public void Should_assert_expressions_containing_a_lambda_expression_with_invocation(int model, params string[] expectedAssertion)
     {
         // Assemble
@@ -466,8 +485,8 @@ public class ExpressionTreeTests
     }
 
     [Theory]
-    [InlineData(2, 3, "new List<int> { 1, 2, 3 }[index] == 3")]
-    [InlineData(1, 1, "new List<int> { 1, 2, 3 }[index] != 1")]
+    [InlineData(2, 3, "new List<int> { 1, 2, 3 }[index] == query")]
+    [InlineData(1, 1, "new List<int> { 1, 2, 3 }[index] != query")]
     public void Should_assert_expressions_containing_an_index_expression(int model, int query, params string[] expectedAssertion)
     {
         // Assemble
@@ -483,14 +502,16 @@ public class ExpressionTreeTests
     }
 
     [Theory]
-    [InlineData(3, 3, "(default(int?) ?? 3) == n")]
-    [InlineData(0, 1, "(default(int?) ?? 1) != n")]
+    [InlineData(3, 3, "(null ?? substitution) == n")]
+    [InlineData(0, 1, "(null ?? substitution) != n")]
+    [InlineData(0, 0, "(null ?? substitution) == n")]
+    [InlineData(1, 0, "(null ?? substitution) != n")]
     public void Should_assert_expressions_containing_a_coalesce_expression(int model, int substitution, params string[] expectedAssertion)
     {
         // Assemble
         var sut = Spec
             .From((int n) => (default(int?) ?? substitution) == n)
-            .Create("coalesce_expression");
+            .Create("coalesce-expression");
 
         // Act
         var act = sut.IsSatisfiedBy(model);
@@ -499,74 +520,171 @@ public class ExpressionTreeTests
         act.Assertions.Should().BeEquivalentTo(expectedAssertion);
     }
 
-    Expression<Func<int, string, bool, List<int>, double>> complexExpression =
-        (x, s, b, list) =>
+    [Theory]
+    [InlineData(2, 3, 2, "new Point { X = x, Y = y * 2 }.X != query")]
+    [InlineData(1, 1, 3, "new Point { X = x, Y = y * 2 }.X == query")]
+    public void Should_assert_expressions_containing_a_member_init_expression(int model, int x, int y, params string[] expectedAssertion)
+    {
+        // Assembled
+        var sut = Spec
+            .From((int query) => new Point { X = x, Y = y * 2 }.X == query)
+            .Create("member-init-expression");
 
+        // Act
+        var act = sut.IsSatisfiedBy(model);
 
-            // Coalesce Expression
-            (default(int?) ?? 0) +
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
 
-            // Member Init Expression
-            new Point { X = x, Y = x * 2 }.X +
+    [Theory]
+    [InlineData(2, 3, "x / 100 < query")]
+    [InlineData(1, 1, "x / 100 < query")]
+    public void Should_assert_expressions_containing_a_cast(int model, int x, params string[] expectedAssertion)
+    {
+        // Assembled
+        var sut = Spec
+            .From((int query) => (double)x / 100 < query)
+            .Create("casting-expression");
 
-            // Aggregate function (using LINQ)
-            list.Sum() +
+        // Act
+        var act = sut.IsSatisfiedBy(model);
 
-            // Cast Expression
-            ((double)x / 100);
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
 
-    private Expression<Func<int, bool>> complexPredicate = (int n) =>
-        // Equality and logical operators
-        n == 0 && n != 1 || n == 2 && !(n < 0) &&
+    [Theory]
+    [InlineData(100, $$"""
+                      $"{n:D2}" == n < 10 ? $"0{n}" : $"{n}"
+                      """)]
+    [InlineData(10, $$"""
+                     $"{n:D2}" == n < 10 ? $"0{n}" : $"{n}"
+                     """)]
+    [InlineData(1, """
+                   $"{n:D2}" == n < 10 ? $"0{n}" : $"{n}"
+                   """)]
+    public void Should_assert_expressions_containing_string_interpolation(int model, params string[] expectedAssertion)
+    {
+        // Assembled
+        var sut = Spec
+            .From((int n) => $"{n:D2}" == (n < 10 ? $"0{n}" : $"{n}"))
+            .Create("string-interpolation-expression");
 
-        // Arithmetic operations with type conversion
-        (double)n / 2 == Math.Floor((double)n / 2) &&
+        // Act
+        var act = sut.IsSatisfiedBy(model);
 
-        // Bitwise operations
-        ((n & 1) == 0) && ((n | 4) > 0) && ((n ^ 3) != 0) &&
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
 
-        // Shift operations
-        ((n << 2) > (n >> 1)) &&
+    [Theory]
+    [InlineData(1, 1, "((p.Item1 - 1) * (p.Item2 - -1)) / 2 < p.Item1 * p.Item2")]
+    [InlineData(2, 0, "((p.Item1 - 1) * (p.Item2 - -1)) / 2 > p.Item1 * p.Item2")]
+    [InlineData(3, 3, "((p.Item1 - 1) * (p.Item2 - -1)) / 2 < p.Item1 * p.Item2")]
+    public void Should_assert_expressions_containing_arithmetic(decimal x, decimal y, params string[] expectedAssertion)
+    {
+        // Assembled
+        var sut = Spec
+            .From(((decimal x, decimal y) p) => (p.x - 1) * (p.y - -1) / 2 < p.x * p.y)
+            .Create("arithmetic-expression");
 
-        // Conditional operator
-        (n % 2 == 0 ? n / 2 : n * 3 + 1) < 100 &&
+        // Act
+        var act = sut.IsSatisfiedBy((x, y));
 
-        // Method calls (static and instance)
-        Math.Abs(n) == n && n.ToString().Length <= 3 &&
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
 
-        // Property access
-        n.GetType().Name == "Int32" &&
+    [Theory]
+    [InlineData(1, "(n & 1) != 0")]
+    [InlineData(0, "(n & 1) == 0", "(n | 4) > 0", "(n ^ 3) != 0")]
+    public void Should_assert_expressions_containing_bitwise_operations(long model, params string[] expectedAssertion)
+    {
+        // Assembled
+        var sut = Spec
+            .From((long n) => (n & 1) == 0 & (n | 4) > 0 & (n ^ 3) != 0)
+            .Create("bitwise-expression");
 
-        // Array creation and indexing
-        new[] { 1, 2, 3, 4, 5 }[Math.Abs(n) % 5] == n &&
+        // Act
+        var act = sut.IsSatisfiedBy(model);
 
-        // String interpolation and comparison
-        $"{n:D2}" == (n < 10 ? "0" + n : n.ToString()) &&
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
 
-        // Nullable types
-        (int?)n == (int?)0 &&
+    [Theory]
+    [InlineData(-1, "n << 2 < n >> 1")]
+    [InlineData(1, "n << 2 > n >> 1")]
+    public void Should_assert_expressions_containing_bit_shift_operations(int model, params string[] expectedAssertion)
+    {
+        // Assembled
+        var sut = Spec
+            .From((int n) => n << 2 > n >> 1)
+            .Create("bit-shift-expression");
 
-        // Enum comparison (assuming System.DayOfWeek is available)
-        (DayOfWeek)((n % 7) + 1) != DayOfWeek.Sunday &&
+        // Act
+        var act = sut.IsSatisfiedBy(model);
 
-        // Constant folding
-        n * 1 == 1 * n && n + 0 == 0 + n &&
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
 
-        // Complex nested expressions
-        ((n > 0 ? n * n : -n * n) + (n < 0 ? -1 : 1)) % (Math.Abs(n) + 1) == 0 &&
+    [Theory]
+    [InlineData(BindingFlags.Public, "f.HasFlag(BindingFlags.Public) == true")]
+    [InlineData(BindingFlags.NonPublic | BindingFlags.Instance, "f.HasFlag(BindingFlags.Public) == false", "f.HasFlag(BindingFlags.Static) == false")]
+    [InlineData(BindingFlags.Public | BindingFlags.Static, "f.HasFlag(BindingFlags.Public) == true", "f.HasFlag(BindingFlags.Static) == true")]
+    public void Should_assert_expressions_containing_enums(BindingFlags flags, params string[] expectedAssertion)
+    {
+        // Assembled
+        var sut = Spec
+            .From((BindingFlags f) => f.HasFlag(BindingFlags.Public) | f.HasFlag(BindingFlags.Static))
+            .Create("enum-expression");
 
-        // Use of constants
-        n * Math.PI < 10 && n * Math.E < 10 &&
+        // Act
+        var act = sut.IsSatisfiedBy(flags);
 
-        // Bit counting (population count)
-        Convert.ToString(n, 2).Count(c => c == '1') < 5 &&
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
 
-        // Use of other numeric types
-        (long)n * (long)n <= int.MaxValue &&
+    [Theory]
+    [InlineData(null, "n == null")]
+    [InlineData(0, "n == 0")]
+    [InlineData(int.MaxValue, "n != null", "n != 0")]
+    public void Should_assert_expressions_containing_nullable_types(int? model, params string[] expectedAssertion)
+    {
+        // Assembled
+        var sut = Spec
+            .From((int? n) => n == null | n == 0)
+            .Create("nullable-expression");
 
-        // String operations
-        ("0123456789".IndexOf(n.ToString()) >= 0) &&
+        // Act
+        var act = sut.IsSatisfiedBy(model);
 
-        // Use of char
-        (char)(n + 'A') <= 'Z';
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineAutoData("2023-07-15T08:30:45+03:00", "date < now", "now < DateTime.Parse(\"3023-07-15T05:30:45.0000000Z\")")]
+    [InlineAutoData("3023-07-15T05:30:45Z", "date > now")]
+    public void Should_assert_expressions_containing_datetime_values(DateTime date, params string[] expectedAssertion)
+    {
+        // Assembled
+        var futureDate = DateTime.Parse(
+            "3023-07-15T05:30:45Z",
+            DateTimeFormatInfo.InvariantInfo,
+            DateTimeStyles.AdjustToUniversal);
+
+        var sut = Spec
+            .From((DateTime now) => date < now && now < Serialize.AsValue(futureDate))
+            .Create("datetime-expression");
+
+        // Act
+        var act = sut.IsSatisfiedBy(DateTime.UtcNow);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
 }
