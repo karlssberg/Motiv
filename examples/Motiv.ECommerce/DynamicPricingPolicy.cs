@@ -17,13 +17,13 @@ public class DynamicPricingPolicy(Dictionary<ProductId, PricedProduct> competito
             .Create("a discount is applied");
 
     private static PolicyBase<Context, decimal> IsPriceMatch(Dictionary<ProductId, PricedProduct> competitorsProducts) =>
-        Spec.Build((Context ctx) => ctx.Product.Price > competitorsProducts[ctx.Product.Id].Price)
+        Spec.From((Context ctx) => ctx.Product.Price > competitorsProducts[ctx.Product.Id].Price)
             .WhenTrue(ctx => competitorsProducts[ctx.Product.Id].Price)
             .WhenFalse(ctx => ctx.Product.Price)
             .Create("is a competitor's price match");
 
     private static PolicyBase<Context, decimal> IsInStockFor90daysDiscount { get; } =
-        Spec.Build((Context ctx) => ctx.Product.DateInStock < ctx.Now.AddDays(-90))
+        Spec.From((Context ctx) => ctx.Product.DateInStock < ctx.Now.AddDays(-90))
             .WhenTrue(0.05m)
             .WhenFalse(0m)
             .Create("the product has been in stock for 90 days");
@@ -35,13 +35,13 @@ public class DynamicPricingPolicy(Dictionary<ProductId, PricedProduct> competito
             .Create("it is night owl time");
 
     private static PolicyBase<Context, decimal> IsPreviouslyAbandonedProductDiscount { get; } =
-        Spec.Build((Context ctx) => ctx.User.AbandonedCartProducts.Contains(ctx.Product))
+        Spec.From((Context ctx) => ctx.User.AbandonedCartProducts.Contains(ctx.Product))
             .WhenTrue(0.02m)
             .WhenFalse(0m)
             .Create("the product was previously in an abandoned cart");
 
     private static PolicyBase<Context, decimal> IsLowStockIncrease { get; } =
-        Spec.Build((Context ctx) => ctx.Product.WarehouseStockLevel < 10)
+        Spec.From((Context ctx) => ctx.Product.WarehouseStockLevel < 10)
             .WhenTrue(-0.2m)
             .WhenFalse(0m)
             .Create("there are ten or fewer items in stock");

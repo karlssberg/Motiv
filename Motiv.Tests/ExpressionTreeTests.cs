@@ -96,7 +96,7 @@ public class ExpressionTreeTests
     public void Should_perform_text_search(string searchTerm, string expectedAssertion)
     {
         var sut =
-            Spec.From((string txt) => txt.Contains(Serialize.AsValue(searchTerm)))
+            Spec.From((string txt) => txt.Contains(Display.AsValue(searchTerm)))
                 .Create("text-search");
 
         // Act
@@ -556,13 +556,13 @@ public class ExpressionTreeTests
 
     [Theory]
     [InlineData(100, $$"""
-                      $"{n:D2}" == n < 10 ? $"0{n}" : $"{n}"
+                      $"{n:D2}" == (n < 10 ? $"0{n}" : $"{n}")
                       """)]
     [InlineData(10, $$"""
-                     $"{n:D2}" == n < 10 ? $"0{n}" : $"{n}"
+                     $"{n:D2}" == (n < 10 ? $"0{n}" : $"{n}")
                      """)]
     [InlineData(1, """
-                   $"{n:D2}" == n < 10 ? $"0{n}" : $"{n}"
+                   $"{n:D2}" == (n < 10 ? $"0{n}" : $"{n}")
                    """)]
     public void Should_assert_expressions_containing_string_interpolation(int model, params string[] expectedAssertion)
     {
@@ -678,11 +678,49 @@ public class ExpressionTreeTests
             DateTimeStyles.AdjustToUniversal);
 
         var sut = Spec
-            .From((DateTime now) => date < now && now < Serialize.AsValue(futureDate))
+            .From((DateTime now) => date < now && now < Display.AsValue(futureDate))
             .Create("datetime-expression");
 
         // Act
         var act = sut.IsSatisfiedBy(DateTime.UtcNow);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData("hello", 2, "\"hello\".Count((char ch) => vowels.Contains(ch)) == 2")]
+    [InlineData("world", 2, "\"world\".Count((char ch) => vowels.Contains(ch)) < 2")]
+    [InlineData("high-roller", 2, "\"high-roller\".Count((char ch) => vowels.Contains(ch)) > 2")]
+    public void Should_serialize_parameter_as_value_when_requested(string model, int threshold, string expectedAssertion)
+    {
+        // Assemble
+        var vowels = new HashSet<char>("aeiouAEIOU");
+
+        var sut = Spec
+            .From((string txt) => Display.AsValue(txt).Count(ch => vowels.Contains(ch)) > Display.AsValue(threshold))
+            .Create($"has-more-than-{threshold}-vowels");
+
+        // Act
+        var act = sut.IsSatisfiedBy(model);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData("hello", 2, "(string.IsNullOrEmpty(txt) ? \"\" : \"hello\").Length > threshold")]
+    [InlineData("world", 6, "(string.IsNullOrEmpty(txt) ? \"\" : \"world\").Length < threshold")]
+    [InlineData("high-roller", 2, "(string.IsNullOrEmpty(txt) ? \"\" : \"high-roller\").Length > threshold")]
+    public void Should_serialize_values_in_a_conditional_expression(string model, int threshold, string expectedAssertion)
+    {
+        // Assemble
+        var sut = Spec
+            .From((string txt) => (string.IsNullOrEmpty(txt) ? "" : Display.AsValue(txt)).Length > threshold)
+            .Create($"length-greater-than-{threshold}");
+
+        // Act
+        var act = sut.IsSatisfiedBy(model);
 
         // Assert
         act.Assertions.Should().BeEquivalentTo(expectedAssertion);
