@@ -160,7 +160,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
     protected override Expression VisitMember(MemberExpression node)
     {
-        if (node.Expression is not ConstantExpression constantExpression)
+        if (node.Expression is not ConstantExpression)
         {
             if (node.Expression is null)
                 OutputText.Append(node.Member.DeclaringType?.Name);
@@ -331,9 +331,9 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
             case ParameterExpression parameterExpression:
                 OutputText.Append(parameterExpression.Name);
                 break;
-            case MemberExpression memberExpression and { Expression: ConstantExpression constantExpression }:
+            case MemberExpression { Expression: ConstantExpression constantExpression } memberExpression:
 
-                var (value, valueType) = GetConstantExpressionValue(memberExpression.Member.Name, constantExpression);
+                var (value, valueType) = constantExpression.GetConstantExpressionValue(memberExpression.Member.Name);
                 if (IsSupported(value))
                 {
                     var serializeSupported = SerializeSupported(value, valueType);
@@ -452,28 +452,6 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         if (needsParentheses)
             OutputText.Append(')');
     }
-
-    private static (object?, Type) GetConstantExpressionValue(string capturedVariableName,
-        ConstantExpression constantExpression)
-    {
-        var value = constantExpression.Value;
-        var valueType = constantExpression.Type;
-
-        if (value == null || !IsClosureObject(value.GetType())) return (value, valueType); // not a closure
-
-        var capturedField = GetCapturedField(capturedVariableName, value);
-
-        return capturedField != null
-            ? (capturedField.GetValue(value), capturedField.FieldType)
-            : (value, valueType); // If no suitable field found, return the closure object itself
-    }
-
-    private static FieldInfo? GetCapturedField(string capturedVariableName, object value) =>
-        value.GetType().GetField(capturedVariableName);
-
-    protected static bool IsClosureObject(Type type) =>
-        // Closure types are compiler-generated and usually have specific naming patterns
-        type.Name.StartsWith("<>") || type.Name.Contains("DisplayClass");
 
     private static string GetBinaryOperatorSymbol(ExpressionType nodeType) =>
         nodeType switch

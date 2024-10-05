@@ -4,6 +4,11 @@ namespace Motiv.ExpressionTrees;
 
 internal class ExpressionTreeTransformer<TModel>()
 {
+    enum PredicateReturnType
+    {
+        Boolean,
+        BooleanResult
+    }
     private readonly ExpressionAnalyzer _expressionAnalyzer = new ();
 
     internal SpecBase<TModel, string> Transform(Expression<Func<TModel, bool>> expression) =>
@@ -75,14 +80,14 @@ internal class ExpressionTreeTransformer<TModel>()
                 })
                 .WhenTrueYield((_, result) => result.Assertions)
                 .WhenFalseYield((_, result) => result.Assertions)
-            .Create(whenConditional);
+                .Create(whenConditional);
     }
 
     private SpecBase<TModel, string> TransformEqualsExpression(
         BinaryExpression expression,
         ParameterExpression parameter)
     {
-        var predicate = CreatePredicate(expression, parameter);
+        var predicate = CreateFunc<TModel, bool>(expression, parameter);
 
         var hasAsValueMethod = _expressionAnalyzer.FindAsValueArguments(expression).Any();
         var equalsExpression = Expression.Equal(expression.Left, expression.Right);
@@ -105,7 +110,7 @@ internal class ExpressionTreeTransformer<TModel>()
         BinaryExpression expression,
         ParameterExpression parameter)
     {
-        var predicate = CreatePredicate(expression, parameter);
+        var predicate = CreateFunc<TModel, bool>(expression, parameter);
 
         var notEqualExpression = Expression.NotEqual(expression.Left, expression.Right);
         var equalExpression = Expression.Equal(expression.Left, expression.Right);
@@ -128,7 +133,7 @@ internal class ExpressionTreeTransformer<TModel>()
         BinaryExpression expression,
         ParameterExpression parameter)
     {
-        var predicate = CreatePredicate(expression, parameter);
+        var predicate = CreateFunc<TModel, bool>(expression, parameter);
         var equals = CreateEqualsFunction(expression, parameter);
 
         var greaterThanExpression = Expression.GreaterThan(expression.Left, expression.Right);
@@ -156,7 +161,7 @@ internal class ExpressionTreeTransformer<TModel>()
         BinaryExpression expression,
         ParameterExpression parameter)
     {
-        var predicate = CreatePredicate(expression, parameter);
+        var predicate = CreateFunc<TModel, bool>(expression, parameter);
         var equals = CreateEqualsFunction(expression, parameter);
 
         var equalsExpression = Expression.Equal(expression.Left, expression.Right);
@@ -187,7 +192,7 @@ internal class ExpressionTreeTransformer<TModel>()
         BinaryExpression expression,
         ParameterExpression parameter)
     {
-        var predicate = CreatePredicate(expression, parameter);
+        var predicate = CreateFunc<TModel, bool>(expression, parameter);
         var equals = CreateEqualsFunction(expression, parameter);
 
         var lessThanExpression = Expression.LessThan(expression.Left, expression.Right);
@@ -216,7 +221,7 @@ internal class ExpressionTreeTransformer<TModel>()
         BinaryExpression expression,
         ParameterExpression parameter)
     {
-        var predicate = CreatePredicate(expression, parameter);
+        var predicate = CreateFunc<TModel, bool>(expression, parameter);
         var equals = CreateEqualsFunction(expression, parameter);
 
         var hasAsValueMethod = _expressionAnalyzer.FindAsValueArguments(expression).Any();
@@ -256,29 +261,64 @@ internal class ExpressionTreeTransformer<TModel>()
         Expression expression,
         ParameterExpression parameter)
     {
-        var hasAsValueMethod = _expressionAnalyzer.FindAsValueArguments(expression).Any();
+        var (expressionAsBooleanResult, returnType) = ResolvePredicateResultExpression(expression);
 
         var whenTrueExpression = Expression.Equal(expression, Expression.Constant(true));
         var whenFalseExpression = Expression.Equal(expression, Expression.Constant(false));
 
+        return returnType == PredicateReturnType.BooleanResult
+            ? CreateSpecForBooleanResult(expressionAsBooleanResult, parameter, whenTrueExpression)
+            : CreateSpecForBoolean(expression, parameter, whenTrueExpression, whenFalseExpression);
+    }
+
+    private SpecBase<TModel, string> CreateSpecForBoolean(
+        Expression expression,
+        ParameterExpression parameter,
+        BinaryExpression whenTrueExpression,
+        BinaryExpression whenFalseExpression)
+    {
+        var hasAsValueMethod = _expressionAnalyzer.FindAsValueArguments(expression).Any();
         if(hasAsValueMethod)
             return
-                Spec.Build(CreatePredicate(expression, parameter))
+                Spec.Build(CreateFunc<TModel, bool>(expression, parameter))
                     .WhenTrue(model => Humanize(whenTrueExpression, model, parameter))
                     .WhenFalse(model => Humanize(whenFalseExpression, model, parameter))
-                    .Create(Humanize(expression));
-
+                    .Create(Humanize(whenTrueExpression));
         return
-            Spec.Build(CreatePredicate(expression, parameter))
+            Spec.Build(CreateFunc<TModel, bool>(expression, parameter))
                 .WhenTrue(Humanize(whenTrueExpression))
                 .WhenFalse(Humanize(whenFalseExpression))
                 .Create();
     }
 
-    private Func<TModel, bool> CreatePredicate(
+    private SpecBase<TModel, string> CreateSpecForBooleanResult(
         Expression expression,
-        ParameterExpression parameter) =>
-        CreateFunc<TModel, bool>(expression, parameter);
+        ParameterExpression parameter,
+        BinaryExpression propositionalStatementExpression)
+    {
+        var hasAsValueMethod = _expressionAnalyzer.FindAsValueArguments(expression).Any();
+        if (hasAsValueMethod)
+            return
+                Spec.Build(CreateFunc<TModel, BooleanResultBase<string>>(expression, parameter))
+                    .Create(Humanize(propositionalStatementExpression));
+        return
+            Spec.Build(CreateFunc<TModel, BooleanResultBase<string>>(expression, parameter))
+                .Create(Humanize(propositionalStatementExpression));
+    }
+
+    private static (Expression, PredicateReturnType) ResolvePredicateResultExpression(Expression expression)
+    {
+        return expression switch
+        {
+            UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } unaryExpression =>
+                ResolvePredicateResultExpression(unaryExpression.Operand),
+            _ => IsDescendantOfBooleanResultBase(expression.Type)
+                ? (expression, PredicateReturnType.BooleanResult)
+                : (expression, PredicateReturnType.Boolean),
+        };
+
+        bool IsDescendantOfBooleanResultBase(Type type) => typeof(BooleanResultBase<string>).IsAssignableFrom(type);
+    }
 
     private Func<TModel, bool> CreateEqualsFunction(
         BinaryExpression expression,
@@ -296,3 +336,4 @@ internal class ExpressionTreeTransformer<TModel>()
     private static string Humanize<T>(Expression expression, T parameterValue, ParameterExpression parameter) =>
         new CSharpExpressionSerializer<T>(parameterValue, parameter).Serialize(expression);
 }
+

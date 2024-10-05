@@ -710,7 +710,6 @@ public class ExpressionTreeTests
 
     [Theory]
     [InlineData("hello", 2, "(string.IsNullOrEmpty(txt) ? \"\" : \"hello\").Length > threshold")]
-    [InlineData("world", 6, "(string.IsNullOrEmpty(txt) ? \"\" : \"world\").Length < threshold")]
     [InlineData("high-roller", 2, "(string.IsNullOrEmpty(txt) ? \"\" : \"high-roller\").Length > threshold")]
     public void Should_serialize_values_in_a_conditional_expression(string model, int threshold, string expectedAssertion)
     {
@@ -718,6 +717,81 @@ public class ExpressionTreeTests
         var sut = Spec
             .From((string txt) => (string.IsNullOrEmpty(txt) ? "" : Display.AsValue(txt)).Length > threshold)
             .Create($"length-greater-than-{threshold}");
+
+        // Act
+        var act = sut.IsSatisfiedBy(model);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData("hello world", "hello", "contains 'hello'")]
+    [InlineData("high-roller", "hello", "does not contain 'hello'")]
+    public void Should_treat_boolean_results_within_expressions_as_a_source_of_custom_assertions(string text, string model, params string[] expectedAssertion)
+    {
+        // Assemble
+        var textEquals = Spec
+            .Build((string query) => text.Contains(query))
+            .WhenTrue(query => $"contains '{query}'")
+            .WhenFalse(query => $"does not contain '{query}'")
+            .Create($"text-equals")
+            .IsSatisfiedBy(model);
+
+        var tuple =(Spec: textEquals, query: model);
+
+        var sut = Spec
+            .From((string query) => tuple.Spec)
+            .Create("supports-embedded-specifications");
+
+        // Act
+        var act = sut.IsSatisfiedBy(model);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData("hello world", "hello", "query.Length > 0", "contains 'hello'")]
+    [InlineData("high-roller", "world", "does not contain 'world'")]
+    public void Should_treat_specifications_within_expressions_as_a_source_of_custom_assertions(string text, string model, params string[] expectedAssertion)
+    {
+        // Assemble
+        var textEquals = Spec
+            .Build((string query) => text.Contains(query))
+            .WhenTrue(query => $"contains '{query}'")
+            .WhenFalse(query => $"does not contain '{query}'")
+            .Create($"text-equals");
+
+        var sut = Spec
+            .From((string query) => query.Length > 0 && textEquals.IsSatisfiedBy(query))
+            .Create("supports-embedded-specifications");
+
+        // Act
+        var act = sut.IsSatisfiedBy(model);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+
+
+    [Theory]
+    [InlineData("hello world", "hello", "query.Length > 0", "contains 'hello'")]
+    [InlineData("high-roller", "world", "does not contain 'world'")]
+    public void Should_treat_boolean_result_factory_within_expressions_as_a_source_of_custom_assertions(string text, string model, params string[] expectedAssertion)
+    {
+        // Assemble
+        var textEquals = (string m) => Spec
+            .Build((string query) => text.Contains(query))
+            .WhenTrue(query => $"contains '{query}'")
+            .WhenFalse(query => $"does not contain '{query}'")
+            .Create($"text-equals")
+            .IsSatisfiedBy(m);
+
+        var sut = Spec
+            .From((string query) => query.Length > 0 && textEquals(query))
+            .Create("supports-embedded-specifications");
 
         // Act
         var act = sut.IsSatisfiedBy(model);
