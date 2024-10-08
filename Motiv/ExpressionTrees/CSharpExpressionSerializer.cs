@@ -1,5 +1,4 @@
 ﻿using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -140,6 +139,12 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
             return binaryExpression;
         }
 
+        var isCheckedExpression = binaryExpression.NodeType is
+            ExpressionType.AddChecked or
+            ExpressionType.SubtractChecked;
+
+        if (isCheckedExpression) OutputText.Append("checked(");
+
         VisitAndMaybeApplyParentheses(binaryExpression, binaryExpression.Left, true);
 
         OutputText.Append(' ');
@@ -147,6 +152,8 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         OutputText.Append(' ');
 
         VisitAndMaybeApplyParentheses(binaryExpression, binaryExpression.Right, false);
+
+        if (isCheckedExpression) OutputText.Append(')');
 
         return binaryExpression;
     }
@@ -280,7 +287,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         return node;
     }
 
-    protected Expression VisitObjectIndex(MethodCallExpression node)
+    private Expression VisitObjectIndex(MethodCallExpression node)
     {
         Visit(node.Object);
         OutputText.Append('[');
@@ -298,8 +305,6 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
             case { DeclaringType.FullName: "System.String", Name: nameof(string.Format) }:
                 return VisitStringInterpolation(node);
             case { DeclaringType.FullName: $"Motiv.ExpressionTrees.{nameof(Display)}", Name: nameof(Display.AsValue) }:
-                if (node.Arguments.Count != 1)
-                    throw new InvalidOperationException("Serialize.AsName<T>(T arg) should have exactly one argument");
                 return VisitSerializeAsValue(ResolveMethodArguments(node).First());
         }
 
@@ -444,7 +449,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         }
     }
 
-    protected void VisitAndMaybeApplyParentheses(Expression parent, Expression childToVisit, bool isLeft = true)
+    private void VisitAndMaybeApplyParentheses(Expression parent, Expression childToVisit, bool isLeft = true)
     {
         var needsParentheses = NeedsParentheses(parent, childToVisit, isLeft);
         if (needsParentheses)
@@ -468,8 +473,8 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
             ExpressionType.LessThan => "<",
             ExpressionType.LessThanOrEqual => "<=",
             ExpressionType.ExclusiveOr => "^",
-            ExpressionType.Add => "+",
-            ExpressionType.Subtract => "-",
+            ExpressionType.Add or ExpressionType.AddChecked=> "+",
+            ExpressionType.Subtract or ExpressionType.SubtractChecked => "-",
             ExpressionType.Multiply => "*",
             ExpressionType.Divide => "/",
             ExpressionType.Modulo => "%",
@@ -527,7 +532,9 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
                 or ExpressionType.Modulo => 13,
             // Additive operators
             ExpressionType.Add
-                or ExpressionType.Subtract => 12,
+                or ExpressionType.Subtract
+                or ExpressionType.AddChecked
+                or ExpressionType.SubtractChecked => 12,
             // Shift operators
             ExpressionType.LeftShift
                 or ExpressionType.RightShift => 11,
@@ -679,7 +686,11 @@ internal class CSharpExpressionSerializer<T>(T model, ParameterExpression modelP
                 OutputText.Append(serialization);
                 return node;
             default:
-                return base.VisitSerializeAsValue(node);
+                var body = Expression.Convert(node, typeof(object));
+                var valueGetter = Expression.Lambda<Func<T, object>>(body, modelParameter).Compile();
+                var value = valueGetter(model);
+                OutputText.Append(SerializeSupported(value, node.Type) ?? value);
+                return node;
         }
     }
 }
