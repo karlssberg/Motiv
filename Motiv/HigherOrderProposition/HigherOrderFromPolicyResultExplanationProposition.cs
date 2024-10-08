@@ -65,6 +65,7 @@ internal sealed class HigherOrderFromPolicyResultExplanationProposition<TModel, 
         var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderResultDescription<TUnderlyingMetadata>(
                 assertion.Value,
+                [],
                 causes.Value,
                 Description.Statement));
 

@@ -218,7 +218,7 @@ public class HigherOrderPolicyResultEvaluationTests
             .ToList();
 
         var causes = results.Take(2).ToList();
-        var expected = results.Select(r => r.Value);
+        var expected = causes.Select(r => r.Value);
 
         var evaluation = new HigherOrderPolicyResultEvaluation<TestModel, TestMetadata>(results, causes);
         // Act

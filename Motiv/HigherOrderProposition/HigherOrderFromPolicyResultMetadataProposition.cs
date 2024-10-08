@@ -62,17 +62,18 @@ internal sealed class HigherOrderFromPolicyResultMetadataProposition<TModel, TMe
         IEnumerable<BooleanResultBase<TUnderlyingMetadata>> underlyingResults,
         Lazy<IReadOnlyList<PolicyResult<TModel, TUnderlyingMetadata>>> causes)
     {
-        var assertions = new Lazy<IEnumerable<string>>(() =>
+        var assertion = new Lazy<string>(() =>
             metadata.Value switch
             {
-                IEnumerable<string>  reasons => reasons,
-                _ => specDescription.ToReason(isSatisfied).ToEnumerable()
+                string reasons => reasons,
+                _ => specDescription.ToReason(isSatisfied)
             });
 
 
         var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderResultDescription<TUnderlyingMetadata>(
                 specDescription.ToReason(isSatisfied),
+                [],
                 causes.Value,
                 Description.Statement));
 
@@ -87,7 +88,7 @@ internal sealed class HigherOrderFromPolicyResultMetadataProposition<TModel, TMe
 
         TMetadata Value() => metadata.Value;
         IEnumerable<TMetadata> Metadata() => metadata.Value.ToEnumerable();
-        IEnumerable<string> Assertions() => assertions.Value;
+        IEnumerable<string> Assertions() => assertion.Value.ToEnumerable();
         ResultDescriptionBase ResultDescription() => lazyDescription.Value;
         IEnumerable<BooleanResultBase<TUnderlyingMetadata>> GetCauses() => causes.Value;
     }

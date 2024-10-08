@@ -37,10 +37,6 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
 
     private PolicyResultBase<string> CreatePolicyResult(BooleanResultBase<TUnderlyingMetadata> booleanResult, Lazy<string> assertion)
     {
-        var reason = propositionalStatement is not null
-            ? propositionalStatement.ToReason(booleanResult.Satisfied)
-            : assertion.Value;
-
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(assertion.Value, booleanResult.ToEnumerable(), booleanResult.ToEnumerable()));
 
@@ -51,7 +47,7 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
         var description = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
-                reason,
+                assertion.Value,
                 Description.Statement));
 
         return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(

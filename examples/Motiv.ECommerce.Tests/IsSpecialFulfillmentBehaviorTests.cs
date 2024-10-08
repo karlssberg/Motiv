@@ -43,7 +43,9 @@ public class IsSpecialFulfillmentBehaviorTests
                 should ship some products from store
                     AND
                         Brand Model is out of stock at warehouse
+                            product.WarehouseStockLevel == 0
                         Brand Model is available in store
+                            product.InStoreStockLevel > 0
             """);
     }
 
@@ -65,6 +67,7 @@ public class IsSpecialFulfillmentBehaviorTests
             """
             should deliver same day
                 is same day delivery
+                    context.DistanceFromStore < 10
             """);
     }
 
@@ -86,6 +89,7 @@ public class IsSpecialFulfillmentBehaviorTests
             """
             should split order
                 is expensive
+                    context.Order.Products.Sum((InventoryPricedProduct product) => product.Price) > 1000
             """);
     }
 
@@ -108,6 +112,7 @@ public class IsSpecialFulfillmentBehaviorTests
             should locally fulfill
                 any perishable
                     Brand Model is perishable
+                        product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30)
             """);
     }
 

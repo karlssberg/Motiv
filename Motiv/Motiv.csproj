@@ -315,6 +315,24 @@
         <Compile Update="ExpressionTrees\SpecTransformerOptions.cs">
           <DependentUpon>ExpressionTreeTransformer.cs</DependentUpon>
         </Compile>
+        <Compile Update="ExpressionTrees\PropositionBuilders\Explanation\ExplanationWithNamePropositionFactory.cs">
+          <DependentUpon>FalseAssertionWithNamePropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="ExpressionTrees\PropositionBuilders\Explanation\MultiAssertionExplanationWithNamePropositionFactory.cs">
+          <DependentUpon>FalseAssertionWithNamePropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="ExpressionTrees\PropositionBuilders\Explanation\ExplanationPropositionFactory.cs">
+          <DependentUpon>FalseAssertionPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="ExpressionTrees\PropositionBuilders\Explanation\MultiAssertionExplanationPropositionFactory.cs">
+          <DependentUpon>FalseAssertionPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="ExpressionTrees\PropositionBuilders\Metadata\MultiMetadataPropositionFactory.cs">
+          <DependentUpon>FalseMultiMetadataPropositionBuilder.cs</DependentUpon>
+        </Compile>
+        <Compile Update="ExpressionTrees\PropositionBuilders\Metadata\MetadataPropositionFactory.cs">
+          <DependentUpon>FalseMetadataPropositionBuilder.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>

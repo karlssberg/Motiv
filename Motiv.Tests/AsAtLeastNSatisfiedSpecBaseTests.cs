@@ -763,8 +763,6 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(false, false, false, """
                                             none satisfied
                                                 received false
-                                                received false
-                                                received false
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at least one satisfied
@@ -777,7 +775,6 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(false, true,  true,  """
                                             at least one satisfied
                                                 received true
-                                                received true
                                             """)]
     [InlineAutoData(true,  false, false, """
                                             at least one satisfied
@@ -786,17 +783,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(true,  false, true,  """
                                             at least one satisfied
                                                 received true
-                                                received true
                                             """)]
     [InlineAutoData(true,  true,  false, """
                                             at least one satisfied
                                                 received true
-                                                received true
                                             """)]
     [InlineAutoData(true,  true,  true,  """
                                             at least one satisfied
-                                                received true
-                                                received true
                                                 received true
                                             """)]
     public void Should_serialize_the_result_of_the_at_least_of_1_operation_when_metadata_is_a_string(
@@ -832,8 +825,6 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(false, false, false, """
                                             None satisfied
                                                 underlying not satisfied
-                                                underlying not satisfied
-                                                underlying not satisfied
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             At least one satisfied
@@ -846,7 +837,6 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(false, true, true,   """
                                             At least one satisfied
                                                 underlying satisfied
-                                                underlying satisfied
                                             """)]
     [InlineAutoData(true, false, false,  """
                                             At least one satisfied
@@ -855,17 +845,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(true, false, true,   """
                                             At least one satisfied
                                                 underlying satisfied
-                                                underlying satisfied
                                             """)]
     [InlineAutoData(true, true, false,   """
                                             At least one satisfied
                                                 underlying satisfied
-                                                underlying satisfied
                                             """)]
     [InlineAutoData(true, true, true,    """
                                             At least one satisfied
-                                                underlying satisfied
-                                                underlying satisfied
                                                 underlying satisfied
                                             """)]
     public void Should_serialize_the_result_of_the_at_least_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
@@ -901,8 +887,6 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(false, false, false, """
                                             none satisfied
                                                 ¬is true
-                                                ¬is true
-                                                ¬is true
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at least one satisfied
@@ -915,7 +899,6 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(false, true, true,   """
                                             at least one satisfied
                                                 is true
-                                                is true
                                             """)]
     [InlineAutoData(true, false, false,  """
                                             at least one satisfied
@@ -924,17 +907,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     [InlineAutoData(true, false, true,   """
                                             at least one satisfied
                                                 is true
-                                                is true
                                             """)]
     [InlineAutoData(true, true, false,   """
                                             at least one satisfied
                                                 is true
-                                                is true
                                             """)]
     [InlineAutoData(true, true, true,    """
                                             at least one satisfied
-                                                is true
-                                                is true
                                                 is true
                                             """)]
     public void Should_serialize_the_result_of_the_at_least_n_satisified_operation(

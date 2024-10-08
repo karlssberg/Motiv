@@ -754,8 +754,6 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(false, false, false, """
                                             at most one is satisfied
                                                 is not satisfied
-                                                is not satisfied
-                                                is not satisfied
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied
@@ -768,7 +766,6 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(false, true,  true,  """
                                             more than one is satisfied
                                                 is satisfied
-                                                is satisfied
                                             """)]
     [InlineAutoData(true,  false, false, """
                                             at most one is satisfied
@@ -777,17 +774,13 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(true,  false, true,  """
                                             more than one is satisfied
                                                 is satisfied
-                                                is satisfied
                                             """)]
     [InlineAutoData(true,  true,  false, """
                                             more than one is satisfied
                                                 is satisfied
-                                                is satisfied
                                             """)]
     [InlineAutoData(true,  true,  true,  """
                                             more than one is satisfied
-                                                is satisfied
-                                                is satisfied
                                                 is satisfied
                                             """)]
     public void Should_serialize_the_result_of_the_at_most_of_1_operation_when_metadata_is_a_string(
@@ -823,8 +816,6 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(false, false, false, """
                                             at most one is satisfied
                                                 False
-                                                False
-                                                False
                                             """)]
     [InlineAutoData(false, false, true, """
                                             at most one is satisfied
@@ -837,7 +828,6 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(false, true,  true, """
                                             more than one is satisfied
                                                 True
-                                                True
                                             """)]
     [InlineAutoData(true,  false, false, """
                                             at most one is satisfied
@@ -846,17 +836,13 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(true,  false, true, """
                                             more than one is satisfied
                                                 True
-                                                True
                                             """)]
     [InlineAutoData(true,  true,  false, """
                                             more than one is satisfied
                                                 True
-                                                True
                                             """)]
     [InlineAutoData(true,  true,  true, """
                                             more than one is satisfied
-                                                True
-                                                True
                                                 True
                                             """)]
     public void Should_serialize_the_result_of_the_at_most_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
@@ -892,8 +878,6 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(false, false, false, """
                                             at most one is satisfied
                                                 ¬is true
-                                                ¬is true
-                                                ¬is true
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied
@@ -906,7 +890,6 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(false, true,  true,  """
                                             more than one is satisfied
                                                 is true
-                                                is true
                                             """)]
     [InlineAutoData(true,  false, false, """
                                             at most one is satisfied
@@ -915,17 +898,13 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineAutoData(true,  false, true,  """
                                             more than one is satisfied
                                                 is true
-                                                is true
                                             """)]
     [InlineAutoData(true,  true,  false, """
                                             more than one is satisfied
                                                 is true
-                                                is true
                                             """)]
     [InlineAutoData(true,  true,  true,  """
                                             more than one is satisfied
-                                                is true
-                                                is true
                                                 is true
                                             """)]
     public void Should_serialize_the_result_of_the_all_operation(

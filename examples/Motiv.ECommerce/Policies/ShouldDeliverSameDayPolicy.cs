@@ -10,6 +10,6 @@ public class ShouldDeliverSameDayPolicy() : Policy<FulfillmentContext, IBehavior
         .Create("should deliver same day"))
 {
     private static SpecBase<FulfillmentContext, string> IsSameDayDelivery { get; } =
-        Spec.Build((FulfillmentContext context) => context.DistanceFromStore < 10)
+        Spec.From((FulfillmentContext context) => context.DistanceFromStore < 10)
             .Create("is same day delivery");
 }

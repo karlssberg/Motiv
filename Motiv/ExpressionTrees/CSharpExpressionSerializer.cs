@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace Motiv.ExpressionTrees;
 
+
 internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerializer
 {
     protected readonly StringBuilder OutputText = new();

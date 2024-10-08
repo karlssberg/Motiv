@@ -23,7 +23,7 @@ namespace Motiv.Tests.HigherOrderProposition;
                 () => value ?? new TestMetadata(),
                 () => metadata ?? new List<TestMetadata>(),
                 () => assertions ?? new List<string>(),
-                () => new HigherOrderResultDescription<TestUnderlyingMetadata>(reason ?? "", causes ?? [], ""),
+                () => new HigherOrderResultDescription<TestUnderlyingMetadata>(reason ?? "", [], causes ?? [], ""),
                 underlyingResults ?? new List<BooleanResultBase<TestUnderlyingMetadata>>(),
                 () => causes ?? new List<BooleanResultBase<TestUnderlyingMetadata>>());
         }

@@ -97,7 +97,7 @@ public class HigherOrderPolicyResultEvaluation<TModel, TMetadata>
     /// <summary>
     /// Gets the metadata associated with the evaluation.
     /// </summary>
-    public IEnumerable<TMetadata> Values => _results.Select(result => result.Value);
+    public IEnumerable<TMetadata> Values => _causalResults.Select(result => result.Value);
 
     /// <summary>
     /// Gets the assertions made during the evaluation.

@@ -14,9 +14,6 @@ internal class ExpressionTreeTransformer<TModel>()
     internal SpecBase<TModel, string> Transform(Expression<Func<TModel, bool>> expression) =>
         Transform(expression.Body, expression.Parameters.First());
 
-    internal SpecBase<TModel, string> Transform(Expression<Func<TModel, BooleanResultBase<string>>> expression) =>
-        Transform(expression.Body, expression.Parameters.First());
-
     private SpecBase<TModel, string> Transform(
         Expression expression,
         ParameterExpression parameter)
@@ -310,11 +307,10 @@ internal class ExpressionTreeTransformer<TModel>()
     {
         return expression switch
         {
-            UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } unaryExpression =>
-                ResolvePredicateResultExpression(unaryExpression.Operand),
-            _ => IsDescendantOfBooleanResultBase(expression.Type)
-                ? (expression, PredicateReturnType.BooleanResult)
-                : (expression, PredicateReturnType.Boolean),
+            UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } unary when unary.Type == typeof(bool) =>
+                ResolvePredicateResultExpression(unary.Operand),
+            _ when IsDescendantOfBooleanResultBase(expression.Type) => (expression, PredicateReturnType.BooleanResult),
+            _ => (expression, PredicateReturnType.Boolean)
         };
 
         bool IsDescendantOfBooleanResultBase(Type type) => typeof(BooleanResultBase<string>).IsAssignableFrom(type);

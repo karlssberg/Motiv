@@ -1,12 +1,10 @@
 ﻿namespace Motiv.HigherOrderProposition;
 
-internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
-    Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
-    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
+internal sealed class HigherOrderFromBooleanResultProposition<TModel, TMetadata>(
+    Func<TModel, BooleanResultBase<TMetadata>> resultResolver,
+    Func<IEnumerable<BooleanResult<TModel, TMetadata>>, bool> higherOrderPredicate,
     ISpecDescription specDescription,
-    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
+    Func<bool, IEnumerable<BooleanResult<TModel, TMetadata>>, IEnumerable<BooleanResult<TModel, TMetadata>>> causeSelector)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
     public override IEnumerable<SpecBase> Underlying => [];
@@ -16,23 +14,21 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
-            .Select(model => new BooleanResult<TModel, TUnderlyingMetadata>(model,  resultResolver(model)))
+            .Select(model => new BooleanResult<TModel, TMetadata>(model,  resultResolver(model)))
             .ToArray();
 
         var isSatisfied = higherOrderPredicate(underlyingResults);
-        var causes = new Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]>(() =>
+        var causes = new Lazy<BooleanResult<TModel, TMetadata>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
                 .ToArray());
 
         var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
         {
-            var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(
+            var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TMetadata>(
                 underlyingResults,
                 causes.Value);
 
-            return isSatisfied
-                ? whenTrue(evaluation)
-                : whenFalse(evaluation);
+            return evaluation.Values;
         });
 
         var assertions = new Lazy<IEnumerable<string>>(() =>
@@ -43,13 +39,13 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
             });
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-                new HigherOrderResultDescription<TUnderlyingMetadata>(
+                new HigherOrderResultDescription<TMetadata>(
                     specDescription.ToReason(isSatisfied),
-                    typeof(TMetadata) == typeof(string) ? assertions.Value : [],
+                    [],
                     causes.Value,
                     Description.Statement));
 
-        return new HigherOrderBooleanResult<TMetadata, TUnderlyingMetadata>(
+        return new HigherOrderBooleanResult<TMetadata, TMetadata>(
             isSatisfied,
             Metadata,
             Assertions,
@@ -59,7 +55,7 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
 
         IEnumerable<TMetadata> Metadata() => metadata.Value;
         IEnumerable<string> Assertions() => assertions.Value;
-        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> GetCauses() => causes.Value;
+        IEnumerable<BooleanResult<TModel, TMetadata>> GetCauses() => causes.Value;
         ResultDescriptionBase ResultDescription() => resultDescription.Value;
     }
 }

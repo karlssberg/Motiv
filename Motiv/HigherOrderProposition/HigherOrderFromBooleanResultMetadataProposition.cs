@@ -69,6 +69,7 @@ internal sealed class HigherOrderFromBooleanResultMetadataProposition<TModel, TM
         var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderResultDescription<TUnderlyingMetadata>(
                 specDescription.ToReason(isSatisfied),
+                [],
                 causes.Value,
                 Description.Statement));
 

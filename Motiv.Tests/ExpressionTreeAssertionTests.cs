@@ -1,12 +1,11 @@
 ﻿using System.Drawing;
 using System.Globalization;
-using System.Linq.Expressions;
 using System.Reflection;
 using Motiv.ExpressionTrees;
 
 namespace Motiv.Tests;
 
-public class ExpressionTreeTests
+public class ExpressionTreeAssertionTests
 {
     [Theory]
     [InlineData(-1, false)]
@@ -774,10 +773,8 @@ public class ExpressionTreeTests
         act.Assertions.Should().BeEquivalentTo(expectedAssertion);
     }
 
-
-
     [Theory]
-    [InlineData("hello world", "hello", "query.Length > 0", "contains 'hello'")]
+    [InlineData("hello world", "hello", "query.Length > 3", "contains 'hello'")]
     [InlineData("high-roller", "world", "does not contain 'world'")]
     public void Should_treat_boolean_result_factory_within_expressions_as_a_source_of_custom_assertions(string text, string model, params string[] expectedAssertion)
     {
@@ -790,11 +787,58 @@ public class ExpressionTreeTests
             .IsSatisfiedBy(m);
 
         var sut = Spec
-            .From((string query) => query.Length > 0 && textEquals(query))
+            .From((string query) => query.Length > 3 && textEquals(query))
             .Create("supports-embedded-specifications");
 
         // Act
         var act = sut.IsSatisfiedBy(model);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData("hello world", "hello", "contains 'hello'")]
+    [InlineData("high-roller", "world", "does not contain 'world'")]
+    public void Should_treat_boolean_result_model_as_a_source_of_custom_assertions(string text, string model, params string[] expectedAssertion)
+    {
+        // Assemble
+        var textEquals = Spec
+            .Build((string query) => text.Contains(query))
+            .WhenTrue(query => $"contains '{query}'")
+            .WhenFalse(query => $"does not contain '{query}'")
+            .Create($"text-equals")
+            .IsSatisfiedBy(model);
+
+        var sut = Spec
+            .From((BooleanResultBase<string> equal) => equal)
+            .Create("supports-embedded-specifications");
+
+        // Act
+        var act = sut.IsSatisfiedBy(textEquals);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+
+    [Theory]
+    [InlineData("hello world", "hello", "contains 'hello'")]
+    [InlineData("high-roller", "world", "does not contain 'world'")]
+    public void Should_override_assertions_with_custom_assertions_when_using_higher_order_propostions(string text, string model, params string[] expectedAssertion)
+    {
+        // Assemble
+        var sut = Spec
+            .From((string query) => text.Contains(query))
+            .AsAnySatisfied()
+            .WhenTrueYield(eval => eval.CausalModels
+                .Select(query => $"contains '{query}'"))
+            .WhenFalseYield(eval => eval.CausalModels
+                .Select(query => $"does not contain '{query}'"))
+            .Create($"text-equals");
+
+        // Act
+        var act = sut.IsSatisfiedBy([model]);
 
         // Assert
         act.Assertions.Should().BeEquivalentTo(expectedAssertion);

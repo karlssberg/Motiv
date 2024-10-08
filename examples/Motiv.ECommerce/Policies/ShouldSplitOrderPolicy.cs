@@ -10,6 +10,6 @@ public class ShouldSplitOrderPolicy() : Policy<FulfillmentContext, IBehavior>(
         .Create("should split order"))
 {
     private static SpecBase<FulfillmentContext, string> IsExpensive { get; } =
-        Spec.Build((FulfillmentContext context) => context.Order.Products.Sum(product => product.Price) > 1000)
+        Spec.From((FulfillmentContext context) => context.Order.Products.Sum(product => product.Price) > 1000)
             .Create("is expensive");
 }

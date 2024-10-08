@@ -10,7 +10,7 @@ public class ShouldFulfillLocallyPolicy() : Policy<FulfillmentContext, IBehavior
         .Create("should locally fulfill"))
 {
     private static SpecBase<FulfillmentContext, string> AnyPerishable { get; } =
-        Spec.Build((InventoryPricedProduct product) => product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30))
+        Spec.From((InventoryPricedProduct product) => product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30))
             .AsAnySatisfied()
             .WhenTrueYield(eval => eval.CausalModels.Select(p =>  $"{p.Brand} {p.Model} is perishable"))
             .WhenFalse("has no perishable products")

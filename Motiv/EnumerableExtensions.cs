@@ -104,12 +104,18 @@ public static class EnumerableExtensions
         yield return currentGroup;
     }
 
-    internal static IEnumerable<T> DistinctWithOrderPreserved<T>(this IEnumerable<T> source)
+    internal static IEnumerable<T> DistinctWithOrderPreserved<T>(this IEnumerable<T> source) =>
+        DistinctWithOrderPreservedInternal(source, x => x);
+
+    internal static IEnumerable<T> DistinctWithOrderPreserved<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector) =>
+        DistinctWithOrderPreservedInternal(source, keySelector);
+
+    private static IEnumerable<T> DistinctWithOrderPreservedInternal<T, TKey>(IEnumerable<T> source, Func<T, TKey> keySelector)
     {
-        var uniqueItems = new HashSet<T>();
+        var uniqueItems = new HashSet<TKey>();
         foreach (var x in source)
         {
-            if (uniqueItems.Add(x))
+            if (uniqueItems.Add(keySelector(x)))
                 yield return x;
         }
     }

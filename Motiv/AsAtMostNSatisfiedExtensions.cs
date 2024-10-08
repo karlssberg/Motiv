@@ -1,5 +1,6 @@
 using Motiv.BooleanPredicateProposition.PropositionBuilders;
 using Motiv.BooleanResultPredicateProposition.PropositionBuilders;
+using Motiv.ExpressionTrees.PropositionBuilders;
 using Motiv.HigherOrderProposition.PropositionBuilders;
 using Motiv.Shared;
 using Motiv.SpecDecoratorProposition.PropositionBuilders;
@@ -121,6 +122,29 @@ public static class AsAtMostNSatisfiedExtensions
     /// <returns>The next build step.</returns>
     public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAtMostNSatisfied<TModel>(
         this BooleanPredicatePropositionBuilder<TModel> builder,
+        int n)
+    {
+        n.ThrowIfLessThan(0, nameof(n));
+        return builder.As(
+            booleanResults => booleanResults.CountTrue() <= n,
+            (_, booleanResults) =>
+            {
+                var booleanResultsArray = booleanResults.ToArray();
+                return booleanResultsArray
+                    .WhereTrue()
+                    .ElseIfEmpty(booleanResultsArray);
+            });
+    }
+
+    /// <summary>
+    /// Creates a higher order proposition which is satisfied if at most 'n' of the underlying propositions are satisfied.
+    /// </summary>
+    /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <param name="builder">The proposition builder.</param>
+    /// <param name="n">The maximum number of underlying propositions that can be satisfied.</param>
+    /// <returns>The next build step.</returns>
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, string> AsAtMostNSatisfied<TModel>(
+        this TrueExpressionTreePropositionBuilder<TModel> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));

@@ -96,11 +96,9 @@ public readonly ref struct TrueHigherOrderFromPolicyPropositionBuilder<TModel, T
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
     public SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> Create(string statement) =>
-        new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, TUnderlyingMetadata, TUnderlyingMetadata>(
+        new HigherOrderFromPolicyResultProposition<TModel, TUnderlyingMetadata>(
             policy.IsSatisfiedBy,
             higherOrderPredicate,
-            eval => eval.Values,
-            eval => eval.Values,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
                 policy.Description),

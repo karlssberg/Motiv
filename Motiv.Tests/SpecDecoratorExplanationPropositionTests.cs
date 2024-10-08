@@ -1302,9 +1302,9 @@ public class SpecDecoratorExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
-    public void Should_use_the_propositional_statement_in_the_reason_for_policies(
+    [InlineData(true, "true assertion")]
+    [InlineData(false, "false assertion")]
+    public void Should_not_use_the_propositional_statement_in_the_reason_for_policies(
         bool model,
         string expectedReasonStatement)
     {
@@ -1347,9 +1347,9 @@ public class SpecDecoratorExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
-    public void Should_use_the_propositional_statement_in_the_reason_for_specs(
+    [InlineData(true, "true assertion")]
+    [InlineData(false, "false assertion")]
+    public void Should_use_assertions_in_the_reason_when_propositional_statements_are_used(
         bool model,
         string expectedReasonStatement)
     {

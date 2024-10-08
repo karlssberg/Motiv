@@ -177,7 +177,7 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// <summary>
     /// Combines this specification with another specification using the logical AND operator. The operands are
     /// short-circuted, meaning that if the left operand resolves to <c>false</c> then it is not possible for the AND operation
-    /// to return <c>true</c>.  Therefore the compiler does not bother evaluating the right operand.
+    /// to return <c>true</c>.  Therefore, the compiler does not bother evaluating the right operand.
     /// </summary>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>

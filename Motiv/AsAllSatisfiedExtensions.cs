@@ -1,5 +1,6 @@
 using Motiv.BooleanPredicateProposition.PropositionBuilders;
 using Motiv.BooleanResultPredicateProposition.PropositionBuilders;
+using Motiv.ExpressionTrees.PropositionBuilders;
 using Motiv.HigherOrderProposition.PropositionBuilders;
 using Motiv.SpecDecoratorProposition.PropositionBuilders;
 
@@ -65,5 +66,15 @@ public static class AsAllSatisfiedExtensions
     /// <returns>The next build step.</returns>
     public static TrueHigherOrderFromBooleanPredicatePropositionBuilder<TModel> AsAllSatisfied<TModel>(
         this BooleanPredicatePropositionBuilder<TModel> builder) =>
+        builder.As(results => results.AllTrue());
+
+    /// <summary>
+    /// Builds a proposition which is satisfied if all the underlying propositions are satisfied.
+    /// </summary>
+    /// <param name="builder">The previous build step.</param>
+    /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <returns>The next build step.</returns>
+    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, string> AsAllSatisfied<TModel>(
+        this TrueExpressionTreePropositionBuilder<TModel> builder) =>
         builder.As(results => results.AllTrue());
 }
