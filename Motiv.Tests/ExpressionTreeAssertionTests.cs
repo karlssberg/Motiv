@@ -49,8 +49,8 @@ public class ExpressionTreeAssertionTests
     }
 
     [Theory]
-    [InlineData(-1, "n < 0")]
-    [InlineData(0, "n == 0")]
+    [InlineData(-1, "n <= 0")]
+    [InlineData(0, "n <= 0")]
     [InlineData(1, "n % 2 != 0")]
     [InlineData(2, "n > 0", "n % 2 == 0")]
     [InlineData(3, "n % 2 != 0")]
@@ -123,8 +123,7 @@ public class ExpressionTreeAssertionTests
     }
 
     [Theory]
-    [InlineData("hello", 2, "txt.Count((char ch) => vowels.Contains(ch)) == threshold")]
-    [InlineData("world", 2, "txt.Count((char ch) => vowels.Contains(ch)) < threshold")]
+    [InlineData("world", 2, "txt.Count((char ch) => vowels.Contains(ch)) <= threshold")]
     [InlineData("high-roller", 2, "txt.Count((char ch) => vowels.Contains(ch)) > threshold")]
     public void Should_display_nested_function_expression(string model, int threshold, string expectedAssertion)
     {
@@ -179,8 +178,7 @@ public class ExpressionTreeAssertionTests
     }
 
     [Theory]
-    [InlineData(0, "n + 1 < 2")]
-    [InlineData(1, "n + 1 == 2")]
+    [InlineData(0, "n + 1 <= 2")]
     [InlineData(2, "n + 1 > 2")]
     public void Should_assert_expressions_containing_a_greater_than_comparison(int model, string expectedAssertion)
     {
@@ -198,8 +196,7 @@ public class ExpressionTreeAssertionTests
 
     [Theory]
     [InlineData(0, "n + 1 < 2")]
-    [InlineData(1, "n + 1 == 2")]
-    [InlineData(2, "n + 1 > 2")]
+    [InlineData(2, "n + 1 >= 2")]
     public void Should_assert_expressions_containing_a_greater_than_or_equals_comparison(int model, string expectedAssertion)
     {
         // Assemble
@@ -216,8 +213,7 @@ public class ExpressionTreeAssertionTests
 
     [Theory]
     [InlineData(0, "n + 1 < 2")]
-    [InlineData(1, "n + 1 == 2")]
-    [InlineData(2, "n + 1 > 2")]
+    [InlineData(2, "n + 1 >= 2")]
     public void Should_assert_expressions_containing_a_less_than_comparison(int model, string expectedAssertion)
     {
         // Assemble
@@ -233,8 +229,7 @@ public class ExpressionTreeAssertionTests
     }
 
     [Theory]
-    [InlineData(0, "n + 1 < 2")]
-    [InlineData(1, "n + 1 == 2")]
+    [InlineData(0, "n + 1 <= 2")]
     [InlineData(2, "n + 1 > 2")]
     public void Should_assert_expressions_containing_a_less_than_or_equals_comparison(int model, string expectedAssertion)
     {
@@ -251,8 +246,7 @@ public class ExpressionTreeAssertionTests
     }
 
     [Theory]
-    [InlineData(0, "n + 1 < threshold")]
-    [InlineData(1, "n + 1 == threshold")]
+    [InlineData(0, "n + 1 <= threshold")]
     [InlineData(2, "n + 1 > threshold")]
     public void Should_assert_expressions_containing_a_constant_expression(int model, string expectedAssertion)
     {
@@ -271,8 +265,7 @@ public class ExpressionTreeAssertionTests
 
     [Theory]
     [InlineData(0, "list.Count((int i) => i > n) > threshold")]
-    [InlineData(1, "list.Count((int i) => i > n) == threshold")]
-    [InlineData(2, "list.Count((int i) => i > n) < threshold")]
+    [InlineData(2, "list.Count((int i) => i > n) <= threshold")]
     public void Should_assert_expressions_containing_a_parameter_expression(int model, string expectedAssertion)
     {
         // Assemble
@@ -291,8 +284,7 @@ public class ExpressionTreeAssertionTests
 
 
     [Theory]
-    [InlineData(0, "n + 1 < 2")]
-    [InlineData(1, "n + 1 == 2")]
+    [InlineData(0, "n + 1 <= 2")]
     [InlineData(2, "n + 1 > 2")]
     public void Should_assert_expressions_containing_a_binary_expression(int model, string expectedAssertion)
     {
@@ -310,8 +302,7 @@ public class ExpressionTreeAssertionTests
 
     [Theory]
     [InlineData(2, "-n < -1")]
-    [InlineData(1, "-n == -1")]
-    [InlineData(0, "-n > -1")]
+    [InlineData(0, "-n >= -1")]
     public void Should_assert_expressions_containing_a_unary_expression(int model, string expectedAssertion)
     {
         // Assemble
@@ -327,8 +318,7 @@ public class ExpressionTreeAssertionTests
     }
 
     [Theory]
-    [InlineData("ab", "txt.Substring(1).Length < 2")]
-    [InlineData("abc", "txt.Substring(1).Length == 2")]
+    [InlineData("ab", "txt.Substring(1).Length <= 2")]
     [InlineData("abcd", "txt.Substring(1).Length > 2")]
     public void Should_assert_expressions_containing_a_method_call_expression(string model, string expectedAssertion)
     {
@@ -579,7 +569,7 @@ public class ExpressionTreeAssertionTests
 
     [Theory]
     [InlineData(1, 1, "((p.Item1 - 1) * (p.Item2 - -1)) / 2 < p.Item1 * p.Item2")]
-    [InlineData(2, 0, "((p.Item1 - 1) * (p.Item2 - -1)) / 2 > p.Item1 * p.Item2")]
+    [InlineData(2, 0, "((p.Item1 - 1) * (p.Item2 - -1)) / 2 >= p.Item1 * p.Item2")]
     [InlineData(3, 3, "((p.Item1 - 1) * (p.Item2 - -1)) / 2 < p.Item1 * p.Item2")]
     public void Should_assert_expressions_containing_arithmetic(decimal x, decimal y, params string[] expectedAssertion)
     {
@@ -613,7 +603,7 @@ public class ExpressionTreeAssertionTests
     }
 
     [Theory]
-    [InlineData(-1, "n << 2 < n >> 1")]
+    [InlineData(-1, "n << 2 <= n >> 1")]
     [InlineData(1, "n << 2 > n >> 1")]
     public void Should_assert_expressions_containing_bit_shift_operations(int model, params string[] expectedAssertion)
     {
@@ -667,7 +657,7 @@ public class ExpressionTreeAssertionTests
 
     [Theory]
     [InlineAutoData("2023-07-15T08:30:45+03:00", "date < now", "now < DateTime.Parse(\"3023-07-15T05:30:45.0000000Z\")")]
-    [InlineAutoData("3023-07-15T05:30:45Z", "date > now")]
+    [InlineAutoData("3023-07-15T05:30:45Z", "date >= now")]
     public void Should_assert_expressions_containing_datetime_values(DateTime date, params string[] expectedAssertion)
     {
         // Assembled
@@ -688,8 +678,7 @@ public class ExpressionTreeAssertionTests
     }
 
     [Theory]
-    [InlineData("hello", 2, "\"hello\".Count((char ch) => vowels.Contains(ch)) == 2")]
-    [InlineData("world", 2, "\"world\".Count((char ch) => vowels.Contains(ch)) < 2")]
+    [InlineData("world", 2, "\"world\".Count((char ch) => vowels.Contains(ch)) <= 2")]
     [InlineData("high-roller", 2, "\"high-roller\".Count((char ch) => vowels.Contains(ch)) > 2")]
     public void Should_serialize_parameter_as_value_when_requested(string model, int threshold, string expectedAssertion)
     {
@@ -825,7 +814,7 @@ public class ExpressionTreeAssertionTests
     [Theory]
     [InlineData("hello world", "hello", "contains 'hello'")]
     [InlineData("high-roller", "world", "does not contain 'world'")]
-    public void Should_override_assertions_with_custom_assertions_when_using_higher_order_propostions(string text, string model, params string[] expectedAssertion)
+    public void Should_override_assertions_with_custom_assertions_when_using_higher_order_propositions(string text, string model, params string[] expectedAssertion)
     {
         // Assemble
         var sut = Spec
@@ -839,6 +828,98 @@ public class ExpressionTreeAssertionTests
 
         // Act
         var act = sut.IsSatisfiedBy([model]);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData("is admin", "admin", "user")]
+    [InlineData("is not admin", "user")]
+    public void Should_convert_any_linq_function_to_higher_order_proposition(string expectedAssertion, params string[] model)
+    {
+        // Assemble
+        var isAdmin =
+            Spec.Build((string role) => role == "admin")
+                .WhenTrue("is admin")
+                .WhenFalse("is not admin")
+                .Create("is-admin");
+
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.Any(isAdmin))
+                .Create("has admin");
+
+        // Act
+        var act = sut.IsSatisfiedBy(model);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData("is admin", "admin", "user")]
+    [InlineData("is not admin", "user")]
+    public void Should_convert_any_linq_function_to_higher_order_proposition_using_its_IsSatisfiedBy_method(string expectedAssertion, params string[] model)
+    {
+        // Assemble
+        var isAdmin =
+            Spec.Build((string role) => role == "admin")
+                .WhenTrue("is admin")
+                .WhenFalse("is not admin")
+                .Create("is-admin");
+
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.Any(role => isAdmin.IsSatisfiedBy(role)))
+                .Create("has admin");
+
+        // Act
+        var act = sut.IsSatisfiedBy(model);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData("is admin", "admin", "admin")]
+    [InlineData("is not admin", "user, admin")]
+    public void Should_convert_all_linq_function_to_higher_order_proposition(string expectedAssertion, params string[] model)
+    {
+        // Assemble
+        var isAdmin =
+            Spec.Build((string role) => role == "admin")
+                .WhenTrue("is admin")
+                .WhenFalse("is not admin")
+                .Create("is-admin");
+
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.All(isAdmin))
+                .Create("all admins");
+
+        // Act
+        var act = sut.IsSatisfiedBy(model);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData("is admin", "admin", "admin")]
+    [InlineData("is not admin", "user, admin")]
+    public void Should_convert_all_linq_function_to_higher_order_proposition_using_its_IsSatisfiedBy_method(string expectedAssertion, params string[] model)
+    {
+        // Assemble
+        var isAdmin =
+            Spec.Build((string role) => role == "admin")
+                .WhenTrue("is admin")
+                .WhenFalse("is not admin")
+                .Create("is-admin");
+
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.All(role => isAdmin.IsSatisfiedBy(role)))
+                .Create("all admins");
+
+        // Act
+        var act = sut.IsSatisfiedBy(model);
 
         // Assert
         act.Assertions.Should().BeEquivalentTo(expectedAssertion);

@@ -140,12 +140,20 @@ public abstract class SpecBase<TModel> : SpecBase
         SpecBase<TModel> left,
         SpecBase<TModel> right) =>
         left.XOr(right);
+
+    /// <summary>
+    /// Converts the expression into a predicate function that can be used to evaluate the proposition against a model.
+    /// </summary>
+    /// <param name="spec">The specification to be converted into predicate</param>
+    /// <returns>A predicate function</returns>
+    public static implicit operator Func<TModel, bool>(SpecBase<TModel> spec) =>
+        model => spec.IsSatisfiedBy(model).Satisfied;
 }
 
 /// <summary>
 /// The base class for all specifications. A specification is an encapsulated predicate that can be evaluated
 /// against a model.  When the predicate is evaluated, it returns a result that contains the Boolean result of the
-/// predicate as well as metadata that captures the meaning behind the predicate.  By encapsulating the predicate we can
+/// predicate as well as metadata that captures the meaning behind the predicate.  By encapsulating the predicate, we can
 /// supply methods to assist with combining specifications together to form more complex specifications.
 /// </summary>
 /// <typeparam name="TModel">The model type that the specification will evaluate against</typeparam>

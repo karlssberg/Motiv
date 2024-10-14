@@ -89,4 +89,16 @@ internal static class ExpressionTreeExtensions
             _ => type.Name
         };
     }
+
+    internal static bool InheritsFrom(this Type concreteType, Type superType)
+    {
+        var type = concreteType;
+        while (type != null && type != typeof(object))
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == superType)
+                return true;
+            type = type.BaseType;
+        }
+        return false;
+    }
 }

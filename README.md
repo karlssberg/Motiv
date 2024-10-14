@@ -8,62 +8,39 @@
 - [NuGet Package](https://www.nuget.org/packages/Motiv/)
 - [Official GitHub Repository](https://github.com/karlssberg/Motiv)
 
-## Know _Why_, not just _What_
+## Decisions Made Clear
 
-Motiv is a developer-first .NET library that transforms the way you work with boolean logic.
-It lets you form expressions from discrete [propositions](https://en.wikipedia.org/wiki/Proposition) so that you
-can explain _why_ decisions were made.
-
-First create [atomic propositions](https://en.wikipedia.org/wiki/Atomic_sentence):
-
-```csharp
-// Define atomic propositions
-var isValid = Spec.Build((int n) => n is >= 0 and <= 11).Create("valid");
-var isEmpty = Spec.Build((int n) => n == 0).Create("empty");
-var isFull  = Spec.Build((int n) => n == 11).Create("full");
-```
-
-Then compose using operators (e.g., `!`,  `&`, `|`, `^`):
+Motiv is a solution to the _[Boolean Blindness](https://existentialtype.wordpress.com/2011/03/15/boolean-blindness/)_
+problem (which is the loss of information resulting from the reduction of logic to a single true or false value).
+It achieves this by decomposing logical expressions into a syntax tree of atomic
+[propositions](https://en.wikipedia.org/wiki/Proposition), so that during evaluation,
+the causes of a decision can be preserved, and put to use.
+In most cases this will be a human-readable explanation of the decision, but it could equally be used to surface state.
 
 ```csharp
-// Compose a new ad-hoc proposition
-var composed = isValid & !(isEmpty | isFull);
+// Define the proposition
+var isInRange = Spec.From((int n) => n >= 1 & n <= 10)
+                    .Create("in range");
 
-// Give it a new name
-var isPartiallyFull = Spec.Build(composed).Create("partial");
-```
+// Evaluate proposition (elsewhere in your code)
+var result = isInRange.IsSatisfiedBy(11);
 
-To get detailed feedback:
-
-```csharp
-// Evaluate the proposition against a model/value
-var result = isPartiallyFull.IsSatisfiedBy(5);
-
-result.Satisfied;         // true
-result.Reason;            // "partial"
-result.UnderlyingReasons; // ["valid & !(¬empty | ¬full)"]
-result.SubAssertions;     // ["valid", "¬empty", "¬full"]
-result.Justifications     // partial
-                          //     AND
-                          //         valid
-                          //         NOR
-                          //             ¬empty
-                          //             ¬full
+result.Satisfied;  // false
+result.Assertions; // ["n > 10"]
+result.Reason;     // "¬in range"
 ```
 
 ## Why Use Motiv?
 
-Motiv primarily gives you visibility into your application's decision-making process.
-By decomposing expressions into propositions,
-it addresses important architectural concerns and enables more advanced use cases,
-such as implementing dynamic logic or determining state.
+Motiv primarily gives you visibility into your application's decision-making process by replacing opaque boolean
+expressions with semantically rich propositions.
 
 Consider using Motiv if your project requires two or more of the following:
 
 1. **Visibility**: Provide detailed, real-time feedback about decisions made.
 2. **Decomposition**: Break down complex logic into meaningful subclauses for improved readability.
 3. **Reusability**: Reuse logic across multiple locations to reduce duplication.
-4. **Modeling**: Explicitly model your domain logic.
+4. **Modeling**: Explicitly model the logic in your domain as propositions.
 5. **Testing**: Simplify the testing your logic without mocking or stubbing dependencies.
 
 ## Use Cases
@@ -92,18 +69,37 @@ dotnet add package Motiv
 
 ## Usage
 
-### Basic Proposition
+### From Lambda Expression Tree to Propositions
 
-Create and evaluate a basic proposition:
+When given an `Expression<Func<T, bool>>`, Motiv will transform it into a syntax tree of propositions, with each
+underlying sub-expression describing the outcome of the logic that it performed.
 
 ```csharp
+```csharp
+Expression<Func<Customer, bool>> expression = customer =>
+    customer.CreditScore > 600 & customer.Income > 100000;
+
 var isEligibleForLoan =
-    Spec.Build((Customer customer) =>
-            customer is
-            {
-                CreditScore: > 600,
-                Income: > 100000
-            })
+    Spec.From(expression)
+        .Create("eligible for loan");
+
+var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
+
+result.Satisfied;  // true
+result.Reason;     // "eligible for loan"
+result.Assertions; // ["customer.CreditScore > 600", "customer.Income > 100000"]
+```
+
+### From Lambda Expression to Propositions
+
+Create and evaluate a `Func<T, bool>` proposition:
+
+```csharp
+Func<Customer, bool> expression = customer =>
+    customer.CreditScore > 600 & customer.Income > 100000;
+
+var isEligibleForLoan =
+    Spec.Build(expression)
         .Create("eligible for loan");
 
 var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
@@ -208,8 +204,8 @@ result.Assertions; // ["2 is not negative", "3 is not negative"]
 Consider these potential tradeoffs when using Motiv:
 
 1. **Performance**: Motiv isn't optimized for high-performance scenarios where nanoseconds matter.
-2. **Dependency**: Once integrated, Motiv becomes a core dependency in your codebase.
-3. **Learning Curve**: While Motiv introduces a new approach, it's designed to be intuitive and easy to use.
+2. **Dependency**: Once integrated, Motiv becomes a dependency in your codebase.
+3. **Learning Curve**: While Motiv introduces a new approach, it's designed to be intuitive and straightforward to use.
 
 ## License
 

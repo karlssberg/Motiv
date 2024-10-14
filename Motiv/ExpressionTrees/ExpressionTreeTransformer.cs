@@ -1,11 +1,14 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Motiv.ExpressionTrees;
 
 internal class ExpressionTreeTransformer<TModel>()
 {
-    enum PredicateReturnType
+    private enum PredicateReturnType
     {
+        Unknown,
         Boolean,
         BooleanResult
     }
@@ -20,41 +23,98 @@ internal class ExpressionTreeTransformer<TModel>()
     {
         return expression switch
         {
-            BinaryExpression { NodeType: ExpressionType.And } binaryExpression =>
-                Left(binaryExpression).And(Right(binaryExpression)),
-            BinaryExpression { NodeType: ExpressionType.AndAlso } binaryExpression =>
-                Left(binaryExpression).AndAlso(Right(binaryExpression)),
-            BinaryExpression { NodeType: ExpressionType.Or } binaryExpression =>
-                Left(binaryExpression).Or(Right(binaryExpression)),
-            BinaryExpression { NodeType: ExpressionType.OrElse } binaryExpression =>
-                Left(binaryExpression).OrElse(Right(binaryExpression)),
-            BinaryExpression { NodeType: ExpressionType.ExclusiveOr } binaryExpression =>
-                Left(binaryExpression).XOr(Right(binaryExpression)),
-            BinaryExpression { NodeType: ExpressionType.GreaterThan } binaryExpression =>
-                TransformGreaterThanExpression(binaryExpression, parameter),
-            BinaryExpression { NodeType: ExpressionType.GreaterThanOrEqual } binaryExpression =>
-                TransformGreaterThanOrEqualExpression(binaryExpression, parameter),
-            BinaryExpression { NodeType: ExpressionType.LessThan } binaryExpression =>
-                TransformLessThanExpression(binaryExpression, parameter),
-            BinaryExpression { NodeType: ExpressionType.LessThanOrEqual } binaryExpression =>
-                TransformLessThanOrEqualExpression(binaryExpression, parameter),
-            BinaryExpression { NodeType: ExpressionType.Equal } binaryExpression =>
-                TransformEqualsExpression(binaryExpression, parameter),
-            BinaryExpression { NodeType: ExpressionType.NotEqual } binaryExpression =>
-                TransformNotEqualsExpression(binaryExpression, parameter),
-            UnaryExpression { NodeType: ExpressionType.Not } unaryExpression =>
+            UnaryExpression unaryExpression =>
                 TransformUnaryExpression(unaryExpression, parameter),
+            BinaryExpression binaryExpression =>
+                TransformBinaryExpression(binaryExpression, parameter),
+            MethodCallExpression methodCallExpression =>
+                TransformMethodCallExpression(methodCallExpression, parameter),
             ConditionalExpression conditionalExpression when conditionalExpression.Type == typeof(bool) =>
                 TransformBooleanConditionalExpression(conditionalExpression, parameter),
-            _ =>
-                TransformQuasiProposition(expression, parameter)
+            _ => TransformQuasiProposition(expression, parameter)
+        };
+    }
+
+    private SpecBase<TModel, string> TransformBinaryExpression(
+        BinaryExpression expression,
+        ParameterExpression parameter)
+    {
+        return expression.NodeType switch
+        {
+            ExpressionType.And =>
+                Left(expression).And(Right(expression)),
+            ExpressionType.AndAlso =>
+                Left(expression).AndAlso(Right(expression)),
+            ExpressionType.Or =>
+                Left(expression).Or(Right(expression)),
+            ExpressionType.OrElse =>
+                Left(expression).OrElse(Right(expression)),
+            ExpressionType.ExclusiveOr =>
+                Left(expression).XOr(Right(expression)),
+            ExpressionType.GreaterThan =>
+                TransformGreaterThanExpression(expression, parameter),
+            ExpressionType.GreaterThanOrEqual =>
+                TransformGreaterThanOrEqualExpression(expression, parameter),
+            ExpressionType.LessThan =>
+                TransformLessThanExpression(expression, parameter),
+            ExpressionType.LessThanOrEqual =>
+                TransformLessThanOrEqualExpression(expression, parameter),
+            ExpressionType.Equal =>
+                TransformEqualsExpression(expression, parameter),
+            ExpressionType.NotEqual =>
+                TransformNotEqualsExpression(expression, parameter),
+            _ => TransformQuasiProposition(expression, parameter)
         };
 
         SpecBase<TModel, string> Right(BinaryExpression binaryExpression) =>
             Transform(binaryExpression.Right, parameter);
 
-        SpecBase<TModel, string> Left(BinaryExpression binaryExpression) => Transform(binaryExpression.Left, parameter);
+        SpecBase<TModel, string> Left(BinaryExpression binaryExpression) =>
+            Transform(binaryExpression.Left, parameter);
     }
+
+    private SpecBase<TModel, string> TransformMethodCallExpression(
+        MethodCallExpression expression,
+        ParameterExpression parameter)
+    {
+        return expression.Method switch
+        {
+            { DeclaringType.Name: "Enumerable", Name: "Any" } when IsSpecPredicate() =>
+                TransformSpecExpression(expression, TransformAnyExpressionInternalMethodInfo),
+            { DeclaringType.Name: "Enumerable", Name: "Any" } when IsBooleanResultPredicate() =>
+                TransformPredicateExpression(expression, TransformAnyExpressionInternalMethodInfo),
+
+            { DeclaringType.Name: "Enumerable", Name: "All" } when IsSpecPredicate() =>
+                TransformSpecExpression(expression, TransformAllExpressionInternalMethodInfo),
+            { DeclaringType.Name: "Enumerable", Name: "All" } when IsBooleanResultPredicate() =>
+                TransformPredicateExpression(expression, TransformAllExpressionInternalMethodInfo),
+
+            _ => TransformQuasiProposition(expression, parameter)
+        };
+
+        bool IsSpecPredicate()
+        {
+            var predicateExpression = UnwrapConvertExpression(expression.Arguments.ElementAt(1));
+            if (!predicateExpression.Type.IsGenericType)
+                return false;
+
+            var genericTypeDefinition = predicateExpression.Type.GetGenericTypeDefinition();
+            return genericTypeDefinition.InheritsFrom(typeof(SpecBase<,>));
+        }
+
+        bool IsBooleanResultPredicate()
+        {
+            var predicateExpression = UnwrapConvertExpression(expression.Arguments.ElementAt(1));
+            if (!predicateExpression.Type.IsGenericType)
+                return false;
+
+            var genericTypeDefinition = predicateExpression.Type.GetGenericTypeDefinition();
+
+            var isFunc = genericTypeDefinition.InheritsFrom(typeof(Func<,>));
+            return isFunc && DoesReturnBooleanResult(predicateExpression);
+        }
+    }
+
 
     private SpecBase<TModel, string> TransformBooleanConditionalExpression(
         ConditionalExpression expression,
@@ -133,26 +193,22 @@ internal class ExpressionTreeTransformer<TModel>()
         ParameterExpression parameter)
     {
         var predicate = CreateFunc<TModel, bool>(expression, parameter);
-        var equals = CreateEqualsFunction(expression, parameter);
 
         var greaterThanExpression = Expression.GreaterThan(expression.Left, expression.Right);
-        var equalsExpression = Expression.Equal(expression.Left, expression.Right);
-        var lessThanExpression = Expression.LessThan(expression.Left, expression.Right);
+        var lessThanOrEqualExpression = Expression.LessThanOrEqual(expression.Left, expression.Right);
 
         var hasAsValueMethod = _expressionAnalyzer.FindAsValueArguments(expression).Any();
         if (hasAsValueMethod)
             return
                 Spec.Build(predicate)
                     .WhenTrue(model => Humanize(greaterThanExpression, model, parameter))
-                    .WhenFalse(model => equals(model)
-                        ? Humanize(equalsExpression, model, parameter)
-                        : Humanize(lessThanExpression, model, parameter))
+                    .WhenFalse(model => Humanize(lessThanOrEqualExpression, model, parameter))
                     .Create(Humanize(greaterThanExpression));
 
         return
             Spec.Build(predicate)
                 .WhenTrue(Humanize(greaterThanExpression))
-                .WhenFalse(model => equals(model) ? Humanize(equalsExpression) : Humanize(lessThanExpression))
+                .WhenFalse(Humanize(lessThanOrEqualExpression))
                 .Create();
     }
 
@@ -161,30 +217,23 @@ internal class ExpressionTreeTransformer<TModel>()
         ParameterExpression parameter)
     {
         var predicate = CreateFunc<TModel, bool>(expression, parameter);
-        var equals = CreateEqualsFunction(expression, parameter);
 
-        var equalsExpression = Expression.Equal(expression.Left, expression.Right);
-        var greaterThanExpression = Expression.GreaterThan(expression.Left, expression.Right);
+        var greaterThanOrEqualExpression = Expression.GreaterThanOrEqual(expression.Left, expression.Right);
         var lessThanExpression = Expression.LessThan(expression.Left, expression.Right);
-        var greaterThanOrEqual = Expression.GreaterThanOrEqual(expression.Left, expression.Right);
 
         var hasAsValueMethod = _expressionAnalyzer.FindAsValueArguments(expression).Any();
         if (hasAsValueMethod)
             return
                 Spec.Build(predicate)
-                    .WhenTrue(model => equals(model)
-                        ? Humanize(equalsExpression, model, parameter)
-                        : Humanize(greaterThanExpression, model, parameter))
+                    .WhenTrue(model => Humanize(greaterThanOrEqualExpression, model, parameter))
                     .WhenFalse(model => Humanize(lessThanExpression, model, parameter))
-                    .Create(Humanize(greaterThanOrEqual));
+                    .Create(Humanize(greaterThanOrEqualExpression));
 
         return
             Spec.Build(predicate)
-                .WhenTrue(model => equals(model)
-                    ? Humanize(equalsExpression)
-                    : Humanize(greaterThanExpression))
+                .WhenTrue(Humanize(greaterThanOrEqualExpression))
                 .WhenFalse(Humanize(lessThanExpression))
-                .Create(Humanize(greaterThanOrEqual));
+                .Create(Humanize(greaterThanOrEqualExpression));
     }
 
     private SpecBase<TModel, string> TransformLessThanExpression(
@@ -192,28 +241,22 @@ internal class ExpressionTreeTransformer<TModel>()
         ParameterExpression parameter)
     {
         var predicate = CreateFunc<TModel, bool>(expression, parameter);
-        var equals = CreateEqualsFunction(expression, parameter);
 
         var lessThanExpression = Expression.LessThan(expression.Left, expression.Right);
-        var equalsExpression = Expression.Equal(expression.Left, expression.Right);
-        var greaterThanExpression = Expression.GreaterThan(expression.Left, expression.Right);
+        var greaterThanOrEqualExpression = Expression.GreaterThanOrEqual(expression.Left, expression.Right);
 
         var hasAsValueMethod = _expressionAnalyzer.FindAsValueArguments(expression).Any();
         if (hasAsValueMethod)
             return
                 Spec.Build(predicate)
                     .WhenTrue(model => Humanize(lessThanExpression, model, parameter))
-                    .WhenFalse(model => equals(model)
-                        ? Humanize(equalsExpression, model, parameter)
-                        : Humanize(greaterThanExpression, model, parameter))
+                    .WhenFalse(model => Humanize(greaterThanOrEqualExpression, model, parameter))
                     .Create(Humanize(lessThanExpression));
 
         return
             Spec.Build(predicate)
                 .WhenTrue(Humanize(lessThanExpression))
-                .WhenFalse(model => equals(model)
-                    ? Humanize(equalsExpression)
-                    : Humanize(greaterThanExpression))
+                .WhenFalse(Humanize(greaterThanOrEqualExpression))
                 .Create();
     }
 
@@ -222,37 +265,165 @@ internal class ExpressionTreeTransformer<TModel>()
         ParameterExpression parameter)
     {
         var predicate = CreateFunc<TModel, bool>(expression, parameter);
-        var equals = CreateEqualsFunction(expression, parameter);
+
+        var lessThanOrEqualExpression = Expression.LessThanOrEqual(expression.Left, expression.Right);
+        var greaterThanExpression = Expression.GreaterThan(expression.Left, expression.Right);
 
         var hasAsValueMethod = _expressionAnalyzer.FindAsValueArguments(expression).Any();
         if (hasAsValueMethod)
             return
                 Spec.Build(predicate)
-                    .WhenTrue(model => equals(model)
-                        ? Humanize(Expression.Equal(expression.Left, expression.Right), model, parameter)
-                        : Humanize(Expression.LessThan(expression.Left, expression.Right), model, parameter))
-                    .WhenFalse(model => Humanize(Expression.GreaterThan(expression.Left, expression.Right), model, parameter))
-                    .Create(Humanize(Expression.LessThanOrEqual(expression.Left, expression.Right)));
+                    .WhenTrue(model =>  Humanize(lessThanOrEqualExpression, model, parameter))
+                    .WhenFalse(model => Humanize(greaterThanExpression, model, parameter))
+                    .Create(Humanize(lessThanOrEqualExpression));
 
         return
             Spec.Build(predicate)
-                .WhenTrue(model => equals(model)
-                    ? Humanize(Expression.Equal(expression.Left, expression.Right))
-                    : Humanize(Expression.LessThan(expression.Left, expression.Right)))
-                .WhenFalse(Humanize(Expression.GreaterThan(expression.Left, expression.Right)))
-                .Create(Humanize(Expression.LessThanOrEqual(expression.Left, expression.Right)));
+                .WhenTrue(Humanize(lessThanOrEqualExpression))
+                .WhenFalse(Humanize(greaterThanExpression))
+                .Create(Humanize(lessThanOrEqualExpression));
     }
 
     private SpecBase<TModel, string> TransformUnaryExpression(
         UnaryExpression expression,
         ParameterExpression parameter)
     {
-        var operand = Transform(expression.Operand, parameter);
         return expression.NodeType switch
         {
-            ExpressionType.Not => operand.Not(),
+            ExpressionType.Not => Transform(expression.Operand, parameter).Not(),
+            ExpressionType.Convert or ExpressionType.ConvertChecked => Transform(expression.Operand, parameter),
             _ => TransformQuasiProposition(expression, parameter)
         };
+    }
+
+    private static SpecBase<TModel, string> TransformSpecExpression(
+        MethodCallExpression expression,
+        MethodInfo factory)
+    {
+        var args = expression.Arguments.Take(2).ToArray();
+        var enumerableExpression = args[0];
+        var specExpression = UnwrapConvertExpression(args[1]);
+        var itemParameter = Expression.Parameter(GetEnumerableItemType(enumerableExpression.Type)!);
+        var callIsSatisfied = Expression.Call
+            (specExpression,
+                specExpression.Type.GetMethod(nameof(SpecBase<TModel>.IsSatisfiedBy))!,
+                itemParameter);
+
+        var enumerableItemType = GetEnumerableItemType(enumerableExpression.Type)!;
+        return CallSpecFactory(
+            factory,
+            enumerableItemType,
+            Expression.Lambda(callIsSatisfied, itemParameter).Compile());
+    }
+
+    private static SpecBase<TModel, string> TransformPredicateExpression(
+        MethodCallExpression expression,
+        MethodInfo factory)
+    {
+        var args = expression.Arguments.Take(2).ToArray();
+        var enumerableExpression = args[0];
+        var predicateExpression = UnwrapConvertExpression(args[1]);
+        if (predicateExpression is not LambdaExpression lambdaExpression)
+            throw new InvalidOperationException("Unsupported predicate type");
+
+        var unConverted = UnConvertLambdaBody(lambdaExpression);
+
+        var enumerableItemType = GetEnumerableItemType(enumerableExpression.Type)!;
+        return CallSpecFactory(
+            factory,
+            enumerableItemType,
+            unConverted.Compile());
+    }
+
+    private static SpecBase<TModel, string> CallSpecFactory(
+        MethodInfo method,
+        Type itemType,
+        object argument)
+    {
+        return (SpecBase<TModel, string>)
+            method
+                .MakeGenericMethod(itemType)
+                .Invoke(null, [argument]);
+    }
+
+    private static MethodInfo TransformAnyExpressionInternalMethodInfo { get; } =
+        typeof(ExpressionTreeTransformer<TModel>)
+            .GetMethod(
+                nameof(TransformAnyExpressionInternal),
+                BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    private static MethodInfo TransformAllExpressionInternalMethodInfo { get; } =
+        typeof(ExpressionTreeTransformer<TModel>)
+            .GetMethod(
+                nameof(TransformAllExpressionInternal),
+                BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    private static SpecBase<IEnumerable<T>, string> TransformAnyExpressionInternal<T>(
+        object argument)
+    {
+        return argument switch
+        {
+            SpecBase<T> spec => Spec
+                .Build(spec.ToExplanationSpec())
+                .AsAnySatisfied()
+                .Create(spec.Description.Statement),
+            Func<T, BooleanResultBase<string>> booleanResultPredicate => Spec
+                .Build(booleanResultPredicate)
+                .AsAnySatisfied()
+                .Create(booleanResultPredicate.ToString()),
+            Func<T, bool> predicate => Spec
+                .Build(predicate)
+                .AsAnySatisfied()
+                .Create(predicate.ToString()),
+            _ => throw new InvalidOperationException("Unsupported predicate type")
+        };
+    }
+
+    private static SpecBase<IEnumerable<T>, string> TransformAllExpressionInternal<T>(
+        object argument)
+    {
+        return argument switch
+        {
+            SpecBase<T> spec => Spec
+                .Build(spec.ToExplanationSpec())
+                .AsAllSatisfied()
+                .Create(spec.Description.Statement),
+            Func<T, BooleanResultBase<string>> booleanResultPredicate => Spec
+                .Build(booleanResultPredicate)
+                .AsAllSatisfied()
+                .Create(booleanResultPredicate.ToString()),
+            Func<T, bool> predicate => Spec
+                .Build(predicate)
+                .AsAllSatisfied()
+                .Create(predicate.ToString()),
+            _ => throw new InvalidOperationException("Unsupported predicate type")
+        };
+    }
+
+    private static Type? GetEnumerableItemType(Type? type)
+    {
+        if (type == null)
+            return null;
+
+        // Handle array types
+        if (type.IsArray)
+            return type.GetElementType();
+
+        // Handle IEnumerable<T>
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+            return type.GetGenericArguments()[0];
+
+        // Search for IEnumerable<T> in interfaces
+        var enumerableType = type.GetInterfaces()
+            .FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+        if (enumerableType != null)
+            return enumerableType.GetGenericArguments()[0];
+
+        // Handle non-generic IEnumerable
+        return typeof(IEnumerable).IsAssignableFrom(type)
+            ? typeof(object)
+            : null;
     }
 
     private SpecBase<TModel, string> TransformQuasiProposition(
@@ -260,13 +431,24 @@ internal class ExpressionTreeTransformer<TModel>()
         ParameterExpression parameter)
     {
         var (expressionAsBooleanResult, returnType) = ResolvePredicateResultExpression(expression);
+        if (returnType == PredicateReturnType.BooleanResult)
+        {
+            var statement = Expression.Equal(
+                Expression.MakeMemberAccess(
+                    expression,
+                    typeof(BooleanResultBase).GetProperty(nameof(BooleanResultBase.Satisfied))!),
+                Expression.Constant(true));
+
+            return CreateSpecForBooleanResult(
+                expressionAsBooleanResult,
+                parameter,
+                statement);
+        }
 
         var whenTrueExpression = Expression.Equal(expression, Expression.Constant(true));
         var whenFalseExpression = Expression.Equal(expression, Expression.Constant(false));
 
-        return returnType == PredicateReturnType.BooleanResult
-            ? CreateSpecForBooleanResult(expressionAsBooleanResult, parameter, whenTrueExpression)
-            : CreateSpecForBoolean(expression, parameter, whenTrueExpression, whenFalseExpression);
+        return CreateSpecForBoolean(expression, parameter, whenTrueExpression, whenFalseExpression);
     }
 
     private SpecBase<TModel, string> CreateSpecForBoolean(
@@ -308,19 +490,16 @@ internal class ExpressionTreeTransformer<TModel>()
     {
         return expression switch
         {
-            UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } unary when unary.Type == typeof(bool) =>
+            UnaryExpression { NodeType: ExpressionType.Convert } unary when unary.Type == typeof(bool) =>
                 ResolvePredicateResultExpression(unary.Operand),
             _ when IsDescendantOfBooleanResultBase(expression.Type) => (expression, PredicateReturnType.BooleanResult),
-            _ => (expression, PredicateReturnType.Boolean)
+            _ when IsBoolean(expression.Type) => (expression, PredicateReturnType.Boolean),
+            _ => (expression, PredicateReturnType.Unknown)
         };
 
         bool IsDescendantOfBooleanResultBase(Type type) => typeof(BooleanResultBase<string>).IsAssignableFrom(type);
+        bool IsBoolean(Type type) => type == typeof(bool);
     }
-
-    private Func<TModel, bool> CreateEqualsFunction(
-        BinaryExpression expression,
-        ParameterExpression parameter) =>
-        CreateFunc<TModel, bool>(Expression.Equal(expression.Left, expression.Right), parameter);
 
     private static string Humanize(Expression expression) =>
         new CSharpExpressionSerializer().Serialize(expression);
@@ -328,9 +507,35 @@ internal class ExpressionTreeTransformer<TModel>()
     private static string Humanize<T>(Expression expression, T parameterValue, ParameterExpression parameter) =>
         new CSharpExpressionSerializer<T>(parameterValue, parameter).Serialize(expression);
 
+    private static Expression UnwrapConvertExpression(Expression expression)
+    {
+        if (expression is UnaryExpression { NodeType: ExpressionType.Convert } unaryExpression)
+            return unaryExpression.Operand;
+
+        return expression;
+    }
+
     private static Func<TValue, TReturn> CreateFunc<TValue, TReturn>(
         Expression expression,
         ParameterExpression parameter) =>
-        Expression.Lambda<Func<TValue, TReturn>>(expression, parameter).Compile();
+        Expression.Lambda<Func<TValue, TReturn>>(expression, parameter)
+                  .Compile();
+
+    private static bool DoesReturnBooleanResult(Expression predicateExpression)
+    {
+        var returnType = predicateExpression.Type.GetGenericArguments().Last();
+        if (predicateExpression is LambdaExpression lambdaExpression)
+            returnType = UnwrapConvertExpression(lambdaExpression.Body).Type;
+
+        return returnType.IsGenericType &&
+               returnType.GetGenericTypeDefinition().InheritsFrom(typeof(BooleanResultBase<>));
+    }
+
+    private static LambdaExpression UnConvertLambdaBody(LambdaExpression lambdaExpression)
+    {
+        var unConvertedBody = UnwrapConvertExpression(lambdaExpression.Body);
+
+        return Expression.Lambda(unConvertedBody, lambdaExpression.Parameters);
+    }
 }
 

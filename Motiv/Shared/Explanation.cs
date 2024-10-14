@@ -44,10 +44,10 @@ public sealed class Explanation
     internal Explanation(IEnumerable<BooleanResultBase> causes, IEnumerable<BooleanResultBase> results)
     {
         var causeCollection = causes as ICollection<BooleanResultBase> ?? causes.ToArray();
-        var assertions = causeCollection.GetAssertions();
+        var assertions = causeCollection.GetAssertions().DistinctWithOrderPreserved();
 
         var allResult = results as ICollection<BooleanResultBase> ?? results.ToArray();
-        var allAssertions = allResult.GetAllAssertions();
+        var allAssertions = allResult.GetAllAssertions().DistinctWithOrderPreserved();
 
         Assertions = assertions;
         AllAssertions = allAssertions;

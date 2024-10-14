@@ -20,7 +20,7 @@ public static class AssertionExtensions
                 result switch
                 {
                     IBooleanOperationResult operationResult => operationResult.Causes.GetAssertions(),
-                    _ => result.Assertions
+                    _ => result.Explanation.Assertions
                 });
 
 
@@ -36,7 +36,7 @@ public static class AssertionExtensions
                 result switch
                 {
                     IBooleanOperationResult operationResult => operationResult.Underlying.GetAllAssertions(),
-                    _ => result.AllAssertions
+                    _ => result.Explanation.AllAssertions
                 });
 
     /// <summary>

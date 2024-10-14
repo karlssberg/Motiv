@@ -554,32 +554,13 @@ public class TutorialTests
     [Fact]
     public void Should_evaluate_initial_example_in_readme()
     {
-        // Define clauses
-        var isValid = Spec.Build((int n) => n is >= 0 and <= 11).Create("valid");
-        var isEmpty = Spec.Build((int n) => n == 0).Create("empty");
-        var isFull = Spec.Build((int n) => n == 11).Create("full");
+        var isInRange = Spec.From((int n) => n >= 1 & n <= 10).Create("in range");
 
-        // Compose new proposition// Compose a new ad-hoc proposition
-        var composed = isValid & !(isEmpty | isFull);
+        var result = isInRange.IsSatisfiedBy(11);
 
-        // Give it a new name
-        var isPartiallyFull = Spec.Build(composed).Create("partial");
-
-        // Evaluate proposition
-        var result = isPartiallyFull.IsSatisfiedBy(5);
-
-        result.Satisfied.Should().BeTrue();
-        result.Assertions.Should().BeEquivalentTo(["valid", "¬empty", "¬full"]);
-        result.UnderlyingReasons.Should().BeEquivalentTo("valid & !(¬empty | ¬full)");
-        result.Justification.Should().Be(
-            """
-            partial
-                AND
-                    valid
-                    NOR
-                        ¬empty
-                        ¬full
-            """);
+        result.Satisfied.Should().BeFalse();
+        result.Reason.Should().Be("¬in range");
+        result.Assertions.Should().BeEquivalentTo("n > 10");
     }
 
 

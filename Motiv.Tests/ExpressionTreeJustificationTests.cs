@@ -6,12 +6,12 @@ public class ExpressionTreeJustificationTests
     [InlineData(-1,
         """
         ¬is-positive
-            n < 0
+            n <= 0
         """)]
     [InlineData(0,
         """
         ¬is-positive
-            n == 0
+            n <= 0
         """)]
     [InlineData(1,
         """
@@ -36,12 +36,12 @@ public class ExpressionTreeJustificationTests
     [InlineData(-1,
         """
         n is not positive
-            n < 0
+            n <= 0
         """)]
     [InlineData(0,
         """
         n is not positive
-            n == 0
+            n <= 0
         """)]
     [InlineData(1,
         """
@@ -70,13 +70,13 @@ public class ExpressionTreeJustificationTests
         """
         ¬any-positive
             n is not positive
-                n < 0
+                n <= 0
         """)]
     [InlineData(0,
         """
         ¬any-positive
             n is not positive
-                n == 0
+                n <= 0
         """)]
     [InlineData(1,
         """
@@ -109,21 +109,21 @@ public class ExpressionTreeJustificationTests
         """
         none positive
             -1 is not positive
-                n < 0
+                n <= 0
             -2 is not positive
-                n < 0
+                n <= 0
             -3 is not positive
-                n < 0
+                n <= 0
         """, -1, -2, -3)]
     [InlineData(
         """
         none positive
             0 is not positive
-                n == 0
+                n <= 0
             -1 is not positive
-                n < 0
+                n <= 0
             -2 is not positive
-                n < 0
+                n <= 0
         """, 0, -1, -2)]
     [InlineData(
         """
@@ -162,13 +162,12 @@ public class ExpressionTreeJustificationTests
     [InlineData(
         """
         3x not positive
-            n < 0
+            n <= 0
         """, -1, -2, -3)]
     [InlineData(
         """
         3x not positive
-            n == 0
-            n < 0
+            n <= 0
         """, 0, -1, -2)]
     [InlineData(
         """
@@ -202,7 +201,7 @@ public class ExpressionTreeJustificationTests
         ¬should create guid
             ¬any positive
                 none positive
-                    n < 0
+                    n <= 0
         """, -1, -2, -3)]
     [InlineData(
         """

@@ -13,11 +13,11 @@ internal sealed class ExpressionTreeExplanationProposition<TModel>(
     private readonly Lazy<ISpecDescription> _description = new (() => new SpecDescription(statement));
     public override IEnumerable<SpecBase> Underlying => UnderlyingSpec.ToEnumerable();
 
-    private Func<TModel, bool> _predicate = expression.Compile();
+    private readonly Func<TModel, bool> _predicate = expression.Compile();
 
     public override ISpecDescription Description => _description.Value;
 
-    public SpecBase<TModel, string> UnderlyingSpec { get; } = expression.ToSpec();
+    private SpecBase<TModel, string> UnderlyingSpec { get; } = expression.ToSpec();
 
     protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
     {

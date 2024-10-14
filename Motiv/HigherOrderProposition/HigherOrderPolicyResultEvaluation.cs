@@ -49,7 +49,7 @@ public class HigherOrderPolicyResultEvaluation<TModel, TMetadata>
         _lazyFalseModels = new Lazy<IReadOnlyList<TModel>>(() =>
             results.WhereFalse().Select(result => result.Model).ToArray());
         _lazyAssertions = new Lazy<IReadOnlyList<string>>(() =>
-            causalResults.SelectMany(result => result.Assertions).DistinctWithOrderPreserved().ToArray());
+            causalResults.SelectMany(result => result.Explanation.Assertions).DistinctWithOrderPreserved().ToArray());
         _lazyMetadata = new Lazy<IReadOnlyList<TMetadata>>(() =>
             causalResults.SelectMany(result => result.MetadataTier.Metadata).DistinctWithOrderPreserved().ToArray());
     }
