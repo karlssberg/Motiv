@@ -834,9 +834,27 @@ public class ExpressionTreeAssertionTests
     }
 
     [Theory]
+    [InlineData("admin", "user", "role == \"admin\"", "role == \"user\"")]
+    [InlineData("user", "guest", "role == \"user\"")]
+    [InlineData("superuser", "guest", "role != \"admin\"", "role != \"user\"")]
+    public void Should_convert_any_linq_function_to_higher_order_proposition(string modelA, string modelB, params string[] expected)
+    {
+        // Assemble
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.Any(role => role == "admin" | role == "user"))
+                .Create("has admin or user");
+
+        // Act
+        var act = sut.IsSatisfiedBy([modelA, modelB]);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expected);
+    }
+
+    [Theory]
     [InlineData("is admin", "admin", "user")]
     [InlineData("is not admin", "user")]
-    public void Should_convert_any_linq_function_to_higher_order_proposition(string expectedAssertion, params string[] model)
+    public void Should_convert_any_linq_function_to_higher_order_proposition_by_supplying_a_spec(string expectedAssertion, params string[] model)
     {
         // Assemble
         var isAdmin =
@@ -880,9 +898,27 @@ public class ExpressionTreeAssertionTests
     }
 
     [Theory]
+    [InlineData("admin", "user", "role == \"admin\"", "role == \"user\"")]
+    [InlineData("user", "guest", "role != \"admin\"", "role != \"user\"")]
+    [InlineData("superuser", "guest", "role != \"admin\"", "role != \"user\"")]
+    public void Should_convert_all_linq_function_to_higher_order_proposition(string modelA, string modelB, params string[] expected)
+    {
+        // Assemble
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.All(role => role == "admin" | role == "user"))
+                .Create("all admin or user");
+
+        // Act
+        var act = sut.IsSatisfiedBy([modelA, modelB]);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expected);
+    }
+
+    [Theory]
     [InlineData("is admin", "admin", "admin")]
     [InlineData("is not admin", "user, admin")]
-    public void Should_convert_all_linq_function_to_higher_order_proposition(string expectedAssertion, params string[] model)
+    public void Should_convert_all_linq_function_to_higher_order_proposition_by_supplying_a_spec(string expectedAssertion, params string[] model)
     {
         // Assemble
         var isAdmin =

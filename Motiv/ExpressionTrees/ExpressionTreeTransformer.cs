@@ -79,15 +79,25 @@ internal class ExpressionTreeTransformer<TModel>()
     {
         return expression.Method switch
         {
-            { DeclaringType.Name: "Enumerable", Name: "Any" } when IsSpecPredicate() =>
-                TransformSpecExpression(expression, TransformAnyExpressionInternalMethodInfo),
-            { DeclaringType.Name: "Enumerable", Name: "Any" } when IsBooleanResultPredicate() =>
-                TransformPredicateExpression(expression, TransformAnyExpressionInternalMethodInfo),
+            { DeclaringType.Name: nameof(Enumerable), Name: nameof(Enumerable.Any) }
+                when IsSpecPredicate() =>
+                TransformSpecExpression(expression, AnyFactoryMethodInfo),
+            { DeclaringType.Name: nameof(Enumerable), Name: nameof(Enumerable.Any) }
+                when IsBooleanResultPredicate() =>
+                TransformPredicateExpression(expression, AnyFactoryMethodInfo),
+            { DeclaringType.Name: nameof(Enumerable), Name: nameof(Enumerable.Any) }
+                when IsBooleanPredicate() && IsSimpleEnumerableRelationship() =>
+                TransformBinaryPredicateExpression(expression, AnyFactoryMethodInfo),
 
-            { DeclaringType.Name: "Enumerable", Name: "All" } when IsSpecPredicate() =>
-                TransformSpecExpression(expression, TransformAllExpressionInternalMethodInfo),
-            { DeclaringType.Name: "Enumerable", Name: "All" } when IsBooleanResultPredicate() =>
-                TransformPredicateExpression(expression, TransformAllExpressionInternalMethodInfo),
+            { DeclaringType.Name: nameof(Enumerable), Name: nameof(Enumerable.All) }
+                when IsSpecPredicate() =>
+                TransformSpecExpression(expression, AllFactoryMethodInfo),
+            { DeclaringType.Name: nameof(Enumerable), Name: nameof(Enumerable.All) }
+                when IsBooleanResultPredicate() =>
+                TransformPredicateExpression(expression, AllFactoryMethodInfo),
+            { DeclaringType.Name: nameof(Enumerable), Name: nameof(Enumerable.All) }
+                when IsBooleanPredicate() && IsSimpleEnumerableRelationship() =>
+                TransformBinaryPredicateExpression(expression, AllFactoryMethodInfo),
 
             _ => TransformQuasiProposition(expression, parameter)
         };
@@ -111,10 +121,31 @@ internal class ExpressionTreeTransformer<TModel>()
             var genericTypeDefinition = predicateExpression.Type.GetGenericTypeDefinition();
 
             var isFunc = genericTypeDefinition.InheritsFrom(typeof(Func<,>));
-            return isFunc && DoesReturnBooleanResult(predicateExpression);
+            return isFunc && DoesReturn(predicateExpression, typeof(BooleanResultBase<>));
+        }
+
+        bool IsBooleanPredicate()
+        {
+            var predicateExpression = UnwrapConvertExpression(expression.Arguments.ElementAt(1));
+            if (!predicateExpression.Type.IsGenericType)
+                return false;
+
+            var genericTypeDefinition = predicateExpression.Type.GetGenericTypeDefinition();
+
+            var isFunc = genericTypeDefinition.InheritsFrom(typeof(Func<,>));
+            return isFunc && DoesReturn(predicateExpression, typeof(bool));
+        }
+
+        bool IsSimpleEnumerableRelationship()
+        {
+            var predicateExpression = UnwrapConvertExpression(expression.Arguments.ElementAt(1));
+            if (!predicateExpression.Type.IsGenericType)
+                return false;
+
+            var model = predicateExpression.Type.GetGenericArguments().First();
+            return typeof(IEnumerable<>).MakeGenericType(model) == parameter.Type;
         }
     }
-
 
     private SpecBase<TModel, string> TransformBooleanConditionalExpression(
         ConditionalExpression expression,
@@ -335,6 +366,25 @@ internal class ExpressionTreeTransformer<TModel>()
             unConverted.Compile());
     }
 
+    private static SpecBase<TModel, string> TransformBinaryPredicateExpression(
+        MethodCallExpression expression,
+        MethodInfo factory)
+    {
+        var args = expression.Arguments.Take(2).ToArray();
+        var enumerableExpression = args[0];
+        var predicateExpression = UnwrapConvertExpression(args[1]);
+        if (predicateExpression is not LambdaExpression lambdaExpression)
+            throw new InvalidOperationException("Unsupported predicate type");
+
+        var unConverted = UnConvertLambdaBody(lambdaExpression);
+
+        var enumerableItemType = GetEnumerableItemType(enumerableExpression.Type)!;
+        return CallSpecFactory(
+            factory,
+            enumerableItemType,
+            unConverted);
+    }
+
     private static SpecBase<TModel, string> CallSpecFactory(
         MethodInfo method,
         Type itemType,
@@ -346,13 +396,13 @@ internal class ExpressionTreeTransformer<TModel>()
                 .Invoke(null, [argument]);
     }
 
-    private static MethodInfo TransformAnyExpressionInternalMethodInfo { get; } =
+    private static MethodInfo AnyFactoryMethodInfo { get; } =
         typeof(ExpressionTreeTransformer<TModel>)
             .GetMethod(
                 nameof(TransformAnyExpressionInternal),
                 BindingFlags.NonPublic | BindingFlags.Static)!;
 
-    private static MethodInfo TransformAllExpressionInternalMethodInfo { get; } =
+    private static MethodInfo AllFactoryMethodInfo { get; } =
         typeof(ExpressionTreeTransformer<TModel>)
             .GetMethod(
                 nameof(TransformAllExpressionInternal),
@@ -371,8 +421,8 @@ internal class ExpressionTreeTransformer<TModel>()
                 .Build(booleanResultPredicate)
                 .AsAnySatisfied()
                 .Create(booleanResultPredicate.ToString()),
-            Func<T, bool> predicate => Spec
-                .Build(predicate)
+            Expression<Func<T, bool>> predicate => Spec
+                .From(predicate)
                 .AsAnySatisfied()
                 .Create(predicate.ToString()),
             _ => throw new InvalidOperationException("Unsupported predicate type")
@@ -392,8 +442,8 @@ internal class ExpressionTreeTransformer<TModel>()
                 .Build(booleanResultPredicate)
                 .AsAllSatisfied()
                 .Create(booleanResultPredicate.ToString()),
-            Func<T, bool> predicate => Spec
-                .Build(predicate)
+            Expression<Func<T, bool>> predicate => Spec
+                .From(predicate)
                 .AsAllSatisfied()
                 .Create(predicate.ToString()),
             _ => throw new InvalidOperationException("Unsupported predicate type")
@@ -521,14 +571,16 @@ internal class ExpressionTreeTransformer<TModel>()
         Expression.Lambda<Func<TValue, TReturn>>(expression, parameter)
                   .Compile();
 
-    private static bool DoesReturnBooleanResult(Expression predicateExpression)
+    private static bool DoesReturn(Expression predicateExpression, Type type)
     {
         var returnType = predicateExpression.Type.GetGenericArguments().Last();
         if (predicateExpression is LambdaExpression lambdaExpression)
             returnType = UnwrapConvertExpression(lambdaExpression.Body).Type;
 
-        return returnType.IsGenericType &&
-               returnType.GetGenericTypeDefinition().InheritsFrom(typeof(BooleanResultBase<>));
+
+        return returnType.IsGenericType
+            ? returnType.GetGenericTypeDefinition().InheritsFrom(type)
+            : returnType.InheritsFrom(type);
     }
 
     private static LambdaExpression UnConvertLambdaBody(LambdaExpression lambdaExpression)

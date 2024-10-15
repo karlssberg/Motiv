@@ -95,8 +95,9 @@ internal static class ExpressionTreeExtensions
         var type = concreteType;
         while (type != null && type != typeof(object))
         {
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == superType)
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == superType || type == superType)
                 return true;
+
             type = type.BaseType;
         }
         return false;
