@@ -898,6 +898,30 @@ public class ExpressionTreeAssertionTests
     }
 
     [Theory]
+    [InlineData("is admin", "admin")]
+    [InlineData("is not admin", "user")]
+    public void Should_convert_any_linq_function_to_higher_order_proposition_when_boolean_result_is_returned(string expectedAssertion, string model)
+    {
+        // Assemble
+        var isAdminResult =
+            Spec.Build((string role) => role == "admin")
+                .WhenTrue("is admin")
+                .WhenFalse("is not admin")
+                .Create("is-admin")
+                .IsSatisfiedBy(model);
+
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.Any(role => isAdminResult))
+                .Create("all admins");
+
+        // Act
+        var act = sut.IsSatisfiedBy([model]);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
     [InlineData("admin", "user", "role == \"admin\"", "role == \"user\"")]
     [InlineData("user", "guest", "role != \"admin\"", "role != \"user\"")]
     [InlineData("superuser", "guest", "role != \"admin\"", "role != \"user\"")]
@@ -960,4 +984,30 @@ public class ExpressionTreeAssertionTests
         // Assert
         act.Assertions.Should().BeEquivalentTo(expectedAssertion);
     }
+
+
+    [Theory]
+    [InlineData("is admin", "admin")]
+    [InlineData("is not admin", "user")]
+    public void Should_convert_all_linq_function_to_higher_order_proposition_when_boolean_result_is_returned(string expectedAssertion, string model)
+    {
+        // Assemble
+        var isAdminResult =
+            Spec.Build((string role) => role == "admin")
+                .WhenTrue("is admin")
+                .WhenFalse("is not admin")
+                .Create("is-admin")
+                .IsSatisfiedBy(model);
+
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.All(role => isAdminResult))
+                .Create("all admins");
+
+        // Act
+        var act = sut.IsSatisfiedBy([model]);
+
+        // Assert
+        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+    }
+
 }

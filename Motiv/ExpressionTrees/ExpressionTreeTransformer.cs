@@ -4,18 +4,26 @@ using System.Reflection;
 
 namespace Motiv.ExpressionTrees;
 
-internal class ExpressionTreeTransformer<TModel>()
+internal class ExpressionTreeTransformer<TModel>
 {
-    private enum PredicateReturnType
-    {
-        Unknown,
-        Boolean,
-        BooleanResult
-    }
-    private readonly ExpressionAnalyzer _expressionAnalyzer = new ();
+    private readonly ExpressionAnalyzer _expressionAnalyzer = new();
 
-    internal SpecBase<TModel, string> Transform(Expression<Func<TModel, bool>> expression) =>
-        Transform(expression.Body, expression.Parameters.First());
+    private static MethodInfo AnyFactoryMethodInfo { get; } =
+        typeof(ExpressionTreeTransformer<TModel>)
+            .GetMethod(
+                nameof(TransformAnyExpressionInternal),
+                BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    private static MethodInfo AllFactoryMethodInfo { get; } =
+        typeof(ExpressionTreeTransformer<TModel>)
+            .GetMethod(
+                nameof(TransformAllExpressionInternal),
+                BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    internal SpecBase<TModel, string> Transform(Expression<Func<TModel, bool>> expression)
+    {
+        return Transform(expression.Body, expression.Parameters.First());
+    }
 
     private SpecBase<TModel, string> Transform(
         Expression expression,
@@ -66,36 +74,40 @@ internal class ExpressionTreeTransformer<TModel>()
             _ => TransformQuasiProposition(expression, parameter)
         };
 
-        SpecBase<TModel, string> Right(BinaryExpression binaryExpression) =>
-            Transform(binaryExpression.Right, parameter);
+        SpecBase<TModel, string> Right(BinaryExpression binaryExpression)
+        {
+            return Transform(binaryExpression.Right, parameter);
+        }
 
-        SpecBase<TModel, string> Left(BinaryExpression binaryExpression) =>
-            Transform(binaryExpression.Left, parameter);
+        SpecBase<TModel, string> Left(BinaryExpression binaryExpression)
+        {
+            return Transform(binaryExpression.Left, parameter);
+        }
     }
 
     private SpecBase<TModel, string> TransformMethodCallExpression(
         MethodCallExpression expression,
         ParameterExpression parameter)
     {
-        return expression.Method switch
+        return expression switch
         {
-            { DeclaringType.Name: nameof(Enumerable), Name: nameof(Enumerable.Any) }
+            { Method.DeclaringType.Name: nameof(Enumerable), Method.Name: nameof(Enumerable.Any), Arguments.Count: 2 }
                 when IsSpecPredicate() =>
                 TransformSpecExpression(expression, AnyFactoryMethodInfo),
-            { DeclaringType.Name: nameof(Enumerable), Name: nameof(Enumerable.Any) }
+            { Method.DeclaringType.Name: nameof(Enumerable), Method.Name: nameof(Enumerable.Any), Arguments.Count: 2 }
                 when IsBooleanResultPredicate() =>
                 TransformPredicateExpression(expression, AnyFactoryMethodInfo),
-            { DeclaringType.Name: nameof(Enumerable), Name: nameof(Enumerable.Any) }
+            { Method.DeclaringType.Name: nameof(Enumerable), Method.Name: nameof(Enumerable.Any), Arguments.Count: 2 }
                 when IsBooleanPredicate() && IsSimpleEnumerableRelationship() =>
                 TransformBinaryPredicateExpression(expression, AnyFactoryMethodInfo),
 
-            { DeclaringType.Name: nameof(Enumerable), Name: nameof(Enumerable.All) }
+            { Method.DeclaringType.Name: nameof(Enumerable), Method.Name: nameof(Enumerable.All), Arguments.Count: 2 }
                 when IsSpecPredicate() =>
                 TransformSpecExpression(expression, AllFactoryMethodInfo),
-            { DeclaringType.Name: nameof(Enumerable), Name: nameof(Enumerable.All) }
+            { Method.DeclaringType.Name: nameof(Enumerable), Method.Name: nameof(Enumerable.All), Arguments.Count: 2 }
                 when IsBooleanResultPredicate() =>
                 TransformPredicateExpression(expression, AllFactoryMethodInfo),
-            { DeclaringType.Name: nameof(Enumerable), Name: nameof(Enumerable.All) }
+            { Method.DeclaringType.Name: nameof(Enumerable), Method.Name: nameof(Enumerable.All), Arguments.Count: 2 }
                 when IsBooleanPredicate() && IsSimpleEnumerableRelationship() =>
                 TransformBinaryPredicateExpression(expression, AllFactoryMethodInfo),
 
@@ -304,7 +316,7 @@ internal class ExpressionTreeTransformer<TModel>()
         if (hasAsValueMethod)
             return
                 Spec.Build(predicate)
-                    .WhenTrue(model =>  Humanize(lessThanOrEqualExpression, model, parameter))
+                    .WhenTrue(model => Humanize(lessThanOrEqualExpression, model, parameter))
                     .WhenFalse(model => Humanize(greaterThanExpression, model, parameter))
                     .Create(Humanize(lessThanOrEqualExpression));
 
@@ -336,9 +348,9 @@ internal class ExpressionTreeTransformer<TModel>()
         var specExpression = UnwrapConvertExpression(args[1]);
         var itemParameter = Expression.Parameter(GetEnumerableItemType(enumerableExpression.Type)!);
         var callIsSatisfied = Expression.Call
-            (specExpression,
-                specExpression.Type.GetMethod(nameof(SpecBase<TModel>.IsSatisfiedBy))!,
-                itemParameter);
+        (specExpression,
+            specExpression.Type.GetMethod(nameof(SpecBase<TModel>.IsSatisfiedBy))!,
+            itemParameter);
 
         var enumerableItemType = GetEnumerableItemType(enumerableExpression.Type)!;
         return CallSpecFactory(
@@ -395,18 +407,6 @@ internal class ExpressionTreeTransformer<TModel>()
                 .MakeGenericMethod(itemType)
                 .Invoke(null, [argument]);
     }
-
-    private static MethodInfo AnyFactoryMethodInfo { get; } =
-        typeof(ExpressionTreeTransformer<TModel>)
-            .GetMethod(
-                nameof(TransformAnyExpressionInternal),
-                BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    private static MethodInfo AllFactoryMethodInfo { get; } =
-        typeof(ExpressionTreeTransformer<TModel>)
-            .GetMethod(
-                nameof(TransformAllExpressionInternal),
-                BindingFlags.NonPublic | BindingFlags.Static)!;
 
     private static SpecBase<IEnumerable<T>, string> TransformAnyExpressionInternal<T>(
         object argument)
@@ -508,7 +508,7 @@ internal class ExpressionTreeTransformer<TModel>()
         BinaryExpression whenFalseExpression)
     {
         var hasAsValueMethod = _expressionAnalyzer.FindAsValueArguments(expression).Any();
-        if(hasAsValueMethod)
+        if (hasAsValueMethod)
             return
                 Spec.Build(CreateFunc<TModel, bool>(expression, parameter))
                     .WhenTrue(model => Humanize(whenTrueExpression, model, parameter))
@@ -547,15 +547,26 @@ internal class ExpressionTreeTransformer<TModel>()
             _ => (expression, PredicateReturnType.Unknown)
         };
 
-        bool IsDescendantOfBooleanResultBase(Type type) => typeof(BooleanResultBase<string>).IsAssignableFrom(type);
-        bool IsBoolean(Type type) => type == typeof(bool);
+        bool IsDescendantOfBooleanResultBase(Type type)
+        {
+            return typeof(BooleanResultBase<string>).IsAssignableFrom(type);
+        }
+
+        bool IsBoolean(Type type)
+        {
+            return type == typeof(bool);
+        }
     }
 
-    private static string Humanize(Expression expression) =>
-        new CSharpExpressionSerializer().Serialize(expression);
+    private static string Humanize(Expression expression)
+    {
+        return new CSharpExpressionSerializer().Serialize(expression);
+    }
 
-    private static string Humanize<T>(Expression expression, T parameterValue, ParameterExpression parameter) =>
-        new CSharpExpressionSerializer<T>(parameterValue, parameter).Serialize(expression);
+    private static string Humanize<T>(Expression expression, T parameterValue, ParameterExpression parameter)
+    {
+        return new CSharpExpressionSerializer<T>(parameterValue, parameter).Serialize(expression);
+    }
 
     private static Expression UnwrapConvertExpression(Expression expression)
     {
@@ -567,9 +578,11 @@ internal class ExpressionTreeTransformer<TModel>()
 
     private static Func<TValue, TReturn> CreateFunc<TValue, TReturn>(
         Expression expression,
-        ParameterExpression parameter) =>
-        Expression.Lambda<Func<TValue, TReturn>>(expression, parameter)
-                  .Compile();
+        ParameterExpression parameter)
+    {
+        return Expression.Lambda<Func<TValue, TReturn>>(expression, parameter)
+            .Compile();
+    }
 
     private static bool DoesReturn(Expression predicateExpression, Type type)
     {
@@ -589,5 +602,11 @@ internal class ExpressionTreeTransformer<TModel>()
 
         return Expression.Lambda(unConvertedBody, lambdaExpression.Parameters);
     }
-}
 
+    private enum PredicateReturnType
+    {
+        Unknown,
+        Boolean,
+        BooleanResult
+    }
+}
