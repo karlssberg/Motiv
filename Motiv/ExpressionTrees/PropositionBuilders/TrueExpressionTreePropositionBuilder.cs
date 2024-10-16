@@ -3,7 +3,8 @@ using Motiv.HigherOrderProposition;
 using Motiv.HigherOrderProposition.PropositionBuilders;
 using Motiv.ExpressionTrees.PropositionBuilders.Metadata;
 using Motiv.ExpressionTrees.PropositionBuilders.Explanation;
-using Motiv.Shared;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTree;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Spec;
 
 namespace Motiv.ExpressionTrees.PropositionBuilders;
 
@@ -83,10 +84,9 @@ public readonly ref struct TrueExpressionTreePropositionBuilder<TModel>(
     /// <summary>Specifies a higher order predicate for the proposition.</summary>
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
     /// <returns>An instance of <see cref="TrueHigherOrderFromSpecPropositionBuilder{TModel, TMetadata}" />.</returns>
-    public TrueHigherOrderFromSpecPropositionBuilder<TModel, string> As(
+    public TrueExpressionTreeHigherOrderFromSpecPropositionBuilder<TModel> As(
         Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate) =>
-        new(
-            expression.ToSpec(),
+        new(expression,
             higherOrderPredicate,
             (isSatisfied, results) => Causes.Get(isSatisfied, results, higherOrderPredicate));
 
@@ -94,11 +94,11 @@ public readonly ref struct TrueExpressionTreePropositionBuilder<TModel>(
     /// <param name="higherOrderPredicate">A function that takes a collection of boolean results and returns a boolean.</param>
     /// <param name="causeSelector">A function that selects the causes of the boolean results.</param>
     /// <returns>An instance of <see cref="TrueHigherOrderFromSpecPropositionBuilder{TModel, TMetadata}" />.</returns>
-    public TrueHigherOrderFromSpecPropositionBuilder<TModel, string> As(
+    public TrueExpressionTreeHigherOrderFromSpecPropositionBuilder<TModel> As(
         Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
         Func<bool, IEnumerable<BooleanResult<TModel, string>>,
             IEnumerable<BooleanResult<TModel, string>>> causeSelector) =>
-        new(expression.ToSpec(), higherOrderPredicate, causeSelector);
+        new(expression, higherOrderPredicate, causeSelector);
 
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>

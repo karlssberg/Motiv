@@ -2,6 +2,12 @@ using Motiv.BooleanPredicateProposition.PropositionBuilders;
 using Motiv.BooleanResultPredicateProposition.PropositionBuilders;
 using Motiv.ExpressionTrees.PropositionBuilders;
 using Motiv.HigherOrderProposition.PropositionBuilders;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.BooleanPredicate;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.BooleanResultPredicate;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTree;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Policy;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.PolicyResultPredicate;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Spec;
 using Motiv.Shared;
 using Motiv.SpecDecoratorProposition.PropositionBuilders;
 
@@ -143,7 +149,7 @@ public static class AsAtMostNSatisfiedExtensions
     /// <param name="builder">The proposition builder.</param>
     /// <param name="n">The maximum number of underlying propositions that can be satisfied.</param>
     /// <returns>The next build step.</returns>
-    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, string> AsAtMostNSatisfied<TModel>(
+    public static TrueExpressionTreeHigherOrderFromSpecPropositionBuilder<TModel> AsAtMostNSatisfied<TModel>(
         this TrueExpressionTreePropositionBuilder<TModel> builder,
         int n)
     {

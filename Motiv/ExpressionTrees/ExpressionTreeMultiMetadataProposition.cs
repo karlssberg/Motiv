@@ -46,10 +46,13 @@ internal sealed class ExpressionTreeMultiMetadataProposition<TModel, TMetadata>(
         });
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-            new BooleanResultDescriptionWithUnderlying(
+        {
+            var trueOrFalse = satisfied ? "true" : "false";
+            return new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
-                Description.ToReason(satisfied),
-                Description.Statement));
+                $"{Description.Statement} == {trueOrFalse}",
+                Description.Statement);
+        });
 
         return new ExpressionTreeBooleanResult<TMetadata>(
             satisfied,

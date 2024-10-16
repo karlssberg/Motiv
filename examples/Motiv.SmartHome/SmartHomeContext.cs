@@ -1,4 +1,6 @@
-﻿public record SmartHomeContext
+﻿namespace Motiv.SmartHome;
+
+public record SmartHomeContext
 {
     public double Temperature { get; init; }
     public bool IsOccupied { get; init; }

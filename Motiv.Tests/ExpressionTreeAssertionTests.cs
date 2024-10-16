@@ -985,7 +985,6 @@ public class ExpressionTreeAssertionTests
         act.Assertions.Should().BeEquivalentTo(expectedAssertion);
     }
 
-
     [Theory]
     [InlineData("is admin", "admin")]
     [InlineData("is not admin", "user")]

@@ -245,4 +245,64 @@ public class ExpressionTreeJustificationTests
         act.Justification.Should().Be(expectedResult);
     }
 
+
+    [Theory]
+    [InlineData("is admin", "admin")]
+    [InlineData("is not admin", "user")]
+    public void Should_justify_any_linq_function_to_higher_order_proposition_when_boolean_result_is_returned(string expectedAssertion, string model)
+    {
+        // Assemble
+        var isAdminResult =
+            Spec.Build((string role) => role == "admin")
+                .WhenTrue("is admin")
+                .WhenFalse("is not admin")
+                .Create("is-admin")
+                .IsSatisfiedBy(model);
+
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.Any(role => isAdminResult))
+                .Create("all admins");
+
+        // Act
+        var act = sut.IsSatisfiedBy([model]);
+
+        // Assert
+        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData(
+        """
+        all admins
+            isAdminResult == true
+                is admin
+        """,
+        "admin")]
+    [InlineData(
+        """
+        ¬all admins
+            isAdminResult == false
+                is not admin
+        """,
+        "user")]
+    public void Should_justify_all_linq_function_to_higher_order_proposition_when_boolean_result_is_returned(string expectedAssertion, string model)
+    {
+        // Assemble
+        var isAdminResult =
+            Spec.Build((string role) => role == "admin")
+                .WhenTrue("is admin")
+                .WhenFalse("is not admin")
+                .Create("is-admin")
+                .IsSatisfiedBy(model);
+
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.All(role => isAdminResult))
+                .Create("all admins");
+
+        // Act
+        var act = sut.IsSatisfiedBy([model]);
+
+        // Assert
+        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+    }
 }

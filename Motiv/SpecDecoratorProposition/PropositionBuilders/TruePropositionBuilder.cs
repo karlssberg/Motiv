@@ -1,5 +1,6 @@
 using Motiv.HigherOrderProposition;
 using Motiv.HigherOrderProposition.PropositionBuilders;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Spec;
 using Motiv.Shared;
 using Motiv.SpecDecoratorProposition.PropositionBuilders.Explanation;
 using Motiv.SpecDecoratorProposition.PropositionBuilders.Metadata;

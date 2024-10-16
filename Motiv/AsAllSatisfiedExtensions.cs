@@ -2,6 +2,12 @@ using Motiv.BooleanPredicateProposition.PropositionBuilders;
 using Motiv.BooleanResultPredicateProposition.PropositionBuilders;
 using Motiv.ExpressionTrees.PropositionBuilders;
 using Motiv.HigherOrderProposition.PropositionBuilders;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.BooleanPredicate;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.BooleanResultPredicate;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTree;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Policy;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.PolicyResultPredicate;
+using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Spec;
 using Motiv.SpecDecoratorProposition.PropositionBuilders;
 
 namespace Motiv;
@@ -74,7 +80,7 @@ public static class AsAllSatisfiedExtensions
     /// <param name="builder">The previous build step.</param>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <returns>The next build step.</returns>
-    public static TrueHigherOrderFromSpecPropositionBuilder<TModel, string> AsAllSatisfied<TModel>(
+    public static TrueExpressionTreeHigherOrderFromSpecPropositionBuilder<TModel> AsAllSatisfied<TModel>(
         this TrueExpressionTreePropositionBuilder<TModel> builder) =>
         builder.As(results => results.AllTrue());
 }

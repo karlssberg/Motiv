@@ -346,17 +346,12 @@ internal class ExpressionTreeTransformer<TModel>
         var args = expression.Arguments.Take(2).ToArray();
         var enumerableExpression = args[0];
         var specExpression = UnwrapConvertExpression(args[1]);
-        var itemParameter = Expression.Parameter(GetEnumerableItemType(enumerableExpression.Type)!);
-        var callIsSatisfied = Expression.Call
-        (specExpression,
-            specExpression.Type.GetMethod(nameof(SpecBase<TModel>.IsSatisfiedBy))!,
-            itemParameter);
 
         var enumerableItemType = GetEnumerableItemType(enumerableExpression.Type)!;
         return CallSpecFactory(
             factory,
             enumerableItemType,
-            Expression.Lambda(callIsSatisfied, itemParameter).Compile());
+            Expression.Lambda(specExpression).Compile().DynamicInvoke());
     }
 
     private static SpecBase<TModel, string> TransformPredicateExpression(
@@ -375,7 +370,7 @@ internal class ExpressionTreeTransformer<TModel>
         return CallSpecFactory(
             factory,
             enumerableItemType,
-            unConverted.Compile());
+            unConverted);
     }
 
     private static SpecBase<TModel, string> TransformBinaryPredicateExpression(
@@ -413,20 +408,50 @@ internal class ExpressionTreeTransformer<TModel>
     {
         return argument switch
         {
-            SpecBase<T> spec => Spec
-                .Build(spec.ToExplanationSpec())
-                .AsAnySatisfied()
-                .Create(spec.Description.Statement),
-            Func<T, BooleanResultBase<string>> booleanResultPredicate => Spec
-                .Build(booleanResultPredicate)
-                .AsAnySatisfied()
-                .Create(booleanResultPredicate.ToString()),
-            Expression<Func<T, bool>> predicate => Spec
-                .From(predicate)
-                .AsAnySatisfied()
-                .Create(predicate.ToString()),
-            _ => throw new InvalidOperationException("Unsupported predicate type")
+            SpecBase<T> spec =>
+                CreateAnySatisfiedSpec(spec),
+            Expression<Func<T, PolicyResultBase<string>>> predicate =>
+                CreateAnySatisfiedSpec(predicate),
+            Expression<Func<T, BooleanResultBase<string>>> predicate =>
+                CreateAnySatisfiedSpec(predicate),
+            Expression<Func<T, bool>> predicate =>
+                CreateAnySatisfiedSpec(predicate),
+            _ => throw new InvalidOperationException($"Unsupported predicate type: {argument.GetType()}")
         };
+    }
+
+    private static SpecBase<IEnumerable<T>, string> CreateAnySatisfiedSpec<T>(SpecBase<T> spec)
+    {
+        return Spec
+            .Build(spec.ToExplanationSpec())
+            .AsAnySatisfied()
+            .Create(spec.Description.Statement);
+    }
+
+    private static SpecBase<IEnumerable<T>, string> CreateAnySatisfiedSpec<T>(Expression<Func<T, PolicyResultBase<string>>> predicate)
+    {
+        var serialized = Humanize(predicate.Body);
+        return Spec
+            .Build(predicate.Compile())
+            .AsAnySatisfied()
+            .Create(serialized);
+    }
+
+    private static SpecBase<IEnumerable<T>, string> CreateAnySatisfiedSpec<T>(Expression<Func<T, BooleanResultBase<string>>> predicate)
+    {
+        var serialized = Humanize(predicate.Body);
+        return Spec
+            .Build(predicate.Compile())
+            .AsAnySatisfied()
+            .Create(serialized);
+    }
+
+    private static SpecBase<IEnumerable<T>, string> CreateAnySatisfiedSpec<T>(Expression<Func<T, bool>> predicate)
+    {
+        return Spec
+            .From(predicate)
+            .AsAnySatisfied()
+            .Create(Humanize(predicate.Body));
     }
 
     private static SpecBase<IEnumerable<T>, string> TransformAllExpressionInternal<T>(
@@ -434,20 +459,50 @@ internal class ExpressionTreeTransformer<TModel>
     {
         return argument switch
         {
-            SpecBase<T> spec => Spec
-                .Build(spec.ToExplanationSpec())
-                .AsAllSatisfied()
-                .Create(spec.Description.Statement),
-            Func<T, BooleanResultBase<string>> booleanResultPredicate => Spec
-                .Build(booleanResultPredicate)
-                .AsAllSatisfied()
-                .Create(booleanResultPredicate.ToString()),
-            Expression<Func<T, bool>> predicate => Spec
-                .From(predicate)
-                .AsAllSatisfied()
-                .Create(predicate.ToString()),
-            _ => throw new InvalidOperationException("Unsupported predicate type")
+            SpecBase<T> spec =>
+                CreateAllSatisfiedSpec(spec),
+            Expression<Func<T, PolicyResultBase<string>>> predicate =>
+                CreateAllSatisfiedSpec(predicate),
+            Expression<Func<T, BooleanResultBase<string>>> predicate =>
+                CreateAllSatisfiedSpec(predicate),
+            Expression<Func<T, bool>> predicate =>
+                CreateAllSatisfiedSpec(predicate),
+            _ => throw new InvalidOperationException($"Unsupported predicate type: {argument.GetType()}")
         };
+    }
+
+    private static SpecBase<IEnumerable<T>,string> CreateAllSatisfiedSpec<T>(SpecBase<T> spec)
+    {
+        return Spec
+            .Build(spec.ToExplanationSpec())
+            .AsAllSatisfied()
+            .Create(spec.Description.Statement);
+    }
+
+    private static SpecBase<IEnumerable<T>, string> CreateAllSatisfiedSpec<T>(Expression<Func<T, BooleanResultBase<string>>> predicate)
+    {
+        var serialized = Humanize(predicate.Body);
+        return Spec
+            .Build(predicate.Compile())
+            .AsAllSatisfied()
+            .Create(serialized);
+    }
+
+    private static SpecBase<IEnumerable<T>, string> CreateAllSatisfiedSpec<T>(Expression<Func<T, PolicyResultBase<string>>> predicate)
+    {
+        var serialized = Humanize(predicate.Body);
+        return Spec
+            .Build(predicate.Compile())
+            .AsAllSatisfied()
+            .Create(serialized);
+    }
+
+    private static SpecBase<IEnumerable<T>,string> CreateAllSatisfiedSpec<T>(Expression<Func<T, bool>> predicate)
+    {
+        return Spec
+            .From(predicate)
+            .AsAllSatisfied()
+            .Create(Humanize(predicate.Body));
     }
 
     private static Type? GetEnumerableItemType(Type? type)
