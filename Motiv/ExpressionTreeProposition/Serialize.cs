@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Motiv.ExpressionTrees;
+﻿namespace Motiv.ExpressionTreeProposition;
 
 /// <summary>
 /// Provides hints to the serialization process.

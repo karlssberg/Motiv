@@ -5,7 +5,6 @@ using Motiv.MetadataToExplanationAdapter;
 using Motiv.Not;
 using Motiv.Or;
 using Motiv.OrElse;
-using Motiv.Shared;
 using Motiv.XOr;
 
 namespace Motiv;

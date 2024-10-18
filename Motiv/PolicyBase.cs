@@ -1,7 +1,6 @@
 ﻿using Motiv.ChangeModelType;
 using Motiv.Not;
 using Motiv.OrElse;
-using Motiv.Shared;
 
 namespace Motiv;
 

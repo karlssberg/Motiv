@@ -1,7 +1,6 @@
 using Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
 using Motiv.BooleanPredicateProposition.PropositionBuilders.Metadata;
 using Motiv.HigherOrderProposition;
-using Motiv.HigherOrderProposition.PropositionBuilders;
 using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.BooleanPredicate;
 using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Spec;
 using Motiv.Shared;

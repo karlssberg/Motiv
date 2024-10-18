@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
 using Motiv.BooleanPredicateProposition.PropositionBuilders;
 using Motiv.BooleanResultPredicateProposition.PropositionBuilders;
+using Motiv.ExpressionTreeProposition.PropositionBuilders;
 using Motiv.SpecDecoratorProposition.PropositionBuilders;
-using Motiv.ExpressionTrees.PropositionBuilders;
 
 namespace Motiv;
 
@@ -179,11 +179,43 @@ public static class Spec
     /// The lambda expression function that is to be analyzed and converted into  a tree of
     /// <see cref="SpecBase{TModel, TMetadata}" /> propositions.
     /// </param>
-    /// <returns>A <see cref="TrueExpressionTreePropositionBuilder{TModel}" /> instance for further specification building.</returns>
-    public static TrueExpressionTreePropositionBuilder<TModel> From<TModel>(
+    /// <returns>A <see cref="TrueExpressionTreePropositionBuilder{TModel, TPredicateReturn}" /> instance for further specification building.</returns>
+    public static TrueExpressionTreePropositionBuilder<TModel, bool> From<TModel>(
         Expression<Func<TModel, bool>> expression)
     {
         expression.ThrowIfNull(nameof(expression));
-        return new TrueExpressionTreePropositionBuilder<TModel>(expression);
+        return new TrueExpressionTreePropositionBuilder<TModel, bool>(expression);
+    }
+
+    /// <summary>
+    /// Starts the construction of a proposition using a predicate function that returns a
+    /// <see cref="BooleanResultBase{TMetadata}" />.
+    /// </summary>
+    /// <param name="predicate">The predicate function to be used in the proposition.</param>
+    /// <returns>
+    /// A <see cref="BooleanResultPredicatePropositionBuilder{TModel, TMetadata}" /> instance for further proposition
+    /// building.
+    /// </returns>
+    public static TrueExpressionTreePropositionBuilder<TModel, BooleanResultBase<TMetadata>> From<TModel, TMetadata>(
+        Expression<Func<TModel, BooleanResultBase<TMetadata>>> predicate)
+    {
+        predicate.ThrowIfNull(nameof(predicate));
+        return new TrueExpressionTreePropositionBuilder<TModel, BooleanResultBase<TMetadata>>(predicate);
+    }
+
+    /// <summary>
+    /// Starts the construction of a proposition using a predicate function that returns a
+    /// <see cref="BooleanResultBase{TMetadata}" />.
+    /// </summary>
+    /// <param name="predicate">The predicate function to be used in the proposition.</param>
+    /// <returns>
+    /// A <see cref="PolicyResultPredicatePropositionBuilder{TModel, TMetadata}" /> instance for further proposition
+    /// building.
+    /// </returns>
+    public static TrueExpressionTreePropositionBuilder<TModel, PolicyResultBase<TMetadata>> From<TModel, TMetadata>(
+        Expression<Func<TModel, PolicyResultBase<TMetadata>>> predicate)
+    {
+        predicate.ThrowIfNull(nameof(predicate));
+        return new TrueExpressionTreePropositionBuilder<TModel, PolicyResultBase<TMetadata>>(predicate);
     }
 }

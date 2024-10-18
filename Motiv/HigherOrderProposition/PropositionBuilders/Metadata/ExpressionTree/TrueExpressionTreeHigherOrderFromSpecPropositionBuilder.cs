@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using Motiv.HigherOrderProposition.BooleanResultPredicate;
+using Motiv.ExpressionTreeProposition;
 using Motiv.HigherOrderProposition.ExpressionTree;
 using Motiv.HigherOrderProposition.PropositionBuilders.Explanation.BooleanResultPredicate;
 using Motiv.HigherOrderProposition.PropositionBuilders.Explanation.ExpressionTree;
@@ -15,9 +15,9 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTr
 /// proposition that covers every possibility, so instead it is done on a case-by-case basis.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-/// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
-public readonly ref struct TrueExpressionTreeHigherOrderFromSpecPropositionBuilder<TModel>(
-    Expression<Func<TModel, bool>> expression,
+/// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
+public readonly ref struct TrueExpressionTreeHigherOrderFromSpecPropositionBuilder<TModel, TPredicateResult>(
+    Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     Func<bool, IEnumerable<BooleanResult<TModel, string>>, IEnumerable<BooleanResult<TModel, string>>> causeSelector)
 {
@@ -25,7 +25,7 @@ public readonly ref struct TrueExpressionTreeHigherOrderFromSpecPropositionBuild
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">The metadata to use when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseExpressionTreeMetadataHigherOrderPropositionBuilder<TModel, TMetadata> WhenTrue<TMetadata>(
+    public FalseExpressionTreeMetadataHigherOrderPropositionBuilder<TModel, TMetadata, TPredicateResult> WhenTrue<TMetadata>(
         TMetadata whenTrue) =>
         new(expression,
             higherOrderPredicate,
@@ -42,7 +42,7 @@ public readonly ref struct TrueExpressionTreeHigherOrderFromSpecPropositionBuild
     /// method instead, otherwise the whole collection will become the metadata.
     /// </para>
     /// </remarks>
-    public FalseExpressionTreeMetadataHigherOrderPropositionBuilder<TModel, TMetadata> WhenTrue<TMetadata>(
+    public FalseExpressionTreeMetadataHigherOrderPropositionBuilder<TModel, TMetadata, TPredicateResult> WhenTrue<TMetadata>(
         Func<HigherOrderBooleanResultEvaluation<TModel, string>, TMetadata> whenTrue) =>
         new(expression,
             higherOrderPredicate,
@@ -53,7 +53,7 @@ public readonly ref struct TrueExpressionTreeHigherOrderFromSpecPropositionBuild
     /// <typeparam name="TMetadata">The type of the metadata to use when the condition is true.</typeparam>
     /// <param name="whenTrue">A function that generates a collection of metadata when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseExpressionTreeMultiMetadataFromSpecHigherOrderPropositionBuilder<TModel, TMetadata> WhenTrueYield<TMetadata>(
+    public FalseExpressionTreeMultiMetadataFromSpecHigherOrderPropositionBuilder<TModel, TMetadata, TPredicateResult> WhenTrueYield<TMetadata>(
         Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenTrue) =>
         new(expression,
             higherOrderPredicate,
@@ -65,7 +65,7 @@ public readonly ref struct TrueExpressionTreeHigherOrderFromSpecPropositionBuild
     /// <returns>
     /// An instance of <see cref="FalseAssertionFromSpecWithNameHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.
     /// </returns>
-    public FalseExpressionTreeAssertionFromSpecWithNameHigherOrderPropositionBuilder<TModel> WhenTrue(
+    public FalseExpressionTreeAssertionFromSpecWithNameHigherOrderPropositionBuilder<TModel, TPredicateResult> WhenTrue(
         string trueBecause)
     {
         trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
@@ -79,7 +79,7 @@ public readonly ref struct TrueExpressionTreeHigherOrderFromSpecPropositionBuild
     /// <summary>Specifies an assertion to yield when the condition is true.</summary>
     /// <param name="trueBecause">A function that generates a human-readable reason when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseAssertionFromBooleanResultHigherOrderPropositionBuilder{TModel,TUnderlyingMetadata}" />.</returns>
-    public FalseExpressionTreeAssertionFromBooleanResultHigherOrderPropositionBuilder<TModel> WhenTrue(
+    public FalseExpressionTreeAssertionFromBooleanResultHigherOrderPropositionBuilder<TModel, TPredicateResult> WhenTrue(
         Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> trueBecause) =>
         new(expression,
             higherOrderPredicate,
@@ -89,7 +89,7 @@ public readonly ref struct TrueExpressionTreeHigherOrderFromSpecPropositionBuild
     /// <summary>Specifies the set of assertions to use when the condition is true.</summary>
     /// <param name="whenTrue">A function that generates a collection of assertions when the condition is true.</param>
     /// <returns>An instance of <see cref="FalseMetadataHigherOrderPropositionBuilder{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public FalseExpressionTreeMultiMetadataFromSpecHigherOrderPropositionBuilder<TModel, string> WhenTrueYield(
+    public FalseExpressionTreeMultiMetadataFromSpecHigherOrderPropositionBuilder<TModel, string, TPredicateResult> WhenTrueYield(
         Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>> whenTrue) =>
         new(expression,
             higherOrderPredicate,
@@ -101,9 +101,18 @@ public readonly ref struct TrueExpressionTreeHigherOrderFromSpecPropositionBuild
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create(string statement) =>
-        new HigherOrderFromBooleanResultExpressionTreeProposition<TModel>(
+        new HigherOrderFromBooleanResultExpressionTreeProposition<TModel, TPredicateResult>(
             expression,
             higherOrderPredicate,
             new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))),
+            causeSelector);
+
+    /// <summary>Creates a proposition.</summary>
+    /// <returns>A specification for the model.</returns>
+    public SpecBase<IEnumerable<TModel>, string> Create() =>
+        new HigherOrderFromBooleanResultExpressionTreeProposition<TModel, TPredicateResult>(
+            expression,
+            higherOrderPredicate,
+            new ExpressionDescription<TModel, TPredicateResult>(expression),
             causeSelector);
 }

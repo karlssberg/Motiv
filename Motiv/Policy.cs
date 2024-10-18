@@ -1,6 +1,4 @@
-﻿using Motiv.Shared;
-
-namespace Motiv;
+﻿namespace Motiv;
 /// <summary>
 /// Represents a "policy" whereby an arbitrary rule causes a single metadata instance to be returned for either the
 /// true and false condition. The metadata is a string.

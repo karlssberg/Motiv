@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using System.Globalization;
 using System.Reflection;
-using Motiv.ExpressionTrees;
+using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.Tests;
 

@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using Motiv.ExpressionTrees;
+using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.Tests;
 
@@ -144,7 +144,7 @@ public class ExpressionTreeTests
         // Act
         var act = () => sut.IsSatisfiedBy(int.MaxValue);
 
-        act.Should().Throw<OverflowException>();
+        act.Should().Throw<SpecException>();
     }
 
     [Theory]

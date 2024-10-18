@@ -1,9 +1,10 @@
 ﻿using System.Linq.Expressions;
+using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
 
-internal sealed class HigherOrderFromBooleanResultMultiMetadataExpressionTreeProposition<TModel, TMetadata>(
-    Expression<Func<TModel, bool>> expression,
+internal sealed class HigherOrderFromBooleanResultMultiMetadataExpressionTreeProposition<TModel, TMetadata, TPredicateResult>(
+    Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenTrue,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenFalse,
@@ -11,7 +12,7 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataExpressionTreePro
     Func<bool, IEnumerable<BooleanResult<TModel, string>>, IEnumerable<BooleanResult<TModel, string>>> causeSelector)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
-    private readonly SpecBase<TModel, string> _spec = expression.ToSpec();
+    private readonly ExpressionPredicate<TModel, TPredicateResult> _predicate = new(expression);
 
     public override IEnumerable<SpecBase> Underlying => [];
 
@@ -20,7 +21,7 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataExpressionTreePro
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
-            .Select(model => new BooleanResult<TModel, string>(model,  _spec.IsSatisfiedBy(model)))
+            .Select(model => new BooleanResult<TModel, string>(model,  _predicate.Execute(model)))
             .ToArray();
 
         var isSatisfied = higherOrderPredicate(underlyingResults);
@@ -43,12 +44,12 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataExpressionTreePro
             metadata.Value switch
             {
                 IEnumerable<string>  reasons => reasons,
-                _ => specDescription.ToReason(isSatisfied).ToEnumerable()
+                _ => [expression.ToAssertion(isSatisfied)]
             });
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
                 new HigherOrderResultDescription<string>(
-                    specDescription.ToReason(isSatisfied),
+                    Description.ToAssertion(isSatisfied),
                     typeof(TMetadata) == typeof(string) ? assertions.Value : [],
                     causes.Value,
                     Description.Statement));

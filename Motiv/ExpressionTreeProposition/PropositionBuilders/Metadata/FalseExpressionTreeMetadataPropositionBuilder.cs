@@ -1,15 +1,16 @@
-
+﻿
 using System.Linq.Expressions;
 
-namespace Motiv.ExpressionTrees.PropositionBuilders.Metadata;
+namespace Motiv.ExpressionTreeProposition.PropositionBuilders.Metadata;
 
 /// <summary>
 /// A builder for creating propositions based on an existing proposition and metadata factories.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
-public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata>(
-    Expression<Func<TModel, bool>> expression,
+/// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
+public readonly ref struct FalseExpressionTreeMetadataPropositionBuilder<TModel, TMetadata, TPredicateResult>(
+    Expression<Func<TModel, TPredicateResult>> expression,
     Func<TModel, BooleanResultBase<string>, TMetadata> whenTrue)
 {
     /// <summary>
@@ -17,7 +18,7 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata>(
     /// </summary>
     /// <param name="whenFalse">The metadata to use when the condition is false.</param>
     /// <returns>A factory for creating propositions based on the supplied proposition and metadata factories.</returns>
-    public MetadataPropositionFactory<TModel, TMetadata> WhenFalse(
+    public MetadataExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult> WhenFalse(
         TMetadata whenFalse) =>
         new(expression,
             whenTrue,
@@ -28,7 +29,7 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata>(
     /// </summary>
     /// <param name="whenFalse">A function that generates the metadata when the condition is false.</param>
     /// <returns>A factory for creating propositions based on the supplied proposition and metadata factories.</returns>
-    public MetadataPropositionFactory<TModel, TMetadata> WhenFalse(
+    public MetadataExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult> WhenFalse(
         Func<TModel, TMetadata> whenFalse) =>
         new(expression,
             whenTrue,
@@ -39,7 +40,7 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata>(
     /// </summary>
     /// <param name="whenFalse">A function that generates the metadata when the condition is false.</param>
     /// <returns>A factory for creating propositions based on the supplied proposition and metadata factories.</returns>
-    public MetadataPropositionFactory<TModel, TMetadata> WhenFalse(
+    public MetadataExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult> WhenFalse(
         Func<TModel, BooleanResultBase<string>, TMetadata> whenFalse) =>
         new(expression,
             whenTrue,
@@ -50,7 +51,7 @@ public readonly ref struct FalseMetadataPropositionBuilder<TModel, TMetadata>(
     /// </summary>
     /// <param name="whenFalse">A function that generates a collection of metadata when the condition is false.</param>
     /// <returns>A factory for creating specifications based on the supplied proposition and metadata factories.</returns>
-    public MultiMetadataPropositionFactory<TModel, TMetadata> WhenFalseYield(
+    public MultiMetadataPropositionExpressionTreeFactory<TModel, TMetadata, TPredicateResult> WhenFalseYield(
         Func<TModel, BooleanResultBase<string>, IEnumerable<TMetadata>> whenFalse) =>
         new(expression,
             whenTrue.ToEnumerableReturn(),

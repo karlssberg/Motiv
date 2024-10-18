@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using Motiv.HigherOrderProposition.BooleanResultPredicate;
 using Motiv.HigherOrderProposition.ExpressionTree;
 using Motiv.Shared;
 
@@ -10,8 +9,8 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Expressio
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct MultiAssertionExplanationFromBooleanResultWithNameHigherOrderExpressionTreePropositionFactory<TModel>(
-    Expression<Func<TModel, bool>> expression,
+public readonly ref struct MultiAssertionExplanationFromBooleanResultWithNameHigherOrderExpressionTreePropositionFactory<TModel, TPredicateResult>(
+    Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     string trueBecause,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>> falseBecause,
@@ -26,7 +25,7 @@ public readonly ref struct MultiAssertionExplanationFromBooleanResultWithNameHig
     public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultMultiMetadataExpressionTreeProposition<TModel, string>(
+        return new HigherOrderFromBooleanResultMultiMetadataExpressionTreeProposition<TModel, string, TPredicateResult>(
             expression,
             higherOrderPredicate,
             trueBecause
@@ -43,7 +42,7 @@ public readonly ref struct MultiAssertionExplanationFromBooleanResultWithNameHig
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromBooleanResultMultiMetadataExpressionTreeProposition<TModel, string>(
+        new HigherOrderFromBooleanResultMultiMetadataExpressionTreeProposition<TModel, string, TPredicateResult>(
             expression,
             higherOrderPredicate,
             trueBecause

@@ -1,5 +1,4 @@
 using Motiv.BooleanPredicateProposition.PropositionBuilders.Metadata;
-using Motiv.Shared;
 
 namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
 

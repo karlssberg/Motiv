@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using Motiv.HigherOrderProposition.BooleanResultPredicate;
 using Motiv.HigherOrderProposition.ExpressionTree;
 using Motiv.Shared;
 
@@ -10,8 +9,8 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Expressio
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct ExplanationHigherOrderExpressionTreePropositionFactory<TModel>(
-    Expression<Func<TModel, bool>> expression,
+public readonly ref struct ExplanationHigherOrderExpressionTreePropositionFactory<TModel, TPredicateResult>(
+    Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> trueBecause,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> falseBecause,
@@ -26,7 +25,7 @@ public readonly ref struct ExplanationHigherOrderExpressionTreePropositionFactor
     public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultExplanationExpressionTreeProposition<TModel>(
+        return new HigherOrderFromBooleanResultExplanationExpressionTreeProposition<TModel, TPredicateResult>(
             expression,
             higherOrderPredicate,
             trueBecause,

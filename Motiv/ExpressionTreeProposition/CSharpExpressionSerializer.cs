@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Motiv.ExpressionTrees;
+namespace Motiv.ExpressionTreeProposition;
 
 
 internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerializer
@@ -304,7 +304,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
                 return VisitObjectIndex(node);
             case { DeclaringType.FullName: "System.String", Name: nameof(string.Format) }:
                 return VisitStringInterpolation(node);
-            case { DeclaringType.FullName: $"Motiv.ExpressionTrees.{nameof(Display)}", Name: nameof(Display.AsValue) }:
+            case { DeclaringType.FullName: $"Motiv.ExpressionTreeProposition.{nameof(Display)}", Name: nameof(Display.AsValue) }:
                 return VisitSerializeAsValue(ResolveMethodArguments(node).First());
         }
 

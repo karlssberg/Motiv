@@ -1,9 +1,10 @@
 using System.Linq.Expressions;
+using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
 
-internal sealed class HigherOrderFromBooleanResultExplanationExpressionTreeProposition<TModel>(
-    Expression<Func<TModel, bool>> expression,
+internal sealed class HigherOrderFromBooleanResultExplanationExpressionTreeProposition<TModel, TPredicateResult>(
+    Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> trueBecause,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> falseBecause,
@@ -12,7 +13,7 @@ internal sealed class HigherOrderFromBooleanResultExplanationExpressionTreePropo
         IEnumerable<BooleanResult<TModel, string>>> causeSelector)
     : PolicyBase<IEnumerable<TModel>, string>
 {
-    private readonly SpecBase<TModel, string> _spec = expression.ToSpec();
+    private readonly ExpressionPredicate<TModel, TPredicateResult> _predicate = new(expression);
 
     public override IEnumerable<SpecBase> Underlying => [];
 
@@ -20,36 +21,17 @@ internal sealed class HigherOrderFromBooleanResultExplanationExpressionTreePropo
 
     protected override PolicyResultBase<string> IsPolicySatisfiedBy(IEnumerable<TModel> models)
     {
-        var underlyingResults = EvaluateModels(models);
+        var underlyingResults = models
+            .Select(model => new BooleanResult<TModel, string>(model, _predicate.Execute(model)))
+            .ToArray();
 
         var isSatisfied = higherOrderPredicate(underlyingResults);
 
-        var causes = DetermineCauses(isSatisfied, underlyingResults);
-
-        var assertion = GetLazyAssertion(underlyingResults, causes, isSatisfied);
-
-        return CreatePolicyResult(isSatisfied, underlyingResults, assertion, causes);
-    }
-
-    private BooleanResult<TModel, string>[] EvaluateModels(IEnumerable<TModel> models)
-    {
-        return models
-            .Select(model => new BooleanResult<TModel, string>(model, _spec.IsSatisfiedBy(model)))
-            .ToArray();
-    }
-
-    private Lazy<BooleanResult<TModel, string>[]> DetermineCauses(bool isSatisfied,
-        BooleanResult<TModel, string>[] underlyingResults)
-    {
-        return new Lazy<BooleanResult<TModel, string>[]>(() =>
+        var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
                 .ToArray());
-    }
 
-    private Lazy<string> GetLazyAssertion(BooleanResult<TModel, string>[] underlyingResults,
-        Lazy<BooleanResult<TModel, string>[]> causes, bool isSatisfied)
-    {
-        return new Lazy<string>(() =>
+        var assertion = new Lazy<string>(() =>
         {
             var booleanCollectionResults = new HigherOrderBooleanResultEvaluation<TModel, string>(
                 underlyingResults,
@@ -59,12 +41,7 @@ internal sealed class HigherOrderFromBooleanResultExplanationExpressionTreePropo
                 ? trueBecause(booleanCollectionResults)
                 : falseBecause(booleanCollectionResults);
         });
-    }
 
-    private PolicyResultBase<string> CreatePolicyResult(bool isSatisfied,
-        BooleanResult<TModel, string>[] underlyingResults,
-        Lazy<string> assertion, Lazy<BooleanResult<TModel, string>[]> causes)
-    {
         var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderResultDescription<string>(
                 assertion.Value,

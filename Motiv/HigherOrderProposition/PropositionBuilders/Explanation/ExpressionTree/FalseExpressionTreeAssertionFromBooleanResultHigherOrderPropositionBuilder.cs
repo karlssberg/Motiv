@@ -7,8 +7,8 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Expressio
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct FalseExpressionTreeAssertionFromBooleanResultHigherOrderPropositionBuilder<TModel>(
-    Expression<Func<TModel, bool>> expression,
+public readonly ref struct FalseExpressionTreeAssertionFromBooleanResultHigherOrderPropositionBuilder<TModel, TPredicateResult>(
+    Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> trueBecause,
     Func<bool, IEnumerable<BooleanResult<TModel, string>>, IEnumerable<BooleanResult<TModel, string>>> causeSelector)
@@ -18,7 +18,7 @@ public readonly ref struct FalseExpressionTreeAssertionFromBooleanResultHigherOr
     /// </summary>
     /// <param name="falseBecause">A human-readable reason why the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationHigherOrderExpressionTreePropositionFactory{TModel,TUnderlyingMetadata}" />.</returns>
-    public ExplanationHigherOrderExpressionTreePropositionFactory<TModel> WhenFalse(string falseBecause) =>
+    public ExplanationHigherOrderExpressionTreePropositionFactory<TModel, TPredicateResult> WhenFalse(string falseBecause) =>
         new(expression,
             higherOrderPredicate,
             trueBecause,
@@ -30,7 +30,7 @@ public readonly ref struct FalseExpressionTreeAssertionFromBooleanResultHigherOr
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="ExplanationHigherOrderExpressionTreePropositionFactory{TModel,TUnderlyingMetadata}" />.</returns>
-    public ExplanationHigherOrderExpressionTreePropositionFactory<TModel> WhenFalse(
+    public ExplanationHigherOrderExpressionTreePropositionFactory<TModel, TPredicateResult> WhenFalse(
         Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> falseBecause) =>
         new(expression,
             higherOrderPredicate,
@@ -43,7 +43,7 @@ public readonly ref struct FalseExpressionTreeAssertionFromBooleanResultHigherOr
     /// </summary>
     /// <param name="falseBecause">A function that generates a human-readable reason when the condition is false.</param>
     /// <returns>An instance of <see cref="MultiAssertionExplanationFromBooleanResultHigherOrderPropositionFactory{TModel,TUnderlyingMetadata}" />.</returns>
-    public MultiAssertionExplanationFromBooleanResultHigherOrderExpressionTreePropositionFactory<TModel> WhenFalseYield(
+    public MultiAssertionExplanationFromBooleanResultHigherOrderExpressionTreePropositionFactory<TModel, TPredicateResult> WhenFalseYield(
         Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>> falseBecause) =>
         new(expression,
             higherOrderPredicate,

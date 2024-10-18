@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Motiv.ExpressionTrees;
+namespace Motiv.ExpressionTreeProposition;
 
 internal class ExpressionAnalyzer : ExpressionVisitor
 {

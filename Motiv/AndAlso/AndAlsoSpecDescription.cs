@@ -29,5 +29,7 @@ internal sealed class AndAlsoSpecDescription<TModel, TMetadata>(
         };
     }
 
+    public string ToAssertion(bool satisfied) => Statement.ToReason(satisfied);
+
     public override string ToString() => Statement;
 }

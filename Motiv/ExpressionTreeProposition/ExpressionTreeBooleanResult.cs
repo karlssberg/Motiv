@@ -1,27 +1,22 @@
 ﻿using Motiv.Shared;
 
-namespace Motiv.ExpressionTrees;
+namespace Motiv.ExpressionTreeProposition;
 
 /// <summary>
 /// Represents a proposition that yields custom metadata based on the result of a boolean predicate.
 /// </summary>
 /// <param name="satisfied">The value of the proposition.</param>
-/// <param name="lazyValue">The value of the policy result.</param>
 /// <param name="metadataTier">The metadata to yield when the predicate is true.</param>
 /// <param name="explanation">The explanation of the proposition.</param>
 /// <param name="description">The description of the proposition result.</param>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-internal sealed class ExpressionTreePolicyResult<TMetadata>(
+internal sealed class ExpressionTreeBooleanResult<TMetadata>(
     bool satisfied,
-    Lazy<TMetadata> lazyValue,
     Lazy<MetadataNode<TMetadata>> metadataTier,
     Lazy<Explanation> explanation,
     Lazy<ResultDescriptionBase> description)
-    : PolicyResultBase<TMetadata>
+    : BooleanResultBase<TMetadata>
 {
-    /// <inheritdoc />
-    public override TMetadata Value => lazyValue.Value;
-
     /// <summary>
     /// Gets the metadata tier of the result.
     /// </summary>

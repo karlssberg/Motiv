@@ -1,14 +1,12 @@
 using Motiv.BooleanPredicateProposition.PropositionBuilders;
 using Motiv.BooleanResultPredicateProposition.PropositionBuilders;
-using Motiv.ExpressionTrees.PropositionBuilders;
-using Motiv.HigherOrderProposition.PropositionBuilders;
+using Motiv.ExpressionTreeProposition.PropositionBuilders;
 using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.BooleanPredicate;
 using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.BooleanResultPredicate;
 using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTree;
 using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Policy;
 using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.PolicyResultPredicate;
 using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Spec;
-using Motiv.Shared;
 using Motiv.SpecDecoratorProposition.PropositionBuilders;
 
 namespace Motiv;
@@ -149,8 +147,8 @@ public static class AsNSatisfiedExtensions
     /// <param name="builder">The proposition builder.</param>
     /// <param name="n">The exact number of underlying propositions that need to be satisfied.</param>
     /// <returns>A higher order proposition builder.</returns>
-    public static TrueExpressionTreeHigherOrderFromSpecPropositionBuilder<TModel> AsNSatisfied<TModel>(
-        this TrueExpressionTreePropositionBuilder<TModel> builder,
+    public static TrueExpressionTreeHigherOrderFromSpecPropositionBuilder<TModel, TPredicateResult> AsNSatisfied<TModel, TPredicateResult>(
+        this TrueExpressionTreePropositionBuilder<TModel, TPredicateResult> builder,
         int n)
     {
         n.ThrowIfLessThan(0, nameof(n));

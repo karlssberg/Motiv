@@ -247,8 +247,16 @@ public class ExpressionTreeJustificationTests
 
 
     [Theory]
-    [InlineData("is admin", "admin")]
-    [InlineData("is not admin", "user")]
+    [InlineData("""
+                any admins
+                    isAdminResult == true
+                        is admin
+                """, "admin")]
+    [InlineData("""
+                ¬any admins
+                    isAdminResult == false
+                        is not admin
+                """, "user")]
     public void Should_justify_any_linq_function_to_higher_order_proposition_when_boolean_result_is_returned(string expectedAssertion, string model)
     {
         // Assemble
@@ -261,7 +269,7 @@ public class ExpressionTreeJustificationTests
 
         var sut =
             Spec.From((IEnumerable<string> roles) => roles.Any(role => isAdminResult))
-                .Create("all admins");
+                .Create("any admins");
 
         // Act
         var act = sut.IsSatisfiedBy([model]);

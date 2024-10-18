@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using Motiv.HigherOrderProposition.BooleanResultPredicate;
 using Motiv.HigherOrderProposition.ExpressionTree;
 using Motiv.Shared;
 
@@ -12,8 +11,8 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Expressio
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct ExplanationWithNameHigherOrderExpressionTreePropositionFactory<TModel>(
-    Expression<Func<TModel, bool>> expression,
+public readonly ref struct ExplanationWithNameHigherOrderExpressionTreePropositionFactory<TModel, TPredicateResult>(
+    Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     string trueBecause,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> falseBecause,
@@ -26,7 +25,7 @@ public readonly ref struct ExplanationWithNameHigherOrderExpressionTreePropositi
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public PolicyBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromBooleanResultExplanationExpressionTreeProposition<TModel>(
+        new HigherOrderFromBooleanResultExplanationExpressionTreeProposition<TModel, TPredicateResult>(
             expression,
             higherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, string>, string>(),
@@ -44,7 +43,7 @@ public readonly ref struct ExplanationWithNameHigherOrderExpressionTreePropositi
     public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultExplanationExpressionTreeProposition<TModel>(
+        return new HigherOrderFromBooleanResultExplanationExpressionTreeProposition<TModel, TPredicateResult>(
             expression,
             higherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, string>, string>(),

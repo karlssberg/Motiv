@@ -1,7 +1,6 @@
 using Motiv.BooleanPredicateProposition.PropositionBuilders;
 using Motiv.BooleanResultPredicateProposition.PropositionBuilders;
-using Motiv.ExpressionTrees.PropositionBuilders;
-using Motiv.HigherOrderProposition.PropositionBuilders;
+using Motiv.ExpressionTreeProposition.PropositionBuilders;
 using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.BooleanPredicate;
 using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.BooleanResultPredicate;
 using Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTree;
@@ -82,7 +81,7 @@ public static class AsNoneSatisfiedExtensions
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <param name="builder">The proposition builder.</param>
     /// <returns>The next build step.</returns>
-    public static TrueExpressionTreeHigherOrderFromSpecPropositionBuilder<TModel> AsNoneSatisfied<TModel>(
-        this TrueExpressionTreePropositionBuilder<TModel> builder) =>
+    public static TrueExpressionTreeHigherOrderFromSpecPropositionBuilder<TModel, TPredicateResult> AsNoneSatisfied<TModel, TPredicateResult>(
+        this TrueExpressionTreePropositionBuilder<TModel, TPredicateResult> builder) =>
         builder.As(booleanResults => booleanResults.AllFalse());
 }

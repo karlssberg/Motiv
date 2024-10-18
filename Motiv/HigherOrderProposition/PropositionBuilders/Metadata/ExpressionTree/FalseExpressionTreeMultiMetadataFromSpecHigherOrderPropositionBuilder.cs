@@ -10,9 +10,9 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTr
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
-/// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct FalseExpressionTreeMultiMetadataFromSpecHigherOrderPropositionBuilder<TModel, TMetadata>(
-    Expression<Func<TModel, bool>> expression,
+/// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
+public readonly ref struct FalseExpressionTreeMultiMetadataFromSpecHigherOrderPropositionBuilder<TModel, TMetadata, TPredicateResult>(
+    Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenTrue,
     Func<bool, IEnumerable<BooleanResult<TModel, string>>, IEnumerable<BooleanResult<TModel, string>>> causeSelector)
@@ -20,7 +20,7 @@ public readonly ref struct FalseExpressionTreeMultiMetadataFromSpecHigherOrderPr
     /// <summary>Specifies the metadata to use when the condition is false.</summary>
     /// <param name="whenFalse">The metadata to use when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory<TModel, TMetadata> WhenFalse(TMetadata whenFalse) =>
+    public MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult> WhenFalse(TMetadata whenFalse) =>
         new(expression,
             higherOrderPredicate,
             whenTrue,
@@ -30,7 +30,7 @@ public readonly ref struct FalseExpressionTreeMultiMetadataFromSpecHigherOrderPr
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
     /// <param name="whenFalse">A function that generates metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory<TModel, TMetadata> WhenFalse(
+    public MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult> WhenFalse(
         Func<HigherOrderBooleanResultEvaluation<TModel, string>, TMetadata> whenFalse) =>
         new(expression,
             higherOrderPredicate,
@@ -41,7 +41,7 @@ public readonly ref struct FalseExpressionTreeMultiMetadataFromSpecHigherOrderPr
     /// <summary>Specifies a metadata factory function to use when the condition is false.</summary>
     /// <param name="whenFalse">A function that generates a collection of metadata when the condition is false.</param>
     /// <returns>An instance of <see cref="MetadataHigherOrderPropositionFactory{TModel,TMetadata,TUnderlyingMetadata}" />.</returns>
-    public MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory<TModel, TMetadata> WhenFalseYield(
+    public MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult> WhenFalseYield(
         Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenFalse) =>
         new(expression,
             higherOrderPredicate,

@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using Motiv.HigherOrderProposition.BooleanResultPredicate;
+using Motiv.ExpressionTreeProposition;
 using Motiv.HigherOrderProposition.ExpressionTree;
 using Motiv.Shared;
 
@@ -12,9 +12,9 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTr
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
-/// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly ref struct MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory<TModel, TMetadata>(
-    Expression<Func<TModel, bool>> expression,
+/// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
+public readonly ref struct MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult>(
+    Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenTrue,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenFalse,
@@ -27,12 +27,25 @@ public readonly ref struct MultiMetadataFromSpecHigherOrderExpressionTreeProposi
     public SpecBase<IEnumerable<TModel>, TMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultMultiMetadataExpressionTreeProposition<TModel, TMetadata>(
+        return new HigherOrderFromBooleanResultMultiMetadataExpressionTreeProposition<TModel, TMetadata, TPredicateResult>(
             expression,
             higherOrderPredicate,
             whenTrue,
             whenFalse,
             new SpecDescription(statement),
+            causeSelector);
+    }
+
+    /// <summary>Creates a specification.</summary>
+    /// <returns>A specification for the model.</returns>
+    public SpecBase<IEnumerable<TModel>, TMetadata> Create()
+    {
+        return new HigherOrderFromBooleanResultMultiMetadataExpressionTreeProposition<TModel, TMetadata, TPredicateResult>(
+            expression,
+            higherOrderPredicate,
+            whenTrue,
+            whenFalse,
+            new ExpressionDescription<TModel, TPredicateResult>(expression),
             causeSelector);
     }
 }

@@ -1,9 +1,10 @@
 using System.Linq.Expressions;
+using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
 
-internal sealed class HigherOrderFromBooleanResultMetadataExpressionTreeProposition<TModel, TMetadata>(
-    Expression<Func<TModel, bool>> expression,
+internal sealed class HigherOrderFromBooleanResultMetadataExpressionTreeProposition<TModel, TMetadata, TPredicateResult>(
+    Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, TMetadata> whenTrue,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, TMetadata> whenFalse,
@@ -11,7 +12,7 @@ internal sealed class HigherOrderFromBooleanResultMetadataExpressionTreeProposit
     Func<bool, IEnumerable<BooleanResult<TModel, string>>, IEnumerable<BooleanResult<TModel, string>>> causeSelector)
     : PolicyBase<IEnumerable<TModel>, TMetadata>
 {
-    private readonly SpecBase<TModel, string> _spec = expression.ToSpec();
+    private readonly ExpressionPredicate<TModel, TPredicateResult> _predicate = new(expression);
 
     public override IEnumerable<SpecBase> Underlying => [];
 
@@ -19,32 +20,15 @@ internal sealed class HigherOrderFromBooleanResultMetadataExpressionTreeProposit
 
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(IEnumerable<TModel> models)
     {
-        var underlyingResults = EvaluateModels(models);
-        var isSatisfied = higherOrderPredicate(underlyingResults);
-        var causes = GetLazyCauses(isSatisfied, underlyingResults);
-        var metadata = GetLazyMetadata(underlyingResults, causes, isSatisfied);
-
-        return CreatePolicyResult(metadata, isSatisfied, underlyingResults, causes);
-    }
-
-    private BooleanResult<TModel, string>[] EvaluateModels(IEnumerable<TModel> models) =>
-        models
-            .Select(model => new BooleanResult<TModel, string>(model,  _spec.IsSatisfiedBy(model)))
+        var underlyingResults = models
+            .Select(model => new BooleanResult<TModel, string>(model,  _predicate.Execute(model)))
             .ToArray();
-
-    private Lazy<BooleanResult<TModel, string>[]> GetLazyCauses(
-        bool isSatisfied,
-        BooleanResult<TModel, string>[] underlyingResults) =>
-        new(() =>
+        var isSatisfied = higherOrderPredicate(underlyingResults);
+        var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
                 .ToArray());
 
-    private Lazy<TMetadata> GetLazyMetadata(
-        BooleanResult<TModel, string>[] underlyingResults,
-        Lazy<BooleanResult<TModel, string>[]> causes,
-        bool isSatisfied)
-    {
-        return new Lazy<TMetadata>(() =>
+        var metadata = new Lazy<TMetadata>(() =>
         {
             var evaluation = new HigherOrderBooleanResultEvaluation<TModel, string>(
                 underlyingResults,
@@ -54,14 +38,7 @@ internal sealed class HigherOrderFromBooleanResultMetadataExpressionTreeProposit
                 ? whenTrue(evaluation)
                 : whenFalse(evaluation);
         });
-    }
 
-    private PolicyResultBase<TMetadata> CreatePolicyResult(
-        Lazy<TMetadata> metadata,
-        bool isSatisfied,
-        BooleanResult<TModel, string>[] underlyingResults,
-        Lazy<BooleanResult<TModel, string>[]> causes)
-    {
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch
             {
@@ -69,10 +46,9 @@ internal sealed class HigherOrderFromBooleanResultMetadataExpressionTreeProposit
                 _ => specDescription.ToReason(isSatisfied).ToEnumerable()
             });
 
-
         var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderResultDescription<string>(
-                specDescription.ToReason(isSatisfied),
+                Description.ToAssertion(isSatisfied),
                 [],
                 causes.Value,
                 Description.Statement));

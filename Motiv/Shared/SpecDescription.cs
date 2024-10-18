@@ -16,5 +16,8 @@ internal sealed class SpecDescription(string statement, ISpecDescription? underl
             yield return line.Indent();
     }
 
+    public string ToAssertion(bool satisfied) => Statement.ToReason(satisfied);
+
+
     public override string ToString() => Statement;
 }

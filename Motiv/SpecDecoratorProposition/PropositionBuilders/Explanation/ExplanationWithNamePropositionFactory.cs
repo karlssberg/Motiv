@@ -1,5 +1,3 @@
-using Motiv.Shared;
-
 namespace Motiv.SpecDecoratorProposition.PropositionBuilders.Explanation;
 
 /// <summary>
