@@ -28,7 +28,7 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("is positive | is positive | is positive | is positive");
+        act.Reason.Should().BeEquivalentTo("is-positive | is-positive | is-positive | is-positive");
     }
 
     [Fact]
