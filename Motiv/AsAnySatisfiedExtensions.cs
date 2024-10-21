@@ -77,6 +77,7 @@ public static class AsAnySatisfiedExtensions
     /// Creates a higher order proposition that is satisfied if any of the underlying propositions are satisfied.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <typeparam name="TPredicateResult">The return type of the predicate.</typeparam>
     /// <param name="builder">The proposition builder.</param>
     /// <returns>The next build step.</returns>
     public static TrueExpressionTreeHigherOrderFromSpecPropositionBuilder<TModel, TPredicateResult> AsAnySatisfied<TModel, TPredicateResult>(

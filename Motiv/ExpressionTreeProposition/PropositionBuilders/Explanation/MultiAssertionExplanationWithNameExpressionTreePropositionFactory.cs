@@ -26,7 +26,7 @@ public readonly ref struct MultiAssertionExplanationWithNameExpressionTreePropos
                 .ToEnumerable()
                 .ToFunc<TModel, BooleanResultBase<string>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
+            new OverridingExpressionDescription<TModel>(statement.ThrowIfNullOrWhitespace(nameof(statement))));
 
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement
@@ -40,5 +40,5 @@ public readonly ref struct MultiAssertionExplanationWithNameExpressionTreePropos
                 .ToEnumerable()
                 .ToFunc<TModel, BooleanResultBase<string>, IEnumerable<string>>(),
             falseBecause,
-            new ExpressionDescription<TModel, TPredicateResult>(expression));
+            new ExpressionTreeDescription<TModel, TPredicateResult>(expression));
 }

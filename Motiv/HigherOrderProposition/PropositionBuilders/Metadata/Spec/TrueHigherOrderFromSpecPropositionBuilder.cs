@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Motiv.HigherOrderProposition.BooleanResultPredicate;
 using Motiv.HigherOrderProposition.PropositionBuilders.Explanation.BooleanResultPredicate;
 using Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Spec;
@@ -102,6 +103,15 @@ public readonly ref struct TrueHigherOrderFromSpecPropositionBuilder<TModel, TUn
             higherOrderPredicate,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
+                spec.Description),
+            causeSelector);
+
+    internal SpecBase<IEnumerable<TModel>, TUnderlyingMetadata> Create(Expression statement) =>
+        new HigherOrderFromBooleanResultProposition<TModel, TUnderlyingMetadata>(
+            spec.IsSatisfiedBy,
+            higherOrderPredicate,
+            new SpecDescription(
+                statement,
                 spec.Description),
             causeSelector);
 }

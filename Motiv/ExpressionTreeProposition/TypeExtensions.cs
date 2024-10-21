@@ -113,38 +113,40 @@ internal static class ExpressionTreeExtensions
         return new CSharpExpressionSerializer<T>(parameterValue, parameter).Serialize(expression);
     }
 
-    internal static string ToAssertion<TModel, TPredicateResult>(this Expression<Func<TModel, TPredicateResult>> expression, bool satisfied = false)
+    internal static Expression ToExpressionAssertion(
+        this Expression expression,
+        bool satisfied)
     {
-        return (satisfied, expression.Body, expression.Body.NodeType) switch
+        return (satisfied, expression, expression.NodeType) switch
         {
             (false, BinaryExpression expr, ExpressionType.GreaterThan) =>
-                Expression.LessThanOrEqual(expr.Left, expr.Right).Humanize(),
+                Expression.LessThanOrEqual(expr.Left, expr.Right),
             (true, BinaryExpression, ExpressionType.GreaterThan) =>
-                expression.Body.Humanize(),
+                expression,
             (false, BinaryExpression expr, ExpressionType.GreaterThanOrEqual) =>
-                Expression.LessThan(expr.Left, expr.Right).Humanize(),
+                Expression.LessThan(expr.Left, expr.Right),
             (true, BinaryExpression, ExpressionType.GreaterThanOrEqual) =>
-                expression.Body.Humanize(),
+                expression,
             (false, BinaryExpression expr, ExpressionType.LessThan) =>
-                Expression.GreaterThanOrEqual(expr.Left, expr.Right).Humanize(),
+                Expression.GreaterThanOrEqual(expr.Left, expr.Right),
             (true, BinaryExpression, ExpressionType.LessThan) =>
-                expression.Body.Humanize(),
+                expression,
             (false, BinaryExpression expr, ExpressionType.LessThanOrEqual) =>
-                Expression.GreaterThan(expr.Left, expr.Right).Humanize(),
+                Expression.GreaterThan(expr.Left, expr.Right),
             (true, BinaryExpression, ExpressionType.LessThanOrEqual) =>
-                expression.Body.Humanize(),
+                expression,
             (false, BinaryExpression expr, ExpressionType.Equal) =>
-                Expression.NotEqual(expr.Left, expr.Right).Humanize(),
+                Expression.NotEqual(expr.Left, expr.Right),
             (true, BinaryExpression, ExpressionType.Equal) =>
-                expression.Body.Humanize(),
+                expression,
             (false, BinaryExpression expr, ExpressionType.NotEqual) =>
-                Expression.Equal(expr.Left, expr.Right).Humanize(),
+                Expression.Equal(expr.Left, expr.Right),
             (true, BinaryExpression, ExpressionType.NotEqual) =>
-                expression.Body.Humanize(),
-            (false, _, _) =>
-                $"{expression.Body.Humanize()} == false",
-            (true, _, _) =>
-                $"{expression.Body.Humanize()} == true",
+                expression,
+            (_, _, _) =>
+                    Expression.Equal(
+                        Expression.Convert(expression, typeof(object)),
+                        Expression.Convert(Expression.Constant(satisfied), typeof(object))),
         };
     }
 }

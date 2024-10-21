@@ -21,5 +21,5 @@ public interface ISpecDescription
     /// <returns>An enumerable collection of strings, each representing a line of detail.</returns>
     internal IEnumerable<string> GetDetailsAsLines();
 
-    internal string ToAssertion(bool satisfied);
+    internal string ToReason(bool satisfied);
 }

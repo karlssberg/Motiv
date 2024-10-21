@@ -18,6 +18,9 @@ internal sealed class OrElseSpecDescription<TModel, TMetadata>(
         return specs.GetBinaryJustificationAsLines(Operator.OrElse);
     }
 
+    public string ToReason(bool satisfied)=>
+        Statement.ToReason(satisfied);
+
     private static string Summarize(SpecBase<TModel> operand)
     {
         return operand switch
@@ -33,8 +36,6 @@ internal sealed class OrElseSpecDescription<TModel, TMetadata>(
             _ => operand.Statement
         };
     }
-
-    public string ToAssertion(bool satisfied) => Statement.ToReason(satisfied);
 
     public override string ToString() => Statement;
 }

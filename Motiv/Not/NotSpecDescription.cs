@@ -27,7 +27,8 @@ internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMe
             yield return line;
     }
 
-    public string ToAssertion(bool satisfied) => Statement.ToReason(satisfied);
+    public string ToReason(bool satisfied)=>
+        Statement.ToReason(satisfied);
 
     private string FormatStatement()
     {

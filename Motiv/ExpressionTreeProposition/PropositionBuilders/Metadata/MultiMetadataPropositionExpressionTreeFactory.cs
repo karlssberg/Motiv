@@ -23,7 +23,7 @@ public readonly ref struct MultiMetadataPropositionExpressionTreeFactory<TModel,
             expression,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
+            new OverridingExpressionDescription<TModel>(statement.ThrowIfNullOrWhitespace(nameof(statement))));
 
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
@@ -34,5 +34,5 @@ public readonly ref struct MultiMetadataPropositionExpressionTreeFactory<TModel,
             expression,
             whenTrue,
             whenFalse,
-            new ExpressionDescription<TModel, TPredicateResult>(expression));
+            new ExpressionTreeDescription<TModel, TPredicateResult>(expression));
 }

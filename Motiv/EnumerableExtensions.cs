@@ -25,8 +25,10 @@ public static class EnumerableExtensions
     /// <returns>An <see cref="IEnumerable{TModel}" /> containing only the values that satisfy the specification.</returns>
     public static IEnumerable<TModel> Where<TModel, TMetadata>(
         this IEnumerable<TModel> source,
-        SpecBase<TModel, TMetadata> spec) =>
-        source.Where(model => spec.IsSatisfiedBy(model).Satisfied);
+        SpecBase<TModel, TMetadata> spec)
+    {
+        return source.Where(model => spec.IsSatisfiedBy(model).Satisfied);
+    }
 
     internal static IEnumerable<T> ReplaceFirstLine<T>(this IEnumerable<T> lines, Func<T, T> prefixFn)
     {
@@ -104,19 +106,23 @@ public static class EnumerableExtensions
         yield return currentGroup;
     }
 
-    internal static IEnumerable<T> DistinctWithOrderPreserved<T>(this IEnumerable<T> source) =>
-        DistinctWithOrderPreservedInternal(source, x => x);
+    internal static IEnumerable<T> DistinctWithOrderPreserved<T>(this IEnumerable<T> source)
+    {
+        return DistinctWithOrderPreservedInternal(source, x => x);
+    }
 
-    internal static IEnumerable<T> DistinctWithOrderPreserved<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector) =>
-        DistinctWithOrderPreservedInternal(source, keySelector);
+    internal static IEnumerable<T> DistinctWithOrderPreserved<T, TKey>(this IEnumerable<T> source,
+        Func<T, TKey> keySelector)
+    {
+        return DistinctWithOrderPreservedInternal(source, keySelector);
+    }
 
-    private static IEnumerable<T> DistinctWithOrderPreservedInternal<T, TKey>(IEnumerable<T> source, Func<T, TKey> keySelector)
+    private static IEnumerable<T> DistinctWithOrderPreservedInternal<T, TKey>(IEnumerable<T> source,
+        Func<T, TKey> keySelector)
     {
         var uniqueItems = new HashSet<TKey>();
         foreach (var x in source)
-        {
             if (uniqueItems.Add(keySelector(x)))
                 yield return x;
-        }
     }
 }

@@ -6,7 +6,7 @@ namespace Motiv.HigherOrderProposition.ExpressionTree;
 internal sealed class HigherOrderFromBooleanResultExpressionTreeProposition<TModel, TPredicateResult>(
     Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
-    ISpecDescription specDescription,
+    IExpressionDescription<TModel> expressionDescription,
     Func<bool, IEnumerable<BooleanResult<TModel, string>>, IEnumerable<BooleanResult<TModel, string>>> causeSelector)
     : SpecBase<IEnumerable<TModel>, string>
 {
@@ -14,7 +14,7 @@ internal sealed class HigherOrderFromBooleanResultExpressionTreeProposition<TMod
 
     public override IEnumerable<SpecBase> Underlying => [];
 
-    public override ISpecDescription Description => specDescription;
+    public override ISpecDescription Description => expressionDescription;
 
     protected override BooleanResultBase<string> IsSpecSatisfiedBy(IEnumerable<TModel> models)
     {
@@ -32,7 +32,7 @@ internal sealed class HigherOrderFromBooleanResultExpressionTreeProposition<TMod
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
                 new HigherOrderResultDescription<string>(
-                    Description.ToAssertion(isSatisfied),
+                    Description.ToReason(isSatisfied),
                     [],
                     causes.Value,
                     Description.Statement));
