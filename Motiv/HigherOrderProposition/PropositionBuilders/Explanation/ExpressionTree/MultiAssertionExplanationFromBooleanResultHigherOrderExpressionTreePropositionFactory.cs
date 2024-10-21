@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Motiv.ExpressionTreeProposition;
 using Motiv.HigherOrderProposition.ExpressionTree;
 using Motiv.Shared;
 
@@ -30,7 +31,7 @@ public readonly ref struct MultiAssertionExplanationFromBooleanResultHigherOrder
             higherOrderPredicate,
             trueBecause,
             falseBecause,
-            new SpecDescription(statement),
+            new SpecDescription<TModel>(statement),
             causeSelector);
     }
 }

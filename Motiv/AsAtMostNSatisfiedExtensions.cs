@@ -144,6 +144,7 @@ public static class AsAtMostNSatisfiedExtensions
     /// Creates a higher order proposition which is satisfied if at most 'n' of the underlying propositions are satisfied.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <typeparam name="TPredicateResult">The return type of the predicate.</typeparam>
     /// <param name="builder">The proposition builder.</param>
     /// <param name="n">The maximum number of underlying propositions that can be satisfied.</param>
     /// <returns>The next build step.</returns>

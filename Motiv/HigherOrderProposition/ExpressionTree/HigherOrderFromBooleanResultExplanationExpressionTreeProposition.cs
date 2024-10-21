@@ -8,7 +8,7 @@ internal sealed class HigherOrderFromBooleanResultExplanationExpressionTreePropo
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> trueBecause,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> falseBecause,
-    ISpecDescription specDescription,
+    IExpressionDescription<TModel> expressionDescription,
     Func<bool, IEnumerable<BooleanResult<TModel, string>>,
         IEnumerable<BooleanResult<TModel, string>>> causeSelector)
     : PolicyBase<IEnumerable<TModel>, string>
@@ -17,7 +17,7 @@ internal sealed class HigherOrderFromBooleanResultExplanationExpressionTreePropo
 
     public override IEnumerable<SpecBase> Underlying => [];
 
-    public override ISpecDescription Description => specDescription;
+    public override ISpecDescription Description => expressionDescription;
 
     protected override PolicyResultBase<string> IsPolicySatisfiedBy(IEnumerable<TModel> models)
     {

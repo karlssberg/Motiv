@@ -23,5 +23,5 @@ public readonly ref struct MetadataExpressionTreePropositionFactory<TModel, TMet
             expression,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
+            new OverridingExpressionDescription<TModel>(statement.ThrowIfNullOrWhitespace(nameof(statement))));
 }

@@ -245,16 +245,40 @@ public class ExpressionTreeJustificationTests
         act.Justification.Should().Be(expectedResult);
     }
 
+    [Theory]
+    [InlineData("""
+                any admins
+                    roles.Any((string role) => role == "admin") == true
+                        role == "admin"
+                """, "admin")]
+    [InlineData("""
+                ¬any admins
+                    roles.Any((string role) => role == "admin") == false
+                        role != "admin"
+                """, "user")]
+    public void Should_justify_any_linq_function_to_higher_order_proposition_when_boolean_is_returned(string expectedAssertion, string model)
+    {
+        // Assemble
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.Any(role => role == "admin"))
+                .Create("any admins");
+
+        // Act
+        var act = sut.IsSatisfiedBy([model]);
+
+        // Assert
+        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+    }
 
     [Theory]
     [InlineData("""
                 any admins
-                    isAdminResult == true
+                    roles.Any((string role) => isAdminResult) == true
                         is admin
                 """, "admin")]
     [InlineData("""
                 ¬any admins
-                    isAdminResult == false
+                    roles.Any((string role) => isAdminResult) == false
                         is not admin
                 """, "user")]
     public void Should_justify_any_linq_function_to_higher_order_proposition_when_boolean_result_is_returned(string expectedAssertion, string model)
@@ -281,15 +305,120 @@ public class ExpressionTreeJustificationTests
     [Theory]
     [InlineData(
         """
+        any admins or super users
+            roles.Any((string role) => isSuperUser || isAdminResult) == true
+                OR
+                    is admin
+        """,
+        "admin")]
+    [InlineData(
+        """
+        any admins or super users
+            roles.Any((string role) => isSuperUser || isAdminResult) == true
+                is super user
+        """,
+        "superuser")]
+    [InlineData(
+        """
+        ¬any admins or super users
+            roles.Any((string role) => isSuperUser || isAdminResult) == false
+                OR
+                    is not super user
+                    is not admin
+        """,
+        "user")]
+    public void Should_justify_any_linq_function_to_higher_order_proposition_when_multiple_boolean_results_are_returned(string expectedAssertion, string model)
+    {
+        // Assemble
+        var isAdminResult =
+            Spec.Build((string role) => role == "admin")
+                .WhenTrue("is admin")
+                .WhenFalse("is not admin")
+                .Create("is-admin")
+                .IsSatisfiedBy(model);
+
+        var isSuperUser =
+            Spec.Build((string role) => role == "superuser")
+                .WhenTrue("is super user")
+                .WhenFalse("is not super user")
+                .Create("is-super-user")
+                .IsSatisfiedBy(model);
+
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.Any(role => isSuperUser || isAdminResult))
+                .Create("any admins or super users");
+
+        // Act
+        var act = sut.IsSatisfiedBy([model]);
+
+        // Assert
+        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData(
+        """
+        any admins or super users
+            roles.Any(isSuperUser | isAdminResult) == true
+                OR
+                    is admin
+        """,
+        "admin")]
+    [InlineData(
+        """
+        any admins or super users
+            roles.Any(isSuperUser | isAdminResult) == true
+                OR
+                    is super user
+        """,
+        "superuser")]
+    [InlineData(
+        """
+        ¬any admins or super users
+            roles.Any(isSuperUser | isAdminResult) == false
+                OR
+                    is not super user
+                    is not admin
+        """,
+        "user")]
+    public void Should_justify_any_linq_function_to_higher_order_proposition_when_multiple_specs_are_returned(string expectedAssertion, string model)
+    {
+        // Assemble
+        var isAdminResult =
+            Spec.Build((string role) => role == "admin")
+                .WhenTrue("is admin")
+                .WhenFalse("is not admin")
+                .Create("is-admin");
+
+        var isSuperUser =
+            Spec.Build((string role) => role == "superuser")
+                .WhenTrue("is super user")
+                .WhenFalse("is not super user")
+                .Create("is-super-user");
+
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.Any(isSuperUser | isAdminResult))
+                .Create("any admins or super users");
+
+        // Act
+        var act = sut.IsSatisfiedBy([model]);
+
+        // Assert
+        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData(
+        """
         all admins
-            isAdminResult == true
+            roles.All((string role) => isAdminResult) == true
                 is admin
         """,
         "admin")]
     [InlineData(
         """
         ¬all admins
-            isAdminResult == false
+            roles.All((string role) => isAdminResult) == false
                 is not admin
         """,
         "user")]
@@ -306,6 +435,111 @@ public class ExpressionTreeJustificationTests
         var sut =
             Spec.From((IEnumerable<string> roles) => roles.All(role => isAdminResult))
                 .Create("all admins");
+
+        // Act
+        var act = sut.IsSatisfiedBy([model]);
+
+        // Assert
+        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData(
+        """
+        all admins or super users
+            roles.All((string role) => isSuperUser || isAdminResult) == true
+                OR
+                    is admin
+        """,
+        "admin")]
+    [InlineData(
+        """
+        all admins or super users
+            roles.All((string role) => isSuperUser || isAdminResult) == true
+                is super user
+        """,
+        "superuser")]
+    [InlineData(
+        """
+        ¬all admins or super users
+            roles.All((string role) => isSuperUser || isAdminResult) == false
+                OR
+                    is not super user
+                    is not admin
+        """,
+        "user")]
+    public void Should_justify_all_linq_function_to_higher_order_proposition_when_multiple_boolean_results_are_returned(string expectedAssertion, string model)
+    {
+        // Assemble
+        var isAdminResult =
+            Spec.Build((string role) => role == "admin")
+                .WhenTrue("is admin")
+                .WhenFalse("is not admin")
+                .Create("is-admin")
+                .IsSatisfiedBy(model);
+
+        var isSuperUser =
+            Spec.Build((string role) => role == "superuser")
+                .WhenTrue("is super user")
+                .WhenFalse("is not super user")
+                .Create("is-super-user")
+                .IsSatisfiedBy(model);
+
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.All(role => isSuperUser || isAdminResult))
+                .Create("all admins or super users");
+
+        // Act
+        var act = sut.IsSatisfiedBy([model]);
+
+        // Assert
+        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+    }
+
+    [Theory]
+    [InlineData(
+        """
+        all admins or super users
+            roles.All(isSuperUser | isAdminResult) == true
+                OR
+                    is admin
+        """,
+        "admin")]
+    [InlineData(
+        """
+        all admins or super users
+            roles.All(isSuperUser | isAdminResult) == true
+                OR
+                    is super user
+        """,
+        "superuser")]
+    [InlineData(
+        """
+        ¬all admins or super users
+            roles.All(isSuperUser | isAdminResult) == false
+                OR
+                    is not super user
+                    is not admin
+        """,
+        "user")]
+    public void Should_justify_all_linq_function_to_higher_order_proposition_when_multiple_specs_are_returned(string expectedAssertion, string model)
+    {
+        // Assemble
+        var isAdminResult =
+            Spec.Build((string role) => role == "admin")
+                .WhenTrue("is admin")
+                .WhenFalse("is not admin")
+                .Create("is-admin");
+
+        var isSuperUser =
+            Spec.Build((string role) => role == "superuser")
+                .WhenTrue("is super user")
+                .WhenFalse("is not super user")
+                .Create("is-super-user");
+
+        var sut =
+            Spec.From((IEnumerable<string> roles) => roles.All(isSuperUser | isAdminResult))
+                .Create("all admins or super users");
 
         // Act
         var act = sut.IsSatisfiedBy([model]);

@@ -20,25 +20,6 @@ internal class ExpressionPredicate<TModel, TPredicateResult>
     {
         var spec = expr.ToSpec();
         return spec.IsSatisfiedBy;
-        // var compiled = expr.Compile();
-        // var statement = expr.Body.Humanize();
-        //
-        // var whenTrueExpression = expr.Body Expression.Equal(expr.Body, Expression.Constant(true));
-        // var whenTrue = whenTrueExpression.Humanize();
-        //
-        // var whenFalseExpression = Expression.Equal(expr.Body, Expression.Constant(false));
-        // var whenFalse = whenFalseExpression.Humanize();
-        //
-        // return model =>
-        // {
-        //     var satisfied = compiled(model);
-        //     var assertion = satisfied ? whenTrue : whenFalse;
-        //     return new ExpressionTreeBooleanResult<string>(
-        //         satisfied,
-        //         new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(assertion, [])),
-        //         new Lazy<Explanation>(() => new Explanation(assertion, [], [])),
-        //         new Lazy<ResultDescriptionBase>(() => new BooleanResultDescription(assertion, statement)));
-        // };
     }
 
     internal Func<TModel, BooleanResultBase<string>> Execute { get; }

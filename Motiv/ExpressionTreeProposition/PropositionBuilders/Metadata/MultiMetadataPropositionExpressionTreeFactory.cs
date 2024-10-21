@@ -8,7 +8,7 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders.Metadata;
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
-/// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
+/// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
 public readonly ref struct MultiMetadataPropositionExpressionTreeFactory<TModel, TMetadata, TPredicateResult>(
     Expression<Func<TModel, TPredicateResult>> expression,
     Func<TModel, BooleanResultBase<string>, IEnumerable<TMetadata>> whenTrue,
@@ -23,7 +23,7 @@ public readonly ref struct MultiMetadataPropositionExpressionTreeFactory<TModel,
             expression,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
+            new OverridingExpressionDescription<TModel>(statement.ThrowIfNullOrWhitespace(nameof(statement))));
 
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
@@ -34,5 +34,5 @@ public readonly ref struct MultiMetadataPropositionExpressionTreeFactory<TModel,
             expression,
             whenTrue,
             whenFalse,
-            new ExpressionDescription<TModel, TPredicateResult>(expression));
+            new ExpressionTreeDescription<TModel, TPredicateResult>(expression));
 }

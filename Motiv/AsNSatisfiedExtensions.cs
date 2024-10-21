@@ -144,6 +144,7 @@ public static class AsNSatisfiedExtensions
     /// Creates a higher order proposition that is satisfied if exactly 'n' of the underlying propositions are satisfied.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <typeparam name="TPredicateResult">The return type of the predicate.</typeparam>
     /// <param name="builder">The proposition builder.</param>
     /// <param name="n">The exact number of underlying propositions that need to be satisfied.</param>
     /// <returns>A higher order proposition builder.</returns>

@@ -37,5 +37,5 @@ public readonly ref struct ExplanationExpressionTreePropositionFactory<TModel, T
             expression,
             trueBecause,
             falseBecause,
-            new ExpressionDescription<TModel, TPredicateResult>(expression));
+            new ExpressionTreeDescription<TModel, TPredicateResult>(expression));
 }

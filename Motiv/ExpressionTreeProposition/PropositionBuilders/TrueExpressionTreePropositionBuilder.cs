@@ -110,5 +110,5 @@ public readonly ref struct TrueExpressionTreePropositionBuilder<TModel, TPredica
             expression,
             (_, result) => result.Values,
             (_, result) => result.Values,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
+            new OverridingExpressionDescription<TModel>(statement.ThrowIfNullOrWhitespace(nameof(statement))));
 }

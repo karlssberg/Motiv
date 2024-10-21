@@ -1,8 +1,12 @@
+﻿using System.Linq.Expressions;
+using Motiv.ExpressionTreeProposition;
+
 namespace Motiv.Shared;
 
-internal sealed class SpecDescription(string statement, ISpecDescription? underlyingDescription = null) : ISpecDescription
+internal sealed class ExpressionDescription(Expression statement, ISpecDescription? underlyingDescription = null) : ISpecDescription
 {
-    public string Statement => statement;
+
+    public string Statement => statement.Humanize();
 
     public string Detailed => string.Join(Environment.NewLine, GetDetailsAsLines());
 
@@ -16,7 +20,8 @@ internal sealed class SpecDescription(string statement, ISpecDescription? underl
             yield return line.Indent();
     }
 
-    public string ToReason(bool satisfied) => Statement.ToReason(satisfied);
+    public string ToReason(bool satisfied) =>
+        statement.ToExpressionAssertion(satisfied).Humanize();
 
     public override string ToString() => Statement;
 }

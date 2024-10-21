@@ -550,19 +550,20 @@ public class TutorialTests
             """);
     }
 
-
     [Fact]
     public void Should_evaluate_initial_example_in_readme()
     {
-        var isInRange = Spec.From((int n) => n >= 1 & n <= 10).Create("in range");
+        // Define the proposition
+        var isInRangeAndEven = Spec.From((int n) => n >= 1 & n <= 10 & n % 2 == 0)
+            .Create("in range and even");
 
-        var result = isInRange.IsSatisfiedBy(11);
+        // Evaluate proposition (elsewhere in your code)
+        var result = isInRangeAndEven.IsSatisfiedBy(11);
 
         result.Satisfied.Should().BeFalse();
-        result.Reason.Should().Be("¬in range");
-        result.Assertions.Should().BeEquivalentTo("n > 10");
+        result.Reason.Should().Be("¬in range and even");
+        result.Assertions.Should().BeEquivalentTo("n > 10", "n % 2 != 0");
     }
-
 
     [Fact]
     public void Should_demonstrate_the_usage_of_GetTrueAssertions()
@@ -612,5 +613,4 @@ public class TutorialTests
         result.Reason.Should().Be("¬all are negative");
         result.Assertions.Should().BeEquivalentTo("2 is not negative", "3 is not negative");
     }
-
 }

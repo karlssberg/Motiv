@@ -32,7 +32,7 @@ public readonly ref struct MetadataHigherOrderExpressionTreePropositionFactory<T
             higherOrderPredicate,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement),
+            new SpecDescription<TModel>(statement),
             causeSelector);
     }
 
@@ -45,7 +45,7 @@ public readonly ref struct MetadataHigherOrderExpressionTreePropositionFactory<T
             higherOrderPredicate,
             whenTrue,
             whenFalse,
-            new ExpressionDescription<TModel, TPredicateResult>(expression),
+            new ExpressionTreeDescription<TModel, TPredicateResult>(expression),
             causeSelector);
     }
 }

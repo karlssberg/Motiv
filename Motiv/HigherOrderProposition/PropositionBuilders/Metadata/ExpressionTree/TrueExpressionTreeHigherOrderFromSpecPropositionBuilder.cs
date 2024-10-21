@@ -104,7 +104,7 @@ public readonly ref struct TrueExpressionTreeHigherOrderFromSpecPropositionBuild
         new HigherOrderFromBooleanResultExpressionTreeProposition<TModel, TPredicateResult>(
             expression,
             higherOrderPredicate,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))),
+            new SpecDescription<TModel>(statement.ThrowIfNullOrWhitespace(nameof(statement))),
             causeSelector);
 
     /// <summary>Creates a proposition.</summary>
@@ -113,6 +113,13 @@ public readonly ref struct TrueExpressionTreeHigherOrderFromSpecPropositionBuild
         new HigherOrderFromBooleanResultExpressionTreeProposition<TModel, TPredicateResult>(
             expression,
             higherOrderPredicate,
-            new ExpressionDescription<TModel, TPredicateResult>(expression),
+            new ExpressionTreeDescription<TModel, TPredicateResult>(expression),
+            causeSelector);
+
+    internal SpecBase<IEnumerable<TModel>, string> Create(Expression statement) =>
+        new HigherOrderFromBooleanResultExpressionTreeProposition<TModel, TPredicateResult>(
+            expression,
+            higherOrderPredicate,
+            new ExpressionAsStatementDescription<TModel>(statement, expression.Parameters.First()),
             causeSelector);
 }

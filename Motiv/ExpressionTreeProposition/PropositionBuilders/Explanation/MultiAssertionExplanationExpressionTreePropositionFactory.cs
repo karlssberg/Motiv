@@ -26,7 +26,7 @@ public readonly ref struct MultiAssertionExplanationExpressionTreePropositionFac
             expression,
             trueBecause,
             falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
+            new OverridingExpressionDescription<TModel>(statement.ThrowIfNullOrWhitespace(nameof(statement))));
 
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
@@ -39,5 +39,5 @@ public readonly ref struct MultiAssertionExplanationExpressionTreePropositionFac
             expression,
             trueBecause,
             falseBecause,
-            new ExpressionDescription<TModel, TPredicateResult>(expression));
+            new ExpressionTreeDescription<TModel, TPredicateResult>(expression));
 }

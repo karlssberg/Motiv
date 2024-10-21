@@ -12,22 +12,21 @@
 
 Motiv is a solution to the _[Boolean Blindness](https://existentialtype.wordpress.com/2011/03/15/boolean-blindness/)_
 problem (which is the loss of information resulting from the reduction of logic to a single true or false value).
-It achieves this by decomposing logical expressions into a syntax tree of atomic
-[propositions](https://en.wikipedia.org/wiki/Proposition), so that during evaluation,
-the causes of a decision can be preserved, and put to use.
+It does this by having logical expressions decomposed into individual atomic [propositions](https://en.wikipedia.org/wiki/Proposition),
+so that during evaluation, the specific causes of a decision can be preserved, and then put to use.
 In most cases this will be a human-readable explanation of the decision, but it could equally be used to surface state.
 
 ```csharp
 // Define the proposition
-var isInRange = Spec.From((int n) => n >= 1 & n <= 10)
-                    .Create("in range");
+var isInRangeAndEven = Spec.From((int n) => n >= 1 & n <= 10 & n % 2 == 0)
+                           .Create("in range and even");
 
 // Evaluate proposition (elsewhere in your code)
-var result = isInRange.IsSatisfiedBy(11);
+var result = isInRangeAndEven.IsSatisfiedBy(11);
 
 result.Satisfied;  // false
-result.Assertions; // ["n > 10"]
-result.Reason;     // "¬in range"
+result.Assertions; // ["n > 10", "n % 2 != 0"]
+result.Reason;     // "¬in range and even"
 ```
 
 ## Why Use Motiv?
@@ -204,7 +203,9 @@ result.Assertions; // ["2 is not negative", "3 is not negative"]
 Consider these potential tradeoffs when using Motiv:
 
 1. **Performance**: Motiv isn't optimized for high-performance scenarios where nanoseconds matter.
+    Instead, it lazily evaluates results to ensure that extraneous computation is avoided.
 2. **Dependency**: Once integrated, Motiv becomes a dependency in your codebase.
+    It does not, however, introduce any additional dependencies.
 3. **Learning Curve**: While Motiv introduces a new approach, it's designed to be intuitive and straightforward to use.
 
 ## License

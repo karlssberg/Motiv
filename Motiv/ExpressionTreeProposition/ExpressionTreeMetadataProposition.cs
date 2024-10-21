@@ -7,7 +7,7 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
     Expression<Func<TModel, TPredicateResult>> expression,
     Func<TModel, BooleanResultBase<string>, TMetadata> whenTrue,
     Func<TModel, BooleanResultBase<string>, TMetadata> whenFalse,
-    ISpecDescription description)
+    IExpressionDescription<TModel> description)
     : PolicyBase<TModel, TMetadata>
 {
     public override IEnumerable<SpecBase> Underlying { get; } = [];
@@ -33,10 +33,11 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
 
         var explanation = new Lazy<Explanation>(() =>
         {
+            var parameter = expression.Parameters.First();
             var assertions = lazyMetadata.Value switch
             {
                 IEnumerable<string> because => because.ToArray(),
-                _ => [Description.ToAssertion(result.Satisfied)]
+                _ => [expression.ToExpressionAssertion(result.Satisfied).Humanize(model, parameter)]
             };
 
             return new Explanation(assertions, result.ToEnumerable(),
@@ -46,7 +47,7 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 result,
-                expression.ToAssertion(result.Satisfied),
+                description.ToAssertion(model, result.Satisfied),
                 Description.Statement));
 
         return new ExpressionTreePolicyResult<TMetadata>(

@@ -16,5 +16,5 @@ public static class ExpressionTreeExtensions
     /// <typeparam name="TModel"></typeparam>
     /// <returns></returns>
     public static SpecBase<TModel, string> ToSpec<TModel>(this Expression<Func<TModel, bool>> expression) =>
-        new ExpressionTreeTransformer<TModel>().Transform(expression);
+        new ExpressionTreeTransformer<TModel>(expression).Transform();
 }

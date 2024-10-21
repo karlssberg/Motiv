@@ -8,7 +8,7 @@ internal sealed class HigherOrderFromBooleanResultMetadataExpressionTreeProposit
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, TMetadata> whenTrue,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, TMetadata> whenFalse,
-    ISpecDescription specDescription,
+    IExpressionDescription<TModel> expressionDescription,
     Func<bool, IEnumerable<BooleanResult<TModel, string>>, IEnumerable<BooleanResult<TModel, string>>> causeSelector)
     : PolicyBase<IEnumerable<TModel>, TMetadata>
 {
@@ -16,7 +16,7 @@ internal sealed class HigherOrderFromBooleanResultMetadataExpressionTreeProposit
 
     public override IEnumerable<SpecBase> Underlying => [];
 
-    public override ISpecDescription Description => specDescription;
+    public override ISpecDescription Description => expressionDescription;
 
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(IEnumerable<TModel> models)
     {
@@ -43,12 +43,12 @@ internal sealed class HigherOrderFromBooleanResultMetadataExpressionTreeProposit
             metadata.Value switch
             {
                 IEnumerable<string>  reasons => reasons,
-                _ => specDescription.ToReason(isSatisfied).ToEnumerable()
+                _ => expressionDescription.ToReason(isSatisfied).ToEnumerable()
             });
 
         var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderResultDescription<string>(
-                Description.ToAssertion(isSatisfied),
+                Description.ToReason(isSatisfied),
                 [],
                 causes.Value,
                 Description.Statement));

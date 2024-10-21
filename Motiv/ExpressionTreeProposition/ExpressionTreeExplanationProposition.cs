@@ -10,7 +10,6 @@ internal sealed class ExpressionTreeExplanationProposition<TModel, TPredicateRes
     ISpecDescription description)
     : PolicyBase<TModel, string>
 {
-
     public override IEnumerable<SpecBase> Underlying { get; } = [];
 
     private readonly ExpressionPredicate<TModel, TPredicateResult> _predicate = new(expression);

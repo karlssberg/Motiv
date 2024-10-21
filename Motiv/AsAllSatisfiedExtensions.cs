@@ -78,6 +78,7 @@ public static class AsAllSatisfiedExtensions
     /// </summary>
     /// <param name="builder">The previous build step.</param>
     /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <typeparam name="TPredicateResult">The return type of the predicate.</typeparam>
     /// <returns>The next build step.</returns>
     public static TrueExpressionTreeHigherOrderFromSpecPropositionBuilder<TModel, TPredicateResult> AsAllSatisfied<TModel, TPredicateResult>(
         this TrueExpressionTreePropositionBuilder<TModel, TPredicateResult> builder) =>
