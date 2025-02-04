@@ -35,7 +35,7 @@ public static class TargetTypeObjectCreationExpression
         IEnumerable<ArgumentSyntax> argNodes =
         [
             ..fieldArguments,
-            Argument(ParameterConverterInvocationExpression.Create(method.ParameterConverter, methodArguments, method.RootNamespace))
+            Argument(MultiMethodInvocationExpression.Create(method.ParameterConverter, methodArguments, method.RootNamespace))
         ];
 
         return ObjectCreationExpression(name)

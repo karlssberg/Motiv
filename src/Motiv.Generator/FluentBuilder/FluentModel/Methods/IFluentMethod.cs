@@ -7,7 +7,7 @@ namespace Motiv.Generator.FluentBuilder.FluentModel.Methods;
 public interface IFluentMethod
 {
     string MethodName { get; }
-    IParameterSymbol? SourceParameterSymbol { get; }
+    IParameterSymbol? SourceParameter { get; }
     ImmutableArray<FluentMethodParameter> AvailableParameterFields { get; }
     IFluentReturn Return { get; }
     ImmutableArray<FluentTypeParameter> TypeParameters { get; }

@@ -15,7 +15,7 @@ public class RegularFluentStep(INamedTypeSymbol rootType) : IFluentStep
 #if DEBUG
     public int InstanceId => RuntimeHelpers.GetHashCode(this);
 #endif
-    public string Name => GetStepName(rootType);
+    public string Name => GetStepName(RootType);
 
     public string FullName => $"{Namespace.ToDisplayString()}.{Name}";
 
@@ -51,13 +51,27 @@ public class RegularFluentStep(INamedTypeSymbol rootType) : IFluentStep
 
     public INamedTypeSymbol RootType { get; } = rootType;
 
-    public string IdentifierDisplayString(INamespaceSymbol _) => CreateIdentifierDisplayString();
-
-    private string CreateIdentifierDisplayString()
+    public string IdentifierDisplayString(INamespaceSymbol _)
     {
         var distinctGenericParameters = GenericConstructorParameters
             .SelectMany(t => t.Type.GetGenericTypeArguments())
             .DistinctBy(symbol => symbol.ToDynamicDisplayString(Namespace))
+            .ToArray();
+
+        return distinctGenericParameters.Length > 0
+            ? GenericName(Identifier(Name))
+                .WithTypeArgumentList(
+                    TypeArgumentList(SeparatedList<TypeSyntax>(
+                        distinctGenericParameters
+                            .Select(arg => IdentifierName(arg.ToDynamicDisplayString(Namespace))))))
+                .NormalizeWhitespace()
+                .ToString()
+            : Name;
+    }
+
+    public string IdentifierDisplayString(INamespaceSymbol currentNamespace, IDictionary<FluentType, ITypeSymbol> genericTypeParameterMap)
+    {
+        var distinctGenericParameters = this.GetGenericTypeArguments(genericTypeParameterMap)
             .ToArray();
 
         return distinctGenericParameters.Length > 0

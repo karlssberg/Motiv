@@ -755,7 +755,8 @@ public class MultipleFluentMethodTests
     }
 
     [Fact]
-    public async Task Should_support_multiple_methods_containing_overload_methods_where_a_concrete_generic_argument_type_is_used()
+    public async Task
+        Should_support_multiple_methods_containing_overload_methods_where_a_concrete_generic_argument_type_is_used()
     {
         const string code =
             """
@@ -785,7 +786,7 @@ public class MultipleFluentMethodTests
                 public class FirstMethods
                 {
                     [FluentMethodTemplate]
-                    public static T SetFirst<T>(in Func<T> function)
+                    public static TX SetFirst<TX>(in Func<TX> function)
                     {
                         return function();
                     }
@@ -806,7 +807,7 @@ public class MultipleFluentMethodTests
                 public class SecondMethods
                 {
                     [FluentMethodTemplate]
-                    public static T SetSecond<T>(in Func<T> function)
+                    public static TX SetSecond<TX>(in Func<TX> function)
                     {
                         return function();
                     }
@@ -910,4 +911,142 @@ public class MultipleFluentMethodTests
         }.RunAsync();
     }
 
+    [Fact]
+    public async Task Given_no_create_method_Should_support_multiple_methods_containing_overload_methods_where_a_concrete_generic_argument_type_is_used()
+    {
+        const string code =
+            """
+            using System;
+            using Motiv.Generator.Attributes;
+
+            namespace Test.Namespace
+            {
+                [FluentFactory(Options = FluentOptions.NoCreateMethod)]
+                public static partial class Factory;
+
+                public class MyBuildTarget<T1, T2>
+                {
+                    [FluentConstructor(typeof(Factory))]
+                    public MyBuildTarget(
+                        [MultipleFluentMethods(typeof(FirstMethods))]T1 first,
+                        [MultipleFluentMethods(typeof(SecondMethods))]T2 second)
+                    {
+                        First = first;
+                        Second = second;
+                    }
+
+                    public T1 First { get; set; }
+                    public T2 Second { get; set; }
+                }
+
+                public class FirstMethods
+                {
+                    [FluentMethodTemplate]
+                    public static TX SetFirst<TX>(in Func<TX> function)
+                    {
+                        return function();
+                    }
+
+                    [FluentMethodTemplate]
+                    public static int SetFirst(in Func<int> function)
+                    {
+                        return function();
+                    }
+
+                    [FluentMethodTemplate]
+                    public static Func<TX2, TX1> SetFirst<TX1, TX2>()
+                    {
+                        return _ => default(TX1);
+                    }
+                }
+
+                public class SecondMethods
+                {
+                    [FluentMethodTemplate]
+                    public static TX SetSecond<TX>(in Func<TX> function)
+                    {
+                        return function();
+                    }
+
+                    [FluentMethodTemplate]
+                    public static int SetSecond(in Func<int> function)
+                    {
+                        return function();
+                    }
+
+                    [FluentMethodTemplate]
+                    public static Func<TX2, TX1> SetSecond<TX1, TX2>()
+                    {
+                        return _ => default(TX1);
+                    }
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            namespace Test.Namespace
+            {
+                public static partial class Factory
+                {
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory<T1> SetFirst<T1>(in System.Func<T1> function)
+                    {
+                        return new Step_0__Test_Namespace_Factory<T1>(FirstMethods.SetFirst<T1>(function));
+                    }
+
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory<int> SetFirst(in System.Func<int> function)
+                    {
+                        return new Step_0__Test_Namespace_Factory<int>(FirstMethods.SetFirst(function));
+                    }
+
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory<System.Func<T2, T1>> SetFirst<T1, T2>()
+                    {
+                        return new Step_0__Test_Namespace_Factory<System.Func<T2, T1>>(FirstMethods.SetFirst());
+                    }
+                }
+
+                public struct Step_0__Test_Namespace_Factory<T1>
+                {
+                    private readonly T1 _first__parameter;
+                    public Step_0__Test_Namespace_Factory(in T1 first)
+                    {
+                        this._first__parameter = first;
+                    }
+
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyBuildTarget<T1, T2> SetSecond<T2>(in System.Func<T2> function)
+                    {
+                        return new MyBuildTarget<T1, T2>(this._first__parameter, SecondMethods.SetSecond<T2>(function));
+                    }
+
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyBuildTarget<T1, int> SetSecond(in System.Func<int> function)
+                    {
+                        return new MyBuildTarget<T1, int>(this._first__parameter, SecondMethods.SetSecond(function));
+                    }
+
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyBuildTarget<T1, System.Func<T2, T1>> SetSecond(in System.Func<string> function)
+                    {
+                        return new new MyBuildTarget<T1, System.Func<T2, T1>>(this._first__parameter, SecondMethods.SetSecond(function));
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Test.Namespace.Factory.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
 }

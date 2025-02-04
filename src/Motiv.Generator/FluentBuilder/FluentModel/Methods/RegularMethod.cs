@@ -9,9 +9,9 @@ public class RegularMethod : IFluentMethod
 {
     public string MethodName { get; }
 
-    public ImmutableArray<FluentMethodParameter> MethodParameters { get; } = [];
+    public ImmutableArray<FluentMethodParameter> MethodParameters { get; }
 
-    public IParameterSymbol SourceParameterSymbol { get; }
+    public IParameterSymbol SourceParameter { get; }
 
     public ImmutableArray<FluentMethodParameter> AvailableParameterFields { get; }
 
@@ -28,7 +28,7 @@ public class RegularMethod : IFluentMethod
         ImmutableArray<FluentMethodParameter> availableParameterFields)
     {
         MethodName = methodName;
-        SourceParameterSymbol = sourceParameterSymbol;
+        SourceParameter = sourceParameterSymbol;
         MethodParameters = [new FluentMethodParameter(sourceParameterSymbol, methodName)];
         RootNamespace = rootNamespace;
         AvailableParameterFields = availableParameterFields;
@@ -44,9 +44,9 @@ public class RegularMethod : IFluentMethod
     {
         return
         [
-            ..SourceParameterSymbol?.Type
+            ..SourceParameter.Type
                 .GetGenericTypeParameters()
-                .Select(genericTypeParameter => new FluentTypeParameter(genericTypeParameter)) ?? []
+                .Select(genericTypeParameter => new FluentTypeParameter(genericTypeParameter))
         ];
     }
 }

@@ -5,7 +5,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Motiv.Generator.FluentBuilder.Generation.Shared;
 
-public static class ParameterConverterInvocationExpression
+public static class MultiMethodInvocationExpression
 {
     public static InvocationExpressionSyntax Create(
         IMethodSymbol parameterConverterMethod,

@@ -1,10 +1,12 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
 
 namespace Motiv.Generator.FluentBuilder.FluentModel.Steps;
 
 public interface IFluentReturn
 {
     string IdentifierDisplayString(INamespaceSymbol currentNamespace);
+    string IdentifierDisplayString(INamespaceSymbol currentNamespace, IDictionary<FluentType, ITypeSymbol> genericTypeParameterMap);
 
     INamespaceSymbol Namespace { get; }
 
@@ -13,4 +15,6 @@ public interface IFluentReturn
     /// Potentially more parameters are required to satisfy a constructor signature.
     /// </summary>
     ParameterSequence KnownConstructorParameters { get; }
+
+    ImmutableArray<IParameterSymbol> GenericConstructorParameters { get; }
 }

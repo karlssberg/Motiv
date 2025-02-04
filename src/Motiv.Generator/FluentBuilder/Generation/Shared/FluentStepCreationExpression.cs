@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Motiv.Generator.FluentBuilder.FluentModel;
 using Motiv.Generator.FluentBuilder.FluentModel.Methods;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
@@ -13,7 +14,12 @@ public static class FluentStepCreationExpression
         MultiMethod method,
         IEnumerable<ArgumentSyntax> arguments)
     {
-        var name = StepNameSyntax.Create(currentNamespace, method.Return);
+
+        var name = IdentifierName(method.Return.IdentifierDisplayString(currentNamespace, new Dictionary<FluentType, ITypeSymbol>
+        {
+            [new FluentType(method.SourceParameter.Type)] = method.ParameterConverter.ReturnType
+
+        }));
         return CreateMethodOverloadExpression(method, arguments, name);
     }
 
@@ -22,7 +28,7 @@ public static class FluentStepCreationExpression
         IFluentMethod method,
         IEnumerable<ArgumentSyntax> arguments)
     {
-        var name = StepNameSyntax.Create(currentNamespace, method.Return);
+        NameSyntax name = IdentifierName(method.Return.IdentifierDisplayString(currentNamespace));
         return CreateObjectCreationExpression(arguments, name);
     }
 
@@ -49,7 +55,7 @@ public static class FluentStepCreationExpression
         IEnumerable<ArgumentSyntax> argNodes =
         [
             ..fieldSourcedArguments,
-            Argument(ParameterConverterInvocationExpression.Create(parameterConverterMethod, methodParameterSourcedArguments, method.RootNamespace))
+            Argument(MultiMethodInvocationExpression.Create(parameterConverterMethod, methodParameterSourcedArguments, method.RootNamespace))
         ];
 
         return ObjectCreationExpression(name)

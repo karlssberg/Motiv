@@ -5,7 +5,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Motiv.Generator.Attributes;
 using Motiv.Generator.FluentBuilder.Analysis;
 using Motiv.Generator.FluentBuilder.FluentModel;
-using Motiv.Generator.FluentBuilder.Generation;
 using Motiv.Generator.FluentBuilder.Generation.SyntaxElements;
 
 namespace Motiv.Generator.FluentBuilder;

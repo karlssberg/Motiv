@@ -2,15 +2,17 @@
 using Microsoft.CodeAnalysis;
 using Motiv.Generator.FluentBuilder.FluentModel.Steps;
 using Motiv.Generator.FluentBuilder.Generation;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Symbols;
 
 namespace Motiv.Generator.FluentBuilder.FluentModel.Methods;
 
 public class MultiMethod : IFluentMethod
 {
     public string MethodName { get; }
-    public ImmutableArray<FluentMethodParameter> MethodParameters { get; }
+    public ImmutableArray<FluentMethodParameter> MethodParameters => GetMethodParameters();
 
-    public IParameterSymbol? SourceParameterSymbol { get; }
+    public IParameterSymbol SourceParameter { get; }
 
     public ImmutableArray<FluentMethodParameter> AvailableParameterFields { get; }
 
@@ -28,13 +30,28 @@ public class MultiMethod : IFluentMethod
         IMethodSymbol parameterConverter,
         ImmutableArray<FluentMethodParameter> availableParameterFields)
     {
+        _typeParameters = new Lazy<ImmutableArray<FluentTypeParameter>>(GetTypeParameters);
+
         MethodName = methodName;
-        MethodParameters = [..parameterConverter.Parameters.Select(p => new FluentMethodParameter(p, methodName))];
         RootNamespace = rootNamespace;
+        SourceParameter = sourceParameterSymbol;
         Return = fluentReturn;
         ParameterConverter = parameterConverter;
         AvailableParameterFields = availableParameterFields;
-        _typeParameters = new Lazy<ImmutableArray<FluentTypeParameter>>(GetTypeParameters);
+    }
+
+    private ImmutableArray<FluentMethodParameter> GetMethodParameters()
+    {
+        return [..ParameterConverter.Parameters.Select(p => new FluentMethodParameter(p, MethodName))];
+
+        // var typeArguments = _typeParameters.Value.Select(p => p.TypeParameterSymbol);
+        // var constructedMethodSymbol = ParameterConverter.OriginalDefinition.Construct(typeArguments.ToArray<ITypeSymbol>());
+        // return
+        // [
+        //     ..constructedMethodSymbol.Parameters.Select(p => p.Type is INamedTypeSymbol namedTypeSymbol
+        //         ? new FluentMethodParameter(Symbol, MethodName, namedTypeSymbol)
+        //         : new FluentMethodParameter(p, MethodName))
+        // ];
     }
 
     public ImmutableArray<FluentTypeParameter> TypeParameters => _typeParameters.Value;
@@ -42,13 +59,13 @@ public class MultiMethod : IFluentMethod
 
     private ImmutableArray<FluentTypeParameter> GetTypeParameters()
     {
-        var parameterConverterTypeArguments = ParameterConverter?.TypeArguments
+        var parameterConverterTypeArguments = ParameterConverter.TypeArguments
             .OfType<ITypeParameterSymbol>()
-            .Select(typeParameter => new FluentTypeParameter(typeParameter)) ?? [];
+            .Select(typeParameter => new FluentTypeParameter(typeParameter));
 
-        var sourceParameterGenericParameters = SourceParameterSymbol?.Type
+        var sourceParameterGenericParameters = SourceParameter.Type
             .GetGenericTypeParameters()
-            .Select(typeParameter => new FluentTypeParameter(typeParameter)) ?? [];
+            .Select(typeParameter => new FluentTypeParameter(typeParameter));
 
         return
         [

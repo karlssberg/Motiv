@@ -1,8 +1,6 @@
-﻿using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Motiv.Generator.Attributes;
 
 namespace Motiv.Generator.FluentBuilder.Generation;
 
@@ -92,12 +90,12 @@ public static class SymbolExtensions
         };
     }
 
-    public static IEnumerable<ITypeSymbol> GetGenericTypeArguments(this ITypeSymbol type)
+    public static IEnumerable<ITypeParameterSymbol> GetGenericTypeArguments(this ITypeSymbol type)
     {
         return GenericTypeArgumentsInternal(type).DistinctBy(type => type.Name);
     }
 
-    private static IEnumerable<ITypeSymbol> GenericTypeArgumentsInternal(ITypeSymbol type)
+    private static IEnumerable<ITypeParameterSymbol> GenericTypeArgumentsInternal(ITypeSymbol type)
     {
         return type switch
         {

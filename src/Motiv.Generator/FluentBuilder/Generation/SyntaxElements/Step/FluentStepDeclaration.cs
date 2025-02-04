@@ -1,10 +1,7 @@
-﻿using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Motiv.Generator.FluentBuilder.FluentModel.Methods;
 using Motiv.Generator.FluentBuilder.FluentModel.Steps;
-using Motiv.Generator.FluentBuilder.Generation.Shared;
 using Motiv.Generator.FluentBuilder.Generation.SyntaxElements.Step.Constructors;
 using Motiv.Generator.FluentBuilder.Generation.SyntaxElements.Step.Fields;
 using Motiv.Generator.FluentBuilder.Generation.SyntaxElements.Step.Methods;
@@ -18,19 +15,20 @@ public static class FluentStepDeclaration
         RegularFluentStep step)
     {
         var methodDeclarationSyntaxes = step.FluentMethods
-            .Select<IFluentMethod, MethodDeclarationSyntax>(method => method switch
-            {
-                CreateMethod createMethod => FluentFactoryMethodDeclaration.Create(createMethod, step),
-                MultiMethod multiMethod => FluentStepMethodDeclaration.Create(multiMethod, step),
-                _ => FluentStepMethodDeclaration.Create(method, step)
-            });
+            .Select<IFluentMethod, MethodDeclarationSyntax>(method =>
+                method switch
+                {
+                    CreateMethod createMethod => FluentFactoryMethodDeclaration.Create(createMethod, step),
+                    MultiMethod multiMethod => FluentStepMethodDeclaration.Create(multiMethod, step),
+                    _ => FluentStepMethodDeclaration.Create(method, step)
+                });
 
         var fieldDeclaration = step.KnownConstructorParameters
             .Select(parameter => ParameterFieldDeclarations.Create(parameter, step.RootType.ContainingNamespace));
 
         var constructor = FluentStepConstructorDeclaration.Create(step);
 
-        var name = StepNameSyntax.Create(step.Namespace, step);
+        NameSyntax name = IdentifierName(((IFluentReturn)step).IdentifierDisplayString(step.Namespace));
 
         var identifier = name is GenericNameSyntax genericName
             ? genericName.Identifier

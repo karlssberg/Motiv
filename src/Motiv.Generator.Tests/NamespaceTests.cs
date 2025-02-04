@@ -181,13 +181,13 @@ public class NamespaceTests
             public class MethodVariants
             {
                 [FluentMethodTemplate]
-                public static T WithDefaultValue<T>()
+                public static TX WithDefaultValue<TX>()
                 {
-                    return default(T);
+                    return default(TX);
                 }
 
                 [FluentMethodTemplate]
-                public static T WithValue<T>(in T data)
+                public static TX WithValue<TX>(in TX data)
                 {
                     return data;
                 }

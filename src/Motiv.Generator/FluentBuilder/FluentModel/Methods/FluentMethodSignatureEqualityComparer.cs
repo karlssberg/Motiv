@@ -1,6 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-
-namespace Motiv.Generator.FluentBuilder.FluentModel.Methods;
+﻿namespace Motiv.Generator.FluentBuilder.FluentModel.Methods;
 
 internal sealed class FluentMethodSignatureEqualityComparer : IEqualityComparer<IFluentMethod>
 {

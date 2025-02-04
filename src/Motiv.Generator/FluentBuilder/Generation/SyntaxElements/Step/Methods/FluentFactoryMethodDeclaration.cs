@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Motiv.Generator.FluentBuilder.FluentModel;
@@ -50,15 +49,15 @@ public static class FluentFactoryMethodDeclaration
                     Token(SyntaxKind.PublicKeyword)))
             .WithBody(Block(ReturnStatement(returnObjectExpression)));
 
-        if (method.SourceParameterSymbol is not null)
+        if (method.SourceParameter is not null)
         {
             methodDeclaration = methodDeclaration.WithParameterList(
                 ParameterList(SingletonSeparatedList(
                     Parameter(
-                            Identifier(method.SourceParameterSymbol.Name.ToCamelCase()))
+                            Identifier(method.SourceParameter.Name.ToCamelCase()))
                         .WithModifiers(TokenList(Token(SyntaxKind.InKeyword)))
                         .WithType(
-                            IdentifierName(method.SourceParameterSymbol.Type.ToDynamicDisplayString(method.RootNamespace))))));
+                            IdentifierName(method.SourceParameter.Type.ToDynamicDisplayString(method.RootNamespace))))));
         }
 
         if (!method.TypeParameters.Any())

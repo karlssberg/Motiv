@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using Motiv.Generator.FluentBuilder.Generation;
 
 namespace Motiv.Generator.FluentBuilder;
 

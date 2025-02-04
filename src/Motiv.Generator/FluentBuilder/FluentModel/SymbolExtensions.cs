@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Motiv.Generator.FluentBuilder.Generation;
@@ -65,5 +66,22 @@ public static class SymbolExtensions
         return parameterSymbol
             .GetAttributes()
             .FirstOrDefault(a => a.AttributeClass?.ToDisplayString(format) == fluentMethodName);
+    }
+
+    public static INamedTypeSymbol ReplaceTypeParameters(
+        this INamedTypeSymbol type,
+        ImmutableDictionary<ITypeParameterSymbol, ITypeSymbol> replacements)
+    {
+        if (!type.IsGenericType)
+            return type;
+
+        var newTypeArgs = type.TypeArguments.Select(arg =>
+            arg is ITypeParameterSymbol tp && replacements.TryGetValue(tp, out var replacement)
+                ? replacement
+                : arg is INamedTypeSymbol namedArg
+                    ? ReplaceTypeParameters(namedArg, replacements)
+                    : arg);
+
+        return type.OriginalDefinition.Construct(newTypeArgs.ToArray());
     }
 }

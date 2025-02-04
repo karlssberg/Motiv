@@ -11,7 +11,7 @@ public class CreateMethod : IFluentMethod
 
     public ImmutableArray<FluentMethodParameter> MethodParameters { get; } = [];
 
-    public IParameterSymbol? SourceParameterSymbol => null;
+    public IParameterSymbol? SourceParameter => null;
 
     public ImmutableArray<FluentMethodParameter> AvailableParameterFields { get; }
 
@@ -40,7 +40,7 @@ public class CreateMethod : IFluentMethod
     {
         return
             [
-                ..SourceParameterSymbol?.Type
+                ..SourceParameter?.Type
                     .GetGenericTypeParameters()
                     .Select(genericTypeParameter => new FluentTypeParameter(genericTypeParameter))
                   ?? []

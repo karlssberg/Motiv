@@ -104,8 +104,3 @@ public class Trie<TKey, TValue>
         public ICollection<TKey> EncounteredKeyParts { get; } = [];
     }
 }
-
-public class Trie<TKey> : Trie<TKey, object?>
-{
-    public new void Insert(IEnumerable<TKey> key) => base.Insert(key, null);
-}

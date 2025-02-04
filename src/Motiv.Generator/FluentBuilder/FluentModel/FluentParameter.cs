@@ -4,13 +4,13 @@ namespace Motiv.Generator.FluentBuilder.FluentModel;
 
 public class FluentMethodParameter(
     IParameterSymbol parameterSymbol,
-    IEnumerable<string> methodNames)
+    IEnumerable<string> names)
     : IEquatable<FluentMethodParameter>
 {
     public FluentMethodParameter(
         IParameterSymbol parameterSymbol,
-        string methodName)
-        : this(parameterSymbol, [methodName])
+        string names)
+        : this(parameterSymbol, [names])
     {
     }
 
@@ -18,7 +18,7 @@ public class FluentMethodParameter(
 
     public FluentType FluentType { get; } = new(parameterSymbol.Type);
 
-    public ISet<string> Names { get; } = new HashSet<string>(methodNames);
+    public ISet<string> Names { get; } = new HashSet<string>(names);
 
     public bool Equals(FluentMethodParameter? other)
     {

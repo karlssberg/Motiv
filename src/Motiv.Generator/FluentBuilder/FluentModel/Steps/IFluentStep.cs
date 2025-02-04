@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Motiv.Generator.FluentBuilder.FluentModel.Methods;
 
 namespace Motiv.Generator.FluentBuilder.FluentModel.Steps;

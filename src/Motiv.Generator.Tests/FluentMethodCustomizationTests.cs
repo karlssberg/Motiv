@@ -1105,13 +1105,13 @@ public class FluentMethodCustomizationTests
             public static class Value1Methods
             {
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value1<T1, T2>(Func<T1, T2> value)
+                public static Func<TX1, TX2> Value1<TX1, TX2>(Func<TX1, TX2> value)
                 {
                     return value;
                 }
 
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value1<T1, T2>(T2 value)
+                public static Func<TX1, TX2> Value1<TX1, TX2>(TX2 value)
                 {
                     return _ => value;
                 }
@@ -1120,13 +1120,13 @@ public class FluentMethodCustomizationTests
             public static class Value2Methods
             {
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value2<T1, T2>(Func<T1, T2> value)
+                public static Func<TY1, TY2> Value2<TY1, TY2>(Func<TY1, TY2> value)
                 {
                     return value;
                 }
 
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value2<T1, T2>(T2 value)
+                public static Func<TY1, TY2> Value2<TY1, TY2>(TY2 value)
                 {
                     return _ => value;
                 }
@@ -1135,13 +1135,13 @@ public class FluentMethodCustomizationTests
             public static class Value3Methods
             {
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value3<T1, T2>(Func<T1, T2> value)
+                public static Func<TY1, TY2> Value3<TY1, TY2>(Func<TY1, TY2> value)
                 {
                     return value;
                 }
 
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value3<T1, T2>(T2 value)
+                public static Func<TY1, TY2> Value3<TY1, TY2>(TY2 value)
                 {
                     return _ => value;
                 }
@@ -1257,13 +1257,13 @@ public class FluentMethodCustomizationTests
             public static class Value1Methods
             {
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value1<T1, T2>(Func<T1, T2> value)
+                public static Func<TX1, TX2> Value1<TX1, TX2>(Func<TX1, TX2> value)
                 {
                     return value;
                 }
 
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value1<T1, T2>(T2 value)
+                public static Func<TX1, TX2> Value1<TX1, TX2>(TX2 value)
                 {
                     return _ => value;
                 }
@@ -1272,13 +1272,13 @@ public class FluentMethodCustomizationTests
             public static class Value2Methods
             {
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value2<T1, T2>(Func<T1, T2> value)
+                public static Func<TY1, TY2> Value2<TY1, TY2>(Func<TY1, TY2> value)
                 {
                     return value;
                 }
 
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value2<T1, T2>(T2 value)
+                public static Func<TY1, TY2> Value2<TY1, TY2>(TY2 value)
                 {
                     return _ => value;
                 }
@@ -1287,13 +1287,13 @@ public class FluentMethodCustomizationTests
             public static class Value3Methods
             {
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value3<T1, T2>(Func<T1, T2> value)
+                public static Func<TZ1, TZ2> Value3<TZ1, TZ2>(Func<TZ1, TZ2> value)
                 {
                     return value;
                 }
 
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value3<T1, T2>(T2 value)
+                public static Func<TZ1, TZ2> Value3<TZ1, TZ2>(TZ2 value)
                 {
                     return _ => value;
                 }
