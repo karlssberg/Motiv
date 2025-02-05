@@ -69,9 +69,9 @@ public class RegularFluentStep(INamedTypeSymbol rootType) : IFluentStep
             : Name;
     }
 
-    public string IdentifierDisplayString(INamespaceSymbol currentNamespace, IDictionary<FluentType, ITypeSymbol> genericTypeParameterMap)
+    public string IdentifierDisplayString(INamespaceSymbol currentNamespace, IDictionary<FluentType, ITypeSymbol> genericTypeArgumentMap)
     {
-        var distinctGenericParameters = this.GetGenericTypeArguments(genericTypeParameterMap)
+        var distinctGenericParameters = this.GetGenericTypeArguments(genericTypeArgumentMap)
             .ToArray();
 
         return distinctGenericParameters.Length > 0

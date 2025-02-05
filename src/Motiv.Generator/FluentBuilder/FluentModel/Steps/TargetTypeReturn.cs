@@ -18,25 +18,24 @@ public class TargetTypeReturn(
 
     public string IdentifierDisplayString(INamespaceSymbol currentNamespace)
     {
-        return targetTypeConstructor.ContainingType.ToDynamicDisplayString(currentNamespace);
+        return IdentifierDisplayString(currentNamespace, new Dictionary<FluentType, ITypeSymbol>());
     }
 
     public string IdentifierDisplayString(
         INamespaceSymbol currentNamespace,
-        IDictionary<FluentType, ITypeSymbol> genericTypeParameterMap)
+        IDictionary<FluentType, ITypeSymbol> genericTypeArgumentMap)
     {
-        var distinctGenericParameters = this.GetGenericTypeArguments(genericTypeParameterMap).ToDictionary(i => i.Name);
-        if (distinctGenericParameters.Count == 0)
-            return targetTypeConstructor.ContainingType.Name;
-
-        var argsToAppend = genericTypeParameterMap
-            .SelectMany(parameter => parameter.Value.GetGenericTypeArguments())
-            .Where(typeParameterSymbol => !distinctGenericParameters.ContainsKey(typeParameterSymbol.Name))
+        var allArgs = targetTypeConstructor.ContainingType.TypeParameters
+            .Select(typeParameter => genericTypeArgumentMap.TryGetValue(new FluentType(typeParameter), out var type)
+                ? type
+                : typeParameter)
             .ToArray();
 
-        var allArgs = distinctGenericParameters.Values.Concat(argsToAppend).ToArray();
+        var constructedType = allArgs.Length > 0
+            ? targetTypeConstructor.ContainingType.Construct(allArgs)
+            : targetTypeConstructor.ContainingType;
 
-        return targetTypeConstructor.ContainingType.Construct(allArgs).ToDynamicDisplayString(currentNamespace);
+        return constructedType.ToDynamicDisplayString(currentNamespace);
     }
 
     public INamespaceSymbol Namespace => targetTypeConstructor.ContainingNamespace;

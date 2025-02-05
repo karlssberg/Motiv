@@ -6,7 +6,7 @@ namespace Motiv.Generator.FluentBuilder.FluentModel.Steps;
 public interface IFluentReturn
 {
     string IdentifierDisplayString(INamespaceSymbol currentNamespace);
-    string IdentifierDisplayString(INamespaceSymbol currentNamespace, IDictionary<FluentType, ITypeSymbol> genericTypeParameterMap);
+    string IdentifierDisplayString(INamespaceSymbol currentNamespace, IDictionary<FluentType, ITypeSymbol> genericTypeArgumentMap);
 
     INamespaceSymbol Namespace { get; }
 

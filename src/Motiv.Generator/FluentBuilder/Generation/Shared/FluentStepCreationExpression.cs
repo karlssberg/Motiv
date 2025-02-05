@@ -14,7 +14,6 @@ public static class FluentStepCreationExpression
         MultiMethod method,
         IEnumerable<ArgumentSyntax> arguments)
     {
-
         var name = IdentifierName(method.Return.IdentifierDisplayString(currentNamespace, new Dictionary<FluentType, ITypeSymbol>
         {
             [new FluentType(method.SourceParameter.Type)] = method.ParameterConverter.ReturnType

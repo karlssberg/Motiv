@@ -50,9 +50,9 @@ public class ExistingTypeFluentStep(INamedTypeSymbol rootType, IMethodSymbol exi
         return ExistingStepConstructor.ContainingType.ToDynamicDisplayString(currentNamespace);
     }
 
-    public string IdentifierDisplayString(INamespaceSymbol currentNamespace, IDictionary<FluentType, ITypeSymbol> genericTypeParameterMap)
+    public string IdentifierDisplayString(INamespaceSymbol currentNamespace, IDictionary<FluentType, ITypeSymbol> genericTypeArgumentMap)
     {
-        var distinctGenericParameters = this.GetGenericTypeArguments(genericTypeParameterMap).ToArray();
+        var distinctGenericParameters = this.GetGenericTypeArguments(genericTypeArgumentMap).ToArray();
 
         var existingStepConstructed = existingStepConstructor.ContainingType.Construct(distinctGenericParameters);
 
