@@ -54,15 +54,9 @@ public class ExistingTypeFluentStep(INamedTypeSymbol rootType, IMethodSymbol exi
     {
         var distinctGenericParameters = this.GetGenericTypeArguments(genericTypeParameterMap).ToArray();
 
-        return distinctGenericParameters.Length > 0
-            ? GenericName(Identifier(Name))
-                .WithTypeArgumentList(
-                    TypeArgumentList(SeparatedList<TypeSyntax>(
-                        distinctGenericParameters
-                            .Select(arg => IdentifierName(arg.ToDynamicDisplayString(Namespace))))))
-                .NormalizeWhitespace()
-                .ToString()
-            : Name;
+        var existingStepConstructed = existingStepConstructor.ContainingType.Construct(distinctGenericParameters);
+
+        return existingStepConstructed.ToDynamicDisplayString(currentNamespace);
     }
     public INamespaceSymbol Namespace => ExistingStepConstructor.ContainingNamespace;
 

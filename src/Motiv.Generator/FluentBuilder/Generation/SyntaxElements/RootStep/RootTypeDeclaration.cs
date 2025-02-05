@@ -5,6 +5,7 @@ using Motiv.Generator.FluentBuilder.FluentModel;
 using Motiv.Generator.FluentBuilder.FluentModel.Methods;
 using Motiv.Generator.FluentBuilder.FluentModel.Steps;
 using Motiv.Generator.FluentBuilder.Generation.SyntaxElements.RootStep.Methods;
+using Motiv.Generator.FluentBuilder.Generation.SyntaxElements.Step.Methods;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Motiv.Generator.FluentBuilder.Generation.SyntaxElements.RootStep;
@@ -69,10 +70,11 @@ public static class RootTypeDeclaration
     private static IEnumerable<MethodDeclarationSyntax> GetRootMethodDeclarations(FluentFactoryCompilationUnit file)
     {
         return file.FluentMethods
-            .Select<IFluentMethod, MethodDeclarationSyntax>(method => method.Return switch
+            .Select<IFluentMethod, MethodDeclarationSyntax>(method => method switch
             {
-                TargetTypeReturn => FluentRootFactoryMethodDeclaration.Create(file.RootType.ContainingNamespace, method),
-                _ => FluentRootStepMethodDeclaration.Create(file.RootType.ContainingNamespace, method)
+                { Return: TargetTypeReturn } => FluentRootFactoryMethodDeclaration.Create(file.RootType.ContainingNamespace, method),
+                MultiMethod multiMethod => FluentStepMethodDeclaration.Create(multiMethod, [], file.RootType.ContainingNamespace),
+                _ => FluentStepMethodDeclaration.Create(method, [], file.RootType.ContainingNamespace)
             })
             .Select(method =>
             {

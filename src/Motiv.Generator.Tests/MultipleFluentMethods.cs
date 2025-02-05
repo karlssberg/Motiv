@@ -921,12 +921,12 @@ public class MultipleFluentMethodTests
 
             namespace Test.Namespace
             {
-                [FluentFactory(Options = FluentOptions.NoCreateMethod)]
+                [FluentFactory]
                 public static partial class Factory;
 
                 public class MyBuildTarget<T1, T2>
                 {
-                    [FluentConstructor(typeof(Factory))]
+                    [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                     public MyBuildTarget(
                         [MultipleFluentMethods(typeof(FirstMethods))]T1 first,
                         [MultipleFluentMethods(typeof(SecondMethods))]T2 second)
@@ -963,7 +963,7 @@ public class MultipleFluentMethodTests
                 public class SecondMethods
                 {
                     [FluentMethodTemplate]
-                    public static TX SetSecond<TX>(in Func<TX> function)
+                    public static TY SetSecond<TY>(in Func<TY> function)
                     {
                         return function();
                     }
@@ -975,9 +975,9 @@ public class MultipleFluentMethodTests
                     }
 
                     [FluentMethodTemplate]
-                    public static Func<TX2, TX1> SetSecond<TX1, TX2>()
+                    public static Func<TY2, TY1> SetSecond<TY1, TY2>()
                     {
-                        return _ => default(TX1);
+                        return _ => default(TY1);
                     }
                 }
             }
@@ -1002,9 +1002,9 @@ public class MultipleFluentMethodTests
                     }
 
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public static Step_0__Test_Namespace_Factory<System.Func<T2, T1>> SetFirst<T1, T2>()
+                    public static Step_0__Test_Namespace_Factory<System.Func<TX2, TX1>> SetFirst<TX1, TX2>()
                     {
-                        return new Step_0__Test_Namespace_Factory<System.Func<T2, T1>>(FirstMethods.SetFirst());
+                        return new Step_0__Test_Namespace_Factory<System.Func<TX2, TX1>>(FirstMethods.SetFirst<TX1, TX2>());
                     }
                 }
 
@@ -1029,9 +1029,9 @@ public class MultipleFluentMethodTests
                     }
 
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public MyBuildTarget<T1, System.Func<T2, T1>> SetSecond(in System.Func<string> function)
+                    public MyBuildTarget<T1, System.Func<TY2, TY1>> SetSecond<TY1, TY2>()
                     {
-                        return new new MyBuildTarget<T1, System.Func<T2, T1>>(this._first__parameter, SecondMethods.SetSecond(function));
+                        return new MyBuildTarget<T1, System.Func<TY2, TY1>>(this._first__parameter, SecondMethods.SetSecond<TY1, TY2>());
                     }
                 }
             }

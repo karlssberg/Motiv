@@ -7,6 +7,25 @@ namespace Motiv.Generator.FluentBuilder.FluentModel.Methods;
 
 public class RegularMethod : IFluentMethod
 {
+    private readonly Lazy<ImmutableArray<FluentTypeParameter>> _lazyTypeParameters;
+
+    public RegularMethod(
+        string methodName,
+        IParameterSymbol sourceParameterSymbol,
+        IFluentReturn fluentReturn,
+        INamespaceSymbol rootNamespace,
+        ImmutableArray<FluentMethodParameter> availableParameterFields)
+    {
+        _lazyTypeParameters = new Lazy<ImmutableArray<FluentTypeParameter>>(GetTypeParameters);
+
+        MethodName = methodName;
+        SourceParameter = sourceParameterSymbol;
+        MethodParameters = GetMethodParameters(methodName, sourceParameterSymbol);
+        RootNamespace = rootNamespace;
+        AvailableParameterFields = availableParameterFields;
+        Return = fluentReturn;
+    }
+
     public string MethodName { get; }
 
     public ImmutableArray<FluentMethodParameter> MethodParameters { get; }
@@ -17,28 +36,15 @@ public class RegularMethod : IFluentMethod
 
     public IFluentReturn Return { get; }
 
-
-    private readonly Lazy<ImmutableArray<FluentTypeParameter>> _typeParameters;
-
-    public RegularMethod(
-        string methodName,
-        IParameterSymbol sourceParameterSymbol,
-        IFluentReturn fluentReturn,
-        INamespaceSymbol rootNamespace,
-        ImmutableArray<FluentMethodParameter> availableParameterFields)
-    {
-        MethodName = methodName;
-        SourceParameter = sourceParameterSymbol;
-        MethodParameters = [new FluentMethodParameter(sourceParameterSymbol, methodName)];
-        RootNamespace = rootNamespace;
-        AvailableParameterFields = availableParameterFields;
-        Return = fluentReturn;
-        _typeParameters = new Lazy<ImmutableArray<FluentTypeParameter>>(GetTypeParameters);
-    }
-
-    public ImmutableArray<FluentTypeParameter> TypeParameters => _typeParameters.Value;
+    public ImmutableArray<FluentTypeParameter> TypeParameters => _lazyTypeParameters.Value;
 
     public INamespaceSymbol RootNamespace { get; }
+
+    private static ImmutableArray<FluentMethodParameter> GetMethodParameters(string methodName,
+        IParameterSymbol sourceParameterSymbol)
+    {
+        return [new FluentMethodParameter(sourceParameterSymbol, methodName)];
+    }
 
     private ImmutableArray<FluentTypeParameter> GetTypeParameters()
     {

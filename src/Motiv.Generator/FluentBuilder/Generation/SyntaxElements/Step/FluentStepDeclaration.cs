@@ -19,8 +19,8 @@ public static class FluentStepDeclaration
                 method switch
                 {
                     CreateMethod createMethod => FluentFactoryMethodDeclaration.Create(createMethod, step),
-                    MultiMethod multiMethod => FluentStepMethodDeclaration.Create(multiMethod, step),
-                    _ => FluentStepMethodDeclaration.Create(method, step)
+                    MultiMethod multiMethod => FluentStepMethodDeclaration.Create(multiMethod, step.KnownConstructorParameters, step.Namespace),
+                    _ => FluentStepMethodDeclaration.Create(method, step.KnownConstructorParameters, step.Namespace)
                 });
 
         var fieldDeclaration = step.KnownConstructorParameters

@@ -1,9 +1,9 @@
 ﻿using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Motiv.Generator.FluentBuilder.FluentModel;
 using Motiv.Generator.FluentBuilder.FluentModel.Methods;
-using Motiv.Generator.FluentBuilder.FluentModel.Steps;
 using Motiv.Generator.FluentBuilder.Generation.Shared;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
@@ -13,27 +13,31 @@ public static class FluentStepMethodDeclaration
 {
     public static MethodDeclarationSyntax Create(
         MultiMethod multiMethod,
-        IFluentStep step)
+        ParameterSequence knownConstructorParameters,
+        INamespaceSymbol currentNamespace)
     {
-        var stepActivationArgs = CreateStepConstructorArguments(multiMethod, step);
+        var stepActivationArgs = CreateStepConstructorArguments(multiMethod, knownConstructorParameters);
 
-        var returnObjectExpression = FluentStepCreationExpression.Create(step.Namespace, multiMethod, stepActivationArgs);
+        var returnObjectExpression = FluentStepCreationExpression.Create(currentNamespace, multiMethod, stepActivationArgs);
 
-        return CreateMethodDeclaration(multiMethod, step, returnObjectExpression);
+        return CreateMethodDeclaration(multiMethod, knownConstructorParameters, returnObjectExpression);
     }
 
     public static MethodDeclarationSyntax Create(
         IFluentMethod method,
-        IFluentStep step)
+        ParameterSequence knownConstructorParameters,
+        INamespaceSymbol currentNamespace)
     {
-        var stepActivationArgs = CreateStepConstructorArguments(method, step);
+        var stepActivationArgs = CreateStepConstructorArguments(method, knownConstructorParameters);
 
-        var returnObjectExpression = FluentStepCreationExpression.Create(step.Namespace, method, stepActivationArgs);
+        var returnObjectExpression = FluentStepCreationExpression.Create(currentNamespace, method, stepActivationArgs);
 
-        return CreateMethodDeclaration(method, step, returnObjectExpression);
+        return CreateMethodDeclaration(method, knownConstructorParameters, returnObjectExpression);
     }
 
-    private static MethodDeclarationSyntax CreateMethodDeclaration(IFluentMethod method, IFluentStep step,
+    private static MethodDeclarationSyntax CreateMethodDeclaration(
+        IFluentMethod method,
+        ParameterSequence knownConstructorParameters,
         ObjectCreationExpressionSyntax returnObjectExpression)
     {
         var methodDeclaration = MethodDeclaration(
@@ -66,7 +70,7 @@ public static class FluentStepMethodDeclaration
             return methodDeclaration;
 
         var typeParameterSyntaxes = method.TypeParameters
-            .Except(step.KnownConstructorParameters
+            .Except(knownConstructorParameters
                 .SelectMany(parameter => parameter.Type.GetGenericTypeParameters())
                 .Select(genericTypeParameters => new FluentTypeParameter(genericTypeParameters)))
             .Select(fluentTypeParameter => fluentTypeParameter.TypeParameterSymbol.ToTypeParameterSyntax())
@@ -80,9 +84,9 @@ public static class FluentStepMethodDeclaration
 
     private static IEnumerable<ArgumentSyntax> CreateStepConstructorArguments(
         IFluentMethod method,
-        IFluentStep step)
+        ParameterSequence knownConstructorParameters)
     {
-        return step.KnownConstructorParameters
+        return knownConstructorParameters
             .Select(parameter =>
                 Argument(
                     MemberAccessExpression(

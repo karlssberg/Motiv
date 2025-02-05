@@ -2,25 +2,14 @@
 using Microsoft.CodeAnalysis;
 using Motiv.Generator.FluentBuilder.FluentModel.Steps;
 using Motiv.Generator.FluentBuilder.Generation;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
 
 namespace Motiv.Generator.FluentBuilder.FluentModel.Methods;
 
 public class MultiMethod : IFluentMethod
 {
-    public string MethodName { get; }
-    public ImmutableArray<FluentMethodParameter> MethodParameters => GetMethodParameters();
+    private readonly Lazy<ImmutableArray<FluentTypeParameter>> _lazyTypeParameters;
 
-    public IParameterSymbol SourceParameter { get; }
-
-    public ImmutableArray<FluentMethodParameter> AvailableParameterFields { get; }
-
-    public IFluentReturn Return { get; }
-
-    public IMethodSymbol ParameterConverter { get; }
-
-    private readonly Lazy<ImmutableArray<FluentTypeParameter>> _typeParameters;
+    private readonly Lazy<ImmutableArray<FluentMethodParameter>> _lazyMethodParameters;
 
     public MultiMethod(
         string methodName,
@@ -30,7 +19,8 @@ public class MultiMethod : IFluentMethod
         IMethodSymbol parameterConverter,
         ImmutableArray<FluentMethodParameter> availableParameterFields)
     {
-        _typeParameters = new Lazy<ImmutableArray<FluentTypeParameter>>(GetTypeParameters);
+        _lazyMethodParameters = new Lazy<ImmutableArray<FluentMethodParameter>>(GetMethodParameters);
+        _lazyTypeParameters = new Lazy<ImmutableArray<FluentTypeParameter>>(GetTypeParameters);
 
         MethodName = methodName;
         RootNamespace = rootNamespace;
@@ -39,6 +29,19 @@ public class MultiMethod : IFluentMethod
         ParameterConverter = parameterConverter;
         AvailableParameterFields = availableParameterFields;
     }
+
+    public IMethodSymbol ParameterConverter { get; }
+    public string MethodName { get; }
+    public ImmutableArray<FluentMethodParameter> MethodParameters => _lazyMethodParameters.Value;
+
+    public IParameterSymbol SourceParameter { get; }
+
+    public ImmutableArray<FluentMethodParameter> AvailableParameterFields { get; }
+
+    public IFluentReturn Return { get; }
+
+    public ImmutableArray<FluentTypeParameter> TypeParameters => _lazyTypeParameters.Value;
+    public INamespaceSymbol RootNamespace { get; }
 
     private ImmutableArray<FluentMethodParameter> GetMethodParameters()
     {
@@ -54,22 +57,13 @@ public class MultiMethod : IFluentMethod
         // ];
     }
 
-    public ImmutableArray<FluentTypeParameter> TypeParameters => _typeParameters.Value;
-    public INamespaceSymbol RootNamespace { get; }
-
     private ImmutableArray<FluentTypeParameter> GetTypeParameters()
     {
-        var parameterConverterTypeArguments = ParameterConverter.TypeArguments
-            .OfType<ITypeParameterSymbol>()
-            .Select(typeParameter => new FluentTypeParameter(typeParameter));
-
-        var sourceParameterGenericParameters = SourceParameter.Type
-            .GetGenericTypeParameters()
-            .Select(typeParameter => new FluentTypeParameter(typeParameter));
-
         return
         [
-            ..sourceParameterGenericParameters.Union(parameterConverterTypeArguments)
+            ..ParameterConverter.TypeArguments
+                .OfType<ITypeParameterSymbol>()
+                .Select(typeParameter => new FluentTypeParameter(typeParameter))
         ];
     }
 }

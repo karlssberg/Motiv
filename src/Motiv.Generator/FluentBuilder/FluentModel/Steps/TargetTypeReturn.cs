@@ -32,15 +32,11 @@ public class TargetTypeReturn(
         var argsToAppend = genericTypeParameterMap
             .SelectMany(parameter => parameter.Value.GetGenericTypeArguments())
             .Where(typeParameterSymbol => !distinctGenericParameters.ContainsKey(typeParameterSymbol.Name))
-            .Select(typeParameterSymbol => typeParameterSymbol.ToDisplayString())
             .ToArray();
 
-        return GenericName(Identifier(targetTypeConstructor.ContainingType.Name))
-            .WithTypeArgumentList(
-                TypeArgumentList(SeparatedList<TypeSyntax>(
-                    distinctGenericParameters.Keys.Concat(argsToAppend).Select(IdentifierName))))
-            .NormalizeWhitespace()
-            .ToString();
+        var allArgs = distinctGenericParameters.Values.Concat(argsToAppend).ToArray();
+
+        return targetTypeConstructor.ContainingType.Construct(allArgs).ToDynamicDisplayString(currentNamespace);
     }
 
     public INamespaceSymbol Namespace => targetTypeConstructor.ContainingNamespace;
