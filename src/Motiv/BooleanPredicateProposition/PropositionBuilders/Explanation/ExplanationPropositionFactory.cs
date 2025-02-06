@@ -10,8 +10,8 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct ExplanationPropositionFactory<TModel>(
     [FluentMethod("Build")]Func<TModel, bool> predicate,
-    [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<TModel, string> whenTrue,
-    [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<TModel, string> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, string> whenTrue,
+    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, string> whenFalse)
 {
     /// <summary>
     /// Creates a proposition with descriptive assertions, but using the supplied proposition to succinctly explain

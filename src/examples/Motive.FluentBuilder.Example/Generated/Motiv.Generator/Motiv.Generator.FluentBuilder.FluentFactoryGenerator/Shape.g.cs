@@ -26,13 +26,13 @@ public struct Step_0__Shape
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public Step_1__Shape WithHeight(in int height)
     {
-        return new Step_1__Shape(this._width__parameter, width);
+        return new Step_1__Shape(this._width__parameter, height);
     }
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    public Square Create(in int width)
+    public Square Create()
     {
-        return new Square(this._withWidth__parameter, width);
+        return new Square(this._width__parameter);
     }
 }
 
@@ -49,13 +49,13 @@ public struct Step_1__Shape
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public Step_2__Shape WithDepth(in int depth)
     {
-        return new Step_2__Shape(this._width__parameter, this._height__parameter, width, height);
+        return new Step_2__Shape(this._width__parameter, this._height__parameter, depth);
     }
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    public Rectangle Create(in int width)
+    public Rectangle Create()
     {
-        return new Rectangle(this._withWidth__parameter, this._withHeight__parameter, width);
+        return new Rectangle(this._width__parameter, this._height__parameter);
     }
 }
 
@@ -72,9 +72,9 @@ public struct Step_2__Shape
     }
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    public Cuboid Create(in int width)
+    public Cuboid Create()
     {
-        return new Cuboid(this._withWidth__parameter, this._withHeight__parameter, this._withDepth__parameter, width);
+        return new Cuboid(this._width__parameter, this._height__parameter, this._depth__parameter);
     }
 }
 
@@ -87,8 +87,8 @@ public struct Step_3__Shape
     }
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    public Circle Create(in int radius)
+    public Circle Create()
     {
-        return new Circle(this._withRadius__parameter, radius);
+        return new Circle(this._radius__parameter);
     }
 }

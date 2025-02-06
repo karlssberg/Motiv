@@ -11,8 +11,8 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Metadata;
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct MetadataPropositionFactory<TModel, TMetadata>(
     [FluentMethod("Build")]Func<TModel, bool> predicate,
-    [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<TModel, TMetadata> whenTrue,
-    [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<TModel, TMetadata> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, TMetadata> whenTrue,
+    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, TMetadata> whenFalse)
 {
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.

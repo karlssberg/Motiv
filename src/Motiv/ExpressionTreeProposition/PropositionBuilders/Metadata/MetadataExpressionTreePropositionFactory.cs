@@ -13,8 +13,8 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders.Metadata;
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct MetadataExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
-    [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<TModel, BooleanResultBase<string>, TMetadata> whenTrue,
-    [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<TModel, BooleanResultBase<string>, TMetadata> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, TMetadata> whenTrue,
+    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, BooleanResultBase<string>, TMetadata> whenFalse)
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>

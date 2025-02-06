@@ -13,8 +13,8 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders.Explanation;
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct ExplanationExpressionTreePropositionFactory<TModel, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
-    [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<TModel, BooleanResultBase<string>, string> trueBecause,
-    [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<TModel, BooleanResultBase<string>, string> falseBecause)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, string> trueBecause,
+    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, BooleanResultBase<string>, string> falseBecause)
 {
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.

@@ -1,0 +1,24 @@
+﻿using Motiv.Generator.Attributes;
+
+namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders;
+
+internal class WhenTrueOverloads
+{
+    [FluentMethodTemplate]
+    internal static Func<TModel, TBooleanResult, TNewMetadata> WhenTrue<TModel, TBooleanResult, TNewMetadata>(Func<TModel, TBooleanResult, TNewMetadata> whenTrue)
+    {
+        return whenTrue;
+    }
+
+    [FluentMethodTemplate]
+    internal static Func<TModel, TBooleanResult, TNewMetadata> WhenTrue<TModel, TBooleanResult, TNewMetadata>(Func<TModel, TNewMetadata> whenTrue)
+    {
+        return (model, _) => whenTrue(model);
+    }
+
+    [FluentMethodTemplate]
+    internal static Func<TModel, TBooleanResult, TNewMetadata> WhenTrue<TModel, TBooleanResult, TNewMetadata>(TNewMetadata whenTrue)
+    {
+        return (_, _) => whenTrue;
+    }
+}

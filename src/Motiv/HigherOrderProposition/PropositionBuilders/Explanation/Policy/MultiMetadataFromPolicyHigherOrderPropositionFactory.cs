@@ -15,43 +15,9 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Policy;
 public readonly partial struct MultiMetadataFromPolicyHigherOrderPropositionFactory<TModel, TReplacementMetadata>(
     [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, string> policy,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, string> higherOrderOperation,
-    [FluentMethod("WhenTrueYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, string>, IEnumerable<TReplacementMetadata>> whenTrue,
-    [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, string>, IEnumerable<TReplacementMetadata>> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, string>, IEnumerable<TReplacementMetadata>> whenTrue,
+    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, string>, IEnumerable<TReplacementMetadata>> whenFalse)
 {
-    /// <summary>
-    /// Creates a specification and names it with the propositional statement provided.
-    /// </summary>
-    /// <param name="policy">The policy to evaluate.</param>
-    /// <param name="higherOrderOperation">The higher-order operation to perform.</param>
-    /// <param name="whenTrue">The metadata to yield when the policy is satisfied.</param>
-    /// <param name="whenFalse">The metadata to yield when the policy is not satisfied.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiMetadataFromPolicyHigherOrderPropositionFactory(
-        [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, string> policy,
-        [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, string> higherOrderOperation,
-        [FluentMethod("WhenTrueYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, string>, IEnumerable<TReplacementMetadata>> whenTrue,
-        [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, string>, TReplacementMetadata> whenFalse)
-        : this(policy, higherOrderOperation, whenTrue, whenFalse.ToEnumerableReturn())
-    {
-    }
-
-    /// <summary>
-    /// Creates a specification and names it with the propositional statement provided.
-    /// </summary>
-    /// <param name="policy">The policy to evaluate.</param>
-    /// <param name="higherOrderOperation">The higher-order operation to perform.</param>
-    /// <param name="whenTrue">The metadata to yield when the policy is satisfied.</param>
-    /// <param name="whenFalse">The metadata to yield when the policy is not satisfied.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiMetadataFromPolicyHigherOrderPropositionFactory(
-        [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, string> policy,
-        [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, string> higherOrderOperation,
-        [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, string>, TReplacementMetadata> whenTrue,
-        [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, string>, IEnumerable<TReplacementMetadata>> whenFalse)
-        : this(policy, higherOrderOperation, whenTrue.ToEnumerableReturn(), whenFalse)
-    {
-    }
-
     /// <summary>Creates a specification and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>

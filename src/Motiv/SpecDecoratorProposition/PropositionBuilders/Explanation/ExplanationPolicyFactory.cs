@@ -12,8 +12,8 @@ namespace Motiv.SpecDecoratorProposition.PropositionBuilders.Explanation;
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct ExplanationPolicyDecoratorFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
-    [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<TModel, PolicyResultBase<TMetadata>, string> trueBecause,
-    [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<TModel, PolicyResultBase<TMetadata>, string> falseBecause)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, PolicyResultBase<TMetadata>, string> trueBecause,
+    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, PolicyResultBase<TMetadata>, string> falseBecause)
 {
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.

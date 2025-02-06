@@ -14,39 +14,9 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders.Explanation;
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct MultiAssertionExplanationExpressionTreePropositionFactory<TModel, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
-    [FluentMethod("WhenTrueYield", Overloads = typeof(WhenYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> trueBecause,
-    [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> falseBecause)
+    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> trueBecause,
+    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> falseBecause)
 {
-    /// <summary>
-    /// A factory for creating propositions based on the supplied proposition and explanation factories.
-    /// </summary>
-    /// <param name="expression">The predicate to evaluate.</param>
-    /// <param name="trueBecause">The explanations for when the predicate is true.</param>
-    /// <param name="falseBecause">The explanation for when the predicate is false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiAssertionExplanationExpressionTreePropositionFactory(
-        [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
-        [FluentMethod("WhenTrueYield", Overloads = typeof(WhenYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> trueBecause,
-        [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<TModel, BooleanResultBase<string>, string> falseBecause)
-        : this(expression, trueBecause, falseBecause.ToEnumerableReturn())
-    {
-    }
-
-    /// <summary>
-    /// A factory for creating propositions based on the supplied proposition and explanation factories.
-    /// </summary>
-    /// <param name="expression">The predicate to evaluate.</param>
-    /// <param name="trueBecause">The explanations for when the predicate is true.</param>
-    /// <param name="falseBecause">The explanation for when the predicate is false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiAssertionExplanationExpressionTreePropositionFactory(
-        [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
-        [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<TModel, BooleanResultBase<string>, string> trueBecause,
-        [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> falseBecause)
-        : this(expression, trueBecause.ToEnumerableReturn(), falseBecause)
-    {
-    }
-
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>

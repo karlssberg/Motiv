@@ -19,8 +19,8 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTr
 public readonly partial struct MetadataHigherOrderExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,
-    [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, TMetadata> whenTrue,
-    [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, TMetadata> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, TMetadata> whenTrue,
+    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, TMetadata> whenFalse)
 {
     /// <summary>Creates a specification and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>

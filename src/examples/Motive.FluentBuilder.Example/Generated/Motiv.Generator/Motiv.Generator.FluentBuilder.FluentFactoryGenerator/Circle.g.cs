@@ -18,8 +18,8 @@ public struct Step_0__Circle
     }
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    public Circle Create(in int radius)
+    public Circle Create()
     {
-        return new Circle(this._withRadius__parameter, radius);
+        return new Circle(this._radius__parameter);
     }
 }

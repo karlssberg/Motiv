@@ -12,7 +12,7 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanatio
 public readonly partial struct ExplanationFromPolicyResultWithNamePropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> predicate,
     [FluentMethod("WhenTrue")]string trueBecause,
-    [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<TModel, PolicyResultBase<TMetadata>, string> falseBecause)
+    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, PolicyResultBase<TMetadata>, string> falseBecause)
 {
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement

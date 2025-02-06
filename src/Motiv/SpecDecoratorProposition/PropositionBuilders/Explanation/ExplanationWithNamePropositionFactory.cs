@@ -23,7 +23,7 @@ public readonly partial struct ExplanationWithNamePropositionFactory<TModel, TMe
     public ExplanationWithNamePropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
         [FluentMethod("WhenTrue")]string trueBecause,
-        [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<TModel, BooleanResultBase<TMetadata>, string> falseBecause)
+        [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, BooleanResultBase<TMetadata>, string> falseBecause)
     {
         _spec = spec;
         _trueBecause = trueBecause;
@@ -39,7 +39,7 @@ public readonly partial struct ExplanationWithNamePropositionFactory<TModel, TMe
     public ExplanationWithNamePropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
         [FluentMethod("WhenTrue")]string trueBecause,
-        [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<TModel, BooleanResultBase<TMetadata>, string> falseBecause)
+        [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, BooleanResultBase<TMetadata>, string> falseBecause)
     {
         _spec = policy;
         _trueBecause = trueBecause;

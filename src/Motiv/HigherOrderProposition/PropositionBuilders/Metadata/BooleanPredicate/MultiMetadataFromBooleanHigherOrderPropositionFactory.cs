@@ -15,42 +15,9 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.BooleanPredi
 public readonly partial struct MultiMetadataFromBooleanHigherOrderPropositionFactory<TModel, TMetadata>(
     [FluentMethod("Build")]Func<TModel, bool> resultResolver,
     [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,
-    [FluentMethod("WhenTrueYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenTrue,
-    [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenTrue,
+    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenFalse)
 {
-    /// <summary>
-    /// Creates a specification with metadata for when the condition is true or false, and names it with the propositional statement provided.
-    /// </summary>
-    /// <param name="resultResolver">The predicate to evaluate.</param>
-    /// <param name="higherOrderOperation">The higher-order operation to perform.</param>
-    /// <param name="whenTrue">The metadata for when the predicate is true.</param>
-    /// <param name="whenFalse">The metadata for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiMetadataFromBooleanHigherOrderPropositionFactory(
-        [FluentMethod("Build")]Func<TModel, bool> resultResolver,
-        [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,
-        [FluentMethod("WhenTrueYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenTrue,
-        [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenFalse)
-        : this(resultResolver, higherOrderOperation, whenTrue, whenFalse.ToEnumerableReturn())
-    {
-    }
-
-    /// <summary>
-    /// Creates a specification with metadata for when the condition is true or false, and names it with the propositional statement provided.
-    /// </summary>
-    /// <param name="resultResolver">The predicate to evaluate.</param>
-    /// <param name="higherOrderOperation">The higher-order operation to perform.</param>
-    /// <param name="whenTrue">The metadata for when the predicate is true.</param>
-    /// <param name="whenFalse">The metadata for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiMetadataFromBooleanHigherOrderPropositionFactory(
-        [FluentMethod("Build")]Func<TModel, bool> resultResolver,
-        [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,
-        [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenTrue,
-        [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenFalse)
-        : this(resultResolver, higherOrderOperation, whenTrue.ToEnumerableReturn(), whenFalse)
-    {
-    }
 
     /// <summary>Creates a specification and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>

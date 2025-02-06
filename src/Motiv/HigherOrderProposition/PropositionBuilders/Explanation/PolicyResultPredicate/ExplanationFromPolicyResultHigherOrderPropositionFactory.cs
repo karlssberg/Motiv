@@ -11,10 +11,10 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.PolicyRes
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct ExplanationFromPolicyResultHigherOrderPropositionFactory<TModel, TMetadata>(
-    [FluentMethod("Build", Overloads = typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
+    [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
-    [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> trueBecause,
-    [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> falseBecause)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> trueBecause,
+    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> falseBecause)
 {
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.

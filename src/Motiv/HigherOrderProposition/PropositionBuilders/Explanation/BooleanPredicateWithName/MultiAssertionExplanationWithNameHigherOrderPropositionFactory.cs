@@ -13,7 +13,7 @@ public readonly partial struct MultiAssertionExplanationWithNameHigherOrderPropo
     [FluentMethod("Build")]Func<TModel, bool> resultResolver,
     [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,
     [FluentMethod("WhenTrue")]string trueBecause,
-    [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> falseBecause)
+    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> falseBecause)
 {
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.

@@ -18,7 +18,7 @@ public readonly partial struct ExplanationWithNameHigherOrderExpressionTreePropo
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,
     [FluentMethod("WhenTrue")]string trueBecause,
-    [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> falseBecause)
+    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> falseBecause)
 {
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false. The propositional statement

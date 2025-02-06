@@ -15,8 +15,8 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.BooleanPredi
 public readonly partial struct MetadataFromBooleanHigherOrderPropositionFactory<TModel, TMetadata>(
     [FluentMethod("Build")]Func<TModel, bool> resultResolver,
     [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,
-    [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenTrue,
-    [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenTrue,
+    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenFalse)
 {
     /// <summary>Creates a specification and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>

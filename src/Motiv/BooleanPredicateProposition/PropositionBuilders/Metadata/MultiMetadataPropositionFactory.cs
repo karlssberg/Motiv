@@ -11,37 +11,9 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Metadata;
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct MultiMetadataPropositionFactory<TModel, TMetadata>(
     [FluentMethod("Build")]Func<TModel, bool> predicate,
-    [FluentMethod("WhenTrueYield", Overloads = typeof(WhenYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenTrue,
-    [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenTrue,
+    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenFalse)
 {
-    /// <summary>
-    /// A factory for creating propositions based on the supplied predicate and metadata factories.
-    /// </summary>
-    /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiMetadataPropositionFactory(
-        [FluentMethod("Build")] Func<TModel, bool> predicate,
-        [FluentMethod("WhenTrueYield", Overloads = typeof(WhenYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenTrue,
-        [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))] Func<TModel, TMetadata> whenFalse)
-    : this(predicate, whenTrue, whenFalse.ToEnumerableReturn())
-    {
-    }
-
-    /// <summary>
-    /// A factory for creating propositions based on the supplied predicate and metadata factories.
-    /// </summary>
-    /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiMetadataPropositionFactory(
-        [FluentMethod("Build")] Func<TModel, bool> predicate,
-        [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))] Func<TModel, TMetadata> whenTrue,
-        [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenFalse)
-        : this(predicate, whenTrue.ToEnumerableReturn(), whenFalse)
-    {
-    }
-
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>

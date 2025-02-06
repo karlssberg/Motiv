@@ -11,45 +11,11 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.PolicyRes
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct MultiAssertionExplanationFromPolicyResultHigherOrderPropositionFactory<TModel, TMetadata>(
-    [FluentMethod("Build", Overloads = typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
+    [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
-    [FluentMethod("WhenTrueYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> trueBecause,
-    [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> falseBecause)
+    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> trueBecause,
+    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> falseBecause)
 {
-    /// <summary>
-    /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.
-    /// </summary>
-    /// <param name="resultResolver">The predicate to evaluate.</param>
-    /// <param name="higherOrderOperation">The higher-order operation to perform.</param>
-    /// <param name="trueBecause">The explanations for when the predicate is true.</param>
-    /// <param name="falseBecause">The explanation for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiAssertionExplanationFromPolicyResultHigherOrderPropositionFactory(
-        [FluentMethod("Build", Overloads = typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
-        [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
-        [FluentMethod("WhenTrueYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> trueBecause,
-        [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> falseBecause)
-        : this(resultResolver, higherOrderOperation, trueBecause, falseBecause.ToEnumerableReturn())
-    {
-    }
-
-    /// <summary>
-    /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.
-    /// </summary>
-    /// <param name="resultResolver">The predicate to evaluate.</param>
-    /// <param name="higherOrderOperation">The higher-order operation to perform.</param>
-    /// <param name="trueBecause">The explanations for when the predicate is true.</param>
-    /// <param name="falseBecause">The explanation for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiAssertionExplanationFromPolicyResultHigherOrderPropositionFactory(
-        [FluentMethod("Build", Overloads = typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
-        [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
-        [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> trueBecause,
-        [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> falseBecause)
-        : this(resultResolver, higherOrderOperation, trueBecause.ToEnumerableReturn(), falseBecause)
-    {
-    }
-
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.
     /// </summary>

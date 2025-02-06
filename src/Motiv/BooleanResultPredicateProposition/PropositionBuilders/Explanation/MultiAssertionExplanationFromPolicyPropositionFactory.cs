@@ -12,39 +12,9 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Explanatio
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct MultiAssertionExplanationFromPolicyPropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> predicate,
-    [FluentMethod("WhenTrueYield", Overloads = typeof(WhenYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> trueBecause,
-    [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> falseBecause)
+    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> trueBecause,
+    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> falseBecause)
 {
-    /// <summary>
-    /// A factory for creating propositions based on the supplied proposition and explanation factories.
-    /// </summary>
-    /// <param name="predicate">The predicate to evaluate.</param>
-    /// <param name="trueBecause">The explanations for when the predicate is true.</param>
-    /// <param name="falseBecause">The explanation for when the predicate is false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiAssertionExplanationFromPolicyPropositionFactory(
-        [FluentMethod("Build")]Func<TModel, PolicyResultBase<TMetadata>> predicate,
-        [FluentMethod("WhenTrueYield", Overloads = typeof(WhenYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> trueBecause,
-        [FluentMethod("WhenFalse", Overloads = typeof(WhenOverloads))]Func<TModel, PolicyResultBase<TMetadata>, string> falseBecause)
-        : this(predicate, trueBecause, falseBecause.ToEnumerableReturn())
-    {
-    }
-
-    /// <summary>
-    /// A factory for creating propositions based on the supplied proposition and explanation factories.
-    /// </summary>
-    /// <param name="predicate">The predicate to evaluate.</param>
-    /// <param name="trueBecause">The explanation for when the predicate is true.</param>
-    /// <param name="falseBecause">The explanations for when the predicate is false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiAssertionExplanationFromPolicyPropositionFactory(
-        [FluentMethod("Build")]Func<TModel, PolicyResultBase<TMetadata>> predicate,
-        [FluentMethod("WhenTrue", Overloads = typeof(WhenOverloads))]Func<TModel, PolicyResultBase<TMetadata>, string> trueBecause,
-        [FluentMethod("WhenFalseYield", Overloads = typeof(WhenYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> falseBecause)
-        : this(predicate, trueBecause.ToEnumerableReturn(), falseBecause)
-    {
-    }
-
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>

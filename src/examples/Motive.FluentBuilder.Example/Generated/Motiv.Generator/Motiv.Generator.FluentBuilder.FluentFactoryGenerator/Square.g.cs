@@ -18,8 +18,8 @@ public struct Step_0__Square
     }
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    public Square Create(in int width)
+    public Square Create()
     {
-        return new Square(this._withWidth__parameter, width);
+        return new Square(this._width__parameter);
     }
 }
