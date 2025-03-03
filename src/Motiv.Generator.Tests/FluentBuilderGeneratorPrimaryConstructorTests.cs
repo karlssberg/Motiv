@@ -34,6 +34,10 @@ public class FluentBuilderGeneratorPrimaryConstructorTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget WithValue(in int value)
                     {
@@ -83,6 +87,10 @@ public class FluentBuilderGeneratorPrimaryConstructorTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory WithNumber(in int number)
                     {
@@ -98,6 +106,10 @@ public class FluentBuilderGeneratorPrimaryConstructorTests
                         this._number__parameter = number;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget WithText(in string text)
                     {
@@ -150,6 +162,10 @@ public class FluentBuilderGeneratorPrimaryConstructorTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory WithNumber(in int number)
                     {
@@ -165,6 +181,10 @@ public class FluentBuilderGeneratorPrimaryConstructorTests
                         this._number__parameter = number;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget WithText(in string text)
                     {
@@ -222,6 +242,10 @@ public class FluentBuilderGeneratorPrimaryConstructorTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory WithNumber(in int number)
                     {
@@ -237,6 +261,10 @@ public class FluentBuilderGeneratorPrimaryConstructorTests
                         this._number__parameter = number;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory WithText(in string text)
                     {
@@ -254,6 +282,10 @@ public class FluentBuilderGeneratorPrimaryConstructorTests
                         this._text__parameter = text;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget WithId(in System.Guid id)
                     {
@@ -316,6 +348,10 @@ public class FluentBuilderGeneratorPrimaryConstructorTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory WithNumber(in int number)
                     {
@@ -331,6 +367,10 @@ public class FluentBuilderGeneratorPrimaryConstructorTests
                         this._number__parameter = number;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory WithText(in string text)
                     {
@@ -348,6 +388,10 @@ public class FluentBuilderGeneratorPrimaryConstructorTests
                         this._text__parameter = text;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_2__Test_Factory WithId(in System.Guid id)
                     {
@@ -367,6 +411,10 @@ public class FluentBuilderGeneratorPrimaryConstructorTests
                         this._id__parameter = id;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget WithRegex(in System.Text.RegularExpressions.Regex regex)
                     {

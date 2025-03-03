@@ -1,5 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
-using Motiv.Generator.FluentBuilder.FluentModel;
+﻿using System.Collections.Specialized;
+using Microsoft.CodeAnalysis;
+using Motiv.Generator.FluentBuilder.Model;
+using Motiv.Generator.FluentBuilder.Model.Storage;
 
 namespace Motiv.Generator.FluentBuilder.Analysis;
 
@@ -18,14 +20,14 @@ public record FluentConstructorContext
         IsRecord = rootSymbol.IsRecord;
         TypeKind = rootSymbol.TypeKind;
         Accessibility = rootSymbol.DeclaredAccessibility;
-        ParameterStores = new ConstructorAnalyzer(semanticModel).FindStoringMembers(constructor);
+        ValueStorage = new ConstructorAnalyzer(semanticModel).FindParameterValueStorage(constructor);
         RootType = rootSymbol;
     }
 
     public INamedTypeSymbol RootType { get; set; }
 
-    public IReadOnlyDictionary<IParameterSymbol,FluentParameterResolution> ParameterStores { get; set; } =
-        new Dictionary<IParameterSymbol, FluentParameterResolution>(FluentParameterComparer.Default);
+    public OrderedDictionary<IParameterSymbol, IFluentValueStorage> ValueStorage { get; } =
+        new(FluentParameterComparer.Default);
 
     public FluentFactoryGeneratorOptions Options { get; }
 

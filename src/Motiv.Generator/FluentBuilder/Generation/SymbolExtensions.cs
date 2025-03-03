@@ -11,48 +11,26 @@ public static class SymbolExtensions
         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters
     );
 
-    public static bool IsOpenGenericType(this IParameterSymbol parameter)
-    {
-        return parameter.Type switch
-        {
-            ITypeParameterSymbol => true,
-            INamedTypeSymbol namedType => namedType.TypeArguments.Any(t => t switch
-                                          {
-                                              ITypeParameterSymbol => true,
-                                              INamedTypeSymbol { IsGenericType: true } typeSymbol => typeSymbol.IsOpenGenericType(),
-                                              _ => false
-                                          }) ||
-                                          // Also check if this is a generic type definition itself
-                                          namedType.IsUnboundGenericType,
-            _ => false
-        };
-    }
-
     public static bool IsOpenGenericType(this ITypeSymbol type)
     {
         return type switch
         {
             ITypeParameterSymbol => true,
-            INamedTypeSymbol namedType => namedType.TypeArguments.Any(t => t switch
-                                          {
-                                              ITypeParameterSymbol => true,
-                                              INamedTypeSymbol { IsGenericType: true } typeSymbol => typeSymbol.IsOpenGenericType(),
-                                              _ => false
-                                          }) ||
-                                          // Also check if this is a generic type definition itself
-                                          namedType.IsUnboundGenericType,
+            INamedTypeSymbol namedType => ContainsUnboundGenericTypes(namedType),
             _ => false
         };
     }
 
-    public static bool ContainsGenericTypeParameter(this ITypeSymbol type)
+    private static bool ContainsUnboundGenericTypes(INamedTypeSymbol namedType)
     {
-        return type switch
-        {
-            ITypeParameterSymbol => true,
-            INamedTypeSymbol namedType => namedType.TypeArguments.Any(t => t.ContainsGenericTypeParameter()),
-            _ => false
-        };
+        return namedType.TypeArguments.Any(t => t switch
+               {
+                   ITypeParameterSymbol => true,
+                   INamedTypeSymbol { IsGenericType: true } typeSymbol => typeSymbol.IsOpenGenericType(),
+                   _ => false
+               }) ||
+               // Also check if this is a generic type definition itself
+               namedType.IsUnboundGenericType;
     }
 
     public static IEnumerable<TypeParameterSyntax> GetGenericTypeParameterSyntaxList(this IEnumerable<ITypeSymbol> types)
@@ -217,12 +195,7 @@ public static class SymbolExtensions
          miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes
     );
 
-   public static string ToFullyQualifiedDisplayString(this ITypeSymbol typeSymbol)
-   {
-       return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-   }
-
-   public static string ToUnqualifiedDisplayString(this ITypeSymbol typeSymbol) =>
+    public static string ToUnqualifiedDisplayString(this ITypeSymbol typeSymbol) =>
        typeSymbol.ToDisplayString(TypeNameOnlyFormat);
 
    public static string ToDynamicDisplayString(this ITypeSymbol typeSymbol, INamespaceSymbol currentNamespace)

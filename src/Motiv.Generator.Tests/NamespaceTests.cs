@@ -82,12 +82,22 @@ public class NamespaceTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.NamespaceA.MyBuildTargetA{T}"/>
+                    ///     <seealso cref="Test.NamespaceB.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T> WithDefaultValue<T>()
                     {
                         return new Step_0__Test_Factory<T>(MethodVariants.WithDefaultValue<T>());
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.NamespaceA.MyBuildTargetA{T}"/>
+                    ///     <seealso cref="Test.NamespaceB.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T> WithFunction<T>(in System.Func<T> function)
                     {
@@ -103,12 +113,20 @@ public class NamespaceTests
                         this._data__parameter = data;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.NamespaceA.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public NamespaceA.MyBuildTargetA<T> WithValue(in int value)
                     {
                         return new NamespaceA.MyBuildTargetA<T>(this._data__parameter, value);
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.NamespaceB.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public NamespaceB.MyBuildTargetB<T> WithValue(in string value)
                     {
@@ -204,12 +222,22 @@ public class NamespaceTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.NamespaceA.MyBuildTargetA{T}"/>
+                    ///     <seealso cref="Test.NamespaceB.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static NamespaceB.MyBuildTargetB<T> WithDefaultValue<T>()
                     {
                         return new NamespaceB.MyBuildTargetB<T>(MethodVariants.WithDefaultValue<T>());
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.NamespaceA.MyBuildTargetA{T}"/>
+                    ///     <seealso cref="Test.NamespaceB.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static NamespaceB.MyBuildTargetB<T> WithValue<T>(in T data)
                     {
@@ -222,6 +250,10 @@ public class NamespaceTests
             {
                 public partial class MyBuildTargetB<T>
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.NamespaceA.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Test.NamespaceA.MyBuildTargetA<T> WithValue(in int value)
                     {

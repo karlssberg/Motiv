@@ -1,19 +1,21 @@
 ﻿
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Motiv.Generator.FluentBuilder.FluentModel;
-using static Motiv.Generator.FluentBuilder.FluentModel.FluentParameterResolution.ValueLocationType;
+using Motiv.Generator.FluentBuilder.Model;
+using Motiv.Generator.FluentBuilder.Model.Storage;
 
 namespace Motiv.Generator.FluentBuilder.Analysis;
 
 public class ConstructorAnalyzer(SemanticModel semanticModel)
 {
-    public IReadOnlyDictionary<IParameterSymbol, FluentParameterResolution> FindStoringMembers(IMethodSymbol constructor)
+    public OrderedDictionary<IParameterSymbol, IFluentValueStorage> FindParameterValueStorage(IMethodSymbol constructor)
     {
         var results =
-            constructor.Parameters.ToDictionary(
-                p => p,
-                _ => new FluentParameterResolution(),
+            new OrderedDictionary<IParameterSymbol, IFluentValueStorage>(constructor.Parameters
+                .Select(parameterSymbol =>
+                    new KeyValuePair<IParameterSymbol, IFluentValueStorage>(
+                        parameterSymbol,
+                        new NullStorage(semanticModel.Compilation.GetSpecialType(SpecialType.System_Void)))),
                 FluentParameterComparer.Default);
 
         var containingType = constructor.ContainingType;
@@ -23,18 +25,28 @@ public class ConstructorAnalyzer(SemanticModel semanticModel)
         {
             foreach (var parameter in constructor.Parameters)
             {
-                results[parameter] = new FluentParameterResolution(containingType.GetMembers()
+                var property = containingType.GetMembers()
                     .OfType<IPropertySymbol>()
-                    .FirstOrDefault(p => p.Name.Equals(parameter.Name, StringComparison.OrdinalIgnoreCase)));
+                    .FirstOrDefault(p => p.Name.Equals(parameter.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (property is null) continue;
+
+                results[parameter] =
+                    new PropertyStorage(property.Name, property.Type, constructor.ContainingNamespace)
+                    {
+                        DefinitionExists = true
+                    };
             }
             return results;
         }
 
         // For classes with primary constructors, look for property declarations
         var syntaxNode = constructor.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
-        if (syntaxNode is TypeDeclarationSyntax { ParameterList: not null})
+        if (syntaxNode is TypeDeclarationSyntax { ParameterList: not null })
         {
-            PopulatedWithPrimaryConstructorParameterReferences(constructor, results);
+            PopulateWithPrimaryConstructorParametersDirectAccess(constructor, results, constructor.ContainingNamespace);
+            PopulateWithMembersInitializedFromPrimaryConstructors(constructor, results, constructor.ContainingNamespace);
+
             return results;
         }
 
@@ -44,7 +56,7 @@ public class ConstructorAnalyzer(SemanticModel semanticModel)
         // Analyze constructor body for assignments
         if (ctorSyntax.Body is not null)
         {
-            PopulateWithRelevantFieldAndPropertyReferences(ctorSyntax, results);
+            PopulateWithRelevantFieldAndPropertyReferences(ctorSyntax, results, constructor.ContainingNamespace);
         }
 
         // Look for property/field initializations in constructor initializer (i.e. : base() and : this())
@@ -52,7 +64,7 @@ public class ConstructorAnalyzer(SemanticModel semanticModel)
         if (initializer == null) return results;
         var initializerMethod = (IMethodSymbol?)semanticModel.GetSymbolInfo(initializer).Symbol;
         if (initializerMethod == null) return results;
-        var baseResults = FindStoringMembers(initializerMethod);
+        var baseResults = FindParameterValueStorage(initializerMethod);
 
         for (var i = 0; i < initializer.ArgumentList.Arguments.Count; i++)
         {
@@ -74,8 +86,8 @@ public class ConstructorAnalyzer(SemanticModel semanticModel)
 
     private void PopulateWithRelevantFieldAndPropertyReferences(
         ConstructorDeclarationSyntax ctorSyntax,
-        Dictionary<IParameterSymbol,
-        FluentParameterResolution> results)
+        OrderedDictionary<IParameterSymbol, IFluentValueStorage> results,
+        INamespaceSymbol constructorContainingNamespace)
     {
         var assignments = ctorSyntax.Body?
             .DescendantNodes()
@@ -88,44 +100,45 @@ public class ConstructorAnalyzer(SemanticModel semanticModel)
                 !results.ContainsKey(paramSymbol)) continue;
 
             var memberSymbol = semanticModel.GetSymbolInfo(assignment.Left).Symbol;
-            if (memberSymbol is IPropertySymbol or IFieldSymbol)
+            results[paramSymbol] = memberSymbol switch
             {
-                results[paramSymbol] = new FluentParameterResolution(
-                    memberSymbol as IPropertySymbol,
-                    memberSymbol as IFieldSymbol);
-            }
+                IPropertySymbol propertySymbol =>
+                    new PropertyStorage(propertySymbol.Name, propertySymbol.Type, constructorContainingNamespace)
+                    {
+                        DefinitionExists = true
+                    },
+                IFieldSymbol fieldSymbol =>
+                    new FieldStorage(fieldSymbol.Name, fieldSymbol.Type, constructorContainingNamespace)
+                    {
+                        DefinitionExists = true
+                    },
+                _ => results[paramSymbol]
+            };
         }
     }
 
-    private void  PopulatedWithPrimaryConstructorParameterReferences(
-        IMethodSymbol constructor,
-        Dictionary<IParameterSymbol, FluentParameterResolution> results)
+    private void PopulateWithPrimaryConstructorParametersDirectAccess(
+        IMethodSymbol primaryConstructor,
+        OrderedDictionary<IParameterSymbol, IFluentValueStorage> result,
+        INamespaceSymbol constructorContainingNamespace)
     {
-        PopulateWithMembersInitializedFromPrimaryConstructors(constructor, results);
-
-        foreach (var parameter in constructor.Parameters)
+        foreach (var parameter in primaryConstructor.Parameters)
         {
-            if (results.TryGetValue(parameter, out var resolution)
-                && resolution is { ExistingFieldSymbol: not null } or { ExistingPropertySymbol: not null })
-            {
-                continue;
-            }
-
-            results[parameter] = new FluentParameterResolution
-            {
-                ResolutionType = parameter.RefKind switch
+            result[parameter] =
+                new PrimaryConstructorParameterStorage(
+                    parameter.Name,
+                    parameter.Type,
+                    constructorContainingNamespace)
                 {
-                    RefKind.In =>  Member,
-                    _ => PrimaryConstructorParameter
-                }
-            };
+                    DefinitionExists = true
+                };
         }
     }
 
     private void PopulateWithMembersInitializedFromPrimaryConstructors(
         IMethodSymbol primaryConstructor,
-        Dictionary<IParameterSymbol,
-        FluentParameterResolution> result)
+        OrderedDictionary<IParameterSymbol, IFluentValueStorage> result,
+        INamespaceSymbol constructorContainingNamespace)
     {
         foreach (var member in primaryConstructor.ContainingType.GetMembers())
         {
@@ -134,54 +147,40 @@ public class ConstructorAnalyzer(SemanticModel semanticModel)
                 case IFieldSymbol fieldSymbol:
                 {
                     var initializer = GetInitializerSyntax(fieldSymbol);
-                    if (initializer != null)
-                    {
-                        foreach (var parameter in primaryConstructor.Parameters)
-                        {
-                            var isInitialized = IsInitializedFromParameter(initializer, parameter);
-                            if (isInitialized)
-                            {
-                                result[parameter] = new FluentParameterResolution(ExistingFieldSymbol: fieldSymbol);
-                            }
-                        }
-                    }
+                    if (initializer is null) break;
 
+                    foreach (var parameter in GetParameterSymbols(initializer))
+                        result[parameter] =
+                            new FieldStorage(fieldSymbol.Name, fieldSymbol.Type, constructorContainingNamespace)
+                            {
+                                DefinitionExists = true
+                            };
                     break;
                 }
                 case IPropertySymbol propertySymbol:
                 {
                     var initializer = GetInitializerSyntax(propertySymbol);
-                    if (initializer != null)
-                    {
-                        foreach (var parameter in primaryConstructor.Parameters)
-                        {
-                            var isInitialized = IsInitializedFromParameter(initializer, parameter);
-                            if (isInitialized)
-                            {
-                                result[parameter] = new FluentParameterResolution(ExistingPropertySymbol: propertySymbol);
-                            }
-                        }
-                    }
+                    if (initializer is null) break;
 
+                    foreach (var parameter in GetParameterSymbols(initializer))
+                        result[parameter] =
+                            new PropertyStorage(propertySymbol.Name, propertySymbol.Type, constructorContainingNamespace)
+                            {
+                                DefinitionExists = true
+                            };
                     break;
                 }
             }
         }
 
-        var parametersRequiringStorageFields = primaryConstructor.Parameters
-            .Where(parameter => result.TryGetValue(parameter, out var resolution)
-                                && resolution is { ExistingFieldSymbol: null, ExistingPropertySymbol: null });
+        return;
 
-        foreach (var parameter in parametersRequiringStorageFields)
+        IEnumerable<IParameterSymbol> GetParameterSymbols(ExpressionSyntax initializer)
         {
-            result[parameter] = new FluentParameterResolution
-            {
-                ResolutionType = parameter.RefKind switch
-                {
-                    RefKind.In =>  Member,
-                    _ => PrimaryConstructorParameter
-                }
-            };
+            return from parameter in primaryConstructor.Parameters
+                let isInitialized = IsInitializedFromParameter(initializer, parameter)
+                where isInitialized
+                select parameter;
         }
     }
 

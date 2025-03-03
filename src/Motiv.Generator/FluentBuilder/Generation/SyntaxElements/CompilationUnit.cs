@@ -1,9 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Motiv.Generator.FluentBuilder.FluentModel;
-using Motiv.Generator.FluentBuilder.FluentModel.Steps;
-using Motiv.Generator.FluentBuilder.Generation.SyntaxElements.RootStep;
-using Motiv.Generator.FluentBuilder.Generation.SyntaxElements.Step;
+using Motiv.Generator.FluentBuilder.Model;
+using Motiv.Generator.FluentBuilder.Model.Steps;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Motiv.Generator.FluentBuilder.Generation.SyntaxElements;
@@ -92,7 +90,7 @@ public static class CompilationUnit
                 file.FluentSteps.Any(
                     step => step is not ExistingTypeFluentStep existingTypeFluentStep
                             || SymbolEqualityComparer.Default.Equals(
-                                existingTypeFluentStep.ExistingStepConstructor.ContainingNamespace,
+                                existingTypeFluentStep.Namespace,
                                  rootNamespace));
         }
     }

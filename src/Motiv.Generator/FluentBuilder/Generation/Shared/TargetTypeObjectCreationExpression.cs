@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Motiv.Generator.FluentBuilder.FluentModel.Methods;
+using Motiv.Generator.FluentBuilder.Model.Methods;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Motiv.Generator.FluentBuilder.Generation.Shared;

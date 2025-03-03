@@ -1,0 +1,72 @@
+﻿using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Motiv.Generator.FluentBuilder.Generation.Shared;
+using Motiv.Generator.FluentBuilder.Model;
+using Motiv.Generator.FluentBuilder.Model.Methods;
+using Motiv.Generator.FluentBuilder.Model.Steps;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+
+namespace Motiv.Generator.FluentBuilder.Generation.SyntaxElements.Methods;
+
+public static class ExistingPartialTypeMethodDeclaration
+{
+    public static MethodDeclarationSyntax Create(
+        IFluentMethod method,
+        IFluentStep step)
+    {
+        var stepActivationArgs = ReturnTypeConstructorArgumentsSyntax.Create(method);
+
+        var returnObjectExpression = method.Return switch
+        {
+            TargetTypeReturn => TargetTypeObjectCreationExpression.Create(step.Namespace, method, stepActivationArgs, []),
+            _ => FluentStepCreationExpression.Create(step.Namespace, method, stepActivationArgs)
+        };
+
+        var methodDeclaration = MethodDeclaration(
+                returnObjectExpression.Type,
+                Identifier(method.MethodName))
+            .WithAttributeLists(
+                SingletonList(
+                    AttributeList(
+                        SingletonSeparatedList(AggressiveInliningAttributeSyntax.Create()))))
+            .WithModifiers(
+                TokenList(
+                    Token(SyntaxKind.PublicKeyword)))
+            .WithBody(Block(ReturnStatement(returnObjectExpression)))
+            .WithLeadingTrivia(CandidateConstructorTypesTrivia.Create(method.Return.CandidateConstructors));
+
+        if (method.MethodParameters.Length > 0)
+        {
+            methodDeclaration = methodDeclaration
+                .WithParameterList(
+                    ParameterList(SeparatedList(
+                        method.MethodParameters
+                            .Select(parameter =>
+                                Parameter(
+                                        Identifier(parameter.ParameterSymbol.Name.ToCamelCase()))
+                                    .WithModifiers(TokenList(Token(SyntaxKind.InKeyword)))
+                                    .WithType(
+                                        IdentifierName(parameter.ParameterSymbol.Type.ToDynamicDisplayString(method.RootNamespace)))))));
+        }
+
+        if (!method.TypeParameters.Any())
+            return methodDeclaration;
+
+        var typeParameterSyntaxes = method.TypeParameters
+            .Except(
+                step.KnownConstructorParameters
+                    .SelectMany(parameter => parameter.Type.GetGenericTypeParameters())
+                    .Select(genericTypeParameters => new FluentTypeParameter(genericTypeParameters)))
+            .Select(fluentTypeParameter => fluentTypeParameter.TypeParameterSymbol.ToTypeParameterSyntax())
+            .ToImmutableArray();
+
+        return typeParameterSyntaxes.Length == 0
+            ? methodDeclaration
+            : methodDeclaration.WithTypeParameterList(
+                TypeParameterList(SeparatedList([..typeParameterSyntaxes])));
+    }
+
+
+}

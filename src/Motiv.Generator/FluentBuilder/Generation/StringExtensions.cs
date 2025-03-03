@@ -37,14 +37,4 @@ public static class StringExtensions
             .Replace(">", "__")
             .Replace(" ", "");
     }
-
-    public static string ToFileName(this ITypeSymbol name)
-    {
-        return name
-            .ToDisplayString()
-            .Replace(",", "_")
-            .Replace("<", "__")
-            .Replace(">", "__")
-            .Replace(" ", "");
-    }
 }

@@ -38,6 +38,10 @@ public class FluentBuilderGeneratorTargetTypeTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget WithValue(in int value)
                     {
@@ -89,6 +93,10 @@ public class FluentBuilderGeneratorTargetTypeTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget WithValue(in int value)
                     {
@@ -144,6 +152,10 @@ public class FluentBuilderGeneratorTargetTypeTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget WithValue(in int value)
                     {
@@ -194,6 +206,10 @@ public class FluentBuilderGeneratorTargetTypeTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget WithValue(in int value)
                     {
@@ -249,6 +265,10 @@ public class FluentBuilderGeneratorTargetTypeTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget WithValue(in int value)
                     {
@@ -299,6 +319,10 @@ public class FluentBuilderGeneratorTargetTypeTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget WithValue(in int value)
                     {

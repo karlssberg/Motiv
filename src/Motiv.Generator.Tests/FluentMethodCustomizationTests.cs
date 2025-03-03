@@ -36,6 +36,10 @@ public class FluentMethodCustomizationTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget<T> SetValue<T>(in T value)
                     {
@@ -102,12 +106,20 @@ public class FluentMethodCustomizationTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget<T1, T2, T3> SetValue<T1, T2, T3>(in System.Func<System.Collections.Generic.IEnumerable<T1>, T2, T3> function)
                     {
                         return new MyBuildTarget<T1, T2, T3>(Methods.SetValue<T1, T2, T3>(function));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget<T1, T2, T3> SetValue<T1, T2, T3>(in T3 value)
                     {
@@ -174,12 +186,20 @@ public class FluentMethodCustomizationTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget<T> SetValue<T>(in System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<T>> value)
                     {
                         return new MyBuildTarget<T>(Converter.SetValue<T>(value));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget<T> SetValue<T>(in T value)
                     {
@@ -237,6 +257,10 @@ public class FluentMethodCustomizationTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T1> SetValue1<T1>(in T1 value1)
                     {
@@ -252,6 +276,10 @@ public class FluentMethodCustomizationTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2> SetValue2<T2>(in T2 value2)
                     {
@@ -313,6 +341,10 @@ public class FluentMethodCustomizationTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T1> SetValue1<T1>(in T1 value1)
                     {
@@ -328,6 +360,10 @@ public class FluentMethodCustomizationTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory<T1, T2> SetValue2<T2>(in T2 value2)
                     {
@@ -345,6 +381,10 @@ public class FluentMethodCustomizationTests
                         this._value2__parameter = value2;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2, T3> SetValue3<T3>(in T3 value3)
                     {
@@ -410,6 +450,10 @@ public class FluentMethodCustomizationTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T1> SetValue1<T1>(in T1 value1)
                     {
@@ -425,6 +469,10 @@ public class FluentMethodCustomizationTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory<T1, T2> SetValue2<T2>(in T2 value2)
                     {
@@ -442,6 +490,10 @@ public class FluentMethodCustomizationTests
                         this._value2__parameter = value2;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_2__Test_Factory<T1, T2, T3> SetValue3<T3>(in T3 value3)
                     {
@@ -461,6 +513,10 @@ public class FluentMethodCustomizationTests
                         this._value3__parameter = value3;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2, T3, T4> SetValue4<T4>(in T4 value4)
                     {
@@ -526,12 +582,20 @@ public class FluentMethodCustomizationTests
             """
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static MyClass<T> Create<T>(in T value)
                 {
                     return new MyClass<T>(Overloads.Create<T>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static MyClass<T> Create<T>(in System.Func<T> factory)
                 {
@@ -596,12 +660,20 @@ public class FluentMethodCustomizationTests
             """
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static MyClass<T> Create<T>(in T value)
                 {
                     return new MyClass<T>(Overloads.Create<T>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static MyClass<T> Create<T>(in System.Func<T> factory, in string value)
                 {
@@ -687,12 +759,20 @@ public class FluentMethodCustomizationTests
 
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory Value1(in string value)
                 {
                     return new Step_0__Factory(Value1Methods.Value1<string>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory Value1(in System.Func<string> factory)
                 {
@@ -708,12 +788,20 @@ public class FluentMethodCustomizationTests
                     this._value1__parameter = value1;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClass Create(in string value)
                 {
                     return new MyClass(this._value1__parameter, CreateMethods.Create<string>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClass Create(in System.Func<string> factory)
                 {
@@ -797,12 +885,20 @@ public class FluentMethodCustomizationTests
             """
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T> Value1<T>(in T value)
                 {
                     return new Step_0__Factory<T>(Value1Methods.Value1<T>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T> Value1<T>(in System.Func<T> factory)
                 {
@@ -818,12 +914,20 @@ public class FluentMethodCustomizationTests
                     this._value1__parameter = value1;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClass<T> Create(in T value)
                 {
                     return new MyClass<T>(this._value1__parameter, CreateMethods.Create<T>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClass<T> Create(in System.Func<T> factory)
                 {
@@ -930,12 +1034,20 @@ public class FluentMethodCustomizationTests
             """
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1, T2, T3}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1> Value1<T1>(in T1 value)
                 {
                     return new Step_0__Factory<T1>(Value1Methods.Value1<T1>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1, T2, T3}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1> Value1<T1>(in System.Func<string, string, T1> function)
                 {
@@ -951,12 +1063,20 @@ public class FluentMethodCustomizationTests
                     this._value1__parameter = value1;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1, T2, T3}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public Step_1__Factory<T1, T2> Value2<T2>(in T2 value)
                 {
                     return new Step_1__Factory<T1, T2>(this._value1__parameter, Value2Methods.Value2<T2>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1, T2, T3}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public Step_1__Factory<T1, T2> Value2<T2>(in System.Func<string, string, T2> function)
                 {
@@ -974,12 +1094,20 @@ public class FluentMethodCustomizationTests
                     this._value2__parameter = value2;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1, T2, T3}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClass<T1, T2, T3> Create<T3>(in T3 value)
                 {
                     return new MyClass<T1, T2, T3>(this._value1__parameter, this._value2__parameter, CreateMethods.Create<T3>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1, T2, T3}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClass<T1, T2, T3> Create<T3>(in System.Func<string, string, T3> function)
                 {
@@ -1046,12 +1174,20 @@ public class FluentMethodCustomizationTests
 
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1A, T1B}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static MyClass<T1A, T1B> Value1<T1A, T1B>(in System.Func<T1A, T1B> value)
                 {
                     return new MyClass<T1A, T1B>(Value1Methods.Value1<T1A, T1B>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1A, T1B}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static MyClass<T1A, T1B> Value1<T1A, T1B>(in T1B value)
                 {
@@ -1154,12 +1290,20 @@ public class FluentMethodCustomizationTests
 
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1A, T1B> Value1<T1A, T1B>(in System.Func<T1A, T1B> value)
                 {
                     return new Step_0__Factory<T1A, T1B>(Value1Methods.Value1<T1A, T1B>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1A, T1B> Value1<T1A, T1B>(in T1B value)
                 {
@@ -1175,12 +1319,20 @@ public class FluentMethodCustomizationTests
                     this._factory1__parameter = factory1;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public Step_1__Factory<T1A, T1B, T2A, T2B> Value2<T2A, T2B>(in System.Func<T2A, T2B> value)
                 {
                     return new Step_1__Factory<T1A, T1B, T2A, T2B>(this._factory1__parameter, Value2Methods.Value2<T2A, T2B>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public Step_1__Factory<T1A, T1B, T2A, T2B> Value2<T2A, T2B>(in T2B value)
                 {
@@ -1198,12 +1350,20 @@ public class FluentMethodCustomizationTests
                     this._factory2__parameter = factory2;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClass<T1A, T1B, T2A, T2B, T3A, T3B> Value3<T3A, T3B>(in System.Func<T3A, T3B> value)
                 {
                     return new MyClass<T1A, T1B, T2A, T2B, T3A, T3B>(this._factory1__parameter, this._factory2__parameter, Value3Methods.Value3<T3A, T3B>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClass<T1A, T1B, T2A, T2B, T3A, T3B> Value3<T3A, T3B>(in T3B value)
                 {
@@ -1306,12 +1466,20 @@ public class FluentMethodCustomizationTests
 
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1, T2> Value1<T1, T2>(in System.Func<T1, T2> value)
                 {
                     return new Step_0__Factory<T1, T2>(Value1Methods.Value1<T1, T2>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1, T2> Value1<T1, T2>(in T2 value)
                 {
@@ -1327,12 +1495,20 @@ public class FluentMethodCustomizationTests
                     this._factory1__parameter = factory1;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public Step_1__Factory<T1, T2, T3> Value2<T3>(in System.Func<T2, T3> value)
                 {
                     return new Step_1__Factory<T1, T2, T3>(this._factory1__parameter, Value2Methods.Value2<T2, T3>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public Step_1__Factory<T1, T2, T3> Value2<T3>(in T3 value)
                 {
@@ -1350,12 +1526,20 @@ public class FluentMethodCustomizationTests
                     this._factory2__parameter = factory2;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClass<T1, T2, T3, T4> Value3<T4>(in System.Func<T3, T4> value)
                 {
                     return new MyClass<T1, T2, T3, T4>(this._factory1__parameter, this._factory2__parameter, Value3Methods.Value3<T3, T4>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClass<T1, T2, T3, T4> Value3<T4>(in T4 value)
                 {
@@ -1470,12 +1654,22 @@ public class FluentMethodCustomizationTests
 
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1, T2> Value1<T1, T2>(in System.Func<T1, T2> value)
                 {
                     return new Step_0__Factory<T1, T2>(Value1Methods.Value1<T1, T2>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1, T2> Value1<T1, T2>(in T2 value)
                 {
@@ -1491,24 +1685,40 @@ public class FluentMethodCustomizationTests
                     this._factory1__parameter = factory1;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClassA<T1, T2> CreateString(in System.Func<T1, T2, string> value)
                 {
                     return new MyClassA<T1, T2>(this._factory1__parameter, MyClassACreateMethods.CreateString<T1, T2>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClassA<T1, T2> CreateString(in string value)
                 {
                     return new MyClassA<T1, T2>(this._factory1__parameter, MyClassACreateMethods.CreateString<T1, T2>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClassB<T1, T2> CreateInt(in System.Func<T1, T2, int> value)
                 {
                     return new MyClassB<T1, T2>(this._factory1__parameter, MyClassBCreateMethods.CreateInt<T1, T2>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClassB<T1, T2> CreateInt(in int value)
                 {
@@ -1599,12 +1809,22 @@ public class FluentMethodCustomizationTests
 
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1, T2> Value<T1, T2>(in System.Func<T1, T2> factory1)
                 {
                     return new Step_0__Factory<T1, T2>(factory1);
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1, T2> Value<T1, T2>(in T2 value)
                 {
@@ -1620,12 +1840,20 @@ public class FluentMethodCustomizationTests
                     this._factory1__parameter = factory1;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClassA<T1, T2> Value(in System.Func<T1, T2, string> factory2)
                 {
                     return new MyClassA<T1, T2>(this._factory1__parameter, factory2);
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClassB<T1, T2> Value(in int value)
                 {
@@ -1725,12 +1953,22 @@ public class FluentMethodCustomizationTests
 
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1, T2> Value1<T1, T2>(in System.Func<T1, T2> factory1)
                 {
                     return new Step_0__Factory<T1, T2>(factory1);
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1, T2> Value1<T1, T2>(in T2 value)
                 {
@@ -1746,18 +1984,30 @@ public class FluentMethodCustomizationTests
                     this._factory1__parameter = factory1;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClassA<T1, T2> Create(in System.Func<T1, T2, string> value)
                 {
                     return new MyClassA<T1, T2>(this._factory1__parameter, SecondStep.Create<T1, T2>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClassA<T1, T2> Create(in string value)
                 {
                     return new MyClassA<T1, T2>(this._factory1__parameter, SecondStep.Create<T1, T2, string>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClassB<T1, T2> Create(in System.Func<T1, T2, int> factory2)
                 {
@@ -1857,12 +2107,22 @@ public class FluentMethodCustomizationTests
 
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1, T2> Value1<T1, T2>(in System.Func<T1, T2> value)
                 {
                     return new Step_0__Factory<T1, T2>(Value1Methods.Value1<T1, T2>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Factory<T1, T2> Value1<T1, T2>(in T2 value)
                 {
@@ -1878,18 +2138,30 @@ public class FluentMethodCustomizationTests
                     this._factory1__parameter = factory1;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClassA<T1, T2> Create(in System.Func<T1, T2, string> factory2)
                 {
                     return new MyClassA<T1, T2>(this._factory1__parameter, factory2);
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClassB<T1, T2> Create(in System.Func<T1, T2, int> value)
                 {
                     return new MyClassB<T1, T2>(this._factory1__parameter, CreateMethods.Create<T1, T2, int>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public MyClassB<T1, T2> Create(in int value)
                 {
@@ -1926,44 +2198,59 @@ public class FluentMethodCustomizationTests
             {
                 [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                 public MyClassA(
-                    [MultipleFluentMethods(typeof(Overloads))]Func<T, string> value1,
-                    [FluentMethod("Create")]Func<T, string> value2)
+                    [MultipleFluentMethods(typeof(Overloads))]Func<T> value1,
+                    [FluentMethod("Create")]Func<T> value2)
                 {
                     Value1 = value1;
                     Value2 = value2;
                 }
 
-                public Func<T, string> Value1 { get; set; }
-                public Func<T, string> Value2 { get; set; }
+                public Func<T> Value1 { get; set; }
+                public Func<T> Value2 { get; set; }
             }
 
-            public class MyClassB<T>
+            public class MyClassB
             {
                 [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                 public MyClassB(
-                    [FluentMethod("Value1")]string value1,
-                    [FluentMethod("Create")]Func<T, string> value2)
+                    [FluentMethod("Value")]string value1,
+                    [FluentMethod("Create")]Func<string> value2)
                 {
                     Value1 = value1;
                     Value2 = value2;
                 }
 
                 public string Value1 { get; set; }
-                public Func<T, string> Value2 { get; set; }
+                public Func<string> Value2 { get; set; }
+            }
+
+            public class MyClassC
+            {
+                [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                public MyClassC(
+                    [MultipleFluentMethods(typeof(Overloads))]Func<string> value1,
+                    [FluentMethod("Create")]Func<int> value2)
+                {
+                    Value1 = value1;
+                    Value2 = value2;
+                }
+
+                public Func<string> Value1 { get; set; }
+                public Func<int> Value2 { get; set; }
             }
 
             public static class Overloads
             {
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value1<T1, T2>(Func<T1, T2> value)
+                public static Func<T> Value<T>(T value)
                 {
-                    return value;
+                    return () => value;
                 }
 
                 [FluentMethodTemplate]
-                public static Func<T1, T2> Value1<T1, T2>(T2 value)
+                public static Func<string> Value(string value)
                 {
-                    return _ => value;
+                    return () => value;
                 }
             }
             """;
@@ -1974,20 +2261,22 @@ public class FluentMethodCustomizationTests
 
             public static partial class Factory
             {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                public static Step_0__Factory<T> Value1<T>(in System.Func<T, string> value)
+                public static Step_0__Factory<T> Value<T>(in T value)
                 {
-                    return new Step_0__Factory<T>(Overloads.Value1<T, string>(value));
+                    return new Step_0__Factory<T>(Overloads.Value<T>(value));
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassB"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                public static Step_0__Factory<T> Value1<T>(in string value)
-                {
-                    return new Step_0__Factory<T>(Overloads.Value1<T, string>(value));
-                }
-
-                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                public static Step_1__Factory Value1(in string value1)
+                public static Step_1__Factory Value(in string value1)
                 {
                     return new Step_1__Factory(value1);
                 }
@@ -1995,14 +2284,18 @@ public class FluentMethodCustomizationTests
 
             public struct Step_0__Factory<T>
             {
-                private readonly System.Func<T, string> _value1__parameter;
-                public Step_0__Factory(in System.Func<T, string> value1)
+                private readonly System.Func<T> _value1__parameter;
+                public Step_0__Factory(in System.Func<T> value1)
                 {
                     this._value1__parameter = value1;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T}"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                public MyClassA<T> Create(in System.Func<T, string> value2)
+                public MyClassA<T> Create(in System.Func<T> value2)
                 {
                     return new MyClassA<T>(this._value1__parameter, value2);
                 }
@@ -2016,10 +2309,14 @@ public class FluentMethodCustomizationTests
                     this._value1__parameter = value1;
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassB"/>
+                /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                public MyClassB<T> Create<T>(in System.Func<T, string> value2)
+                public MyClassB Create(in System.Func<string> value2)
                 {
-                    return new MyClassB<T>(this._value1__parameter, value2);
+                    return new MyClassB(this._value1__parameter, value2);
                 }
             }
             """;
@@ -2036,5 +2333,4 @@ public class FluentMethodCustomizationTests
             }
         }.RunAsync();
     }
-
 }

@@ -1,0 +1,69 @@
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Motiv.Generator.FluentBuilder.Generation.SyntaxElements.Methods;
+using Motiv.Generator.FluentBuilder.Generation.SyntaxElements.ValueStorage;
+using Motiv.Generator.FluentBuilder.Model.Methods;
+using Motiv.Generator.FluentBuilder.Model.Steps;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+
+namespace Motiv.Generator.FluentBuilder.Generation.SyntaxElements;
+
+public static class ExistingPartialTypeStepDeclaration
+{
+    public static TypeDeclarationSyntax Create(
+        ExistingTypeFluentStep step)
+    {
+        var methodDeclarationSyntaxes = step.FluentMethods
+            .Select<IFluentMethod, MethodDeclarationSyntax>(method => ExistingPartialTypeMethodDeclaration.Create(method, step));
+
+        var parameterFieldDeclaration = FieldAndPropertySyntax.CreateDeclarations(step.ValueStorage);
+
+        var typeDeclaration = CreateTypeDeclarationSyntax(step, IdentifierName(step.Name).Identifier)
+            .WithMembers(List<MemberDeclarationSyntax>([
+                ..parameterFieldDeclaration,
+                ..methodDeclarationSyntaxes,
+            ]));
+
+        return typeDeclaration;
+    }
+
+    private static TypeDeclarationSyntax CreateTypeDeclarationSyntax(IFluentStep step, SyntaxToken identifier)
+    {
+        return step.TypeKind switch
+        {
+            TypeKind.Class when step.IsRecord =>
+                RecordDeclaration(
+                        SyntaxKind.RecordDeclaration,
+                        Token(SyntaxKind.RecordKeyword),
+                        identifier)
+                    .WithOpenBraceToken(Token(SyntaxKind.OpenBraceToken))
+                    .WithCloseBraceToken(Token(SyntaxKind.CloseBraceToken))
+                    .WithModifiers(
+                        TokenList(GetRootTypeModifiers(step))),
+
+            TypeKind.Class =>
+                ClassDeclaration(identifier)
+                    .WithModifiers(
+                        TokenList(GetRootTypeModifiers(step))),
+
+            TypeKind.Struct  when step.IsRecord=>
+                StructDeclaration(identifier)
+                    .WithModifiers(
+                        TokenList(GetRootTypeModifiers(step).Append(Token(SyntaxKind.RecordKeyword)))),
+
+            _ =>
+                StructDeclaration(identifier)
+                    .WithModifiers(
+                        TokenList(GetRootTypeModifiers(step))),
+        };
+    }
+
+    private static IEnumerable<SyntaxToken> GetRootTypeModifiers(IFluentStep step)
+    {
+        return step.Accessibility
+            .AccessibilityToSyntaxKind()
+            .Select(Token)
+            .Append(Token(SyntaxKind.PartialKeyword));
+    }
+}

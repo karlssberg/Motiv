@@ -53,12 +53,20 @@ public class MultipleFluentMethodTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<T> WithValue<T>(in T value)
                     {
                         return new Step_0__Test_Namespace_Factory<T>(MethodVariants.WithValue<T>(value));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<T> WithFunction<T>(in System.Func<T> function)
                     {
@@ -74,6 +82,10 @@ public class MultipleFluentMethodTests
                         this._data__parameter = data;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T> Create()
                     {
@@ -164,12 +176,22 @@ public class MultipleFluentMethodTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<T> WithDefaultValue<T>()
                     {
                         return new Step_0__Test_Namespace_Factory<T>(MethodVariants.WithDefaultValue<T>());
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<T> WithFunction<T>(in System.Func<T> function)
                     {
@@ -185,12 +207,20 @@ public class MultipleFluentMethodTests
                         this._data__parameter = data;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTargetA<T> WithValue(in int value)
                     {
                         return new MyBuildTargetA<T>(this._data__parameter, value);
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTargetB<T> WithValue(in string value)
                     {
@@ -286,6 +316,11 @@ public class MultipleFluentMethodTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory WithNumber(in int number)
                     {
@@ -301,12 +336,22 @@ public class MultipleFluentMethodTests
                         this._number__parameter = number;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Namespace_Factory<T> WithDefaultValue<T>()
                     {
                         return new Step_1__Test_Namespace_Factory<T>(this._number__parameter, MethodVariants.WithDefaultValue<T>());
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Namespace_Factory<T> WithFunction<T>(in System.Func<T> function)
                     {
@@ -324,12 +369,20 @@ public class MultipleFluentMethodTests
                         this._data__parameter = data;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTargetA<T> WithValue(in int value)
                     {
                         return new MyBuildTargetA<T>(this._number__parameter, this._data__parameter, value);
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTargetB<T> WithValue(in string value)
                     {
@@ -425,6 +478,11 @@ public class MultipleFluentMethodTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory WithNumber(in int number)
                     {
@@ -440,12 +498,20 @@ public class MultipleFluentMethodTests
                         this._number__parameter = number;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Namespace_Factory<T> WithDefaultValue<T>()
                     {
                         return new Step_1__Test_Namespace_Factory<T>(this._number__parameter, MethodVariants.WithDefaultValue<T>());
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_2__Test_Namespace_Factory<T> WithFunction<T>(in System.Func<T> nativeFunction)
                     {
@@ -463,6 +529,10 @@ public class MultipleFluentMethodTests
                         this._data__parameter = data;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTargetA<T> WithValue(in int value)
                     {
@@ -480,6 +550,10 @@ public class MultipleFluentMethodTests
                         this._nativeFunction__parameter = nativeFunction;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTargetB<T> WithValue(in string value)
                     {
@@ -582,18 +656,30 @@ public class MultipleFluentMethodTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory Number()
                     {
                         return new Step_0__Test_Namespace_Factory(NumberMethods.Number());
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory Number(in System.Func<int> function)
                     {
                         return new Step_0__Test_Namespace_Factory(NumberMethods.Number(function));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory Number(in System.Func<string, int> function, in string value)
                     {
@@ -609,18 +695,30 @@ public class MultipleFluentMethodTests
                         this._number__parameter = number;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Namespace_Factory<T> As<T>()
                     {
                         return new Step_1__Test_Namespace_Factory<T>(this._number__parameter, AsMethods.As<T>());
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Namespace_Factory<T> As<T>(in System.Func<T> function)
                     {
                         return new Step_1__Test_Namespace_Factory<T>(this._number__parameter, AsMethods.As<T>(function));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Namespace_Factory<T> As<T>(in System.Func<string, T> function, in string value)
                     {
@@ -638,6 +736,10 @@ public class MultipleFluentMethodTests
                         this._data__parameter = data;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTargetA<T> Create()
                     {
@@ -711,12 +813,20 @@ public class MultipleFluentMethodTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<T> WithValue<T>(in System.Threading.Tasks.Task<T> value)
                     {
                         return new Step_0__Test_Namespace_Factory<T>(MethodVariants.WithValue<T>(value));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<T> WithFunction<T>(in System.Func<System.Threading.Tasks.Task<T>, System.Threading.Tasks.Task<T>> function, in System.Threading.Tasks.Task<T> defaultTask)
                     {
@@ -732,6 +842,10 @@ public class MultipleFluentMethodTests
                         this._data__parameter = data;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T> Create()
                     {
@@ -833,18 +947,30 @@ public class MultipleFluentMethodTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<T1> SetFirst<T1>(in System.Func<T1> function)
                     {
                         return new Step_0__Test_Namespace_Factory<T1>(FirstMethods.SetFirst<T1>(function));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<int> SetFirst(in System.Func<int> function)
                     {
                         return new Step_0__Test_Namespace_Factory<int>(FirstMethods.SetFirst(function));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<string> SetFirst(in System.Func<string> function)
                     {
@@ -860,18 +986,30 @@ public class MultipleFluentMethodTests
                         this._first__parameter = first;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Namespace_Factory<T1, T2> SetSecond<T2>(in System.Func<T2> function)
                     {
                         return new Step_1__Test_Namespace_Factory<T1, T2>(this._first__parameter, SecondMethods.SetSecond<T2>(function));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Namespace_Factory<T1, int> SetSecond(in System.Func<int> function)
                     {
                         return new Step_1__Test_Namespace_Factory<T1, int>(this._first__parameter, SecondMethods.SetSecond(function));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Namespace_Factory<T1, string> SetSecond(in System.Func<string> function)
                     {
@@ -889,6 +1027,10 @@ public class MultipleFluentMethodTests
                         this._second__parameter = second;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2> Create()
                     {
@@ -989,18 +1131,30 @@ public class MultipleFluentMethodTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<T1> SetFirst<T1>(in System.Func<T1> function)
                     {
                         return new Step_0__Test_Namespace_Factory<T1>(FirstMethods.SetFirst<T1>(function));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<int> SetFirst(in System.Func<int> function)
                     {
                         return new Step_0__Test_Namespace_Factory<int>(FirstMethods.SetFirst(function));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<System.Func<TX2, TX1>> SetFirst<TX1, TX2>()
                     {
@@ -1016,18 +1170,30 @@ public class MultipleFluentMethodTests
                         this._first__parameter = first;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2> SetSecond<T2>(in System.Func<T2> function)
                     {
                         return new MyBuildTarget<T1, T2>(this._first__parameter, SecondMethods.SetSecond<T2>(function));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, int> SetSecond(in System.Func<int> function)
                     {
                         return new MyBuildTarget<T1, int>(this._first__parameter, SecondMethods.SetSecond(function));
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, System.Func<TY2, TY1>> SetSecond<TY1, TY2>()
                     {

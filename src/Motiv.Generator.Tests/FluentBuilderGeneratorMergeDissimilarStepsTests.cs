@@ -1,4 +1,5 @@
-﻿using Motiv.Generator.FluentBuilder;
+﻿using System.Globalization;
+using Motiv.Generator.FluentBuilder;
 using VerifyCS =
     Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentBuilder.FluentFactoryGenerator>;
 
@@ -7,7 +8,7 @@ namespace Motiv.Generator.Tests;
 public class FluentBuilderGeneratorMergeDissimilarStepsTests
 {
     [Fact]
-    public async Task Should_merge_generated_when_applied_to_class_constructors_with_a_single_and_dual_parameters()
+    public async Task Given_class_constructors_with_a_single_and_dual_parameters_Should_create_methods_both_target_types()
     {
         const string code =
             """
@@ -53,12 +54,20 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget<T> WithValue1<T>(in T value1)
                     {
                         return new MyBuildTarget<T>(value1);
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory WithValue1(in string value1)
                     {
@@ -74,6 +83,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget WithValue2(in string value2)
                     {
@@ -97,7 +110,7 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
     }
 
     [Fact]
-    public async Task Should_merge_generated_when_applied_to_class_constructors_with_two_and_three_parameters()
+    public async Task Given_class_constructors_with_two_and_three_parameters_Should_create_methods_both_target_types()
     {
         const string code =
             """
@@ -154,12 +167,20 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T1> WithValue1<T1>(in T1 value1)
                     {
                         return new Step_0__Test_Factory<T1>(value1);
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_2__Test_Factory WithString1(in string string1)
                     {
@@ -175,6 +196,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory<T1, T2> WithValue2<T2>(in T2 value2)
                     {
@@ -192,6 +217,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._value2__parameter = value2;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2> Create()
                     {
@@ -207,6 +236,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._string1__parameter = string1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_3__Test_Factory WithString2(in string string2)
                     {
@@ -224,6 +257,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._string2__parameter = string2;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_4__Test_Factory WithString3(in string string3)
                     {
@@ -243,6 +280,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._string3__parameter = string3;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget Create()
                     {
@@ -266,7 +307,7 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
     }
 
     [Fact]
-    public async Task Should_merge_generated_when_applied_to_class_constructors_with_two_and_three_parameters_with_divergence_on_the_second_step()
+    public async Task Given_class_constructors_with_two_and_three_parameters_Should_create_methods_for_both_target_types_with_divergence_on_the_second_step()
     {
         const string code =
             """
@@ -316,6 +357,11 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T1> WithValue1<T1>(in T1 value1)
                     {
@@ -331,12 +377,20 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory<T1> WithValue2(in string value2)
                     {
                         return new Step_1__Test_Factory<T1>(this._value1__parameter, value2);
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_3__Test_Factory<T1, T2> WithValue3<T2>(in T2 value3)
                     {
@@ -354,6 +408,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._value2__parameter = value2;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_2__Test_Factory<T1, T2> WithValue3<T2>(in T2 value3)
                     {
@@ -373,6 +431,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._value3__parameter = value3;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2> Create()
                     {
@@ -390,6 +452,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._value3__parameter = value3;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2> Create()
                     {
@@ -413,7 +479,7 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
     }
 
     [Fact]
-    public async Task Should_merge_generated_when_applied_to_class_constructors_with_three_parameters()
+    public async Task Given_a_constructors_with_dissimilar_parameters_Should_diverge_steps_from_root()
     {
         const string code =
             """
@@ -458,12 +524,20 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T1> WithValue1<T1>(in T1 value1)
                     {
                         return new Step_0__Test_Factory<T1>(value1);
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_2__Test_Factory<T2> WithValue2<T2>(in T2 value2)
                     {
@@ -479,6 +553,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory<T1, T2> WithValue2<T2>(in T2 value2)
                     {
@@ -496,6 +574,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._value2__parameter = value2;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2> Create()
                     {
@@ -511,6 +593,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._value2__parameter = value2;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_3__Test_Factory<T2, T1> WithValue1<T1>(in T1 value1)
                     {
@@ -528,6 +614,10 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2> Create()
                     {
@@ -552,7 +642,7 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
     }
 
     [Fact]
-    public async Task Should_merge_generated_when_applied_to_record_constructors_with_divergence_from_the_second_step_when_no_create_methods_are_requested()
+    public async Task Given_records_diverge_from_the_second_step_when_no_create_methods_are_requested_Should_merge_steps_and_methods()
     {
         const string code =
             """
@@ -594,6 +684,12 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
             {
                 public static partial class Shape
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Square"/>
+                    ///     <seealso cref="Test.Rectangle"/>
+                    ///     <seealso cref="Test.Cuboid"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Square WithWidth(in int width)
                     {
@@ -603,6 +699,11 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
 
                 public partial record Square
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Rectangle"/>
+                    ///     <seealso cref="Test.Cuboid"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Rectangle WithHeight(in int height)
                     {
@@ -612,10 +713,486 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
 
                 public partial class Rectangle
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Cuboid"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Cuboid WithDepth(in int depth)
                     {
                         return new Cuboid(this.Width, this.Height, depth);
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Test.Shape.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Given_class_constructors_with_a_single_double_and_triple_parameters_Should_ensure_signature_clashes_involving_existing_type()
+    {
+        const string code =
+            """
+            using System;
+            using Motiv.Generator.Attributes;
+
+            namespace TestFactory
+            {
+                [FluentFactory]
+                public static partial class Factory;
+            }
+
+            namespace TestA
+            {
+                public partial class MyBuildTargetA<T>
+                {
+                    [FluentConstructor(typeof(TestFactory.Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyBuildTargetA(
+                        [FluentMethod("WithValueA")]T valueA1)
+                    {
+                        ValueA1 = valueA1;
+                    }
+
+                    public T ValueA1 { get; set; }
+                }
+            }
+
+            namespace TestB
+            {
+                public class MyBuildTargetB<T>
+                {
+                    [FluentConstructor(typeof(TestFactory.Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyBuildTargetB(
+                        [FluentMethod("WithValueA")]T valueB1,
+                        [FluentMethod("WithValueB")]string valueB2,
+                        [FluentMethod("WithValueC")]int valueB3)
+                    {
+                        ValueB1 = valueB1;
+                        ValueB2 = valueB2;
+                        ValueB3 = valueB3;
+                    }
+
+                    public T ValueB1 { get; set; }
+
+                    public String ValueB2 { get; set; }
+
+                    public int ValueB3 { get; set; }
+                }
+            }
+
+            namespace TestC
+            {
+                public partial class MyBuildTargetC<T>
+                {
+                    [FluentConstructor(typeof(TestFactory.Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyBuildTargetC(
+                        [FluentMethod("WithValueA")]T valueC1,
+                        [FluentMethod("WithValueB")]string valueC2)
+                    {
+                        ValueC1 = valueC1;
+                        ValueC2 = valueC2;
+                    }
+
+                    public T ValueC1 { get; set; }
+
+                    public string ValueC2 { get; set; }
+                }
+            }
+
+            namespace TestD
+            {
+                public partial class MyBuildTargetD<T>
+                {
+                    [FluentConstructor(typeof(TestFactory.Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyBuildTargetD(
+                        [FluentMethod("WithValueA")]T valueD1,
+                        [FluentMethod("WithValueB")]string valueD2,
+                        [FluentMethod("WithValueC")]string valueD3)
+                    {
+                        ValueD1 = valueD1;
+                        ValueD2 = valueD2;
+                        ValueD3 = valueD3;
+                    }
+
+                    public T ValueD1 { get; set; }
+
+                    public string ValueD2 { get; set; }
+
+                    public string ValueD3 { get; set; }
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            using System;
+            using TestA;
+            using TestB;
+            using TestC;
+            using TestD;
+
+            namespace TestFactory
+            {
+                public static partial class Factory
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="TestA.MyBuildTargetA{T}"/>
+                    ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
+                    ///     <seealso cref="TestC.MyBuildTargetC{T}"/>
+                    ///     <seealso cref="TestD.MyBuildTargetD{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static TestA.MyBuildTargetA<T> WithValueA<T>(in T valueA1)
+                    {
+                        return new TestA.MyBuildTargetA<T>(valueA1);
+                    }
+                }
+            }
+
+            namespace TestA
+            {
+                public partial class MyBuildTargetA<T>
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
+                    ///     <seealso cref="TestC.MyBuildTargetC{T}"/>
+                    ///     <seealso cref="TestD.MyBuildTargetD{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public TestC.MyBuildTargetC<T> WithValueB(in string valueB2)
+                    {
+                        return new TestC.MyBuildTargetC<T>(this.ValueA1, valueB2);
+                    }
+                }
+            }
+
+            namespace TestC
+            {
+                public partial class MyBuildTargetC<T>
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public TestB.MyBuildTargetB<T> WithValueC(in int valueB3)
+                    {
+                        return new TestB.MyBuildTargetB<T>(this.ValueC1, this.ValueC2, valueB3);
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="TestD.MyBuildTargetD{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public TestD.MyBuildTargetD<T> WithValueC(in string valueD3)
+                    {
+                        return new TestD.MyBuildTargetD<T>(this.ValueC1, this.ValueC2, valueD3);
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "TestFactory.Factory.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
+
+
+    [Fact]
+    public async Task Given_class_constructors_with_different_parameters_including_multiple_fluent_methods_Should_ensure_type_converters_are_generated_with_existing_types()
+    {
+        const string code =
+            """
+            using System;
+            using Motiv.Generator.Attributes;
+
+            namespace TestFactory
+            {
+                [FluentFactory]
+                public static partial class Factory;
+            }
+
+            namespace TestA
+            {
+                public partial class MyBuildTargetA<T>
+                {
+                    [FluentConstructor(typeof(TestFactory.Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyBuildTargetA(
+                        [FluentMethod("WithValueA")]T valueA1)
+                    {
+                        ValueA1 = valueA1;
+                    }
+
+                    public T ValueA1 { get; set; }
+                }
+            }
+
+            namespace TestC
+            {
+                public partial class MyBuildTargetC<T>
+                {
+                    [FluentConstructor(typeof(TestFactory.Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyBuildTargetC(
+                        [FluentMethod("WithValueA")]T valueC1,
+                        [FluentMethod("WithValueB")]string valueC2)
+                    {
+                        ValueC1 = valueC1;
+                        ValueC2 = valueC2;
+                    }
+
+                    public T ValueC1 { get; set; }
+
+                    public string ValueC2 { get; set; }
+                }
+            }
+
+            namespace TestB
+            {
+                public class MyBuildTargetB<T>
+                {
+                    [FluentConstructor(typeof(TestFactory.Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyBuildTargetB(
+                        [FluentMethod("WithValueA")]T valueB1,
+                        [MultipleFluentMethods(typeof(MultipleMethods))]Func<string> valueB2,
+                        [FluentMethod("WithValueC")]string valueB3)
+                    {
+                        ValueB1 = valueB1;
+                        ValueB2 = valueB2;
+                        ValueB3 = valueB3;
+                    }
+
+                    public T ValueB1 { get; set; }
+
+                    public Func<string> ValueB2 { get; set; }
+
+                    public String ValueB3 { get; set; }
+                }
+
+                public class MultipleMethods
+                {
+                    [FluentMethodTemplate]
+                    public static Func<string> WithValueB(string multipleMethodValue1)
+                    {
+                        return () => multipleMethodValue1;
+                    }
+
+                    [FluentMethodTemplate]
+                    public static Func<string> WithValueB(Func<string> multipleMethodValue2)
+                    {
+                        return multipleMethodValue2;
+                    }
+
+                    [FluentMethodTemplate]
+                    public static Func<string> WithValueB<T>(T multipleMethodValue1)
+                    {
+                        return () => multipleMethodValue1 switch
+                        {
+                            not null when multipleMethodValue1.ToString() is {} txt => txt,
+                            _ => string.Empty
+                        };
+                    }
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            using System;
+            using TestA;
+            using TestB;
+            using TestC;
+
+            namespace TestA
+            {
+                public partial class MyBuildTargetA<T>
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="TestC.MyBuildTargetC{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public TestC.MyBuildTargetC<T> WithValueB(in string valueC2)
+                    {
+                        return new TestC.MyBuildTargetC<T>(this.ValueA1, valueC2);
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public TestFactory.Step_1__TestFactory_Factory<T> WithValueB(in System.Func<string> multipleMethodValue2)
+                    {
+                        return new TestFactory.Step_1__TestFactory_Factory<T>(this.ValueA1, TestB.MultipleMethods.WithValueB(multipleMethodValue2));
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public TestFactory.Step_1__TestFactory_Factory<T> WithValueB(in T multipleMethodValue1)
+                    {
+                        return new TestFactory.Step_1__TestFactory_Factory<T>(this.ValueA1, TestB.MultipleMethods.WithValueB<T>(multipleMethodValue1));
+                    }
+                }
+            }
+
+            namespace TestFactory
+            {
+                public static partial class Factory
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="TestA.MyBuildTargetA{T}"/>
+                    ///     <seealso cref="TestC.MyBuildTargetC{T}"/>
+                    ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static TestA.MyBuildTargetA<T> WithValueA<T>(in T valueA1)
+                    {
+                        return new TestA.MyBuildTargetA<T>(valueA1);
+                    }
+                }
+
+                public struct Step_1__TestFactory_Factory<T>
+                {
+                    private readonly T _valueB1__parameter;
+                    private readonly System.Func<string> _valueB2__parameter;
+                    public Step_1__TestFactory_Factory(in T valueB1, in System.Func<string> valueB2)
+                    {
+                        this._valueB1__parameter = valueB1;
+                        this._valueB2__parameter = valueB2;
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public TestB.MyBuildTargetB<T> WithValueC(in string valueB3)
+                    {
+                        return new TestB.MyBuildTargetB<T>(this._valueB1__parameter, this._valueB2__parameter, valueB3);
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "TestFactory.Factory.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_ensure_existing_member_names_are_used_verbatim()
+    {
+        const string code =
+            """
+            using System;
+            using Motiv.Generator.Attributes;
+
+            namespace Test;
+
+            [FluentFactory]
+            public static partial class Shape;
+
+            [FluentConstructor(typeof(Shape), Options = FluentOptions.NoCreateMethod)]
+            public partial record Square(int Width)
+            {
+                public int A { get; set; } = Width;
+            }
+
+            [FluentConstructor(typeof(Shape), Options = FluentOptions.NoCreateMethod)]
+            public partial class Rectangle(int width, in int height)
+            {
+                public int B { get; set; } = width;
+                public int C { get; set; } = height;
+            }
+
+            [FluentConstructor(typeof(Shape), Options = FluentOptions.NoCreateMethod)]
+            public partial record Cuboid(in int Width, int Height, in int Depth)
+            {
+                public int D { get; set; } = Width;
+                public int E { get; set; } = Height;
+                public int F { get; set; } = Depth;
+            }
+            """;
+
+        const string expected =
+            """
+            using System;
+
+            namespace Test
+            {
+                public static partial class Shape
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Square"/>
+                    ///     <seealso cref="Test.Rectangle"/>
+                    ///     <seealso cref="Test.Cuboid"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Square WithWidth(in int width)
+                    {
+                        return new Square(width);
+                    }
+                }
+
+                public partial record Square
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Rectangle"/>
+                    ///     <seealso cref="Test.Cuboid"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public Rectangle WithHeight(in int height)
+                    {
+                        return new Rectangle(this.Width, height);
+                    }
+                }
+
+                public partial class Rectangle
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Cuboid"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public Cuboid WithDepth(in int depth)
+                    {
+                        return new Cuboid(this.B, this.C, depth);
                     }
                 }
             }

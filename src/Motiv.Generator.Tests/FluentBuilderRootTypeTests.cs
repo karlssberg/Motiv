@@ -39,6 +39,10 @@ public class FluentBuilderRootTypeTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget WithValue(in int value)
                     {
@@ -94,6 +98,10 @@ public class FluentBuilderRootTypeTests
             {
                 public partial record Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget WithValue(in int value)
                     {
@@ -149,6 +157,10 @@ public class FluentBuilderRootTypeTests
             {
                 public partial struct Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget WithValue(in int value)
                     {
@@ -204,6 +216,10 @@ public class FluentBuilderRootTypeTests
             {
                 public partial record struct Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget WithValue(in int value)
                     {
@@ -262,6 +278,10 @@ public class FluentBuilderRootTypeTests
             {
                 public partial record struct Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static MyBuildTarget WithValue(in MyParameterValue value)
                     {
@@ -321,6 +341,10 @@ public class FluentBuilderRootTypeTests
             {
                 public partial record struct Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory WithValue1(in MyParameterValue value1)
                     {
@@ -336,6 +360,10 @@ public class FluentBuilderRootTypeTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory WithValue2(in MyParameterValue value2)
                     {
@@ -353,6 +381,10 @@ public class FluentBuilderRootTypeTests
                         this._value2__parameter = value2;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget WithValue3(in MyParameterValue value3)
                     {
@@ -414,6 +446,10 @@ public class FluentBuilderRootTypeTests
             {
                 public partial record struct Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T1, T2> WithValue1<T1, T2>(in MyParameterValue<T1, T2> value1)
                     {
@@ -429,6 +465,10 @@ public class FluentBuilderRootTypeTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory<T1, T2> WithValue2(in MyParameterValue<T1, T2> value2)
                     {
@@ -446,6 +486,10 @@ public class FluentBuilderRootTypeTests
                         this._value2__parameter = value2;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2> WithValue3(in MyParameterValue<T1, T2> value3)
                     {
@@ -520,6 +564,11 @@ public class FluentBuilderRootTypeTests
             {
                 public partial record struct Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTargetA"/>
+                    ///     <seealso cref="Test.MyBuildTargetB"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory WithValue1(in MyParameterValue value1)
                     {
@@ -535,6 +584,11 @@ public class FluentBuilderRootTypeTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTargetA"/>
+                    ///     <seealso cref="Test.MyBuildTargetB"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTargetB WithValue2(in MyParameterValue value2)
                     {
@@ -544,6 +598,10 @@ public class FluentBuilderRootTypeTests
 
                 public partial class MyBuildTargetB
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTargetA"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_2__Test_Factory WithValue3(in MyParameterValue value3)
                     {
@@ -563,6 +621,10 @@ public class FluentBuilderRootTypeTests
                         this._value3__parameter = value3;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTargetA"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTargetA WithValue4(in MyParameterValue value4)
                     {
@@ -612,6 +674,11 @@ public class FluentBuilderRootTypeTests
             {
                 public partial record struct Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTargetA"/>
+                    ///     <seealso cref="Test.MyBuildTargetB"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory WithValue1(in MyParameterValue value1)
                     {
@@ -627,6 +694,11 @@ public class FluentBuilderRootTypeTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTargetA"/>
+                    ///     <seealso cref="Test.MyBuildTargetB"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTargetB WithValue2(in MyParameterValue value2)
                     {
@@ -636,6 +708,10 @@ public class FluentBuilderRootTypeTests
 
                 public partial class MyBuildTargetB
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTargetA"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_2__Test_Factory WithValue3(in MyParameterValue value3)
                     {
@@ -655,6 +731,10 @@ public class FluentBuilderRootTypeTests
                         this._value3__parameter = value3;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTargetA"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTargetA WithValue4(in MyParameterValue value4)
                     {

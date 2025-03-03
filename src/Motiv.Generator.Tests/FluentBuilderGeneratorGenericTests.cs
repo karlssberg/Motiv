@@ -37,6 +37,10 @@ public class FluentBuilderGeneratorGenericTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory<T> WithValue<T>(in T value)
                     {
@@ -52,6 +56,10 @@ public class FluentBuilderGeneratorGenericTests
                         this._value__parameter = value;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T> Create()
                     {
@@ -109,6 +117,10 @@ public class FluentBuilderGeneratorGenericTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T1> WithValue1<T1>(in T1 value1)
                     {
@@ -124,6 +136,10 @@ public class FluentBuilderGeneratorGenericTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory<T1, T2> WithValue2<T2>(in T2 value2)
                     {
@@ -141,6 +157,10 @@ public class FluentBuilderGeneratorGenericTests
                         this._value2__parameter = value2;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2> Create()
                     {
@@ -202,6 +222,10 @@ public class FluentBuilderGeneratorGenericTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T1> WithValue1<T1>(in T1 value1)
                     {
@@ -217,6 +241,10 @@ public class FluentBuilderGeneratorGenericTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory<T1, T2> WithValue2<T2>(in T2 value2)
                     {
@@ -234,6 +262,10 @@ public class FluentBuilderGeneratorGenericTests
                         this._value2__parameter = value2;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_2__Test_Factory<T1, T2, T3> WithValue3<T3>(in T3 value3)
                     {
@@ -253,6 +285,10 @@ public class FluentBuilderGeneratorGenericTests
                         this._value3__parameter = value3;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2, T3> Create()
                     {
@@ -318,6 +354,10 @@ public class FluentBuilderGeneratorGenericTests
             {
                 public static partial class Factory
                 {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T1> WithValue1<T1>(in T1 value1)
                     {
@@ -333,6 +373,10 @@ public class FluentBuilderGeneratorGenericTests
                         this._value1__parameter = value1;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory<T1, T2> WithValue2<T2>(in T2 value2)
                     {
@@ -350,6 +394,10 @@ public class FluentBuilderGeneratorGenericTests
                         this._value2__parameter = value2;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_2__Test_Factory<T1, T2, T3> WithValue3<T3>(in T3 value3)
                     {
@@ -369,6 +417,10 @@ public class FluentBuilderGeneratorGenericTests
                         this._value3__parameter = value3;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_3__Test_Factory<T1, T2, T3, T4> WithValue4<T4>(in T4 value4)
                     {
@@ -390,6 +442,10 @@ public class FluentBuilderGeneratorGenericTests
                         this._value4__parameter = value4;
                     }
 
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                    /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public MyBuildTarget<T1, T2, T3, T4> Create()
                     {
