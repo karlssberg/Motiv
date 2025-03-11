@@ -11,14 +11,8 @@ internal class WhenTrueYieldOverloads
     }
 
     [FluentMethodTemplate]
-    internal static Func<TModel, IEnumerable<TMetadata>> WhenTrue<TModel, TMetadata>(Func<TModel, TMetadata> function)
+    internal static Func<TModel, IEnumerable<string>> WhenTrueYield<TModel>(Func<TModel, IEnumerable<string>> function)
     {
-        return model => [function(model)];
-    }
-
-    [FluentMethodTemplate]
-    internal static Func<TModel, IEnumerable<TMetadata>> WhenTrue<TModel, TMetadata>(TMetadata value)
-    {
-        return _ => [value];
+        return function;
     }
 }

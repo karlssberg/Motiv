@@ -3,7 +3,7 @@
 namespace Motiv.Generator.Tests;
 using VerifyCS = CSharpSourceGeneratorVerifier<FluentBuilder.FluentFactoryGenerator>;
 
-public class MultipleFluentMethodTests
+public class FluentFactoryMultipleMethodsGenerationTests
 {
     [Fact]
     public async Task Should_build_multiple_root_constructor_methods_for_single_parameter()
@@ -1059,6 +1059,7 @@ public class MultipleFluentMethodTests
         const string code =
             """
             using System;
+            using System.Collections.Generic;
             using Motiv.Generator.Attributes;
 
             namespace Test.Namespace
@@ -1198,6 +1199,361 @@ public class MultipleFluentMethodTests
                     public MyBuildTarget<T1, System.Func<TY2, TY1>> SetSecond<TY1, TY2>()
                     {
                         return new MyBuildTarget<T1, System.Func<TY2, TY1>>(this._first__parameter, SecondMethods.SetSecond<TY1, TY2>());
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Test.Namespace.Factory.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Given_an_multimethod_class_with_varying_number_of_deeply_nested_generic_type_parameters_Should_match_deeply_nested_genric_expressions()
+    {
+        const string code =
+            """
+            using System;
+            using System.Collections.Generic;
+            using Motiv.Generator.Attributes;
+
+            namespace Test.Namespace
+            {
+                [FluentFactory]
+                public static partial class Factory;
+
+                public class MyBuildTarget<T1, T2>
+                {
+                    [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyBuildTarget(
+                        [MultipleFluentMethods(typeof(Overloads))]Func<KeyValuePair<T1, T2>> first,
+                        string second)
+                    {
+                        First = first;
+                        Second = second;
+                    }
+
+                    public Func<KeyValuePair<T1, T2>> First { get; set; }
+                    public string Second { get; set; }
+                }
+
+                internal static class Overloads
+                {
+
+                    [FluentMethodTemplate]
+                    internal static Func<KeyValuePair<T1, T2>> Build<T1, T2>(Func<KeyValuePair<T1, T2>> resultFactory) => resultFactory;
+
+
+                    [FluentMethodTemplate]
+                    internal static Func<KeyValuePair<T1, string>> Build<T1>(Func<KeyValuePair<T1, string>> resultFactory) => resultFactory;
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            using System;
+
+            namespace Test.Namespace
+            {
+                public static partial class Factory
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory<T1, T2> Build<T1, T2>(in System.Func<System.Collections.Generic.KeyValuePair<T1, T2>> resultFactory)
+                    {
+                        return new Step_0__Test_Namespace_Factory<T1, T2>(Overloads.Build<T1, T2>(resultFactory));
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory<T1, string> Build<T1>(in System.Func<System.Collections.Generic.KeyValuePair<T1, string>> resultFactory)
+                    {
+                        return new Step_0__Test_Namespace_Factory<T1, string>(Overloads.Build<T1>(resultFactory));
+                    }
+                }
+
+                public struct Step_0__Test_Namespace_Factory<T1, T2>
+                {
+                    private readonly System.Func<System.Collections.Generic.KeyValuePair<T1, T2>> _first__parameter;
+                    public Step_0__Test_Namespace_Factory(in System.Func<System.Collections.Generic.KeyValuePair<T1, T2>> first)
+                    {
+                        this._first__parameter = first;
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyBuildTarget<T1, T2> WithSecond(in string second)
+                    {
+                        return new MyBuildTarget<T1, T2>(this._first__parameter, second);
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Test.Namespace.Factory.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Given_an_existing_fluent_step_Should_handle_compatible_yet_different_generic_parameters()
+    {
+        const string code =
+            """
+            using System;
+            using System.Collections.Generic;
+            using Motiv.Generator.Attributes;
+
+            namespace Test.Namespace
+            {
+                [FluentFactory]
+                public static partial class Factory;
+
+                public class MyBuildTarget<T1, T2>
+                {
+                    [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyBuildTarget(
+                        [MultipleFluentMethods(typeof(Overloads))]Func<T1, IEnumerable<int>, T2> first,
+                        string second)
+                    {
+                        First = first;
+                        Second = second;
+                    }
+
+                    public Func<T1, IEnumerable<int>, T2> First { get; set; }
+                    public string Second { get; set; }
+                }
+
+                internal static class Overloads
+                {
+                    // Should be ignored
+                    [FluentMethodTemplate]
+                    internal static string Build<T>(string ignoreThis) => ignoreThis;
+
+                    [FluentMethodTemplate]
+                    internal static Func<T1, TAbstraction, T2> Build<T1, T2, TAbstraction>(Func<T1, TAbstraction, T2> firstFactory) => firstFactory;
+
+                    [FluentMethodTemplate]
+                    internal static Func<T1, TAbstraction, string> Build<T1, TAbstraction>(Func<T1, TAbstraction, string> secondFactory) => secondFactory;
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            using System;
+
+            namespace Test.Namespace
+            {
+                public static partial class Factory
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory<T1, T2> Build<T1, T2>(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> firstFactory)
+                    {
+                        return new Step_0__Test_Namespace_Factory<T1, T2>(Overloads.Build<T1, T2, System.Collections.Generic.IEnumerable<int>>(firstFactory));
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory<T1, string> Build<T1>(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, string> secondFactory)
+                    {
+                        return new Step_0__Test_Namespace_Factory<T1, string>(Overloads.Build<T1, System.Collections.Generic.IEnumerable<int>>(secondFactory));
+                    }
+                }
+
+                public struct Step_0__Test_Namespace_Factory<T1, T2>
+                {
+                    private readonly System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> _first__parameter;
+                    public Step_0__Test_Namespace_Factory(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> first)
+                    {
+                        this._first__parameter = first;
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyBuildTarget<T1, T2> WithSecond(in string second)
+                    {
+                        return new MyBuildTarget<T1, T2>(this._first__parameter, second);
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Test.Namespace.Factory.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Given_a_method_conversion_class_Should_handle_compatible_yet_different_generic_parameters()
+    {
+        const string code =
+            """
+            using System;
+            using System.Collections.Generic;
+            using Motiv.Generator.Attributes;
+
+            namespace Test.Namespace
+            {
+                [FluentFactory]
+                public static partial class Factory;
+
+                public class MyBuildTarget
+                {
+                    [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyBuildTarget(
+                        string first)
+                    {
+                        First = first;
+                    }
+
+                    public string First { get; set; }
+                }
+
+                public class MyBuildTarget<T1, T2>
+                {
+                    [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyBuildTarget(
+                        string first
+                        [MultipleFluentMethods(typeof(Overloads))]Func<T1, IEnumerable<int>, T2> second,
+                        string third)
+                    {
+                        First = first;
+                        Second = second;
+                        Third = third;
+                    }
+
+                    public string First { get; set; }
+                    public Func<T1, IEnumerable<int>, T2> Second { get; set; }
+                    public string Third { get; set; }
+                }
+
+                internal static class Overloads
+                {
+                    // Should be ignored
+                    [FluentMethodTemplate]
+                    internal static string Build<T>(string ignoreThis) => ignoreThis;
+
+                    [FluentMethodTemplate]
+                    internal static Func<T1, TAbstraction, T2> Build<T1, T2, TAbstraction>(Func<T1, TAbstraction, T2> firstFactory) => firstFactory;
+
+                    [FluentMethodTemplate]
+                    internal static Func<T1, TAbstraction, string> Build<T1, TAbstraction>(Func<T1, TAbstraction, string> secondFactory) => secondFactory;
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            using System;
+
+            namespace Test.Namespace
+            {
+                public static partial class Factory
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory Build(in string first)
+                    {
+                        return new Step_0__Test_Namespace_Factory(first);
+                    }
+                }
+
+                public static partial class Step_0__Test_Namespace_Factory
+                {
+                    private readonly string _first__parameter;
+                    public Step_0__Test_Namespace_Factory(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> first)
+                    {
+                        this._first__parameter = first;
+                    }
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory<T1, T2> Build<T1, T2>(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> firstFactory)
+                    {
+                        return new Step_0__Test_Namespace_Factory<T1, T2>(Overloads.Build<T1, T2, System.Collections.Generic.IEnumerable<int>>(firstFactory));
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory<T1, string> Build<T1>(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, string> secondFactory)
+                    {
+                        return new Step_0__Test_Namespace_Factory<T1, string>(Overloads.Build<T1, System.Collections.Generic.IEnumerable<int>>(secondFactory));
+                    }
+                }
+
+                public struct Step_0__Test_Namespace_Factory<T1, T2>
+                {
+                    private readonly string _first__parameter;
+                    private readonly System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> _second__parameter;
+                    public Step_0__Test_Namespace_Factory(in string first, in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> second)
+                    {
+                        this._first__parameter = first;
+                        this._second__parameter = second;
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyBuildTarget<T1, T2> WithSecond(in string third)
+                    {
+                        return new MyBuildTarget<T1, T2>(this._first__parameter, second);
                     }
                 }
             }

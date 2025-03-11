@@ -5,20 +5,8 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders;
 internal class WhenFalseYieldOverloads
 {
     [FluentMethodTemplate]
-    internal static Func<TModel, IEnumerable<TMetadata>> WhenFalseYield<TModel, TMetadata>(Func<TModel, IEnumerable<TMetadata>> function)
+    internal static Func<TEvaluation, IEnumerable<TNewMetadata>> WhenFalseYield<TEvaluation, TNewMetadata>(Func<TEvaluation, IEnumerable<TNewMetadata>> function)
     {
         return function;
-    }
-
-    [FluentMethodTemplate]
-    internal static Func<TModel, TBooleanResult, IEnumerable<TNewMetadata>> WhenFalse<TModel, TBooleanResult, TNewMetadata>(Func<TModel, TBooleanResult, TNewMetadata> function)
-    {
-        return (model, result) => [function(model, result)];
-    }
-
-    [FluentMethodTemplate]
-    internal static Func<TModel, TBooleanResult, IEnumerable<TNewMetadata>> WhenFalse<TModel, TBooleanResult, TNewMetadata>(TNewMetadata value)
-    {
-        return  (_, _) => [value];
     }
 }

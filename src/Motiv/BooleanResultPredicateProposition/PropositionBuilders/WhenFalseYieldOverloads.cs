@@ -4,21 +4,34 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders;
 
 internal class WhenFalseYieldOverloads
 {
+
     [FluentMethodTemplate]
-    internal static Func<TModel, IEnumerable<TMetadata>> WhenFalseYield<TModel, TMetadata>(Func<TModel, IEnumerable<TMetadata>> function)
+    internal static Func<TModel, TResult, IEnumerable<TMetadata>> WhenFalseYield<TModel, TMetadata, TResult>(Func<TModel, TResult, IEnumerable<TMetadata>> whenFalse)
     {
-        return function;
+        return whenFalse;
     }
 
     [FluentMethodTemplate]
-    internal static Func<TModel, TBooleanResult, IEnumerable<TNewMetadata>> WhenFalse<TModel, TBooleanResult, TNewMetadata>(Func<TModel, TBooleanResult, TNewMetadata> function)
+    internal static Func<TModel, TResult, IEnumerable<TMetadata>> WhenFalseYield<TModel, TMetadata, TResult>(Func<TModel, IEnumerable<TMetadata>> whenFalse)
     {
-        return (model, result) => [function(model, result)];
+        return (model, _) => whenFalse(model);
     }
 
     [FluentMethodTemplate]
-    internal static Func<TModel, TBooleanResult, IEnumerable<TNewMetadata>> WhenFalse<TModel, TBooleanResult, TNewMetadata>(TNewMetadata value)
+    internal static Func<TModel, TBooleanResult, IEnumerable<TNewMetadata>> WhenFalse<TModel, TBooleanResult, TNewMetadata>(Func<TModel, TBooleanResult, TNewMetadata> whenFalse)
     {
-        return  (_, _) => [value];
+        return whenFalse.ToEnumerableReturn();
+    }
+
+    [FluentMethodTemplate]
+    internal static Func<TModel, TBooleanResult, IEnumerable<TNewMetadata>> WhenFalse<TModel, TBooleanResult, TNewMetadata>(Func<TModel, TNewMetadata> whenFalse)
+    {
+        return (model, _) => whenFalse(model).ToEnumerable();
+    }
+
+    [FluentMethodTemplate]
+    internal static Func<TModel, TBooleanResult, IEnumerable<TNewMetadata>> WhenFalse<TModel, TBooleanResult, TNewMetadata>(TNewMetadata whenFalse)
+    {
+        return (_, _) => whenFalse.ToEnumerable();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Motiv.Generator.FluentBuilder.Model;
 
+
 public class FluentMethodParameter(
     IParameterSymbol parameterSymbol,
     IEnumerable<string> names)

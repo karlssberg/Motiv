@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
+using Motiv.Generator.FluentBuilder.Generation;
 using Motiv.Generator.FluentBuilder.Model.Steps;
 using Motiv.Generator.FluentBuilder.Model.Storage;
 
@@ -21,6 +22,7 @@ public class MultiMethod : IFluentMethod
     {
         _lazyMethodParameters = new Lazy<ImmutableArray<FluentMethodParameter>>(GetMethodParameters);
         _lazyTypeParameters = new Lazy<ImmutableArray<FluentTypeParameter>>(GetTypeParameters);
+        _lazyResolvedTypes = new Lazy<ImmutableHashSet<ITypeSymbol>>(GetResolvedTypeParameters);
 
         MethodName = parameterConverter.Name;
         ValueSources = valueStorages;
@@ -30,6 +32,8 @@ public class MultiMethod : IFluentMethod
         ParameterConverter = parameterConverter;
         AvailableParameterFields = availableParameterFields;
     }
+
+    private readonly Lazy<ImmutableHashSet<ITypeSymbol>> _lazyResolvedTypes;
 
     public IMethodSymbol ParameterConverter { get; }
 
@@ -51,7 +55,11 @@ public class MultiMethod : IFluentMethod
 
     private ImmutableArray<FluentMethodParameter> GetMethodParameters()
     {
-        return [..ParameterConverter.Parameters.Select(p => new FluentMethodParameter(p, MethodName))];
+        return
+        [
+            ..ParameterConverter.Parameters
+                .Select(p => new FluentMethodParameter(p, MethodName))
+        ];
     }
 
     private ImmutableArray<FluentTypeParameter> GetTypeParameters()
@@ -59,8 +67,18 @@ public class MultiMethod : IFluentMethod
         return
         [
             ..ParameterConverter.TypeArguments
+                .SelectMany(arg => arg.GetGenericTypeParameters())
+                .Except(_lazyResolvedTypes.Value, FluentTypeSymbolEqualityComparer.Default)
                 .OfType<ITypeParameterSymbol>()
                 .Select(typeParameter => new FluentTypeParameter(typeParameter))
         ];
+    }
+
+
+    private ImmutableHashSet<ITypeSymbol> GetResolvedTypeParameters()
+    {
+        return ValueSources
+            .SelectMany(source => source.Value.Type.GetGenericTypeParameters())
+            .ToImmutableHashSet(FluentTypeSymbolEqualityComparer.Default);
     }
 }

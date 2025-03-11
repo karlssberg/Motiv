@@ -4,21 +4,16 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders;
 
 internal class WhenTrueYieldOverloads
 {
+
     [FluentMethodTemplate]
-    internal static Func<TModel, IEnumerable<TMetadata>> WhenTrueYield<TModel, TMetadata>(Func<TModel, IEnumerable<TMetadata>> function)
+    internal static Func<TModel, TResult, IEnumerable<TMetadata>> WhenTrueYield<TModel, TMetadata, TResult>(Func<TModel, TResult, IEnumerable<TMetadata>> whenTrue)
     {
-        return function;
+        return whenTrue;
     }
 
     [FluentMethodTemplate]
-    internal static Func<TModel, IEnumerable<TMetadata>> WhenTrue<TModel, TMetadata>(Func<TModel, TMetadata> function)
+    internal static Func<TModel, TResult, IEnumerable<TMetadata>> WhenTrueYield<TModel, TMetadata, TResult>(Func<TModel, IEnumerable<TMetadata>> whenTrue)
     {
-        return model => [function(model)];
-    }
-
-    [FluentMethodTemplate]
-    internal static Func<TModel, IEnumerable<TMetadata>> WhenTrue<TModel, TMetadata>(TMetadata value)
-    {
-        return _ => [value];
+        return (model, _) => whenTrue(model);
     }
 }

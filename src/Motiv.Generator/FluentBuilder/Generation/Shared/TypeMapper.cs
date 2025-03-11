@@ -14,12 +14,13 @@ public static class TypeMapper
 
     private static void MapTypes(ITypeSymbol open, ITypeSymbol closed, Dictionary<ITypeParameterSymbol, ITypeSymbol> typeMap)
     {
-        switch (open)
+        switch (open, closed)
         {
-            case ITypeParameterSymbol typeParam:
+            case (ITypeParameterSymbol typeParam, _):
                 typeMap[typeParam] = closed;
                 break;
-            case INamedTypeSymbol openNamed when closed is INamedTypeSymbol closedNamed:
+            case (INamedTypeSymbol openNamed,  INamedTypeSymbol closedNamed)
+                when openNamed.TypeArguments.Length == closedNamed.TypeArguments.Length:
             {
                 for (var i = 0; i < openNamed.TypeArguments.Length; i++)
                 {

@@ -28,10 +28,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
         <None Include="..\..\README.md" Pack="true" PackagePath="\" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
     </ItemGroup>

@@ -5,7 +5,7 @@ using VerifyCS =
 
 namespace Motiv.Generator.Tests;
 
-public class FluentBuilderGeneratorMergeDissimilarStepsTests
+public class FluenFactoryGeneratorMergeDissimilarStepsTests
 {
     [Fact]
     public async Task Given_class_constructors_with_a_single_and_dual_parameters_Should_create_methods_both_target_types()
@@ -1206,6 +1206,149 @@ public class FluentBuilderGeneratorMergeDissimilarStepsTests
                 GeneratedSources =
                 {
                     (typeof(FluentFactoryGenerator), "Test.Shape.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Given_custom_step_Should_ensure_that_converter_arguments_are_correctly_populated()
+    {
+        const string code =
+            """
+            using System;
+            using System.Collections.Generic;
+            using Motiv.Generator.Attributes;
+
+            namespace Test;
+
+            [FluentFactory]
+            public static partial class Spec
+            {
+            }
+
+            public class PolicyResultBase<TMetadata>
+            {
+            }
+
+            [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+            public readonly partial struct PolicyResultPredicatePropositionFactory<TModel, TMetadata>(
+                [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> predicate)
+            {
+            }
+
+            [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+            public readonly partial struct MultiAssertionExplanationFromPolicyPropositionFactory<TModel, TMetadata>(
+                [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> predicate,
+                [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> trueBecause,
+                [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> falseBecause)
+            {
+            }
+
+            internal static class PolicyResultBuildOverloads
+            {
+                [FluentMethodTemplate]
+                internal static Func<TModel, PolicyResultBase<TMetadata>> Build<TModel, TMetadata>(Func<TModel, PolicyResultBase<TMetadata>> resultFactory) => resultFactory;
+
+                [FluentMethodTemplate]
+                internal static Func<TModel, PolicyResultBase<string>> Build<TModel>(Func<TModel, PolicyResultBase<string>> resultFactory) => resultFactory;
+            }
+
+            internal class WhenTrueYieldOverloads
+            {
+                [FluentMethodTemplate]
+                internal static Func<TModel, TResult, IEnumerable<TMetadata>> WhenTrueYield<TModel, TMetadata, TResult>(Func<TModel, TResult, IEnumerable<TMetadata>> function)
+                {
+                    return function;
+                }
+            }
+
+            internal class WhenFalseYieldOverloads
+            {
+                [FluentMethodTemplate]
+                internal static Func<TModel, TResult, IEnumerable<TMetadata>> WhenFalseYield<TModel, TMetadata, TResult>(Func<TModel, TResult, IEnumerable<TMetadata>> function)
+                {
+                    return function;
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            using System;
+            using System.Collections.Generic;
+
+            namespace Test
+            {
+                public static partial class Spec
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.PolicyResultPredicatePropositionFactory{TModel, TMetadata}"/>
+                    ///     <seealso cref="Test.MultiAssertionExplanationFromPolicyPropositionFactory{TModel, TMetadata}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static PolicyResultPredicatePropositionFactory<TModel, TMetadata> Build<TModel, TMetadata>(in System.Func<TModel, PolicyResultBase<TMetadata>> resultFactory)
+                    {
+                        return new PolicyResultPredicatePropositionFactory<TModel, TMetadata>(PolicyResultBuildOverloads.Build<TModel, TMetadata>(resultFactory));
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.PolicyResultPredicatePropositionFactory{TModel, TMetadata}"/>
+                    ///     <seealso cref="Test.MultiAssertionExplanationFromPolicyPropositionFactory{TModel, TMetadata}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static PolicyResultPredicatePropositionFactory<TModel, string> Build<TModel>(in System.Func<TModel, PolicyResultBase<string>> resultFactory)
+                    {
+                        return new PolicyResultPredicatePropositionFactory<TModel, string>(PolicyResultBuildOverloads.Build<TModel>(resultFactory));
+                    }
+                }
+
+                public readonly partial struct PolicyResultPredicatePropositionFactory<TModel, TMetadata>
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MultiAssertionExplanationFromPolicyPropositionFactory{TModel, TMetadata}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public Step_1__Test_Spec<TModel, TMetadata> WhenTrueYield(in System.Func<TModel, PolicyResultBase<TMetadata>, System.Collections.Generic.IEnumerable<string>> function)
+                    {
+                        return new Step_1__Test_Spec<TModel, TMetadata>(predicate, WhenTrueYieldOverloads.WhenTrueYield<TModel, string, PolicyResultBase<TMetadata>>(function));
+                    }
+                }
+
+                public struct Step_1__Test_Spec<TModel, TMetadata>
+                {
+                    private readonly System.Func<TModel, PolicyResultBase<TMetadata>> _predicate__parameter;
+                    private readonly System.Func<TModel, PolicyResultBase<TMetadata>, System.Collections.Generic.IEnumerable<string>> _trueBecause__parameter;
+                    public Step_1__Test_Spec(in System.Func<TModel, PolicyResultBase<TMetadata>> predicate, in System.Func<TModel, PolicyResultBase<TMetadata>, System.Collections.Generic.IEnumerable<string>> function)
+                    {
+                        this._predicate__parameter = predicate;
+                        this._trueBecause__parameter = trueBecause;
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.MultiAssertionExplanationFromPolicyPropositionFactory{TModel, TMetadata}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MultiAssertionExplanationFromPolicyPropositionFactory<TModel, TMetadata> WhenFalseYield(in System.Func<TModel, PolicyResultBase<TMetadata>, System.Collections.Generic.IEnumerable<string>> function)
+                    {
+                        return new MultiAssertionExplanationFromPolicyPropositionFactory<TModel, TMetadata>(this._predicate__parameter, this._trueBecause__parameter, WhenFalseYieldOverloads.WhenFalseYield<TModel, string, PolicyResultBase<TMetadata>>(function));
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Test.Spec.g.cs", expected)
                 }
             }
         }.RunAsync();

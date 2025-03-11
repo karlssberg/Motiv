@@ -5,20 +5,14 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders;
 internal class WhenTrueYieldOverloads
 {
     [FluentMethodTemplate]
-    internal static Func<TModel, IEnumerable<TMetadata>> WhenTrueYield<TModel, TMetadata>(Func<TModel, IEnumerable<TMetadata>> function)
+    internal static Func<TEvaluation, IEnumerable<TNewMetadata>> WhenTrueYield<TEvaluation, TNewMetadata>(Func<TEvaluation, IEnumerable<TNewMetadata>> function)
     {
         return function;
     }
 
     [FluentMethodTemplate]
-    internal static Func<TModel, IEnumerable<TMetadata>> WhenTrue<TModel, TMetadata>(Func<TModel, TMetadata> function)
+    internal static Func<TEvaluation, IEnumerable<string>> WhenTrueYield<TEvaluation>(Func<TEvaluation, IEnumerable<string>> function)
     {
-        return model => [function(model)];
-    }
-
-    [FluentMethodTemplate]
-    internal static Func<TModel, IEnumerable<TMetadata>> WhenTrue<TModel, TMetadata>(TMetadata value)
-    {
-        return _ => [value];
+        return function;
     }
 }

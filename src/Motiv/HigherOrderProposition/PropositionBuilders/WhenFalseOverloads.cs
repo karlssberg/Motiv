@@ -5,20 +5,14 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders;
 internal class WhenFalseOverloads
 {
     [FluentMethodTemplate]
-    internal static Func<TModel, TBooleanResult, TNewMetadata> WhenFalse<TModel, TBooleanResult, TNewMetadata>(Func<TModel, TBooleanResult, TNewMetadata> whenFalse)
+    internal static Func<TEvaluation, TNewMetadata> WhenFalse<TEvaluation, TNewMetadata>(Func<TEvaluation, TNewMetadata> whenFalse)
     {
         return whenFalse;
     }
 
     [FluentMethodTemplate]
-    internal static Func<TModel, TBooleanResult, TNewMetadata> WhenFalse<TModel, TBooleanResult, TNewMetadata>(Func<TModel, TNewMetadata> whenFalse)
+    internal static Func<TEvaluation, TNewMetadata> WhenFalse<TEvaluation, TNewMetadata>(TNewMetadata whenFalse)
     {
-        return (model, _) => whenFalse(model);
-    }
-
-    [FluentMethodTemplate]
-    internal static Func<TModel, TBooleanResult, TNewMetadata> WhenFalse<TModel, TBooleanResult, TNewMetadata>(TNewMetadata whenFalse)
-    {
-        return (_, _) => whenFalse;
+        return _ => whenFalse;
     }
 }

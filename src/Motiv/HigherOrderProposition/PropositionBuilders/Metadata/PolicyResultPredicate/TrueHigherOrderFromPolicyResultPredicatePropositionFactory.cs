@@ -14,7 +14,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.PolicyResult
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct TrueHigherOrderFromPolicyResultPredicatePropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
-    [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation)
+    [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation)
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>

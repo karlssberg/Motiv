@@ -4,7 +4,7 @@ using VerifyCS =
 
 namespace Motiv.Generator.Tests;
 
-public class FluentBuilderGeneratorPrimaryConstructorTests
+public class FluentFactoryGeneratorPrimaryConstructorTests
 {
     [Fact]
     public async Task Should_generate_when_applied_to_a_class_primary_constructor_with_a_single_parameter()

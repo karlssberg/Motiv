@@ -3,7 +3,7 @@
 namespace Motiv.Generator.Tests;
 using VerifyCS = CSharpSourceGeneratorVerifier<FluentFactoryGenerator>;
 
-public class FluentBuilderGeneratorTargetTypeTests
+public class FluentFactoryGeneratorTargetTypeTests
 {
     [Fact]
     public async Task Should_generate_for_a_class_target_type()

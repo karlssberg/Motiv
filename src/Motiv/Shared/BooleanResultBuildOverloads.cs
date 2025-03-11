@@ -2,13 +2,13 @@
 
 namespace Motiv.Shared;
 
-public static class BooleanResultBuildOverloads
+internal static class BooleanResultBuildOverloads
 {
 
     [FluentMethodTemplate]
-    public static Func<TModel, BooleanResultBase<TMetadata>> Build<TModel, TMetadata>(Func<TModel, BooleanResultBase<TMetadata>> resultFactory) => resultFactory;
+    internal static Func<TModel, BooleanResultBase<TMetadata>> Build<TModel, TMetadata>(Func<TModel, BooleanResultBase<TMetadata>> resultFactory) => resultFactory;
 
 
     [FluentMethodTemplate]
-    public static Func<TModel, BooleanResultBase<string>> Build<TModel>(Func<TModel, BooleanResultBase<string>> resultFactory) => resultFactory;
+    internal static Func<TModel, BooleanResultBase<string>> Build<TModel>(Func<TModel, BooleanResultBase<string>> resultFactory) => resultFactory;
 }

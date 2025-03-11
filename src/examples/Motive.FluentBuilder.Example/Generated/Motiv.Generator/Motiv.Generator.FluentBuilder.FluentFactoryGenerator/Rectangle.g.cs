@@ -2,6 +2,10 @@
 
 public partial record Rectangle
 {
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Rectangle"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public static Step_0__Rectangle WithWidth(in int width)
     {
@@ -17,6 +21,10 @@ public struct Step_0__Rectangle
         this._width__parameter = width;
     }
 
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Rectangle"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public Step_1__Rectangle WithHeight(in int height)
     {
@@ -34,6 +42,10 @@ public struct Step_1__Rectangle
         this._height__parameter = height;
     }
 
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Rectangle"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public Rectangle Create()
     {

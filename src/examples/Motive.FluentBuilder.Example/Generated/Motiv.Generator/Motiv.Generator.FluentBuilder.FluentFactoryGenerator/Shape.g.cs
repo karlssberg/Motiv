@@ -2,12 +2,22 @@
 
 public partial class Shape
 {
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Square"/>
+    ///     <seealso cref="Rectangle"/>
+    ///     <seealso cref="Cuboid"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public static Step_0__Shape WithWidth(in int width)
     {
         return new Step_0__Shape(width);
     }
 
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Circle"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public static Step_3__Shape WithRadius(in int radius)
     {
@@ -23,12 +33,21 @@ public struct Step_0__Shape
         this._width__parameter = width;
     }
 
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Rectangle"/>
+    ///     <seealso cref="Cuboid"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public Step_1__Shape WithHeight(in int height)
     {
         return new Step_1__Shape(this._width__parameter, height);
     }
 
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Square"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public Square Create()
     {
@@ -46,12 +65,20 @@ public struct Step_1__Shape
         this._height__parameter = height;
     }
 
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Cuboid"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public Step_2__Shape WithDepth(in int depth)
     {
         return new Step_2__Shape(this._width__parameter, this._height__parameter, depth);
     }
 
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Rectangle"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public Rectangle Create()
     {
@@ -71,6 +98,10 @@ public struct Step_2__Shape
         this._depth__parameter = depth;
     }
 
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Cuboid"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public Cuboid Create()
     {
@@ -86,6 +117,10 @@ public struct Step_3__Shape
         this._radius__parameter = radius;
     }
 
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Circle"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public Circle Create()
     {

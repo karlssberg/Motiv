@@ -26,10 +26,13 @@ public static class FluentStepCreationExpression
         MultiMethod method,
         IEnumerable<ArgumentSyntax> arguments)
     {
-        var name = IdentifierName(method.Return.IdentifierDisplayString(currentNamespace, new Dictionary<FluentType, ITypeSymbol>
-        {
-            [new FluentType(method.SourceParameter.Type)] = method.ParameterConverter.ReturnType
-        }));
+        var typeArgMappings = GenericAnalysis
+            .GetGenericParameterMappings(method.SourceParameter.Type, method.ParameterConverter.ReturnType)
+            .ToDictionary(pair => new FluentType(pair.Key), pair => pair.Value);
+
+        var name = IdentifierName(
+            method.Return.IdentifierDisplayString(currentNamespace, typeArgMappings));
+
         return CreateMethodOverloadExpression(method, arguments, name);
     }
 

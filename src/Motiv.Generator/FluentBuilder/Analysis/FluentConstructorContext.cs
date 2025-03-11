@@ -1,10 +1,12 @@
 ﻿using System.Collections.Specialized;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Motiv.Generator.FluentBuilder.Model;
 using Motiv.Generator.FluentBuilder.Model.Storage;
 
 namespace Motiv.Generator.FluentBuilder.Analysis;
 
+[DebuggerDisplay("{ToDisplayString()}}")]
 public record FluentConstructorContext
 {
     public FluentConstructorContext(
@@ -39,4 +41,6 @@ public record FluentConstructorContext
     public TypeKind TypeKind { get; }
     public IMethodSymbol Constructor { get; }
     public string RootTypeFullName { get; }
+
+    public string ToDisplayString() => $"{Constructor.ToDisplayString()}";
 }

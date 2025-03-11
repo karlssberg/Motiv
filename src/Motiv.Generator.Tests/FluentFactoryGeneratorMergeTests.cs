@@ -4,7 +4,7 @@ using VerifyCS =
 
 namespace Motiv.Generator.Tests;
 
-public class FluentBuilderGeneratorMergeTests
+public class FluentFactoryGeneratorMergeTests
 {
     [Fact]
     public async Task Should_merge_generated_when_applied_to_class_constructors_with_a_single_parameter()
@@ -1327,6 +1327,400 @@ public class FluentBuilderGeneratorMergeTests
                 GeneratedSources =
                 {
                     (typeof(FluentFactoryGenerator), "Test.Factory.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Given_that_generic_type_parameters_have_been_resolved_by_earlier_steps_Should_not_use_resolved_type_parameters_when_merging_methods()
+    {
+        const string code =
+            """
+            using System;
+            using System.Collections.Generic;
+            using System.Collections.Generic;
+            using Motiv.Generator.Attributes;
+
+            [FluentFactory]
+            public static partial class Spec;
+
+            [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+            public readonly partial struct ExplanationWithNamePropositionFactory<TModel>(
+                [FluentMethod("Build")]Func<TModel, bool> predicate,
+                [FluentMethod("WhenTrue")]string trueBecause,
+                [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, string> falseBecause)
+            {
+            }
+
+            [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+            public readonly partial struct MultiAssertionExplanationWithNamePropositionFactory<TModel>(
+                [FluentMethod("Build")]Func<TModel, bool> predicate,
+                [FluentMethod("WhenTrue")]string trueBecause,
+                [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, IEnumerable<string>> falseBecause)
+            {
+            }
+
+            [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+            public readonly partial struct ExplanationPropositionFactory<TModel>(
+                [FluentMethod("Build")]Func<TModel, bool> predicate,
+                [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, string> whenTrue,
+                [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, string> whenFalse)
+            {
+            }
+
+            internal class WhenTrueOverloads
+            {
+                [FluentMethodTemplate]
+                internal static Func<TModel, TMetadata> WhenTrue<TModel, TMetadata>(Func<TModel, TMetadata> whenTrue)
+                {
+                    return whenTrue;
+                }
+
+                [FluentMethodTemplate]
+                internal static Func<TModel, TMetadata> WhenTrue<TModel, TMetadata>(TMetadata whenTrue)
+                {
+                    return _ => whenTrue;
+                }
+            }
+
+            internal class WhenFalseOverloads
+            {
+                [FluentMethodTemplate]
+                internal static Func<TModel, TMetadata> WhenFalse<TModel, TMetadata>(Func<TModel, TMetadata> whenFalse)
+                {
+                    return whenFalse;
+                }
+
+
+                [FluentMethodTemplate]
+                internal static Func<TModel, TMetadata> WhenFalse<TModel, TMetadata>(TMetadata whenFalse)
+                {
+                    return _ => whenFalse;
+                }
+            }
+
+            internal class WhenFalseYieldOverloads
+            {
+                [FluentMethodTemplate]
+                internal static Func<TModel, IEnumerable<TMetadata>> WhenFalseYield<TModel, TMetadata>(Func<TModel, IEnumerable<TMetadata>> whenFalse)
+                {
+                    return whenFalse;
+                }
+
+                [FluentMethodTemplate]
+                internal static Func<TModel, IEnumerable<TMetadata>> WhenFalse<TModel, TMetadata>(Func<TModel, TMetadata> whenFalse)
+                {
+                    return model => [whenFalse(model)];
+                }
+
+                [FluentMethodTemplate]
+                internal static Func<TModel, IEnumerable<TMetadata>> WhenFalse<TModel, TMetadata>(TMetadata whenFalse)
+                {
+                    return _ => [whenFalse];
+                }
+            }
+            """;
+        var expected =
+            """
+            using System;
+
+            public static partial class Spec
+            {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
+                ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
+                ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public static Step_0__Spec<TModel> Build<TModel>(in System.Func<TModel, bool> predicate)
+                {
+                    return new Step_0__Spec<TModel>(predicate);
+                }
+            }
+
+            public struct Step_0__Spec<TModel>
+            {
+                private readonly System.Func<TModel, bool> _predicate__parameter;
+                public Step_0__Spec(in System.Func<TModel, bool> predicate)
+                {
+                    this._predicate__parameter = predicate;
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
+                ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public Step_1__Spec<TModel> WhenTrue(in string trueBecause)
+                {
+                    return new Step_1__Spec<TModel>(this._predicate__parameter, trueBecause);
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public Step_2__Spec<TModel> WhenTrue(in System.Func<TModel, string> whenTrue)
+                {
+                    return new Step_2__Spec<TModel>(this._predicate__parameter, WhenTrueOverloads.WhenTrue<TModel, string>(whenTrue));
+                }
+            }
+
+            public struct Step_1__Spec<TModel>
+            {
+                private readonly System.Func<TModel, bool> _predicate__parameter;
+                private readonly string _trueBecause__parameter;
+                public Step_1__Spec(in System.Func<TModel, bool> predicate, in string trueBecause)
+                {
+                    this._predicate__parameter = predicate;
+                    this._trueBecause__parameter = trueBecause;
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public ExplanationWithNamePropositionFactory<TModel> WhenFalse(in System.Func<TModel, string> whenFalse)
+                {
+                    return new ExplanationWithNamePropositionFactory<TModel>(this._predicate__parameter, this._trueBecause__parameter, WhenFalseOverloads.WhenFalse<TModel, string>(whenFalse));
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public ExplanationWithNamePropositionFactory<TModel> WhenFalse(in string whenFalse)
+                {
+                    return new ExplanationWithNamePropositionFactory<TModel>(this._predicate__parameter, this._trueBecause__parameter, WhenFalseOverloads.WhenFalse<TModel, string>(whenFalse));
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public MultiAssertionExplanationWithNamePropositionFactory<TModel> WhenFalseYield(in System.Func<TModel, System.Collections.Generic.IEnumerable<string>> whenFalse)
+                {
+                    return new MultiAssertionExplanationWithNamePropositionFactory<TModel>(this._predicate__parameter, this._trueBecause__parameter, WhenFalseYieldOverloads.WhenFalseYield<TModel, string>(whenFalse));
+                }
+            }
+
+            public struct Step_2__Spec<TModel>
+            {
+                private readonly System.Func<TModel, bool> _predicate__parameter;
+                private readonly System.Func<TModel, string> _whenTrue__parameter;
+                public Step_2__Spec(in System.Func<TModel, bool> predicate, in System.Func<TModel, string> whenTrue)
+                {
+                    this._predicate__parameter = predicate;
+                    this._whenTrue__parameter = whenTrue;
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public ExplanationPropositionFactory<TModel> WhenFalse(in System.Func<TModel, string> whenFalse)
+                {
+                    return new ExplanationPropositionFactory<TModel>(this._predicate__parameter, this._whenTrue__parameter, WhenFalseOverloads.WhenFalse<TModel, string>(whenFalse));
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public ExplanationPropositionFactory<TModel> WhenFalse(in string whenFalse)
+                {
+                    return new ExplanationPropositionFactory<TModel>(this._predicate__parameter, this._whenTrue__parameter, WhenFalseOverloads.WhenFalse<TModel, string>(whenFalse));
+                }
+            }
+            """;
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Spec.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_treat_generic_constructor_parameters_as_invariant_when_merging()
+    {
+        const string code =
+            """
+            using System;
+            using System.Collections.Generic;
+            using Motiv.Generator.Attributes;
+
+            namespace Test.Namespace
+            {
+                [FluentFactory]
+                public static partial class Factory;
+
+                public partial class MyEnumerableBuildTarget<T1, T2>
+                {
+                    [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyEnumerableBuildTarget(
+                        [MultipleFluentMethods(typeof(EnumerableOverloads))]Func<T1, IEnumerable<T2>> first,
+                        string second)
+                    {
+                        First = first;
+                        Second = second;
+                    }
+
+                    public Func<T1, IEnumerable<T2>> First { get; set; }
+                    public string Second { get; set; }
+                }
+
+
+                public partial class MyCollectionBuildTarget<T1, T2>
+                {
+                    [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                    public MyCollectionBuildTarget(
+                        [MultipleFluentMethods(typeof(CollectionOverloads))]Func<T1, ICollection<T2>> first,
+                        string second)
+                    {
+                        First = first;
+                        Second = second;
+                    }
+
+                    public Func<T1, ICollection<T2>> First { get; set; }
+                    public string Second { get; set; }
+                }
+
+                internal static class EnumerableOverloads
+                {
+
+                    [FluentMethodTemplate]
+                    internal static Func<T1, IEnumerable<T2>> Build<T1, T2>(Func<T1, IEnumerable<T2>> resultFactory) => resultFactory;
+
+
+                    [FluentMethodTemplate]
+                    internal static Func<T1, IEnumerable<string>> Build<T1>(Func<T1, IEnumerable<string>> resultFactory) => resultFactory;
+                }
+
+                internal static class CollectionOverloads
+                {
+
+                    [FluentMethodTemplate]
+                    internal static Func<T1, ICollection<T2>> Build<T1, T2>(Func<T1, ICollection<T2>> resultFactory) => resultFactory;
+
+
+                    [FluentMethodTemplate]
+                    internal static Func<T1, ICollection<string>> Build<T1>(Func<T1, ICollection<string>> resultFactory) => resultFactory;
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            using System;
+
+            namespace Test.Namespace
+            {
+                public static partial class Factory
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyEnumerableBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory<T1, T2> Build<T1, T2>(in System.Func<T1, System.Collections.Generic.IEnumerable<T2>> resultFactory)
+                    {
+                        return new Step_0__Test_Namespace_Factory<T1, T2>(EnumerableOverloads.Build<T1, T2>(resultFactory));
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyEnumerableBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory<T1, string> Build<T1>(in System.Func<T1, System.Collections.Generic.IEnumerable<string>> resultFactory)
+                    {
+                        return new Step_0__Test_Namespace_Factory<T1, string>(EnumerableOverloads.Build<T1>(resultFactory));
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyCollectionBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_1__Test_Namespace_Factory<T1, T2> Build<T1, T2>(in System.Func<T1, System.Collections.Generic.ICollection<T2>> resultFactory)
+                    {
+                        return new Step_1__Test_Namespace_Factory<T1, T2>(CollectionOverloads.Build<T1, T2>(resultFactory));
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyCollectionBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_1__Test_Namespace_Factory<T1, string> Build<T1>(in System.Func<T1, System.Collections.Generic.ICollection<string>> resultFactory)
+                    {
+                        return new Step_1__Test_Namespace_Factory<T1, string>(CollectionOverloads.Build<T1>(resultFactory));
+                    }
+                }
+
+                public struct Step_0__Test_Namespace_Factory<T1, T2>
+                {
+                    private readonly System.Func<T1, System.Collections.Generic.IEnumerable<T2>> _first__parameter;
+                    public Step_0__Test_Namespace_Factory(in System.Func<T1, System.Collections.Generic.IEnumerable<T2>> first)
+                    {
+                        this._first__parameter = first;
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyEnumerableBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyEnumerableBuildTarget<T1, T2> WithSecond(in string second)
+                    {
+                        return new MyEnumerableBuildTarget<T1, T2>(this._first__parameter, second);
+                    }
+                }
+
+                public struct Step_1__Test_Namespace_Factory<T1, T2>
+                {
+                    private readonly System.Func<T1, System.Collections.Generic.ICollection<T2>> _first__parameter;
+                    public Step_1__Test_Namespace_Factory(in System.Func<T1, System.Collections.Generic.ICollection<T2>> first)
+                    {
+                        this._first__parameter = first;
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Namespace.MyCollectionBuildTarget{T1, T2}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyCollectionBuildTarget<T1, T2> WithSecond(in string second)
+                    {
+                        return new MyCollectionBuildTarget<T1, T2>(this._first__parameter, second);
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Test.Namespace.Factory.g.cs", expected)
                 }
             }
         }.RunAsync();

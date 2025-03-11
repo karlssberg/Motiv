@@ -2,6 +2,10 @@
 
 public partial record Circle
 {
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Circle"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public static Step_0__Circle WithRadius(in int radius)
     {
@@ -17,6 +21,10 @@ public struct Step_0__Circle
         this._radius__parameter = radius;
     }
 
+    /// <summary>
+    /// Candidate constructor types:
+    ///     <seealso cref="Circle"/>
+    /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public Circle Create()
     {

@@ -4,7 +4,7 @@ namespace Motiv.Generator.Tests;
 
 using VerifyCS = CSharpSourceGeneratorVerifier<FluentFactoryGenerator>;
 
-public class FluentBuilderRootTypeTests
+public class FluentFactoryRootTypeTests
 {
     [Fact]
     public async Task Should_generate_for_an_existing_static_partial_class_target_type()
