@@ -5,8 +5,14 @@ namespace Motiv.SpecDecoratorProposition.PropositionBuilders;
 internal class WhenTrueYieldOverloads
 {
     [FluentMethodTemplate]
-    internal static Func<TModel, IEnumerable<TMetadata>> WhenTrueYield<TModel, TMetadata>(Func<TModel, IEnumerable<TMetadata>> function)
+    internal static Func<TModel, TResult, IEnumerable<TMetadata>> WhenTrueYield<TModel, TMetadata, TResult>(Func<TModel, TResult, IEnumerable<TMetadata>> whenTrue)
     {
-        return function;
+        return whenTrue;
+    }
+
+    [FluentMethodTemplate]
+    internal static Func<TModel, TResult, IEnumerable<string>> WhenTrueYield<TModel, TResult>(Func<TModel, TResult, IEnumerable<string>> whenTrue)
+    {
+        return whenTrue;
     }
 }

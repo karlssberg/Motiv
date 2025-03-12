@@ -1,29 +1,27 @@
 ﻿using Motiv.Generator.Attributes;
 using Motiv.Shared;
 
-namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Metadata;
+namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
 
 /// <summary>
 /// A factory for creating propositions based on the supplied predicate and metadata factories.
 /// </summary>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
-/// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
-public readonly partial struct MultiMetadataPropositionFactory<TModel, TMetadata>
+public readonly partial struct MultiAssertionExplanationPropositionFactory<TModel>
 {
     private readonly Func<TModel, bool> _predicate;
-    private readonly Func<TModel, IEnumerable<TMetadata>> _whenTrue;
-    private readonly Func<TModel, IEnumerable<TMetadata>> _whenFalse;
+    private readonly Func<TModel, IEnumerable<string>> _whenTrue;
+    private readonly Func<TModel, IEnumerable<string>> _whenFalse;
 
     /// <summary>
     /// A factory for creating propositions based on the supplied predicate and metadata factories.
     /// </summary>
     /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiMetadataPropositionFactory(
+    public MultiAssertionExplanationPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> predicate,
-        [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenTrue,
-        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenFalse)
+        [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))] Func<TModel, IEnumerable<string>> whenTrue,
+        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))] Func<TModel, IEnumerable<string>> whenFalse)
     {
         _predicate = predicate;
         _whenTrue = whenTrue;
@@ -34,12 +32,11 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TMetadata
     /// A factory for creating propositions based on the supplied predicate and metadata factories.
     /// </summary>
     /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiMetadataPropositionFactory(
+    public MultiAssertionExplanationPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> predicate,
-        [MultipleFluentMethods(typeof(WhenTrueOverloads))] Func<TModel, TMetadata> whenTrue,
-        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenFalse)
+        [MultipleFluentMethods(typeof(WhenTrueOverloads))] Func<TModel, string> whenTrue,
+        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))] Func<TModel, IEnumerable<string>> whenFalse)
     {
         _predicate = predicate;
         _whenTrue = whenTrue.ToEnumerableReturn();
@@ -52,10 +49,10 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TMetadata
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, TMetadata> Create(string statement)
+    public SpecBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new MultiMetadataProposition<TModel, TMetadata>(
+        return new MultiMetadataProposition<TModel, string>(
             _predicate,
             _whenTrue,
             _whenFalse,

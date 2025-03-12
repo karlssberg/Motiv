@@ -33,3 +33,4 @@ public readonly partial struct ExplanationFromBooleanPredicateHigherOrderProposi
             higherOrderOperation.CauseSelector);
     }
 }
+

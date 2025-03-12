@@ -14,7 +14,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Policy;
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct MetadataFromPolicyHigherOrderPropositionFactory<TModel, TReplacementMetadata, TMetadata>(
-    [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> spec,
+    [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
     [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, TReplacementMetadata> whenTrue,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, TReplacementMetadata> whenFalse)
@@ -27,11 +27,11 @@ public readonly partial struct MetadataFromPolicyHigherOrderPropositionFactory<T
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromPolicyResultMetadataProposition<TModel, TReplacementMetadata, TMetadata>(
-            spec.IsSatisfiedBy,
+            policy.IsSatisfiedBy,
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement, spec.Description),
+            new SpecDescription(statement, policy.Description),
             higherOrderOperation.CauseSelector);
     }
 }

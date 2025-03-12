@@ -9,12 +9,46 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Metadata;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
-[FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly partial struct MultiMetadataFromPolicyResultPropositionFactory<TModel, TReplacementMetadata, TMetadata>(
-    [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> spec,
-    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenTrue,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
+public readonly partial struct MultiMetadataFromPolicyResultPropositionFactory<TModel, TReplacementMetadata, TMetadata>
 {
+    private readonly Func<TModel, PolicyResultBase<TMetadata>> _spec;
+    private readonly Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> _whenTrue;
+    private readonly Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> _whenFalse;
+
+    /// <summary>
+    /// A builder for creating propositions using a predicate function that returns a <see cref="PolicyResultBase{TMetadata}"/>.
+    /// </summary>
+    /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
+    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
+    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+    public MultiMetadataFromPolicyResultPropositionFactory(
+        [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> spec,
+        [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenTrue,
+        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
+    {
+        _spec = spec;
+        _whenTrue = whenTrue;
+        _whenFalse = whenFalse;
+    }
+
+    /// <summary>
+    /// A builder for creating propositions using a predicate function that returns a <see cref="PolicyResultBase{TMetadata}"/>.
+    /// </summary>
+    /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
+    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
+    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+    public MultiMetadataFromPolicyResultPropositionFactory(
+        [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> spec,
+        [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, PolicyResultBase<TMetadata>, TReplacementMetadata> whenTrue,
+        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
+    {
+        _spec = spec;
+        _whenTrue = whenTrue.ToEnumerableReturn();
+        _whenFalse = whenFalse;
+    }
+
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
@@ -23,9 +57,9 @@ public readonly partial struct MultiMetadataFromPolicyResultPropositionFactory<T
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new PolicyResultPredicateMultiMetadataProposition<TModel, TReplacementMetadata, TMetadata>(
-            spec,
-            whenTrue,
-            whenFalse,
+            _spec,
+            _whenTrue,
+            _whenFalse,
             new SpecDescription(statement));
     }
 }

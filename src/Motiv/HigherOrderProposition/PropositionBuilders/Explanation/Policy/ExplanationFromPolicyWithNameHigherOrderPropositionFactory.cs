@@ -16,38 +16,41 @@ public readonly struct ExplanationFromPolicyWithNameHigherOrderPropositionFactor
     [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
     [FluentMethod("WhenTrue")]string trueBecause,
-    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> falseBecause)
+    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> falseBecause)
 {
+    /// <summary>
+    /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.
+    /// </summary>
+    /// <param name="statement">The proposition statement of what the specification represents.</param>
+    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
+    public SpecBase<IEnumerable<TModel>, string> Create(string statement)
+    {
+        statement.ThrowIfNullOrWhitespace(nameof(statement));
+        return new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, string, TMetadata>(
+            policy.IsSatisfiedBy,
+            higherOrderOperation.HigherOrderPredicate,
+            trueBecause
+                .ToEnumerable()
+                .ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>>(),
+            falseBecause,
+            new SpecDescription(statement, policy.Description),
+            higherOrderOperation.CauseSelector);
+    }
+
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false. The propositional statement
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public PolicyBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromPolicyResultExplanationProposition<TModel, TMetadata>(
+    public SpecBase<IEnumerable<TModel>, string> Create() =>
+        new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, string, TMetadata>(
             policy.IsSatisfiedBy,
             higherOrderOperation.HigherOrderPredicate,
-            trueBecause.ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string>(),
+            trueBecause
+                .ToEnumerable()
+                .ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>>(),
             falseBecause,
             new SpecDescription(trueBecause, policy.Description),
             higherOrderOperation.CauseSelector);
-
-    /// <summary>
-    /// Creates a specification with descriptive assertions, but using the supplied proposition to succinctly explain
-    /// the decision.
-    /// </summary>
-    /// <param name="statement">The proposition statement of what the specification represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
-    /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
-    {
-        statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromPolicyResultExplanationProposition<TModel, TMetadata>(
-            policy.IsSatisfiedBy,
-            higherOrderOperation.HigherOrderPredicate,
-            trueBecause.ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string>(),
-            falseBecause,
-            new SpecDescription(statement, policy.Description),
-            higherOrderOperation.CauseSelector);
-    }
 }
