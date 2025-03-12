@@ -2,10 +2,10 @@
 
 namespace Motiv.SpecDecoratorProposition;
 
-internal sealed class MinimalSpecDecoratorProposition<TModel, TUnderlyingMetadata>(
-    SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
+internal sealed class MinimalSpecDecoratorProposition<TModel, TMetadata>(
+    SpecBase<TModel, TMetadata> underlyingSpec,
     ISpecDescription description)
-    : SpecBase<TModel, string>
+    : SpecBase<TModel, TMetadata>
 {
     private readonly string _trueBecause = GetTrueAssertion(underlyingSpec.Statement);
     private readonly string _falseBecause = GetFalseAssertion(underlyingSpec.Statement);
@@ -13,9 +13,9 @@ internal sealed class MinimalSpecDecoratorProposition<TModel, TUnderlyingMetadat
 
     public override ISpecDescription Description => description;
 
-    public SpecBase<TModel, TUnderlyingMetadata> UnderlyingSpec { get; } = underlyingSpec;
+    public SpecBase<TModel, TMetadata> UnderlyingSpec { get; } = underlyingSpec;
 
-    protected override BooleanResultBase<string> IsSpecSatisfiedBy(TModel model)
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var predicateResult = UnderlyingSpec.IsSatisfiedBy(model);
         var assertion = GetLazyAssertion(model, predicateResult);
@@ -23,7 +23,7 @@ internal sealed class MinimalSpecDecoratorProposition<TModel, TUnderlyingMetadat
         return CreateSpecResult(assertion, predicateResult);
     }
 
-    private Lazy<string> GetLazyAssertion(TModel model, BooleanResultBase<TUnderlyingMetadata> predicateResult)
+    private Lazy<string> GetLazyAssertion(TModel model, BooleanResultBase<TMetadata> predicateResult)
     {
         return new Lazy<string>(() =>
             predicateResult.Satisfied switch
@@ -33,29 +33,22 @@ internal sealed class MinimalSpecDecoratorProposition<TModel, TUnderlyingMetadat
             });
     }
 
-    private BooleanResultBase<string> CreateSpecResult(Lazy<string> assertion, BooleanResultBase<TUnderlyingMetadata> booleanResult)
+    private BooleanResultBase<TMetadata> CreateSpecResult(Lazy<string> assertion, BooleanResultBase<TMetadata> booleanResult)
     {
-        var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertion.Value, booleanResult.ToEnumerable(), booleanResult.ToEnumerable()));
-
-        var metadataTier = new Lazy<MetadataNode<string>>(() =>
-            new MetadataNode<string>(assertion.Value.ToEnumerable(),
-                booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []));
-
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
                 assertion.Value,
                 Description.Statement));
 
-        return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
+        return new BooleanResultWithUnderlying<TMetadata, TMetadata>(
             booleanResult,
             Value,
             MetadataTier,
             ResultDescription);
 
-        MetadataNode<string> Value() => metadataTier.Value;
-        Explanation MetadataTier() => explanation.Value;
+        MetadataNode<TMetadata> Value() => booleanResult.MetadataTier;
+        Explanation MetadataTier() => booleanResult.Explanation;
         ResultDescriptionBase ResultDescription() => resultDescription.Value;
     }
 

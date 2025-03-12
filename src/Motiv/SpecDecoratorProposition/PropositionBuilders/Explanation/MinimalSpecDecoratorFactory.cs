@@ -19,7 +19,7 @@ public readonly partial struct MinimalSpecDecoratorFactory<TModel, TMetadata>(
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create(string statement) =>
+    public SpecBase<TModel, TMetadata> Create(string statement) =>
         new MinimalSpecDecoratorProposition<TModel, TMetadata>(
             spec,
             new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)),
