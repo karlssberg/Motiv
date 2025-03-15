@@ -24,9 +24,6 @@ public readonly partial struct MultiMetadataFromPolicyResultHigherOrderPropositi
     /// for handling edge-case scenarios where it would be impossible or impractical to create a proposition that covers
     /// every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the specification.</typeparam>
-    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataFromPolicyResultHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
@@ -45,15 +42,12 @@ public readonly partial struct MultiMetadataFromPolicyResultHigherOrderPropositi
     /// for handling edge-case scenarios where it would be impossible or impractical to create a proposition that covers
     /// every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the specification.</typeparam>
-    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataFromPolicyResultHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
         [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, TReplacementMetadata> whenTrue,
-        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
+        [FluentMethod("WhenFalseYield")]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
     {
         _resultResolver = resultResolver;
         _higherOrderOperation = higherOrderOperation;

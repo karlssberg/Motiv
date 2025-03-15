@@ -12,26 +12,12 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Spec;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly partial struct ExplanationWithNameHigherOrderPropositionFactory<TModel, TMetadata>(
+public readonly partial struct ExplanationFromSpecHigherOrderPropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,
-    [FluentMethod("WhenTrue")]string trueBecause,
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string> trueBecause,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string> falseBecause)
 {
-    /// <summary>
-    /// Creates a specification with explanations for when the condition is true or false. The propositional statement
-    /// will be obtained from the .WhenTrue() assertion.
-    /// </summary>
-    /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public PolicyBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromBooleanResultExplanationProposition<TModel, TMetadata>(
-            spec.IsSatisfiedBy,
-            higherOrderOperation.HigherOrderPredicate,
-            trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string>(),
-            falseBecause,
-            new SpecDescription(trueBecause, spec.Description),
-            higherOrderOperation.CauseSelector);
-
     /// <summary>
     /// Creates a specification with descriptive assertions, but using the supplied proposition to succinctly explain
     /// the decision.
@@ -45,7 +31,7 @@ public readonly partial struct ExplanationWithNameHigherOrderPropositionFactory<
         return new HigherOrderFromBooleanResultExplanationProposition<TModel, TMetadata>(
             spec.IsSatisfiedBy,
             higherOrderOperation.HigherOrderPredicate,
-            trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string>(),
+            trueBecause,
             falseBecause,
             new SpecDescription(statement, spec.Description),
             higherOrderOperation.CauseSelector);

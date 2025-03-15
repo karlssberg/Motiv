@@ -1,4 +1,4 @@
-using Motiv.Generator.Attributes;
+﻿using Motiv.Generator.Attributes;
 using Motiv.Shared;
 
 namespace Motiv.SpecDecoratorProposition.PropositionBuilders.Explanation;
@@ -9,10 +9,10 @@ namespace Motiv.SpecDecoratorProposition.PropositionBuilders.Explanation;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly partial struct MultiAssertionExplanationWithNamePropositionFactory<TModel, TMetadata>(
-    [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
+public readonly partial struct MultiAssertionPolicyExplanationWithNamePropositionFactory<TModel, TMetadata>(
+    [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> spec,
     [FluentMethod("WhenTrue")]string trueBecause,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> falseBecause)
+    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> falseBecause)
 {
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
@@ -21,7 +21,7 @@ public readonly partial struct MultiAssertionExplanationWithNamePropositionFacto
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, string> Create(string statement) =>
-        new SpecDecoratorMultiMetadataProposition<TModel, string, TMetadata>(
+        new PolicyDecoratorMultiMetadataProposition<TModel, string, TMetadata>(
             spec,
             trueBecause
                 .ToEnumerable()
@@ -35,7 +35,7 @@ public readonly partial struct MultiAssertionExplanationWithNamePropositionFacto
     /// </summary>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, string> Create() =>
-        new SpecDecoratorMultiMetadataProposition<TModel, string, TMetadata>(
+        new PolicyDecoratorMultiMetadataProposition<TModel, string, TMetadata>(
             spec,
             trueBecause
                 .ToEnumerable()

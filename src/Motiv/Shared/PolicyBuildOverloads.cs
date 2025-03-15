@@ -2,7 +2,7 @@ using Motiv.Generator.Attributes;
 
 namespace Motiv.Shared;
 
-public static class PolicyBuildOverloads
+internal static class PolicyBuildOverloads
 {
 
     [FluentMethodTemplate]

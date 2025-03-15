@@ -32,7 +32,7 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TReplacem
         _whenFalse = whenFalse;
     }
 
-    /// <summary>
+     /// <summary>
     /// A factory for creating propositions based on the supplied proposition and metadata factories.
     /// </summary>
     /// <typeparam name="TModel">The type of the model.</typeparam>

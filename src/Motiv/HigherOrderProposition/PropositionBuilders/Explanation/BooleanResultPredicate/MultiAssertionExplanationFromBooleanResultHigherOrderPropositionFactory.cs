@@ -19,8 +19,6 @@ public readonly partial struct MultiAssertionExplanationFromBooleanResultHigherO
     /// <summary>
     /// A factory for creating specifications based on a predicate and explanations for true and false conditions. This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a specification that covers every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiAssertionExplanationFromBooleanResultHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> resultResolver,
@@ -37,8 +35,6 @@ public readonly partial struct MultiAssertionExplanationFromBooleanResultHigherO
     /// <summary>
     /// A factory for creating specifications based on a predicate and explanations for true and false conditions. This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a specification that covers every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiAssertionExplanationFromBooleanResultHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> resultResolver,

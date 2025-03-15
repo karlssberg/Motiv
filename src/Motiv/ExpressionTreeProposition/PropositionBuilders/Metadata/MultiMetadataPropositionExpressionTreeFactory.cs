@@ -19,9 +19,6 @@ public readonly partial struct MultiMetadataPropositionExpressionTreeFactory<TMo
     /// <summary>
     /// A factory for creating propositions based on the supplied proposition and metadata factories.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
-    /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataPropositionExpressionTreeFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
@@ -36,9 +33,6 @@ public readonly partial struct MultiMetadataPropositionExpressionTreeFactory<TMo
     /// <summary>
     /// A factory for creating propositions based on the supplied proposition and metadata factories.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
-    /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataPropositionExpressionTreeFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,

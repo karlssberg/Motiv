@@ -22,8 +22,6 @@ public readonly partial struct MultiAssertionExplanationExpressionTreePropositio
     /// This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create
     /// a proposition that covers every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiAssertionExplanationExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
@@ -40,8 +38,6 @@ public readonly partial struct MultiAssertionExplanationExpressionTreePropositio
     /// This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create
     /// a proposition that covers every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiAssertionExplanationExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,

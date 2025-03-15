@@ -26,9 +26,6 @@ public readonly partial struct MultiMetadataFromSpecHigherOrderExpressionTreePro
     /// for handling edge-case scenarios where it would be impossible or impractical to create a proposition that covers
     /// every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
-    /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
@@ -47,15 +44,12 @@ public readonly partial struct MultiMetadataFromSpecHigherOrderExpressionTreePro
     /// for handling edge-case scenarios where it would be impossible or impractical to create a proposition that covers
     /// every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
-    /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, TMetadata> whenTrue,
-        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenFalse)
+        [FluentMethod("WhenFalseYield")]Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenFalse)
     {
         _expression = expression;
         _higherOrderOperation = higherOrderOperation;

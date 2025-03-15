@@ -10,14 +10,13 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Policy;
 /// every possibility, so instead it is done on a case-by-case basis.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-/// <typeparam name="TReplacementMetadata">The replacement type of the metadata associated with the policy.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the policy</typeparam>
-public readonly partial struct MultiMetadataFromPolicyHigherOrderPropositionFactory<TModel, TMetadata, TReplacementMetadata>
+public readonly partial struct MultiAssertionFromPolicyHigherOrderPropositionFactory<TModel, TMetadata>
 {
     private readonly PolicyBase<TModel, TMetadata> _policy;
     private readonly HigherOrderPolicyPredicateOperation<TModel, TMetadata> _higherOrderOperation;
-    private readonly Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<TReplacementMetadata>> _whenTrue;
-    private readonly Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<TReplacementMetadata>> _whenFalse;
+    private readonly Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> _whenTrue;
+    private readonly Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> _whenFalse;
 
     /// <summary>
     /// A factory for creating propositions based on a predicate and metadata factories. This is particularly useful
@@ -25,11 +24,11 @@ public readonly partial struct MultiMetadataFromPolicyHigherOrderPropositionFact
     /// every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiMetadataFromPolicyHigherOrderPropositionFactory(
+    public MultiAssertionFromPolicyHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
         [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
-        [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<TReplacementMetadata>> whenTrue,
-        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
+        [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> whenTrue,
+        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> whenFalse)
     {
         _policy = policy;
         _higherOrderOperation = higherOrderOperation;
@@ -43,11 +42,11 @@ public readonly partial struct MultiMetadataFromPolicyHigherOrderPropositionFact
     /// every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiMetadataFromPolicyHigherOrderPropositionFactory(
+    public MultiAssertionFromPolicyHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
         [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
-        [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, TReplacementMetadata> whenTrue,
-        [FluentMethod("WhenFalseYield")]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
+        [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> whenTrue,
+        [FluentMethod("WhenFalseYield")]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> whenFalse)
     {
         _policy = policy;
         _higherOrderOperation = higherOrderOperation;
@@ -59,10 +58,10 @@ public readonly partial struct MultiMetadataFromPolicyHigherOrderPropositionFact
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
-    public SpecBase<IEnumerable<TModel>, TReplacementMetadata> Create(string statement)
+    public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, TReplacementMetadata, TMetadata>(
+        return new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, string, TMetadata>(
             _policy.IsSatisfiedBy,
             _higherOrderOperation.HigherOrderPredicate,
             _whenTrue,

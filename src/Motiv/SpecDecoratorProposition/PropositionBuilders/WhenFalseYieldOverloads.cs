@@ -17,6 +17,12 @@ internal class WhenFalseYieldOverloads
     }
 
     [FluentMethodTemplate]
+    internal static Func<TModel, TResult, IEnumerable<TMetadata>> WhenFalse<TModel, TMetadata, TResult>(Func<TModel, TMetadata> whenFalse)
+    {
+        return (model, _) => whenFalse(model).ToEnumerable();
+    }
+
+    [FluentMethodTemplate]
     internal static Func<TModel, TResult, IEnumerable<TMetadata>> WhenFalse<TModel, TMetadata, TResult>(TMetadata whenFalse)
     {
         return (_, _) => whenFalse.ToEnumerable();

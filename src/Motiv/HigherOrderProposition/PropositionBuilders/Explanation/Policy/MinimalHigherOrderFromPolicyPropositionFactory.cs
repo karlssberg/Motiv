@@ -11,7 +11,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Policy;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly partial struct HigherOrderFromPolicyPropositionFactory<TModel, TMetadata>(
+public readonly partial struct MinimalHigherOrderFromPolicyPropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation)
 {

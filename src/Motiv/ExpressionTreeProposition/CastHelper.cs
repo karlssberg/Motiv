@@ -1,8 +1,8 @@
 ﻿namespace Motiv.ExpressionTreeProposition;
 
-public static class CastHelper
+internal static class CastHelper
 {
-    public static bool IsExplicitNumericCast(Type sourceType, Type targetType)
+    internal static bool IsExplicitNumericCast(Type sourceType, Type targetType)
     {
         sourceType = Nullable.GetUnderlyingType(sourceType) ?? sourceType;
         targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
@@ -26,31 +26,6 @@ public static class CastHelper
         // By default, assume implicit cast since
         return false;
     }
-
-    private static bool IsExplicitCharConversion(Type source, Type target)
-    {
-        if (source == typeof(char))
-        {
-            // Char can be implicitly converted to ushort, int, uint, long, ulong, float, double, or decimal
-            return !(target == typeof(ushort) ||
-                    target == typeof(int) ||
-                    target == typeof(uint) ||
-                    target == typeof(long) ||
-                    target == typeof(ulong) ||
-                    target == typeof(float) ||
-                    target == typeof(double) ||
-                    target == typeof(decimal));
-        }
-
-        if (target == typeof(char))
-        {
-            // All numeric to char conversions are explicit
-            return true;
-        }
-
-        return true;
-    }
-
     private static bool IsNumericType(Type type)
     {
         return type == typeof(byte) ||

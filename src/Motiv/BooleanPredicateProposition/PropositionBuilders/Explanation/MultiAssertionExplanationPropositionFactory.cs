@@ -16,7 +16,6 @@ public readonly partial struct MultiAssertionExplanationPropositionFactory<TMode
     /// <summary>
     /// A factory for creating propositions based on the supplied predicate and metadata factories.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiAssertionExplanationPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> predicate,
@@ -31,7 +30,6 @@ public readonly partial struct MultiAssertionExplanationPropositionFactory<TMode
     /// <summary>
     /// A factory for creating propositions based on the supplied predicate and metadata factories.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiAssertionExplanationPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> predicate,

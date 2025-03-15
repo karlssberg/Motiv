@@ -21,8 +21,6 @@ public readonly partial struct MultiAssertionExplanationFromBooleanResultHigherO
     /// <summary>
     /// A factory for creating specifications based on a predicate and explanations for true and false conditions. This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a specification that covers every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TPredicateResult">The type of the underlying metadata associated with the specification.</typeparam>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiAssertionExplanationFromBooleanResultHigherOrderExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
@@ -39,14 +37,12 @@ public readonly partial struct MultiAssertionExplanationFromBooleanResultHigherO
     /// <summary>
     /// A factory for creating specifications based on a predicate and explanations for true and false conditions. This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a specification that covers every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TPredicateResult">The type of the underlying metadata associated with the specification.</typeparam>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiAssertionExplanationFromBooleanResultHigherOrderExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> trueBecause,
-        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>> falseBecause)
+        [FluentMethod("WhenFalseYield")]Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>> falseBecause)
     {
         _expression = expression;
         _higherOrderOperation = higherOrderOperation;

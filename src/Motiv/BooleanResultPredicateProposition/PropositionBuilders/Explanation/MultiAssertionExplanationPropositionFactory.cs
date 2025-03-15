@@ -19,8 +19,6 @@ public readonly partial struct MultiAssertionExplanationPropositionFactory<TMode
     /// A factory for creating propositions based on the supplied proposition and explanation factories.
     /// This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a proposition that covers every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiAssertionExplanationPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> predicate,
@@ -36,8 +34,6 @@ public readonly partial struct MultiAssertionExplanationPropositionFactory<TMode
     /// A factory for creating propositions based on the supplied proposition and explanation factories.
     /// This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a proposition that covers every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiAssertionExplanationPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> predicate,

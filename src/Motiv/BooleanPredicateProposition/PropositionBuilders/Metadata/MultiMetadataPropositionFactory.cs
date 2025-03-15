@@ -17,8 +17,6 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TMetadata
     /// <summary>
     /// A factory for creating propositions based on the supplied predicate and metadata factories.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> predicate,
@@ -33,8 +31,6 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TMetadata
     /// <summary>
     /// A factory for creating propositions based on the supplied predicate and metadata factories.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> predicate,

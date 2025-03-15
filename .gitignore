@@ -17,3 +17,5 @@ riderModule.iml
 /.vs/ProjectEvaluation/motiv.projects.v9.bin
 /.vs/ProjectEvaluation/motiv.strings.v9.bin
 BenchmarkDotNet.Artifacts/
+
+.fake

@@ -10,7 +10,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Spec;
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly partial struct HigherOrderFromSpecPropositionFactory<TModel>(
+public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TModel>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, string> spec,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation)
 {

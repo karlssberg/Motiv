@@ -9,7 +9,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
 public readonly partial struct MultiAssertionExplanationWithNamePropositionFactory<TModel>(
     [FluentMethod("Build")]Func<TModel, bool> predicate,
     [FluentMethod("WhenTrue")]string trueBecause,
-    [FluentMethod("WhenFalseYield")]Func<TModel, IEnumerable<string>> falseBecause)
+    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, IEnumerable<string>> falseBecause)
 {
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement

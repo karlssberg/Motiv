@@ -18,9 +18,6 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TReplacem
     /// <summary>
     /// A builder for creating propositions using a predicate function that returns a <see cref="BooleanResultBase{TMetadata}"/>.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
-    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> spec,
@@ -35,9 +32,6 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TReplacem
     /// <summary>
     /// A builder for creating propositions using a predicate function that returns a <see cref="BooleanResultBase{TMetadata}"/>.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
-    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> spec,
