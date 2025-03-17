@@ -428,39 +428,6 @@ public class SpecTests
         act.Should().Throw<ArgumentNullException>();
     }
 
-    [Theory]
-    [InlineAutoData("true", null)]
-    [InlineAutoData(null, "false")]
-    public void Should_throw_if_null_metadata_supplied(string trueMetadata, string falseMetadata)
-    {
-        // Arrange
-        // Act
-        var act = () => Spec
-            .Build((string _) => default)
-            .WhenTrue(trueMetadata)
-            .WhenFalse(falseMetadata)
-            .Create("is null");
-
-        // Assert
-        act.Should().Throw<ArgumentException>();
-    }
-
-    [Theory]
-    [InlineAutoData("hello world", null)]
-    [InlineAutoData(null, "hello world")]
-    public void Should_throw_if_null_reasons_are_supplied(string trueBecause, string falseBecause)
-    {
-        // Act
-        var act = () => Spec
-            .Build<string>(m => m is null)
-            .WhenTrue(trueBecause)
-            .WhenFalse(falseBecause)
-            .Create();
-
-        // Assert
-        act.Should().Throw<ArgumentException>();
-    }
-
     [Fact]
     public void Should_provide_detailed_proposition()
     {

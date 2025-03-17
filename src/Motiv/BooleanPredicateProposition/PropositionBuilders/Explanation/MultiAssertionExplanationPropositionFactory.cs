@@ -22,6 +22,7 @@ public readonly partial struct MultiAssertionExplanationPropositionFactory<TMode
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))] Func<TModel, IEnumerable<string>> whenTrue,
         [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))] Func<TModel, IEnumerable<string>> whenFalse)
     {
+        predicate.ThrowIfNull(nameof(predicate));
         _predicate = predicate;
         _whenTrue = whenTrue;
         _whenFalse = whenFalse;
@@ -34,8 +35,9 @@ public readonly partial struct MultiAssertionExplanationPropositionFactory<TMode
     public MultiAssertionExplanationPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> predicate,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))] Func<TModel, string> whenTrue,
-        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))] Func<TModel, IEnumerable<string>> whenFalse)
+        [FluentMethod("WhenFalseYield")]Func<TModel, IEnumerable<string>> whenFalse)
     {
+        predicate.ThrowIfNull(nameof(predicate));
         _predicate = predicate;
         _whenTrue = whenTrue.ToEnumerableReturn();
         _whenFalse = whenFalse;

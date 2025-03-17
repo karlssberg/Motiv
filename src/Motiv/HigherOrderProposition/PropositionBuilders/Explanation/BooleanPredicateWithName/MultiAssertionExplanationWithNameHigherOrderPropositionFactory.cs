@@ -23,6 +23,7 @@ public readonly partial struct MultiAssertionExplanationWithNameHigherOrderPropo
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
+        resultResolver.ThrowIfNull(nameof(resultResolver));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel, string>(
             resultResolver,
@@ -40,8 +41,9 @@ public readonly partial struct MultiAssertionExplanationWithNameHigherOrderPropo
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel, string>(
+    public SpecBase<IEnumerable<TModel>, string> Create()
+    {
+        return new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel, string>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause
@@ -50,4 +52,5 @@ public readonly partial struct MultiAssertionExplanationWithNameHigherOrderPropo
             falseBecause,
             new SpecDescription(trueBecause),
             higherOrderOperation.CauseSelector);
+    }
 }

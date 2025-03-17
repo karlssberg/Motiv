@@ -6,7 +6,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// <summary>A builder for creating propositions based on a predicate, or for further refining a proposition.</summary>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly partial struct BooleanPredicatePropositionFactory<TModel>(
+public readonly partial struct MinimalBooleanPredicatePropositionFactory<TModel>(
     [FluentMethod("Build")]Func<TModel, bool> predicate)
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>

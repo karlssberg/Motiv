@@ -6,9 +6,11 @@ internal static class BooleanResultBuildOverloads
 {
 
     [FluentMethodTemplate]
-    internal static Func<TModel, BooleanResultBase<TMetadata>> Build<TModel, TMetadata>(Func<TModel, BooleanResultBase<TMetadata>> resultFactory) => resultFactory;
+    internal static Func<TModel, BooleanResultBase<TMetadata>> Build<TModel, TMetadata>(Func<TModel, BooleanResultBase<TMetadata>> resultFactory) =>
+        resultFactory.ThrowIfNull(nameof(resultFactory));
 
 
     [FluentMethodTemplate]
-    internal static Func<TModel, BooleanResultBase<string>> Build<TModel>(Func<TModel, BooleanResultBase<string>> resultFactory) => resultFactory;
+    internal static Func<TModel, BooleanResultBase<string>> Build<TModel>(Func<TModel, BooleanResultBase<string>> resultFactory) =>
+        resultFactory.ThrowIfNull(nameof(resultFactory));
 }

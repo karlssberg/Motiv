@@ -22,6 +22,7 @@ public readonly partial struct ExplanationPropositionFactory<TModel>(
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public PolicyBase<TModel, string> Create(string statement)
     {
+        predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new ExplanationProposition<TModel>(
             predicate,

@@ -1,6 +1,6 @@
 ﻿namespace Motiv.HigherOrderProposition.PolicyResultPredicate;
 
-internal sealed class HigherOrderFromPolicyResultProposition<TModel, TMetadata>(
+internal sealed class MinimalHigherOrderFromPolicyResultProposition<TModel, TMetadata>(
     Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
     Func<IEnumerable<PolicyResult<TModel, TMetadata>>, bool> higherOrderPredicate,
     ISpecDescription specDescription,
@@ -22,14 +22,7 @@ internal sealed class HigherOrderFromPolicyResultProposition<TModel, TMetadata>(
             causeSelector(isSatisfied, underlyingResults)
                 .ToArray());
 
-        var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
-        {
-            var evaluation = new HigherOrderPolicyResultEvaluation<TModel, TMetadata>(
-                underlyingResults,
-                causes.Value);
-
-            return evaluation.Values;
-        });
+        var metadata = new Lazy<IEnumerable<TMetadata>>(() => causes.Value.Select(result => result.Value).ToArray());
 
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch
@@ -47,15 +40,10 @@ internal sealed class HigherOrderFromPolicyResultProposition<TModel, TMetadata>(
 
         return new HigherOrderBooleanResult<TMetadata, TMetadata>(
             isSatisfied,
-            Metadata,
-            Assertions,
-            ResultDescription,
+            () => metadata.Value,
+            () => assertions.Value,
+            () => resultDescription.Value,
             underlyingResults,
-            GetCauses);
-
-        IEnumerable<TMetadata> Metadata() => metadata.Value;
-        IEnumerable<string> Assertions() => assertions.Value;
-        IEnumerable<BooleanResultBase<TMetadata>> GetCauses() => causes.Value;
-        ResultDescriptionBase ResultDescription() => resultDescription.Value;
+            () => causes.Value);
     }
 }

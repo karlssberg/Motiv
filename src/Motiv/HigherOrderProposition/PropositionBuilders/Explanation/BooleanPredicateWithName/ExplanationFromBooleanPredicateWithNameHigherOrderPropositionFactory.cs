@@ -22,14 +22,17 @@ public readonly partial struct ExplanationFromBooleanPredicateWithNameHigherOrde
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public PolicyBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromBooleanPredicateExplanationProposition<TModel>(
+    public PolicyBase<IEnumerable<TModel>, string> Create()
+    {
+        predicate.ThrowIfNull(nameof(predicate));
+        return new HigherOrderFromBooleanPredicateExplanationProposition<TModel>(
             predicate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanEvaluation<TModel>, string>(),
             falseBecause,
             new SpecDescription(trueBecause),
             higherOrderOperation.CauseSelector);
+    }
 
     /// <summary>
     /// Creates a specification with descriptive assertions, but using the supplied proposition to succinctly explain
@@ -40,6 +43,7 @@ public readonly partial struct ExplanationFromBooleanPredicateWithNameHigherOrde
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {
+        predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanPredicateExplanationProposition<TModel>(
             predicate,

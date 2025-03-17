@@ -23,6 +23,7 @@ public readonly partial struct ExplanationFromBooleanPredicateHigherOrderProposi
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {
+        predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanPredicateExplanationProposition<TModel>(
             predicate,

@@ -36,6 +36,7 @@ public readonly partial struct ExplanationFromPolicyResultWithNamePropositionFac
     public PolicyBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
         return new PolicyResultPredicateExplanationProposition<TModel,TMetadata>(
             predicate,
             trueBecause.ToFunc<TModel, PolicyResultBase<TMetadata>, string>(),

@@ -29,6 +29,7 @@ public readonly partial struct MultiAssertionExplanationHigherOrderPropositionFa
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> whenTrue,
         [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> whenFalse)
     {
+        resultResolver.ThrowIfNull(nameof(resultResolver));
         _resultResolver = resultResolver;
         _higherOrderOperation = higherOrderOperation;
         _whenTrue = whenTrue;
@@ -45,8 +46,9 @@ public readonly partial struct MultiAssertionExplanationHigherOrderPropositionFa
         [FluentMethod("Build")]Func<TModel, bool> resultResolver,
         [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, string> whenTrue,
-        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> whenFalse)
+        [FluentMethod("WhenFalseYield")]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> whenFalse)
     {
+        resultResolver.ThrowIfNull(nameof(resultResolver));
         _resultResolver = resultResolver;
         _higherOrderOperation = higherOrderOperation;
         _whenTrue = whenTrue.ToEnumerableReturn();
@@ -57,7 +59,7 @@ public readonly partial struct MultiAssertionExplanationHigherOrderPropositionFa
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create(string statement)
+    public SpecBase<IEnumerable<TModel>, string>  Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel,string>(

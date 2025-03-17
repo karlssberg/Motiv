@@ -2,73 +2,33 @@
 
 namespace Motiv.SpecDecoratorProposition;
 
-internal sealed partial class MinimalPolicyDecoratorProposition<TModel, TUnderlyingMetadata>(
-    PolicyBase<TModel, TUnderlyingMetadata> underlyingPolicy,
+internal sealed partial class MinimalPolicyDecoratorProposition<TModel, TMetadata>(
+    PolicyBase<TModel, TMetadata> underlyingPolicy,
     ISpecDescription description)
-    : PolicyBase<TModel, string>
+    : PolicyBase<TModel, TMetadata>
 {
-    private readonly string _trueBecause = GetTrueAssertion(underlyingPolicy.Statement);
-    private readonly string _falseBecause = GetFalseAssertion(underlyingPolicy.Statement);
-    public override IEnumerable<SpecBase> Underlying => UnderlyingPolicy.ToEnumerable();
+    public override IEnumerable<SpecBase> Underlying => underlyingPolicy.ToEnumerable();
 
     public override ISpecDescription Description => description;
 
-    public PolicyBase<TModel, TUnderlyingMetadata> UnderlyingPolicy { get; } = underlyingPolicy;
-
-    protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
+    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
-        var predicateResult = UnderlyingPolicy.IsSatisfiedBy(model);
-        var assertion = GetLazyAssertion(model, predicateResult);
-
-        return CreatePolicyResult(assertion, predicateResult);
-    }
-
-    private Lazy<string> GetLazyAssertion(TModel model, PolicyResultBase<TUnderlyingMetadata> predicateResult)
-    {
-        return new Lazy<string>(() =>
-            predicateResult.Satisfied switch
-            {
-                true => _trueBecause,
-                false => _falseBecause
-            });
-    }
-
-    private PolicyResultBase<string> CreatePolicyResult(Lazy<string> assertion, PolicyResultBase<TUnderlyingMetadata> policyResult)
-    {
-        var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertion.Value, policyResult.ToEnumerable(), policyResult.ToEnumerable()));
-
-        var metadataTier = new Lazy<MetadataNode<string>>(() =>
-            new MetadataNode<string>(assertion.Value.ToEnumerable(),
-                policyResult.ToEnumerable() as IEnumerable<PolicyResultBase<string>> ?? []));
+        var predicateResult = underlyingPolicy.IsSatisfiedBy(model);
+        var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
+            new MetadataNode<TMetadata>(predicateResult.Value,
+                predicateResult.ToEnumerable()));
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
-                policyResult,
-                assertion.Value,
+                predicateResult,
+                description.ToReason(predicateResult.Satisfied),
                 Description.Statement));
 
-        return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
-            policyResult,
-            Value,
-            MetadataTier,
-            Explanation,
-            ResultDescription);
-
-        string Value() => assertion.Value;
-        MetadataNode<string> MetadataTier() => metadataTier.Value;
-        Explanation Explanation() => explanation.Value;
-        ResultDescriptionBase ResultDescription() => resultDescription.Value;
+        return new PolicyResultWithUnderlying<TMetadata, TMetadata>(
+            predicateResult,
+            () => predicateResult.Value,
+            () => metadataTier.Value,
+            () => predicateResult.Explanation,
+            () => resultDescription.Value);
     }
-    
-
-    private static string GetTrueAssertion(string proposition) =>
-        proposition.ContainsReservedCharacters()
-            ? $"({proposition})"
-            : proposition;
-
-    private static string GetFalseAssertion(string proposition) =>
-        proposition.ContainsReservedCharacters()
-            ? $"({proposition})".AsUnsatisfied()
-            : proposition.AsUnsatisfied();
 }

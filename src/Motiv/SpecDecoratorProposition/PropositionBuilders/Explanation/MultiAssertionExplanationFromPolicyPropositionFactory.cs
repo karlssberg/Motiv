@@ -45,7 +45,7 @@ public readonly partial struct MultiAssertionExplanationFromPolicyPropositionFac
     public MultiAssertionExplanationFromPolicyPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, PolicyResultBase<TMetadata>, string> trueBecause,
-        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> falseBecause)
+        [FluentMethod("WhenFalseYield")]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> falseBecause)
     {
         _policy = policy;
         _trueBecause = trueBecause.ToEnumerableReturn();

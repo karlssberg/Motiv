@@ -1459,7 +1459,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 {
                     [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                     public MyBuildTarget(
-                        string first
+                        string first,
                         [MultipleFluentMethods(typeof(Overloads))]Func<T1, IEnumerable<int>, T2> second,
                         string third)
                     {
@@ -1502,27 +1502,28 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public static Step_0__Test_Namespace_Factory Build(in string first)
+                    public static Step_0__Test_Namespace_Factory WithFirst(in string first)
                     {
                         return new Step_0__Test_Namespace_Factory(first);
                     }
                 }
 
-                public static partial class Step_0__Test_Namespace_Factory
+                public struct Step_0__Test_Namespace_Factory
                 {
                     private readonly string _first__parameter;
-                    public Step_0__Test_Namespace_Factory(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> first)
+                    public Step_0__Test_Namespace_Factory(in string first)
                     {
                         this._first__parameter = first;
                     }
+
                     /// <summary>
                     /// Candidate constructor types:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public static Step_0__Test_Namespace_Factory<T1, T2> Build<T1, T2>(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> firstFactory)
+                    public Step_1__Test_Namespace_Factory<T1, T2> Build<T1, T2>(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> firstFactory)
                     {
-                        return new Step_0__Test_Namespace_Factory<T1, T2>(Overloads.Build<T1, T2, System.Collections.Generic.IEnumerable<int>>(firstFactory));
+                        return new Step_1__Test_Namespace_Factory<T1, T2>(this._first__parameter, Overloads.Build<T1, T2, System.Collections.Generic.IEnumerable<int>>(firstFactory));
                     }
 
                     /// <summary>
@@ -1530,17 +1531,17 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public static Step_0__Test_Namespace_Factory<T1, string> Build<T1>(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, string> secondFactory)
+                    public Step_1__Test_Namespace_Factory<T1, string> Build<T1>(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, string> secondFactory)
                     {
-                        return new Step_0__Test_Namespace_Factory<T1, string>(Overloads.Build<T1, System.Collections.Generic.IEnumerable<int>>(secondFactory));
+                        return new Step_1__Test_Namespace_Factory<T1, string>(this._first__parameter, Overloads.Build<T1, System.Collections.Generic.IEnumerable<int>>(secondFactory));
                     }
                 }
 
-                public struct Step_0__Test_Namespace_Factory<T1, T2>
+                public struct Step_1__Test_Namespace_Factory<T1, T2>
                 {
                     private readonly string _first__parameter;
                     private readonly System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> _second__parameter;
-                    public Step_0__Test_Namespace_Factory(in string first, in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> second)
+                    public Step_1__Test_Namespace_Factory(in string first, in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> second)
                     {
                         this._first__parameter = first;
                         this._second__parameter = second;
@@ -1551,9 +1552,9 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public MyBuildTarget<T1, T2> WithSecond(in string third)
+                    public MyBuildTarget<T1, T2> WithThird(in string third)
                     {
-                        return new MyBuildTarget<T1, T2>(this._first__parameter, second);
+                        return new MyBuildTarget<T1, T2>(this._first__parameter, this._second__parameter, third);
                     }
                 }
             }

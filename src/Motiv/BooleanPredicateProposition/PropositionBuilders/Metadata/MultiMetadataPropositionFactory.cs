@@ -23,6 +23,7 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TMetadata
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenTrue,
         [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenFalse)
     {
+        predicate.ThrowIfNull(nameof(predicate));
         _predicate = predicate;
         _whenTrue = whenTrue;
         _whenFalse = whenFalse;
@@ -35,8 +36,9 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TMetadata
     public MultiMetadataPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> predicate,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))] Func<TModel, TMetadata> whenTrue,
-        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenFalse)
+        [FluentMethod("WhenFalseYield")]Func<TModel, IEnumerable<TMetadata>> whenFalse)
     {
+        predicate.ThrowIfNull(nameof(predicate));
         _predicate = predicate;
         _whenTrue = whenTrue.ToEnumerableReturn();
         _whenFalse = whenFalse;

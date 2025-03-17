@@ -569,7 +569,6 @@ public class BooleanResultTests
         act.Should().BeEquivalentTo("¬a || !(b & c)");
     }
 
-
     [Fact]
     public void Should_ensure_that_nested_underlying_expression_property_reveals_the_boolean_expression()
     {

@@ -16,14 +16,17 @@ public readonly partial struct MultiAssertionExplanationWithNamePropositionFacto
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<TModel, string> Create() =>
-        new MultiMetadataProposition<TModel, string>(
+    public SpecBase<TModel, string> Create()
+    {
+        predicate.ThrowIfNull(nameof(predicate));
+        return new MultiMetadataProposition<TModel, string>(
             predicate,
             trueBecause
                 .ToEnumerable()
                 .ToFunc<TModel, IEnumerable<string>>(),
             falseBecause,
             new SpecDescription(trueBecause));
+    }
 
     /// <summary>
     /// Creates a proposition with descriptive assertions, but using the supplied proposition to succinctly explain
@@ -34,6 +37,7 @@ public readonly partial struct MultiAssertionExplanationWithNamePropositionFacto
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<TModel, string> Create(string statement)
     {
+        predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new MultiMetadataProposition<TModel, string>(
             predicate,

@@ -42,7 +42,7 @@ public readonly partial struct MultiMetadataFromPolicyPropositionFactory<TModel,
     public MultiMetadataFromPolicyPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> spec,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, PolicyResultBase<TMetadata>, TReplacementMetadata> whenTrue,
-        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
+        [FluentMethod("WhenFalseYield")]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
     {
         _spec = spec;
         _whenTrue = whenTrue.ToEnumerableReturn();

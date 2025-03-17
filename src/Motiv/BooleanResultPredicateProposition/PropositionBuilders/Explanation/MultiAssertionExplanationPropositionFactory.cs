@@ -38,7 +38,7 @@ public readonly partial struct MultiAssertionExplanationPropositionFactory<TMode
     public MultiAssertionExplanationPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> predicate,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<TMetadata>, string> trueBecause,
-        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> falseBecause)
+        [FluentMethod("WhenFalseYield")]Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> falseBecause)
     {
         _predicate = predicate;
         _trueBecause = trueBecause.ToEnumerableReturn();

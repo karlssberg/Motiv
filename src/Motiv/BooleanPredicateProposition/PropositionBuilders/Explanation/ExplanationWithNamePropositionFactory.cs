@@ -16,12 +16,15 @@ public readonly partial struct ExplanationWithNamePropositionFactory<TModel>(
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public PolicyBase<TModel, string> Create() =>
-        new ExplanationProposition<TModel>(
+    public PolicyBase<TModel, string> Create()
+    {
+        predicate.ThrowIfNull(nameof(predicate));
+        return new ExplanationProposition<TModel>(
             predicate,
             trueBecause.ToFunc<TModel, string>(),
             falseBecause,
             new SpecDescription(trueBecause));
+    }
 
     /// <summary>
     /// Creates a proposition with descriptive assertions, but using the supplied proposition to succinctly explain
@@ -32,6 +35,7 @@ public readonly partial struct ExplanationWithNamePropositionFactory<TModel>(
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public PolicyBase<TModel, string> Create(string statement)
     {
+        predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new ExplanationProposition<TModel>(
             predicate,

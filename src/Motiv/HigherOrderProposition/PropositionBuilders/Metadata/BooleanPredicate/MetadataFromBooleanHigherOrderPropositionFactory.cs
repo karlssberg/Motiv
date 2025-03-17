@@ -24,6 +24,7 @@ public readonly partial struct MetadataFromBooleanHigherOrderPropositionFactory<
     /// <returns>A specification for the model.</returns>
     public PolicyBase<IEnumerable<TModel>, TMetadata> Create(string statement)
     {
+        resultResolver.ThrowIfNull(nameof(resultResolver));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanPredicateMetadataProposition<TModel,TMetadata>(
             resultResolver,

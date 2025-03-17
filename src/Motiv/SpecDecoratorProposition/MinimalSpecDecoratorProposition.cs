@@ -7,59 +7,27 @@ internal sealed class MinimalSpecDecoratorProposition<TModel, TMetadata>(
     ISpecDescription description)
     : SpecBase<TModel, TMetadata>
 {
-    private readonly string _trueBecause = GetTrueAssertion(underlyingSpec.Statement);
-    private readonly string _falseBecause = GetFalseAssertion(underlyingSpec.Statement);
-    public override IEnumerable<SpecBase> Underlying => UnderlyingSpec.ToEnumerable();
+    public override IEnumerable<SpecBase> Underlying => underlyingSpec.ToEnumerable();
 
     public override ISpecDescription Description => description;
 
-    public SpecBase<TModel, TMetadata> UnderlyingSpec { get; } = underlyingSpec;
-
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
-        var predicateResult = UnderlyingSpec.IsSatisfiedBy(model);
-        var assertion = GetLazyAssertion(model, predicateResult);
+        var predicateResult = underlyingSpec.IsSatisfiedBy(model);
 
-        return CreateSpecResult(assertion, predicateResult);
-    }
-
-    private Lazy<string> GetLazyAssertion(TModel model, BooleanResultBase<TMetadata> predicateResult)
-    {
-        return new Lazy<string>(() =>
-            predicateResult.Satisfied switch
-            {
-                true => _trueBecause,
-                false => _falseBecause
-            });
-    }
-
-    private BooleanResultBase<TMetadata> CreateSpecResult(Lazy<string> assertion, BooleanResultBase<TMetadata> booleanResult)
-    {
-        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
+        var lazyResultDescription = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
-                booleanResult,
-                assertion.Value,
+                predicateResult,
+                description.ToReason(predicateResult.Satisfied),
                 Description.Statement));
 
+        var lazyMetadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
+            new MetadataNode<TMetadata>(predicateResult.Values, predicateResult.ToEnumerable()));
+
         return new BooleanResultWithUnderlying<TMetadata, TMetadata>(
-            booleanResult,
-            Value,
-            MetadataTier,
-            ResultDescription);
-
-        MetadataNode<TMetadata> Value() => booleanResult.MetadataTier;
-        Explanation MetadataTier() => booleanResult.Explanation;
-        ResultDescriptionBase ResultDescription() => resultDescription.Value;
+            predicateResult,
+            () => lazyMetadataTier.Value,
+            () => predicateResult.Explanation,
+            () => lazyResultDescription.Value);
     }
-
-
-    private static string GetTrueAssertion(string proposition) =>
-        proposition.ContainsReservedCharacters()
-            ? $"({proposition})"
-            : proposition;
-
-    private static string GetFalseAssertion(string proposition) =>
-        proposition.ContainsReservedCharacters()
-            ? $"({proposition})".AsUnsatisfied()
-            : proposition.AsUnsatisfied();
 }

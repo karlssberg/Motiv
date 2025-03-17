@@ -22,6 +22,7 @@ public readonly partial struct MetadataPropositionFactory<TModel, TMetadata>(
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, TMetadata> Create(string statement)
     {
+        predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new MetadataProposition<TModel, TMetadata>(
             predicate,

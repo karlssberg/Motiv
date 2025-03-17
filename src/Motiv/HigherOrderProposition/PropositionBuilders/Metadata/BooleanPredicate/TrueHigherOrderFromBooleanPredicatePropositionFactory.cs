@@ -21,6 +21,7 @@ public readonly partial struct TrueHigherOrderFromBooleanPredicatePropositionFac
     /// <returns>A specification for the model.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
+        predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanPredicateMetadataProposition<TModel, string>(
             predicate,
