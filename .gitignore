@@ -19,3 +19,4 @@ riderModule.iml
 BenchmarkDotNet.Artifacts/
 
 .fake
+.vs/
