@@ -12,7 +12,7 @@ New [propositions](xref:Motiv.SpecBase`2) are created fluently by initially call
 |----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
 | [Build()](./builder/Build.md)                            | Initiates the build process based on a predicate or an existing proposition or one of its results.               |
 | [As()](./builder/As.md)                                  | (Optional) Defines a custom higher order proposition.                                                            |
-| [AsAllSatisfied()](./builder/AsAllSatisfied.md)          | (Optional) Defines a proposition that is satisfied when all odels in the collection are satisfied.               |
+| [AsAllSatisfied()](./builder/AsAllSatisfied.md)          | (Optional) Defines a proposition that is satisfied when all models in the collection are satisfied.               |
 | [AsAnySatisfied()](./builder/AsAnySatisfied.md)          | (Optional) Defines a proposition that is satisfied when any of the models in the collection are satisfied.       |
 | [AsNoneSatisfied()](./builder/AsNoneSatisfied.md)        | (Optional) Defines a proposition that is satisfied when none of the models in the collection are satisfied.      |
 | [AsAtLeastNSatisfied()](./builder/AsAtLeastNSatisfied.md) | (Optional) Defines a proposition that is satisfied when at least `n` models in the collection are satisfied.     |
