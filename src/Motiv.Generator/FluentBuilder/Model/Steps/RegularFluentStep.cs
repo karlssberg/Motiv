@@ -33,7 +33,7 @@ public class RegularFluentStep(INamedTypeSymbol rootType, IEnumerable<IMethodSym
             .Where(parameter => parameter.Type.IsOpenGenericType())
     ];
 
-    public Accessibility Accessibility { get; set; } = Accessibility.Internal;
+    public Accessibility Accessibility { get; set; } = rootType.DeclaredAccessibility;
 
     public override string ToString()
     {

@@ -40,27 +40,38 @@ public static class ExistingPartialTypeStepDeclaration
                     .WithOpenBraceToken(Token(SyntaxKind.OpenBraceToken))
                     .WithCloseBraceToken(Token(SyntaxKind.CloseBraceToken))
                     .WithModifiers(
-                        TokenList(GetRootTypeModifiers(step))),
+                        TokenList(GetModifiers(step))),
 
             TypeKind.Class =>
                 ClassDeclaration(identifier)
                     .WithModifiers(
-                        TokenList(GetRootTypeModifiers(step))),
+                        TokenList(GetModifiers(step))),
 
-            TypeKind.Struct  when step.IsRecord=>
+            TypeKind.Struct when step.IsRecord =>
                 StructDeclaration(identifier)
                     .WithModifiers(
-                        TokenList(GetRootTypeModifiers(step).Append(Token(SyntaxKind.RecordKeyword)))),
+                        TokenList(GetModifiers(step).Append(Token(SyntaxKind.RecordKeyword)))),
 
             _ =>
                 StructDeclaration(identifier)
                     .WithModifiers(
-                        TokenList(GetRootTypeModifiers(step))),
+                        TokenList(GetModifiers(step))),
         };
     }
 
-    private static IEnumerable<SyntaxToken> GetRootTypeModifiers(IFluentStep step)
+    private static IEnumerable<SyntaxToken> GetModifiers(IFluentStep step)
     {
+        if (step is ExistingTypeFluentStep existingStep)
+        {
+            var originalModifiers = existingStep.ConstructorContext.OriginalTypeModifiers;
+            
+            // Filter out 'partial' from original modifiers since we'll add it back
+            var modifiersToKeep = originalModifiers.Where(m => !m.IsKind(SyntaxKind.PartialKeyword));
+            
+            return modifiersToKeep.Append(Token(SyntaxKind.PartialKeyword));
+        }
+
+        // Fallback to just accessibility + partial for non-existing types
         return step.Accessibility
             .AccessibilityToSyntaxKind()
             .Select(Token)

@@ -1276,7 +1276,6 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
         const string expected =
             """
             using System;
-            using System.Collections.Generic;
 
             namespace Test
             {
@@ -1322,7 +1321,7 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                 {
                     private readonly System.Func<TModel, PolicyResultBase<TMetadata>> _predicate__parameter;
                     private readonly System.Func<TModel, PolicyResultBase<TMetadata>, System.Collections.Generic.IEnumerable<string>> _trueBecause__parameter;
-                    public Step_1__Test_Spec(in System.Func<TModel, PolicyResultBase<TMetadata>> predicate, in System.Func<TModel, PolicyResultBase<TMetadata>, System.Collections.Generic.IEnumerable<string>> function)
+                    public Step_1__Test_Spec(in System.Func<TModel, PolicyResultBase<TMetadata>> predicate, in System.Func<TModel, PolicyResultBase<TMetadata>, System.Collections.Generic.IEnumerable<string>> trueBecause)
                     {
                         this._predicate__parameter = predicate;
                         this._trueBecause__parameter = trueBecause;

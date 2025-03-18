@@ -17,10 +17,12 @@ public class ConstructorMetadata(FluentConstructorContext constructorContext)
 
     public OrderedDictionary<IParameterSymbol, IFluentValueStorage> ValueStorage { get; } =
         constructorContext.ValueStorage;
+        
+    public FluentConstructorContext Context { get; } = constructorContext;
 
     public ConstructorMetadata Clone()
     {
-        return new ConstructorMetadata(constructorContext);
+        return new ConstructorMetadata(Context);
     }
 
     public string ToDisplayString() => Constructor.ToDisplayString();

@@ -355,7 +355,7 @@ public class FluentFactoryRootTypeTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly MyParameterValue _value1__parameter;
-                    public Step_0__Test_Factory(in Test.MyParameterValue value1)
+                    public Step_0__Test_Factory(in MyParameterValue value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -375,7 +375,7 @@ public class FluentFactoryRootTypeTests
                 {
                     private readonly MyParameterValue _value1__parameter;
                     private readonly MyParameterValue _value2__parameter;
-                    public Step_1__Test_Factory(in Test.MyParameterValue value1, in Test.MyParameterValue value2)
+                    public Step_1__Test_Factory(in MyParameterValue value1, in MyParameterValue value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -460,7 +460,7 @@ public class FluentFactoryRootTypeTests
                 public struct Step_0__Test_Factory<T1, T2>
                 {
                     private readonly MyParameterValue<T1, T2> _value1__parameter;
-                    public Step_0__Test_Factory(in Test.MyParameterValue<T1, T2> value1)
+                    public Step_0__Test_Factory(in MyParameterValue<T1, T2> value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -480,7 +480,7 @@ public class FluentFactoryRootTypeTests
                 {
                     private readonly MyParameterValue<T1, T2> _value1__parameter;
                     private readonly MyParameterValue<T1, T2> _value2__parameter;
-                    public Step_1__Test_Factory(in Test.MyParameterValue<T1, T2> value1, in Test.MyParameterValue<T1, T2> value2)
+                    public Step_1__Test_Factory(in MyParameterValue<T1, T2> value1, in MyParameterValue<T1, T2> value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -579,7 +579,7 @@ public class FluentFactoryRootTypeTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly MyParameterValue _value1__parameter;
-                    public Step_0__Test_Factory(in Test.MyParameterValue value1)
+                    public Step_0__Test_Factory(in MyParameterValue value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -614,7 +614,7 @@ public class FluentFactoryRootTypeTests
                     private readonly MyParameterValue _value1__parameter;
                     private readonly MyParameterValue _value2__parameter;
                     private readonly MyParameterValue _value3__parameter;
-                    public Step_2__Test_Factory(in Test.MyParameterValue value1, in Test.MyParameterValue value2, in Test.MyParameterValue value3)
+                    public Step_2__Test_Factory(in MyParameterValue value1, in MyParameterValue value2, in MyParameterValue value3)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -689,7 +689,7 @@ public class FluentFactoryRootTypeTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly MyParameterValue _value1__parameter;
-                    public Step_0__Test_Factory(in Test.MyParameterValue value1)
+                    public Step_0__Test_Factory(in MyParameterValue value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -724,7 +724,7 @@ public class FluentFactoryRootTypeTests
                     private readonly MyParameterValue _value1__parameter;
                     private readonly MyParameterValue _value2__parameter;
                     private readonly MyParameterValue _value3__parameter;
-                    public Step_2__Test_Factory(in Test.MyParameterValue value1, in Test.MyParameterValue value2, in Test.MyParameterValue value3)
+                    public Step_2__Test_Factory(in MyParameterValue value1, in MyParameterValue value2, in MyParameterValue value3)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;

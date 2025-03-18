@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis;
+using Motiv.Generator.FluentBuilder.Analysis;
 using Motiv.Generator.FluentBuilder.Generation;
 using Motiv.Generator.FluentBuilder.Model.Methods;
 using Motiv.Generator.FluentBuilder.Model.Storage;
@@ -41,7 +42,10 @@ public class ExistingTypeFluentStep(
     public bool IsRecord { get; } = constructorMetadata.Constructor.ContainingType.IsRecord;
 
     public OrderedDictionary<IParameterSymbol, IFluentValueStorage> ValueStorage { get; set; } = [];
+    
     public ImmutableArray<IMethodSymbol> CandidateConstructors { get; set; }
+    
+    public FluentConstructorContext ConstructorContext => constructorMetadata.Context;
 
     public string IdentifierDisplayString(INamespaceSymbol currentNamespace)
     {

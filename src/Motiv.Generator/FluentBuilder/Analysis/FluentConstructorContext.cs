@@ -1,6 +1,8 @@
 ﻿using System.Collections.Specialized;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Motiv.Generator.FluentBuilder.Model;
 using Motiv.Generator.FluentBuilder.Model.Storage;
 
@@ -24,6 +26,24 @@ public record FluentConstructorContext
         Accessibility = rootSymbol.DeclaredAccessibility;
         ValueStorage = new ConstructorAnalyzer(semanticModel).FindParameterValueStorage(constructor);
         RootType = rootSymbol;
+
+        // Get all declarations of the type to find modifiers
+        var declarations = constructor.ContainingType.DeclaringSyntaxReferences
+            .Select(r => r.GetSyntax())
+            .OfType<TypeDeclarationSyntax>()
+            .ToArray();
+
+        // Find declaration with readonly modifier if it exists
+        var declaration = declarations.FirstOrDefault(d =>
+            d.Modifiers.Any(m => m.IsKind(SyntaxKind.ReadOnlyKeyword)));
+
+        // If no readonly found, use first declaration with any modifiers
+        declaration ??= declarations.FirstOrDefault(d => d.Modifiers.Any());
+
+        if (declaration != null)
+        {
+            OriginalTypeModifiers = declaration.Modifiers;
+        }
     }
 
     public INamedTypeSymbol RootType { get; set; }
@@ -38,9 +58,14 @@ public record FluentConstructorContext
     public Accessibility Accessibility { get; }
 
     public bool IsStatic { get; }
+
     public TypeKind TypeKind { get; }
+
     public IMethodSymbol Constructor { get; }
+
     public string RootTypeFullName { get; }
+
+    public SyntaxTokenList OriginalTypeModifiers { get; }
 
     public string ToDisplayString() => $"{Constructor.ToDisplayString()}";
 }

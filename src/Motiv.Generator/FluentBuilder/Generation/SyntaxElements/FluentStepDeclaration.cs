@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Motiv.Generator.FluentBuilder.Generation.SyntaxElements.Constructors;
 using Motiv.Generator.FluentBuilder.Generation.SyntaxElements.Methods;
@@ -33,10 +34,19 @@ public static class FluentStepDeclaration
             ? genericName.Identifier
             : ((SimpleNameSyntax)name).Identifier;
 
+        SyntaxTokenList accessibilityToken = step.Accessibility switch
+        {
+            Accessibility.Public => [Token(SyntaxKind.PublicKeyword)],
+            Accessibility.Private => [Token(SyntaxKind.PrivateKeyword)],
+            Accessibility.Protected => [Token(SyntaxKind.ProtectedKeyword)],
+            Accessibility.Internal => [Token(SyntaxKind.InternalKeyword)],
+            Accessibility.ProtectedOrInternal => [Token(SyntaxKind.ProtectedKeyword), Token(SyntaxKind.InternalKeyword)],
+            Accessibility.ProtectedAndInternal => [Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ProtectedKeyword)],
+            _ => [Token(SyntaxKind.PublicKeyword)]
+        };
+
         var structDeclaration = StructDeclaration(identifier)
-            .WithModifiers(
-                TokenList(
-                    Token(SyntaxKind.PublicKeyword)))
+            .WithModifiers(accessibilityToken)
             .WithMembers(List<MemberDeclarationSyntax>([
                 ..fieldDeclarations,
                 constructor,
