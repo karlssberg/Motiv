@@ -154,6 +154,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -173,6 +177,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_1__Test_Factory
                 {
                     private readonly string _value1__parameter;
@@ -291,6 +299,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="TestA.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__MyFactory_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -310,6 +322,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="TestB.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_1__MyFactory_Factory
                 {
                     private readonly string _value1__parameter;
@@ -410,6 +426,11 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                ///     <seealso cref="Test.MyBuildTarget{T1}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -537,6 +558,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -556,6 +581,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
                 {
                     private readonly T1 _value1__parameter;
@@ -577,6 +606,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_2__Test_Factory
                 {
                     private readonly string _value1__parameter;
@@ -596,6 +629,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_3__Test_Factory
                 {
                     private readonly string _value1__parameter;
@@ -714,6 +751,11 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                ///     <seealso cref="Test.MyBuildTarget{T1}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -743,6 +785,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
                 {
                     private readonly T1 _value1__parameter;
@@ -764,6 +810,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                /// </summary>
                 public struct Step_2__Test_Factory<T1, T2, T3>
                 {
                     private readonly T1 _value1__parameter;
@@ -787,6 +837,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1}"/>
+                /// </summary>
                 public struct Step_3__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -808,6 +862,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1}"/>
+                /// </summary>
                 public struct Step_4__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -897,6 +955,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_0__Test_Factory
                 {
                     private readonly string _value1__parameter;
@@ -916,6 +978,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_1__Test_Factory
                 {
                     private readonly string _value1__parameter;
@@ -958,6 +1024,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_0__Test_MyBuildTarget
                 {
                     private readonly string _value1__parameter;
@@ -977,6 +1047,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_1__Test_MyBuildTarget
                 {
                     private readonly string _value1__parameter;
@@ -1078,8 +1152,8 @@ public class FluentFactoryGeneratorMergeTests
                 {
                     /// <summary>
                     /// Candidate constructor types:
-                    ///     <seealso cref="Test.MyBuildTarget{T}"/>
                     ///     <seealso cref="Test.MyBuildTarget"/>
+                    ///     <seealso cref="Test.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory WithValueA(in string valueX1)
@@ -1088,6 +1162,11 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                ///     <seealso cref="Test.MyBuildTarget{T}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory
                 {
                     private readonly string _valueX1__parameter;
@@ -1098,8 +1177,8 @@ public class FluentFactoryGeneratorMergeTests
 
                     /// <summary>
                     /// Candidate constructor types:
-                    ///     <seealso cref="Test.MyBuildTarget{T}"/>
                     ///     <seealso cref="Test.MyBuildTarget"/>
+                    ///     <seealso cref="Test.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory WithValueB(in string valueX2)
@@ -1108,6 +1187,11 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                ///     <seealso cref="Test.MyBuildTarget{T}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory
                 {
                     private readonly string _valueX1__parameter;
@@ -1237,6 +1321,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _valueX1__parameter;
@@ -1256,6 +1344,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
                 {
                     private readonly T1 _valueX1__parameter;
@@ -1277,6 +1369,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_2__Test_Factory
                 {
                     private readonly string _valueY1__parameter;
@@ -1296,6 +1392,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_3__Test_Factory
                 {
                     private readonly string _valueY1__parameter;
@@ -1429,9 +1529,9 @@ public class FluentFactoryGeneratorMergeTests
             {
                 /// <summary>
                 /// Candidate constructor types:
+                ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
                 ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
                 ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
-                ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                 public static Step_0__Spec<TModel> Build<TModel>(in System.Func<TModel, bool> predicate)
@@ -1440,6 +1540,12 @@ public class FluentFactoryGeneratorMergeTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
+            ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
+            ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
+            /// </summary>
             public struct Step_0__Spec<TModel>
             {
                 private readonly System.Func<TModel, bool> _predicate__parameter;
@@ -1470,6 +1576,11 @@ public class FluentFactoryGeneratorMergeTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
+            ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
+            /// </summary>
             public struct Step_1__Spec<TModel>
             {
                 private readonly System.Func<TModel, bool> _predicate__parameter;
@@ -1511,6 +1622,10 @@ public class FluentFactoryGeneratorMergeTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
+            /// </summary>
             public struct Step_2__Spec<TModel>
             {
                 private readonly System.Func<TModel, bool> _predicate__parameter;
@@ -1673,6 +1788,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyEnumerableBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T1, T2>
                 {
                     private readonly System.Func<T1, System.Collections.Generic.IEnumerable<T2>> _first__parameter;
@@ -1692,6 +1811,10 @@ public class FluentFactoryGeneratorMergeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyCollectionBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_1__Test_Namespace_Factory<T1, T2>
                 {
                     private readonly System.Func<T1, System.Collections.Generic.ICollection<T2>> _first__parameter;

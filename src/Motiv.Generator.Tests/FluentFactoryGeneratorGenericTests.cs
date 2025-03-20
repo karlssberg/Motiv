@@ -48,6 +48,10 @@ public class FluentFactoryGeneratorGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T>
                 {
                     private readonly T _value__parameter;
@@ -128,6 +132,10 @@ public class FluentFactoryGeneratorGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -147,6 +155,10 @@ public class FluentFactoryGeneratorGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
                 {
                     private readonly T1 _value1__parameter;
@@ -233,6 +245,10 @@ public class FluentFactoryGeneratorGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -252,6 +268,10 @@ public class FluentFactoryGeneratorGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
                 {
                     private readonly T1 _value1__parameter;
@@ -273,6 +293,10 @@ public class FluentFactoryGeneratorGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                /// </summary>
                 public struct Step_2__Test_Factory<T1, T2, T3>
                 {
                     private readonly T1 _value1__parameter;
@@ -365,6 +389,10 @@ public class FluentFactoryGeneratorGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -384,6 +412,10 @@ public class FluentFactoryGeneratorGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
                 {
                     private readonly T1 _value1__parameter;
@@ -405,6 +437,10 @@ public class FluentFactoryGeneratorGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                /// </summary>
                 public struct Step_2__Test_Factory<T1, T2, T3>
                 {
                     private readonly T1 _value1__parameter;
@@ -428,6 +464,10 @@ public class FluentFactoryGeneratorGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                /// </summary>
                 public struct Step_3__Test_Factory<T1, T2, T3, T4>
                 {
                     private readonly T1 _value1__parameter;

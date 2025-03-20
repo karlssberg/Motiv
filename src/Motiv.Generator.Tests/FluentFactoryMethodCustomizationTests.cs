@@ -268,6 +268,10 @@ public class FluentFactoryMethodCustomizationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -352,6 +356,10 @@ public class FluentFactoryMethodCustomizationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -371,6 +379,10 @@ public class FluentFactoryMethodCustomizationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
                 {
                     private readonly T1 _value1__parameter;
@@ -461,6 +473,10 @@ public class FluentFactoryMethodCustomizationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -480,6 +496,10 @@ public class FluentFactoryMethodCustomizationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
                 {
                     private readonly T1 _value1__parameter;
@@ -501,6 +521,10 @@ public class FluentFactoryMethodCustomizationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
+                /// </summary>
                 public struct Step_2__Test_Factory<T1, T2, T3>
                 {
                     private readonly T1 _value1__parameter;
@@ -780,6 +804,10 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClass"/>
+            /// </summary>
             public struct Step_0__Factory
             {
                 private readonly string _value1__parameter;
@@ -906,6 +934,10 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClass{T}"/>
+            /// </summary>
             public struct Step_0__Factory<T>
             {
                 private readonly T _value1__parameter;
@@ -1055,6 +1087,10 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClass{T1, T2, T3}"/>
+            /// </summary>
             public struct Step_0__Factory<T1>
             {
                 private readonly T1 _value1__parameter;
@@ -1084,6 +1120,10 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClass{T1, T2, T3}"/>
+            /// </summary>
             public struct Step_1__Factory<T1, T2>
             {
                 private readonly T1 _value1__parameter;
@@ -1311,6 +1351,10 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
+            /// </summary>
             public struct Step_0__Factory<T1A, T1B>
             {
                 private readonly System.Func<T1A, T1B> _factory1__parameter;
@@ -1340,6 +1384,10 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
+            /// </summary>
             public struct Step_1__Factory<T1A, T1B, T2A, T2B>
             {
                 private readonly System.Func<T1A, T1B> _factory1__parameter;
@@ -1487,6 +1535,10 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
+            /// </summary>
             public struct Step_0__Factory<T1, T2>
             {
                 private readonly System.Func<T1, T2> _factory1__parameter;
@@ -1516,6 +1568,10 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
+            /// </summary>
             public struct Step_1__Factory<T1, T2, T3>
             {
                 private readonly System.Func<T1, T2> _factory1__parameter;
@@ -1677,6 +1733,11 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClassA{T1, T2}"/>
+            ///     <seealso cref="MyClassB{T1, T2}"/>
+            /// </summary>
             public struct Step_0__Factory<T1, T2>
             {
                 private readonly System.Func<T1, T2> _factory1__parameter;
@@ -1832,6 +1893,11 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClassA{T1, T2}"/>
+            ///     <seealso cref="MyClassB{T1, T2}"/>
+            /// </summary>
             public struct Step_0__Factory<T1, T2>
             {
                 private readonly System.Func<T1, T2> _factory1__parameter;
@@ -1976,6 +2042,11 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClassA{T1, T2}"/>
+            ///     <seealso cref="MyClassB{T1, T2}"/>
+            /// </summary>
             public struct Step_0__Factory<T1, T2>
             {
                 private readonly System.Func<T1, T2> _factory1__parameter;
@@ -2130,6 +2201,11 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClassA{T1, T2}"/>
+            ///     <seealso cref="MyClassB{T1, T2}"/>
+            /// </summary>
             public struct Step_0__Factory<T1, T2>
             {
                 private readonly System.Func<T1, T2> _factory1__parameter;
@@ -2282,6 +2358,10 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClassA{T}"/>
+            /// </summary>
             public struct Step_0__Factory<T>
             {
                 private readonly System.Func<T> _value1__parameter;
@@ -2301,6 +2381,10 @@ public class FluentFactoryMethodCustomizationTests
                 }
             }
 
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClassB"/>
+            /// </summary>
             public struct Step_1__Factory
             {
                 private readonly string _value1__parameter;

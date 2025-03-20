@@ -98,6 +98,10 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_0__Test_Factory
                 {
                     private readonly int _number__parameter;
@@ -173,6 +177,10 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_0__Test_Factory
                 {
                     private readonly int _number__parameter;
@@ -253,6 +261,10 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_0__Test_Factory
                 {
                     private readonly int _number__parameter;
@@ -272,6 +284,10 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_1__Test_Factory
                 {
                     private readonly int _number__parameter;
@@ -359,6 +375,10 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_0__Test_Factory
                 {
                     private readonly int _number__parameter;
@@ -378,6 +398,10 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_1__Test_Factory
                 {
                     private readonly int _number__parameter;
@@ -399,6 +423,10 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_2__Test_Factory
                 {
                     private readonly int _number__parameter;

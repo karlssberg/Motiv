@@ -74,6 +74,10 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T>
                 {
                     private readonly T _data__parameter;
@@ -199,6 +203,11 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T>
                 {
                     private readonly T _data__parameter;
@@ -328,6 +337,11 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory
                 {
                     private readonly int _number__parameter;
@@ -359,6 +373,11 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                /// </summary>
                 public struct Step_1__Test_Namespace_Factory<T>
                 {
                     private readonly int _number__parameter;
@@ -490,6 +509,11 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory
                 {
                     private readonly int _number__parameter;
@@ -519,6 +543,10 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                /// </summary>
                 public struct Step_1__Test_Namespace_Factory<T>
                 {
                     private readonly int _number__parameter;
@@ -540,6 +568,10 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
+                /// </summary>
                 public struct Step_2__Test_Namespace_Factory<T>
                 {
                     private readonly int _number__parameter;
@@ -687,6 +719,10 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory
                 {
                     private readonly int _number__parameter;
@@ -726,6 +762,10 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
+                /// </summary>
                 public struct Step_1__Test_Namespace_Factory<T>
                 {
                     private readonly int _number__parameter;
@@ -834,6 +874,10 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T>
                 {
                     private readonly System.Threading.Tasks.Task<T> _data__parameter;
@@ -978,6 +1022,10 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T1>
                 {
                     private readonly T1 _first__parameter;
@@ -1017,6 +1065,10 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_1__Test_Namespace_Factory<T1, T2>
                 {
                     private readonly T1 _first__parameter;
@@ -1163,6 +1215,10 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T1>
                 {
                     private readonly T1 _first__parameter;
@@ -1288,6 +1344,10 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T1, T2>
                 {
                     private readonly System.Func<System.Collections.Generic.KeyValuePair<T1, T2>> _first__parameter;
@@ -1395,6 +1455,10 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T1, T2>
                 {
                     private readonly System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> _first__parameter;
@@ -1508,6 +1572,11 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Namespace_Factory
                 {
                     private readonly string _first__parameter;
@@ -1537,6 +1606,10 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_1__Test_Namespace_Factory<T1, T2>
                 {
                     private readonly string _first__parameter;

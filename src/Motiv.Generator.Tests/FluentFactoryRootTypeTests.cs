@@ -352,6 +352,10 @@ public class FluentFactoryRootTypeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_0__Test_Factory
                 {
                     private readonly MyParameterValue _value1__parameter;
@@ -371,6 +375,10 @@ public class FluentFactoryRootTypeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_1__Test_Factory
                 {
                     private readonly MyParameterValue _value1__parameter;
@@ -457,6 +465,10 @@ public class FluentFactoryRootTypeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1, T2>
                 {
                     private readonly MyParameterValue<T1, T2> _value1__parameter;
@@ -476,6 +488,10 @@ public class FluentFactoryRootTypeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
                 {
                     private readonly MyParameterValue<T1, T2> _value1__parameter;
@@ -576,6 +592,11 @@ public class FluentFactoryRootTypeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTargetA"/>
+                ///     <seealso cref="Test.MyBuildTargetB"/>
+                /// </summary>
                 public struct Step_0__Test_Factory
                 {
                     private readonly MyParameterValue _value1__parameter;
@@ -609,6 +630,10 @@ public class FluentFactoryRootTypeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTargetA"/>
+                /// </summary>
                 public struct Step_2__Test_Factory
                 {
                     private readonly MyParameterValue _value1__parameter;
@@ -686,6 +711,11 @@ public class FluentFactoryRootTypeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTargetA"/>
+                ///     <seealso cref="Test.MyBuildTargetB"/>
+                /// </summary>
                 public struct Step_0__Test_Factory
                 {
                     private readonly MyParameterValue _value1__parameter;
@@ -719,6 +749,10 @@ public class FluentFactoryRootTypeTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTargetA"/>
+                /// </summary>
                 public struct Step_2__Test_Factory
                 {
                     private readonly MyParameterValue _value1__parameter;

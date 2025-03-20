@@ -19,13 +19,12 @@ public static class ExistingPartialTypeStepDeclaration
 
         var parameterFieldDeclaration = FieldAndPropertySyntax.CreateDeclarations(step.ValueStorage);
 
-        var typeDeclaration = CreateTypeDeclarationSyntax(step, IdentifierName(step.Name).Identifier)
+        var identifier = IdentifierName(step.Name).Identifier;
+        return CreateTypeDeclarationSyntax(step, identifier)
             .WithMembers(List<MemberDeclarationSyntax>([
                 ..parameterFieldDeclaration,
                 ..methodDeclarationSyntaxes,
             ]));
-
-        return typeDeclaration;
     }
 
     private static TypeDeclarationSyntax CreateTypeDeclarationSyntax(IFluentStep step, SyntaxToken identifier)
@@ -64,10 +63,10 @@ public static class ExistingPartialTypeStepDeclaration
         if (step is ExistingTypeFluentStep existingStep)
         {
             var originalModifiers = existingStep.ConstructorContext.OriginalTypeModifiers;
-            
+
             // Filter out 'partial' from original modifiers since we'll add it back
             var modifiersToKeep = originalModifiers.Where(m => !m.IsKind(SyntaxKind.PartialKeyword));
-            
+
             return modifiersToKeep.Append(Token(SyntaxKind.PartialKeyword));
         }
 

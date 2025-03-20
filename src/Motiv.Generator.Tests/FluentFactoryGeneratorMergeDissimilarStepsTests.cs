@@ -5,7 +5,7 @@ using VerifyCS =
 
 namespace Motiv.Generator.Tests;
 
-public class FluenFactoryGeneratorMergeDissimilarStepsTests
+public class FluentFactoryGeneratorMergeDissimilarStepsTests
 {
     [Fact]
     public async Task Given_class_constructors_with_a_single_and_dual_parameters_Should_create_methods_both_target_types()
@@ -75,6 +75,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_0__Test_Factory
                 {
                     private readonly string _value1__parameter;
@@ -188,6 +192,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -207,6 +215,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
                 {
                     private readonly T1 _value1__parameter;
@@ -228,6 +240,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_2__Test_Factory
                 {
                     private readonly string _string1__parameter;
@@ -247,6 +263,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_3__Test_Factory
                 {
                     private readonly string _string1__parameter;
@@ -268,6 +288,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget"/>
+                /// </summary>
                 public struct Step_4__Test_Factory
                 {
                     private readonly string _string1__parameter;
@@ -360,7 +384,6 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     /// <summary>
                     /// Candidate constructor types:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
-                    ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory<T1> WithValue1<T1>(in T1 value1)
@@ -369,6 +392,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -398,6 +425,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -419,6 +450,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_2__Test_Factory<T1, T2>
                 {
                     private readonly T1 _value1__parameter;
@@ -442,6 +477,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_3__Test_Factory<T1, T2>
                 {
                     private readonly T1 _value1__parameter;
@@ -545,6 +584,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
@@ -564,6 +607,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
                 {
                     private readonly T1 _value1__parameter;
@@ -585,6 +632,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_2__Test_Factory<T2>
                 {
                     private readonly T2 _value2__parameter;
@@ -604,6 +655,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_3__Test_Factory<T2, T1>
                 {
                     private readonly T2 _value2__parameter;
@@ -626,7 +681,6 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                 }
             }
             """;
-
 
         await new VerifyCS.Test
         {
@@ -686,9 +740,9 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                 {
                     /// <summary>
                     /// Candidate constructor types:
-                    ///     <seealso cref="Test.Square"/>
-                    ///     <seealso cref="Test.Rectangle"/>
                     ///     <seealso cref="Test.Cuboid"/>
+                    ///     <seealso cref="Test.Rectangle"/>
+                    ///     <seealso cref="Test.Square"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Square WithWidth(in int width)
@@ -701,8 +755,8 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                 {
                     /// <summary>
                     /// Candidate constructor types:
-                    ///     <seealso cref="Test.Rectangle"/>
                     ///     <seealso cref="Test.Cuboid"/>
+                    ///     <seealso cref="Test.Rectangle"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Rectangle WithHeight(in int height)
@@ -1067,8 +1121,8 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     /// <summary>
                     /// Candidate constructor types:
                     ///     <seealso cref="TestA.MyBuildTargetA{T}"/>
-                    ///     <seealso cref="TestC.MyBuildTargetC{T}"/>
                     ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
+                    ///     <seealso cref="TestC.MyBuildTargetC{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static TestA.MyBuildTargetA<T> WithValueA<T>(in T valueA1)
@@ -1077,6 +1131,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
+                /// </summary>
                 public struct Step_1__TestFactory_Factory<T>
                 {
                     private readonly T _valueB1__parameter;
@@ -1158,9 +1216,9 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                 {
                     /// <summary>
                     /// Candidate constructor types:
-                    ///     <seealso cref="Test.Square"/>
-                    ///     <seealso cref="Test.Rectangle"/>
                     ///     <seealso cref="Test.Cuboid"/>
+                    ///     <seealso cref="Test.Rectangle"/>
+                    ///     <seealso cref="Test.Square"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Square WithWidth(in int width)
@@ -1173,8 +1231,8 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                 {
                     /// <summary>
                     /// Candidate constructor types:
-                    ///     <seealso cref="Test.Rectangle"/>
                     ///     <seealso cref="Test.Cuboid"/>
+                    ///     <seealso cref="Test.Rectangle"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Rectangle WithHeight(in int height)
@@ -1283,8 +1341,8 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                 {
                     /// <summary>
                     /// Candidate constructor types:
-                    ///     <seealso cref="Test.PolicyResultPredicatePropositionFactory{TModel, TMetadata}"/>
                     ///     <seealso cref="Test.MultiAssertionExplanationFromPolicyPropositionFactory{TModel, TMetadata}"/>
+                    ///     <seealso cref="Test.PolicyResultPredicatePropositionFactory{TModel, TMetadata}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static PolicyResultPredicatePropositionFactory<TModel, TMetadata> Build<TModel, TMetadata>(in System.Func<TModel, PolicyResultBase<TMetadata>> resultFactory)
@@ -1294,8 +1352,8 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
 
                     /// <summary>
                     /// Candidate constructor types:
-                    ///     <seealso cref="Test.PolicyResultPredicatePropositionFactory{TModel, TMetadata}"/>
                     ///     <seealso cref="Test.MultiAssertionExplanationFromPolicyPropositionFactory{TModel, TMetadata}"/>
+                    ///     <seealso cref="Test.PolicyResultPredicatePropositionFactory{TModel, TMetadata}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static PolicyResultPredicatePropositionFactory<TModel, string> Build<TModel>(in System.Func<TModel, PolicyResultBase<string>> resultFactory)
@@ -1317,6 +1375,10 @@ public class FluenFactoryGeneratorMergeDissimilarStepsTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MultiAssertionExplanationFromPolicyPropositionFactory{TModel, TMetadata}"/>
+                /// </summary>
                 public struct Step_1__Test_Spec<TModel, TMetadata>
                 {
                     private readonly System.Func<TModel, PolicyResultBase<TMetadata>> _predicate__parameter;

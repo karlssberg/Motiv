@@ -116,6 +116,10 @@ public class FluentFactoryGeneratorNestedGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly System.Func<T1, bool> _value1__parameter;
@@ -201,6 +205,10 @@ public class FluentFactoryGeneratorNestedGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly System.Func<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<T1, T1>>, bool> _value1__parameter;
@@ -291,6 +299,10 @@ public class FluentFactoryGeneratorNestedGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly System.Func<T1, bool> _value1__parameter;
@@ -310,6 +322,10 @@ public class FluentFactoryGeneratorNestedGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
                 {
                     private readonly System.Func<T1, bool> _value1__parameter;
@@ -399,6 +415,10 @@ public class FluentFactoryGeneratorNestedGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4, T5, T6}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T1, T2>
                 {
                     private readonly System.Func<T1, T2> _value1__parameter;
@@ -418,6 +438,10 @@ public class FluentFactoryGeneratorNestedGenericTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4, T5, T6}"/>
+                /// </summary>
                 public struct Step_1__Test_Factory<T1, T2, T3, T4>
                 {
                     private readonly System.Func<T1, T2> _value1__parameter;

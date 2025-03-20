@@ -46,87 +46,17 @@ public static class FluentStepDeclaration
         };
 
         // Create XML documentation for the struct
-        var xmlDocTrivia = CreateXmlDocumentation(step.Name);
+        var xmlDocTrivia = CandidateConstructorTypesTrivia.Create(step.CandidateConstructors);
 
-            var structDeclaration = StructDeclaration(identifier)
-            .WithModifiers(accessibilityToken)
-            .WithMembers(List<MemberDeclarationSyntax>([
-                ..fieldDeclarations,
-                constructor,
-                ..methodDeclarationSyntaxes,
-            ]));
+        var structDeclaration = StructDeclaration(identifier)
+        .WithModifiers(accessibilityToken)
+        .WithLeadingTrivia(xmlDocTrivia)
+        .WithMembers(List<MemberDeclarationSyntax>([
+            ..fieldDeclarations,
+            constructor,
+            ..methodDeclarationSyntaxes,
+        ]));
 
-                return structDeclaration;
-    }
-
-    /// <summary>
-    /// Creates XML documentation trivia for a fluent step struct declaration.
-    /// </summary>
-    /// <param name="stepName">The name of the step to document.</param>
-    /// <returns>A SyntaxTriviaList containing the XML documentation.</returns>
-    private static SyntaxTriviaList CreateXmlDocumentation(string stepName)
-    {
-        // Using a fixed "\n" instead of Environment.NewLine to avoid analyzer warning RS1035
-        const string newLine = "\n";
-        string docText = $" Represents a fluent builder step for {stepName}.";
-        
-        return TriviaList(
-            Trivia(
-                DocumentationCommentTrivia(
-                    SyntaxKind.SingleLineDocumentationCommentTrivia,
-                    List<XmlNodeSyntax>(
-                        [
-                            XmlText()
-                                .WithTextTokens(
-                                    TokenList(
-                                        XmlTextLiteral(
-                                            TriviaList(
-                                                DocumentationCommentExterior("///")),
-                                            " ",
-                                            " ",
-                                            TriviaList()))),
-                            XmlElement(
-                                XmlElementStartTag(
-                                    XmlName(
-                                        Identifier("summary"))),
-                                XmlElementEndTag(
-                                    XmlName(
-                                        Identifier("summary"))))
-                                .WithContent(
-                                    SingletonList<XmlNodeSyntax>(
-                                        XmlText()
-                                            .WithTextTokens(
-                                                TokenList(
-                                                    XmlTextNewLine(
-                                                        TriviaList(),
-                                                        newLine,
-                                                        newLine,
-                                                        TriviaList()),
-                                                    XmlTextLiteral(
-                                                        TriviaList(
-                                                            DocumentationCommentExterior("    ///")),
-                                                        docText,
-                                                        docText,
-                                                        TriviaList()),
-                                                    XmlTextNewLine(
-                                                        TriviaList(),
-                                                        newLine,
-                                                        newLine,
-                                                        TriviaList()),
-                                                    XmlTextLiteral(
-                                                        TriviaList(
-                                                            DocumentationCommentExterior("    ///")),
-                                                        " ",
-                                                        " ",
-                                                        TriviaList()))))),
-                            XmlText()
-                                .WithTextTokens(
-                                    TokenList(
-                                        XmlTextNewLine(
-                                            TriviaList(),
-                                            newLine,
-                                            newLine,
-                                            TriviaList())))
-                        ]))));
+        return structDeclaration;
     }
 }

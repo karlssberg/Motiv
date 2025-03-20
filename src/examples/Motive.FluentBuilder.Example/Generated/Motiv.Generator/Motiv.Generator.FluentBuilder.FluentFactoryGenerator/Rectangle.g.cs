@@ -13,6 +13,9 @@ public partial record Rectangle
     }
 }
 
+/// <summary>
+/// Represents a fluent builder step for Step_0__Rectangle.
+/// </summary>
 public struct Step_0__Rectangle
 {
     private readonly int _width__parameter;
@@ -32,6 +35,9 @@ public struct Step_0__Rectangle
     }
 }
 
+/// <summary>
+/// Represents a fluent builder step for Step_1__Rectangle.
+/// </summary>
 public struct Step_1__Rectangle
 {
     private readonly int _width__parameter;

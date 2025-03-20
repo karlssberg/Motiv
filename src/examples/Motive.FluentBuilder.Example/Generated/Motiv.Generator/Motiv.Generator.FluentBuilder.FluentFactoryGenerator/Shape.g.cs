@@ -25,6 +25,9 @@ public partial class Shape
     }
 }
 
+/// <summary>
+/// Represents a fluent builder step for Step_0__Shape.
+/// </summary>
 public struct Step_0__Shape
 {
     private readonly int _width__parameter;
@@ -55,6 +58,9 @@ public struct Step_0__Shape
     }
 }
 
+/// <summary>
+/// Represents a fluent builder step for Step_1__Shape.
+/// </summary>
 public struct Step_1__Shape
 {
     private readonly int _width__parameter;
@@ -86,6 +92,9 @@ public struct Step_1__Shape
     }
 }
 
+/// <summary>
+/// Represents a fluent builder step for Step_2__Shape.
+/// </summary>
 public struct Step_2__Shape
 {
     private readonly int _width__parameter;
@@ -109,6 +118,9 @@ public struct Step_2__Shape
     }
 }
 
+/// <summary>
+/// Represents a fluent builder step for Step_3__Shape.
+/// </summary>
 public struct Step_3__Shape
 {
     private readonly int _radius__parameter;

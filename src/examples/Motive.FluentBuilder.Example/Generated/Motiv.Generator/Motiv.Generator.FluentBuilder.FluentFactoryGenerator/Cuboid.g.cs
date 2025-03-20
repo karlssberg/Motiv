@@ -13,6 +13,9 @@ public partial record Cuboid
     }
 }
 
+/// <summary>
+/// Represents a fluent builder step for Step_0__Cuboid.
+/// </summary>
 public struct Step_0__Cuboid
 {
     private readonly int _width__parameter;
@@ -32,6 +35,9 @@ public struct Step_0__Cuboid
     }
 }
 
+/// <summary>
+/// Represents a fluent builder step for Step_1__Cuboid.
+/// </summary>
 public struct Step_1__Cuboid
 {
     private readonly int _width__parameter;
@@ -53,6 +59,9 @@ public struct Step_1__Cuboid
     }
 }
 
+/// <summary>
+/// Represents a fluent builder step for Step_2__Cuboid.
+/// </summary>
 public struct Step_2__Cuboid
 {
     private readonly int _width__parameter;

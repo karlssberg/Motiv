@@ -13,6 +13,9 @@ public partial record Circle
     }
 }
 
+/// <summary>
+/// Represents a fluent builder step for Step_0__Circle.
+/// </summary>
 public struct Step_0__Circle
 {
     private readonly int _radius__parameter;

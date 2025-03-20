@@ -105,6 +105,11 @@ public class NamespaceTests
                     }
                 }
 
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.NamespaceA.MyBuildTargetA{T}"/>
+                ///     <seealso cref="Test.NamespaceB.MyBuildTargetB{T}"/>
+                /// </summary>
                 public struct Step_0__Test_Factory<T>
                 {
                     private readonly T _data__parameter;

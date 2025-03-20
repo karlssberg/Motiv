@@ -22,9 +22,12 @@ public static class CandidateConstructorTypesTrivia
             Comment($"/// Candidate constructor types:"),
             CarriageReturnLineFeed,
             ..candidateConstructors
-                .SelectMany<IMethodSymbol, SyntaxTrivia>(constructor =>
+                .Select(ctor => ctor.ContainingType)
+                .Distinct<INamedTypeSymbol>(SymbolEqualityComparer.Default)
+                .OrderBy(type => type.ToDisplayString())
+                .SelectMany<INamedTypeSymbol, SyntaxTrivia>(type =>
                 [
-                    CreateSeeAlsoLink(constructor.ContainingType),
+                    CreateSeeAlsoLink(type),
                     CarriageReturnLineFeed
                 ]),
             Comment($"/// </summary>"),

@@ -13,6 +13,9 @@ public partial record Square
     }
 }
 
+/// <summary>
+/// Represents a fluent builder step for Step_0__Square.
+/// </summary>
 public struct Step_0__Square
 {
     private readonly int _width__parameter;
