@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class StringExtensionTests
@@ -12,10 +14,10 @@ public class StringExtensionTests
     public void Should_serialize_a_collection_to_a_human_readable_string(string expected, params int[] collection)
     {
         var act = collection.Serialize();
-        
-        act.Should().Be(expected);
+
+        act.ShouldBe(expected);
     }
-    
+
     [Theory]
     [InlineData("1, 2, 3, 4, or 5", true, 1, 2, 3, 4, 5)]
     [InlineData("1, 2, 3, 4 or 5", false, 1, 2, 3, 4, 5)]
@@ -35,7 +37,7 @@ public class StringExtensionTests
         params int[] collection)
     {
         var act = collection.Serialize("or", useOxfordComma);
-        
-        act.Should().Be(expected);
+
+        act.ShouldBe(expected);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Motiv.HigherOrderProposition;
 using Motiv.Shared;
+using Shouldly;
 
 namespace Motiv.Tests.HigherOrderProposition;
 
@@ -34,7 +35,7 @@ namespace Motiv.Tests.HigherOrderProposition;
             var result = CreateHigherOrderPolicyResult(isSatisfied: isSatisfied);
 
             // Assert
-            result.Satisfied.Should().Be(isSatisfied);
+            result.Satisfied.ShouldBe(isSatisfied);
         }
 
         [Theory, AutoData]
@@ -47,7 +48,7 @@ namespace Motiv.Tests.HigherOrderProposition;
             var resultValue = result.Value;
 
             // Assert
-            resultValue.Should().Be(value);
+            resultValue.ShouldBe(value);
         }
 
         [Theory, AutoData]
@@ -60,7 +61,7 @@ namespace Motiv.Tests.HigherOrderProposition;
             var resultMetadata = result.MetadataTier.Metadata;
 
             // Assert
-            resultMetadata.Should().BeEquivalentTo(metadata);
+            resultMetadata.ShouldBe(metadata);
         }
 
         [Theory, AutoData]
@@ -73,7 +74,7 @@ namespace Motiv.Tests.HigherOrderProposition;
             var explanation = result.Explanation;
 
             // Assert
-            explanation.Assertions.Should().BeEquivalentTo(assertions);
+            explanation.Assertions.ShouldBe(assertions);
         }
 
         [Theory, AutoData]
@@ -86,7 +87,7 @@ namespace Motiv.Tests.HigherOrderProposition;
             var resultUnderlying = result.Underlying;
 
             // Assert
-            resultUnderlying.Should().BeEquivalentTo(underlyingResults);
+            resultUnderlying.ShouldBe(underlyingResults);
         }
 
         [Fact]
@@ -100,7 +101,7 @@ namespace Motiv.Tests.HigherOrderProposition;
             var underlyingWithValues = result.UnderlyingWithValues;
 
             // Assert
-            underlyingWithValues.Should().BeEmpty();
+            underlyingWithValues.ShouldBeEmpty();
         }
 
         [Fact]
@@ -114,7 +115,7 @@ namespace Motiv.Tests.HigherOrderProposition;
             var resultCauses = result.Causes;
 
             // Assert
-            resultCauses.Should().BeEquivalentTo(causes);
+            resultCauses.ShouldBe(causes);
         }
 
         [Fact]
@@ -128,7 +129,7 @@ namespace Motiv.Tests.HigherOrderProposition;
             var causesWithValues = result.CausesWithValues;
 
             // Assert
-            causesWithValues.Should().BeEmpty();
+            causesWithValues.ShouldBeEmpty();
         }
 
         [Theory, AutoData]
@@ -141,8 +142,8 @@ namespace Motiv.Tests.HigherOrderProposition;
             var description = result.Description as HigherOrderResultDescription<TestUnderlyingMetadata>;
 
             // Assert
-            description.Should().NotBeNull();
-            description!.Reason.Should().Be(reason);
+            description.ShouldNotBeNull();
+            description!.Reason.ShouldBe(reason);
         }
     }
 

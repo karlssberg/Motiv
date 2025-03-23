@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class ExpressionTreeMetadataTests
@@ -36,7 +38,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo("n > 0");
+        act.Assertions.ShouldBe(["n > 0"]);
     }
 
 
@@ -78,7 +80,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo("n > 0");
+        act.Assertions.ShouldBe(["n > 0"]);
     }
 
     [Fact]
@@ -93,7 +95,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.Should().Be("is-positive");
+        act.Reason.ShouldBe("is-positive");
     }
 
     [Fact]
@@ -109,7 +111,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Reason.Should().Be("is-positive");
+        act.Reason.ShouldBe("is-positive");
     }
 
     [Fact]
@@ -146,7 +148,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.Should().Be("is-positive | is-positive | is-positive | is-positive");
+        act.Reason.ShouldBe("is-positive | is-positive | is-positive | is-positive");
     }
 
 
@@ -188,7 +190,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Reason.Should().Be("is-positive | is-positive | is-positive | is-positive");
+        act.Reason.ShouldBe("is-positive | is-positive | is-positive | is-positive");
     }
 
     [Fact]
@@ -225,7 +227,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Justification.Should().BeEquivalentTo(
+        act.Justification.ShouldBe(
             """
             OR
                 is-positive
@@ -281,7 +283,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Justification.Should().BeEquivalentTo(
+        act.Justification.ShouldBe(
             """
             OR
                 is-positive
@@ -333,7 +335,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo("n <= 0");
+        act.Assertions.ShouldBe(["n <= 0"]);
     }
 
     [Fact]
@@ -370,7 +372,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo("n <= 0");
+        act.Assertions.ShouldBe(["n <= 0"]);
     }
 
     [Fact]
@@ -404,7 +406,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy([-1]);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo("n <= 0");
+        act.Assertions.ShouldBe(["n <= 0"]);
     }
 
     [Fact]
@@ -419,7 +421,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("¬is-positive");
+        act.Reason.ShouldBe("¬is-positive");
     }
 
 
@@ -436,7 +438,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy([-1]);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("¬is-positive");
+        act.Reason.ShouldBe("¬is-positive");
     }
 
     [Fact]
@@ -473,7 +475,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("¬is-positive | ¬is-positive | ¬is-positive | ¬is-positive");
+        act.Reason.ShouldBe("¬is-positive | ¬is-positive | ¬is-positive | ¬is-positive");
     }
 
     [Fact]
@@ -514,7 +516,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy([-1]);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("¬is-positive | ¬is-positive | ¬is-positive | ¬is-positive");
+        act.Reason.ShouldBe("¬is-positive | ¬is-positive | ¬is-positive | ¬is-positive");
     }
 
     [Fact]
@@ -551,7 +553,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Justification.Should().Be(
+        act.Justification.ShouldBe(
             """
             OR
                 ¬is-positive
@@ -607,7 +609,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy([-1]);
 
         // Assert
-        act.Justification.Should().Be(
+        act.Justification.ShouldBe(
             """
             OR
                 ¬is-positive
@@ -634,7 +636,7 @@ public class ExpressionTreeMetadataTests
 
         var result = areAllInRange.IsSatisfiedBy([-1, 2, 3]);
 
-        result.Assertions.Should().BeEquivalentTo("n <= 0");
+        result.Assertions.ShouldBe(["n <= 0"]);
     }
 
 
@@ -649,7 +651,7 @@ public class ExpressionTreeMetadataTests
 
         var result = areAllInRange.IsSatisfiedBy([[-1, 2, 3]]);
 
-        result.Assertions.Should().BeEquivalentTo("n <= 0");
+        result.Assertions.ShouldBe(["n <= 0"]);
     }
 
     public record Metadata(string Assertion)

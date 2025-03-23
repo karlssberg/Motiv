@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class SpecDecoratorMetadataPropositionTests
@@ -72,7 +74,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -139,7 +141,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [InlineData(true, 200, 300, 400, 500, 600, 700, 800)]
@@ -206,7 +208,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [InlineData(true, 200, 300, 400, 500, 600, 700, 800)]
@@ -273,7 +275,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [InlineAutoData(true, 1, 3, 5, 7)]
@@ -324,15 +326,18 @@ public class SpecDecoratorMetadataPropositionTests
 
         var result = spec.IsSatisfiedBy("model");
 
-        result.GetRootAssertions().Should().BeEquivalentTo(result.Satisfied
-            ? trueReason
-            : falseReason);
+        result.GetRootAssertions().ShouldBe(
+            [
+                result.Satisfied
+                    ? trueReason
+                    : falseReason
+            ]);
 
         // Act
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expectation);
+        act.ShouldBe(expectation);
     }
 
     [InlineAutoData(true, 1, 3, 5, 7)]
@@ -383,15 +388,18 @@ public class SpecDecoratorMetadataPropositionTests
 
         var result = spec.IsSatisfiedBy("model");
 
-        result.GetRootAssertions().Should().BeEquivalentTo(result.Satisfied
-            ? trueReason
-            : falseReason);
+        result.GetRootAssertions().ShouldBe(
+            [
+                result.Satisfied
+                    ? trueReason
+                    : falseReason
+            ]);
 
         // Act
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expectation);
+        act.ShouldBe(expectation);
     }
 
     [Fact]
@@ -414,7 +422,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([Metadata.True]);
+        act.ShouldBe(Metadata.True.ToEnumerable());
     }
 
     [Fact]
@@ -437,7 +445,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([Metadata.True]);
+        act.ShouldBe(Metadata.True.ToEnumerable());
     }
 
     [Theory]
@@ -462,7 +470,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected.ToEnumerable());
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -487,7 +495,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected.ToEnumerable());
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -512,7 +520,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Value;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -539,7 +547,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([(model, expected.ToEnumerable())]);
+        act.ShouldAllBe(tuple => tuple.Model == model && tuple.Metadata.Single() == expected);
     }
 
     [Theory]
@@ -566,7 +574,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([(model, expected.ToEnumerable())]);
+        act.ShouldAllBe(tuple => tuple.Model == model && tuple.Metadata.Single() == expected);
     }
 
     [Theory]
@@ -594,7 +602,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo($"{model} - underlying true");
+        act.ShouldBe([$"{model} - underlying true"]);
     }
 
     [Theory]
@@ -622,7 +630,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo($"{model} - underlying true");
+        act.ShouldBe([$"{model} - underlying true"]);
     }
 
     [Theory]
@@ -648,7 +656,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([isTrueMetadata]);
+        act.ShouldBe(isTrueMetadata.ToEnumerable());
     }
 
     [Theory]
@@ -674,7 +682,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([isTrueMetadata]);
+        act.ShouldBe(isTrueMetadata.ToEnumerable());
     }
 
     [Theory]
@@ -704,7 +712,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([(guidModel, underlyingTrueGuid)]);
+        act.ShouldBe((guidModel, underlyingTrueGuid).ToEnumerable());
     }
 
     [Theory]
@@ -734,7 +742,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([(guidModel, underlyingTrueGuid)]);
+        act.ShouldBe((guidModel, underlyingTrueGuid).ToEnumerable());
     }
 
     [Theory]
@@ -764,7 +772,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Value;
 
         // Assert
-        act.Should().Be((guidModel, underlyingTrueGuid));
+        act.ShouldBe((guidModel, underlyingTrueGuid));
     }
 
     [Theory]
@@ -794,7 +802,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Value;
 
         // Assert
-        act.Should().Be((guidModel, underlyingTrueGuid));
+        act.ShouldBe((guidModel, underlyingTrueGuid));
     }
 
     [Theory]
@@ -825,7 +833,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([(guidModel, underlyingTrueGuid)]);
+        act.ShouldBe((guidModel, underlyingTrueGuid).ToEnumerable());
     }
 
     [Theory]
@@ -856,7 +864,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([(guidModel, underlyingTrueGuid)]);
+        act.ShouldBe((guidModel, underlyingTrueGuid).ToEnumerable());
     }
 
     [Theory]
@@ -887,7 +895,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([(guidModel, underlyingTrueGuid)]);
+        act.ShouldBe((guidModel, underlyingTrueGuid).ToEnumerable());
     }
 
     [Fact]
@@ -910,7 +918,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo("false");
+        act.ShouldBe(["false"]);
     }
 
     [Fact]
@@ -933,7 +941,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo("false");
+        act.ShouldBe(["false"]);
     }
 
     [Theory]
@@ -961,7 +969,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo($"{model} - underlying false");
+        act.ShouldBe([$"{model} - underlying false"]);
     }
 
     [Theory]
@@ -989,7 +997,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo($"{model} - underlying false");
+        act.ShouldBe([$"{model} - underlying false"]);
     }
 
     [Theory]
@@ -1015,7 +1023,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([isFalseMetadata]);
+        act.ShouldBe([isFalseMetadata]);
     }
 
     [Theory]
@@ -1041,7 +1049,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([isFalseMetadata]);
+        act.ShouldBe([isFalseMetadata]);
     }
 
     [Theory]
@@ -1067,7 +1075,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([guidModel]);
+        act.ShouldBe([guidModel]);
     }
 
     [Theory]
@@ -1093,7 +1101,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([guidModel]);
+        act.ShouldBe([guidModel]);
     }
 
     [Theory]
@@ -1123,7 +1131,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Value;
 
         // Assert
-        act.Should().Be((guidModel, underlyingFalseGuid));
+        act.ShouldBe((guidModel, underlyingFalseGuid));
     }
 
     [Theory]
@@ -1153,7 +1161,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Value;
 
         // Assert
-        act.Should().Be((guidModel, underlyingFalseGuid));
+        act.ShouldBe((guidModel, underlyingFalseGuid));
     }
 
     [Theory]
@@ -1184,7 +1192,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([(guidModel, underlyingFalseGuid)]);
+        act.ShouldBe([(guidModel, underlyingFalseGuid)]);
     }
 
     [Theory]
@@ -1215,7 +1223,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([(guidModel, underlyingFalseGuid)]);
+        act.ShouldBe([(guidModel, underlyingFalseGuid)]);
     }
 
     [Theory]
@@ -1238,7 +1246,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(model);
+        act.ShouldBe(model);
     }
 
     [Theory]
@@ -1261,7 +1269,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(model);
+        act.ShouldBe(model);
     }
 
     [Theory]
@@ -1284,7 +1292,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -1307,7 +1315,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Fact]
@@ -1338,7 +1346,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Description.Reason;
 
         // Assert
-        act.Should().NotContainAny("left true", "left false", "right true", "right false");
+        act.ShouldNotBeOneOf("left true", "left false", "right true", "right false");
 
     }
 
@@ -1370,7 +1378,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Underlying;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -1401,7 +1409,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Underlying;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -1432,7 +1440,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.UnderlyingWithValues;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -1463,7 +1471,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.UnderlyingWithValues;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -1492,7 +1500,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Description.CausalOperandCount;
 
         // Assert
-        act.Should().Be(1);
+        act.ShouldBe(1);
     }
 
     [Theory]
@@ -1521,7 +1529,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Description.CausalOperandCount;
 
         // Assert
-        act.Should().Be(1);
+        act.ShouldBe(1);
     }
 
     [Theory]
@@ -1552,7 +1560,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Causes;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -1583,7 +1591,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Causes;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -1614,7 +1622,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.CausesWithValues;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -1645,7 +1653,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.CausesWithValues;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -1680,7 +1688,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expectedLeft, expectedRight);
+        act.ShouldBe([expectedLeft, expectedRight]);
     }
 
     [Theory]
@@ -1715,7 +1723,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expectedLeft, expectedRight);
+        act.ShouldBe([expectedLeft, expectedRight]);
     }
 
     [Theory]
@@ -1767,7 +1775,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -1819,7 +1827,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -1871,7 +1879,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -1923,7 +1931,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -1975,7 +1983,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -2027,7 +2035,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -2079,7 +2087,7 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -2131,6 +2139,6 @@ public class SpecDecoratorMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 }

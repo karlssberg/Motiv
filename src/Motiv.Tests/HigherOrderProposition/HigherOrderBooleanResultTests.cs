@@ -1,5 +1,6 @@
 ﻿using AutoFixture;
 using Motiv.HigherOrderProposition;
+using Shouldly;
 
 namespace Motiv.Tests.HigherOrderProposition;
 
@@ -26,12 +27,12 @@ public class HigherOrderBooleanResultTests
                                       () => causes);
 
         // Assert
-        result.Satisfied.Should().Be(isSatisfied);
-        result.MetadataTier.Metadata.Should().BeEquivalentTo(metadata);
-        result.Explanation.Assertions.Should().BeEquivalentTo(assertions);
-        result.Description.Should().Be(description);
-        result.Underlying.Should().BeEquivalentTo(underlyingResults);
-        result.Causes.Should().BeEquivalentTo(causes);
+        result.Satisfied.ShouldBe(isSatisfied);
+        result.MetadataTier.Metadata.ShouldBe(metadata);
+        result.Explanation.Assertions.ShouldBe(assertions);
+        result.Description.ShouldBe(description);
+        result.Underlying.ShouldBe(underlyingResults);
+        result.Causes.ShouldBe(causes);
     }
 
     [Theory, AutoData]
@@ -56,11 +57,11 @@ public class HigherOrderBooleanResultTests
                                       () => causes);
 
         // Act & Assert
-        callCount.Should().Be(0);
+        callCount.ShouldBe(0);
         _ = result.MetadataTier;
-        callCount.Should().Be(1);
+        callCount.ShouldBe(1);
         _ = result.MetadataTier;
-        callCount.Should().Be(1);
+        callCount.ShouldBe(1);
         return;
 
         IEnumerable<TestMetadata> GetMetadata()
@@ -93,11 +94,11 @@ public class HigherOrderBooleanResultTests
             () => causes);
 
         // Act & Assert
-        callCount.Should().Be(0);
+        callCount.ShouldBe(0);
         _ = result.Explanation;
-        callCount.Should().Be(1);
+        callCount.ShouldBe(1);
         _ = result.Explanation;
-        callCount.Should().Be(1);
+        callCount.ShouldBe(1);
         return;
 
         IEnumerable<string> GetAssertions()
@@ -125,7 +126,7 @@ public class HigherOrderBooleanResultTests
         var underlyingWithValues = result.UnderlyingWithValues;
 
         // Assert
-        underlyingWithValues.Should().BeEquivalentTo(underlying);
+        underlyingWithValues.ShouldBe(underlying);
     }
 
     [Theory, AutoData]
@@ -146,7 +147,7 @@ public class HigherOrderBooleanResultTests
         var causesWithValues = result.CausesWithValues;
 
         // Assert
-        causesWithValues.Should().BeEquivalentTo(causes);
+        causesWithValues.ShouldBe(causes);
     }
 }
 

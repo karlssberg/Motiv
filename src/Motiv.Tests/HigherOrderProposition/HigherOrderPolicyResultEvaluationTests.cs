@@ -2,6 +2,7 @@
 using Motiv.HigherOrderProposition;
 using Motiv.Shared;
 using Motiv.Tests.Customizations;
+using Shouldly;
 
 namespace Motiv.Tests.HigherOrderProposition;
 
@@ -24,10 +25,10 @@ public class HigherOrderPolicyResultEvaluationTests
         var evaluation = new HigherOrderPolicyResultEvaluation<TestModel, TestMetadata>(results, causes);
 
         // Assert
-        evaluation.Results.Should().BeEquivalentTo(results);
-        evaluation.CausalResults.Should().BeEquivalentTo(causes);
-        evaluation.Count.Should().Be(results.Count);
-        evaluation.CausalCount.Should().Be(causes.Count);
+        evaluation.Results.ShouldBe(results);
+        evaluation.CausalResults.ShouldBe(causes);
+        evaluation.Count.ShouldBe(results.Count);
+        evaluation.CausalCount.ShouldBe(causes.Count);
     }
 
     [Theory, AutoData]
@@ -50,7 +51,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var allSatisfied = evaluation.AllSatisfied;
 
         // Assert
-        allSatisfied.Should().BeTrue();
+        allSatisfied.ShouldBeTrue();
     }
 
     [Theory, AutoData]
@@ -73,7 +74,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var anySatisfied = evaluation.AnySatisfied;
 
         // Assert
-        anySatisfied.Should().BeTrue();
+        anySatisfied.ShouldBeTrue();
     }
 
     [Theory, AutoData]
@@ -96,7 +97,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var noneSatisfied = evaluation.NoneSatisfied;
 
         // Assert
-        noneSatisfied.Should().BeTrue();
+        noneSatisfied.ShouldBeTrue();
     }
 
     [Theory, AutoData]
@@ -120,7 +121,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var evaluationModels = evaluation.Models;
 
         // Assert
-        evaluationModels.Should().BeEquivalentTo(expected);
+        evaluationModels.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -146,7 +147,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var trueModels = evaluation.TrueModels;
 
         // Assert
-        trueModels.Should().BeEquivalentTo(expected);
+        trueModels.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -172,7 +173,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var falseModels = evaluation.FalseModels;
 
         // Assert
-        falseModels.Should().BeEquivalentTo(expected);
+        falseModels.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -202,7 +203,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var causalModels = evaluation.CausalModels;
 
         // Assert
-        causalModels.Should().BeEquivalentTo(expected);
+        causalModels.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -225,7 +226,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var values = evaluation.Values;
 
         // Assert
-        values.Should().BeEquivalentTo(expected);
+        values.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -251,7 +252,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var metadata = evaluation.Metadata;
 
         // Assert
-        metadata.Should().BeEquivalentTo(expected);
+        metadata.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -275,7 +276,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var assertions = evaluation.Assertions;
 
         // Assert
-        assertions.Should().BeEquivalentTo(expected);
+        assertions.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -299,7 +300,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var trueResults = evaluation.TrueResults;
 
         // Assert
-        trueResults.Should().BeEquivalentTo(expected);
+        trueResults.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -323,7 +324,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var falseResults = evaluation.FalseResults;
 
         // Assert
-        falseResults.Should().BeEquivalentTo(expected);
+        falseResults.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -346,7 +347,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var trueCount = evaluation.TrueCount;
 
         // Assert
-        trueCount.Should().Be(expected);
+        trueCount.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -370,7 +371,7 @@ public class HigherOrderPolicyResultEvaluationTests
         var falseCount = evaluation.FalseCount;
 
         // Assert
-        falseCount.Should().Be(expected);
+        falseCount.ShouldBe(expected);
     }
 
     private static PolicyResult<TestMetadata> CreateSatisfiedPolicyResult(IFixture fixture) =>

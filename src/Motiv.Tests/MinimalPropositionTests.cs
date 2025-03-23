@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class MinimalPropositionTests
@@ -18,7 +20,7 @@ public class MinimalPropositionTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expectedSatisfied);
+        act.ShouldBe(expectedSatisfied);
     }
 
     [Theory]
@@ -37,7 +39,7 @@ public class MinimalPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -60,6 +62,6 @@ public class MinimalPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 }

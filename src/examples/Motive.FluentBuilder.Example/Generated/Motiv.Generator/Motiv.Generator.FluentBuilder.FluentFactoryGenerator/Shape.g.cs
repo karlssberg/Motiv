@@ -4,9 +4,9 @@ public partial class Shape
 {
     /// <summary>
     /// Candidate constructor types:
-    ///     <seealso cref="Square"/>
-    ///     <seealso cref="Rectangle"/>
     ///     <seealso cref="Cuboid"/>
+    ///     <seealso cref="Rectangle"/>
+    ///     <seealso cref="Square"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public static Step_0__Shape WithWidth(in int width)
@@ -26,7 +26,10 @@ public partial class Shape
 }
 
 /// <summary>
-/// Represents a fluent builder step for Step_0__Shape.
+/// Candidate constructor types:
+///     <seealso cref="Cuboid"/>
+///     <seealso cref="Rectangle"/>
+///     <seealso cref="Square"/>
 /// </summary>
 public struct Step_0__Shape
 {
@@ -38,8 +41,8 @@ public struct Step_0__Shape
 
     /// <summary>
     /// Candidate constructor types:
-    ///     <seealso cref="Rectangle"/>
     ///     <seealso cref="Cuboid"/>
+    ///     <seealso cref="Rectangle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public Step_1__Shape WithHeight(in int height)
@@ -59,7 +62,9 @@ public struct Step_0__Shape
 }
 
 /// <summary>
-/// Represents a fluent builder step for Step_1__Shape.
+/// Candidate constructor types:
+///     <seealso cref="Cuboid"/>
+///     <seealso cref="Rectangle"/>
 /// </summary>
 public struct Step_1__Shape
 {
@@ -93,7 +98,8 @@ public struct Step_1__Shape
 }
 
 /// <summary>
-/// Represents a fluent builder step for Step_2__Shape.
+/// Candidate constructor types:
+///     <seealso cref="Cuboid"/>
 /// </summary>
 public struct Step_2__Shape
 {
@@ -119,7 +125,8 @@ public struct Step_2__Shape
 }
 
 /// <summary>
-/// Represents a fluent builder step for Step_3__Shape.
+/// Candidate constructor types:
+///     <seealso cref="Circle"/>
 /// </summary>
 public struct Step_3__Shape
 {

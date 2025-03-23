@@ -1,4 +1,5 @@
 ﻿using Motiv.HigherOrderProposition;
+using Shouldly;
 
 namespace Motiv.Tests.HigherOrderProposition;
 
@@ -20,7 +21,7 @@ public class HigherOrderBooleanEvaluationTests
         bool allSatisfied = sut.AllSatisfied;
 
         // Assert
-        allSatisfied.Should().BeTrue();
+        allSatisfied.ShouldBeTrue();
     }
 
     [Fact]
@@ -34,7 +35,7 @@ public class HigherOrderBooleanEvaluationTests
         bool allSatisfied = sut.AllSatisfied;
 
         // Assert
-        allSatisfied.Should().BeFalse();
+        allSatisfied.ShouldBeFalse();
     }
 
     [Fact]
@@ -48,7 +49,7 @@ public class HigherOrderBooleanEvaluationTests
         bool anySatisfied = sut.AnySatisfied;
 
         // Assert
-        anySatisfied.Should().BeTrue();
+        anySatisfied.ShouldBeTrue();
     }
 
     [Fact]
@@ -62,7 +63,7 @@ public class HigherOrderBooleanEvaluationTests
         bool anySatisfied = sut.AnySatisfied;
 
         // Assert
-        anySatisfied.Should().BeFalse();
+        anySatisfied.ShouldBeFalse();
     }
 
     [Fact]
@@ -76,7 +77,7 @@ public class HigherOrderBooleanEvaluationTests
         bool noneSatisfied = sut.NoneSatisfied;
 
         // Assert
-        noneSatisfied.Should().BeTrue();
+        noneSatisfied.ShouldBeTrue();
     }
 
     [Fact]
@@ -90,7 +91,7 @@ public class HigherOrderBooleanEvaluationTests
         bool noneSatisfied = sut.NoneSatisfied;
 
         // Assert
-        noneSatisfied.Should().BeFalse();
+        noneSatisfied.ShouldBeFalse();
     }
 
     [Fact]
@@ -104,7 +105,7 @@ public class HigherOrderBooleanEvaluationTests
         var models = sut.Models;
 
         // Assert
-        models.Should().BeEquivalentTo(results.Select(r => r.Model));
+        models.ShouldBe(results.Select(r => r.Model));
     }
 
     [Fact]
@@ -119,7 +120,7 @@ public class HigherOrderBooleanEvaluationTests
         var trueModels = sut.TrueModels;
 
         // Assert
-        trueModels.Should().BeEquivalentTo(satisfiedModels);
+        trueModels.ShouldBe(satisfiedModels);
     }
 
     [Fact]
@@ -134,7 +135,7 @@ public class HigherOrderBooleanEvaluationTests
         var falseModels = sut.FalseModels;
 
         // Assert
-        falseModels.Should().BeEquivalentTo(unsatisfiedModels);
+        falseModels.ShouldBe(unsatisfiedModels);
     }
 
     [Fact]
@@ -149,7 +150,7 @@ public class HigherOrderBooleanEvaluationTests
         var causalModels = sut.CausalModels;
 
         // Assert
-        causalModels.Should().BeEquivalentTo(causalResults.Select(r => r.Model));
+        causalModels.ShouldBe(causalResults.Select(r => r.Model));
     }
 
     [Fact]
@@ -163,7 +164,7 @@ public class HigherOrderBooleanEvaluationTests
         int count = sut.Count;
 
         // Assert
-        count.Should().Be(results.Count);
+        count.ShouldBe(results.Count);
     }
 
     [Fact]
@@ -178,7 +179,7 @@ public class HigherOrderBooleanEvaluationTests
         int trueCount = sut.TrueCount;
 
         // Assert
-        trueCount.Should().Be(expectedTrueCount);
+        trueCount.ShouldBe(expectedTrueCount);
     }
 
     [Fact]
@@ -193,7 +194,7 @@ public class HigherOrderBooleanEvaluationTests
         int falseCount = sut.FalseCount;
 
         // Assert
-        falseCount.Should().Be(expectedFalseCount);
+        falseCount.ShouldBe(expectedFalseCount);
     }
 
     [Fact]
@@ -208,6 +209,6 @@ public class HigherOrderBooleanEvaluationTests
         int causalCount = sut.CausalCount;
 
         // Assert
-        causalCount.Should().Be(causalResults.Count);
+        causalCount.ShouldBe(causalResults.Count);
     }
 }

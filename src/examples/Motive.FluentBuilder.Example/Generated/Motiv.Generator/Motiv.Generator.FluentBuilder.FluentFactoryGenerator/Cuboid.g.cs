@@ -14,7 +14,8 @@ public partial record Cuboid
 }
 
 /// <summary>
-/// Represents a fluent builder step for Step_0__Cuboid.
+/// Candidate constructor types:
+///     <seealso cref="Cuboid"/>
 /// </summary>
 public struct Step_0__Cuboid
 {
@@ -36,7 +37,8 @@ public struct Step_0__Cuboid
 }
 
 /// <summary>
-/// Represents a fluent builder step for Step_1__Cuboid.
+/// Candidate constructor types:
+///     <seealso cref="Cuboid"/>
 /// </summary>
 public struct Step_1__Cuboid
 {
@@ -60,7 +62,8 @@ public struct Step_1__Cuboid
 }
 
 /// <summary>
-/// Represents a fluent builder step for Step_2__Cuboid.
+/// Candidate constructor types:
+///     <seealso cref="Cuboid"/>
 /// </summary>
 public struct Step_2__Cuboid
 {

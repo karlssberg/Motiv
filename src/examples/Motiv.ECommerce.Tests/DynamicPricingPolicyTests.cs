@@ -1,5 +1,6 @@
-using FluentAssertions;
 using Motiv.ECommerce.Models;
+using Motiv.ECommerce.Models;
+using Shouldly;
 
 namespace Motiv.ECommerce.Tests;
 
@@ -91,6 +92,6 @@ public class DynamicPricingPolicyTests
         var act = result.Value;
 
         // Assert
-        act.Should().Be(expected, result.RootAssertions.Serialize());
+        act.ShouldBe(expected, result.RootAssertions.Serialize());
     }
 }

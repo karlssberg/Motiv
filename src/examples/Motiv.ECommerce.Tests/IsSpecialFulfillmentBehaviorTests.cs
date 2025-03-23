@@ -1,7 +1,7 @@
 ﻿using AutoFixture;
-using FluentAssertions;
 using Motiv.ECommerce.Models;
 using Motiv.ECommerce.Policies;
+using Shouldly;
 
 namespace Motiv.ECommerce.Tests;
 
@@ -20,7 +20,7 @@ public class IsSpecialFulfillmentBehaviorTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().BeTrue();
+        act.ShouldBeTrue();
     }
 
     [Theory, AutoData]
@@ -37,7 +37,7 @@ public class IsSpecialFulfillmentBehaviorTests
         var act = result.Justification;
 
         // Assert
-        act.Should().BeEquivalentTo(
+        act.ShouldBe(
             """
             should ship from store
                 should ship some products from store
@@ -65,7 +65,7 @@ public class IsSpecialFulfillmentBehaviorTests
         var act = result.Justification;
 
         // Assert
-        act.Should().BeEquivalentTo(
+        act.ShouldBe(
             """
             should deliver same day
                 is same day delivery
@@ -88,7 +88,7 @@ public class IsSpecialFulfillmentBehaviorTests
         var act = result.Justification;
 
         // Assert
-        act.Should().BeEquivalentTo(
+        act.ShouldBe(
             """
             should split order
                 is expensive
@@ -111,7 +111,7 @@ public class IsSpecialFulfillmentBehaviorTests
         var act = result.Justification;
 
         // Assert
-        act.Should().BeEquivalentTo(
+        act.ShouldBe(
             """
             should locally fulfill
                 any perishable

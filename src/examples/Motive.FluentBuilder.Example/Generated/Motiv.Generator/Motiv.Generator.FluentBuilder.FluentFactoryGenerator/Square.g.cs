@@ -14,7 +14,8 @@ public partial record Square
 }
 
 /// <summary>
-/// Represents a fluent builder step for Step_0__Square.
+/// Candidate constructor types:
+///     <seealso cref="Square"/>
 /// </summary>
 public struct Step_0__Square
 {

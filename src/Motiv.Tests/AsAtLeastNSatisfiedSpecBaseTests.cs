@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class AsAtLeastNSatisfiedSpecBaseTests
@@ -46,7 +48,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -94,7 +96,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -141,7 +143,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -189,7 +191,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -236,7 +238,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -283,7 +285,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -332,7 +334,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -379,7 +381,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -426,7 +428,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -473,7 +475,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -521,7 +523,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -568,7 +570,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -615,7 +617,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -662,7 +664,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -709,7 +711,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -756,7 +758,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -818,7 +820,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -880,7 +882,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -942,7 +944,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Fact]
@@ -968,7 +970,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Fact]
@@ -994,7 +996,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = spec.ToString();
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -1028,7 +1030,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Description.CausalOperandCount;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -1060,7 +1062,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -1093,7 +1095,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -1129,7 +1131,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -1166,6 +1168,6 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 }

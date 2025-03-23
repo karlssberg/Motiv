@@ -1,4 +1,5 @@
 using Motiv.Shared;
+using Shouldly;
 
 namespace Motiv.Tests;
 
@@ -21,7 +22,7 @@ public class AssertionExtensionsTests
         var act = booleanResultsCollection.GetAssertions();
 
         // Assert
-        act.Should().BeEquivalentTo(models);
+        act.ShouldBe(models);
     }
 
 
@@ -42,7 +43,7 @@ public class AssertionExtensionsTests
         var act = booleanResultsCollection.GetTrueAssertions();
 
         // Assert
-        act.Should().BeEquivalentTo(models);
+        act.ShouldBe(models);
     }
 
     [Theory]
@@ -62,7 +63,7 @@ public class AssertionExtensionsTests
         var act = booleanResultsCollection.GetFalseAssertions();
 
         // Assert
-        act.Should().BeEquivalentTo(models);
+        act.ShouldBe(models);
     }
 
     [Theory]
@@ -80,6 +81,6 @@ public class AssertionExtensionsTests
         var act = metadataNodes.GetAssertions();
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 }

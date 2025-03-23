@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Shouldly;
 
 namespace Motiv.Tests;
 
@@ -34,7 +35,7 @@ public class AndSpecTests
         var act = spec.IsSatisfiedBy(model).Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -67,7 +68,7 @@ public class AndSpecTests
         var act = spec.IsSatisfiedBy(model).Values;
 
         // Assert
-        act.Should().AllBeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -101,7 +102,7 @@ public class AndSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -134,7 +135,7 @@ public class AndSpecTests
         var act = result.ToString();
 
         // Assert
-        act.Should().Be(result.Reason);
+        act.ShouldBe(result.Reason);
     }
 
     [Theory]
@@ -168,7 +169,7 @@ public class AndSpecTests
         var act = spec.IsSatisfiedBy(model).Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -197,7 +198,7 @@ public class AndSpecTests
         var act = (left & right).Statement;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -225,7 +226,7 @@ public class AndSpecTests
         var act = (left & right).Statement;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -253,7 +254,7 @@ public class AndSpecTests
         var act = (left & right).Statement;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     private record Subscription(DateTime Start, DateTime End)
@@ -297,7 +298,7 @@ public class AndSpecTests
         var result = isActive.IsSatisfiedBy(subscription).Explanation.Underlying;
 
         // Assert
-        result.GetAssertions().Should().BeEquivalentTo(
+        result.GetAssertions().ShouldBe(
         [
             "subscription has started",
             "subscription has not ended"
@@ -317,7 +318,7 @@ public class AndSpecTests
         var result = isActive.IsSatisfiedBy(subscription).Assertions;
 
         // Assert
-        result.Should().BeEquivalentTo("subscription is active");
+        result.ShouldBe(["subscription is active"]);
     }
 
     private enum Country
@@ -362,7 +363,7 @@ public class AndSpecTests
         var result = (isActive & isUsa).Reason;
 
         // Assert
-        result.Should().Be("subscription has started & !subscription has not ended & the location is in the USA");
+        result.ShouldBe("subscription has started & !subscription has not ended & the location is in the USA");
     }
 
     [Theory]
@@ -396,7 +397,8 @@ public class AndSpecTests
         var act = (isActive & isUsa).Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(
+        act.ShouldBe(
+            (string[])
         [
             "subscription has started",
             "subscription has not ended",
@@ -427,7 +429,7 @@ public class AndSpecTests
         var act = spec.IsSatisfiedBy(model).Description.CausalOperandCount;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -463,7 +465,7 @@ public class AndSpecTests
         var act = spec.IsSatisfiedBy("").Satisfied;
 
         // Assert
-        act.Should().Be(expectedSatisfied);
+        act.ShouldBe(expectedSatisfied);
     }
 
     [Theory]
@@ -494,7 +496,7 @@ public class AndSpecTests
         // Act
         var act = spec.IsSatisfiedBy("").Assertions;
 
-        act.Should().BeEquivalentTo(expectedAssertions);
+        act.ShouldBe(expectedAssertions);
     }
 
     [Theory]
@@ -526,7 +528,7 @@ public class AndSpecTests
         var act = spec.IsSatisfiedBy("").Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expectedAssertions);
+        act.ShouldBe(expectedAssertions);
     }
 
     [Fact]
@@ -551,7 +553,7 @@ public class AndSpecTests
         var act = spec.Expression;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             AND
                 first
@@ -576,7 +578,8 @@ public class AndSpecTests
         var act = (left & right).Underlying;
 
         // Assert
-        act.Should().BeEquivalentTo([left, right]);
+        act.ShouldBe(
+            (PolicyBase<bool,string>[]) [left, right]);
     }
 
     [Fact]
@@ -599,7 +602,7 @@ public class AndSpecTests
         var act = result.UnderlyingWithValues;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -634,7 +637,7 @@ public class AndSpecTests
 
         var result = spec.IsSatisfiedBy(false);
 
-        result.Justification.Should().Be(expected);
+        result.Justification.ShouldBe(expected);
     }
 
     [Theory]
@@ -669,7 +672,7 @@ public class AndSpecTests
 
         var result = spec.IsSatisfiedBy(false);
 
-        result.Justification.Should().Be(expected);
+        result.Justification.ShouldBe(expected);
     }
 
     [Theory]
@@ -704,6 +707,6 @@ public class AndSpecTests
 
         var result = spec.IsSatisfiedBy(false);
 
-        result.Justification.Should().Be(expected);
+        result.Justification.ShouldBe(expected);
     }
 }

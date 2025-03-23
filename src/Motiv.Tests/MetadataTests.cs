@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class MetadataTests
@@ -17,35 +19,35 @@ public class MetadataTests
                 .WhenTrue(new Metadata("even"))
                 .WhenFalse(new Metadata("odd"))
                 .Create("is even");
-        
-        var allEven = 
+
+        var allEven =
             Spec.Build(isEven)
                 .AsAllSatisfied()
                 .Create("all even");
-        
-        var firstEven = 
+
+        var firstEven =
             Spec.Build(allEven)
                 .Create("first even");
-        
+
         var secondEven =
             Spec.Build(firstEven)
                 .WhenTrueYield((_, result) => result.Values)
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("second even");
-        
+
         var thirdEven =
             Spec.Build(secondEven)
                 .WhenTrueYield((_, result) => result.Values)
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("third even");
-        
+
         var result = thirdEven.IsSatisfiedBy([model]);
 
         var act = result.MetadataTier.Metadata.Select(metadata => metadata.Assertion);
-        
-        act.Should().BeEquivalentTo([expected]);
+
+        act.ShouldBe([expected]);
     }
-    
+
     [Theory]
     [InlineData(2, "even")]
     [InlineData(3, "odd")]
@@ -56,35 +58,35 @@ public class MetadataTests
                 .WhenTrue(new Metadata("even"))
                 .WhenFalse(new Metadata("odd"))
                 .Create("is even");
-        
-        var allEven = 
+
+        var allEven =
             Spec.Build(isEven)
                 .AsAllSatisfied()
                 .Create("all even");
-        
-        var firstEven = 
+
+        var firstEven =
             Spec.Build(allEven)
                 .Create("first even");
-        
+
         var secondEven =
             Spec.Build(firstEven)
                 .WhenTrueYield((_, result) => result.Values)
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("second even");
-        
+
         var thirdEven =
             Spec.Build(secondEven)
                 .WhenTrueYield((_, result) => result.Values)
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("third even");
-        
+
         var result = thirdEven.IsSatisfiedBy([model]);
 
-        var act = result.MetadataTier.Underlying.GetValues();
-        
-        act.Should().NotBeEquivalentTo(expected);
+        var act = result.MetadataTier.Underlying.GetValues().Select(meta => meta.ToString());
+
+        act.ShouldNotBe([expected]);
     }
-    
+
     [Theory]
     [InlineData(2)]
     [InlineData(3)]
@@ -95,32 +97,32 @@ public class MetadataTests
                 .WhenTrue(new Metadata("even"))
                 .WhenFalse(new Metadata("odd"))
                 .Create("is even");
-        
-        var allEven = 
+
+        var allEven =
             Spec.Build(isEven)
                 .AsAllSatisfied()
                 .Create("all even");
-        
-        var firstEven = 
+
+        var firstEven =
             Spec.Build(allEven)
                 .Create("first even");
-        
+
         var secondEven =
             Spec.Build(firstEven)
                 .WhenTrueYield((_, result) => result.Values)
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("second even");
-        
+
         var thirdEven =
             Spec.Build(secondEven)
                 .WhenTrueYield((_, result) => result.Values)
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("third even");
-        
+
         var result = thirdEven.IsSatisfiedBy([model]);
 
         var act = result.MetadataTier.Underlying.SelectMany(metadata => metadata.Underlying);
-        
-        act.Should().BeEmpty();
+
+        act.ShouldBeEmpty();
     }
 }

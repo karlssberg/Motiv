@@ -1,6 +1,6 @@
 
-using FluentAssertions;
 using Motiv.Poker.Models;
+using Shouldly;
 using static Motiv.Poker.Tests.HandRanks;
 
 namespace Motiv.Poker.Tests;
@@ -27,8 +27,8 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.Satisfied.Should().Be(expected);
-        act.Value.Should().Be(expectedRank);
+        act.Satisfied.ShouldBe(expected);
+        act.Value.ShouldBe(expectedRank);
     }
 
     [Theory]
@@ -52,8 +52,8 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.Satisfied.Should().Be(expected);
-        act.Values.Should().AllBeEquivalentTo(expectedRank);
+        act.Satisfied.ShouldBe(expected);
+        act.Values.ShouldBe([expectedRank]);
     }
 
     [Theory]
@@ -80,8 +80,8 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.Satisfied.Should().BeTrue();
-        act.Values.Max().Should().Be(HandRank.Straight);
+        act.Satisfied.ShouldBeTrue();
+        act.Values.Max().ShouldBe(HandRank.Straight);
     }
 
     [Theory]
@@ -106,7 +106,7 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.Satisfied.Should().BeFalse();
+        act.Satisfied.ShouldBeFalse();
     }
 
     [Theory]
@@ -130,8 +130,8 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.Satisfied.Should().BeTrue();
-        act.Values.Max().Should().Be(HandRank.Flush);
+        act.Satisfied.ShouldBeTrue();
+        act.Values.Max().ShouldBe(HandRank.Flush);
     }
 
     [Theory]
@@ -156,8 +156,8 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.Satisfied.Should().BeTrue();
-        act.Values.Max().Should().Be(HandRank.StraightFlush);
+        act.Satisfied.ShouldBeTrue();
+        act.Values.Max().ShouldBe(HandRank.StraightFlush);
     }
 
     [Theory]
@@ -176,8 +176,8 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.Satisfied.Should().BeTrue();
-        act.Values.Max().Should().Be(HandRank.RoyalFlush);
+        act.Satisfied.ShouldBeTrue();
+        act.Values.Max().ShouldBe(HandRank.RoyalFlush);
     }
 
     [Theory]
@@ -204,10 +204,10 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(hand);
 
-        act.Satisfied.Should().Be(expected);
-        act.Value.Should().Be(expectedRank);
-        act.Justification.Should().NotBeNullOrEmpty();
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Satisfied.ShouldBe(expected);
+        act.Value.ShouldBe(expectedRank);
+        act.Justification.ShouldNotBeNullOrEmpty();
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Fact]
@@ -217,7 +217,7 @@ public class HandTests
 
         var act = sut.IsSatisfiedBy(new Hand("KH, QH, JH, 10H, 9H"));
 
-        act.Justification.Should().StartWith(
+        act.Justification.ShouldBe(
             """
             OR
                 is a straight flush hand

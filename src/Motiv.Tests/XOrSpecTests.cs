@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Shouldly;
 
 namespace Motiv.Tests;
 
@@ -36,7 +37,7 @@ public class XOrSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -67,12 +68,12 @@ public class XOrSpecTests
         var result = spec.IsSatisfiedBy(model);
 
         // Act
-        var act = result.Values;
+        var act = result.Values.ToList();
 
         // Assert
-        act.Should().HaveCount(leftResult == rightResult ? 1 : 2)
-            .And.Contain(leftResult)
-            .And.Contain(rightResult);
+        act.ShouldContain(leftResult);
+        act.ShouldContain(rightResult);
+        act.Count.ShouldBe(leftResult == rightResult ? 1 : 2);
     }
 
     [Theory]
@@ -107,7 +108,7 @@ public class XOrSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -140,7 +141,7 @@ public class XOrSpecTests
         var act = result.ToString();
 
         // Assert
-        act.Should().Be(result.Reason);
+        act.ShouldBe(result.Reason);
     }
 
     [Theory]
@@ -179,7 +180,7 @@ public class XOrSpecTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -214,7 +215,7 @@ public class XOrSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -249,7 +250,7 @@ public class XOrSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -280,7 +281,7 @@ public class XOrSpecTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -311,7 +312,7 @@ public class XOrSpecTests
         var act = spec.ToString();
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -342,7 +343,7 @@ public class XOrSpecTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -370,7 +371,7 @@ public class XOrSpecTests
         var act = result.Description.CausalOperandCount;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -408,7 +409,7 @@ public class XOrSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expectedSatisfied);
+        act.ShouldBe(expectedSatisfied);
     }
 
     [Theory]
@@ -442,7 +443,7 @@ public class XOrSpecTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -476,7 +477,7 @@ public class XOrSpecTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected, true);
     }
 
     [Fact]
@@ -506,7 +507,7 @@ public class XOrSpecTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             XOR
                 XOR
@@ -547,7 +548,7 @@ public class XOrSpecTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             XOR
                 XOR
@@ -587,7 +588,7 @@ public class XOrSpecTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             XOR
                 first
@@ -619,7 +620,7 @@ public class XOrSpecTests
         var act = result.UnderlyingWithValues;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -658,7 +659,7 @@ public class XOrSpecTests
 
         var result = spec.IsSatisfiedBy(false);
 
-        result.Justification.Should().Be(expected);
+        result.Justification.ShouldBe(expected);
     }
 
     [Theory]
@@ -695,7 +696,7 @@ public class XOrSpecTests
 
         var result = spec.IsSatisfiedBy(false);
 
-        result.Justification.Should().Be(expected);
+        result.Justification.ShouldBe(expected);
     }
 
     [Theory]
@@ -732,6 +733,6 @@ public class XOrSpecTests
 
         var result = spec.IsSatisfiedBy(false);
 
-        result.Justification.Should().Be(expected);
+        result.Justification.ShouldBe(expected);
     }
 }

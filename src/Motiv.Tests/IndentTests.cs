@@ -1,4 +1,5 @@
 using Motiv.Shared;
+using Shouldly;
 
 namespace Motiv.Tests;
 
@@ -10,11 +11,11 @@ public class IndentStringExtensionsTests
     {
         // Arrange
         const string indent = "    ";
-        
+
         // Act
         var act = text.Indent();
 
         // Assert
-        act.Should().Be(indent + text);
+        act.ShouldBe(indent + text);
     }
 }

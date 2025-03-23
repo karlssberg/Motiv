@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class BooleanPredicateExplanationPropositionTests
@@ -45,7 +47,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -85,7 +87,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -128,7 +130,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expectedAssertions);
+        act.ShouldBe(expectedAssertions);
     }
 
     [Theory]
@@ -165,7 +167,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expectedAssertions);
+        act.ShouldBe(expectedAssertions);
     }
 
     [Theory]
@@ -198,7 +200,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -231,7 +233,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -254,7 +256,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -277,7 +279,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -310,7 +312,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -333,7 +335,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -366,7 +368,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -389,7 +391,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -422,7 +424,7 @@ public class BooleanPredicateExplanationPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
 
     }
 
@@ -440,6 +442,6 @@ public class BooleanPredicateExplanationPropositionTests
         var act = spec.Description.Statement;
 
         // Assert
-        act.Should().Be("is model true");
+        act.ShouldBe("is model true");
     }
 }

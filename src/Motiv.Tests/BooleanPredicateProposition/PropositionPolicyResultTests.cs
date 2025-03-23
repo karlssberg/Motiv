@@ -1,6 +1,7 @@
 ﻿using AutoFixture;
 using Motiv.BooleanPredicateProposition;
 using Motiv.Shared;
+using Shouldly;
 
 namespace Motiv.Tests.BooleanPredicateProposition;
 
@@ -16,38 +17,38 @@ public class PropositionPolicyResultTests
     {
         var result = new PropositionPolicyResult<string>(satisfied, lazyValue, metadataTier, explanation, description);
 
-        result.Satisfied.Should().Be(satisfied);
-        result.Value.Should().Be(lazyValue.Value);
-        result.MetadataTier.Should().Be(metadataTier.Value);
-        result.Explanation.Should().Be(explanation.Value);
-        result.Description.Should().Be(description.Value);
+        result.Satisfied.ShouldBe(satisfied);
+        result.Value.ShouldBe(lazyValue.Value);
+        result.MetadataTier.ShouldBe(metadataTier.Value);
+        result.Explanation.ShouldBe(explanation.Value);
+        result.Description.ShouldBe(description.Value);
     }
 
     [Theory, AutoData]
     public void Underlying_AlwaysReturnsEmptyCollection(IFixture fixture)
     {
         var result = fixture.Create<PropositionPolicyResult<string>>();
-        result.Underlying.Should().BeEmpty();
+        result.Underlying.ShouldBeEmpty();
     }
 
     [Theory, AutoData]
     public void UnderlyingWithValues_AlwaysReturnsEmptyCollection(IFixture fixture)
     {
         var result = fixture.Create<PropositionPolicyResult<string>>();
-        result.UnderlyingWithValues.Should().BeEmpty();
+        result.UnderlyingWithValues.ShouldBeEmpty();
     }
 
     [Theory, AutoData]
     public void Causes_AlwaysReturnsEmptyCollection(IFixture fixture)
     {
         var result = fixture.Create<PropositionPolicyResult<string>>();
-        result.Causes.Should().BeEmpty();
+        result.Causes.ShouldBeEmpty();
     }
 
     [Theory, AutoData]
     public void CausesWithValues_AlwaysReturnsEmptyCollection(IFixture fixture)
     {
         var result = fixture.Create<PropositionPolicyResult<string>>();
-        result.CausesWithValues.Should().BeEmpty();
+        result.CausesWithValues.ShouldBeEmpty();
     }
 }

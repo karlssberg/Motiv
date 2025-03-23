@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class HigherOrderExplanationPredicateTests
@@ -23,7 +25,7 @@ public class HigherOrderExplanationPredicateTests
         var act = result.Explanation.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Fact]
@@ -41,7 +43,7 @@ public class HigherOrderExplanationPredicateTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be("is a pair of even numbers");
+        act.ShouldBe("is a pair of even numbers");
     }
 
     [Theory]
@@ -82,7 +84,7 @@ public class HigherOrderExplanationPredicateTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -122,7 +124,7 @@ public class HigherOrderExplanationPredicateTests
         var act = result.RootAssertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -159,7 +161,7 @@ public class HigherOrderExplanationPredicateTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -197,7 +199,7 @@ public class HigherOrderExplanationPredicateTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expectedReason);
+        act.ShouldBe([expectedReason]);
     }
 
 
@@ -234,7 +236,7 @@ public class HigherOrderExplanationPredicateTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -292,7 +294,7 @@ public class HigherOrderExplanationPredicateTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -349,7 +351,7 @@ public class HigherOrderExplanationPredicateTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -406,7 +408,7 @@ public class HigherOrderExplanationPredicateTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -450,6 +452,6 @@ public class HigherOrderExplanationPredicateTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 }

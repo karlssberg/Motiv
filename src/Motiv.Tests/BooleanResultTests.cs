@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class BooleanResultTests
@@ -15,7 +17,7 @@ public class BooleanResultTests
         var act = result && result; // invokes true operator overload
 
         // Assert
-        act.Satisfied.Should().BeTrue();
+        act.Satisfied.ShouldBeTrue();
     }
 
     [Fact]
@@ -32,7 +34,7 @@ public class BooleanResultTests
         var act = !result && result; // invokes false operator overload
 
         // Assert
-        act.Satisfied.Should().BeFalse();
+        act.Satisfied.ShouldBeFalse();
     }
 
     [Theory]
@@ -61,7 +63,7 @@ public class BooleanResultTests
         var act = left.AndAlso(right);
 
         // Assert
-        act.Should().Be(expected);
+        act.Satisfied.ShouldBe(expected);
     }
 
     [Theory]
@@ -92,7 +94,7 @@ public class BooleanResultTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
     [Theory]
     [InlineData(false, false, "left is false")]
@@ -122,7 +124,7 @@ public class BooleanResultTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -154,7 +156,7 @@ public class BooleanResultTests
         var act = left.AndAlso(right);
 
         // Assert
-        act.Should().Be(expected);
+        act.Satisfied.ShouldBe(expected);
     }
 
     [Theory]
@@ -186,7 +188,7 @@ public class BooleanResultTests
         var act = left.OrElse((BooleanResultBase<string>) right);
 
         // Assert
-        act.Should().Be(expected);
+        act.Satisfied.ShouldBe(expected);
     }
 
 
@@ -219,7 +221,7 @@ public class BooleanResultTests
         var act = left.OrElse(right);
 
         // Assert
-        act.Should().Be(expected);
+        act.Satisfied.ShouldBe(expected);
     }
 
     [Theory]
@@ -250,7 +252,7 @@ public class BooleanResultTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -281,7 +283,7 @@ public class BooleanResultTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Fact]
@@ -300,7 +302,7 @@ public class BooleanResultTests
 
         var act = sut.Reason;
 
-        act.Should().Be("a & !(¬b | ¬c)");
+        act.ShouldBe("a & !(¬b | ¬c)");
     }
 
     [Fact]
@@ -319,7 +321,7 @@ public class BooleanResultTests
 
         var act = sut.Reason;
 
-        act.Should().Be("a && !(¬b | ¬c)");
+        act.ShouldBe("a && !(¬b | ¬c)");
     }
 
     [Fact]
@@ -338,7 +340,7 @@ public class BooleanResultTests
 
         var act = sut.Reason;
 
-        act.Should().Be("a | !(¬b & ¬c)");
+        act.ShouldBe("a | !(¬b & ¬c)");
     }
 
     [Fact]
@@ -357,7 +359,7 @@ public class BooleanResultTests
 
         var act = sut.Reason;
 
-        act.Should().Be("¬a || !(b & c)");
+        act.ShouldBe("¬a || !(b & c)");
     }
 
     [Theory]
@@ -395,7 +397,7 @@ public class BooleanResultTests
         var act = results.OrTogether();
 
         // Assert
-        act.Satisfied.Should().Be(expected);
+        act.Satisfied.ShouldBe(expected);
     }
 
     [Theory]
@@ -433,7 +435,7 @@ public class BooleanResultTests
         var act = results.OrElseTogether();
 
         // Assert
-        act.Satisfied.Should().Be(expected);
+        act.Satisfied.ShouldBe(expected);
     }
 
     [Theory]
@@ -471,7 +473,7 @@ public class BooleanResultTests
         var act = results.OrElseTogether();
 
         // Assert
-        act.Satisfied.Should().Be(expected);
+        act.Satisfied.ShouldBe(expected);
     }
 
     [Theory]
@@ -509,7 +511,7 @@ public class BooleanResultTests
         var act = results.AndTogether();
 
         // Assert
-        act.Satisfied.Should().Be(expected);
+        act.Satisfied.ShouldBe(expected);
     }
 
     [Theory]
@@ -547,7 +549,7 @@ public class BooleanResultTests
         var act = results.AndAlsoTogether();
 
         // Assert
-        act.Satisfied.Should().Be(expected);
+        act.Satisfied.ShouldBe(expected);
     }
 
     [Fact]
@@ -566,7 +568,7 @@ public class BooleanResultTests
 
         var act = sut.UnderlyingReasons;
 
-        act.Should().BeEquivalentTo("¬a || !(b & c)");
+        act.ShouldBe(["¬a || !(b & c)"]);
     }
 
     [Fact]
@@ -587,6 +589,6 @@ public class BooleanResultTests
 
         var act = sut.UnderlyingReasons;
 
-        act.Should().BeEquivalentTo("!¬parent | (!¬a & b & c)", "¬a || !(b & c)");
+        act.ShouldBe(["!¬parent | (!¬a & b & c)", "¬a || !(b & c)"]);
     }
 }

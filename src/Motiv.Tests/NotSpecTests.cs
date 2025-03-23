@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class NotSpecTests
@@ -23,7 +25,7 @@ public class NotSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -46,7 +48,7 @@ public class NotSpecTests
         var act = result.Values;
 
         // Assert
-        act.Should().AllBeEquivalentTo(operand);
+        act.ShouldBe(operand.ToEnumerable());
     }
 
     [Theory]
@@ -72,7 +74,7 @@ public class NotSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -98,7 +100,7 @@ public class NotSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -120,7 +122,7 @@ public class NotSpecTests
         var statement = notSpecDescription.Statement;
 
         // Assert
-        statement.Should().Be(expected);
+        statement.ShouldBe(expected);
     }
 
     [Fact]
@@ -145,7 +147,7 @@ public class NotSpecTests
         var statement = notSpecDescription.Statement;
 
         // Assert
-        statement.Should().Be("!(is true & is false)");
+        statement.ShouldBe("!(is true & is false)");
     }
 
 
@@ -163,7 +165,7 @@ public class NotSpecTests
         var act = (!underlying).Underlying;
 
         // Assert
-        act.Should().BeEquivalentTo([underlying]);
+        act.ShouldBe(underlying.ToEnumerable());
     }
 
     [Fact]
@@ -185,6 +187,6 @@ public class NotSpecTests
         var act = result.UnderlyingWithValues;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 }

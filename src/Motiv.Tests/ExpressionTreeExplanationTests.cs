@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class ExpressionTreeExplanationTests
@@ -36,7 +38,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo("is positive");
+        act.Assertions.ShouldBe(["is positive"]);
     }
 
     [Fact]
@@ -113,7 +115,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo("is positive");
+        act.Assertions.ShouldBe(["is positive"]);
     }
 
     [Fact]
@@ -128,7 +130,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("is-positive");
+        act.Reason.ShouldBe("is-positive");
     }
 
     [Fact]
@@ -144,7 +146,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("is-positive");
+        act.Reason.ShouldBe("is-positive");
     }
 
     [Fact]
@@ -188,7 +190,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("is positive | is positive | is positive | is positive | is-positive");
+        act.Reason.ShouldBe("is positive | is positive | is positive | is positive | is-positive");
     }
 
     [Fact]
@@ -237,7 +239,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("is positive | is positive | is positive | is positive | is-positive");
+        act.Reason.ShouldBe("is positive | is positive | is positive | is positive | is-positive");
     }
 
     [Fact]
@@ -274,7 +276,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Justification.Should().BeEquivalentTo(
+        act.Justification.ShouldBe(
             """
             OR
                 is positive
@@ -330,7 +332,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Justification.Should().BeEquivalentTo(
+        act.Justification.ShouldBe(
             """
             OR
                 is positive
@@ -389,7 +391,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo("is not positive");
+        act.Assertions.ShouldBe(["is not positive"]);
     }
 
     [Fact]
@@ -437,7 +439,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy([-1]);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo("is not positive");
+        act.Assertions.ShouldBe(["is not positive"]);
     }
 
     [Fact]
@@ -474,7 +476,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo("is not positive");
+        act.Assertions.ShouldBe(["is not positive"]);
     }
 
     [Fact]
@@ -529,7 +531,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy([-1]);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo("is not positive");
+        act.Assertions.ShouldBe(["is not positive"]);
     }
 
     [Fact]
@@ -544,7 +546,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("¬is-positive");
+        act.Reason.ShouldBe("¬is-positive");
     }
 
     [Fact]
@@ -593,7 +595,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("is not positive | is not positive | is not positive | is not positive | ¬is-positive | ¬is positive");
+        act.Reason.ShouldBe("is not positive | is not positive | is not positive | is not positive | ¬is-positive | ¬is positive");
     }
 
     [Fact]
@@ -642,7 +644,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Justification.Should().Be(
+        act.Justification.ShouldBe(
             """
             OR
                 is not positive
@@ -675,6 +677,6 @@ public class ExpressionTreeExplanationTests
 
         var result = areAllInRange.IsSatisfiedBy([-1, 2, 3]);
 
-        result.Assertions.Should().BeEquivalentTo("n <= 0");
+        result.Assertions.ShouldBe(["n <= 0"]);
     }
 }

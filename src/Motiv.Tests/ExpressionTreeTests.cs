@@ -1,4 +1,6 @@
-﻿namespace Motiv.Tests;
+﻿using Shouldly;
+
+namespace Motiv.Tests;
 
 public class ExpressionTreeTests
 {
@@ -16,7 +18,7 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
+        act.Satisfied.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -35,7 +37,7 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
+        act.Satisfied.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -54,7 +56,7 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
+        act.Satisfied.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -73,7 +75,7 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
+        act.Satisfied.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -92,7 +94,7 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
+        act.Satisfied.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -111,7 +113,7 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
+        act.Satisfied.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -127,7 +129,7 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -144,7 +146,7 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -161,7 +163,7 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -178,8 +180,8 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Satisfied.ShouldBe(expectedResult);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -196,8 +198,8 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Satisfied.ShouldBe(expectedResult);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -214,8 +216,8 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(type);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Satisfied.ShouldBe(expectedResult);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -232,8 +234,8 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(value);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Satisfied.ShouldBe(expectedResult);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -250,8 +252,8 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(values);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Satisfied.ShouldBe(expectedResult);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -268,8 +270,8 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(input);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Satisfied.ShouldBe(expectedResult);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -286,8 +288,8 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(input);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Satisfied.ShouldBe(expectedResult);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -307,8 +309,8 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(value);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Satisfied.ShouldBe(expectedResult);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Fact]
@@ -323,6 +325,6 @@ public class ExpressionTreeTests
         var act = sut.IsSatisfiedBy(1);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo("(1 + n) * (20 - n) / ((n + 1) * 2) / 2 > 0");
+        act.Assertions.ShouldBe(["(1 + n) * (20 - n) / ((n + 1) * 2) / 2 > 0"]);
     }
 }

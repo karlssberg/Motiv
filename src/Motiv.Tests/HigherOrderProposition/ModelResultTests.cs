@@ -1,4 +1,5 @@
 ﻿using Motiv.HigherOrderProposition;
+using Shouldly;
 
 namespace Motiv.Tests.HigherOrderProposition;
 
@@ -12,8 +13,8 @@ public class ModelResultTests
         var result = new ModelResult<string>(model, satisfied);
 
         // Assert
-        result.Model.Should().Be(model);
-        result.Satisfied.Should().Be(satisfied);
+        result.Model.ShouldBe(model);
+        result.Satisfied.ShouldBe(satisfied);
     }
 
     [Theory]
@@ -26,8 +27,8 @@ public class ModelResultTests
         var result = new ModelResult<TestModel>(model, satisfied);
 
         // Assert
-        result.Model.Should().Be(model);
-        result.Satisfied.Should().Be(satisfied);
+        result.Model.ShouldBe(model);
+        result.Satisfied.ShouldBe(satisfied);
     }
 
     [Theory]
@@ -41,8 +42,8 @@ public class ModelResultTests
         var result2 = new ModelResult<TestModel>(model, satisfied);
 
         // Act & Assert
-        result1.Should().Be(result2);
-        (result1 == result2).Should().BeTrue();
+        result1.ShouldBe(result2);
+        (result1 == result2).ShouldBeTrue();
     }
 
     [Theory]
@@ -57,8 +58,8 @@ public class ModelResultTests
         var result2 = new ModelResult<TestModel>(model2, satisfied);
 
         // Act & Assert
-        result1.Should().NotBe(result2);
-        (result1 == result2).Should().BeFalse();
+        result1.ShouldNotBe(result2);
+        (result1 == result2).ShouldBeFalse();
     }
 
     [Theory]
@@ -71,8 +72,8 @@ public class ModelResultTests
         var result2 = new ModelResult<TestModel>(model, false);
 
         // Act & Assert
-        result1.Should().NotBe(result2);
-        (result1 == result2).Should().BeFalse();
+        result1.ShouldNotBe(result2);
+        (result1 == result2).ShouldBeFalse();
     }
 
     [Theory]
@@ -90,7 +91,7 @@ public class ModelResultTests
         var hashCode2 = result2.GetHashCode();
 
         // Assert
-        hashCode1.Should().Be(hashCode2);
+        hashCode1.ShouldBe(hashCode2);
     }
 
     [Theory]
@@ -106,7 +107,7 @@ public class ModelResultTests
         var toString = result.ToString();
 
         // Assert
-        toString.Should().Contain(model.ToString());
-        toString.Should().Contain(satisfied.ToString());
+        toString.ShouldContain(model.ToString());
+        toString.ShouldContain(satisfied.ToString());
     }
 }

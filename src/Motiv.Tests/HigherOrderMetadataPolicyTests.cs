@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class HigherOrderMetadataPolicyTests
@@ -36,7 +38,7 @@ public class HigherOrderMetadataPolicyTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Fact]
@@ -60,7 +62,7 @@ public class HigherOrderMetadataPolicyTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be("is a pair of even numbers");
+        act.ShouldBe("is a pair of even numbers");
     }
 
     [Theory]
@@ -112,7 +114,7 @@ public class HigherOrderMetadataPolicyTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -163,7 +165,7 @@ public class HigherOrderMetadataPolicyTests
         var act = result.RootValues;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -199,7 +201,7 @@ public class HigherOrderMetadataPolicyTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -235,7 +237,7 @@ public class HigherOrderMetadataPolicyTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe(expectedMetadata.ToEnumerable());
     }
 
     [Theory]
@@ -271,6 +273,6 @@ public class HigherOrderMetadataPolicyTests
         var act = result.CausesWithValues;
 
         // Assert
-        act.Should().AllSatisfy(x => x.Reason.Should().Be(expectedMetadata));
+        act.ShouldAllBe(x => x.Reason == expectedMetadata);
     }
 }

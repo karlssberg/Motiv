@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class ChangeModelTypeSpecTests
@@ -22,7 +24,7 @@ public class ChangeModelTypeSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Fact]
@@ -45,7 +47,7 @@ public class ChangeModelTypeSpecTests
         var act = spec.Underlying;
 
         // Assert
-        act.Should().BeEquivalentTo([underlyingSpec]);
+        act.ShouldBe(underlyingSpec.ToEnumerable());
     }
 
     [Fact]
@@ -68,7 +70,7 @@ public class ChangeModelTypeSpecTests
         var act = spec.Description.Statement;
 
         // Assert
-        act.Should().BeEquivalentTo("is null");
+        act.ShouldBe("is null");
     }
 
     [Fact]
@@ -91,7 +93,7 @@ public class ChangeModelTypeSpecTests
         var act = spec.ToString();
 
         // Assert
-        act.Should().BeEquivalentTo(spec.Description.Statement);
+        act.ShouldBe(spec.Description.Statement);
     }
 
     [Theory]
@@ -114,7 +116,7 @@ public class ChangeModelTypeSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Fact]
@@ -137,7 +139,7 @@ public class ChangeModelTypeSpecTests
         var act = spec.Underlying;
 
         // Assert
-        act.Should().BeEquivalentTo([underlyingSpec]);
+        act.ShouldBe(underlyingSpec.ToEnumerable());
     }
 
     [Fact]
@@ -160,7 +162,7 @@ public class ChangeModelTypeSpecTests
         var act = spec.Description.Statement;
 
         // Assert
-        act.Should().BeEquivalentTo("is null");
+        act.ShouldBe("is null");
     }
 
     [Fact]
@@ -183,7 +185,7 @@ public class ChangeModelTypeSpecTests
         var act = spec.ToString();
 
         // Assert
-        act.Should().BeEquivalentTo(spec.Description.Statement);
+        act.ShouldBe(spec.Description.Statement);
     }
 
     [Theory]
@@ -209,7 +211,7 @@ public class ChangeModelTypeSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Fact]
@@ -232,7 +234,7 @@ public class ChangeModelTypeSpecTests
         var act = spec.Underlying;
 
         // Assert
-        act.Should().BeEquivalentTo([underlyingSpec]);
+        act.ShouldBe(underlyingSpec.ToEnumerable());
     }
 
     [Fact]
@@ -255,7 +257,7 @@ public class ChangeModelTypeSpecTests
         var act = spec.Description.Statement;
 
         // Assert
-        act.Should().BeEquivalentTo("is value-type");
+        act.ShouldBe("is value-type");
     }
 
     [Fact]
@@ -278,7 +280,7 @@ public class ChangeModelTypeSpecTests
         var act = spec.ToString();
 
         // Assert
-        act.Should().BeEquivalentTo(spec.Description.Statement);
+        act.ShouldBe(spec.Description.Statement);
     }
 
     [Theory]
@@ -304,7 +306,7 @@ public class ChangeModelTypeSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Fact]
@@ -327,7 +329,7 @@ public class ChangeModelTypeSpecTests
         var act = spec.Underlying;
 
         // Assert
-        act.Should().BeEquivalentTo([underlyingSpec]);
+        act.ShouldBe(underlyingSpec.ToEnumerable());
     }
 
     [Fact]
@@ -350,7 +352,7 @@ public class ChangeModelTypeSpecTests
         var act = spec.Description.Statement;
 
         // Assert
-        act.Should().BeEquivalentTo("is value-type");
+        act.ShouldBe("is value-type");
     }
 
     [Fact]
@@ -373,7 +375,7 @@ public class ChangeModelTypeSpecTests
         var act = spec.ToString();
 
         // Assert
-        act.Should().BeEquivalentTo(spec.Description.Statement);
+        act.ShouldBe(spec.Description.Statement);
     }
 
     [Theory]
@@ -403,7 +405,7 @@ public class ChangeModelTypeSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -433,7 +435,7 @@ public class ChangeModelTypeSpecTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected, true);
     }
 
     [Fact]
@@ -460,6 +462,6 @@ public class ChangeModelTypeSpecTests
         var act = isAllLetters.ToString();
 
         // Assert
-        act.Should().Be(isAllLetters.ToString());
+        act.ShouldBe(isAllLetters.ToString());
     }
 }

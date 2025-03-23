@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class HigherOrderBooleanResultEvaluationTests
@@ -10,11 +12,13 @@ public class HigherOrderBooleanResultEvaluationTests
     [Fact]
     public void Should_yield_underlying_metadata()
     {
+        var whenTrue = new Metadata("is true");
+        var whenFalse = new Metadata("is false");
         // Arrange
         var underlying = Spec
             .Build((bool b) => b)
-            .WhenTrue(new Metadata("is true"))
-            .WhenFalse(new Metadata("is false"))
+            .WhenTrue(whenTrue)
+            .WhenFalse(whenFalse)
             .Create("is true");
 
         var higherOrder = Spec
@@ -30,7 +34,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([new Metadata("is true")]);
+        act.ShouldBe([whenTrue]);
     }
 
     [Theory]
@@ -42,8 +46,6 @@ public class HigherOrderBooleanResultEvaluationTests
         params string[] expectedStrings)
     {
         // Arrange
-        var expected = expectedStrings.Select(text => new Metadata(text)).ToArray();
-
         var underlying = Spec
             .Build((bool b) => b)
             .WhenTrue(new Metadata("is true"))
@@ -60,10 +62,10 @@ public class HigherOrderBooleanResultEvaluationTests
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
 
         // Act
-        var act = result.Values;
+        var act = result.Values.Select(val => val.Text);
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expectedStrings);
     }
 
     [Theory]
@@ -75,8 +77,6 @@ public class HigherOrderBooleanResultEvaluationTests
         params string[] expectedStrings)
     {
         // Arrange
-        var expected = expectedStrings.Select(text => new Metadata(text)).ToArray();
-
         var underlying = Spec
             .Build((bool b) => b)
             .WhenTrue(new Metadata("is true"))
@@ -93,10 +93,10 @@ public class HigherOrderBooleanResultEvaluationTests
         var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
 
         // Act
-        var act = result.Values;
+        var act = result.Values.Select(val => val.Text);
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expectedStrings);
     }
 
     [Theory]
@@ -125,7 +125,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -153,7 +153,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -186,7 +186,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -219,7 +219,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -252,7 +252,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected, true);
     }
 
     [Theory]
@@ -285,6 +285,6 @@ public class HigherOrderBooleanResultEvaluationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected, true);
     }
 }

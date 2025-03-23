@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Globalization;
 using System.Reflection;
+using Shouldly;
 
 namespace Motiv.Tests;
 
@@ -22,7 +23,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
+        act.Satisfied.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -44,16 +45,16 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Satisfied.Should().Be(expectedResult);
+        act.Satisfied.ShouldBe(expectedResult);
     }
 
     [Theory]
     [InlineData(-1, "n <= 0")]
     [InlineData(0, "n <= 0")]
     [InlineData(1, "n % 2 != 0")]
-    [InlineData(2, "n > 0", "n % 2 == 0")]
+    [InlineData(2, "n > 0", "n <= 5", "n % 2 == 0")]
     [InlineData(3, "n % 2 != 0")]
-    [InlineData(4, "n > 0", "n % 2 == 0")]
+    [InlineData(4, "n > 0", "n <= 5", "n % 2 == 0")]
     public void Should_reveal_the_underlying_assertions(int model, params string[] expectedAssertion)
     {
         // Arrange
@@ -65,7 +66,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().Contain(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion, true);
     }
 
     [Fact]
@@ -80,11 +81,11 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy("the quick brown fox jumps over the lazy dog");
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(
+        act.Assertions.ShouldBe(
             [
                 """txt.Contains("quick") == true""",
                 """txt.Contains("brown") == true""",
-            ]);
+            ], true);
     }
 
     [Theory]
@@ -101,7 +102,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy("the quick brown fox jumps over the lazy dog");
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -118,7 +119,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy("the quick brown fox jumps over the lazy dog");
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -137,7 +138,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -155,7 +156,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -173,7 +174,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -190,7 +191,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -207,7 +208,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -224,7 +225,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -241,7 +242,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -259,7 +260,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -278,7 +279,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
 
@@ -296,7 +297,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -313,7 +314,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -330,7 +331,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -349,7 +350,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion, true);
     }
 
     [Theory]
@@ -366,7 +367,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -383,7 +384,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion, true);
     }
 
     [Theory]
@@ -400,7 +401,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -417,7 +418,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -435,7 +436,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion], true);
     }
 
     [Theory]
@@ -452,7 +453,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -469,7 +470,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -486,7 +487,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -505,7 +506,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -522,7 +523,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -539,7 +540,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -563,7 +564,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -581,7 +582,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy((x, y));
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -598,7 +599,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion, true);
     }
 
     [Theory]
@@ -615,7 +616,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -633,7 +634,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(flags);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -651,7 +652,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion, true);
     }
 
     [Theory]
@@ -673,7 +674,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(DateTime.UtcNow);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -692,7 +693,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -709,7 +710,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -735,7 +736,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -758,7 +759,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion, true);
     }
 
     [Theory]
@@ -782,7 +783,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion, true);
     }
 
     [Theory]
@@ -806,7 +807,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(textEquals);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
 
@@ -829,7 +830,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy([model]);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -847,7 +848,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy([modelA, modelB]);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expected);
+        act.Assertions.ShouldBe(expected);
     }
 
     [Theory]
@@ -870,7 +871,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -893,7 +894,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -917,7 +918,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy([model]);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -935,7 +936,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy([modelA, modelB]);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expected);
+        act.Assertions.ShouldBe(expected);
     }
 
     [Theory]
@@ -958,7 +959,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -981,7 +982,7 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -1005,6 +1006,6 @@ public class ExpressionTreeAssertionTests
         var act = sut.IsSatisfiedBy([model]);
 
         // Assert
-        act.Assertions.Should().BeEquivalentTo(expectedAssertion);
+        act.Assertions.ShouldBe([expectedAssertion]);
     }
 }

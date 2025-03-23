@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class AsNoneSatisfiedSpecTests
@@ -35,7 +37,7 @@ public class AsNoneSatisfiedSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -105,7 +107,7 @@ public class AsNoneSatisfiedSpecTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -177,7 +179,7 @@ public class AsNoneSatisfiedSpecTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -239,7 +241,7 @@ public class AsNoneSatisfiedSpecTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -323,7 +325,7 @@ public class AsNoneSatisfiedSpecTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -367,7 +369,7 @@ public class AsNoneSatisfiedSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -411,7 +413,7 @@ public class AsNoneSatisfiedSpecTests
         var act = result.ToString();
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Fact]
@@ -437,7 +439,7 @@ public class AsNoneSatisfiedSpecTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be(expectedSummary);
+        act.ShouldBe(expectedSummary);
     }
 
     [Fact]
@@ -467,7 +469,7 @@ public class AsNoneSatisfiedSpecTests
         var act = spec.Expression;
 
         // Assert
-        act.Should().Be(expectedFull);
+        act.ShouldBe(expectedFull);
     }
 
     [Fact]
@@ -493,7 +495,7 @@ public class AsNoneSatisfiedSpecTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be(expectedSummary);
+        act.ShouldBe(expectedSummary);
     }
 
     [Fact]
@@ -523,7 +525,7 @@ public class AsNoneSatisfiedSpecTests
         var act = spec.Expression;
 
         // Assert
-        act.Should().Be(expectedFull);
+        act.ShouldBe(expectedFull);
     }
 
     [Fact]
@@ -549,7 +551,7 @@ public class AsNoneSatisfiedSpecTests
         var act = spec.ToString();
 
         // Assert
-        act.Should().Be(expectedSummary);
+        act.ShouldBe(expectedSummary);
     }
 
     [Fact]
@@ -575,7 +577,7 @@ public class AsNoneSatisfiedSpecTests
         var act = spec.ToString();
 
         // Assert
-        act.Should().Be(expectedSummary);
+        act.ShouldBe(expectedSummary);
     }
 
     [Theory]
@@ -607,7 +609,7 @@ public class AsNoneSatisfiedSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -639,7 +641,7 @@ public class AsNoneSatisfiedSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -675,7 +677,7 @@ public class AsNoneSatisfiedSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -711,6 +713,6 @@ public class AsNoneSatisfiedSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 }

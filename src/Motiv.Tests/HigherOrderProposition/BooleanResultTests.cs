@@ -1,4 +1,5 @@
 ﻿using Motiv.HigherOrderProposition;
+using Shouldly;
 
 namespace Motiv.Tests.HigherOrderProposition;
 
@@ -11,15 +12,15 @@ public class BooleanResultTests
     {
         var booleanResult = new BooleanResult<string, string>(model, underlyingResult);
 
-        booleanResult.Model.Should().Be(model);
-        booleanResult.Satisfied.Should().Be(underlyingResult.Satisfied);
-        booleanResult.Description.Should().Be(underlyingResult.Description);
-        booleanResult.Explanation.Should().Be(underlyingResult.Explanation);
-        booleanResult.MetadataTier.Should().Be(underlyingResult.MetadataTier);
-        booleanResult.Underlying.Should().ContainSingle().Which.Should().Be(underlyingResult);
-        booleanResult.UnderlyingWithValues.Should().ContainSingle().Which.Should().Be(underlyingResult);
-        booleanResult.Causes.Should().ContainSingle().Which.Should().Be(underlyingResult);
-        booleanResult.CausesWithValues.Should().ContainSingle().Which.Should().Be(underlyingResult);
+        booleanResult.Model.ShouldBe(model);
+        booleanResult.Satisfied.ShouldBe(underlyingResult.Satisfied);
+        booleanResult.Description.ShouldBe(underlyingResult.Description);
+        booleanResult.Explanation.ShouldBe(underlyingResult.Explanation);
+        booleanResult.MetadataTier.ShouldBe(underlyingResult.MetadataTier);
+        booleanResult.Underlying.ShouldBe([underlyingResult]);
+        booleanResult.UnderlyingWithValues.ShouldBe([underlyingResult]);
+        booleanResult.Causes.ShouldBe([underlyingResult]);
+        booleanResult.CausesWithValues.ShouldBe([underlyingResult]);
     }
 
     [Theory, AutoData]
@@ -28,7 +29,7 @@ public class BooleanResultTests
     {
         var act = () => new BooleanResult<string, string>(null!, underlyingResult);
 
-        act.Should().Throw<ArgumentNullException>().WithParameterName("model");
+        act.ShouldThrow(typeof(ArgumentNullException));
     }
 
     [Theory, AutoData]
@@ -37,6 +38,6 @@ public class BooleanResultTests
     {
         var act = () => new BooleanResult<string, string>(model, null!);
 
-        act.Should().Throw<ArgumentNullException>().WithParameterName("underlyingResult");
+        act.ShouldThrow(typeof(ArgumentNullException));
     }
 }

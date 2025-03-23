@@ -2,6 +2,7 @@
 using Motiv.Shared;
 using Motiv.Tests.Customizations;
 using NSubstitute;
+using Shouldly;
 
 namespace Motiv.Tests;
 
@@ -19,7 +20,7 @@ public class BooleanResultWithUnderlyingTests
         var resultSatisfied = result.Satisfied;
 
         // Assert
-        resultSatisfied.Should().Be(satisfied);
+        resultSatisfied.ShouldBe(satisfied);
     }
 
     [Theory]
@@ -34,7 +35,7 @@ public class BooleanResultWithUnderlyingTests
         var resultDescription = result.Description;
 
         // Assert
-        resultDescription.Should().Be(description);
+        resultDescription.ShouldBe(description);
     }
 
     [Theory]
@@ -49,7 +50,7 @@ public class BooleanResultWithUnderlyingTests
         var resultExplanation = result.Explanation;
 
         // Assert
-        resultExplanation.Should().Be(explanation);
+        resultExplanation.ShouldBe(explanation);
     }
 
     [Theory]
@@ -64,7 +65,7 @@ public class BooleanResultWithUnderlyingTests
         var resultMetadataTier = result.MetadataTier;
 
         // Assert
-        resultMetadataTier.Should().Be(metadataTier);
+        resultMetadataTier.ShouldBe(metadataTier);
     }
 
     [Theory]
@@ -79,7 +80,7 @@ public class BooleanResultWithUnderlyingTests
         var underlying = result.Underlying;
 
         // Assert
-        underlying.Should().ContainSingle().Which.Should().Be(underlyingResult);
+        underlying.ShouldBe(underlyingResult.ToEnumerable());
     }
 
     [Theory]
@@ -94,7 +95,7 @@ public class BooleanResultWithUnderlyingTests
         var underlyingWithValues = result.UnderlyingWithValues;
 
         // Assert
-        underlyingWithValues.Should().BeEmpty();
+        underlyingWithValues.ShouldBeEmpty();
     }
 
     [Theory]
@@ -109,7 +110,7 @@ public class BooleanResultWithUnderlyingTests
         var underlyingWithValues = result.UnderlyingWithValues;
 
         // Assert
-        underlyingWithValues.Should().ContainSingle().Which.Should().Be(underlyingResult);
+        underlyingWithValues.ShouldBe(underlyingResult.ToEnumerable());
     }
 
     [Theory]
@@ -124,7 +125,7 @@ public class BooleanResultWithUnderlyingTests
         var causes = result.Causes;
 
         // Assert
-        causes.Should().ContainSingle().Which.Should().Be(underlyingResult);
+        causes.ShouldBe(underlyingResult.ToEnumerable());
     }
 
     [Theory]
@@ -139,7 +140,7 @@ public class BooleanResultWithUnderlyingTests
         var causesWithValues = result.CausesWithValues;
 
         // Assert
-        causesWithValues.Should().BeEmpty();
+        causesWithValues.ShouldBeEmpty();
     }
 
     [Theory]
@@ -154,7 +155,7 @@ public class BooleanResultWithUnderlyingTests
         var causesWithValues = result.CausesWithValues;
 
         // Assert
-        causesWithValues.Should().ContainSingle().Which.Should().Be(underlyingResult);
+        causesWithValues.ShouldBe(underlyingResult.ToEnumerable());
     }
 
     private static BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata> CreateBooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(

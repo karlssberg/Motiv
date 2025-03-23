@@ -1,4 +1,6 @@
-﻿namespace Motiv.Tests;
+﻿using Shouldly;
+
+namespace Motiv.Tests;
 
 public class PolicyTests
 {
@@ -56,7 +58,7 @@ public class PolicyTests
         var result = policy.IsSatisfiedBy(2);
 
         // Assert
-        result.Value.Should().Be(trueResult);
+        result.Value.ShouldBe(trueResult);
     }
 
     [Theory, AutoData]
@@ -81,7 +83,7 @@ public class PolicyTests
         var result = spec.IsSatisfiedBy(2);
 
         // Assert
-        result.Values.Should().BeEquivalentTo(trueResult);
+        result.Values.ShouldBe([trueResult]);
     }
 
     [Theory, AutoData]
@@ -106,7 +108,7 @@ public class PolicyTests
         var result = policy.IsSatisfiedBy(2);
 
         // Assert
-        result.Value.Should().Be(trueResult);
+        result.Value.ShouldBe(trueResult);
     }
 
     [Theory, AutoData]
@@ -131,7 +133,7 @@ public class PolicyTests
         var result = policy.IsSatisfiedBy(2);
 
         // Assert
-        result.Values.Should().BeEquivalentTo([trueResult]);
+        result.Values.ShouldBe(trueResult.ToEnumerable());
     }
 
     [Theory, AutoData]
@@ -156,7 +158,7 @@ public class PolicyTests
         var result = policy.IsSatisfiedBy(2);
 
         // Assert
-        result.Value.Should().Be(trueResult);
+        result.Value.ShouldBe(trueResult);
     }
 
     [Theory, AutoData]
@@ -181,7 +183,7 @@ public class PolicyTests
         var result = policy.IsSatisfiedBy(2);
 
         // Assert
-        result.Value.Should().Be(trueResult);
+        result.Value.ShouldBe(trueResult);
     }
 
     [Theory]
@@ -198,7 +200,7 @@ public class PolicyTests
         var result = policy.IsSatisfiedBy(model);
 
         // Assert
-        result.Satisfied.Should().Be(expected);
+        result.Satisfied.ShouldBe(expected);
     }
 
     [Theory]
@@ -215,7 +217,7 @@ public class PolicyTests
         var result = policy.IsSatisfiedBy(model);
 
         // Assert
-        result.Value.Should().Be(expected);
+        result.Value.ShouldBe(expected);
     }
 
     [Theory]
@@ -232,7 +234,7 @@ public class PolicyTests
         var result = policy.IsSatisfiedBy(model);
 
         // Assert
-        result.Satisfied.Should().Be(expected);
+        result.Satisfied.ShouldBe(expected);
     }
 
     [Theory]
@@ -249,6 +251,6 @@ public class PolicyTests
         var result = policy.IsSatisfiedBy(model);
 
         // Assert
-        result.Value.Should().Be(expected);
+        result.Value.ShouldBe(expected);
     }
 }

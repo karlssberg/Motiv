@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class AsNSatisfiedSpecTests
@@ -32,7 +34,7 @@ public class AsNSatisfiedSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -68,7 +70,7 @@ public class AsNSatisfiedSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -104,7 +106,7 @@ public class AsNSatisfiedSpecTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expectedShallowAssertionSerialized);
+        act.ShouldBe([expectedShallowAssertionSerialized]);
     }
 
     [Theory]
@@ -141,7 +143,7 @@ public class AsNSatisfiedSpecTests
         var act = result.Explanation.Underlying;
 
         // Assert
-        act.GetAssertions().Should().BeEquivalentTo(expectedDeepAssertions);
+        act.GetAssertions().ShouldBe(expectedDeepAssertions);
     }
 
     [Theory]
@@ -174,7 +176,7 @@ public class AsNSatisfiedSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Fact]
@@ -198,7 +200,7 @@ public class AsNSatisfiedSpecTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be("a pair of even numbers");
+        act.ShouldBe("a pair of even numbers");
     }
 
     [Theory]
@@ -228,7 +230,7 @@ public class AsNSatisfiedSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]   [InlineData(false, false, false, "¬2 are true")]
@@ -257,7 +259,7 @@ public class AsNSatisfiedSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -289,7 +291,7 @@ public class AsNSatisfiedSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -320,7 +322,7 @@ public class AsNSatisfiedSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -355,7 +357,7 @@ public class AsNSatisfiedSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -391,6 +393,6 @@ public class AsNSatisfiedSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 }

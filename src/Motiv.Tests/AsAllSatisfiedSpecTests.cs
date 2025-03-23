@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class AsAllSatisfiedSpecTests
@@ -35,7 +37,7 @@ public class AsAllSatisfiedSpecTests
         var act = spec.IsSatisfiedBy(models).Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -71,7 +73,7 @@ public class AsAllSatisfiedSpecTests
         var act = spec.IsSatisfiedBy(models).Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -107,7 +109,7 @@ public class AsAllSatisfiedSpecTests
         var act = spec.IsSatisfiedBy(models).Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -143,7 +145,7 @@ public class AsAllSatisfiedSpecTests
         var act = spec.IsSatisfiedBy(models).Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -203,7 +205,7 @@ public class AsAllSatisfiedSpecTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -274,7 +276,7 @@ public class AsAllSatisfiedSpecTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -336,7 +338,7 @@ public class AsAllSatisfiedSpecTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -420,7 +422,7 @@ public class AsAllSatisfiedSpecTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -464,7 +466,7 @@ public class AsAllSatisfiedSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -508,7 +510,7 @@ public class AsAllSatisfiedSpecTests
         var act = result.ToString();
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -535,7 +537,7 @@ public class AsAllSatisfiedSpecTests
         var act = sut.Statement;
 
         // Assert
-        act.Should().Be(expectedSummary);
+        act.ShouldBe(expectedSummary);
     }
 
     [Fact]
@@ -565,7 +567,7 @@ public class AsAllSatisfiedSpecTests
         var act = spec.Expression;
 
         // Assert
-        act.Should().Be(expectedFull);
+        act.ShouldBe(expectedFull);
     }
 
     [Fact]
@@ -591,7 +593,7 @@ public class AsAllSatisfiedSpecTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be(expectedSummary);
+        act.ShouldBe(expectedSummary);
     }
 
     [Fact]
@@ -620,7 +622,7 @@ public class AsAllSatisfiedSpecTests
         var act = spec.Expression;
 
         // Assert
-        act.Should().Be(expectedFull);
+        act.ShouldBe(expectedFull);
     }
 
     [Theory]
@@ -654,7 +656,7 @@ public class AsAllSatisfiedSpecTests
         var act = result.Description.CausalOperandCount;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -678,7 +680,7 @@ public class AsAllSatisfiedSpecTests
         var act = spec.IsSatisfiedBy([modelA, modelB]).Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -702,7 +704,7 @@ public class AsAllSatisfiedSpecTests
         var act = spec.IsSatisfiedBy([modelA, modelB]).Reason;
 
         // Assert
-        act.Should().Be(expectedAssertion);
+        act.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -731,7 +733,7 @@ public class AsAllSatisfiedSpecTests
         var act = spec.IsSatisfiedBy([modelA, modelB]).Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -761,7 +763,7 @@ public class AsAllSatisfiedSpecTests
         var act = spec.IsSatisfiedBy([modelA, modelB]).Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedAssertion]);
+        act.ShouldBe((string[])[expectedAssertion]);
     }
 
 
@@ -791,7 +793,7 @@ public class AsAllSatisfiedSpecTests
         var act = spec.IsSatisfiedBy([modelA, modelB]).Reason;
 
         // Assert
-        act.Should().Be(expectedAssertion);
+        act.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -818,7 +820,7 @@ public class AsAllSatisfiedSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -846,7 +848,7 @@ public class AsAllSatisfiedSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedAssertion);
+        act.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -873,7 +875,7 @@ public class AsAllSatisfiedSpecTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedAssertion]);
+        act.ShouldBe((string[])[expectedAssertion]);
     }
 
     [Theory]
@@ -900,7 +902,7 @@ public class AsAllSatisfiedSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -926,7 +928,7 @@ public class AsAllSatisfiedSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -953,6 +955,6 @@ public class AsAllSatisfiedSpecTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedAssertion]);
+        act.ShouldBe(expectedAssertion.ToEnumerable());
     }
 }

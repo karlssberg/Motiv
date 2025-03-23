@@ -1,4 +1,6 @@
-﻿namespace Motiv.Tests;
+﻿using Shouldly;
+
+namespace Motiv.Tests;
 
 public class ExpressionTreeJustificationTests
 {
@@ -32,7 +34,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Justification.Should().Be(expectedResult);
+        act.Justification.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -68,7 +70,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Justification.Should().Be(expectedResult);
+        act.Justification.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -111,7 +113,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy([model]);
 
         // Assert
-        act.Justification.Should().Be(expectedResult);
+        act.Justification.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -173,7 +175,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Justification.Should().Be(expectedResult);
+        act.Justification.ShouldBe(expectedResult);
     }
 
 
@@ -237,7 +239,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Justification.Should().Be(expectedResult);
+        act.Justification.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -275,7 +277,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Justification.Should().Be(expectedResult);
+        act.Justification.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -328,7 +330,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Justification.Should().Be(expectedResult);
+        act.Justification.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -357,7 +359,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy([model]);
 
         // Assert
-        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+        act.Justification.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -393,7 +395,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy([model]);
 
         // Assert
-        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+        act.Justification.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -452,7 +454,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy([model]);
 
         // Assert
-        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+        act.Justification.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -507,7 +509,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy([model]);
 
         // Assert
-        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+        act.Justification.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -547,7 +549,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy([model]);
 
         // Assert
-        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+        act.Justification.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -606,7 +608,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy([model]);
 
         // Assert
-        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+        act.Justification.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -661,7 +663,7 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy([model]);
 
         // Assert
-        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+        act.Justification.ShouldBe(expectedAssertion);
     }
 
     [Fact]
@@ -673,7 +675,7 @@ public class ExpressionTreeJustificationTests
 
         var result = allPositive.IsSatisfiedBy([-1, 2, 3]);
 
-        result.Justification.Should().Be(
+        result.Justification.ShouldBe(
             """
             ¬all positive
                 (ICollection<int> numbers) => numbers.All((int n) => n > 0) == false
@@ -692,7 +694,7 @@ public class ExpressionTreeJustificationTests
 
         var result = allPositive.IsSatisfiedBy([-1, 2, 3]);
 
-        result.Justification.Should().Be(
+        result.Justification.ShouldBe(
             """
             any positive
                 (ICollection<int> numbers) => numbers.Any((int n) => n > 0) == true
@@ -711,7 +713,7 @@ public class ExpressionTreeJustificationTests
 
         var result = allPositive.IsSatisfiedBy([-1, 2, 3]);
 
-        result.Justification.Should().Be(
+        result.Justification.ShouldBe(
             """
             ¬all positive
                 (int[] numbers) => numbers.All((int n) => n > 0) == false
@@ -730,7 +732,7 @@ public class ExpressionTreeJustificationTests
 
         var result = allPositive.IsSatisfiedBy([-1, 2, 3]);
 
-        result.Justification.Should().Be(
+        result.Justification.ShouldBe(
             """
             any positive
                 (int[] numbers) => numbers.Any((int n) => n > 0) == true
@@ -775,6 +777,6 @@ public class ExpressionTreeJustificationTests
         var act = sut.IsSatisfiedBy(model);
 
         // Assert
-        act.Justification.Should().BeEquivalentTo(expectedAssertion);
+        act.Justification.ShouldBe(expectedAssertion);
     }
 }

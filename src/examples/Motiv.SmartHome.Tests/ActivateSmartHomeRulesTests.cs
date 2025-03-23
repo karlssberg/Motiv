@@ -1,5 +1,5 @@
-using FluentAssertions;
 using Motiv.SmartHome.Actions;
+using Shouldly;
 
 namespace Motiv.SmartHome.Tests;
 
@@ -21,7 +21,7 @@ public class ActivateSmartHomeRulesTests
 
         var result = _rules.Execute(context);
 
-        result.Should().ContainItemsAssignableTo<ActivateHeatingAction>();
+        result.ShouldContain(item => item is ActivateHeatingAction);
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class ActivateSmartHomeRulesTests
 
         var result = _rules.Execute(context);
 
-        result.Should().ContainItemsAssignableTo<ActivateAirConAction>();
+        result.ShouldContain(item => item is ActivateAirConAction);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class ActivateSmartHomeRulesTests
 
         var result = _rules.Execute(context);
 
-        result.Should().ContainItemsAssignableTo<TurnOffLightsAction>();
+        result.ShouldContain(item => item is TurnOffLightsAction);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class ActivateSmartHomeRulesTests
 
         var result = _rules.Execute(context);
 
-        result.Should().ContainItemsAssignableTo<CloseWindowsAction>();
+        result.ShouldContain(item => item is CloseWindowsAction);
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public class ActivateSmartHomeRulesTests
 
         var result = _rules.Execute(context);
 
-        result.Should().ContainItemsAssignableTo<DeactivateHeatingAction>();
+        result.ShouldContain(item => item is DeactivateHeatingAction);
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public class ActivateSmartHomeRulesTests
 
         var result = _rules.Execute(context);
 
-        result.Should().ContainItemsAssignableTo<DeactivateAirConAction>();
+        result.ShouldContain(item => item is DeactivateAirConAction);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class ActivateSmartHomeRulesTests
 
         var result = _rules.Execute(context);
 
-        result.Should().ContainItemsAssignableTo<KeepLightsOnAction>();
+        result.ShouldContain(item => item is KeepLightsOnAction);
     }
 
     [Fact]
@@ -140,6 +140,6 @@ public class ActivateSmartHomeRulesTests
 
         var result = _rules.Execute(context);
 
-        result.Should().ContainItemsAssignableTo<KeepWindowsOpenAction>();
+        result.ShouldContain(item => item is KeepWindowsOpenAction);
     }
 }

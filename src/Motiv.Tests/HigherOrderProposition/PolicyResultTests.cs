@@ -2,6 +2,7 @@
 using Motiv.HigherOrderProposition;
 using Motiv.Shared;
 using NSubstitute;
+using Shouldly;
 
 namespace Motiv.Tests.HigherOrderProposition;
 
@@ -15,7 +16,7 @@ public class PolicyResultTests
 
         var act = () => new PolicyResult<TestModel, TestMetadata>(null!, underlyingResult);
 
-        act.Should().Throw<ArgumentNullException>();
+        act.ShouldThrow(typeof(ArgumentNullException));
     }
 
     [Theory]
@@ -25,7 +26,8 @@ public class PolicyResultTests
     {
         // Act & Assert
         var act = () => new PolicyResult<TestModel, TestMetadata>(model, null!);
-        act.Should().Throw<ArgumentNullException>();
+
+        act.ShouldThrow(typeof(ArgumentNullException));
     }
 
     [Theory]
@@ -44,9 +46,9 @@ public class PolicyResultTests
         var result = new PolicyResult<TestModel, TestMetadata>(model, underlyingResult);
 
         // Assert
-        result.Model.Should().Be(model);
-        result.Satisfied.Should().Be(satisfied);
-        result.Value.Should().Be(value);
+        result.Model.ShouldBe(model);
+        result.Satisfied.ShouldBe(satisfied);
+        result.Value.ShouldBe(value);
     }
 
     [Theory]
@@ -64,7 +66,7 @@ public class PolicyResultTests
         var resultDescription = result.Description;
 
         // Assert
-        resultDescription.Should().Be(underlyingResult.Description);
+        resultDescription.ShouldBe(underlyingResult.Description);
     }
 
     [Theory]
@@ -82,7 +84,7 @@ public class PolicyResultTests
         var resultExplanation = result.Explanation;
 
         // Assert
-        resultExplanation.Should().Be(explanation);
+        resultExplanation.ShouldBe(explanation);
     }
 
     [Theory]
@@ -100,7 +102,7 @@ public class PolicyResultTests
         var resultMetadataTier = result.MetadataTier;
 
         // Assert
-        resultMetadataTier.Should().Be(metadataTier);
+        resultMetadataTier.ShouldBe(metadataTier);
     }
 
     [Theory]
@@ -116,7 +118,7 @@ public class PolicyResultTests
         var underlying = result.Underlying;
 
         // Assert
-        underlying.Should().ContainSingle().Which.Should().Be(underlyingResult);
+        underlying.ShouldBe(underlyingResult.ToEnumerable());
     }
 
     [Theory]
@@ -132,7 +134,7 @@ public class PolicyResultTests
         var underlyingWithValues = result.UnderlyingWithValues;
 
         // Assert
-        underlyingWithValues.Should().ContainSingle().Which.Should().Be(underlyingResult);
+        underlyingWithValues.ShouldBe(underlyingResult.ToEnumerable());
     }
 
     [Theory]
@@ -148,7 +150,7 @@ public class PolicyResultTests
         var causes = result.Causes;
 
         // Assert
-        causes.Should().ContainSingle().Which.Should().Be(underlyingResult);
+        causes.ShouldBe(underlyingResult.ToEnumerable());
     }
 
     [Theory]
@@ -164,7 +166,7 @@ public class PolicyResultTests
         var causesWithValues = result.CausesWithValues;
 
         // Assert
-        causesWithValues.Should().ContainSingle().Which.Should().Be(underlyingResult);
+        causesWithValues.ShouldBe(underlyingResult.ToEnumerable());
     }
 
 

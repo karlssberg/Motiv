@@ -14,7 +14,8 @@ public partial record Circle
 }
 
 /// <summary>
-/// Represents a fluent builder step for Step_0__Circle.
+/// Candidate constructor types:
+///     <seealso cref="Circle"/>
 /// </summary>
 public struct Step_0__Circle
 {

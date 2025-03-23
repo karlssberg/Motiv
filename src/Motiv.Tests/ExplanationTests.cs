@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class ExplanationTests
@@ -76,7 +78,7 @@ public class ExplanationTests
         var act = result.Explanation.Assertions;
 
         // Assert
-        act.Should().ContainSingle(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -93,7 +95,7 @@ public class ExplanationTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -112,7 +114,7 @@ public class ExplanationTests
         var act = result.AllRootAssertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -133,7 +135,7 @@ public class ExplanationTests
         var act = result.RootAssertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -152,7 +154,7 @@ public class ExplanationTests
         var act = result.SubAssertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -193,7 +195,7 @@ public class ExplanationTests
         var act = result.AllAssertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -239,7 +241,7 @@ public class ExplanationTests
         var act = result.SubAssertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -285,7 +287,7 @@ public class ExplanationTests
         var act = result.AllSubAssertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -317,7 +319,7 @@ public class ExplanationTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -347,7 +349,7 @@ public class ExplanationTests
         // Act
         var act = result.Values;
 
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -380,7 +382,7 @@ public class ExplanationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe(expectedMetadata.ToEnumerable());
     }
 
     [Theory]
@@ -413,7 +415,7 @@ public class ExplanationTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedAssertion]);
+        act.ShouldBe(expectedAssertion.ToEnumerable());
     }
 
     [Theory]
@@ -455,7 +457,7 @@ public class ExplanationTests
         var act = result.Explanation.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -497,7 +499,7 @@ public class ExplanationTests
         var act = result.Explanation.Underlying.GetAssertions();
 
         // Assert
-        act.Should().NotBeEquivalentTo(expected);
+        act.ShouldNotBe([expected]);
     }
 
     [Theory]
@@ -539,6 +541,6 @@ public class ExplanationTests
         var act = result.Explanation.Underlying.SelectMany(explanation => explanation.Underlying);
 
         // Assert
-        act.Should().BeEmpty();
+        act.ShouldBeEmpty();
     }
 }

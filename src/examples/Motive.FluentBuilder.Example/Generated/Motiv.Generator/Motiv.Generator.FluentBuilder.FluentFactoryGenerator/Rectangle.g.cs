@@ -14,7 +14,8 @@ public partial record Rectangle
 }
 
 /// <summary>
-/// Represents a fluent builder step for Step_0__Rectangle.
+/// Candidate constructor types:
+///     <seealso cref="Rectangle"/>
 /// </summary>
 public struct Step_0__Rectangle
 {
@@ -36,7 +37,8 @@ public struct Step_0__Rectangle
 }
 
 /// <summary>
-/// Represents a fluent builder step for Step_1__Rectangle.
+/// Candidate constructor types:
+///     <seealso cref="Rectangle"/>
 /// </summary>
 public struct Step_1__Rectangle
 {

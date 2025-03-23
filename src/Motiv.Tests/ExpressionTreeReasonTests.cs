@@ -1,4 +1,6 @@
-﻿namespace Motiv.Tests;
+﻿using Shouldly;
+
+namespace Motiv.Tests;
 
 public class ExpressionTreeReasonests
 {
@@ -28,7 +30,7 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("is-positive | is-positive | is-positive | is-positive");
+        act.Reason.ShouldBe("is-positive | is-positive | is-positive | is-positive");
     }
 
 
@@ -62,7 +64,7 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("is-positive | is-positive | is-positive | is-positive");
+        act.Reason.ShouldBe("is-positive | is-positive | is-positive | is-positive");
     }
 
     [Fact]
@@ -99,7 +101,7 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("is positive | is positive | is positive | is positive");
+        act.Reason.ShouldBe("is positive | is positive | is positive | is positive");
     }
 
     [Fact]
@@ -140,6 +142,6 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Reason.Should().BeEquivalentTo("is positive | is positive | is positive | is positive");
+        act.Reason.ShouldBe("is positive | is positive | is positive | is positive");
     }
 }

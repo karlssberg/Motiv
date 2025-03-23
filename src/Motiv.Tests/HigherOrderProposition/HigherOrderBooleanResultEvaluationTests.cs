@@ -2,6 +2,7 @@
 using Motiv.HigherOrderProposition;
 using Motiv.Shared;
 using Motiv.Tests.Customizations;
+using Shouldly;
 
 namespace Motiv.Tests.HigherOrderProposition;
 
@@ -30,10 +31,10 @@ public class HigherOrderBooleanResultEvaluationTests
         var evaluation = new HigherOrderBooleanResultEvaluation<TestModel, TestMetadata>(results, causes);
 
         // Assert
-        evaluation.Results.Should().BeEquivalentTo(results);
-        evaluation.CausalResults.Should().BeEquivalentTo(causes);
-        evaluation.Count.Should().Be(results.Count);
-        evaluation.CausalCount.Should().Be(causes.Count);
+        evaluation.Results.ShouldBe(results);
+        evaluation.CausalResults.ShouldBe(causes);
+        evaluation.Count.ShouldBe(results.Count);
+        evaluation.CausalCount.ShouldBe(causes.Count);
     }
 
     [Theory, AutoData]
@@ -59,7 +60,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var allSatisfied = evaluation.AllSatisfied;
 
         // Assert
-        allSatisfied.Should().BeTrue();
+        allSatisfied.ShouldBeTrue();
     }
 
     [Theory, AutoData]
@@ -87,7 +88,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var anySatisfied = evaluation.AnySatisfied;
 
         // Assert
-        anySatisfied.Should().BeTrue();
+        anySatisfied.ShouldBeTrue();
     }
 
     [Theory, AutoData]
@@ -115,7 +116,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var noneSatisfied = evaluation.NoneSatisfied;
 
         // Assert
-        noneSatisfied.Should().BeTrue();
+        noneSatisfied.ShouldBeTrue();
     }
 
     [Theory, AutoData]
@@ -143,7 +144,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var evaluationModels = evaluation.Models;
 
         // Assert
-        evaluationModels.Should().BeEquivalentTo(results.Select(r => r.Model));
+        evaluationModels.ShouldBe(results.Select(r => r.Model));
     }
 
     [Theory, AutoData]
@@ -171,7 +172,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var trueModels = evaluation.TrueModels;
 
         // Assert
-        trueModels.Should().BeEquivalentTo(results.Where(r => r.Satisfied).Select(r => r.Model));
+        trueModels.ShouldBe(results.Where(r => r.Satisfied).Select(r => r.Model));
     }
 
     [Theory, AutoData]
@@ -200,7 +201,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var falseModels = evaluation.FalseModels;
 
         // Assert
-        falseModels.Should().BeEquivalentTo(expected);
+        falseModels.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -226,7 +227,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var causalModels = evaluation.CausalModels;
 
         // Assert
-        causalModels.Should().BeEquivalentTo(expected);
+        causalModels.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -252,7 +253,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var values = evaluation.Values;
 
         // Assert
-        values.Should().BeEquivalentTo(expected);
+        values.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -277,7 +278,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var assertions = evaluation.Assertions;
 
         // Assert
-        assertions.Should().BeEquivalentTo(expected);
+        assertions.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -302,7 +303,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var trueResults = evaluation.TrueResults;
 
         // Assert
-        trueResults.Should().BeEquivalentTo(expected);
+        trueResults.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -326,7 +327,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var falseResults = evaluation.FalseResults;
 
         // Assert
-        falseResults.Should().BeEquivalentTo(expected);
+        falseResults.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -350,7 +351,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var trueCount = evaluation.TrueCount;
 
         // Assert
-        trueCount.Should().Be(expected);
+        trueCount.ShouldBe(expected);
     }
 
     [Theory, AutoData]
@@ -374,7 +375,7 @@ public class HigherOrderBooleanResultEvaluationTests
         var falseCount = evaluation.FalseCount;
 
         // Assert
-        falseCount.Should().Be(expected);
+        falseCount.ShouldBe(expected);
     }
 
 

@@ -1,4 +1,6 @@
-﻿namespace Motiv.Tests;
+﻿using Shouldly;
+
+namespace Motiv.Tests;
 
 public class NotPolicyTests
 {
@@ -23,7 +25,7 @@ public class NotPolicyTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -46,7 +48,7 @@ public class NotPolicyTests
         var act = result.Values;
 
         // Assert
-        act.Should().AllBeEquivalentTo(operand);
+        act.ShouldBe([operand]);
     }
 
     [Theory]
@@ -72,7 +74,7 @@ public class NotPolicyTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -98,7 +100,7 @@ public class NotPolicyTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -120,7 +122,7 @@ public class NotPolicyTests
         var statement = notSpecDescription.Statement;
 
         // Assert
-        statement.Should().Be(expected);
+        statement.ShouldBe(expected);
     }
 
     [Fact]
@@ -145,7 +147,7 @@ public class NotPolicyTests
         var statement = notSpecDescription.Statement;
 
         // Assert
-        statement.Should().Be("!(is true || is false)");
+        statement.ShouldBe("!(is true || is false)");
     }
 
 
@@ -161,7 +163,7 @@ public class NotPolicyTests
         var act = (!underlying).Underlying;
 
         // Assert
-        act.Should().BeEquivalentTo([underlying]);
+        act.ShouldBe(underlying.ToEnumerable());
     }
 
     [Fact]
@@ -178,6 +180,6 @@ public class NotPolicyTests
         var act = result.UnderlyingWithValues;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 }

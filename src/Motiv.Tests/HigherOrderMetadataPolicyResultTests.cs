@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class HigherOrderMetadataPolicyResultTests
@@ -36,7 +38,7 @@ public class HigherOrderMetadataPolicyResultTests
         var act = result.Explanation.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Fact]
@@ -60,7 +62,7 @@ public class HigherOrderMetadataPolicyResultTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be("is a pair of even numbers");
+        act.ShouldBe("is a pair of even numbers");
     }
 
     [Theory]
@@ -106,7 +108,7 @@ public class HigherOrderMetadataPolicyResultTests
         var act = result.Explanation.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -152,7 +154,7 @@ public class HigherOrderMetadataPolicyResultTests
         var act = result.GetRootAssertions();
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -188,7 +190,7 @@ public class HigherOrderMetadataPolicyResultTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -227,7 +229,7 @@ public class HigherOrderMetadataPolicyResultTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -281,7 +283,7 @@ public class HigherOrderMetadataPolicyResultTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -335,7 +337,7 @@ public class HigherOrderMetadataPolicyResultTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -389,7 +391,7 @@ public class HigherOrderMetadataPolicyResultTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -435,6 +437,6 @@ public class HigherOrderMetadataPolicyResultTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 }

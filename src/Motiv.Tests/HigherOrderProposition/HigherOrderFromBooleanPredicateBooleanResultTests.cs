@@ -2,6 +2,7 @@
 using AutoFixture.Xunit2;
 using Motiv.HigherOrderProposition;
 using Motiv.Shared;
+using Shouldly;
 
 namespace Motiv.Tests.HigherOrderProposition;
 
@@ -15,7 +16,7 @@ public class HigherOrderFromBooleanPredicatePolicyResultTests
         var result = fixture.Create<HigherOrderFromBooleanPredicatePolicyResult<TestMetadata>>();
 
         // Assert
-        result.Satisfied.Should().Be(isSatisfied);
+        result.Satisfied.ShouldBe(isSatisfied);
     }
 
     [Theory]
@@ -31,7 +32,7 @@ public class HigherOrderFromBooleanPredicatePolicyResultTests
         var value = result.Value;
 
         // Assert
-        value.Should().Be(metadata);
+        value.ShouldBe(metadata);
     }
 
     [Theory]
@@ -46,7 +47,7 @@ public class HigherOrderFromBooleanPredicatePolicyResultTests
         var metadataTier = result.MetadataTier;
 
         // Assert
-        metadataTier.Should().Be(metadata);
+        metadataTier.ShouldBe(metadata);
     }
 
     [Theory]
@@ -60,7 +61,7 @@ public class HigherOrderFromBooleanPredicatePolicyResultTests
         var underlying = result.Underlying;
 
         // Assert
-        underlying.Should().BeEmpty();
+        underlying.ShouldBeEmpty();
     }
 
     [Theory]
@@ -74,7 +75,7 @@ public class HigherOrderFromBooleanPredicatePolicyResultTests
         var underlyingWithValues = result.UnderlyingWithValues;
 
         // Assert
-        underlyingWithValues.Should().BeEmpty();
+        underlyingWithValues.ShouldBeEmpty();
     }
 
     [Theory]
@@ -88,7 +89,7 @@ public class HigherOrderFromBooleanPredicatePolicyResultTests
         var causes = result.Causes;
 
         // Assert
-        causes.Should().BeEmpty();
+        causes.ShouldBeEmpty();
     }
 
     [Theory]
@@ -102,7 +103,7 @@ public class HigherOrderFromBooleanPredicatePolicyResultTests
         var causesWithValues = result.CausesWithValues;
 
         // Assert
-        causesWithValues.Should().BeEmpty();
+        causesWithValues.ShouldBeEmpty();
     }
 
     [Theory]
@@ -118,7 +119,7 @@ public class HigherOrderFromBooleanPredicatePolicyResultTests
         var resultDescription = result.Description;
 
         // Assert
-        resultDescription.Should().Be(description);
+        resultDescription.ShouldBe(description);
     }
 
     [Theory]
@@ -134,6 +135,6 @@ public class HigherOrderFromBooleanPredicatePolicyResultTests
         var resultExplanation = result.Explanation;
 
         // Assert
-        resultExplanation.Should().Be(explanation);
+        resultExplanation.ShouldBe(explanation);
     }
 }

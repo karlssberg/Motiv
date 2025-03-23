@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Shouldly;
 
 namespace Motiv.Tests;
 
@@ -36,7 +37,7 @@ public class OrSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
 
@@ -72,7 +73,7 @@ public class OrSpecTests
         var act = result.Values;
 
         // Assert
-        act.Should().AllBeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -107,7 +108,7 @@ public class OrSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -140,7 +141,7 @@ public class OrSpecTests
         var act = result.ToString();
 
         // Assert
-        act.Should().Be(result.Reason);
+        act.ShouldBe(result.Reason);
     }
 
     [Theory]
@@ -172,7 +173,7 @@ public class OrSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -207,7 +208,7 @@ public class OrSpecTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -238,7 +239,7 @@ public class OrSpecTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -269,7 +270,7 @@ public class OrSpecTests
         var act = spec.ToString();
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -300,7 +301,7 @@ public class OrSpecTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -331,7 +332,7 @@ public class OrSpecTests
         var act = spec.ToString();
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -359,7 +360,7 @@ public class OrSpecTests
         var act = result.Description.CausalOperandCount;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -397,7 +398,7 @@ public class OrSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expectedSatisfied);
+        act.ShouldBe(expectedSatisfied);
     }
 
     [Theory]
@@ -431,7 +432,7 @@ public class OrSpecTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expectedAssertions);
+        act.ShouldBe(expectedAssertions);
     }
 
     [Theory]
@@ -465,7 +466,7 @@ public class OrSpecTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expectedAssertions);
+        act.ShouldBe(expectedAssertions);
     }
 
     [Fact]
@@ -490,7 +491,7 @@ public class OrSpecTests
         var act = spec.Expression;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             OR
                 first
@@ -519,7 +520,7 @@ public class OrSpecTests
         var act = result.Underlying;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Fact]
@@ -542,7 +543,7 @@ public class OrSpecTests
         var act = result.UnderlyingWithValues;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -577,7 +578,7 @@ public class OrSpecTests
 
         var result = spec.IsSatisfiedBy(false);
 
-        result.Justification.Should().Be(expected);
+        result.Justification.ShouldBe(expected);
     }
 
     [Theory]
@@ -612,7 +613,7 @@ public class OrSpecTests
 
         var result = spec.IsSatisfiedBy(false);
 
-        result.Justification.Should().Be(expected);
+        result.Justification.ShouldBe(expected);
     }
 
     [Theory]
@@ -647,6 +648,6 @@ public class OrSpecTests
 
         var result = spec.IsSatisfiedBy(false);
 
-        result.Justification.Should().Be(expected);
+        result.Justification.ShouldBe(expected);
     }
 }

@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class HigherOrderBooleanEvaluationTests
@@ -27,7 +29,7 @@ public class HigherOrderBooleanEvaluationTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -50,7 +52,7 @@ public class HigherOrderBooleanEvaluationTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -74,7 +76,7 @@ public class HigherOrderBooleanEvaluationTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -101,7 +103,7 @@ public class HigherOrderBooleanEvaluationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -128,7 +130,7 @@ public class HigherOrderBooleanEvaluationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -155,7 +157,7 @@ public class HigherOrderBooleanEvaluationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected.AsEnumerable());
+        act.ShouldBe(expected.AsEnumerable());
     }
 
     [Theory]
@@ -184,7 +186,7 @@ public class HigherOrderBooleanEvaluationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -212,7 +214,7 @@ public class HigherOrderBooleanEvaluationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([2]);
+        act.ShouldBe(2.ToEnumerable());
     }
 
     [Theory]
@@ -241,7 +243,7 @@ public class HigherOrderBooleanEvaluationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedCount]);
+        act.ShouldBe(expectedCount.ToEnumerable());
     }
 
     [Theory]
@@ -270,6 +272,6 @@ public class HigherOrderBooleanEvaluationTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedCount]);
+        act.ShouldBe(expectedCount.ToEnumerable());
     }
 }

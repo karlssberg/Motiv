@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class SpecTests
@@ -53,7 +55,7 @@ public class SpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(model);
+        act.ShouldBe(model);
     }
 
     [Theory]
@@ -74,7 +76,7 @@ public class SpecTests
         var act = result.Values;
 
         // Assert
-        act.Should().ContainSingle(model.ToString());
+        act.ShouldBe([model.ToString()]);
     }
 
     [Theory]
@@ -101,7 +103,7 @@ public class SpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(model);
+        act.ShouldBe(model);
     }
 
     [Theory]
@@ -130,7 +132,7 @@ public class SpecTests
         var act = result.Values;
 
         // Assert
-        act.Should().ContainSingle(metadata);
+        act.ShouldBe([metadata]);
     }
 
 
@@ -156,7 +158,7 @@ public class SpecTests
         var act = result.Underlying.First().Description.Statement;
 
         // Assert
-        act.Should().Be("underlying");
+        act.ShouldBe("underlying");
     }
 
     [Fact]
@@ -177,7 +179,7 @@ public class SpecTests
         var act = spec.Underlying.First().Statement;
 
         // Assert
-        act.Should().Be("underlying");
+        act.ShouldBe("underlying");
     }
 
     [Fact]
@@ -190,7 +192,7 @@ public class SpecTests
         var act = spec.Underlying.First().Statement;
 
         // Assert
-        act.Should().Be(TestSpec.UnderlyingStatement);
+        act.ShouldBe(TestSpec.UnderlyingStatement);
     }
 
     [Fact]
@@ -203,7 +205,7 @@ public class SpecTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be(TestSpec.PrimaryStatement);
+        act.ShouldBe(TestSpec.PrimaryStatement);
     }
 
     [Theory]
@@ -219,7 +221,7 @@ public class SpecTests
         var act = results.Values.First();
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -246,7 +248,7 @@ public class SpecTests
         var act = result.MetadataTier.Underlying.SelectMany(m => m.Metadata);
 
         // Assert
-        act.Should().BeEquivalentTo(metadata);
+        act.ShouldBe([metadata]);
     }
 
     [Theory]
@@ -273,7 +275,7 @@ public class SpecTests
         var act = result.MetadataTier.Underlying.SelectMany(m => m.Metadata);
 
         // Assert
-        act.Should().BeEquivalentTo([metadata]);
+        act.ShouldBe([metadata]);
     }
 
 
@@ -303,7 +305,7 @@ public class SpecTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expectedAssertion);
+        act.ShouldBe([expectedAssertion]);
     }
 
     [Theory]
@@ -330,7 +332,7 @@ public class SpecTests
         var act = result.Description.Reason;
 
         // Assert
-        act.Should().Be(expectedDescription);
+        act.ShouldBe(expectedDescription);
     }
 
     [Fact]
@@ -347,7 +349,7 @@ public class SpecTests
         var act = () => spec.IsSatisfiedBy(null);
 
         // Assert
-        act.Should().NotThrow();
+        act.ShouldNotThrow();
     }
 
     [Theory]
@@ -368,7 +370,7 @@ public class SpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(model);
+        act.ShouldBe(model);
     }
 
     [Theory]
@@ -395,7 +397,7 @@ public class SpecTests
         var act = result.Values;
 
         // Assert
-        act.Should().ContainSingle(model.ToString());
+        act.ShouldBe([model]);
     }
 
     [Fact]
@@ -411,7 +413,7 @@ public class SpecTests
         var act = () => spec.IsSatisfiedBy(null);
 
         // Assert
-        act.Should().NotThrow();
+        act.ShouldNotThrow();
     }
 
     [Fact]
@@ -425,7 +427,7 @@ public class SpecTests
             .Create();
 
         // Assert
-        act.Should().Throw<ArgumentNullException>();
+        act.ShouldThrow<ArgumentNullException>();
     }
 
     [Fact]
@@ -442,7 +444,7 @@ public class SpecTests
         var act = spec.Expression;
 
         // Assert
-        act.Should().Be("is null");
+        act.ShouldBe("is null");
     }
 
     [Fact]
@@ -463,7 +465,7 @@ public class SpecTests
         var act = spec.Expression;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             top-level proposition
                 is null
@@ -483,7 +485,7 @@ public class SpecTests
 
         var act = sut.Statement;
 
-        act.Should().Be("a & !(b | c)");
+        act.ShouldBe("a & !(b | c)");
     }
 
     [Fact]
@@ -499,7 +501,7 @@ public class SpecTests
 
         var act = sut.Statement;
 
-        act.Should().Be("a & !(b | c)");
+        act.ShouldBe("a & !(b | c)");
     }
 
     [Fact]
@@ -515,7 +517,7 @@ public class SpecTests
 
         var act = sut.Statement;
 
-        act.Should().Be("a & (b | c)");
+        act.ShouldBe("a & (b | c)");
     }
 
     [Fact]
@@ -528,11 +530,11 @@ public class SpecTests
         var act = sut.IsSatisfiedBy(false);
 
         // Assert
-        act.Values.Should().ContainSingle("¬is true");
+        act.Values.ShouldBe(["is true"]);
     }
 
     [Fact]
-    public void Should_evaluate_metadata_specs_that_don_not_have_a_metadata_defined_and_assume_metadata_is_a_string()
+    public void Should_evaluate_metadata_specs_that_have_a_metadata_defined_and_assume_metadata_is_a_string()
     {
         // Arrange
         SpecBase<bool> sut = Spec.Build((bool _) => true)
@@ -544,6 +546,6 @@ public class SpecTests
         var act = sut.IsSatisfiedBy(false);
 
         // Assert
-        act.Values.Should().ContainSingle("¬is true");
+        act.Values.ShouldBe(["is true"]);
     }
 }

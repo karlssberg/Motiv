@@ -1,4 +1,6 @@
-﻿namespace Motiv.Tests;
+﻿using Shouldly;
+
+namespace Motiv.Tests;
 
 public class PropositionResultDescriptionTests
 {
@@ -20,7 +22,7 @@ public class PropositionResultDescriptionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -41,7 +43,7 @@ public class PropositionResultDescriptionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -65,7 +67,7 @@ public class PropositionResultDescriptionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -96,7 +98,7 @@ public class PropositionResultDescriptionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -149,7 +151,7 @@ public class PropositionResultDescriptionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -210,7 +212,7 @@ public class PropositionResultDescriptionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -271,7 +273,7 @@ public class PropositionResultDescriptionTests
         var act = result.Description.ToString();
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -459,7 +461,7 @@ public class PropositionResultDescriptionTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -614,7 +616,7 @@ public class PropositionResultDescriptionTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -633,7 +635,7 @@ public class PropositionResultDescriptionTests
         var act = result.Description.ToString();
 
         // Assert
-        act.Should().Be(result.Description.Reason);
+        act.ShouldBe(result.Description.Reason);
     }
 
     [Fact]
@@ -674,7 +676,7 @@ public class PropositionResultDescriptionTests
         var act = spec.Expression;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             NAND ALSO
                 AND
@@ -717,7 +719,7 @@ public class PropositionResultDescriptionTests
         var act = spec.Expression;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             XOR
                 XOR
@@ -756,7 +758,7 @@ public class PropositionResultDescriptionTests
         var act = spec.Expression;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             AND ALSO
                 first
@@ -793,7 +795,7 @@ public class PropositionResultDescriptionTests
         var act = spec.Expression;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             OR ELSE
                 first
@@ -843,7 +845,7 @@ public class PropositionResultDescriptionTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             AND
                 first
@@ -886,7 +888,7 @@ public class PropositionResultDescriptionTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             AND
                 first
@@ -923,7 +925,7 @@ public class PropositionResultDescriptionTests
         var act = result.Justification;
 
         // Assert
-        act.Should().Be(
+        act.ShouldBe(
             """
             OR
                 first
@@ -949,9 +951,9 @@ public class PropositionResultDescriptionTests
 
         var act = spec.IsSatisfiedBy(model);
 
-        act.Satisfied.Should().Be(expectedSatisfied);
-        act.Reason.Should().Be(expectedReason);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+        act.Satisfied.ShouldBe(expectedSatisfied);
+        act.Reason.ShouldBe(expectedReason);
+        act.Assertions.ShouldBe(expectedAssertions);
     }
 
     [Theory]
@@ -970,9 +972,9 @@ public class PropositionResultDescriptionTests
 
         var act = spec.IsSatisfiedBy(model);
 
-        act.Satisfied.Should().Be(expectedSatisfied);
-        act.Reason.Should().Be(expectedReason);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+        act.Satisfied.ShouldBe(expectedSatisfied);
+        act.Reason.ShouldBe(expectedReason);
+        act.Assertions.ShouldBe(expectedAssertions);
     }
 
 
@@ -992,9 +994,9 @@ public class PropositionResultDescriptionTests
 
         var act = spec.IsSatisfiedBy(model);
 
-        act.Satisfied.Should().Be(expectedSatisfied);
-        act.Reason.Should().Be(expectedReason);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+        act.Satisfied.ShouldBe(expectedSatisfied);
+        act.Reason.ShouldBe(expectedReason);
+        act.Assertions.ShouldBe(expectedAssertions);
     }
 
     [Theory]
@@ -1021,9 +1023,9 @@ public class PropositionResultDescriptionTests
 
         var act = spec.IsSatisfiedBy(model);
 
-        act.Satisfied.Should().Be(expectedSatisfied);
-        act.Reason.Should().Be(expectedReason);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+        act.Satisfied.ShouldBe(expectedSatisfied);
+        act.Reason.ShouldBe(expectedReason);
+        act.Assertions.ShouldBe(expectedAssertions);
     }
 
     [Theory]
@@ -1050,9 +1052,9 @@ public class PropositionResultDescriptionTests
 
         var act = spec.IsSatisfiedBy(model);
 
-        act.Satisfied.Should().Be(expectedSatisfied);
-        act.Reason.Should().Be(expectedReason);
-        act.Assertions.Should().BeEquivalentTo(expectedAssertions);
+        act.Satisfied.ShouldBe(expectedSatisfied);
+        act.Reason.ShouldBe(expectedReason);
+        act.Assertions.ShouldBe(expectedAssertions);
     }
 
 

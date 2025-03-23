@@ -1,4 +1,6 @@
-﻿namespace Motiv.Tests;
+﻿using Shouldly;
+
+namespace Motiv.Tests;
 
 public class SpecExceptionTests
 {
@@ -7,7 +9,7 @@ public class SpecExceptionTests
     {
         var exception = new SpecException();
 
-        exception.Should().NotBeNull();
+        exception.ShouldNotBeNull();
     }
 
     [Fact]
@@ -17,7 +19,7 @@ public class SpecExceptionTests
 
         var exception = new SpecException(message);
 
-        message.Should().Be(exception.Message);
+        message.ShouldBe(exception.Message);
     }
 
     [Fact]
@@ -28,7 +30,7 @@ public class SpecExceptionTests
 
         var exception = new SpecException(message, innerException);
 
-        message.Should().Be(exception.Message);
-        innerException.Should().Be(exception.InnerException);
+        message.ShouldBe(exception.Message);
+        innerException.ShouldBe(exception.InnerException);
     }
 }

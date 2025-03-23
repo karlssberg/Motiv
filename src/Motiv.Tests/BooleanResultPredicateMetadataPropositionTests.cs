@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class BooleanResultPredicateMultiMetadataPropositionTests
@@ -75,7 +77,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -145,7 +147,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -215,7 +217,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expectedAssertion);
+        act.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -285,7 +287,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expectedAssertion);
+        act.ShouldBe(expectedAssertion);
     }
 
     [Theory]
@@ -337,7 +339,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -389,7 +391,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -441,7 +443,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -493,7 +495,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -545,7 +547,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -597,7 +599,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
 
@@ -651,7 +653,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Reason;
 
         // Assert
-        act.Should().Be(expectedReason);
+        act.ShouldBe(expectedReason);
     }
 
     [Theory]
@@ -701,7 +703,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -751,7 +753,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -778,7 +780,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Value;
 
         // Assert
-        act.Should().Be(expectedMetadata);
+        act.ShouldBe(expectedMetadata);
     }
 
     [Theory]
@@ -805,7 +807,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Value;
 
         // Assert
-        act.Should().Be(expectedMetadata);
+        act.ShouldBe(expectedMetadata);
     }
 
     [Theory]
@@ -832,7 +834,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Value;
 
         // Assert
-        act.Should().Be(expectedMetadata);
+        act.ShouldBe(expectedMetadata);
     }
 
     [Theory]
@@ -859,7 +861,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Value;
 
         // Assert
-        act.Should().Be(expectedMetadata);
+        act.ShouldBe(expectedMetadata);
     }
 
     [Theory]
@@ -887,7 +889,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Value;
 
         // Assert
-        act.Should().Be(expectedMetadata);
+        act.ShouldBe(expectedMetadata);
     }
 
 
@@ -917,7 +919,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Value;
 
         // Assert
-        act.Should().Be(expectedMetadata);
+        act.ShouldBe(expectedMetadata);
     }
 
     [Theory]
@@ -967,7 +969,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.MetadataTier.Metadata;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1017,7 +1019,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.MetadataTier.Metadata;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1067,7 +1069,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1117,7 +1119,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1167,7 +1169,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.MetadataTier.Metadata;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1217,7 +1219,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.MetadataTier.Metadata;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1267,7 +1269,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1317,7 +1319,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1367,7 +1369,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.MetadataTier.Metadata;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1417,7 +1419,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.MetadataTier.Metadata;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1467,7 +1469,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1517,7 +1519,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1567,7 +1569,7 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.MetadataTier.Metadata;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 
     [Theory]
@@ -1617,6 +1619,6 @@ public class BooleanResultPredicateMultiMetadataPropositionTests
         var act = result.MetadataTier.Metadata;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe((Metadata[])[expectedMetadata]);
     }
 }

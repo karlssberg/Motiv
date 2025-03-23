@@ -1,6 +1,7 @@
 ﻿using AutoFixture;
 using Motiv.BooleanPredicateProposition;
 using Motiv.Shared;
+using Shouldly;
 
 namespace Motiv.Tests.BooleanPredicateProposition;
 
@@ -16,10 +17,10 @@ public class PropositionBooleanResultTests
     {
         var result = new PropositionBooleanResult<string>(satisfied, metadataTier, explanation, description);
 
-        result.Satisfied.Should().Be(satisfied);
-        result.MetadataTier.Should().Be(metadataTier.Value);
-        result.Explanation.Should().Be(explanation.Value);
-        result.Description.Should().Be(description.Value);
+        result.Satisfied.ShouldBe(satisfied);
+        result.MetadataTier.ShouldBe(metadataTier.Value);
+        result.Explanation.ShouldBe(explanation.Value);
+        result.Description.ShouldBe(description.Value);
     }
 
     [Theory, AutoData]
@@ -27,7 +28,7 @@ public class PropositionBooleanResultTests
     {
         var result = fixture.Create<PropositionBooleanResult<string>>();
 
-        result.Underlying.Should().BeEmpty();
+        result.Underlying.ShouldBeEmpty();
     }
 
     [Theory, AutoData]
@@ -35,7 +36,7 @@ public class PropositionBooleanResultTests
     {
         var result = fixture.Create<PropositionBooleanResult<string>>();
 
-        result.UnderlyingWithValues.Should().BeEmpty();
+        result.UnderlyingWithValues.ShouldBeEmpty();
     }
 
     [Theory, AutoData]
@@ -43,7 +44,7 @@ public class PropositionBooleanResultTests
     {
         var result = fixture.Create<PropositionBooleanResult<string>>();
 
-        result.Causes.Should().BeEmpty();
+        result.Causes.ShouldBeEmpty();
     }
 
     [Theory, AutoData]
@@ -51,6 +52,6 @@ public class PropositionBooleanResultTests
     {
         var result = fixture.Create<PropositionBooleanResult<string>>();
 
-        result.CausesWithValues.Should().BeEmpty();
+        result.CausesWithValues.ShouldBeEmpty();
     }
 }

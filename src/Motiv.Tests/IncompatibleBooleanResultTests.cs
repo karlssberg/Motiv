@@ -1,5 +1,6 @@
 using Motiv.BooleanPredicateProposition;
 using Motiv.Shared;
+using Shouldly;
 
 namespace Motiv.Tests;
 
@@ -37,7 +38,7 @@ public class IncompatibleBooleanResultTests
         var act = (bool)result;
 
         // Assert
-        act.Should().Be(isSatisfied);
+        act.ShouldBe(isSatisfied);
     }
 
     [Theory]
@@ -68,7 +69,7 @@ public class IncompatibleBooleanResultTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -103,7 +104,7 @@ public class IncompatibleBooleanResultTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().Contain(operands.GetAssertions());
+        act.ShouldBeSubsetOf(operands.GetAssertions());
     }
 
     [Theory]
@@ -133,14 +134,14 @@ public class IncompatibleBooleanResultTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().Contain(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
-    [InlineAutoData(false, false, "False")]
+    [InlineAutoData(false, false, "False", "False")]
     [InlineAutoData(false, true, "False")]
     [InlineAutoData(true, false, "False")]
-    [InlineAutoData(true, true, "True")]
+    [InlineAutoData(true, true, "True", "True")]
     public void Should_determine_causes_with_incompatible_metadata(bool left, bool right, params string[] expected)
     {
         // Arrange
@@ -163,7 +164,7 @@ public class IncompatibleBooleanResultTests
         var act = result.Causes.Select(cause => cause.Description.Statement);
 
         // Assert
-        act.Should().Contain(expected);
+        act.ShouldBe(expected, true);
     }
 
     [Theory]
@@ -194,7 +195,7 @@ public class IncompatibleBooleanResultTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -229,7 +230,7 @@ public class IncompatibleBooleanResultTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
+        act.ShouldBeSubsetOf(operands.SelectMany(operand => operand.Explanation.Assertions));
     }
 
     [Theory]
@@ -259,7 +260,7 @@ public class IncompatibleBooleanResultTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().Contain(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -290,7 +291,7 @@ public class IncompatibleBooleanResultTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -323,7 +324,7 @@ public class IncompatibleBooleanResultTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().Contain(operands.SelectMany(operand => operand.Explanation.Assertions));
+        act.ShouldBeSubsetOf(operands.SelectMany(operand => operand.Explanation.Assertions));
     }
 
     [Theory]
@@ -354,7 +355,7 @@ public class IncompatibleBooleanResultTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().Contain(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -376,7 +377,7 @@ public class IncompatibleBooleanResultTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -398,7 +399,7 @@ public class IncompatibleBooleanResultTests
         var act = result.Assertions;
 
         // Assert
-        act.Should().Contain(operandResult.Explanation.Assertions);
+        act.ShouldBeSubsetOf(operandResult.Explanation.Assertions);
     }
 
     [Theory]
@@ -425,7 +426,7 @@ public class IncompatibleBooleanResultTests
         var act = result.SubAssertions;
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -453,7 +454,7 @@ public class IncompatibleBooleanResultTests
         var act = leftResult.Equals(rightResult);
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -483,7 +484,7 @@ public class IncompatibleBooleanResultTests
         var act = leftResult == rightResult;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -503,7 +504,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().Reason;
 
         // Assert
-        act.Should().Be(satisfied.ToString());
+        act.ShouldBe(satisfied.ToString());
     }
 
     [Theory]
@@ -523,7 +524,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().Description.ToString();
 
         // Assert
-        act.Should().Be(satisfied.ToString());
+        act.ShouldBe(satisfied.ToString());
     }
 
     [Theory]
@@ -543,7 +544,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().Justification;
 
         // Assert
-        act.Should().Be(satisfied.ToString());
+        act.ShouldBe(satisfied.ToString());
     }
 
     [Theory]
@@ -569,7 +570,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().Underlying.First().Reason;
 
         // Assert
-        act.Should().Be(satisfied.ToString());
+        act.ShouldBe(satisfied.ToString());
     }
 
     [Theory]
@@ -595,7 +596,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().UnderlyingWithValues.First().Reason;
 
         // Assert
-        act.Should().Be(satisfied.ToString());
+        act.ShouldBe(satisfied.ToString());
     }
 
     [Theory]
@@ -615,7 +616,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().Values;
 
         // Assert
-        act.Should().BeEquivalentTo(satisfied.ToString().ToEnumerable());
+        act.ShouldBe(satisfied.ToString().ToEnumerable());
     }
 
     [Theory]
@@ -640,7 +641,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().Causes.First().Reason;
 
         // Assert
-        act.Should().Be(satisfied.ToString());
+        act.ShouldBe(satisfied.ToString());
     }
 
     [Theory]
@@ -665,6 +666,6 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().CausesWithValues.First().Reason;
 
         // Assert
-        act.Should().Be(satisfied.ToString());
+        act.ShouldBe(satisfied.ToString());
     }
 }

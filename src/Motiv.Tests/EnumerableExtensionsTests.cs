@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class EnumerableExtensionsTests
@@ -10,7 +12,7 @@ public class EnumerableExtensionsTests
         var act = item.ToEnumerable();
 
         // Assert
-        act.Should().BeEquivalentTo([item]);
+        act.ShouldBe(item.ToEnumerable());
     }
 
     [Theory]
@@ -18,7 +20,7 @@ public class EnumerableExtensionsTests
     public void Should_wrap_an_existing_enumerable_inside_an_enumerable(int number)
     {
         // Arrange
-        IEnumerable<IEnumerable<int>> expected = [new[] { number }];
+        IEnumerable<IEnumerable<int>> expected = [[number]];
 
         IEnumerable<int> item = [number];
 
@@ -26,9 +28,7 @@ public class EnumerableExtensionsTests
         var act = item.ToEnumerable();
 
         // Assert
-        act.Should()
-            .BeEquivalentTo(expected).And
-            .BeAssignableTo<IEnumerable<IEnumerable<int>>>();
+        act.ShouldBe(expected);
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public class EnumerableExtensionsTests
         var act = numbers.Where(spec);
 
         // Assert
-        act.Should().BeEquivalentTo([1, 2]);
+        act.ShouldBe((int[])[1, 2]);
     }
 
     [Fact]
@@ -62,9 +62,9 @@ public class EnumerableExtensionsTests
             left % 2 == 0 && right % 2 == 0);
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
-    
+
     [Fact]
     public void Should_handle_empty_collection_when_grouping_by_adjacent_even_numbers()
     {
@@ -77,7 +77,7 @@ public class EnumerableExtensionsTests
             left % 2 == 0 && right % 2 == 0);
 
         // Assert
-        act.Should().BeEquivalentTo(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -96,6 +96,6 @@ public class EnumerableExtensionsTests
         var act = numbers.HasAtLeast(n);
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 }

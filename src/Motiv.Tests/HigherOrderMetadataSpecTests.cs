@@ -1,3 +1,5 @@
+using Shouldly;
+
 namespace Motiv.Tests;
 
 public class HigherOrderMetadataSpecTests
@@ -36,7 +38,7 @@ public class HigherOrderMetadataSpecTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Fact]
@@ -60,7 +62,7 @@ public class HigherOrderMetadataSpecTests
         var act = spec.Statement;
 
         // Assert
-        act.Should().Be("is a pair of even numbers");
+        act.ShouldBe("is a pair of even numbers");
     }
 
     [Theory]
@@ -112,7 +114,7 @@ public class HigherOrderMetadataSpecTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expected]);
+        act.ShouldBe([expected]);
     }
 
     [Theory]
@@ -162,7 +164,7 @@ public class HigherOrderMetadataSpecTests
         var act = result.RootValues;
 
         // Assert
-        act.Should().BeEquivalentTo([(0, expectedMetadata)]);
+        act.ShouldBe((0, expectedMetadata).ToEnumerable());
     }
 
     [Theory]
@@ -198,7 +200,7 @@ public class HigherOrderMetadataSpecTests
         var act = result.Satisfied;
 
         // Assert
-        act.Should().Be(expected);
+        act.ShouldBe(expected);
     }
 
     [Theory]
@@ -234,7 +236,7 @@ public class HigherOrderMetadataSpecTests
         var act = result.Values;
 
         // Assert
-        act.Should().BeEquivalentTo([expectedMetadata]);
+        act.ShouldBe(expectedMetadata.ToEnumerable());
     }
 
     [Theory]
@@ -270,6 +272,6 @@ public class HigherOrderMetadataSpecTests
         var act = result.CausesWithValues;
 
         // Assert
-        act.Should().AllSatisfy(x => x.Reason.Should().Be(expectedMetadata));
+        act.ShouldAllBe(x => x.Reason == expectedMetadata);
     }
 }
