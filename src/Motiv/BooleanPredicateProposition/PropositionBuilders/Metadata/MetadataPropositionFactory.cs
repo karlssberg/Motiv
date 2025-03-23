@@ -24,7 +24,7 @@ public readonly partial struct MetadataPropositionFactory<TModel, TMetadata>(
     {
         predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new MetadataProposition<TModel, TMetadata>(
+        return new Proposition<TModel, TMetadata>(
             predicate,
             whenTrue,
             whenFalse,

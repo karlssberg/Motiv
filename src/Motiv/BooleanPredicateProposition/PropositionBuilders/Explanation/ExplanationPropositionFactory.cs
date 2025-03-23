@@ -24,7 +24,7 @@ public readonly partial struct ExplanationPropositionFactory<TModel>(
     {
         predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new ExplanationProposition<TModel>(
+        return new Proposition<TModel, string>(
             predicate,
             whenTrue,
             whenFalse,

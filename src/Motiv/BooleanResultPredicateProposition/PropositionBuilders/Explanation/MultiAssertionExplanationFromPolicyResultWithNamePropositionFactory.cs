@@ -23,7 +23,7 @@ public readonly partial struct MultiAssertionExplanationFromPolicyResultWithName
     public SpecBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new PolicyResultPredicateMultiMetadataProposition<TModel, string, TMetadata>(
+        return new PolicyResultPredicateMultiValueProposition<TModel, string, TMetadata>(
             predicate,
             trueBecause
                 .ToEnumerable()
@@ -39,7 +39,7 @@ public readonly partial struct MultiAssertionExplanationFromPolicyResultWithName
     /// </summary>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, string> Create() =>
-        new PolicyResultPredicateMultiMetadataProposition<TModel, string, TMetadata>(
+        new PolicyResultPredicateMultiValueProposition<TModel, string, TMetadata>(
             predicate,
             trueBecause
                 .ToEnumerable()

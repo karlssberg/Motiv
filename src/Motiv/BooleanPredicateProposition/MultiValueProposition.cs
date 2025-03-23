@@ -9,7 +9,7 @@ namespace Motiv.BooleanPredicateProposition;
 /// <typeparam name="TModel">The type of the input parameter.</typeparam>
 /// <typeparam name="TMetadata">The type of the return value.</typeparam>
 /// <returns>The return value.</returns>
-internal sealed class MultiMetadataProposition<TModel, TMetadata>(
+internal sealed class MultiValueProposition<TModel, TMetadata>(
     Func<TModel, bool> predicate,
     Func<TModel, IEnumerable<TMetadata>> whenTrue,
     Func<TModel, IEnumerable<TMetadata>> whenFalse,

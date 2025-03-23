@@ -20,7 +20,7 @@ public readonly partial struct BooleanResultPredicatePropositionFactory<TModel, 
     public SpecBase<TModel, TMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new BooleanResultPredicateMultiMetadataProposition<TModel, TMetadata, TMetadata>(
+        return new BooleanResultPredicateMultiValueProposition<TModel, TMetadata, TMetadata>(
             predicate,
             (_, result) => result.Values,
             (_, result) => result.Values,

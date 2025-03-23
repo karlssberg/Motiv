@@ -2,7 +2,7 @@ using Shouldly;
 
 namespace Motiv.Tests;
 
-public class BooleanResultPredicateMultiMetadataPropositionTests
+public class BooleanResultPredicateMultiValuePropositionTests
 {
     public enum Metadata
     {

@@ -1,4 +1,4 @@
-﻿using Motiv.Shared;
+using Motiv.Shared;
 
 namespace Motiv.BooleanResultPredicateProposition;
 
@@ -12,12 +12,12 @@ namespace Motiv.BooleanResultPredicateProposition;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the boolean result.</typeparam>
-internal sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
+internal sealed class BooleanResultPredicateProposition<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> underlyingBooleanResultPredicate,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenFalse,
     ISpecDescription specDescription)
-    : SpecBase<TModel, TMetadata>
+    : PolicyBase<TModel, TMetadata>
 {
     /// <summary>
     /// Gets an empty collection of underlying propositions, since there are no underlying specifications.
@@ -27,50 +27,56 @@ internal sealed class BooleanResultPredicateMultiMetadataProposition<TModel, TMe
     /// <summary>Gets the name of the proposition.</summary>
     public override ISpecDescription Description => specDescription;
 
-    /// <summary>Determines if the proposition is satisfied by the given model.</summary>
-    /// <param name="model">The model to be evaluated.</param>
-    /// <returns>
-    ///     A <see cref="BooleanResultBase{TMetadata}" /> indicating if the proposition is satisfied and the resulting
-    ///     metadata.
-    /// </returns>
-    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
+    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
 
-        var metadata = new Lazy<TMetadata[]>(() =>
+        var metadata = CreateLazyMetadata(model, booleanResult);
+
+        return CreatePolicyResult(metadata, booleanResult);
+    }
+
+    private Lazy<TMetadata> CreateLazyMetadata(TModel model, BooleanResultBase<TUnderlyingMetadata> booleanResult)
+    {
+        return new Lazy<TMetadata>(() =>
             booleanResult.Satisfied switch
             {
-                true => whenTrue(model, booleanResult).ToArray(),
-                false => whenFalse(model, booleanResult).ToArray()
+                true => whenTrue(model, booleanResult),
+                false => whenFalse(model, booleanResult)
             });
+    }
 
-        var assertions = new Lazy<string[]>(() => metadata.Value switch
+    private PolicyResultBase<TMetadata> CreatePolicyResult(Lazy<TMetadata> metadata, BooleanResultBase<TUnderlyingMetadata> booleanResult)
+    {
+        var assertion = new Lazy<string>(() => metadata.Value switch
         {
-            IEnumerable<string> assertion => assertion.ToArray(),
-            _ => [Description.ToReason(booleanResult.Satisfied)]
+            string assertion => assertion,
+            _ => Description.ToReason(booleanResult.Satisfied)
         });
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertions.Value, booleanResult.ToEnumerable(), booleanResult.ToEnumerable()));
+            new Explanation(assertion.Value, booleanResult.ToEnumerable(), booleanResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(metadata.Value,
                 booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []));
 
-        var description = new Lazy<ResultDescriptionBase>(() =>
+        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
-                Description.ToReason(booleanResult.Satisfied),
+                assertion.Value,
                 Description.Statement));
 
-        return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
+        return new PolicyResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,
+            Value,
             MetadataTier,
             Explanation,
             ResultDescription);
 
+        TMetadata Value() => metadata.Value;
         MetadataNode<TMetadata> MetadataTier() => metadataTier.Value;
         Explanation Explanation() => explanation.Value;
-        ResultDescriptionBase ResultDescription() => description.Value;
+        ResultDescriptionBase ResultDescription() => resultDescription.Value;
     }
 }

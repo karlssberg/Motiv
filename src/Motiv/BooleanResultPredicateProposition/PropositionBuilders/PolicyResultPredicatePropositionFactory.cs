@@ -20,7 +20,7 @@ public readonly partial struct PolicyResultPredicatePropositionFactory<TModel, T
     public PolicyBase<TModel, TMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new PolicyResultPredicateMetadataProposition<TModel, TMetadata, TMetadata>(
+        return new PolicyResultPredicateProposition<TModel, TMetadata, TMetadata>(
             predicate,
             (_, result) => result.Value,
             (_, result) => result.Value,

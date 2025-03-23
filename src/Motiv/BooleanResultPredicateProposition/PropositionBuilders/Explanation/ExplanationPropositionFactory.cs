@@ -24,7 +24,7 @@ public readonly partial struct ExplanationPropositionFactory<TModel, TMetadata>(
     public PolicyBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new BooleanResultPredicateExplanationProposition<TModel, TMetadata>(
+        return new BooleanResultPredicateProposition<TModel, string, TMetadata>(
             predicate,
             trueBecause,
             falseBecause,

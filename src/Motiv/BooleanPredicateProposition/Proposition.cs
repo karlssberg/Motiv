@@ -9,7 +9,7 @@ namespace Motiv.BooleanPredicateProposition;
 /// <typeparam name="TModel">The type of the input parameter.</typeparam>
 /// <typeparam name="TMetadata">The type of the return value.</typeparam>
 /// <returns>The return value.</returns>
-internal sealed class MetadataProposition<TModel, TMetadata>(
+internal sealed class Proposition<TModel, TMetadata>(
     Func<TModel, bool> predicate,
     Func<TModel, TMetadata> whenTrue,
     Func<TModel, TMetadata> whenFalse,
@@ -25,16 +25,18 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
     {
         var isSatisfied = predicate(model);
 
-        var metadata = new Lazy<TMetadata>(() => isSatisfied switch
+        var metadataResolver = isSatisfied switch
         {
-            true => whenTrue(model),
-            false => whenFalse(model)
-        });
+            true => whenTrue,
+            false => whenFalse
+        };
 
-        var assertion = new Lazy<IEnumerable<string>> (() => metadata.Value switch
+        var metadata = new Lazy<TMetadata>(() => metadataResolver(model));
+
+        var assertion = new Lazy<string> (() => metadata.Value switch
         {
-            IEnumerable<string> because => because,
-            _ => Description.ToReason(isSatisfied).ToEnumerable()
+            string because => because,
+            _ => Description.ToReason(isSatisfied)
         });
 
         return new PropositionPolicyResult<TMetadata>(
@@ -43,6 +45,6 @@ internal sealed class MetadataProposition<TModel, TMetadata>(
             new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata.Value, [])),
             new Lazy<Explanation>(() => new Explanation(assertion.Value)),
             new Lazy<ResultDescriptionBase>(() =>
-                new PropositionResultDescription(Description.ToReason(isSatisfied), Description.Statement)));
+                new PropositionResultDescription(assertion.Value, Description.Statement)));
     }
 }

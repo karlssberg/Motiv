@@ -1,4 +1,4 @@
-using Motiv.Shared;
+﻿using Motiv.Shared;
 
 namespace Motiv.BooleanResultPredicateProposition;
 
@@ -12,12 +12,12 @@ namespace Motiv.BooleanResultPredicateProposition;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 /// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the boolean result.</typeparam>
-internal sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
+internal sealed class BooleanResultPredicateMultiValueProposition<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> underlyingBooleanResultPredicate,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenFalse,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
     ISpecDescription specDescription)
-    : PolicyBase<TModel, TMetadata>
+    : SpecBase<TModel, TMetadata>
 {
     /// <summary>
     /// Gets an empty collection of underlying propositions, since there are no underlying specifications.
@@ -27,27 +27,23 @@ internal sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadat
     /// <summary>Gets the name of the proposition.</summary>
     public override ISpecDescription Description => specDescription;
 
-    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
+    /// <summary>Determines if the proposition is satisfied by the given model.</summary>
+    /// <param name="model">The model to be evaluated.</param>
+    /// <returns>
+    ///     A <see cref="BooleanResultBase{TMetadata}" /> indicating if the proposition is satisfied and the resulting
+    ///     metadata.
+    /// </returns>
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
 
-        var metadata = CreateLazyMetadata(model, booleanResult);
-
-        return CreatePolicyResult(metadata, booleanResult);
-    }
-
-    private Lazy<TMetadata> CreateLazyMetadata(TModel model, BooleanResultBase<TUnderlyingMetadata> booleanResult)
-    {
-        return new Lazy<TMetadata>(() =>
+        var metadata = new Lazy<TMetadata[]>(() =>
             booleanResult.Satisfied switch
             {
-                true => whenTrue(model, booleanResult),
-                false => whenFalse(model, booleanResult)
+                true => whenTrue(model, booleanResult).ToArray(),
+                false => whenFalse(model, booleanResult).ToArray()
             });
-    }
 
-    private PolicyResultBase<TMetadata> CreatePolicyResult(Lazy<TMetadata> metadata, BooleanResultBase<TUnderlyingMetadata> booleanResult)
-    {
         var assertions = new Lazy<string[]>(() => metadata.Value switch
         {
             IEnumerable<string> assertion => assertion.ToArray(),
@@ -61,22 +57,20 @@ internal sealed class BooleanResultPredicateMetadataProposition<TModel, TMetadat
             new MetadataNode<TMetadata>(metadata.Value,
                 booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []));
 
-        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
+        var description = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
                 Description.ToReason(booleanResult.Satisfied),
                 Description.Statement));
 
-        return new PolicyResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
+        return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,
-            Value,
             MetadataTier,
             Explanation,
             ResultDescription);
 
-        TMetadata Value() => metadata.Value;
         MetadataNode<TMetadata> MetadataTier() => metadataTier.Value;
         Explanation Explanation() => explanation.Value;
-        ResultDescriptionBase ResultDescription() => resultDescription.Value;
+        ResultDescriptionBase ResultDescription() => description.Value;
     }
 }

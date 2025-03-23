@@ -50,7 +50,7 @@ public readonly partial struct MultiMetadataFromPolicyResultPropositionFactory<T
     public SpecBase<TModel, TReplacementMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new PolicyResultPredicateMultiMetadataProposition<TModel, TReplacementMetadata, TMetadata>(
+        return new PolicyResultPredicateMultiValueProposition<TModel, TReplacementMetadata, TMetadata>(
             _spec,
             _whenTrue,
             _whenFalse,

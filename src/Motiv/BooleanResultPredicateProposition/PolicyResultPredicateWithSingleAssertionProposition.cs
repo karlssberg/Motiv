@@ -11,7 +11,6 @@ internal sealed class PolicyResultPredicateWithSingleAssertionProposition<TModel
 {
     public override IEnumerable<SpecBase> Underlying => [];
 
-
     public override ISpecDescription Description => specDescription;
 
     protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)

@@ -22,7 +22,7 @@ public readonly partial struct MetadataPropositionFactory<TModel, TReplacementMe
     public PolicyBase<TModel, TReplacementMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new BooleanResultPredicateMetadataProposition<TModel, TReplacementMetadata, TMetadata>(
+        return new BooleanResultPredicateProposition<TModel, TReplacementMetadata, TMetadata>(
             spec,
             whenTrue,
             whenFalse,

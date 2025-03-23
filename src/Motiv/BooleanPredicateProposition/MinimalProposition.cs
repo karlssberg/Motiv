@@ -8,7 +8,6 @@ internal sealed class MinimalProposition<TModel>(
     private readonly string _trueBecause = GetTrueAssertion(specDescription.Statement);
     private readonly string _falseBecause = GetFalseAssertion(specDescription.Statement);
 
-
     public override IEnumerable<SpecBase> Underlying => [];
 
 

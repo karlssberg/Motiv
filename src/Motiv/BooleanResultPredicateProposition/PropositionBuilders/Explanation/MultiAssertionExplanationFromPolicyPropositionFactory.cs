@@ -54,7 +54,7 @@ public readonly partial struct MultiAssertionExplanationFromPolicyPropositionFac
     public SpecBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new PolicyResultPredicateMultiMetadataProposition<TModel, string, TMetadata>(
+        return new PolicyResultPredicateMultiValueProposition<TModel, string, TMetadata>(
             _predicate,
             _trueBecause,
             _falseBecause,

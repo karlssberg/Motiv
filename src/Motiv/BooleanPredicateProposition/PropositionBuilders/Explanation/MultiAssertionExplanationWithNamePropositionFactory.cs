@@ -19,7 +19,7 @@ public readonly partial struct MultiAssertionExplanationWithNamePropositionFacto
     public SpecBase<TModel, string> Create()
     {
         predicate.ThrowIfNull(nameof(predicate));
-        return new MultiMetadataProposition<TModel, string>(
+        return new MultiValueProposition<TModel, string>(
             predicate,
             trueBecause
                 .ToEnumerable()
@@ -39,7 +39,7 @@ public readonly partial struct MultiAssertionExplanationWithNamePropositionFacto
     {
         predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new MultiMetadataProposition<TModel, string>(
+        return new MultiValueProposition<TModel, string>(
             predicate,
             trueBecause.ToEnumerable().ToFunc<TModel, IEnumerable<string>>(),
             falseBecause,

@@ -52,7 +52,7 @@ public readonly partial struct MultiAssertionExplanationPropositionFactory<TMode
     public SpecBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new MultiMetadataProposition<TModel, string>(
+        return new MultiValueProposition<TModel, string>(
             _predicate,
             _whenTrue,
             _whenFalse,
