@@ -22,7 +22,7 @@ public readonly partial struct TrueExpressionTreeHigherOrderFromSpecPropositionF
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create(string statement) =>
-        new HigherOrderFromBooleanResultExpressionTreeProposition<TModel, TPredicateResult>(
+        new MinimalHigherOrderFromExpressionTreeProposition<TModel, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))),
@@ -31,7 +31,7 @@ public readonly partial struct TrueExpressionTreeHigherOrderFromSpecPropositionF
     /// <summary>Creates a proposition.</summary>
     /// <returns>A specification for the model.</returns>
     internal SpecBase<IEnumerable<TModel>, string> Create(Expression statement) =>
-        new HigherOrderFromBooleanResultExpressionTreeProposition<TModel, TPredicateResult>(
+        new MinimalHigherOrderFromExpressionTreeProposition<TModel, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             new ExpressionAsStatementDescription(statement),

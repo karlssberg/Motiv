@@ -3,7 +3,7 @@ using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
 
-internal sealed class HigherOrderFromBooleanResultExpressionTreeProposition<TModel, TPredicateResult>(
+internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TPredicateResult>(
     Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     ISpecDescription description,
@@ -41,15 +41,10 @@ internal sealed class HigherOrderFromBooleanResultExpressionTreeProposition<TMod
 
         return new HigherOrderBooleanResult<string, string>(
             isSatisfied,
-            Metadata,
-            Assertions,
-            ResultDescription,
+            () => metadata.Value,
+            () => metadata.Value,
+            () => resultDescription.Value,
             underlyingResults,
-            GetCauses);
-
-        IEnumerable<string> Metadata() => metadata.Value;
-        IEnumerable<string> Assertions() => metadata.Value;
-        IEnumerable<BooleanResult<TModel, string>> GetCauses() => causes.Value;
-        ResultDescriptionBase ResultDescription() => resultDescription.Value;
+            () => causes.Value);
     }
 }

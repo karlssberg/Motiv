@@ -64,7 +64,7 @@ public readonly partial struct MultiMetadataFromSpecHigherOrderExpressionTreePro
     public SpecBase<IEnumerable<TModel>, TMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultMultiMetadataExpressionTreeProposition<TModel, TMetadata, TPredicateResult>(
+        return new HigherOrderFromExpressionTreeMultiMetadataProposition<TModel, TMetadata, TPredicateResult>(
             _expression,
             _higherOrderOperation.HigherOrderPredicate,
             _whenTrue,

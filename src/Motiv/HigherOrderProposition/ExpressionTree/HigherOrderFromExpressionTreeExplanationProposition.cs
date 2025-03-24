@@ -3,7 +3,7 @@ using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
 
-internal sealed class HigherOrderFromBooleanResultExplanationExpressionTreeProposition<TModel, TPredicateResult>(
+internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel, TPredicateResult>(
     Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> trueBecause,

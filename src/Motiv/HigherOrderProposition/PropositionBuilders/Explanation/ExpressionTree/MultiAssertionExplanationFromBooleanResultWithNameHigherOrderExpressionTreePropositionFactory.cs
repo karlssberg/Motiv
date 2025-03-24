@@ -27,7 +27,7 @@ public readonly partial struct MultiAssertionExplanationFromBooleanResultWithNam
     public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultMultiMetadataExpressionTreeProposition<TModel, string, TPredicateResult>(
+        return new HigherOrderFromExpressionTreeMultiMetadataProposition<TModel, string, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause
@@ -44,7 +44,7 @@ public readonly partial struct MultiAssertionExplanationFromBooleanResultWithNam
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromBooleanResultMultiMetadataExpressionTreeProposition<TModel, string, TPredicateResult>(
+        new HigherOrderFromExpressionTreeMultiMetadataProposition<TModel, string, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause

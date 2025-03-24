@@ -29,7 +29,7 @@ public readonly partial struct MetadataHigherOrderExpressionTreePropositionFacto
     public PolicyBase<IEnumerable<TModel>, TMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultMetadataExpressionTreeProposition<TModel, TMetadata, TPredicateResult>(
+        return new HigherOrderFromExpressionTreeMetadataProposition<TModel, TMetadata, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,
@@ -42,7 +42,7 @@ public readonly partial struct MetadataHigherOrderExpressionTreePropositionFacto
     /// <returns>A specification for the model.</returns>
     public PolicyBase<IEnumerable<TModel>, TMetadata> Create()
     {
-        return new HigherOrderFromBooleanResultMetadataExpressionTreeProposition<TModel, TMetadata, TPredicateResult>(
+        return new HigherOrderFromExpressionTreeMetadataProposition<TModel, TMetadata, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,

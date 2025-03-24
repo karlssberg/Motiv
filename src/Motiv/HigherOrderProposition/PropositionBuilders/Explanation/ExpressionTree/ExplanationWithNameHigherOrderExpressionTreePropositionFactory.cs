@@ -26,7 +26,7 @@ public readonly partial struct ExplanationWithNameHigherOrderExpressionTreePropo
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public PolicyBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromBooleanResultExplanationExpressionTreeProposition<TModel, TPredicateResult>(
+        new HigherOrderFromExpressionTreeExplanationProposition<TModel, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, string>, string>(),
@@ -44,7 +44,7 @@ public readonly partial struct ExplanationWithNameHigherOrderExpressionTreePropo
     public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultExplanationExpressionTreeProposition<TModel, TPredicateResult>(
+        return new HigherOrderFromExpressionTreeExplanationProposition<TModel, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, string>, string>(),
