@@ -22,7 +22,7 @@ public readonly partial struct ExplanationPropositionFactory<TModel, TMetadata>(
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, string> Create(string statement) =>
-        new SpecDecoratorExplanationProposition<TModel, TMetadata>(
+        new SpecDecoratorProposition<TModel, string, TMetadata>(
             spec,
             trueBecause,
             falseBecause,

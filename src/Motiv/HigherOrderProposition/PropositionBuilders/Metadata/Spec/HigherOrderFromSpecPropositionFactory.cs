@@ -20,7 +20,7 @@ public readonly partial struct HigherOrderFromSpecPropositionFactory<TModel, TMe
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
     public SpecBase<IEnumerable<TModel>, TMetadata> Create(string statement) =>
-        new HigherOrderFromBooleanResultProposition<TModel, TMetadata>(
+        new MinimalHigherOrderFromBooleanResultProposition<TModel, TMetadata>(
             spec.IsSatisfiedBy,
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(
@@ -29,7 +29,7 @@ public readonly partial struct HigherOrderFromSpecPropositionFactory<TModel, TMe
             higherOrderOperation.CauseSelector);
 
     internal SpecBase<IEnumerable<TModel>, TMetadata> Create(Expression statement) =>
-        new HigherOrderFromBooleanResultProposition<TModel, TMetadata>(
+        new MinimalHigherOrderFromBooleanResultProposition<TModel, TMetadata>(
             spec.IsSatisfiedBy,
             higherOrderOperation.HigherOrderPredicate,
             new ExpressionDescription(

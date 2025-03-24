@@ -26,7 +26,7 @@ public readonly partial struct MetadataFromBooleanHigherOrderPropositionFactory<
     {
         resultResolver.ThrowIfNull(nameof(resultResolver));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanPredicateMetadataProposition<TModel,TMetadata>(
+        return new HigherOrderFromBooleanPredicateProposition<TModel,TMetadata>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,

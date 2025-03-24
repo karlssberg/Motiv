@@ -26,7 +26,7 @@ public readonly partial struct MetadataFromBooleanResultHigherOrderPropositionFa
     public PolicyBase<IEnumerable<TModel>, TReplacementMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultMetadataProposition<TModel, TReplacementMetadata, TMetadata>(
+        return new HigherOrderFromBooleanResultProposition<TModel, TReplacementMetadata, TMetadata>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,

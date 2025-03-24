@@ -20,7 +20,7 @@ public readonly partial struct MetadataPolicyFactory<TModel, TReplacementMetadat
     /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, TReplacementMetadata> Create(string statement) =>
-        new PolicyDecoratorMetadataProposition<TModel, TReplacementMetadata, TMetadata>(
+        new PolicyDecoratorProposition<TModel, TReplacementMetadata, TMetadata>(
             spec,
             whenTrue,
             whenFalse,

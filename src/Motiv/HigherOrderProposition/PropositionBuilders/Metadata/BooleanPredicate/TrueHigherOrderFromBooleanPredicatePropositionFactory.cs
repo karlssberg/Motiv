@@ -23,7 +23,7 @@ public readonly partial struct TrueHigherOrderFromBooleanPredicatePropositionFac
     {
         predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanPredicateMetadataProposition<TModel, string>(
+        return new HigherOrderFromBooleanPredicateProposition<TModel, string>(
             predicate,
             higherOrderOperation.HigherOrderPredicate,
             _ => statement,

@@ -25,7 +25,7 @@ public readonly partial struct ExplanationHigherOrderPropositionFactory<TModel, 
     public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultExplanationProposition<TModel, TMetadata>(
+        return new HigherOrderFromBooleanResultProposition<TModel, string, TMetadata>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause,

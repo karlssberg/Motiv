@@ -25,7 +25,7 @@ public readonly partial struct ExplanationFromBooleanPredicateWithNameHigherOrde
     public PolicyBase<IEnumerable<TModel>, string> Create()
     {
         predicate.ThrowIfNull(nameof(predicate));
-        return new HigherOrderFromBooleanPredicateExplanationProposition<TModel>(
+        return new HigherOrderFromBooleanPredicateProposition<TModel, string>(
             predicate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanEvaluation<TModel>, string>(),
@@ -45,7 +45,7 @@ public readonly partial struct ExplanationFromBooleanPredicateWithNameHigherOrde
     {
         predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanPredicateExplanationProposition<TModel>(
+        return new HigherOrderFromBooleanPredicateProposition<TModel, string>(
             predicate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanEvaluation<TModel>, string>(),

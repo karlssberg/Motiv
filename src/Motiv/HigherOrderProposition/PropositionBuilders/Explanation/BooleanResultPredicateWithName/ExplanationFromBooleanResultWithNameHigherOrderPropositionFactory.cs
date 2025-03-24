@@ -24,7 +24,7 @@ public readonly partial struct ExplanationFromBooleanResultWithNameHigherOrderPr
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public PolicyBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromBooleanResultExplanationProposition<TModel, TMetadata>(
+        new HigherOrderFromBooleanResultProposition<TModel, string, TMetadata>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string>(),
@@ -42,7 +42,7 @@ public readonly partial struct ExplanationFromBooleanResultWithNameHigherOrderPr
     public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanResultExplanationProposition<TModel, TMetadata>(
+        return new HigherOrderFromBooleanResultProposition<TModel, string, TMetadata>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string>(),

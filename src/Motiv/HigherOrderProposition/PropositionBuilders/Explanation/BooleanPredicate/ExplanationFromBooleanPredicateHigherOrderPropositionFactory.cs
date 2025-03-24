@@ -25,7 +25,7 @@ public readonly partial struct ExplanationFromBooleanPredicateHigherOrderProposi
     {
         predicate.ThrowIfNull(nameof(predicate));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanPredicateExplanationProposition<TModel>(
+        return new HigherOrderFromBooleanPredicateProposition<TModel, string>(
             predicate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause,

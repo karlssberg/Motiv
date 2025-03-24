@@ -2,7 +2,7 @@ using Shouldly;
 
 namespace Motiv.Tests;
 
-public class SpecDecoratorMetadataPropositionTests
+public class SpecDecoratorPropositionTests
 {
     public enum Metadata
     {

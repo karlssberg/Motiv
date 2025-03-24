@@ -1,61 +1,63 @@
-﻿namespace Motiv.HigherOrderProposition.BooleanResultPredicate;
+namespace Motiv.HigherOrderProposition.BooleanResultPredicate;
 
-internal sealed class HigherOrderFromBooleanResultProposition<TModel, TMetadata>(
-    Func<TModel, BooleanResultBase<TMetadata>> resultResolver,
-    Func<IEnumerable<BooleanResult<TModel, TMetadata>>, bool> higherOrderPredicate,
+internal sealed class HigherOrderFromBooleanResultProposition<TModel, TMetadata, TUnderlyingMetadata>(
+    Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,
+    Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
+    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue,
+    Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenFalse,
     ISpecDescription specDescription,
-    Func<bool, IEnumerable<BooleanResult<TModel, TMetadata>>, IEnumerable<BooleanResult<TModel, TMetadata>>> causeSelector)
-    : SpecBase<IEnumerable<TModel>, TMetadata>
+    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
+    : PolicyBase<IEnumerable<TModel>, TMetadata>
 {
     public override IEnumerable<SpecBase> Underlying => [];
 
     public override ISpecDescription Description => specDescription;
 
-    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(IEnumerable<TModel> models)
+    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
-            .Select(model => new BooleanResult<TModel, TMetadata>(model,  resultResolver(model)))
+            .Select(model => new BooleanResult<TModel, TUnderlyingMetadata>(model,  resultResolver(model)))
             .ToArray();
 
         var isSatisfied = higherOrderPredicate(underlyingResults);
-        var causes = new Lazy<BooleanResult<TModel, TMetadata>[]>(() =>
+        var metadataResolver = isSatisfied
+            ? whenTrue
+            : whenFalse;
+
+        var causes = new Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
                 .ToArray());
 
-        var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
+        var metadata = new Lazy<TMetadata>(() =>
         {
-            var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TMetadata>(
+            var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(
                 underlyingResults,
                 causes.Value);
 
-            return evaluation.Values;
+            return metadataResolver(evaluation);
         });
 
-        var assertions = new Lazy<IEnumerable<string>>(() =>
+        var assertion = new Lazy<string>(() =>
             metadata.Value switch
             {
-                IEnumerable<string>  reasons => reasons,
-                _ => specDescription.ToReason(isSatisfied).ToEnumerable()
+                string  reasons => reasons,
+                _ => specDescription.ToReason(isSatisfied)
             });
 
-        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-                new HigherOrderResultDescription<TMetadata>(
-                    specDescription.ToReason(isSatisfied),
-                    [],
-                    causes.Value,
-                    Description.Statement));
+        var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
+            new HigherOrderResultDescription<TUnderlyingMetadata>(
+                assertion.Value,
+                [],
+                causes.Value,
+                Description.Statement));
 
-        return new HigherOrderBooleanResult<TMetadata, TMetadata>(
+        return new HigherOrderPolicyResult<TMetadata, TUnderlyingMetadata>(
             isSatisfied,
-            Metadata,
-            Assertions,
-            ResultDescription,
+            () => metadata.Value,
+            () => metadata.Value.ToEnumerable(),
+            () => assertion.Value.ToEnumerable(),
+            () => lazyDescription.Value,
             underlyingResults,
-            GetCauses);
-
-        IEnumerable<TMetadata> Metadata() => metadata.Value;
-        IEnumerable<string> Assertions() => assertions.Value;
-        IEnumerable<BooleanResult<TModel, TMetadata>> GetCauses() => causes.Value;
-        ResultDescriptionBase ResultDescription() => resultDescription.Value;
+            () => causes.Value);
     }
 }
