@@ -29,21 +29,6 @@ public readonly partial struct MultiAssertionExplanationPropositionFactory<TMode
     }
 
     /// <summary>
-    /// A factory for creating propositions based on the supplied predicate and metadata factories.
-    /// </summary>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-    public MultiAssertionExplanationPropositionFactory(
-        [FluentMethod("Build")]Func<TModel, bool> predicate,
-        [MultipleFluentMethods(typeof(WhenTrueOverloads))] Func<TModel, string> whenTrue,
-        [FluentMethod("WhenFalseYield")]Func<TModel, IEnumerable<string>> whenFalse)
-    {
-        predicate.ThrowIfNull(nameof(predicate));
-        _predicate = predicate;
-        _whenTrue = whenTrue.ToEnumerableReturn();
-        _whenFalse = whenFalse;
-    }
-
-    /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
