@@ -29,13 +29,13 @@ internal sealed class HigherOrderFromBooleanResultProposition<TModel, TMetadata,
                 .ToArray());
 
         var metadata = new Lazy<TMetadata>(() =>
-        {
-            var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(
-                underlyingResults,
-                causes.Value);
+            {
+                var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(
+                    underlyingResults,
+                    causes.Value);
 
-            return metadataResolver(evaluation);
-        });
+                return metadataResolver(evaluation);
+            });
 
         var assertion = new Lazy<string>(() =>
             metadata.Value switch

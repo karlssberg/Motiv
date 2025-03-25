@@ -32,16 +32,16 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
                 result.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []));
 
         var explanation = new Lazy<Explanation>(() =>
-        {
-            var assertions = lazyMetadata.Value switch
             {
-                IEnumerable<string> because => because.ToArray(),
-                _ => result.Assertions
-            };
+                var assertions = lazyMetadata.Value switch
+                {
+                    IEnumerable<string> because => because.ToArray(),
+                    _ => result.Assertions
+                };
 
-            return new Explanation(assertions, result.ToEnumerable(),
-                result.ToEnumerable());
-        });
+                return new Explanation(assertions, result.ToEnumerable(),
+                    result.ToEnumerable());
+            });
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new ExpressionTreeBooleanResultDescription(

@@ -27,13 +27,13 @@ internal sealed class HigherOrderFromPolicyResultMetadataProposition<TModel, TMe
             causeSelector(isSatisfied, underlyingResults)
                 .ToArray());
         var metadata = new Lazy<TMetadata>(() =>
-        {
-            var evaluation = new HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>(
-                underlyingResults,
-                causes.Value);
+            {
+                var evaluation = new HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>(
+                    underlyingResults,
+                    causes.Value);
 
-            return metadataResolver(evaluation);
-        });
+                return metadataResolver(evaluation);
+            });
 
         var assertion = new Lazy<string>(() =>
             metadata.Value switch

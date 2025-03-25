@@ -36,23 +36,28 @@ internal sealed class PolicyResultPredicateMultiValueProposition<TModel, TMetada
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var policyResult = underlyingPolicyResultPredicate(model);
-        var metadataResolver = policyResult.Satisfied switch
-        {
-            true => whenTrue,
-            false => whenFalse
-        };
+        var metadataResolver =
+            policyResult.Satisfied switch
+            {
+                true => whenTrue,
+                false => whenFalse
+            };
 
         var metadata = new Lazy<TMetadata[]>(() => metadataResolver(model, policyResult).ToArray());
 
-        var assertions = new Lazy<ICollection<string>>(() => metadata.Value switch
-        {
-            ICollection<string> assertion => assertion,
-            IEnumerable<string> assertion => assertion.ToArray(),
-            _ => [Description.ToReason(policyResult.Satisfied)]
-        });
+        var assertions = new Lazy<ICollection<string>>(() =>
+            metadata.Value switch
+            {
+                ICollection<string> assertion => assertion,
+                IEnumerable<string> assertion => assertion.ToArray(),
+                _ => [Description.ToReason(policyResult.Satisfied)]
+            });
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertions.Value, policyResult.ToEnumerable(), policyResult.ToEnumerable()));
+            new Explanation(
+                assertions.Value,
+                policyResult.ToEnumerable(),
+                policyResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(metadata.Value,

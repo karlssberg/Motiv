@@ -25,19 +25,21 @@ internal sealed class Proposition<TModel, TMetadata>(
     {
         var isSatisfied = predicate(model);
 
-        var metadataResolver = isSatisfied switch
-        {
-            true => whenTrue,
-            false => whenFalse
-        };
+        var metadataResolver =
+            isSatisfied switch
+            {
+                true => whenTrue,
+                false => whenFalse
+            };
 
         var metadata = new Lazy<TMetadata>(() => metadataResolver(model));
 
-        var assertion = new Lazy<string> (() => metadata.Value switch
-        {
-            string because => because,
-            _ => Description.ToReason(isSatisfied)
-        });
+        var assertion = new Lazy<string> (() =>
+            metadata.Value switch
+            {
+                string because => because,
+                _ => Description.ToReason(isSatisfied)
+            });
 
         return new PropositionPolicyResult<TMetadata>(
             isSatisfied,

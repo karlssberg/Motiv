@@ -22,7 +22,9 @@ internal sealed class MinimalSpecDecoratorProposition<TModel, TMetadata>(
                 Description.Statement));
 
         var lazyMetadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
-            new MetadataNode<TMetadata>(predicateResult.Values, predicateResult.ToEnumerable()));
+            new MetadataNode<TMetadata>(
+                predicateResult.Values,
+                predicateResult.ToEnumerable()));
 
         return new BooleanResultWithUnderlying<TMetadata, TMetadata>(
             predicateResult,

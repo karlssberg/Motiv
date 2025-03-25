@@ -26,12 +26,12 @@ internal sealed class HigherOrderFromBooleanPredicateProposition<TModel, TMetada
             : whenFalse;
 
         var metadata = new Lazy<TMetadata>(() =>
-        {
-            var causes = causeSelector(isSatisfied, underlyingResults).ToArray();
-            var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
+            {
+                var causes = causeSelector(isSatisfied, underlyingResults).ToArray();
+                var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
 
-            return metadataResolver(evaluation);
-        });
+                return metadataResolver(evaluation);
+            });
 
         var assertion = new Lazy<string>(() =>
             metadata.Value switch

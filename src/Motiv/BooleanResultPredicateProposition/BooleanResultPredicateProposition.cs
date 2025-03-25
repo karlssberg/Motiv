@@ -30,22 +30,27 @@ internal sealed class BooleanResultPredicateProposition<TModel, TMetadata, TUnde
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
-        var metadataResolver = booleanResult.Satisfied switch
-        {
-            true => whenTrue,
-            false => whenFalse
-        };
+        var metadataResolver =
+            booleanResult.Satisfied switch
+            {
+                true => whenTrue,
+                false => whenFalse
+            };
 
         var metadata = new Lazy<TMetadata>(() => metadataResolver(model, booleanResult));
 
-        var assertion = new Lazy<string>(() => metadata.Value switch
-        {
-            string assertion => assertion,
-            _ => Description.ToReason(booleanResult.Satisfied)
-        });
+        var assertion = new Lazy<string>(() =>
+            metadata.Value switch
+            {
+                string assertion => assertion,
+                _ => Description.ToReason(booleanResult.Satisfied)
+            });
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertion.Value, booleanResult.ToEnumerable(), booleanResult.ToEnumerable()));
+            new Explanation(
+                assertion.Value,
+                booleanResult.ToEnumerable(),
+                booleanResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(metadata.Value,

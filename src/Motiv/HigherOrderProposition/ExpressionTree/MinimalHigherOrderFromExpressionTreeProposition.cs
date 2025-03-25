@@ -31,13 +31,13 @@ internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TP
             causes.Value.SelectMany(result => result.MetadataTier.Metadata));
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-                new HigherOrderExpressionTreeResultDescription<string>(
-                    isSatisfied,
-                    Description.ToReason(isSatisfied),
-                    [],
-                    expression,
-                    causes.Value,
-                    Description.Statement));
+            new HigherOrderExpressionTreeResultDescription<string>(
+                isSatisfied,
+                Description.ToReason(isSatisfied),
+                [],
+                expression,
+                causes.Value,
+                Description.Statement));
 
         return new HigherOrderBooleanResult<string, string>(
             isSatisfied,

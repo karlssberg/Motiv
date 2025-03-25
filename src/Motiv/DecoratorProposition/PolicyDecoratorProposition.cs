@@ -35,7 +35,10 @@ internal sealed partial class PolicyDecoratorProposition<TModel, TMetadata, TUnd
             });
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertion.Value, policyResult.ToEnumerable(), policyResult.ToEnumerable()));
+            new Explanation(
+                assertion.Value,
+                policyResult.ToEnumerable(),
+                policyResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(lazyMetadata.Value,

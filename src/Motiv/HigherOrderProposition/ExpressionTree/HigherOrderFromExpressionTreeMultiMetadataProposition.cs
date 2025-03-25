@@ -30,15 +30,15 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
                 .ToArray());
 
         var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
-        {
-            var evaluation = new HigherOrderBooleanResultEvaluation<TModel, string>(
-                underlyingResults,
-                causes.Value);
+            {
+                var evaluation = new HigherOrderBooleanResultEvaluation<TModel, string>(
+                    underlyingResults,
+                    causes.Value);
 
-            return isSatisfied
-                ? whenTrue(evaluation)
-                : whenFalse(evaluation);
-        });
+                return isSatisfied
+                    ? whenTrue(evaluation)
+                    : whenFalse(evaluation);
+            });
 
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch
@@ -48,13 +48,13 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
             });
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-                new HigherOrderExpressionTreeResultDescription<string>(
-                    isSatisfied,
-                    Description.ToReason(isSatisfied),
-                    typeof(TMetadata) == typeof(string) ? assertions.Value : [],
-                    expression,
-                    causes.Value,
-                    Description.Statement));
+            new HigherOrderExpressionTreeResultDescription<string>(
+                isSatisfied,
+                Description.ToReason(isSatisfied),
+                typeof(TMetadata) == typeof(string) ? assertions.Value : [],
+                expression,
+                causes.Value,
+                Description.Statement));
 
         return new HigherOrderBooleanResult<TMetadata, string>(
             isSatisfied,

@@ -32,15 +32,15 @@ internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel
                 .ToArray());
 
         var assertion = new Lazy<string>(() =>
-        {
-            var booleanCollectionResults = new HigherOrderBooleanResultEvaluation<TModel, string>(
-                underlyingResults,
-                causes.Value);
+            {
+                var booleanCollectionResults = new HigherOrderBooleanResultEvaluation<TModel, string>(
+                    underlyingResults,
+                    causes.Value);
 
-            return isSatisfied
-                ? trueBecause(booleanCollectionResults)
-                : falseBecause(booleanCollectionResults);
-        });
+                return isSatisfied
+                    ? trueBecause(booleanCollectionResults)
+                    : falseBecause(booleanCollectionResults);
+            });
 
         var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderExpressionTreeResultDescription<string>(
@@ -53,17 +53,11 @@ internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel
 
         return new HigherOrderPolicyResult<string, string>(
             isSatisfied,
-            Value,
-            Metadata,
-            Assertions,
-            ResultDescription,
+            () => assertion.Value,
+            () => assertion.Value.ToEnumerable(),
+            () => assertion.Value.ToEnumerable(),
+            () => lazyDescription.Value,
             underlyingResults,
-            GetCauses);
-
-        string Value() => assertion.Value;
-        IEnumerable<string> Metadata() => assertion.Value.ToEnumerable();
-        IEnumerable<string> Assertions() => assertion.Value.ToEnumerable();
-        ResultDescriptionBase ResultDescription() => lazyDescription.Value;
-        IEnumerable<BooleanResult<TModel, string>> GetCauses() => causes.Value;
+            () => causes.Value);
     }
 }

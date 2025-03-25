@@ -25,15 +25,15 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
                 .ToArray());
 
         var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
-        {
-            var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(
-                underlyingResults,
-                causes.Value);
+            {
+                var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(
+                    underlyingResults,
+                    causes.Value);
 
-            return isSatisfied
-                ? whenTrue(evaluation)
-                : whenFalse(evaluation);
-        });
+                return isSatisfied
+                    ? whenTrue(evaluation)
+                    : whenFalse(evaluation);
+            });
 
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch
@@ -43,23 +43,18 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
             });
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-                new HigherOrderResultDescription<TUnderlyingMetadata>(
-                    specDescription.ToReason(isSatisfied),
-                    typeof(TMetadata) == typeof(string) ? assertions.Value : [],
-                    causes.Value,
-                    Description.Statement));
+            new HigherOrderResultDescription<TUnderlyingMetadata>(
+                specDescription.ToReason(isSatisfied),
+                typeof(TMetadata) == typeof(string) ? assertions.Value : [],
+                causes.Value,
+                Description.Statement));
 
         return new HigherOrderBooleanResult<TMetadata, TUnderlyingMetadata>(
             isSatisfied,
-            Metadata,
-            Assertions,
-            ResultDescription,
+            () => metadata.Value,
+            () => assertions.Value,
+            () => resultDescription.Value,
             underlyingResults,
-            GetCauses);
-
-        IEnumerable<TMetadata> Metadata() => metadata.Value;
-        IEnumerable<string> Assertions() => assertions.Value;
-        IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>> GetCauses() => causes.Value;
-        ResultDescriptionBase ResultDescription() => resultDescription.Value;
+            () => causes.Value);
     }
 }

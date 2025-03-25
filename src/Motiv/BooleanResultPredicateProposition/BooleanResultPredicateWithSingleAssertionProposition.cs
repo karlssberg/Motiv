@@ -26,7 +26,10 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
             });
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertion.Value, predicateResult.ToEnumerable(), predicateResult.ToEnumerable()));
+            new Explanation(
+                assertion.Value,
+                predicateResult.ToEnumerable(),
+                predicateResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(

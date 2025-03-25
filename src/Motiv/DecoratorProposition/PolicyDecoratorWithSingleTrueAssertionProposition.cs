@@ -28,7 +28,10 @@ internal sealed partial class PolicyDecoratorWithSingleTrueAssertionProposition<
             });
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertion.Value, underlyingResult.ToEnumerable(), underlyingResult.ToEnumerable()));
+            new Explanation(
+                assertion.Value,
+                underlyingResult.ToEnumerable(),
+                underlyingResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(assertion.Value,

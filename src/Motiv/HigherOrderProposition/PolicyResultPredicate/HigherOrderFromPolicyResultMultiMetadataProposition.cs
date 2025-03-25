@@ -25,15 +25,15 @@ internal sealed class HigherOrderFromPolicyResultMultiMetadataProposition<TModel
                 .ToArray());
 
         var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
-        {
-            var evaluation = new HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>(
-                underlyingResults,
-                causes.Value);
+            {
+                var evaluation = new HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>(
+                    underlyingResults,
+                    causes.Value);
 
-            return isSatisfied
-                ? whenTrue(evaluation)
-                : whenFalse(evaluation);
-        });
+                return isSatisfied
+                    ? whenTrue(evaluation)
+                    : whenFalse(evaluation);
+            });
 
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch

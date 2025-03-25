@@ -23,13 +23,13 @@ internal sealed class MinimalHigherOrderFromBooleanResultProposition<TModel, TMe
                 .ToArray());
 
         var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
-        {
-            var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TMetadata>(
-                underlyingResults,
-                causes.Value);
+            {
+                var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TMetadata>(
+                    underlyingResults,
+                    causes.Value);
 
-            return evaluation.Values;
-        });
+                return evaluation.Values;
+            });
 
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch
@@ -39,11 +39,11 @@ internal sealed class MinimalHigherOrderFromBooleanResultProposition<TModel, TMe
             });
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-                new HigherOrderResultDescription<TMetadata>(
-                    specDescription.ToReason(isSatisfied),
-                    [],
-                    causes.Value,
-                    Description.Statement));
+            new HigherOrderResultDescription<TMetadata>(
+                specDescription.ToReason(isSatisfied),
+                [],
+                causes.Value,
+                Description.Statement));
 
         return new HigherOrderBooleanResult<TMetadata, TMetadata>(
             isSatisfied,

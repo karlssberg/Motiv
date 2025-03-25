@@ -32,7 +32,10 @@ internal sealed partial class SpecDecoratorMultiMetadataProposition<TModel, TMet
             });
 
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertions.Value, booleanResult.ToEnumerable(), booleanResult.ToEnumerable()));
+            new Explanation(
+                assertions.Value,
+                booleanResult.ToEnumerable(),
+                booleanResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(metadata.Value,

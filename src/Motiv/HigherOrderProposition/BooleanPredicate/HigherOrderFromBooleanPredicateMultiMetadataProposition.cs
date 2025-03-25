@@ -23,16 +23,15 @@ internal sealed class HigherOrderFromBooleanPredicateMultiMetadataProposition<TM
 
         var isSatisfied = higherOrderPredicate(underlyingResults);
 
-
         var lazyMetadata = new Lazy<IEnumerable<TMetadata>>(() =>
-        {
-            var causes = causeSelector(isSatisfied, underlyingResults).ToArray();
-            var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
+            {
+                var causes = causeSelector(isSatisfied, underlyingResults).ToArray();
+                var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
 
-            return isSatisfied
-                ? whenTrue(evaluation)
-                : whenFalse(evaluation);
-        });
+                return isSatisfied
+                    ? whenTrue(evaluation)
+                    : whenFalse(evaluation);
+            });
 
         var lazyAssertion = new Lazy<IEnumerable<string>>(() =>
             lazyMetadata.Value switch

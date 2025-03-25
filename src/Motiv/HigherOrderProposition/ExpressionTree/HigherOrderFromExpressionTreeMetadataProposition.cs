@@ -29,15 +29,15 @@ internal sealed class HigherOrderFromExpressionTreeMetadataProposition<TModel, T
                 .ToArray());
 
         var metadata = new Lazy<TMetadata>(() =>
-        {
-            var evaluation = new HigherOrderBooleanResultEvaluation<TModel, string>(
-                underlyingResults,
-                causes.Value);
+            {
+                var evaluation = new HigherOrderBooleanResultEvaluation<TModel, string>(
+                    underlyingResults,
+                    causes.Value);
 
-            return isSatisfied
-                ? whenTrue(evaluation)
-                : whenFalse(evaluation);
-        });
+                return isSatisfied
+                    ? whenTrue(evaluation)
+                    : whenFalse(evaluation);
+            });
 
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch
