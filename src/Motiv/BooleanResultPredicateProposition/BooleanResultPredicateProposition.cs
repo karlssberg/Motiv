@@ -30,24 +30,14 @@ internal sealed class BooleanResultPredicateProposition<TModel, TMetadata, TUnde
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
+        var metadataResolver = booleanResult.Satisfied switch
+        {
+            true => whenTrue,
+            false => whenFalse
+        };
 
-        var metadata = CreateLazyMetadata(model, booleanResult);
+        var metadata = new Lazy<TMetadata>(() => metadataResolver(model, booleanResult));
 
-        return CreatePolicyResult(metadata, booleanResult);
-    }
-
-    private Lazy<TMetadata> CreateLazyMetadata(TModel model, BooleanResultBase<TUnderlyingMetadata> booleanResult)
-    {
-        return new Lazy<TMetadata>(() =>
-            booleanResult.Satisfied switch
-            {
-                true => whenTrue(model, booleanResult),
-                false => whenFalse(model, booleanResult)
-            });
-    }
-
-    private PolicyResultBase<TMetadata> CreatePolicyResult(Lazy<TMetadata> metadata, BooleanResultBase<TUnderlyingMetadata> booleanResult)
-    {
         var assertion = new Lazy<string>(() => metadata.Value switch
         {
             string assertion => assertion,
@@ -69,14 +59,9 @@ internal sealed class BooleanResultPredicateProposition<TModel, TMetadata, TUnde
 
         return new PolicyResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,
-            Value,
-            MetadataTier,
-            Explanation,
-            ResultDescription);
-
-        TMetadata Value() => metadata.Value;
-        MetadataNode<TMetadata> MetadataTier() => metadataTier.Value;
-        Explanation Explanation() => explanation.Value;
-        ResultDescriptionBase ResultDescription() => resultDescription.Value;
+            () => metadata.Value,
+            () => metadataTier.Value,
+            () => explanation.Value,
+            () => resultDescription.Value);
     }
 }

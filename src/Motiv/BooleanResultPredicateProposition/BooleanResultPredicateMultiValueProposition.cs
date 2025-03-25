@@ -36,13 +36,13 @@ internal sealed class BooleanResultPredicateMultiValueProposition<TModel, TMetad
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
+        var metadataResolver = booleanResult.Satisfied switch
+        {
+            true => whenTrue,
+            false => whenFalse
+        };
 
-        var metadata = new Lazy<TMetadata[]>(() =>
-            booleanResult.Satisfied switch
-            {
-                true => whenTrue(model, booleanResult).ToArray(),
-                false => whenFalse(model, booleanResult).ToArray()
-            });
+        var metadata = new Lazy<TMetadata[]>(() => metadataResolver(model, booleanResult).ToArray());
 
         var assertions = new Lazy<string[]>(() => metadata.Value switch
         {
@@ -65,12 +65,8 @@ internal sealed class BooleanResultPredicateMultiValueProposition<TModel, TMetad
 
         return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,
-            MetadataTier,
-            Explanation,
-            ResultDescription);
-
-        MetadataNode<TMetadata> MetadataTier() => metadataTier.Value;
-        Explanation Explanation() => explanation.Value;
-        ResultDescriptionBase ResultDescription() => description.Value;
+            () => metadataTier.Value,
+            () => explanation.Value,
+            () => description.Value);
     }
 }

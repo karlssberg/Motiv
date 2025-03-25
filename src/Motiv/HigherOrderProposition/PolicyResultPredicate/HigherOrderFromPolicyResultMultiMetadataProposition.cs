@@ -51,15 +51,10 @@ internal sealed class HigherOrderFromPolicyResultMultiMetadataProposition<TModel
 
         return new HigherOrderBooleanResult<TMetadata, TUnderlyingMetadata>(
             isSatisfied,
-            Metadata,
-            Assertions,
-            ResultDescription,
+            () => metadata.Value,
+            () => assertions.Value,
+            () => resultDescription.Value,
             underlyingResults,
-            GetCauses);
-
-        IEnumerable<TMetadata> Metadata() => metadata.Value;
-        IEnumerable<string> Assertions() => assertions.Value;
-        IEnumerable<BooleanResultBase<TUnderlyingMetadata>> GetCauses() => causes.Value;
-        ResultDescriptionBase ResultDescription() => resultDescription.Value;
+            () => causes.Value);
     }
 }

@@ -1,20 +1,19 @@
-﻿using Motiv.Generator.Attributes;
-using Motiv.HigherOrderProposition.PolicyResultPredicate;
+using Motiv.Generator.Attributes;
+using Motiv.HigherOrderProposition.BooleanPredicate;
 using Motiv.Shared;
 
-namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.PolicyResultPredicate;
+namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanPredicate;
 
 /// <summary>
 /// A factory for creating specifications based on a predicate and explanations for true and false conditions. This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a specification that covers every possibility, so instead it is done on a case-by-case basis.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-/// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly partial struct MultiAssertionExplanationWithNameHigherOrderPolicyResultPropositionFactory<TModel, TMetadata>(
-    [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
-    [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
+public readonly partial struct MultiAssertionExplanationWithNameHigherOrderPropositionFactory<TModel>(
+    [FluentMethod("Build")]Func<TModel, bool> resultResolver,
+    [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,
     [FluentMethod("WhenTrue")]string trueBecause,
-    [FluentMethod("WhenFalseYield")]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> falseBecause)
+    [FluentMethod("WhenFalseYield")]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> falseBecause)
 {
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.
@@ -24,13 +23,14 @@ public readonly partial struct MultiAssertionExplanationWithNameHigherOrderPolic
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
+        resultResolver.ThrowIfNull(nameof(resultResolver));
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, string, TMetadata>(
+        return new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel, string>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause
                 .ToEnumerable()
-                .ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>>(),
+                .ToFunc<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>>(),
             falseBecause,
             new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
@@ -41,14 +41,16 @@ public readonly partial struct MultiAssertionExplanationWithNameHigherOrderPolic
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, string, TMetadata>(
+    public SpecBase<IEnumerable<TModel>, string> Create()
+    {
+        return new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel, string>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause
                 .ToEnumerable()
-                .ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>>(),
+                .ToFunc<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>>(),
             falseBecause,
             new SpecDescription(trueBecause),
             higherOrderOperation.CauseSelector);
+    }
 }

@@ -904,8 +904,6 @@ public class BooleanResultPredicateExplanationPropositionTests
         act.ShouldBe(expectedReason);
     }
 
-
-
     [Theory]
     [InlineData(true, "propositional statement")]
     [InlineData(false, "¬propositional statement")]

@@ -16,7 +16,7 @@ public readonly partial struct MultiAssertionExplanationFromBooleanResultWithNam
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,
     [FluentMethod("WhenTrue")]string trueBecause,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>> falseBecause)
+    [FluentMethod("WhenFalseYield")]Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>> falseBecause)
 {
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.

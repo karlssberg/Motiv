@@ -18,45 +18,32 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
     {
         var predicateResult = predicate(model);
 
-        var assertion = GetLazyAssertion(model, predicateResult);
-
-        return CreatePolicyResult(assertion, predicateResult);
-    }
-
-    private Lazy<string> GetLazyAssertion(TModel model, BooleanResultBase<TUnderlyingMetadata> booleanResult) =>
-        new(() =>
-            booleanResult.Satisfied switch
+        var assertion = new Lazy<string>(() =>
+            predicateResult.Satisfied switch
             {
                 true => trueBecause,
-                false => whenFalse(model, booleanResult)
+                false => whenFalse(model, predicateResult)
             });
 
-    private PolicyResultBase<string> CreatePolicyResult(Lazy<string> assertion, BooleanResultBase<TUnderlyingMetadata> booleanResult)
-    {
         var explanation = new Lazy<Explanation>(() =>
-            new Explanation(assertion.Value, booleanResult.ToEnumerable(), booleanResult.ToEnumerable()));
+            new Explanation(assertion.Value, predicateResult.ToEnumerable(), predicateResult.ToEnumerable()));
 
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(
                 assertion.Value.ToEnumerable(),
-                booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []));
+                predicateResult.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []));
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
-                booleanResult,
+                predicateResult,
                 assertion.Value,
                 Description.Statement));
 
         return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
-            booleanResult,
-            Value,
-            MetadataTier,
-            Explanation,
-            ResultDescription);
-
-        string Value() => assertion.Value;
-        MetadataNode<string> MetadataTier() => metadataTier.Value;
-        Explanation Explanation() => explanation.Value;
-        ResultDescriptionBase ResultDescription() => resultDescription.Value;
+            predicateResult,
+            () => assertion.Value,
+            () => metadataTier.Value,
+            () => explanation.Value,
+            () => resultDescription.Value);
     }
 }
