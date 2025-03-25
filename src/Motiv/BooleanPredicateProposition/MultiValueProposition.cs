@@ -28,23 +28,28 @@ internal sealed class MultiValueProposition<TModel, TMetadata>(
     {
         var isSatisfied = predicate(model);
 
-        var metadata = isSatisfied switch
+        var metadataResolver = isSatisfied switch
         {
-            true => whenTrue(model),
-            false => whenFalse(model)
+            true => whenTrue,
+            false => whenFalse
         };
+        var metadataNode = new Lazy<MetadataNode<TMetadata>>(() =>
+            new MetadataNode<TMetadata>(metadataResolver(model), []));
 
-        var assertion = metadata switch
-        {
-            IEnumerable<string> because => because,
-            _ => Description.ToReason(isSatisfied).ToEnumerable()
-        };
+        var explanation = new Lazy<Explanation>(() =>
+            new Explanation(metadataNode.Value.Metadata switch
+            {
+                IEnumerable<string> because => because,
+                _ => Description.ToReason(isSatisfied).ToEnumerable()
+            }));
+
+        var description = new Lazy<ResultDescriptionBase>(() =>
+            new PropositionResultDescription(Description.ToReason(isSatisfied), Description.Statement));
 
         return new PropositionBooleanResult<TMetadata>(
             isSatisfied,
-            new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata, [])),
-            new Lazy<Explanation>(() => new Explanation(assertion)),
-            new Lazy<ResultDescriptionBase>(() =>
-                new PropositionResultDescription(Description.ToReason(isSatisfied), Description.Statement)));
+            metadataNode,
+            explanation,
+            description);
     }
 }

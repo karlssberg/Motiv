@@ -31,20 +31,22 @@ internal sealed class ExpressionTreeWithSingleTrueAssertionProposition<TModel, T
                 false => whenFalse(model, result)
             });
 
-        var explanation = new Lazy<Explanation>(() => new Explanation(
-            assertion.Value,
-            resultAsCollection,
-            resultAsCollection));
+        var explanation = new Lazy<Explanation>(() =>
+            new Explanation(
+                assertion.Value,
+                resultAsCollection,
+                resultAsCollection));
 
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(assertion.Value,
                 resultAsCollection));
 
-        var resultDescription = new Lazy<ResultDescriptionBase>(() => new ExpressionTreeBooleanResultDescription(
-            result,
-            assertion.Value,
-            expression,
-            Description.Statement));
+        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
+            new ExpressionTreeBooleanResultDescription(
+                result,
+                assertion.Value,
+                expression,
+                Description.Statement));
 
         return new ExpressionTreePolicyResult<string>(
             result.Satisfied,
