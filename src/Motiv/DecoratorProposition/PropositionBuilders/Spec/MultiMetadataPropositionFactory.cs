@@ -19,9 +19,6 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TReplacem
     /// <summary>
     /// A factory for creating propositions based on the supplied proposition and metadata factories.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
-    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataPropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
@@ -36,9 +33,6 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TReplacem
      /// <summary>
     /// A factory for creating propositions based on the supplied proposition and metadata factories.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
-    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataPropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,

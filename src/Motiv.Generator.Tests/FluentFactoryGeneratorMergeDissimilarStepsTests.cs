@@ -1,7 +1,9 @@
 ﻿using System.Globalization;
-using Motiv.Generator.FluentBuilder;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
+using Motiv.Generator.FluentFactory;
 using VerifyCS =
-    Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentBuilder.FluentFactoryGenerator>;
+    Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentFactory.FluentFactoryGenerator>;
 
 namespace Motiv.Generator.Tests;
 
@@ -1162,7 +1164,10 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
         {
             TestState =
             {
-                Sources = { code },
+                Sources = { ("Source.cs", code) },
+                ExpectedDiagnostics = {
+                    new DiagnosticResult("MOTIV002", DiagnosticSeverity.Warning)
+                        .WithSpan("Source.cs", 51, 74, 51, 81) },
                 GeneratedSources =
                 {
                     (typeof(FluentFactoryGenerator), "TestFactory.Factory.g.cs", expected)
@@ -1285,7 +1290,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
             {
             }
 
-            public class PolicyResultBase<TMetadata>
+            public abstract class PolicyResultBase<TMetadata>
             {
             }
 

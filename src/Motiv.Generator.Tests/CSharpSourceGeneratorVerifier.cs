@@ -3,8 +3,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
+using Microsoft.CodeAnalysis.Testing.Verifiers;
 using Motiv.Generator.Attributes;
-using Motiv.Generator.FluentBuilder;
+using Motiv.Generator.FluentFactory;
 
 namespace Motiv.Generator.Tests;
 
@@ -42,7 +43,8 @@ public static class CSharpSourceGeneratorVerifier<TSourceGenerator>
         private static ImmutableDictionary<string, ReportDiagnostic> GetNullableWarningsFromCompiler()
         {
             string[] args = ["/warnaserror:nullable"];
-            var commandLineArguments = CSharpCommandLineParser.Default.Parse(args, baseDirectory: Environment.CurrentDirectory, sdkDirectory: Environment.CurrentDirectory);
+            var commandLineArguments = CSharpCommandLineParser.Default.Parse(args,
+                baseDirectory: Environment.CurrentDirectory, sdkDirectory: Environment.CurrentDirectory);
             var nullableWarnings = commandLineArguments.CompilationOptions.SpecificDiagnosticOptions;
 
             return nullableWarnings;

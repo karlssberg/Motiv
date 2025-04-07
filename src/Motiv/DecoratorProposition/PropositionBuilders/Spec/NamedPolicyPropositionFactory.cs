@@ -18,8 +18,6 @@ public readonly partial struct NamedPolicyPropositionFactory<TModel, TMetadata>
     /// <summary>
     /// A factory for creating propositions based on the supplied proposition and explanations.
     /// </summary>
-    /// <typeparam name="TModel">The type of the model.</typeparam>
-    /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public NamedPolicyPropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,

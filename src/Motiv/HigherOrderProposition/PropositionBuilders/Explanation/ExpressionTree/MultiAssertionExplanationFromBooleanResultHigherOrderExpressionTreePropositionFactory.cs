@@ -34,6 +34,7 @@ public readonly partial struct MultiAssertionExplanationFromBooleanResultHigherO
         _falseBecause = falseBecause;
     }
 
+
     /// <summary>
     /// A factory for creating specifications based on a predicate and explanations for true and false conditions. This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a specification that covers every possibility, so instead it is done on a case-by-case basis.
     /// </summary>

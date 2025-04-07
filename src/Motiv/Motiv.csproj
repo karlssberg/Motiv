@@ -23,10 +23,6 @@
         <TargetFrameworks>netstandard2.0;net8.0;net9.0</TargetFrameworks>
     </PropertyGroup>
 
-    <PropertyGroup>
-        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    </PropertyGroup>
-
     <ItemGroup>
         <None Include="..\..\README.md" Pack="true" PackagePath="\" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />

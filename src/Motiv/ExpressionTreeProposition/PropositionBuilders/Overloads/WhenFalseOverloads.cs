@@ -1,6 +1,6 @@
 ﻿using Motiv.Generator.Attributes;
 
-namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
+namespace Motiv.ExpressionTreeProposition.PropositionBuilders.Overloads;
 
 internal class WhenFalseOverloads
 {

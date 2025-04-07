@@ -1,6 +1,6 @@
-﻿using Motiv.Generator.FluentBuilder;
+﻿using Motiv.Generator.FluentFactory;
 using VerifyCS =
-    Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentBuilder.FluentFactoryGenerator>;
+    Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentFactory.FluentFactoryGenerator>;
 
 namespace Motiv.Generator.Tests;
 

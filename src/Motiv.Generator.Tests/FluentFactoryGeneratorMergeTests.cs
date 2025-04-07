@@ -1,6 +1,6 @@
-﻿using Motiv.Generator.FluentBuilder;
+﻿using Motiv.Generator.FluentFactory;
 using VerifyCS =
-    Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentBuilder.FluentFactoryGenerator>;
+    Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentFactory.FluentFactoryGenerator>;
 
 namespace Motiv.Generator.Tests;
 
@@ -1457,7 +1457,7 @@ public class FluentFactoryGeneratorMergeTests
             public readonly partial struct MultiAssertionExplanationWithNamePropositionFactory<TModel>(
                 [FluentMethod("Build")]Func<TModel, bool> predicate,
                 [FluentMethod("WhenTrue")]string trueBecause,
-                [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, IEnumerable<string>> falseBecause)
+                [FluentMethod("WhenFalseYield")]Func<TModel, IEnumerable<string>> falseBecause)
             {
             }
 
@@ -1475,12 +1475,6 @@ public class FluentFactoryGeneratorMergeTests
                 internal static Func<TModel, TMetadata> WhenTrue<TModel, TMetadata>(Func<TModel, TMetadata> whenTrue)
                 {
                     return whenTrue;
-                }
-
-                [FluentMethodTemplate]
-                internal static Func<TModel, TMetadata> WhenTrue<TModel, TMetadata>(TMetadata whenTrue)
-                {
-                    return _ => whenTrue;
                 }
             }
 
@@ -1521,6 +1515,7 @@ public class FluentFactoryGeneratorMergeTests
                 }
             }
             """;
+
         var expected =
             """
             using System;
@@ -1616,9 +1611,9 @@ public class FluentFactoryGeneratorMergeTests
                 ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                public MultiAssertionExplanationWithNamePropositionFactory<TModel> WhenFalseYield(in System.Func<TModel, System.Collections.Generic.IEnumerable<string>> whenFalse)
+                public MultiAssertionExplanationWithNamePropositionFactory<TModel> WhenFalseYield(in System.Func<TModel, System.Collections.Generic.IEnumerable<string>> falseBecause)
                 {
-                    return new MultiAssertionExplanationWithNamePropositionFactory<TModel>(this._predicate__parameter, this._trueBecause__parameter, WhenFalseYieldOverloads.WhenFalseYield<TModel, string>(whenFalse));
+                    return new MultiAssertionExplanationWithNamePropositionFactory<TModel>(this._predicate__parameter, this._trueBecause__parameter, falseBecause);
                 }
             }
 

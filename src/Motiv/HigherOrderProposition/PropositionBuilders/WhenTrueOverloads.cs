@@ -9,6 +9,7 @@ internal class WhenTrueOverloads
     {
         return whenTrue;
     }
+
     [FluentMethodTemplate]
     internal static Func<TEvaluation, TNewMetadata> WhenTrue<TEvaluation, TNewMetadata>(TNewMetadata whenTrue)
     {

@@ -1,6 +1,8 @@
-﻿using Motiv.Generator.FluentBuilder;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
+using Motiv.Generator.FluentFactory;
 using VerifyCS =
-    Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentBuilder.FluentFactoryGenerator>;
+    Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentFactory.FluentFactoryGenerator>;
 
 namespace Motiv.Generator.Tests;
 
@@ -2267,6 +2269,7 @@ public class FluentFactoryMethodCustomizationTests
             using System;
             using Motiv.Generator.Attributes;
 
+
             [FluentFactory]
             public static partial class Factory;
 
@@ -2409,11 +2412,18 @@ public class FluentFactoryMethodCustomizationTests
         {
             TestState =
             {
-                Sources = { code },
+                Sources = { ("Source.cs", code) },
                 GeneratedSources =
                 {
                     (typeof(FluentFactoryGenerator), "Factory.g.cs", expected)
-                }
+                },
+                ExpectedDiagnostics =
+                {
+                    new DiagnosticResult("MOTIV001", DiagnosticSeverity.Error)
+                        .WithSpan("Source.cs",42, 64, 42, 70),
+                    new DiagnosticResult("MOTIV002", DiagnosticSeverity.Warning)
+                    .WithSpan("Source.cs",12, 59, 12, 65)
+                },
             }
         }.RunAsync();
     }

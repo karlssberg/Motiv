@@ -1,0 +1,63 @@
+﻿using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
+using Motiv.Generator.FluentFactory.Generation;
+using Motiv.Generator.FluentFactory.Model.Steps;
+using Motiv.Generator.FluentFactory.Model.Storage;
+
+namespace Motiv.Generator.FluentFactory.Model.Methods;
+
+public class RegularMethod : IFluentMethod
+{
+    private readonly Lazy<ImmutableArray<FluentTypeParameter>> _lazyTypeParameters;
+
+    public RegularMethod(
+        string name,
+        IParameterSymbol sourceParameterSymbol,
+        IFluentReturn fluentReturn,
+        INamespaceSymbol rootNamespace,
+        ImmutableArray<FluentMethodParameter> availableParameterFields,
+        OrderedDictionary<IParameterSymbol, IFluentValueStorage> valueStorages)
+    {
+        _lazyTypeParameters = new Lazy<ImmutableArray<FluentTypeParameter>>(GetTypeParameters);
+
+        Name = name;
+        SourceParameter = sourceParameterSymbol;
+        MethodParameters = GetMethodParameters(name, sourceParameterSymbol);
+        RootNamespace = rootNamespace;
+        ValueSources = valueStorages;
+        AvailableParameterFields = availableParameterFields;
+        Return = fluentReturn;
+    }
+
+    public string Name { get; }
+
+    public ImmutableArray<FluentMethodParameter> MethodParameters { get; }
+
+    public OrderedDictionary<IParameterSymbol, IFluentValueStorage> ValueSources { get; }
+
+    public IParameterSymbol SourceParameter { get; }
+
+    public ImmutableArray<FluentMethodParameter> AvailableParameterFields { get; }
+
+    public IFluentReturn Return { get; }
+
+    public ImmutableArray<FluentTypeParameter> TypeParameters => _lazyTypeParameters.Value;
+
+    public INamespaceSymbol RootNamespace { get; }
+
+    private static ImmutableArray<FluentMethodParameter> GetMethodParameters(string methodName,
+        IParameterSymbol sourceParameterSymbol)
+    {
+        return [new FluentMethodParameter(sourceParameterSymbol, methodName)];
+    }
+
+    private ImmutableArray<FluentTypeParameter> GetTypeParameters()
+    {
+        return
+        [
+            ..SourceParameter.Type
+                .GetGenericTypeParameters()
+                .Select(genericTypeParameter => new FluentTypeParameter(genericTypeParameter))
+        ];
+    }
+}

@@ -1,5 +1,4 @@
 using Motiv.ECommerce.Models;
-using Motiv.ECommerce.Models;
 using Shouldly;
 
 namespace Motiv.ECommerce.Tests;

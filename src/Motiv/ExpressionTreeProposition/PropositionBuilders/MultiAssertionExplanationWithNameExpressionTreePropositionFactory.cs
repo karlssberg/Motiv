@@ -1,8 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Motiv.Generator.Attributes;
-using Motiv.Shared;
 
-namespace Motiv.ExpressionTreeProposition.PropositionBuilders.Explanation;
+namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 
 /// <summary>
 /// A factory for creating propositions based on the supplied proposition and explanation factories.
