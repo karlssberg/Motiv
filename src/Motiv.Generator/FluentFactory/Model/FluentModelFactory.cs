@@ -81,16 +81,17 @@ public class FluentModelFactory(Compilation compilation)
         Trie<FluentMethodParameter, ConstructorMetadata>.Node node,
         OrderedDictionary<IParameterSymbol, IFluentValueStorage> valueStorages)
     {
-        IFluentMethod[] candidateFluentMethods =
-        [
-            ..
-            from child in node.Children.Values
-            let nextStep = ConvertNodeToFluentStep(rootType, child)
-            let fluentParameters = child.EncounteredKeyParts
-            from fluentMethod in CreateFluentMethods(rootType, node, fluentParameters, nextStep, child.Values,
-                valueStorages)
-            select fluentMethod
-        ];
+        var candidateFluentMethods =
+            node.Children.Values
+                .SelectMany(child =>
+                    CreateFluentMethods(
+                        rootType,
+                        node,
+                        child.EncounteredKeyParts,
+                        ConvertNodeToFluentStep(rootType, child),
+                        child.Values,
+                        valueStorages))
+                .ToImmutableArray();
 
         var selectedAndIgnoredMethods = ChooseFluentMethod(candidateFluentMethods);
 
@@ -123,7 +124,7 @@ public class FluentModelFactory(Compilation compilation)
         }
     }
 
-    private static ImmutableArray<SelectedFluentMethod> ChooseFluentMethod(IFluentMethod[] fluentMethods)
+    private static ImmutableArray<SelectedFluentMethod> ChooseFluentMethod(ImmutableArray<IFluentMethod> fluentMethods)
     {
         return
         [

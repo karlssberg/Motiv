@@ -1645,4 +1645,153 @@ public class FluentFactoryMultipleMethodsGenerationTests
             }
         }.RunAsync();
     }
+
+    [Fact]
+    public async Task Given_multi_methods_that_could_have_a_signature_clash_if_certain_type_args_are_supplied_Should_favor_the_most_specific()
+    {
+        const string code =
+            """
+            using System;
+            using System.Collections.Generic;
+            using Motiv.Generator.Attributes;
+            using System.Linq.Expressions;
+
+            namespace MyNamespace;
+
+            public abstract class BooleanResultBase<T> {}
+
+            [FluentFactory]
+            public static partial class Spec;
+
+            public readonly partial struct MyTypeA<TModel, TPredicateResult>
+            {
+
+                [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+                public MyTypeA(
+                    [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
+                    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> trueBecause,
+                    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> falseBecause)
+                {
+                }
+            }
+
+            internal class WhenTrueYieldOverloads
+            {
+                [FluentMethodTemplate]
+                internal static Func<TModel, TResult, IEnumerable<TMetadata>> WhenTrueYield<TModel, TMetadata, TResult>(Func<TModel, TResult, IEnumerable<TMetadata>> whenTrue)
+                {
+                    return whenTrue;
+                }
+
+                [FluentMethodTemplate]
+                internal static Func<TModel, TResult, IEnumerable<string>> WhenTrueYield<TModel, TResult>(Func<TModel, TResult, IEnumerable<string>> whenTrue)
+                {
+                    return whenTrue;
+                }
+            }
+
+            internal class WhenFalseYieldOverloads
+            {
+                [FluentMethodTemplate]
+                internal static Func<TEvaluation, IEnumerable<TNewMetadata>> WhenFalseYield<TEvaluation, TNewMetadata>(Func<TEvaluation, IEnumerable<TNewMetadata>> function)
+                {
+                    return function;
+                }
+
+                [FluentMethodTemplate]
+                internal static Func<TEvaluation, IEnumerable<TNewMetadata>> WhenFalse<TEvaluation, TNewMetadata>(Func<TEvaluation, TNewMetadata> whenFalse)
+                {
+                    return (model) => [whenFalse(model)];
+                }
+
+                [FluentMethodTemplate]
+                internal static Func<TEvaluation, IEnumerable<TNewMetadata>> WhenFalse<TEvaluation, TNewMetadata>(TNewMetadata whenFalse)
+                {
+                    return _ => [whenFalse];
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            using System;
+            using System.Linq.Expressions;
+
+            namespace MyNamespace
+            {
+                public static partial class Spec
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="MyNamespace.MyTypeA{TModel, TPredicateResult}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__MyNamespace_Spec<TModel, TPredicateResult> From<TModel, TPredicateResult>(in System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression)
+                    {
+                        return new Step_0__MyNamespace_Spec<TModel, TPredicateResult>(expression);
+                    }
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyNamespace.MyTypeA{TModel, TPredicateResult}"/>
+                /// </summary>
+                public struct Step_0__MyNamespace_Spec<TModel, TPredicateResult>
+                {
+                    private readonly System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> _expression__parameter;
+                    public Step_0__MyNamespace_Spec(in System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression)
+                    {
+                        this._expression__parameter = expression;
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="MyNamespace.MyTypeA{TModel, TPredicateResult}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public Step_1__MyNamespace_Spec<TModel, TPredicateResult> WhenTrueYield(in System.Func<TModel, BooleanResultBase<string>, System.Collections.Generic.IEnumerable<string>> whenTrue)
+                    {
+                        return new Step_1__MyNamespace_Spec<TModel, TPredicateResult>(this._expression__parameter, WhenTrueYieldOverloads.WhenTrueYield<TModel, string, BooleanResultBase<string>>(whenTrue));
+                    }
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyNamespace.MyTypeA{TModel, TPredicateResult}"/>
+                /// </summary>
+                public struct Step_1__MyNamespace_Spec<TModel, TPredicateResult>
+                {
+                    private readonly System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> _expression__parameter;
+                    private readonly Func<TModel, BooleanResultBase<string>, System.Collections.Generic.IEnumerable<string>> _whenTrue__parameter;
+                    public Step_1__MyNamespace_Spec(in System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression, Func<TModel, BooleanResultBase<string>, IEnumerable<string>> whenTrue)
+                    {
+                        this._expression__parameter = expression;
+                        this._whenTrue__parameter = whenTrue;
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="MyNamespace.MyTypeA{TModel, TPredicateResult}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyTypeA<TModel, TPredicateResult> WhenTrueYield(in System.Func<TModel, BooleanResultBase<string>, System.Collections.Generic.IEnumerable<string>> whenFalse)
+                    {
+                        return new MyTypeA<TModel, TPredicateResult>(this._expression__parameter, this._whenTrue__parameter, WhenTrueYieldOverloads.WhenFalseYield<TModel, string, BooleanResultBase<string>>(whenFalse));
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "MyNamespace.Spec.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
 }
