@@ -9,10 +9,4 @@ internal class WhenTrueYieldOverloads
     {
         return whenTrue;
     }
-
-    [FluentMethodTemplate]
-    internal static Func<TModel, TResult, IEnumerable<string>> WhenTrueYield<TModel, TResult>(Func<TModel, TResult, IEnumerable<string>> whenTrue)
-    {
-        return whenTrue;
-    }
 }

@@ -9,6 +9,19 @@ namespace Motiv.Generator.FluentFactory.Model;
 
 public static class SymbolExtensions
 {
+    private static readonly SymbolDisplayFormat FullFormat = new(
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters |
+                         SymbolDisplayGenericsOptions.IncludeTypeConstraints,
+        memberOptions: SymbolDisplayMemberOptions.IncludeParameters |
+                       SymbolDisplayMemberOptions.IncludeContainingType |
+                       SymbolDisplayMemberOptions.IncludeType,
+        parameterOptions: SymbolDisplayParameterOptions.IncludeType |
+                          SymbolDisplayParameterOptions.IncludeName |
+                          SymbolDisplayParameterOptions.IncludeDefaultValue,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes |
+                              SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
+
     public static bool IsPartial(this ITypeSymbol typeSymbol)
     {
         return typeSymbol.DeclaringSyntaxReferences
@@ -34,7 +47,7 @@ public static class SymbolExtensions
         return name;
     }
 
-    public static IEnumerable<IMethodSymbol> GetMultipleFluentMethodSymbols(
+    public static IEnumerable<(IMethodSymbol Method, ICollection<Diagnostic> Diagnostics)> GetMultipleFluentMethodSymbols(
         this Compilation compilation,
         IParameterSymbol parameterSymbol)
     {
@@ -44,18 +57,66 @@ public static class SymbolExtensions
         if (methodTemplateClass?.Value is not ITypeSymbol methodTemplateClassSymbol)
             return [];
 
-        return methodTemplateClassSymbol
+        var multiMethodClass = methodTemplateClassSymbol.IsOpenGenericType()
+            ? methodTemplateClassSymbol.OriginalDefinition
+            : methodTemplateClassSymbol;
+
+        var attributeSyntax = attribute?.ApplicationSyntaxReference?.GetSyntax() as AttributeSyntax;
+        var location = attributeSyntax?.ArgumentList?.Arguments.FirstOrDefault()?.GetLocation()
+                       ?? parameterSymbol.Locations.FirstOrDefault();
+
+        return multiMethodClass
             .GetMembers()
             .OfType<IMethodSymbol>()
-            .Where(method => method.IsStatic)
-            .Where(method => compilation.IsAssignable(method.ReturnType.OriginalDefinition, parameterSymbol.Type))
+            .Where(method => !method.IsImplicitlyDeclared)
             .Where(method => method.GetAttributes().Any(a =>
-                a.AttributeClass?.ToDisplayString() == FluentMethodTemplateAttribute));
+                a.AttributeClass?.ToDisplayString() == FluentMethodTemplateAttribute))
+            .Select(method =>
+            {
+                List<Diagnostic> diagnostics = [];
+
+                if (!method.IsStatic)
+                    diagnostics.Add(Diagnostic.Create(
+                        MotivDiagnosticDescriptor.FluentMethodTemplateAttributeNotStatic,
+                        location,
+                        method.Locations,
+                        method.ToFullDisplayString(),
+                        methodTemplateClassSymbol.ToFullDisplayString()));
+
+                if (!compilation.IsAssignable(method.ReturnType.OriginalDefinition, parameterSymbol.Type))
+                {
+                    diagnostics.AddRange(
+                    [
+                        Diagnostic.Create(
+                            MotivDiagnosticDescriptor.IncompatibleFluentMethodTemplate,
+                            location,
+                            method.Locations,
+                            ImmutableDictionary.Create<string, string?>()
+                                .Add("FluentMethodTemplate", method.ToFullDisplayString())
+                                .Add("FluentConstructorParameter", parameterSymbol.ToFullDisplayString()),
+                            method.ToFullDisplayString(),
+                            parameterSymbol.ToFullDisplayString())
+                    ]);
+                }
+
+                return (method, diagnostics as ICollection<Diagnostic>);
+            });
+    }
+
+    public static Location? GetLocationAtIndex(this AttributeData attributeData, int argumentIndex)
+    {
+        var attributeSyntax = attributeData.ApplicationSyntaxReference?.GetSyntax() as AttributeSyntax;
+        return attributeSyntax?.ArgumentList?.Arguments.ElementAt(argumentIndex).GetLocation();
+    }
+
+    public static string ToFullDisplayString(this ISymbol symbol)
+    {
+        return symbol.ToDisplayString(FullFormat);
     }
 
     public  static AttributeData? GetAttribute(
         this IParameterSymbol parameterSymbol,
-        string fluentMethodName)
+        TypeName fluentMethodName)
     {
         var format = new SymbolDisplayFormat(
             typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,

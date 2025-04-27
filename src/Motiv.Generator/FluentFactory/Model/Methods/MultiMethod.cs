@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Motiv.Generator.FluentFactory.Generation;
 using Motiv.Generator.FluentFactory.Model.Steps;
@@ -56,6 +57,8 @@ public class MultiMethod : IFluentMethod
     public ImmutableArray<FluentTypeParameter> TypeParameters => _lazyTypeParameters.Value;
 
     public INamespaceSymbol RootNamespace { get; }
+
+    public override string ToString() => $"MultiMethod: {ParameterConverter.ToFullDisplayString()}";
 
     private ImmutableArray<FluentMethodParameter> GetMethodParameters()
     {

@@ -46,7 +46,7 @@ public readonly partial struct MultiMetadataFromBooleanHigherOrderPropositionFac
         [FluentMethod("Build")]Func<TModel, bool> resultResolver,
         [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenTrue,
-        [FluentMethod("WhenFalseYield")]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenFalse)
+        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenFalse)
     {
         _resultResolver = resultResolver;
         _higherOrderOperation = higherOrderOperation;

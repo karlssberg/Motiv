@@ -84,63 +84,63 @@ public static class SymbolExtensions
         };
     }
 
-    public static bool IsAssignable(this Compilation compilation, ITypeSymbol? source, ITypeSymbol? destination)
+    public static bool IsAssignable(this Compilation compilation, ITypeSymbol? typeDefinition, ITypeSymbol? typeUsage)
     {
-        if (source is null || destination is null)
+        if (typeDefinition is null || typeUsage is null)
             return false;
 
         // If they're exactly the same type, return true
-        if (SymbolEqualityComparer.Default.Equals(source, destination))
+        if (SymbolEqualityComparer.Default.Equals(typeDefinition, typeUsage))
             return true;
 
-        switch (source, destination)
+        switch (typeDefinition, typeUsage)
         {
-            case (_, ITypeParameterSymbol destinationTypeParam):
+            case (_, ITypeParameterSymbol usageTypeParam):
             {
                 // Check if source satisfies all target's constraints
-                if (destinationTypeParam.ConstraintTypes
-                    .Select(constraint => compilation.ClassifyCommonConversion(source, constraint))
+                if (usageTypeParam.ConstraintTypes
+                    .Select(constraint => compilation.ClassifyCommonConversion(typeDefinition, constraint))
                     .Any(paramConversion => paramConversion is { Exists: false }))
                 {
                     return false;
                 }
 
-                if (destinationTypeParam.HasValueTypeConstraint && !source.IsValueType)
+                if (usageTypeParam.HasValueTypeConstraint && !typeDefinition.IsValueType)
                     return false;
 
-                if (destinationTypeParam.HasReferenceTypeConstraint && !source.IsReferenceType)
+                if (usageTypeParam.HasReferenceTypeConstraint && !typeDefinition.IsReferenceType)
                     return false;
 
-                if (destinationTypeParam.HasConstructorConstraint && !source.IsReferenceType)
+                if (usageTypeParam.HasConstructorConstraint && !typeDefinition.IsReferenceType)
                     return false;
 
                 return true;
             }
-            case (ITypeParameterSymbol sourceTypeParam, _):
+            case (ITypeParameterSymbol definitionTypeParam, _):
             {
-                if (sourceTypeParam.ConstraintTypes
-                    .Select(constraint => compilation.ClassifyCommonConversion(constraint, destination))
+                if (definitionTypeParam.ConstraintTypes
+                    .Select(constraint => compilation.ClassifyCommonConversion(constraint, typeUsage))
                     .Any(typeConversion => typeConversion is { Exists: true, IsImplicit: true }))
                 {
                     return true;
                 }
 
                 // Check special constraints against target
-                if (sourceTypeParam.HasValueTypeConstraint && !destination.IsValueType)
+                if (definitionTypeParam.HasValueTypeConstraint && !typeUsage.IsValueType)
                     return false;
 
-                return !sourceTypeParam.HasReferenceTypeConstraint || destination.IsReferenceType;
+                return !definitionTypeParam.HasReferenceTypeConstraint || typeUsage.IsReferenceType;
             }
-            case (INamedTypeSymbol sourceNamedType, INamedTypeSymbol destinationNamedType):
+            case (INamedTypeSymbol definitionTypeName, INamedTypeSymbol usageNamedType):
             {
                 // Check if they have the same number of type arguments
-                if (sourceNamedType.TypeArguments.Length != destinationNamedType.TypeArguments.Length)
+                if (definitionTypeName.TypeArguments.Length != usageNamedType.TypeArguments.Length)
                     return false;
                 // All other parameters are contravariant
-                for (var i = 0; i < sourceNamedType.TypeArguments.Length; i++)
+                for (var i = 0; i < definitionTypeName.TypeArguments.Length; i++)
                 {
-                    var paramTypeArg = sourceNamedType.TypeArguments[i];
-                    var argTypeArg = destinationNamedType.TypeArguments[i];
+                    var paramTypeArg = definitionTypeName.TypeArguments[i];
+                    var argTypeArg = usageNamedType.TypeArguments[i];
 
                     if (!compilation.IsAssignable(paramTypeArg, argTypeArg))
                         return false;
@@ -149,7 +149,7 @@ public static class SymbolExtensions
             }
             default:
                 // Fall back to checking conversion
-                var conversion = compilation.ClassifyConversion(source, destination);
+                var conversion = compilation.ClassifyConversion(typeDefinition, typeUsage);
                 return conversion is { Exists: true, IsImplicit: true };
         }
     }
@@ -243,7 +243,7 @@ public static class SymbolExtensions
        var namespaceName = currentNamespace.ToDisplayString();
 
        // Remove namespace prefix if it matches current namespace
-       return typeSymbol.ToDisplayString().StartsWith(namespaceName)
+       return fullName.StartsWith(namespaceName)
            ? fullName.Substring(namespaceName.Length).TrimStart('.')
            : fullName;
    }

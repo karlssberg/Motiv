@@ -45,6 +45,8 @@ public class RegularMethod : IFluentMethod
 
     public INamespaceSymbol RootNamespace { get; }
 
+    public override string ToString() => $"RegularMethod: {Name}({string.Join(", ", MethodParameters.Select(p => p.ParameterSymbol.ToFullDisplayString()))})";
+
     private static ImmutableArray<FluentMethodParameter> GetMethodParameters(string methodName,
         IParameterSymbol sourceParameterSymbol)
     {

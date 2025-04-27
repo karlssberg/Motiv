@@ -1,12 +1,20 @@
 ﻿namespace Motiv.Generator.FluentFactory;
 
-public static class TypeName
+public class TypeName
 {
+    private readonly string _fullName;
     private const string AttributesNamespace = "Motiv.Generator.Attributes.";
 
-    public const string FluentConstructorAttribute = AttributesNamespace + nameof(Attributes.FluentConstructorAttribute);
-    public const string FluentFactoryAttribute = AttributesNamespace + nameof(Attributes.FluentFactoryAttribute);
-    public const string FluentMethodAttribute = AttributesNamespace + nameof(Attributes.FluentMethodAttribute);
-    public const string MultipleFluentMethodsAttribute = AttributesNamespace + nameof(Attributes.MultipleFluentMethodsAttribute);
-    public const string FluentMethodTemplateAttribute = AttributesNamespace + nameof(Attributes.FluentMethodTemplateAttribute);
+    private TypeName(string fullName)
+    {
+        _fullName = fullName;
+    }
+
+    public static readonly TypeName FluentConstructorAttribute = new(AttributesNamespace + nameof(Attributes.FluentConstructorAttribute));
+    public static readonly TypeName FluentFactoryAttribute = new(AttributesNamespace + nameof(Attributes.FluentFactoryAttribute));
+    public static readonly TypeName FluentMethodAttribute = new(AttributesNamespace + nameof(Attributes.FluentMethodAttribute));
+    public static readonly TypeName MultipleFluentMethodsAttribute = new(AttributesNamespace + nameof(Attributes.MultipleFluentMethodsAttribute));
+    public static readonly TypeName FluentMethodTemplateAttribute = new(AttributesNamespace + nameof(Attributes.FluentMethodTemplateAttribute));
+
+    public static implicit operator string(TypeName typeName) => typeName._fullName;
 }

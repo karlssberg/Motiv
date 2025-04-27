@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Motiv.Generator.FluentFactory.Generation.Shared;
 using Motiv.Generator.FluentFactory.Model.Methods;
+using Motiv.Generator.FluentFactory.Model.Steps;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Motiv.Generator.FluentFactory.Generation.SyntaxElements.Methods;
@@ -41,10 +42,21 @@ public static class FluentRootFactoryMethodDeclaration
 
     private static ImmutableArray<TypeParameterSyntax> GetTypeParameterSyntaxes(IFluentMethod method)
     {
+        var targetTypeParameterSyntaxes = method.Return switch
+        {
+            TargetTypeReturn targetTypeReturn => targetTypeReturn.Constructor.ContainingType.OriginalDefinition.TypeParameters
+                .Select(typeParameterSymbol => typeParameterSymbol.ToTypeParameterSyntax()),
+            _ => []
+        };
+
+        var accumulatedTypeParameterSyntaxes = method.TypeParameters
+            .Select(typeParameter => typeParameter.TypeParameterSymbol.ToTypeParameterSyntax());
+
         return
         [
-            ..method.TypeParameters
-                .Select(typeParameter => typeParameter.TypeParameterSymbol.ToTypeParameterSyntax())
+            ..accumulatedTypeParameterSyntaxes
+                .Concat(targetTypeParameterSyntaxes)
+                .DistinctBy(typeParameter => typeParameter.Identifier.Text)
         ];
     }
 

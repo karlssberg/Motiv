@@ -22,5 +22,8 @@
       <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
       <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="FluentFactory\Codefix\" />
+    </ItemGroup>
 
 </Project>

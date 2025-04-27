@@ -24,7 +24,8 @@ public class ConstructorAnalyzer(SemanticModel semanticModel)
         {
             foreach (var parameter in constructor.Parameters)
             {
-                var property = containingType.GetMembers()
+                var property = containingType
+                    .GetMembers()
                     .OfType<IPropertySymbol>()
                     .FirstOrDefault(p => p.Name.Equals(parameter.Name, StringComparison.OrdinalIgnoreCase));
 

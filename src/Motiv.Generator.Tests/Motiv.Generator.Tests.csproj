@@ -7,7 +7,7 @@
         <IsPackable>false</IsPackable>
         <RootNamespace>Motiv.Generator.Tests</RootNamespace>
         <OutputType>Library</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -23,7 +23,7 @@
     <PropertyGroup>
         <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
         <MSBuildWarningsAsMessages>MSB3277</MSBuildWarningsAsMessages>
-        <SourceGeneratorTrace>false</SourceGeneratorTrace>
+        <SourceGeneratorTrace>true</SourceGeneratorTrace>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="6.0.4">

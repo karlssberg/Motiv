@@ -37,7 +37,7 @@ public readonly partial struct MultiMetadataPropositionExpressionTreeFactory<TMo
     public MultiMetadataPropositionExpressionTreeFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, TMetadata> whenTrue,
-        [FluentMethod("WhenFalseYield")]Func<TModel, BooleanResultBase<string>, IEnumerable<TMetadata>> whenFalse)
+        [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<TMetadata>> whenFalse)
     {
         _expression = expression;
         _whenTrue = whenTrue.ToEnumerableReturn();

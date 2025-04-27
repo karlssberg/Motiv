@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 using Motiv.Generator.FluentFactory;
+using static Motiv.Generator.FluentFactory.MotivDiagnosticDescriptor;
 using VerifyCS =
     Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentFactory.FluentFactoryGenerator>;
 
@@ -8,6 +9,8 @@ namespace Motiv.Generator.Tests;
 
 public class FluentFactoryMethodCustomizationTests
 {
+    private const string SourceFile = "Source.cs";
+
     [Fact]
     public async Task Should_generate_custom_step_when_applied_to_a_class_constructor_with_a_single_parameter()
     {
@@ -55,7 +58,7 @@ public class FluentFactoryMethodCustomizationTests
         {
             TestState =
             {
-                Sources = { code },
+                Sources = { (SourceFile, code) },
                 GeneratedSources =
                 {
                     (typeof(FluentFactoryGenerator), "Test.Factory.g.cs", expected)
@@ -1934,10 +1937,46 @@ public class FluentFactoryMethodCustomizationTests
         {
             TestState =
             {
-                Sources = { code },
+                Sources = { (SourceFile, code) },
                 GeneratedSources =
                 {
                     (typeof(FluentFactoryGenerator), "Factory.g.cs", expected)
+                },
+                ExpectedDiagnostics =
+                {
+                    DiagnosticResult.CompilerWarning("MOTIV002")
+                        .WithSpan(SourceFile, 26, 32, 26, 49)
+                        .WithSpan(SourceFile, 11, 45, 11, 53)
+                        .WithArguments(
+                            "Overloads.Value<T1, T2>(System.Func<T1, T2> value)",
+                            "System.Func<T1, T2> factory1", "MyClassB<T1, T2>.MyClassB(System.Func<T1, T2> factory1, System.Func<T1, T2, int> factory2)",
+                            "the parameter 'System.Func<T1, T2> factory1' in the constructor 'MyClassA<T1, T2>.MyClassA(System.Func<T1, T2> factory1, System.Func<T1, T2, string> factory2)' was used as the basis for the fluent method. Perhaps the ignored method-template can be removed or modified."),
+                    DiagnosticResult.CompilerWarning("MOTIV003")
+                        .WithSpan(SourceFile, 26, 32, 26, 49)
+                        .WithSpan(SourceFile, 52, 36, 52, 41)
+                        .WithArguments(
+                            "System.Func<T1, T2, T3> Overloads.Value<T1, T2, T3>(T3 value)",
+                            "System.Func<T1, T2> factory1"),
+                    DiagnosticResult.CompilerWarning("MOTIV003")
+                        .WithSpan(SourceFile, 27, 32, 27, 49)
+                        .WithSpan(SourceFile, 40, 32, 40, 37)
+                        .WithArguments(
+                            "System.Func<T1, T2> Overloads.Value<T1, T2>(System.Func<T1, T2> value)",
+                            "System.Func<T1, T2, int> factory2"),
+                    DiagnosticResult.CompilerWarning("MOTIV003")
+                        .WithSpan(SourceFile, 27, 32, 27, 49)
+                        .WithSpan(SourceFile, 46, 32, 46, 37)
+                        .WithArguments(
+                            "System.Func<T1, T2> Overloads.Value<T1, T2>(T2 value)",
+                            "System.Func<T1, T2, int> factory2"),
+                    new DiagnosticResult("MOTIV007", DiagnosticSeverity.Info)
+                        .WithSpan(SourceFile, 40, 32, 40, 37)
+                        .WithArguments(
+                            "System.Func<T1, T2> Overloads.Value<T1, T2>(System.Func<T1, T2> value)",
+                            "System.Func<T1, T2> factory1",
+                            "MyClassB<T1, T2>.MyClassB(System.Func<T1, T2> factory1, System.Func<T1, T2, int> factory2)",
+                            "System.Func<T1, T2> factory1",
+                            "MyClassA<T1, T2>.MyClassA(System.Func<T1, T2> factory1, System.Func<T1, T2, string> factory2)")
                 }
             }
         }.RunAsync();
@@ -2093,11 +2132,32 @@ public class FluentFactoryMethodCustomizationTests
         {
             TestState =
             {
-                Sources = { code },
+                Sources = { (SourceFile, code) },
                 GeneratedSources =
                 {
                     (typeof(FluentFactoryGenerator), "Factory.g.cs", expected)
                 }
+            },
+            ExpectedDiagnostics =
+            {
+                DiagnosticResult.CompilerWarning(ContainsSupersededFluentMethodTemplate.Id)
+                    .WithSpan(SourceFile, 11, 32, 11, 49)
+                    .WithSpan(SourceFile, 11, 64, 11, 72)
+                    .WithArguments(
+                        "FirstStep.Value1<T1, T2>(System.Func<T1, T2> value)",
+                        "System.Func<T1, T2> factory1",
+                        "MyClassA<T1, T2>.MyClassA(System.Func<T1, T2> factory1, System.Func<T1, T2, string> factory2)",
+                        "the parameter 'System.Func<T1, T2> factory1' in the constructor 'MyClassA<T1, T2>.MyClassA(System.Func<T1, T2> factory1, System.Func<T1, T2, string> factory2)' was used as the basis for the fluent method. Perhaps the ignored method-template can be removed or modified."),
+                new DiagnosticResult(FluentMethodTemplateSuperseded.Id, DiagnosticSeverity.Info)
+                    .WithSpan(SourceFile, 40, 32, 40, 38)
+                    .WithArguments(
+                        "System.Func<T1, T2> FirstStep.Value1<T1, T2>(System.Func<T1, T2> value)",
+                        "System.Func<T1, T2> factory1",
+                        "MyClassA<T1, T2>.MyClassA(System.Func<T1, T2> factory1, System.Func<T1, T2, string> factory2)",
+                        "System.Func<T1, T2> factory1",
+                        "MyClassA<T1, T2>.MyClassA(System.Func<T1, T2> factory1, System.Func<T1, T2, string> factory2)"),
+
+
             }
         }.RunAsync();
     }
@@ -2412,17 +2472,35 @@ public class FluentFactoryMethodCustomizationTests
         {
             TestState =
             {
-                Sources = { ("Source.cs", code) },
+                Sources = { (SourceFile, code) },
                 GeneratedSources =
                 {
                     (typeof(FluentFactoryGenerator), "Factory.g.cs", expected)
                 },
                 ExpectedDiagnostics =
                 {
-                    new DiagnosticResult("MOTIV001", DiagnosticSeverity.Error)
-                        .WithSpan("Source.cs",42, 64, 42, 70),
-                    new DiagnosticResult("MOTIV002", DiagnosticSeverity.Warning)
-                    .WithSpan("Source.cs",12, 59, 12, 65)
+                    new DiagnosticResult(UnreachableConstructor.Id, DiagnosticSeverity.Error)
+                        .WithSpan(SourceFile, 42, 64, 42, 70)
+                        .WithSpan(SourceFile, 27, 39, 27, 45)
+                        .WithArguments(
+                            "MyClassC.MyClassC(System.Func<string> value1, System.Func<int> value2)",
+                            "Value(string value1)",
+                            "This involves the constructor parameter 'System.Func<string> value1'. The parameter value is obtained from the fluent-method template 'System.Func<string> Overloads.Value<string>(string value)'. The issue is with the fluent-method template 'System.Func<string> Overloads.Value<string>(string value)'. The clashing methods have differing return-types, which is caused by different constructor parameter types. Try removing or renaming the template method, or changing its signature"),
+                    new DiagnosticResult(ContainsSupersededFluentMethodTemplate.Id, DiagnosticSeverity.Warning)
+                        .WithSpan(SourceFile, 12, 32, 12, 49)
+                        .WithSpan(SourceFile, 27, 39, 27, 45)
+                        .WithArguments(
+                            "Overloads.Value(string value)",
+                            "System.Func<T> value1", "MyClassA<T>.MyClassA(System.Func<T> value1, System.Func<T> value2)",
+                            "the parameter 'string value1' in the constructor 'MyClassB.MyClassB(string value1, System.Func<string> value2)' was used as the basis for the fluent method. Perhaps the ignored method-template can be removed or modified."),
+                    new DiagnosticResult(FluentMethodTemplateSuperseded.Id, DiagnosticSeverity.Info)
+                        .WithSpan(SourceFile, 62, 32, 62, 37)
+                        .WithArguments(
+                            "System.Func<string> Overloads.Value(string value)",
+                            "System.Func<T> value1",
+                            "MyClassA<T>.MyClassA(System.Func<T> value1, System.Func<T> value2)",
+                            "string value1",
+                            "MyClassB.MyClassB(string value1, System.Func<string> value2)")
                 },
             }
         }.RunAsync();

@@ -1,10 +1,15 @@
-﻿using Motiv.Generator.FluentFactory;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
+using Motiv.Generator.FluentFactory;
+using static Motiv.Generator.FluentFactory.MotivDiagnosticDescriptor;
 
 namespace Motiv.Generator.Tests;
 using VerifyCS = CSharpSourceGeneratorVerifier<FluentFactoryGenerator>;
 
 public class FluentFactoryMultipleMethodsGenerationTests
 {
+    private const string SourceFile = "Source.cs";
+
     [Fact]
     public async Task Should_build_multiple_root_constructor_methods_for_single_parameter()
     {
@@ -477,7 +482,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     [FluentMethodTemplate]
                     public static T WithDefaultValue<T>()
                     {
-                        return default(T);
+                        return default;
                     }
 
                     [FluentMethodTemplate]
@@ -599,10 +604,29 @@ public class FluentFactoryMultipleMethodsGenerationTests
         {
             TestState =
             {
-                Sources = { code },
+                Sources = { (SourceFile, code) },
                 GeneratedSources =
                 {
                     (typeof(FluentFactoryGenerator), "Test.Namespace.Factory.g.cs", expected)
+                },
+                ExpectedDiagnostics =
+                {
+                    DiagnosticResult.CompilerWarning(ContainsSupersededFluentMethodTemplate.Id)
+                        .WithSpan(SourceFile, 14, 36, 14, 58)
+                        .WithSpan(SourceFile, 32, 51, 32, 65)
+                        .WithArguments(
+                            "Test.Namespace.MethodVariants.WithFunction<T>(System.Func<T> function)",
+                            "T data",
+                            "Test.Namespace.MyBuildTargetA<T>.MyBuildTargetA(int number, T data, int value)",
+                            "the parameter 'System.Func<T> nativeFunction' in the constructor 'Test.Namespace.MyBuildTargetB<T>.MyBuildTargetB(int number, System.Func<T> nativeFunction, string value)' was used as the basis for the fluent method. Perhaps the ignored method-template can be removed or modified."),
+                    new DiagnosticResult(FluentMethodTemplateSuperseded.Id, DiagnosticSeverity.Info)
+                        .WithSpan("Source.cs", 53, 25, 53, 37)
+                        .WithArguments(
+                            "T Test.Namespace.MethodVariants.WithFunction<T>(System.Func<T> function)",
+                            "T data",
+                            "Test.Namespace.MyBuildTargetA<T>.MyBuildTargetA(int number, T data, int value)",
+                            "System.Func<T> nativeFunction",
+                            "Test.Namespace.MyBuildTargetB<T>.MyBuildTargetB(int number, System.Func<T> nativeFunction, string value)")
                 }
             }
         }.RunAsync();
@@ -1413,10 +1437,6 @@ public class FluentFactoryMultipleMethodsGenerationTests
 
                 internal static class Overloads
                 {
-                    // Should be ignored
-                    [FluentMethodTemplate]
-                    internal static string Build<T>(string ignoreThis) => ignoreThis;
-
                     [FluentMethodTemplate]
                     internal static Func<T1, TAbstraction, T2> Build<T1, T2, TAbstraction>(Func<T1, TAbstraction, T2> firstFactory) => firstFactory;
 
@@ -1637,17 +1657,26 @@ public class FluentFactoryMultipleMethodsGenerationTests
         {
             TestState =
             {
-                Sources = { code },
+                Sources = { (SourceFile, code) },
                 GeneratedSources =
                 {
                     (typeof(FluentFactoryGenerator), "Test.Namespace.Factory.g.cs", expected)
+                },
+                ExpectedDiagnostics =
+                {
+                    new DiagnosticResult(IncompatibleFluentMethodTemplate.Id, DiagnosticSeverity.Warning)
+                        .WithSpan(SourceFile, 27, 36, 27, 53)
+                        .WithSpan(SourceFile, 44, 32, 44, 37)
+                        .WithArguments(
+                            "string Test.Namespace.Overloads.Build<T>(string ignoreThis)",
+                            "System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> second")
                 }
             }
         }.RunAsync();
     }
 
     [Fact]
-    public async Task Given_multi_methods_that_could_have_a_signature_clash_if_certain_type_args_are_supplied_Should_favor_the_most_specific()
+    public async Task Given_overloaded_multiple_methods_that_differ_by_a_open_and_closed_generic_types_When_transforming_template_method_causes_signature_clashes_Should_ignore_open_generic()
     {
         const string code =
             """
@@ -1693,21 +1722,15 @@ public class FluentFactoryMultipleMethodsGenerationTests
             internal class WhenFalseYieldOverloads
             {
                 [FluentMethodTemplate]
-                internal static Func<TEvaluation, IEnumerable<TNewMetadata>> WhenFalseYield<TEvaluation, TNewMetadata>(Func<TEvaluation, IEnumerable<TNewMetadata>> function)
+                internal static Func<TModel, TResult, IEnumerable<TNewMetadata>> WhenFalseYield<TModel, TResult, TNewMetadata>(Func<TModel, TResult, IEnumerable<TNewMetadata>> function)
                 {
                     return function;
                 }
 
                 [FluentMethodTemplate]
-                internal static Func<TEvaluation, IEnumerable<TNewMetadata>> WhenFalse<TEvaluation, TNewMetadata>(Func<TEvaluation, TNewMetadata> whenFalse)
+                internal static Func<TModel, TResult, IEnumerable<string>> WhenFalseYield<TModel, TResult>(Func<TModel, TResult, IEnumerable<string>> function)
                 {
-                    return (model) => [whenFalse(model)];
-                }
-
-                [FluentMethodTemplate]
-                internal static Func<TEvaluation, IEnumerable<TNewMetadata>> WhenFalse<TEvaluation, TNewMetadata>(TNewMetadata whenFalse)
-                {
-                    return _ => [whenFalse];
+                    return function;
                 }
             }
             """;
@@ -1762,11 +1785,11 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public struct Step_1__MyNamespace_Spec<TModel, TPredicateResult>
                 {
                     private readonly System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> _expression__parameter;
-                    private readonly Func<TModel, BooleanResultBase<string>, System.Collections.Generic.IEnumerable<string>> _whenTrue__parameter;
-                    public Step_1__MyNamespace_Spec(in System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression, Func<TModel, BooleanResultBase<string>, IEnumerable<string>> whenTrue)
+                    private readonly System.Func<TModel, BooleanResultBase<string>, System.Collections.Generic.IEnumerable<string>> _trueBecause__parameter;
+                    public Step_1__MyNamespace_Spec(in System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression, in System.Func<TModel, BooleanResultBase<string>, System.Collections.Generic.IEnumerable<string>> trueBecause)
                     {
                         this._expression__parameter = expression;
-                        this._whenTrue__parameter = whenTrue;
+                        this._trueBecause__parameter = trueBecause;
                     }
 
                     /// <summary>
@@ -1774,9 +1797,9 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     ///     <seealso cref="MyNamespace.MyTypeA{TModel, TPredicateResult}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public MyTypeA<TModel, TPredicateResult> WhenTrueYield(in System.Func<TModel, BooleanResultBase<string>, System.Collections.Generic.IEnumerable<string>> whenFalse)
+                    public MyTypeA<TModel, TPredicateResult> WhenFalseYield(in System.Func<TModel, BooleanResultBase<string>, System.Collections.Generic.IEnumerable<string>> function)
                     {
-                        return new MyTypeA<TModel, TPredicateResult>(this._expression__parameter, this._whenTrue__parameter, WhenTrueYieldOverloads.WhenFalseYield<TModel, string, BooleanResultBase<string>>(whenFalse));
+                        return new MyTypeA<TModel, TPredicateResult>(this._expression__parameter, this._trueBecause__parameter, WhenFalseYieldOverloads.WhenFalseYield<TModel, BooleanResultBase<string>, string>(function));
                     }
                 }
             }
@@ -1787,6 +1810,72 @@ public class FluentFactoryMultipleMethodsGenerationTests
             TestState =
             {
                 Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "MyNamespace.Spec.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public Task Given_that_the_multiple_method_type_is_nested_within_the_fluent_constructors_generic_containing_type_Should_use_type_parameters_of_parent()
+    {
+        const string code =
+            """
+            using System;
+            using System.Collections.Generic;
+            using Motiv.Generator.Attributes;
+            using System.Linq.Expressions;
+
+            namespace MyNamespace;
+
+            public abstract class BooleanResultBase<T> {}
+
+            [FluentFactory]
+            public static partial class Spec;
+
+            [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+            public readonly partial struct MyTypeB<TModel, TPredicateResult>(
+                [MultipleFluentMethods(typeof(MyTypeB<,>.WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, string> trueBecause)
+            {
+                internal class WhenTrueOverloads
+                {
+                    [FluentMethodTemplate]
+                    internal static Func<TModel, TResult, TNewMetadata> WhenTrue<TModel, TResult, TNewMetadata>(Func<TModel, TResult, TNewMetadata> whenTrue)
+                    {
+                        return whenTrue;
+                    }
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            using System;
+
+            namespace MyNamespace
+            {
+                public static partial class Spec
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="MyNamespace.MyTypeB{TModel, TPredicateResult}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static MyTypeB<TModel, TPredicateResult> WhenTrue<TModel, TPredicateResult>(in System.Func<TModel, BooleanResultBase<string>, string> whenTrue)
+                    {
+                        return new MyTypeB<TModel, TPredicateResult>(MyTypeB<TModel, TPredicateResult>.WhenTrueOverloads.WhenTrue<TModel, BooleanResultBase<string>, string>(whenTrue));
+                    }
+                }
+            }
+            """;
+
+        return new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { ("Source.cs", code) },
                 GeneratedSources =
                 {
                     (typeof(FluentFactoryGenerator), "MyNamespace.Spec.g.cs", expected)

@@ -1,7 +1,7 @@
 using Motiv.Generator.Attributes;
 using Motiv.Shared;
 
-namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
+namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 
 /// <summary>A factory for creating propositions based on a predicate and explanations for true and false conditions.</summary>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
@@ -9,7 +9,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Explanation;
 public readonly partial struct MultiAssertionExplanationWithNamePropositionFactory<TModel>(
     [FluentMethod("Build")]Func<TModel, bool> predicate,
     [FluentMethod("WhenTrue")]string trueBecause,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, IEnumerable<string>> falseBecause)
+    [FluentMethod("WhenFalseYield")]Func<TModel, IEnumerable<string>> falseBecause)
 {
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement

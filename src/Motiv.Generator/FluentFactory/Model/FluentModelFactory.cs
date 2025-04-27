@@ -15,6 +15,7 @@ public class FluentModelFactory(Compilation compilation)
 {
     private readonly DiagnosticList _diagnostics = [];
     private readonly OrderedDictionary<ParameterSequence, RegularFluentStep> _regularFluentSteps = new();
+    private readonly UnreachableConstructorAnalyzer _unreachableConstructorAnalyzer = new();
 
     public FluentFactoryCompilationUnit CreateFluentFactoryCompilationUnit(
         INamedTypeSymbol rootType,
@@ -22,6 +23,8 @@ public class FluentModelFactory(Compilation compilation)
     {
         _regularFluentSteps.Clear();
         _diagnostics.Clear();
+        _unreachableConstructorAnalyzer.Clear();
+        _unreachableConstructorAnalyzer.AddAllFluentConstructors(fluentConstructorContexts.Select(context => context.Constructor));
 
         var usings = GetUsingStatements(fluentConstructorContexts);
 
@@ -47,6 +50,7 @@ public class FluentModelFactory(Compilation compilation)
             })
             .ToImmutableArray();
 
+        _diagnostics.AddRange(_unreachableConstructorAnalyzer.GetUnreachableConstructorsDiagnostics());
         var sampleConstructorContext = fluentConstructorContexts.First();
         return new FluentFactoryCompilationUnit(
             rootType,
@@ -99,17 +103,14 @@ public class FluentModelFactory(Compilation compilation)
             .SelectMany(pair => pair.IgnoredMethods)
             .ToImmutableHashSet();
 
-        var unreachableConstructorFactory = new UnreachableConstructorErrorFactory(allIgnoredMethods);
+
         var ignoredMultiMethodWarningFactory = new IgnoredMultiMethodWarningFactory(allIgnoredMethods);
 
         foreach (var (selectedMethod, ignoredMethods) in selectedAndIgnoredMethods)
         {
+            _unreachableConstructorAnalyzer.AddSelectedMethod(selectedMethod);
             _diagnostics.AddRange(
                 [
-                    ..unreachableConstructorFactory
-                        .Create(
-                            selectedMethod,
-                            [..ignoredMethods]),
                     ..ignoredMultiMethodWarningFactory
                         .Create(
                             selectedMethod,
@@ -124,30 +125,27 @@ public class FluentModelFactory(Compilation compilation)
         }
     }
 
-    private static ImmutableArray<SelectedFluentMethod> ChooseFluentMethod(ImmutableArray<IFluentMethod> fluentMethods)
-    {
-        return
-        [
-            ..fluentMethods
-                .Distinct()
-                .GroupBy(m => m, FluentMethodSignatureEqualityComparer.Default)
-                .Select(fluentMethodGroup =>
-                {
-                    var regularMethod = fluentMethodGroup.OfType<RegularMethod>()
-                        .OrderBy(m => m.SourceParameter.Name)
-                        .FirstOrDefault();
+    private static ImmutableArray<SelectedFluentMethod> ChooseFluentMethod(ImmutableArray<IFluentMethod> fluentMethods) =>
+    [
+        ..fluentMethods
+            .Distinct()
+            .GroupBy(m => m, FluentMethodSignatureEqualityComparer.Default)
+            .Select(fluentMethodGroup =>
+            {
+                var regularMethod = fluentMethodGroup.OfType<RegularMethod>()
+                    .OrderBy(m => m.SourceParameter.Name)
+                    .FirstOrDefault();
 
-                    var selectedMethod = regularMethod ?? fluentMethodGroup.First();
+                var selectedMethod = regularMethod ?? fluentMethodGroup.First();
 
-                    return new SelectedFluentMethod(
-                        selectedMethod,
-                        [
-                            ..fluentMethodGroup
-                                .Where(method => selectedMethod != method)
-                        ]);
-                })
-        ];
-    }
+                return new SelectedFluentMethod(
+                    selectedMethod,
+                    [
+                        ..fluentMethodGroup
+                            .Where(method => selectedMethod != method)
+                    ]);
+            })
+    ];
 
     private IFluentStep? ConvertNodeToFluentStep(
         INamedTypeSymbol rootType,
@@ -256,20 +254,39 @@ public class FluentModelFactory(Compilation compilation)
 
         foreach (var parameter in fluentParameterInstances)
         {
-            var multipleFluentMethodSymbols = compilation
+            var multipleFluentMethodInfo = compilation
                 .GetMultipleFluentMethodSymbols(parameter.ParameterSymbol)
-                .Select(method => NormalizedConverterMethod(method, parameter.ParameterSymbol.Type))
+                .ToList();
+
+            if (multipleFluentMethodInfo.Any()
+                && multipleFluentMethodInfo.All(info => info.Diagnostics.Count > 0))
+                _diagnostics.AddRange(
+                [
+                    Diagnostic.Create(
+                        MotivDiagnosticDescriptor.AllFluentMethodTemplatesIncompatible,
+                        parameter.ParameterSymbol
+                            .GetAttribute(TypeName.MultipleFluentMethodsAttribute)?
+                            .GetLocationAtIndex(0),
+                    parameter.ParameterSymbol.ToFullDisplayString()),
+                ]);
+            else
+                _diagnostics.AddRange(multipleFluentMethodInfo
+                    .SelectMany(info => info.Diagnostics));
+
+            var normalizedFluentMethodSymbols = multipleFluentMethodInfo
+                .Where(methodInfo => methodInfo.Diagnostics.Count == 0)
+                .Select(methodInfo => NormalizedConverterMethod(methodInfo.Method, parameter.ParameterSymbol.Type))
                 .ToImmutableArray();
 
-            foreach (var multipleFluentMethodSymbol in multipleFluentMethodSymbols)
+            foreach (var normalizedFluentMethodSymbol in normalizedFluentMethodSymbols)
                 yield return new MultiMethod(
                     parameter.ParameterSymbol,
                     methodReturn,
                     rootType.ContainingNamespace,
-                    multipleFluentMethodSymbol,
+                    normalizedFluentMethodSymbol,
                     node.Key,
                     valueStorages,
-                    multipleFluentMethodSymbols);
+                    normalizedFluentMethodSymbols);
 
             var hasMultipleFluentMethodsAttribute = parameter.ParameterSymbol
                 .GetAttribute(TypeName.MultipleFluentMethodsAttribute) is not null;
@@ -356,7 +373,7 @@ public class FluentModelFactory(Compilation compilation)
                     {
                         var methodNames = compilation
                             .GetMultipleFluentMethodSymbols(parameter)
-                            .Select(symbol => symbol.Name)
+                            .Select(methodInfo => methodInfo.Method.Name)
                             .DefaultIfEmpty(parameter.GetFluentMethodName());
 
                         return new FluentMethodParameter(parameter, methodNames);

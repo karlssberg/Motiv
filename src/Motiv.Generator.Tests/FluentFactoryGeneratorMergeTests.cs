@@ -17,24 +17,24 @@ public class FluentFactoryGeneratorMergeTests
             public class MyClass<T>
             {
                 [FluentConstructor(typeof(MyClass), Options = FluentOptions.NoCreateMethod)]
-                public MyClass([FluentMethod("Create")]T value)
+                public MyClass([FluentMethod("Create")]Func<T> value)
                 {
                     Value = value;
                 }
 
-                public T Value { get; set; }
+                public Func<T> Value { get; set; }
             }
 
             [FluentFactory]
             public partial class MyClass
             {
                 [FluentConstructor(typeof(MyClass), Options = FluentOptions.NoCreateMethod)]
-                public MyClass([FluentMethod("Create")]string value)
+                public MyClass([FluentMethod("Create")]Func<string> value)
                 {
                     Value = value;
                 }
 
-                public String Value { get; set; }
+                public Func<String> Value { get; set; }
             }
             """;
 
@@ -49,7 +49,7 @@ public class FluentFactoryGeneratorMergeTests
                 ///     <seealso cref="MyClass{T}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                public static MyClass<T> Create<T>(in T value)
+                public static MyClass<T> Create<T>(in System.Func<T> value)
                 {
                     return new MyClass<T>(value);
                 }
@@ -59,7 +59,7 @@ public class FluentFactoryGeneratorMergeTests
                 ///     <seealso cref="MyClass"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                public static MyClass Create(in string value)
+                public static MyClass Create(in System.Func<string> value)
                 {
                     return new MyClass(value);
                 }
@@ -1457,7 +1457,7 @@ public class FluentFactoryGeneratorMergeTests
             public readonly partial struct MultiAssertionExplanationWithNamePropositionFactory<TModel>(
                 [FluentMethod("Build")]Func<TModel, bool> predicate,
                 [FluentMethod("WhenTrue")]string trueBecause,
-                [FluentMethod("WhenFalseYield")]Func<TModel, IEnumerable<string>> falseBecause)
+                [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, IEnumerable<string>> falseBecause)
             {
             }
 
