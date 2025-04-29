@@ -108,7 +108,7 @@ public class FluentModelFactory(Compilation compilation)
 
         foreach (var (selectedMethod, ignoredMethods) in selectedAndIgnoredMethods)
         {
-            _unreachableConstructorAnalyzer.AddSelectedMethod(selectedMethod);
+            _unreachableConstructorAnalyzer.AddReachableMethod(selectedMethod);
             _diagnostics.AddRange(
                 [
                     ..ignoredMultiMethodWarningFactory
@@ -348,17 +348,21 @@ public class FluentModelFactory(Compilation compilation)
     {
         if (!node.IsEnd) yield break;
 
-        var createMethods =
+        var creationMethods =
             from value in node.Values
             where value.Constructor.Parameters.Length == node.Key.Length
             where !value.Options.HasFlag(NoCreateMethod)
-            select new CreateMethod(
+            select new CreationMethod(
                 rootType.ContainingNamespace,
                 value,
                 node.Key,
                 valueSources);
 
-        foreach (var createMethod in createMethods) yield return createMethod;
+        foreach (var createMethod in creationMethods)
+        {
+            _unreachableConstructorAnalyzer.AddReachableMethod(createMethod);
+            yield return createMethod;
+        }
     }
 
     private Trie<FluentMethodParameter, ConstructorMetadata> CreateFluentStepTrie(
@@ -404,8 +408,10 @@ public class FluentModelFactory(Compilation compilation)
                 .Select(parameter => parameter.Type)
                 .Select(type => type.ContainingNamespace)
                 .Concat(fluentConstructorContexts.Select(ctx => ctx.Constructor.ContainingType.ContainingNamespace))
-                .DistinctBy(ns => ns.ToDisplayString())
-                .OrderBy(ns => ns.ToDisplayString())
+                .Select(namespaceSymbol => (namespaceSymbol, displayString: namespaceSymbol.ToDisplayString()))
+                .DistinctBy(ns => ns.displayString)
+                .OrderBy(ns => ns.displayString)
+                .Select(ns => ns.namespaceSymbol)
         ];
     }
 

@@ -19,7 +19,7 @@ public static class FluentStepDeclaration
             .Select<IFluentMethod, MethodDeclarationSyntax>(method =>
                 method switch
                 {
-                    CreateMethod createMethod => FluentFactoryMethodDeclaration.Create(createMethod, step),
+                    CreationMethod createMethod => FluentFactoryMethodDeclaration.Create(createMethod, step),
                     MultiMethod multiMethod => FluentStepMethodDeclaration.Create(multiMethod, step.KnownConstructorParameters, step.Namespace),
                     _ => FluentStepMethodDeclaration.Create(method, step.KnownConstructorParameters, step.Namespace)
                 });

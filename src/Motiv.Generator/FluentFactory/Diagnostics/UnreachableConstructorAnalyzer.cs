@@ -9,7 +9,7 @@ public class UnreachableConstructorAnalyzer
     private readonly List<IMethodSymbol> _allFluentConstructors = [];
     private readonly HashSet<IMethodSymbol> _reachedFluentConstructors = [];
 
-    public void AddSelectedMethod(IFluentMethod method)
+    public void AddReachableMethod(IFluentMethod method)
     {
         switch (method.Return)
         {

@@ -170,9 +170,10 @@ public class FluentFactoryDiagnosticsTests
 
                 ExpectedDiagnostics =
                 {
-                    new DiagnosticResult(UnreachableConstructor.Id, Error)
-                        .WithSpan(SourceFile, 23, 69, 23, 71)
-                        .WithSpan(SourceFile, 12, 30, 12, 34),
+                    DiagnosticResult
+                        .CompilerError("MOTIV001")
+                        .WithSpan("Source.cs", 23, 16, 23, 23)
+                        .WithArguments("Company.Company(int? id)"),
                 },
                 GeneratedSources =
                 {
@@ -343,7 +344,7 @@ public class FluentFactoryDiagnosticsTests
     }
 
     [Fact]
-    public Task Examine_unexpected_unreachable_constructor_error()
+    public Task Should_not_generate_unreachable_constructor_error_if_not_all_multiple_fluent_methods_are_not_ignored()
     {
         const string code =
             """
@@ -468,6 +469,82 @@ public class FluentFactoryDiagnosticsTests
                 {
                 (typeof(FluentFactoryGenerator), "Test.Spec.g.cs", expected)
             }
+            }
+        }.RunAsync();
+    }
+
+
+
+    [Fact]
+    public Task Should_not_generate_unreachable_constructor_error_with_primary_constructors()
+    {
+        const string code =
+            """
+            using Motiv.Generator.Attributes;
+
+            namespace Test;
+
+            [FluentFactory]
+            public partial class Shape;
+
+            [FluentFactory]
+            [FluentConstructor(typeof(Shape))]
+            public partial record Square(int Width);
+            """;
+
+        const string expected =
+            """
+            using System;
+
+            namespace Test
+            {
+                public partial class Shape
+                {
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Square"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Shape WithWidth(in int width)
+                    {
+                        return new Step_0__Test_Shape(width);
+                    }
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="Test.Square"/>
+                /// </summary>
+                public struct Step_0__Test_Shape
+                {
+                    private readonly int _width__parameter;
+                    public Step_0__Test_Shape(in int width)
+                    {
+                        this._width__parameter = width;
+                    }
+
+                    /// <summary>
+                    /// Candidate constructor types:
+                    ///     <seealso cref="Test.Square"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public Square Create()
+                    {
+                        return new Square(this._width__parameter);
+                    }
+                }
+            }
+            """;
+
+        return new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (SourceFile, code) },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Test.Shape.g.cs", expected)
+                }
             }
         }.RunAsync();
     }

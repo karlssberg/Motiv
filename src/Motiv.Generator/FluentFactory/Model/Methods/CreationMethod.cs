@@ -6,12 +6,12 @@ using Motiv.Generator.FluentFactory.Model.Storage;
 
 namespace Motiv.Generator.FluentFactory.Model.Methods;
 
-public class CreateMethod : IFluentMethod
+public class CreationMethod : IFluentMethod
 {
     private readonly Lazy<ImmutableArray<FluentTypeParameter>> _lazyTypeParameters;
 
 
-    public CreateMethod(
+    public CreationMethod(
         INamespaceSymbol rootNamespace,
         ConstructorMetadata constructorMetadata,
         ImmutableArray<FluentMethodParameter> availableParameterFields,
