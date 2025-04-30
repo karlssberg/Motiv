@@ -1,7 +1,8 @@
+using Motiv.BooleanPredicateProposition.PropositionBuilders.Overloads;
 using Motiv.Generator.Attributes;
 using Motiv.Shared;
 
-namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Metadata;
+namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 
 /// <summary>
 /// A factory for creating propositions based on the supplied predicate and metadata factories.

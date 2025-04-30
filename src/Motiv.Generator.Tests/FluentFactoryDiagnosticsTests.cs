@@ -1,5 +1,4 @@
-﻿
-using Microsoft.CodeAnalysis.Testing;
+﻿using Microsoft.CodeAnalysis.Testing;
 using Motiv.Generator.FluentFactory;
 using static Microsoft.CodeAnalysis.DiagnosticSeverity;
 using static Motiv.Generator.FluentFactory.MotivDiagnosticDescriptor;

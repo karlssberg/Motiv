@@ -1,6 +1,6 @@
 ﻿using Motiv.Generator.Attributes;
 
-namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders;
+namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Overloads;
 
 internal class WhenFalseOverloads
 {

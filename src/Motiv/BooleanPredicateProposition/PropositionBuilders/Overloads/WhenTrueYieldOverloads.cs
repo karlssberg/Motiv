@@ -1,6 +1,6 @@
 ﻿using Motiv.Generator.Attributes;
 
-namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
+namespace Motiv.BooleanPredicateProposition.PropositionBuilders.Overloads;
 
 internal class WhenTrueYieldOverloads
 {
