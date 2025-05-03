@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.Testing;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
 using Motiv.Generator.FluentFactory;
 using static Microsoft.CodeAnalysis.DiagnosticSeverity;
 using static Motiv.Generator.FluentFactory.MotivDiagnosticDescriptor;
@@ -78,13 +79,9 @@ public class FluentFactoryDiagnosticsTests
                 Sources = { (SourceFile, code) },
                 ExpectedDiagnostics =
                 {
-                    new DiagnosticResult(UnreachableConstructor.Id, Error)
-                        .WithSpan(SourceFile,12, 30, 12, 34)
-                        .WithSpan(SourceFile, 12, 30, 12, 34)
-                        .WithArguments(
-                            "MyNamespace.Person.Person(string name)",
-                            "WithName(string name)",
-                            "This involves the constructor parameter 'string name'. Try changing the fluent method name 'WithName', or constructor parameter type 'string name'")
+                    DiagnosticResult.CompilerError(UnreachableConstructor.Id)
+                        .WithSpan("Source.cs", 12, 16, 12, 22)
+                        .WithArguments("Person.Person(string name)")
                 },
                 GeneratedSources =
                 {
@@ -201,7 +198,7 @@ public class FluentFactoryDiagnosticsTests
 
             [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
             public readonly partial struct MyTypeB<TModel, TPredicateResult>(
-                [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, string> trueBecause);
+                [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, MyNamespace.BooleanResultBase<string>, string> trueBecause);
 
             internal class WhenTrueOverloads
             {
@@ -238,9 +235,14 @@ public class FluentFactoryDiagnosticsTests
                 Sources = { (SourceFile, code) },
                 ExpectedDiagnostics =
                 {
-                    new DiagnosticResult(AllFluentMethodTemplatesIncompatible.Id, Error)
+                    DiagnosticResult
+                        .CompilerError(AllFluentMethodTemplatesIncompatible.Id)
                         .WithSpan(SourceFile, 15, 28, 15, 53)
-                        .WithArguments("System.Func<TModel, MyNamespace.BooleanResultBase<string>, string> trueBecause")
+                        .WithArguments("System.Func<TModel, MyNamespace.BooleanResultBase<string>, string> trueBecause"),
+                    DiagnosticResult
+                        .CompilerError(UnreachableConstructor.Id)
+                        .WithSpan(SourceFile, 14, 32, 14, 39)
+                        .WithArguments("MyTypeB<TModel, TPredicateResult>.MyTypeB(Func<TModel, BooleanResultBase<string>, string> trueBecause)")
                 },
                 GeneratedSources =
                 {
@@ -463,6 +465,29 @@ public class FluentFactoryDiagnosticsTests
                 Sources = { (SourceFile, code) },
                 ExpectedDiagnostics =
                 {
+                    DiagnosticResult
+                        .CompilerError(UnreachableConstructor.Id)
+                        .WithSpan(SourceFile, 14, 32, 14, 75)
+                        .WithArguments(
+                            "ExplanationExpressionTreePropositionFactory<TModel, TPredicateResult>.ExplanationExpressionTreePropositionFactory(Expression<Func<TModel, TPredicateResult>> expression, Func<TModel, BooleanResultBase<string>, string> trueBecause)"),
+                    DiagnosticResult
+                        .CompilerWarning(ContainsSupersededFluentMethodTemplate.Id)
+                        .WithSpan(SourceFile, 16, 28, 16, 53)
+                        .WithSpan(SourceFile, 21, 38, 21, 49)
+                        .WithArguments(
+                            "Test.WhenTrueOverloads.WhenTrue<TModel, Test.BooleanResultBase<string>, string>(string whenTrue)",
+                            "System.Func<TModel, Test.BooleanResultBase<string>, string> trueBecause",
+                            "Test.ExplanationExpressionTreePropositionFactory<TModel, TPredicateResult>.ExplanationExpressionTreePropositionFactory(System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression, System.Func<TModel, Test.BooleanResultBase<string>, string> trueBecause)",
+                            "the parameter 'string trueBecause' in the constructor 'Test.ExplanationWithNameExpressionTreePropositionFactory<TModel, TPredicateResult>.ExplanationWithNameExpressionTreePropositionFactory(System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression, string trueBecause)' was used as the basis for the fluent method. Perhaps the ignored method-template can be removed or modified."),
+                    new DiagnosticResult(FluentMethodTemplateSuperseded.Id, Info)
+                        .WithSpan("Source.cs", 43, 64, 43, 72)
+                        .WithArguments(
+                            "System.Func<TModel, Test.BooleanResultBase<string>, string> Test.WhenTrueOverloads.WhenTrue<TModel, Test.BooleanResultBase<string>, string>(string whenTrue)",
+                            "System.Func<TModel, Test.BooleanResultBase<string>, string> trueBecause",
+                            "Test.ExplanationExpressionTreePropositionFactory<TModel, TPredicateResult>.ExplanationExpressionTreePropositionFactory(System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression, System.Func<TModel, Test.BooleanResultBase<string>, string> trueBecause)",
+                            "string trueBecause",
+                            "Test.ExplanationWithNameExpressionTreePropositionFactory<TModel, TPredicateResult>.ExplanationWithNameExpressionTreePropositionFactory(System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression, string trueBecause)"),
+
                 },
                 GeneratedSources =
                 {

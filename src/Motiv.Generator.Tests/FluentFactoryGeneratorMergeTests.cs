@@ -1,4 +1,7 @@
-﻿using Motiv.Generator.FluentFactory;
+﻿using Microsoft.CodeAnalysis.Testing;
+using Motiv.Generator.FluentFactory;
+using static Microsoft.CodeAnalysis.DiagnosticSeverity;
+using static Motiv.Generator.FluentFactory.MotivDiagnosticDescriptor;
 using VerifyCS =
     Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentFactory.FluentFactoryGenerator>;
 
@@ -6,6 +9,8 @@ namespace Motiv.Generator.Tests;
 
 public class FluentFactoryGeneratorMergeTests
 {
+    private const string SourceFile = "Source.cs";
+
     [Fact]
     public async Task Should_merge_generated_when_applied_to_class_constructors_with_a_single_parameter()
     {
@@ -1516,7 +1521,7 @@ public class FluentFactoryGeneratorMergeTests
             }
             """;
 
-        var expected =
+        const string expected =
             """
             using System;
 
@@ -1611,9 +1616,9 @@ public class FluentFactoryGeneratorMergeTests
                 ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                public MultiAssertionExplanationWithNamePropositionFactory<TModel> WhenFalseYield(in System.Func<TModel, System.Collections.Generic.IEnumerable<string>> falseBecause)
+                public MultiAssertionExplanationWithNamePropositionFactory<TModel> WhenFalseYield(in System.Func<TModel, System.Collections.Generic.IEnumerable<string>> whenFalse)
                 {
-                    return new MultiAssertionExplanationWithNamePropositionFactory<TModel>(this._predicate__parameter, this._trueBecause__parameter, falseBecause);
+                    return new MultiAssertionExplanationWithNamePropositionFactory<TModel>(this._predicate__parameter, this._trueBecause__parameter, WhenFalseYieldOverloads.WhenFalseYield<TModel, string>(whenFalse));
                 }
             }
 
@@ -1656,10 +1661,46 @@ public class FluentFactoryGeneratorMergeTests
         {
             TestState =
             {
-                Sources = { code },
+                Sources = { (SourceFile,code) },
                 GeneratedSources =
                 {
                     (typeof(FluentFactoryGenerator), "Spec.g.cs", expected)
+                },
+                ExpectedDiagnostics =
+                {
+                    DiagnosticResult
+                        .CompilerWarning(ContainsSupersededFluentMethodTemplate.Id)
+                        .WithSpan(SourceFile, 21, 28, 21, 59)
+                        .WithSpan(SourceFile, 13, 77, 13, 89)
+                        .WithArguments(
+                            "WhenFalseYieldOverloads.WhenFalse<TModel, string>(System.Func<TModel, string> whenFalse)",
+                            "System.Func<TModel, System.Collections.Generic.IEnumerable<string>> falseBecause",
+                            "MultiAssertionExplanationWithNamePropositionFactory<TModel>.MultiAssertionExplanationWithNamePropositionFactory(System.Func<TModel, bool> predicate, string trueBecause, System.Func<TModel, System.Collections.Generic.IEnumerable<string>> falseBecause)",
+                            "the parameter 'System.Func<TModel, string> falseBecause' in the constructor 'ExplanationWithNamePropositionFactory<TModel>.ExplanationWithNamePropositionFactory(System.Func<TModel, bool> predicate, string trueBecause, System.Func<TModel, string> falseBecause)' was used as the basis for the fluent method. Perhaps the ignored method-template can be removed or modified."),
+                    DiagnosticResult
+                        .CompilerWarning(ContainsSupersededFluentMethodTemplate.Id)
+                        .WithSpan(SourceFile, 21, 28, 21, 59)
+                        .WithSpan(SourceFile, 13, 77, 13, 89)
+                        .WithArguments(
+                            "WhenFalseYieldOverloads.WhenFalse<TModel, string>(string whenFalse)",
+                            "System.Func<TModel, System.Collections.Generic.IEnumerable<string>> falseBecause",
+                            "MultiAssertionExplanationWithNamePropositionFactory<TModel>.MultiAssertionExplanationWithNamePropositionFactory(System.Func<TModel, bool> predicate, string trueBecause, System.Func<TModel, System.Collections.Generic.IEnumerable<string>> falseBecause)",
+                            "the parameter 'System.Func<TModel, string> falseBecause' in the constructor 'ExplanationWithNamePropositionFactory<TModel>.ExplanationWithNamePropositionFactory(System.Func<TModel, bool> predicate, string trueBecause, System.Func<TModel, string> falseBecause)' was used as the basis for the fluent method. Perhaps the ignored method-template can be removed or modified."),
+                    new DiagnosticResult(FluentMethodTemplateSuperseded.Id, Info)
+                        .WithSpan(SourceFile, 67, 58, 67, 67)
+                        .WithArguments(
+                            "System.Func<TModel, System.Collections.Generic.IEnumerable<string>> WhenFalseYieldOverloads.WhenFalse<TModel, string>(System.Func<TModel, string> whenFalse)",
+                            "System.Func<TModel, System.Collections.Generic.IEnumerable<string>> falseBecause",
+                            "MultiAssertionExplanationWithNamePropositionFactory<TModel>.MultiAssertionExplanationWithNamePropositionFactory(System.Func<TModel, bool> predicate, string trueBecause, System.Func<TModel, System.Collections.Generic.IEnumerable<string>> falseBecause)",
+                            "System.Func<TModel, string> falseBecause",
+                            "ExplanationWithNamePropositionFactory<TModel>.ExplanationWithNamePropositionFactory(System.Func<TModel, bool> predicate, string trueBecause, System.Func<TModel, string> falseBecause)"),
+                    new DiagnosticResult(FluentMethodTemplateSuperseded.Id, Info)
+                        .WithSpan(SourceFile, 73, 58, 73, 67)
+                        .WithArguments(
+                            "System.Func<TModel, System.Collections.Generic.IEnumerable<string>> WhenFalseYieldOverloads.WhenFalse<TModel, string>(string whenFalse)",
+                            "System.Func<TModel, System.Collections.Generic.IEnumerable<string>> falseBecause",
+                            "MultiAssertionExplanationWithNamePropositionFactory<TModel>.MultiAssertionExplanationWithNamePropositionFactory(System.Func<TModel, bool> predicate, string trueBecause, System.Func<TModel, System.Collections.Generic.IEnumerable<string>> falseBecause)",
+                            "System.Func<TModel, string> falseBecause", "ExplanationWithNamePropositionFactory<TModel>.ExplanationWithNamePropositionFactory(System.Func<TModel, bool> predicate, string trueBecause, System.Func<TModel, string> falseBecause)"),
                 }
             }
         }.RunAsync();

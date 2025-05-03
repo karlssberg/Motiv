@@ -51,16 +51,8 @@ public static class MotivDiagnosticDescriptor
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public static readonly DiagnosticDescriptor FluentMethodTemplateNotCompatible = new(
-        id: "MOTIV006",
-        title: "Fluent method template not compatible",
-        category: Category,
-        messageFormat: "Fluent method template's return type '{0}' is not assignable to the fluent constructor parameter '{1}' in constructor '{2}'",
-        defaultSeverity: DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
-
     public static readonly DiagnosticDescriptor FluentMethodTemplateSuperseded = new(
-        id: "MOTIV007",
+        id: "MOTIV006",
         title: "Fluent method template superseded",
         category: Category,
         messageFormat: "Fluent method template '{0}' is not being applied for the fluent constructor parameter '{1}' in constructor '{2}'. " +
