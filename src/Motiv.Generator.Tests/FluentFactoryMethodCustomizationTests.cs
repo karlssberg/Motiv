@@ -82,8 +82,11 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory;
 
             [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
-            public class MyBuildTarget<T1, T2, T3>([MultipleFluentMethods(typeof(Methods))]Func<IEnumerable<T1>, T2, T3> function)
+            public class MyBuildTarget<T1, T2, T3>(
+                int x,
+                [MultipleFluentMethods(typeof(Methods))]Func<IEnumerable<T1>, T2, T3> function)
             {
+
                 public Func<IEnumerable<T1>, T2, T3> Value { get; set; } = function;
             }
 
@@ -2502,6 +2505,135 @@ public class FluentFactoryMethodCustomizationTests
                             "string value1",
                             "MyClassB.MyClassB(string value1, System.Func<string> value2)")
                 },
+            }
+        }.RunAsync();
+    }
+
+
+
+
+        [Fact]
+    public async Task Given_that_a_template_method_has_additional_parameters_Should_include_additional_parameters_in_step_method()
+    {
+        const string code =
+            """
+            using System;
+            using Motiv.Generator.Attributes;
+
+            [FluentFactory]
+            public static partial class Factory;
+
+            public class MyClassA<T1, T2>
+            {
+                [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                public MyClassA(
+                    [MultipleFluentMethods(typeof(Value1Methods))]Func<T1, T2> factory
+                {
+                    Factory = factory;
+                }
+
+                public Func<T1, T2> Factory { get; set; }
+            }
+
+            public static class Value1Methods
+            {
+                [FluentMethodTemplate]
+                public static Func<T1, T2> Value1<T1, T2>(Func<T1, T2> value)
+                {
+                    return value;
+                }
+
+                [FluentMethodTemplate]
+                public static Func<T1, T2> Value1<T1, T2>(T2 value)
+                {
+                    return _ => value;
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            using System;
+
+            public static partial class Factory
+            {
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public static Step_0__Factory<T1, T2> Value1<T1, T2>(in System.Func<T1, T2> value)
+                {
+                    return new Step_0__Factory<T1, T2>(Value1Methods.Value1<T1, T2>(value));
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public static Step_0__Factory<T1, T2> Value1<T1, T2>(in T2 value)
+                {
+                    return new Step_0__Factory<T1, T2>(Value1Methods.Value1<T1, T2>(value));
+                }
+            }
+
+            /// <summary>
+            /// Candidate constructor types:
+            ///     <seealso cref="MyClassA{T1, T2}"/>
+            ///     <seealso cref="MyClassB{T1, T2}"/>
+            /// </summary>
+            public struct Step_0__Factory<T1, T2>
+            {
+                private readonly System.Func<T1, T2> _factory1__parameter;
+                public Step_0__Factory(in System.Func<T1, T2> factory1)
+                {
+                    this._factory1__parameter = factory1;
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassA{T1, T2}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public MyClassA<T1, T2> Create(in System.Func<T1, T2, string> factory2)
+                {
+                    return new MyClassA<T1, T2>(this._factory1__parameter, factory2);
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public MyClassB<T1, T2> Create(in System.Func<T1, T2, int> value)
+                {
+                    return new MyClassB<T1, T2>(this._factory1__parameter, CreateMethods.Create<T1, T2, int>(value));
+                }
+
+                /// <summary>
+                /// Candidate constructor types:
+                ///     <seealso cref="MyClassB{T1, T2}"/>
+                /// </summary>
+                [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                public MyClassB<T1, T2> Create(in int value)
+                {
+                    return new MyClassB<T1, T2>(this._factory1__parameter, CreateMethods.Create<T1, T2, int>(value));
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Factory.g.cs", expected)
+                }
             }
         }.RunAsync();
     }

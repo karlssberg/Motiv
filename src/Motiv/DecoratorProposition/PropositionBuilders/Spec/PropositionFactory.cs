@@ -27,3 +27,21 @@ public readonly partial struct PropositionFactory<TModel, TReplacementMetadata, 
             whenFalse,
             new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description));
 }
+
+[FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+public readonly partial struct PropositionFactory<TModel, TReplacementMetadata>(
+    [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, string> spec,
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, TReplacementMetadata> whenTrue,
+    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, BooleanResultBase<string>, TReplacementMetadata> whenFalse)
+{
+    /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
+    /// <param name="statement">The proposition statement of what the proposition represents.</param>
+    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <returns>A proposition for the model.</returns>
+    public PolicyBase<TModel, TReplacementMetadata> Create(string statement) =>
+        new SpecDecoratorProposition<TModel, TReplacementMetadata, string>(
+            spec,
+            whenTrue,
+            whenFalse,
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description));
+}
