@@ -8,7 +8,7 @@
 
 ## Introduction
 
-At the heart of Motiv is the Specification Pattern—a well-established pattern for modelling domain propositions.
+At the heart of Motiv is the Specification Pattern—a well-established pattern for modeling domain propositions.
 As with everything in software development, there are inevitable trade-offs to be made when choosing any technical
 approach, and the same is true with the Specification pattern.
 These include extra verbose code, additional complexity when debugging, and the explainability of the results.
@@ -78,7 +78,7 @@ object instances, meaning re-use would be awkward.
 Propositions yielding _explanations_ are the main use-case of this library and double as a fallback when using
 propositions with differing metadata types (to ensure explanations are as through as possible).
 They are therefore guaranteed to have meaningful and complete `Assertions`.
-In the absence of assertions being explicit defined by the builder, the `Assertions` property will be derived from
+In the absence of assertions being explicitly defined by the builder, the `Assertions` property will be derived from
 the _propositional statement_ supplied to the `Create()` method.
 
 ### Metadata

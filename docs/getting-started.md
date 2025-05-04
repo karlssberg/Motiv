@@ -63,6 +63,26 @@ if (result.Satisfied)
 }
 ```
 
+### Using `Spec.From()`
+
+For simpler cases where you don't need custom explanations immediately,
+you can use `Spec.From()` which infers the proposition structure directly from a lambda expression:
+
+```csharp
+// Alternatively, using Spec.From() to infer propositions
+var isAdultFrom = Spec
+    .From((Person person) => person.Age >= 18)
+    .Create("is adult"); // Name is used in explanations
+
+var resultFrom = isAdultFrom.IsSatisfiedBy(person);
+
+// Check the result (using inferred assertions)
+if (!resultFrom.Satisfied)
+{
+     Console.WriteLine(string.Join(", ", resultFrom.Assertions)); // "person.Age < 18"
+}
+```
+
 ## Combining Specifications
 
 Motiv allows you to combine specifications using logical operators:
@@ -86,4 +106,5 @@ var isValidPerson = isAdult.And(isValidName);
 - Learn about [Operators](./operators/index.md) to combine specifications
 - See how to work with [Collections](./collections/index.md) of specifications and results
 
-For a complete API reference, see the [API Documentation](../api/Motiv.yml).
+For a complete API reference, see the [API Documentation](../api/).
+`

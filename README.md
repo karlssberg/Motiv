@@ -2,8 +2,8 @@
 
 ![Build Status](https://github.com/karlssberg/Motiv/actions/workflows/dotnet.yml/badge.svg) [![NuGet](https://img.shields.io/nuget/v/Motiv.svg)](https://www.nuget.org/packages/Motiv/) [![codecov](https://codecov.io/gh/karlssberg/Motiv/graph/badge.svg?token=XNN34D2JIP)](https://codecov.io/gh/karlssberg/Motiv)
 
-Boolean logic has a fundamental flaw: once evaluated,
-you lose all context about why something was true or false.
+The boolean type has a fundamental flaw: once evaluated,
+you lose all context about _why_ the value is true or false.
 
 This is known as _the boolean blindness problem_:
 
@@ -18,7 +18,7 @@ if (user.Age >= 18 &&
 }
 ```
 
-Instead, Motiv preserves the structure of boolean expressions, so that when needed, it can determine where the causes
+Instead, Motiv preserves the structure of boolean expressions so that when needed, it can determine where the causes
 lie:
 
 ```csharp
@@ -39,7 +39,7 @@ result.Assertions; // ["user.Age < 18", "user.HasValidId == false"]
 ## Core Features
 
 ### Automatic Propositions
-Transform boolean expression into explanatory logic using the `Spec.From()` method:
+Transform boolean expressions into explanatory logic using the `Spec.From()` method:
 
 ```csharp
 var isEligible = Spec
@@ -51,8 +51,11 @@ result.Satisfied;  // true
 result.Assertions; // ["c.CreditScore > 600", "c.Income > 100000"]
 ```
 
+This take a lambda expression tree (`Expression<Func<T, bool>>`), and then re-composes it into a
+set of sub-propositions.
+
 ### Composition
-Alternatively, derive new expressions from reusable propositions:
+Alternatively, if you want full control, you can do this yourself:
 
 ```csharp
 var hasGoodCredit = Spec
@@ -64,7 +67,10 @@ var hasIncome = Spec
     .Create("sufficient income");
 
 // create a new proposition
-var isEligible = hasGoodCredit & hasIncome;
+var isEligible = hasGoodCredit.And(hasIncome);
+
+// alternatively, use operator syntax
+// var isEligible = hasGoodCredit & hasIncome;
 
 var result = isEligible.IsSatisfiedBy(eligableCustomer);
 result.Satisfied;  // true
@@ -131,6 +137,7 @@ result.Assertions; // ["2 is not negative", "3 is not negative"]
 - Zero additional dependencies
 - Metadata lazily evaluated
 - .NET & .NET Framework compatible
+- Performance optimized
 - MIT licensed
 
 ## Learn More
