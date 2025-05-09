@@ -497,8 +497,6 @@ public class FluentFactoryDiagnosticsTests
         }.RunAsync();
     }
 
-
-
     [Fact]
     public Task Should_not_generate_unreachable_constructor_error_with_primary_constructors()
     {

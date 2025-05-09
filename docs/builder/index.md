@@ -5,7 +5,8 @@ description: Documentation for the fluent builder API in Motiv
 
 # Builder API
 
-The Builder API provides a fluent interface for creating specifications and propositions in Motiv. This allows you to construct complex business rules in a readable, maintainable way.
+The Builder API provides a fluent interface for creating specifications and propositions in Motiv. T
+his allows you to construct complex business rules in a readable, maintainable way.
 
 ## Core Builder Methods
 
@@ -61,4 +62,4 @@ After creating specifications, you'll likely want to:
 
 - [Combine specifications](../operators/index.md) using logical operators
 - Work with [collections of specifications](../collections/index.md)
-- [Evaluate specifications](../getting-started.md#evaluating-specifications) against your domain models
+- [Evaluate specifications](../getting-started.md#evaluate-a-specification) against your domain models

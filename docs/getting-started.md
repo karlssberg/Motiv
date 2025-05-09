@@ -1,17 +1,24 @@
 ---
 title: Getting Started with Motiv
-description: Learn how to get started with the Motiv library for building specifications and propositions
+description: Build expressive, composable logical propositions with Motiv - a .NET library that solves the Boolean Blindness problem
 ---
 
 # Getting Started with Motiv
 
-## Introduction
+## What is Motiv?
 
-Motiv is a .NET library that allows you to create specifications and propositions for validating business rules in a fluent, readable way. This guide will help you get started with using Motiv in your projects.
+Motiv is a .NET library that solves the
+[_Boolean Blindness Problem_](https://existentialtype.wordpress.com/2011/03/15/boolean-blindness/)
+by transforming simple boolean expressions into rich, self-documenting specifications.
+
+When you evaluate a traditional boolean expression,
+you only get `true` or `false` &mdash; you lose the context of *why* that result occurred.
+Motiv preserves this critical information by structuring boolean logic as composable specifications that retain
+their reasoning and can be combined to express complex logical propositions.
 
 ## Installation
 
-You can install Motiv via NuGet:
+Install via the .NET CLI:
 
 ```bash
 dotnet add package Motiv
@@ -23,17 +30,19 @@ Or via the NuGet Package Manager:
 Install-Package Motiv
 ```
 
-## Basic Concepts
+## Core Concepts
 
-Motiv is built around several core concepts:
+Motiv is built around three fundamental concepts that work together to solve the Boolean Blindness problem:
 
-- **Specifications**: Reusable, composable business rules
-- **Propositions**: Logical statements that can be evaluated against models
-- **Results**: Objects returned when propositions are evaluated, containing success/failure status and explanations
+| Concept            | Description                                                                                       |
+|--------------------|---------------------------------------------------------------------------------------------------|
+| **Specifications** | The building blocks of propositions. Can encapsulate logical statements or operations             |
+| **Propositions**   | One or more specifications that together form a meaningful logical statement                      |
+| **Results**        | A logical assertion about a model encapsulating the Boolean result, and metadata about the causes |
 
-## Your First Specification
+## Creating Your First Specification
 
-Here's a simple example to get you started:
+Here's how to create a basic age verification specification:
 
 ```csharp
 using Motiv;
@@ -45,66 +54,127 @@ public class Person
     public int Age { get; set; }
 }
 
-// Create a specification
+// Create a specification with custom messages
 var isAdult = Spec
-    .Build<Person>(person => person.Age >= 18)
-    .WhenTrue("Person is an adult")
-    .WhenFalse("Person is underage")
+    .Build((Person person) => person.Age >= 18)
+    .WhenTrue("is an adult")
+    .WhenFalse("is underage")
     .Create();
 
-// Use the specification
-var person = new Person { Name = "John", Age = 25 };
+// Apply the specification to a model
+var person = new Person { Name = "Benjamin", Age = 25 };
 var result = isAdult.IsSatisfiedBy(person);
 
-// Check the result
-if (result.Satisfied)
-{
-    Console.WriteLine(result.Explanation); // "Person is an adult"
-}
+Console.WriteLine(result.Satisfied);    // true
+Console.WriteLine(result.Explanation);  // "is an adult"
 ```
 
-### Using `Spec.From()`
+### Developer-Friendly Specifications with `Spec.From()`
 
-For simpler cases where you don't need custom explanations immediately,
-you can use `Spec.From()` which infers the proposition structure directly from a lambda expression:
+For development and debugging scenarios, `Spec.From()` generates descriptive technical assertions:
 
 ```csharp
-// Alternatively, using Spec.From() to infer propositions
+// Create a specification with auto-generated assertions
 var isAdultFrom = Spec
     .From((Person person) => person.Age >= 18)
     .Create("is adult"); // Name is used in explanations
 
-var resultFrom = isAdultFrom.IsSatisfiedBy(person);
+var person = new Person { Name = "Alice", Age = 16 };
+var result = isAdultFrom.IsSatisfiedBy(person);
 
-// Check the result (using inferred assertions)
-if (!resultFrom.Satisfied)
+// Technical output for debugging
+if (!result.Satisfied)
 {
-     Console.WriteLine(string.Join(", ", resultFrom.Assertions)); // "person.Age < 18"
+    Console.WriteLine(string.Join(", ", result.Assertions)); // "person.Age < 18"
 }
 ```
 
-## Combining Specifications
+The `Spec.From()` approach is particularly useful during development and unit testing when you need precise details
+about why a specification failed.
 
-Motiv allows you to combine specifications using logical operators:
+## Composing Specifications
+
+One of Motiv's most powerful features is the ability to combine specifications using logical operators,
+allowing you to build complex logical propositions from simple parts:
 
 ```csharp
-var isValidName = Spec
-    .Build<Person>(person => !string.IsNullOrWhiteSpace(person.Name))
-    .WhenTrue("Person has a valid name")
-    .WhenFalse("Name cannot be empty")
+// Create individual specifications
+var isAdult = Spec
+    .Build<Person>(p => p.Age >= 18)
+    .WhenTrue("is an adult")
+    .WhenFalse("is underage")
     .Create();
 
-var isValidPerson = isAdult.And(isValidName);
+var hasValidName = Spec
+    .Build<Person>(p => !string.IsNullOrWhiteSpace(p.Name))
+    .WhenTrue("Name is provided")
+    .WhenFalse("Name is missing")
+    .Create();
 
-// Or you can use the operator overload:
-// var isValidPerson = isAdult & isValidName;
+// Combine specifications using logical operators
+var isValidPerson = isAdult.And(hasValidName);
+
+// Alternative operator syntax
+// var isValidPerson = isAdult & hasValidName;
+
+// Apply the combined specification
+var person = new Person { Name = "", Age = 15 };
+var result = isValidPerson.IsSatisfiedBy(person);
+
+// Result contains all failed conditions
+Console.WriteLine(result.Satisfied);    // false
+Console.WriteLine(result.Explanations); // ["is underage", "Name is missing"]
 ```
+
+## Complex Logical Scenarios
+
+Motiv can express complex logical relationships through composition:
+
+```csharp
+public class Product
+{
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+    public bool IsOnSale { get; set; }
+    public decimal SaleDiscount { get; set; }
+}
+
+// Define individual specifications
+var hasValidName = Spec
+    .Build((Product p) => !string.IsNullOrWhiteSpace(p.Name))
+    .WhenTrue("Product name is present")
+    .WhenFalse("Product name is required")
+    .Create();
+
+var hasPositivePrice = Spec
+    .Build((Product p) => p.Price > 0)
+    .WhenTrue("Price is greater than zero")
+    .WhenFalse("Price must be greater than zero")
+    .Create();
+
+var hasValidDiscount = Spec
+    .Build((Product p) => !p.IsOnSale || (p.SaleDiscount > 0 && p.SaleDiscount < p.Price))
+    .WhenTrue("Product has a valid discount")
+    .WhenFalse("Product must have a valid discount")
+    .Create();
+
+// Combine all specifications
+var isValidProduct = hasValidName & hasPositivePrice & hasValidDiscount;
+```
+
+## Best Practices
+
+1. **Name propositions meaningfully** &ndash; Clear names make code self-documenting
+2. **Keep propositions focused** &ndash; Each propositions should express one logical concept
+3. **Compose small propositions** &ndash; Build complex logic from simple building blocks
+4. **Use custom messages** &ndash; Provide clear, context-specific explanations
+5. **Consider internationalization** &ndash; For user-facing messages, use resource files
 
 ## Next Steps
 
-- Explore the [Builder](./builder/index.md) API for creating complex specifications
-- Learn about [Operators](./operators/index.md) to combine specifications
-- See how to work with [Collections](./collections/index.md) of specifications and results
+- Explore the [Builder API](./builder/index.md) for creating expressive propositions
+- Learn about [Logical Operators](./operators/index.md) to combine propositions
+- See how to work with [Collections](./collections/index.md) of propositions and results
+- Understand [Performance Considerations](./performance/index.md) for complex logical compositions
 
-For a complete API reference, see the [API Documentation](../api/).
-`
+For complete API references, see the [API Documentation](~/api/).

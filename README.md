@@ -2,13 +2,13 @@
 
 ![Build Status](https://github.com/karlssberg/Motiv/actions/workflows/dotnet.yml/badge.svg) [![NuGet](https://img.shields.io/nuget/v/Motiv.svg)](https://www.nuget.org/packages/Motiv/) [![codecov](https://codecov.io/gh/karlssberg/Motiv/graph/badge.svg?token=XNN34D2JIP)](https://codecov.io/gh/karlssberg/Motiv)
 
-The boolean type has a fundamental flaw: once evaluated,
+The boolean type has a problem: once evaluated,
 you lose all context about _why_ the value is true or false.
 
 This is known as _the boolean blindness problem_:
 
 ```csharp
-// Traditional approach
+// Traditional approach - life before Motiv
 if (user.Age >= 18 &&
     user.HasValidId &&
     (user.Country == "US" || user.HasInternationalPermit) &&
@@ -18,8 +18,7 @@ if (user.Age >= 18 &&
 }
 ```
 
-Instead, Motiv preserves the structure of boolean expressions so that when needed, it can determine where the causes
-lie:
+Instead, Motiv preserves the structure of boolean expressions so that when required, it can identify the causes:
 
 ```csharp
 // With Motiv
@@ -54,7 +53,7 @@ result.Assertions; // ["c.CreditScore > 600", "c.Income > 100000"]
 This take a lambda expression tree (`Expression<Func<T, bool>>`), and then re-composes it into a
 set of sub-propositions.
 
-### Composition
+### Manual Composition
 Alternatively, if you want full control, you can do this yourself:
 
 ```csharp
@@ -93,7 +92,7 @@ result.Assertions; // ["has good credit score"]
 ```
 
 ### Collection Logic
-Make assertions about sets of results:
+Make assertions about sets of results (aka high-order logic):
 
 ```csharp
 var allNegative = Spec
@@ -110,27 +109,17 @@ result.Assertions; // ["2 is not negative", "3 is not negative"]
 
 ## Quick Start
 
-1. Install:
-    ```bash
-    dotnet add package Motiv
-    ```
+Installation involves adding the Motiv NuGet package to your project:
 
-2. Use:
-    ```csharp
-    var spec = Spec
-        .From(yourExistingBooleanExpression)
-        .Create("human readable name");
+```bash
+dotnet add package Motiv
+```
 
-    var result = spec.IsSatisfiedBy(data);
-    if (!result.Satisfied)
-    {
-        Console.WriteLine("Failed assertions:");
-        foreach (var assertion in result.Assertions)
-        {
-            Console.WriteLine(assertion);
-        }
-    }
-    ```
+or via the NuGet Package Manager:
+
+```bash
+Install-Package Motiv
+```
 
 ## Technical Notes
 
