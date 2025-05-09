@@ -23,17 +23,13 @@ flowchart BT
 
 ---
 
-Motiv is a pragmatic solution to the _[Boolean Blindness](https://existentialtype.wordpress.com/2011/03/15/boolean-blindness/)_
-problem (which is the loss of information resulting from the evaluation of logic to a single true or false value).
-It achieves this by decomposing logical expressions into individual atomic [propositions](https://en.wikipedia.org/wiki/Proposition),
-so that during evaluation, the specific causes of a decision can be preserved, and then put to use.
-In most cases this will be a human-readable explanation of the decision, but it could equally be used to surface state.
+Motiv offers a pragmatic solution to the _[Boolean Blindness](https://existentialtype.wordpress.com/2011/03/15/boolean-blindness/)_ problem—the loss of context when logic is evaluated to a single true or false value. It achieves this by decomposing logical expressions into individual atomic [propositions](https://en.wikipedia.org/wiki/Proposition). This preserves the specific causes of a decision during evaluation, allowing them to be utilized later. In most cases, this means providing a human-readable explanation of the decision, but it can also be used to surface underlying state.
 
-To demonstrate Motiv in action:
+To see Motiv in action:
 
 
 ```csharp
-// Define the proposition
+// Define a proposition using an expression tree
 var isInRangeAndEven = Spec.From((int n) => n >= 1 & n <= 10 & n % 2 == 0)
                            .Create("in range and even");
 
@@ -63,17 +59,14 @@ dotnet add package Motiv
 
 ## Usage
 
-There are two main ways to create propositions in Motiv:
+There are two primary ways to create propositions in Motiv:
 
-1. **[`Spec.Build()`](docs/builder/Build.md)**: For individual atomic propositions using a predicate function.
-2. **[`Spec.From()`](docs/builder/From.md)**: Forgit a lambda expression tree into multiple atomic propositions.
+1.  **[`Spec.Build()`](docs/builder/Build.md)**: For creating individual, atomic propositions using a predicate function.
+2.  **[`Spec.From()`](docs/builder/From.md)**: For transforming a lambda expression tree into multiple, interconnected atomic propositions.
 
 ### Build()
 
-The `Spec.Build()` method is fundamental to creating propositions in Motiv.
-It accepts a lambda function (which returns either a `bool` value,
-a `BooleanResult<TMetadata>`, or `PolicyResult<TMetadata>`),
-another proposition, or composition of propositions as its argument.
+The `Spec.Build()` method is fundamental for creating propositions. It accepts a lambda function that returns a `bool`, a `BooleanResult<TMetadata>`, or a `PolicyResult<TMetadata>`. It can also take another proposition or a composition of propositions as its argument.
 
 
 ```csharp
@@ -83,19 +76,14 @@ Spec.Build((int n) => n % 2 == 0)
 
 ### From()
 
-The `Spec.From()` method is used to create a proposition from a lambda expression trees `Expression<Func<TModel, bool>>`.
-This is the easiest way to use Motiv, as it allows you to create multiple propositions from a single lambda expression,
-with each sub-expression being individually evaluated and expressed as an assertion in code form.
-This is usful for debugging and troubleshooting complex logic.
-However, these can be overridden with custom assertions if needed,
-whilst still retaining the original expression (if required).
+The `Spec.From()` method creates a proposition from a lambda expression tree (`Expression<Func<TModel, bool>>`). This is often the simplest way to start with Motiv, as it automatically breaks down a single lambda expression into multiple propositions. Each sub-expression is evaluated individually and its result is expressed as an assertion in code form. This is particularly useful for debugging and understanding complex logic. These auto-generated assertions can be overridden with custom ones if needed, while still retaining the original expression for reference.
 
 ```csharp
 Spec.From((int n) => n >= 1 & n <= 10 & n % 2 == 0)
     .Create("in range and even");
 ```
 
-## Advanced Usage
+## Advanced Proposition Features
 
 ### Explicit Assertions
 
@@ -197,41 +185,38 @@ flowchart BT
     style False stroke:darkred,stroke-width:2px
 ```
 
-
 This is then implemented in code as follows:
 
+<!--
 <iframe width="100%" height="475" src="https://dotnetfiddle.net/Widget/uYefQ8" frameborder="0"></iframe>
+-->
+See the live example on [.NET Fiddle](https://dotnetfiddle.net/uYefQ8).
 
 This example demonstrates how you can compose complex propositions from simpler ones using Motiv.
 
 ### Custom Types and Reuse
 
-Motiv provides some classes to inherit from so that you can create your own strongly typed propositions which
-can be reused across your codebase.
+Motiv provides base classes to create your own strongly-typed propositions, promoting reusability across your codebase.
 
-For example, let's create a strongly typed proposition to determine if a number is even:
+For example, let's create a strongly-typed proposition to determine if a number is even:
 
 ```csharp
 public class IsEven() : Spec<int>(
     Spec.Build((int n) => n % 2 == 0)
         .WhenTrue("is even")
         .WhenFalse("is odd")
-        .Create();
+        .Create());
 ```
-This can then be instantiated where needed and used as-is.
-Also, by making it strongly typed, you can ensure that there is no ambiguity when registering it with a DI container.
+
+This `IsEven` class can then be instantiated and used directly. Strongly typing also helps avoid ambiguity when registering with a Dependency Injection (DI) container.
 
 ---
 
 ## When to Use Motiv
 
-Motiv is not meant to replace all your boolean logic.
-You should only use it when it makes sense to do so.
-If your logic is pretty straightforward or does not really need any feedback about the decisions being made, then
-you might not see a big benefit from using Motiv.
-It is just another tool in your toolbox, and sometimes the simplest solution is the best fit.
+Motiv is not intended to replace all boolean logic in your application. It should be used selectively where its benefits are most apparent. If your logic is straightforward or doesn't require detailed feedback on decisions, Motiv might not offer a significant advantage. It's another tool in your development toolkit; sometimes, the simplest solution is the most effective.
 
-Consider using Motiv when you need two or more of the following:
+Consider using Motiv when you need two or more of the following capabilities:
 
 1. **Visibility**: Granular, real-time feedback about decisions
 2. **Decomposition**: Break down complex logic into meaningful subclauses

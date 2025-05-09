@@ -18,7 +18,7 @@ if (user.Age >= 18 &&
 }
 ```
 
-Instead, Motiv preserves the structure of boolean expressions so that when required, it can identify the causes:
+Motiv addresses this by preserving the structure of boolean expressions, allowing you to identify the underlying causes when needed:
 
 ```csharp
 // With Motiv
@@ -38,6 +38,7 @@ result.Assertions; // ["user.Age < 18", "user.HasValidId == false"]
 ## Core Features
 
 ### Automatic Propositions
+
 Transform boolean expressions into explanatory logic using the `Spec.From()` method:
 
 ```csharp
@@ -45,15 +46,15 @@ var isEligible = Spec
     .From((Customer c) => c.CreditScore > 600 & c.Income > 100000)
     .Create("eligible for loan");
 
-var result = isEligible.IsSatisfiedBy(eligableCustomer);
+var result = isEligible.IsSatisfiedBy(eligibleCustomer);
 result.Satisfied;  // true
 result.Assertions; // ["c.CreditScore > 600", "c.Income > 100000"]
 ```
 
-This take a lambda expression tree (`Expression<Func<T, bool>>`), and then re-composes it into a
-set of sub-propositions.
+This takes a lambda expression tree (`Expression<Func<T, bool>>`) and transforms it into a hierarchy of propositions that mirror the expression's logic.
 
 ### Manual Composition
+
 Alternatively, if you want full control, you can do this yourself:
 
 ```csharp
@@ -71,12 +72,13 @@ var isEligible = hasGoodCredit.And(hasIncome);
 // alternatively, use operator syntax
 // var isEligible = hasGoodCredit & hasIncome;
 
-var result = isEligible.IsSatisfiedBy(eligableCustomer);
+var result = isEligible.IsSatisfiedBy(eligibleCustomer);
 result.Satisfied;  // true
 result.Assertions; // ["good credit", "sufficient income"]
 ```
 
 ### Custom Assertions
+
 Add readable explanations to your logic:
 
 ```csharp
@@ -86,13 +88,14 @@ var hasGoodCredit = Spec
     .WhenFalse("credit score too low")
     .Create();
 
-var result = hasGoodCredit.IsSatisfiedBy(eligableCustomer);
+var result = hasGoodCredit.IsSatisfiedBy(eligibleCustomer);
 result.Satisfied;  // true
 result.Assertions; // ["has good credit score"]
 ```
 
 ### Collection Logic
-Make assertions about sets of results (aka high-order logic):
+
+Make assertions about collections of items (also known as higher-order logic):
 
 ```csharp
 var allNegative = Spec
@@ -130,6 +133,7 @@ Install-Package Motiv
 - MIT licensed
 
 ## Learn More
+
 - [Documentation](https://karlssberg.github.io/Motiv/)
 - [Try Online](https://dotnetfiddle.net/knykpD)
 - [GitHub](https://github.com/karlssberg/Motiv/)

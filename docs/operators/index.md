@@ -1,29 +1,29 @@
 ---
 title: Logical Operators
-description: Documentation for logical operators in Motiv that allow combining specifications
+description: Documentation for logical operators in Motiv that allow combining propositions.
 ---
 
 # Logical Operators
 
-Motiv provides a set of logical operators that allow you to combine specifications and results to build more complex business rules. These operators work with both specifications and their evaluation results.
+Motiv provides a set of logical operators to combine [propositions](xref:Motiv.SpecBase`2) and their [results](xref:Motiv.BooleanResultBase`1), enabling the construction of more complex expressions. These operators are applicable to both propositions themselves and the outcomes of their evaluations.
 
 ## Available Operators
 
-| Operator | Method Syntax | Operator Syntax | Description |
-|----------|---------------|-----------------|-------------|
-| [And](And.md) | `left.And(right)` | `left & right` | Performs a logical AND on two specifications or results |
-| [AndAlso](AndAlso.md) | `left.AndAlso(right)` | `left && right` (results only) | Performs a short-circuiting logical AND |
-| [Or](Or.md) | `left.Or(right)` | `left \| right` | Performs a logical OR on two specifications or results |
-| [OrElse](OrElse.md) | `left.OrElse(right)` | `left \|\| right` (results only) | Performs a short-circuiting logical OR |
-| [XOr](XOr.md) | `left.XOr(right)` | `left ^ right` | Performs a logical XOR operation |
-| [Not](Not.md) | `proposition.Not()` | `!proposition` | Performs a logical NOT operation |
+| Operation                            | Method Usage | Operator Usage                                                                        | Description                                                                                                                               |
+|:------------------------------------|:-----------------------------------------------------------|-----------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| [And()](./operators/And.md)         | `left.And(right)` |`left & right`                                                                               | Performs a logical AND operation on two propositions or their results.                                                                  |
+| [AndAlso()](./operators/AndAlso.md) | `left.AndAlso(right)` |`left && right`<br>([results](xref:Motiv.BooleanResultBase`1) and expression trees only)                       | Performs a logical AND operation with short-circuiting behavior. The `&&` operator overload is available only for proposition results and within expression trees.     |
+| [Or()](./operators/Or.md)           | `left.Or(right)`  |`left \| right`                                                          | Performs a logical OR operation on two propositions or their results.                                                                   |
+| [OrElse()](./operators/OrElse.md)   | `left.OrElse(right)` |`left \|\| right`<br>([results](xref:Motiv.BooleanResultBase`1) and expression trees only) | Performs a logical OR operation with short-circuiting behavior. The `\|\|` operator overload is available only for proposition results and within expression trees.     |
+| [XOr()](./operators/XOr.md)         | `left.XOr(right)`|`left ^ right`                                                                              | Performs a logical XOR (exclusive OR) operation on two propositions or their results.                                                 |
+| [Not()](./operators/Not.md)         | `proposition.Not()`|`!proposition`                                                                            | Performs a logical NOT (negation) operation on a proposition or its result.                                                             |
 
-## Working with Specifications
+## Working with Propositions
 
-When combining specifications, the operators create new composite specifications:
+Combining propositions with these operators generates new, composite propositions:
 
 ```csharp
-// Create individual specifications
+// Create individual propositions
 var isAdult = Spec
     .Build<Person>(p => p.Age >= 18)
     .WhenTrue("Is an adult")
@@ -36,39 +36,39 @@ var hasValidId = Spec
     .WhenFalse("Missing ID")
     .Create();
 
-// Combine using method syntax
+// Combine using method syntax to create a new proposition
 var canVote = isAdult.And(hasValidId);
 
-// Or using operator syntax
-var canVote = isAdult & hasValidId;
+// Alternatively, use operator syntax
+// var canVote = isAdult & hasValidId;
 ```
 
 ## Working with Results
 
-You can also combine the results of evaluated specifications:
+The results of evaluated propositions can also be combined using these operators:
 
 ```csharp
 var adultResult = isAdult.IsSatisfiedBy(person);
 var idResult = hasValidId.IsSatisfiedBy(person);
 
-// Combine results
+// Combine the results
 var canVoteResult = adultResult & idResult;
 
-// Access combined explanations
+// Access the combined explanation
 if (!canVoteResult.Satisfied)
 {
-    // Will include explanations from both failed specifications
-    Console.WriteLine(canVoteResult.Explanation);
+    // The explanation will include reasons from all failed propositions
+    Console.WriteLine(canVoteResult.Explanation.Assertions.First()); // Example: "Is not an adult"
 }
 ```
 
-## Operator Differences
+## Key Operator Differences
 
-- **And** vs **AndAlso**: AndAlso short-circuits evaluation, meaning the right side is only evaluated if the left side is true
-- **Or** vs **OrElse**: OrElse short-circuits, meaning the right side is only evaluated if the left side is false
+- **And** vs. **AndAlso**: `AndAlso` implements short-circuiting. The right-hand operand is evaluated only if the left-hand operand is true. `And` always evaluates both operands.
+- **Or** vs. **OrElse**: `OrElse` implements short-circuiting. The right-hand operand is evaluated only if the left-hand operand is false. `Or` always evaluates both operands.
 
 ## Next Steps
 
-- Learn more about the [Builder API](../builder/index.md) for creating specifications
-- See how to work with [Collections](../collections/index.md) of specifications and results
-- Review practical examples in the [Getting Started](../getting-started.md) guide
+- Explore the [Builder API](../builder/index.md) for creating propositions.
+- Discover how to manage [Collections](../collections/index.md) of propositions and results.
+- Consult the [Getting Started](../getting-started.md) guide for practical examples.
