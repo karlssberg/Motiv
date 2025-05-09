@@ -1969,32 +1969,36 @@ public class FluentFactoryMethodCustomizationTests
                 },
                 ExpectedDiagnostics =
                 {
-                    DiagnosticResult.CompilerWarning("MOTIV002")
+                    DiagnosticResult
+                        .CompilerWarning(ContainsSupersededFluentMethodTemplate.Id)
                         .WithSpan(SourceFile, 26, 32, 26, 49)
                         .WithSpan(SourceFile, 11, 45, 11, 53)
                         .WithArguments(
                             "Overloads.Value<T1, T2>(System.Func<T1, T2> value)",
                             "System.Func<T1, T2> factory1", "MyClassB<T1, T2>.MyClassB(System.Func<T1, T2> factory1, System.Func<T1, T2, int> factory2)",
                             "the parameter 'System.Func<T1, T2> factory1' in the constructor 'MyClassA<T1, T2>.MyClassA(System.Func<T1, T2> factory1, System.Func<T1, T2, string> factory2)' was used as the basis for the fluent method. Perhaps the ignored method-template can be removed or modified."),
-                    DiagnosticResult.CompilerWarning("MOTIV003")
+                    DiagnosticResult
+                        .CompilerWarning(IncompatibleFluentMethodTemplate.Id)
                         .WithSpan(SourceFile, 26, 32, 26, 49)
                         .WithSpan(SourceFile, 52, 36, 52, 41)
                         .WithArguments(
                             "System.Func<T1, T2, T3> Overloads.Value<T1, T2, T3>(T3 value)",
                             "System.Func<T1, T2> factory1"),
-                    DiagnosticResult.CompilerWarning("MOTIV003")
+                    DiagnosticResult
+                        .CompilerWarning(IncompatibleFluentMethodTemplate.Id)
                         .WithSpan(SourceFile, 27, 32, 27, 49)
                         .WithSpan(SourceFile, 40, 32, 40, 37)
                         .WithArguments(
                             "System.Func<T1, T2> Overloads.Value<T1, T2>(System.Func<T1, T2> value)",
                             "System.Func<T1, T2, int> factory2"),
-                    DiagnosticResult.CompilerWarning("MOTIV003")
+                    DiagnosticResult
+                        .CompilerWarning(IncompatibleFluentMethodTemplate.Id)
                         .WithSpan(SourceFile, 27, 32, 27, 49)
                         .WithSpan(SourceFile, 46, 32, 46, 37)
                         .WithArguments(
                             "System.Func<T1, T2> Overloads.Value<T1, T2>(T2 value)",
                             "System.Func<T1, T2, int> factory2"),
-                    new DiagnosticResult("MOTIV007", DiagnosticSeverity.Info)
+                    new DiagnosticResult(FluentMethodTemplateSuperseded.Id, DiagnosticSeverity.Info)
                         .WithSpan(SourceFile, 40, 32, 40, 37)
                         .WithArguments(
                             "System.Func<T1, T2> Overloads.Value<T1, T2>(System.Func<T1, T2> value)",

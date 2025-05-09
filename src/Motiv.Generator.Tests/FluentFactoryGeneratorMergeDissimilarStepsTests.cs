@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 using Motiv.Generator.FluentFactory;
+using static Motiv.Generator.FluentFactory.MotivDiagnosticDescriptor;
 using VerifyCS =
     Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentFactory.FluentFactoryGenerator>;
 
@@ -9,6 +10,7 @@ namespace Motiv.Generator.Tests;
 
 public class FluentFactoryGeneratorMergeDissimilarStepsTests
 {
+    private const string SourceFile = "Source.cs";
     [Fact]
     public async Task Given_class_constructors_with_a_single_and_dual_parameters_Should_create_methods_both_target_types()
     {
@@ -1164,18 +1166,19 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
         {
             TestState =
             {
-                Sources = { ("Source.cs", code) },
+                Sources = { (SourceFile, code) },
                 ExpectedDiagnostics = {
-                    new DiagnosticResult("MOTIV002", DiagnosticSeverity.Warning)
-                        .WithSpan("Source.cs", 51, 36, 51, 59)
-                        .WithSpan("Source.cs", 32, 48, 32, 55)
+                    DiagnosticResult
+                        .CompilerWarning(ContainsSupersededFluentMethodTemplate.Id)
+                        .WithSpan(SourceFile, 51, 36, 51, 59)
+                        .WithSpan(SourceFile, 32, 48, 32, 55)
                         .WithArguments(
                             "TestB.MultipleMethods.WithValueB(string multipleMethodValue1)",
                             "System.Func<string> valueB2",
                             "TestB.MyBuildTargetB<T>.MyBuildTargetB(T valueB1, System.Func<string> valueB2, string valueB3)",
                             "the parameter 'string valueC2' in the constructor 'TestC.MyBuildTargetC<T>.MyBuildTargetC(T valueC1, string valueC2)' was used as the basis for the fluent method. Perhaps the ignored method-template can be removed or modified."),
-                    new DiagnosticResult("MOTIV007", DiagnosticSeverity.Info)
-                        .WithSpan("Source.cs", 69, 36, 69, 46)
+                    new DiagnosticResult(FluentMethodTemplateSuperseded.Id, DiagnosticSeverity.Info)
+                        .WithSpan(SourceFile, 69, 36, 69, 46)
                         .WithArguments(
                             "System.Func<string> TestB.MultipleMethods.WithValueB(string multipleMethodValue1)",
                             "System.Func<string> valueB2",
