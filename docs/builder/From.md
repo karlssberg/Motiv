@@ -1,7 +1,6 @@
 ﻿---
 title: From()
 ---
-# From()
 
 The `Spec.From()` method is used to create a proposition from a lambda expression trees.
 This is the easiest way to use Motiv, as it allows you to create multiple propositions from a single lambda expression.

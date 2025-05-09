@@ -2,7 +2,6 @@
 title: Create()
 category: building
 ---
-# Create()
 
 ## Default
 

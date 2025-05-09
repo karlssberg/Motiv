@@ -1,4 +1,4 @@
-### _n_ satisfied
+# _n_ satisfied
 
 ```csharp
 AsNSatisfied(int n)

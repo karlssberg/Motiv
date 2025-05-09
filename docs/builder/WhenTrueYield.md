@@ -2,7 +2,6 @@
 title: WhenTrueYield()
 category: building
 ---
-# WhenTrueYield() 
 
 The difference between `WhenTrueYield()` and `WhenTrue()` is that `WhenTrueYield()` is used to generate multiple
 assertions/metadata.
@@ -10,9 +9,9 @@ This may be, for instance, because you want to pass through the underlying asser
 or maybe you are working with higher-order propositions and want assertions for each unsatisfied model in a set.
 
 Different overloads are made available for different use cases—depending on which `Build()` overload was previously 
-chosen. 
+chosen.
 
-### New propositions
+## New propositions
 
 | Type                                   | Description                                                    |
 |----------------------------------------|----------------------------------------------------------------|
@@ -40,7 +39,6 @@ chosen.
 | `Func<HigherOrderEvaluation<TModel>, IEnumerable<string>>`               | a factory function that returns multiple assertion statements from a <xref:Motiv.HigherOrderProposition.HigherOrderEvaluation`2>. |
 | `Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<TMetadata>>` | a factory function that returns multiple metadata values from a <xref:Motiv.HigherOrderProposition.HigherOrderEvaluation`2>.      |
 
-
 ## Usage when building a new proposition
 
 When the `Build()` method is called using a predicate function, or an existing proposition, you can use the model to 
@@ -48,9 +46,7 @@ generate multiple assertions or metadata values from it.
 
 ### Dynamic assertions (derived from model)
 
-```csharp
-WhenTrueYield(Func<TModel, IEnumerable<string>> factory)
-```
+`WhenTrueYield(Func<TModel, IEnumerable<string>> factory)`
 
 This overload generates multiple assertion statements based on the model when the proposition is satisfied.
 
@@ -67,9 +63,7 @@ Spec.Build((string str) => str.Contains("foo") && str.Contains("bar"))
 
 ### Dynamic metadata (derived from model)
 
-```csharp
-WhenTrueYield(Func<TModel, IEnumerable<TMetadata>> factory)
-```
+`WhenTrueYield(Func<TModel, IEnumerable<TMetadata>> factory)`
 
 This overload generates multiple metadata instances based on the model when the proposition is satisfied.
 
@@ -92,9 +86,7 @@ can generate multiple assertions or metadata values from them.
 
 ### Dynamic assertions (derived from model and underlying result)
 
-```csharp
-WhenTrueYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> factory)
-```
+`WhenTrueYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> factory)`
 
 This is used to generate multiple assertion statements based on the model and the result of the underlying proposition.
 
@@ -107,9 +99,7 @@ Spec.Build(new IsEvenProposition())
 
 ### Dynamic metadata (derived from model and underlying result)
 
-```csharp
-WhenTrueYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> factory)
-```
+`WhenTrueYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> factory)`
 
 This overload generates multiple metadata values based on the model and the result of the underlying proposition.
 
@@ -125,11 +115,7 @@ Spec.Build(new IsEvenProposition())
 When a predicate function is used by the `Build()` method, the factory function will receive a
 `HigherOrderBooleanEvaluation<TModel>` containing the models and their results.
 
-### Dynamic assertions (derived from pairwise model and result)
-
-```csharp
-WhenTrueYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> factory)
-```
+`WhenTrueYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> factory)`
 
 This overload gives you access to the models (and various aspects of them) so that you can generate multiple
 distinct assertion statements.
@@ -144,9 +130,7 @@ Spec.Build((int n) => n % 2 == 0))
 
 ### Dynamic metadata (derived from pairwise model and result)
 
-```csharp
-WhenTrueYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> factory)
-```
+`WhenTrueYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> factory)`
 
 This overload gives you access to the models (and various aspects of them) so that you can generate multiple distinct
 metadata values.
@@ -164,11 +148,9 @@ Spec.Build((int n) => n % 2 == 0))
 When an existing proposition is used by the `Build()` method, the factory function will receive a
 `HigherOrderEvaluation<TModel, TMetadata>` containing the models and their results.
 
-### Dynamic assertions (derived from pairwise model and result)
+### Dynamic assertions (derived from higher-order evaluations)
 
-```csharp
-WhenTrueYield(Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<string>> factory)
-```
+`WhenTrueYield(Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<string>> factory)`
 
 This overload gives you access to the models and their results so that you can generate multiple distinct assertion
 statements.
@@ -181,11 +163,9 @@ Spec.Build(new IsEvenProposition())
     .Create("all even");
 ```
 
-### Dynamic metadata (derived from pairwise model and result)
+### Dynamic metadata (derived from higher-order evaluations)
 
-```csharp
-WhenTrueYield(Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<TMetadata>> factory)
-```
+`WhenTrueYield(Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<TMetadata>> factory)`
 
 This overload gives you access to the models and their results so that you can generate multiple distinct metadata
 objects.

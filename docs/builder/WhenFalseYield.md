@@ -2,7 +2,6 @@
 title: WhenFalseYield()
 category: building
 ---
-# WhenFalseYield() 
 
 The difference between `WhenFalseYield()` and `WhenFalse()` is that `WhenFalseYield()` is used to generate multiple 
 assertions/metadata.
@@ -49,9 +48,7 @@ generate multiple assertions or metadata values from it.
 
 ### Dynamic assertions (derived from model)
 
-```csharp
-WhenFalseYield(Func<TModel, IEnumerable<string>> factory)
-```
+`WhenFalseYield(Func<TModel, IEnumerable<string>> factory)`
 
 This overload generates multiple assertion statements based on the model when the proposition is satisfied.
 
@@ -68,9 +65,7 @@ Spec.Build((string str) => str.Contains("foo") || str.Contains("bar"))
 
 ### Dynamic metadata (derived from model)
 
-```csharp
-WhenFalseYield(Func<TModel, IEnumerable<TMetadata>> factory)
-```
+`WhenFalseYield(Func<TModel, IEnumerable<TMetadata>> factory)`
 
 This overload generates multiple metadata values based on the model when the proposition is not satisfied.
 
@@ -84,6 +79,7 @@ Spec.Build((string str) => str.Contains("foo") || str.Contains("bar"))
         ])
     .Create();
 ```
+
 ## Usage when building upon existing propositions or results
 
 Existing propositions can be re-used to build new propositions.
@@ -92,9 +88,7 @@ underlying proposition so that you can generate multiple assertions or metadata 
 
 ### Dynamic assertions (derived from model and underlying result)
 
-```csharp
-WhenFalseYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> factory)
-```
+`WhenFalseYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> factory)`
 
 
 This is used to generate multiple assertion statements based on the model and the <xref:Motiv.BooleanResultBase`1> 
@@ -109,9 +103,7 @@ Spec.Build(new IsEvenProposition())
 
 ### Dynamic metadata (derived from model and underlying result)
 
-```csharp
-WhenFalseYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> factory)
-```
+`WhenFalseYield(Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> factory)`
 
 This overload generates multiple metadata values based on the model and the <xref:Motiv.BooleanResultBase`1> yielded 
 by the underlying proposition.
@@ -130,9 +122,7 @@ When a predicate function is used by the `Build()` method, the factory function 
 
 ### Dynamic assertions (derived from pairwise model and result)
 
-```csharp
-WhenFalseYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> factory)
-```
+`WhenFalseYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> factory)`
 
 This overload gives you access to the models (and various aspects of them) so that you can generate multiple
 distinct assertion statements.
@@ -147,9 +137,7 @@ Spec.Build((int n) => n % 2 == 0))
 
 ### Dynamic metadata (derived from pairwise model and result)
 
-```csharp
-WhenFalseYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> factory)
-```
+`WhenFalseYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> factory)`
 
 This overload gives you access to the models (and various aspects of them) so that you can generate multiple distinct
 metadata values.
@@ -168,11 +156,9 @@ Spec.Build((int n) => n % 2 == 0))
 When an existing proposition is used by the <cref:Motiv.Spec.Build> method, the factory function will receive a
 <cref:Motiv.HigherOrderProposition.HigherOrderEvaluation`2>  containing the models and their results.
 
-### Dynamic assertions (derived from pairwise model and result)
+### Dynamic assertions (derived from higher-order evaluations)
 
-```csharp
-WhenFalseYield(Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<string>> factory)
-```
+`WhenFalseYield(Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<string>> factory)`
 
 The <cref:Motiv.HigherOrderProposition.HigherOrderEvaluation`2> object packages the models and their 
 <xref:Motiv.BooleanResultBase`1> in a way that is convenient for generating custom assertion statements.
@@ -185,11 +171,9 @@ Spec.Build(new IsEvenProposition())
     .Create();
 ```
 
-### Dynamic metadata (derived from pairwise model and result)
+### Dynamic metadata (derived from higher-order evaluations)
 
-```csharp
-WhenFalseYield(Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<TMetadata>> factory)
-```
+`WhenFalseYield(Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<TMetadata>> factory)`
 
 This overload gives you access to the models and their results so that you can generate multiple distinct metadata
 objects.

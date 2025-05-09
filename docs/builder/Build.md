@@ -1,7 +1,6 @@
 ---
 title: Build()
 ---
-# Build()
 
 New propositions are built using the `Spec.Build()` method.
 This method is overloaded and takes one of the following types of arguments:
@@ -28,7 +27,6 @@ Propositions built from these generally serve as the foundations to more complex
 Spec.Build((int n) => n % 2 == 0) 
     .Create("is even"); 
 ```
-
 
 ### From the result of a proposition
 
