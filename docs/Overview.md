@@ -7,21 +7,21 @@ This document provides an overview of the Motiv API, categorized by functionalit
 
 New [propositions](xref:Motiv.SpecBase`2) are created using a fluent interface, starting with an overload of the [`Spec.Build()`](./builder/Build.md) method.
 
-| Method                                                   | Description                                                                                                                               |
-|----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| [Build()](./builder/Build.md)                            | Initiates the proposition construction process. It can be based on a predicate, an existing proposition, or the result of a proposition.        |
-| [As()](./builder/As.md)                                  | (Optional) Defines a custom higher-order proposition, which is a proposition that operates on or returns other propositions.                  |
-| [AsAllSatisfied()](./builder/AsAllSatisfied.md)          | (Optional) Defines a proposition that is satisfied if all models in a collection meet the specified criteria.                               |
-| [AsAnySatisfied()](./builder/AsAnySatisfied.md)          | (Optional) Defines a proposition that is satisfied if at least one model in a collection meets the specified criteria.                        |
-| [AsNoneSatisfied()](./builder/AsNoneSatisfied.md)        | (Optional) Defines a proposition that is satisfied if no models in a collection meet the specified criteria.                                |
-| [AsAtLeastNSatisfied()](./builder/AsAtLeastNSatisfied.md) | (Optional) Defines a proposition that is satisfied if at least `n` models in a collection meet the specified criteria.                      |
-| [AsAtMostNSatisfied()](./builder/AsAtMostNSatisfied.md)  | (Optional) Defines a proposition that is satisfied if no more than `n` models in a collection meet the specified criteria.                  |
-| [AsNSatisfied()](./builder/AsNSatisfied.md)              | (Optional) Defines a proposition that is satisfied if exactly `n` models in a collection meet the specified criteria.                       |
-| [WhenTrue()](./builder/WhenTrue.md)                    | (Optional) Specifies the assertion (explanation) to be used when the proposition is satisfied.                                            |
-| [WhenTrueYield()](./builder/WhenTrueYield.md)            | (Optional) Specifies a collection of assertions to be returned when the proposition is satisfied.                                         |
-| [WhenFalse()](./builder/WhenFalse.md)                    | (Optional) Specifies the assertion (explanation) to be used when the proposition is not satisfied.                                        |
-| [WhenFalseYield()](./builder/WhenFalseYield.md)          | (Optional) Specifies a collection of assertions to be returned when the proposition is not satisfied.                                     |
-| [Create()](./builder/Create.md)                          | Finalizes the construction process and returns the configured proposition.                                                                |
+| Method                                                   | Description                                                                                                                              |
+|----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| [Build()](./builder/Build.md)                            | Initiates the proposition construction process. It can be based on a predicate, an existing proposition, or the result of a proposition. |
+| [As()](./builder/As.md)                                  | (Optional) Defines a custom higher-order proposition, which is a proposition that operates on or returns other propositions.             |
+| [AsAllSatisfied()](./builder/AsAllSatisfied.md)          | (Optional) Defines a proposition that is satisfied if all models in a collection meet the specified criteria.                            |
+| [AsAnySatisfied()](./builder/AsAnySatisfied.md)          | (Optional) Defines a proposition that is satisfied if at least one model in a collection meets the specified criteria.                   |
+| [AsNoneSatisfied()](./builder/AsNoneSatisfied.md)        | (Optional) Defines a proposition that is satisfied if no models in a collection meet the specified criteria.                             |
+| [AsAtLeastNSatisfied()](./builder/AsAtLeastNSatisfied.md) | (Optional) Defines a proposition that is satisfied if at least `n` models in a collection meet the specified criteria.                   |
+| [AsAtMostNSatisfied()](./builder/AsAtMostNSatisfied.md)  | (Optional) Defines a proposition that is satisfied if no more than `n` models in a collection meet the specified criteria.               |
+| [AsNSatisfied()](./builder/AsNSatisfied.md)              | (Optional) Defines a proposition that is satisfied if exactly `n` models in a collection meet the specified criteria.                    |
+| [WhenTrue()](./builder/WhenTrue.md)                    | (Optional) Specifies the value to be used when the proposition is satisfied.                                                             |
+| [WhenTrueYield()](./builder/WhenTrueYield.md)            | (Optional) Specifies a collection of values to be returned when the proposition is satisfied.                                            |
+| [WhenFalse()](./builder/WhenFalse.md)                    | (Optional) Specifies the value to be used when the proposition is not satisfied.                                                         |
+| [WhenFalseYield()](./builder/WhenFalseYield.md)          | (Optional) Specifies a collection of values to be returned when the proposition is not satisfied.                                    |
+| [Create()](./builder/Create.md)                          | Finalizes the construction process and returns the configured proposition.                                                               |
 
 ## Operators
 
