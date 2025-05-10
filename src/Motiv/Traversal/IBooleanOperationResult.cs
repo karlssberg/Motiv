@@ -17,8 +17,8 @@ internal interface IBooleanOperationResult
 
 internal interface IBooleanOperationResult<TMetadata> : IBooleanOperationResult
 {
-    IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata { get; }
+    IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues { get; }
 
-    IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata { get; }
+    IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues { get; }
     MetadataNode<TMetadata> MetadataTier { get; }
 }

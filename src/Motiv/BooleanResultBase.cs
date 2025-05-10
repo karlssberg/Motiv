@@ -312,19 +312,11 @@ public abstract class BooleanResultBase<TMetadata>
     /// <summary>Gets the metadata/assertions yielded by results that caused the outcome.</summary>
     public IEnumerable<TMetadata> Values => MetadataTier.Metadata;
 
-    /// <summary>Gets the metadata yielded by results that caused the outcome.</summary>
-    [Obsolete("Use the Values property instead.")]
-    public IEnumerable<TMetadata> Metadata => Values;
-
     /// <summary>Gets the metadata yielded by all results that evaulated.</summary>
     public IEnumerable<TMetadata> RootValues => this.GetRootValues().ElseIfEmpty(Values);
 
     /// <summary>Gets the metadata tree associated with this result.</summary>
     public abstract MetadataNode<TMetadata> MetadataTier { get; }
-
-    /// <summary>Gets the underlying causes with metadata that contribute to this result.</summary>
-    [Obsolete("Use the CausesWithValues property instead.")]
-    public IEnumerable<BooleanResultBase<TMetadata>> CausesWithMetadata => CausesWithValues;
 
     /// <summary>Gets the underlying causes with metadata that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues { get; }
@@ -335,10 +327,6 @@ public abstract class BooleanResultBase<TMetadata>
             booleanResult is IBooleanOperationResult
                 ? booleanResult.UnderlyingMetadataSources
                 : this.ToEnumerable());
-
-    /// <summary>Gets the underlying boolean results with metadata that contribute to this result.</summary>
-    [Obsolete("Use the UnderlyingWithValues property instead.")]
-    public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithMetadata => UnderlyingWithValues;
 
     /// <summary>Gets the underlying boolean results with metadata that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues { get; }

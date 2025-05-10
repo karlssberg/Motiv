@@ -98,13 +98,6 @@ public class HigherOrderBooleanResultEvaluation<TModel, TMetadata>
     /// </summary>
     public IEnumerable<TMetadata> Values => _lazyMetadata.Value;
 
-
-    /// <summary>
-    /// Gets the metadata associated with the evaluation.
-    /// </summary>
-    [Obsolete("Use Values instead.")]
-    public IEnumerable<TMetadata> Metadata => _lazyMetadata.Value;
-
     /// <summary>
     /// Gets the assertions made during the evaluation.
     /// </summary>
