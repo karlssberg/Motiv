@@ -77,7 +77,7 @@ public static class SymbolExtensions
 
                 if (!method.IsStatic)
                     diagnostics.Add(Diagnostic.Create(
-                        MotivDiagnosticDescriptor.FluentMethodTemplateAttributeNotStatic,
+                        FluentFactoryGenerator.FluentMethodTemplateAttributeNotStatic,
                         location,
                         method.Locations,
                         method.ToFullDisplayString(),
@@ -88,7 +88,7 @@ public static class SymbolExtensions
                     diagnostics.AddRange(
                     [
                         Diagnostic.Create(
-                            MotivDiagnosticDescriptor.IncompatibleFluentMethodTemplate,
+                            FluentFactoryGenerator.IncompatibleFluentMethodTemplate,
                             location,
                             method.Locations,
                             ImmutableDictionary.Create<string, string?>()

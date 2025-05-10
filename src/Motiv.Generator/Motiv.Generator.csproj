@@ -6,13 +6,11 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <RootNamespace>Motiv.Generator</RootNamespace>
-    </PropertyGroup>
-
-    <PropertyGroup>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <IsRoslynComponent>true</IsRoslynComponent>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <AnalyzerLanguage>cs</AnalyzerLanguage>
+        <NoWarn>$(NoWarn);RS2000</NoWarn>
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\Motiv.Generator.Attributes\Motiv.Generator.Attributes.csproj" />
@@ -21,9 +19,6 @@
       <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.13.0" />
       <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
       <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="FluentFactory\Codefix\" />
     </ItemGroup>
 
 </Project>

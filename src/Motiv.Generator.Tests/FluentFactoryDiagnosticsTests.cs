@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis.Testing;
 using Motiv.Generator.FluentFactory;
 using static Microsoft.CodeAnalysis.DiagnosticSeverity;
-using static Motiv.Generator.FluentFactory.MotivDiagnosticDescriptor;
+using static Motiv.Generator.FluentFactory.FluentFactoryGenerator;
 using VerifyCS =
     Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentFactory.FluentFactoryGenerator>;
 

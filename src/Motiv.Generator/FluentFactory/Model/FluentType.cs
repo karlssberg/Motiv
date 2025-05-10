@@ -2,11 +2,9 @@
 
 namespace Motiv.Generator.FluentFactory.Model;
 
-public class FluentType(ITypeSymbol typeSymbol, string? methodName = null) : IEquatable<FluentType>
+public class FluentType(ITypeSymbol typeSymbol) : IEquatable<FluentType>
 {
     private readonly string _key = typeSymbol.ToDisplayString();
-
-    public ITypeSymbol TypeSymbol { get; } = typeSymbol;
 
     public bool Equals(FluentType? other)
     {

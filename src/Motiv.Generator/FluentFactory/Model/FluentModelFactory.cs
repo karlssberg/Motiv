@@ -263,7 +263,7 @@ public class FluentModelFactory(Compilation compilation)
                 _diagnostics.AddRange(
                 [
                     Diagnostic.Create(
-                        MotivDiagnosticDescriptor.AllFluentMethodTemplatesIncompatible,
+                        FluentFactoryGenerator.AllFluentMethodTemplatesIncompatible,
                         parameter.ParameterSymbol
                             .GetAttribute(TypeName.MultipleFluentMethodsAttribute)?
                             .GetLocationAtIndex(0),
