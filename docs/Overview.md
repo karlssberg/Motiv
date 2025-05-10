@@ -1,7 +1,6 @@
 ---
 title: API
 ---
-
 This document provides an overview of the Motiv API, categorized by functionality.
 
 ## Builder

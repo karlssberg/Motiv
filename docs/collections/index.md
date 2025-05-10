@@ -2,9 +2,6 @@
 title: Collections API
 description: Documentation for working with collections of specifications and results in Motiv
 ---
-
-# Collections API
-
 Motiv provides extension methods to work efficiently with collections of specifications and results. These methods improve code readability and reduce the need for repetitive logic when dealing with multiple specifications or results.
 
 ## Collection Categories

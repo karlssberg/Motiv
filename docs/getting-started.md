@@ -2,9 +2,6 @@
 title: Getting Started with Motiv
 description: Build expressive, composable logical propositions with Motiv - a .NET library that solves the Boolean Blindness problem
 ---
-
-# Getting Started with Motiv
-
 ## What is Motiv?
 
 Motiv is a .NET library that solves the

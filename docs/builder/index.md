@@ -2,9 +2,6 @@
 title: Builder API
 description: Documentation for the fluent builder API in Motiv
 ---
-
-# Builder API
-
 The Builder API provides a fluent interface for creating specifications and propositions in Motiv. This allows you to construct complex expressions in a readable, maintainable way.
 
 ## Core Builder Methods
