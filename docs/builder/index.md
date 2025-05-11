@@ -58,4 +58,4 @@ After creating specifications, you'll likely want to:
 
 - [Combine specifications](../operators/index.md) using logical operators
 - Work with [collections of specifications](../collections/index.md)
-- [Evaluate specifications](../getting-started.md#evaluate-a-specification) against your domain models
+- [Evaluate specifications](../getting-started.md#creating-your-first-specification) against your domain models

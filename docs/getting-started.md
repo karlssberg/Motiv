@@ -172,6 +172,5 @@ var isValidProduct = hasValidName & hasPositivePrice & hasValidDiscount;
 - Explore the [Builder API](./builder/index.md) for creating expressive propositions
 - Learn about [Logical Operators](./operators/index.md) to combine propositions
 - See how to work with [Collections](./collections/index.md) of propositions and results
-- Understand [Performance Considerations](./performance/index.md) for complex logical compositions
-
-For complete API references, see the [API Documentation](~/api/).
+- Understand [Performance considerations](../performance/index.md)
+- [API documentation](../../api/index.md)
