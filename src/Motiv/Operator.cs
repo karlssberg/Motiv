@@ -8,30 +8,30 @@ public static class Operator
     /// <summary>
     /// The conjunctive boolean operation.
     /// </summary>
-    public static string And => "AND";
+    public const string And = "AND";
 
     /// <summary>
     /// The short-circuiting conjunctive boolean operation.
     /// </summary>
-    public static string AndAlso => "AND ALSO";
+    public const string AndAlso = "AND ALSO";
 
     /// <summary>
     /// The disjunctive boolean operation.
     /// </summary>
-    public static string Or => "OR";
+    public const string Or = "OR";
 
     /// <summary>
     /// The short-circuiting disjunctive boolean operation.
     /// </summary>
-    public static string OrElse => "OR ELSE";
+    public const string OrElse = "OR ELSE";
 
     /// <summary>
     /// The XOR logical operator.
     /// </summary>
-    public static string XOr => "XOR";
+    public const string XOr = "XOR";
 
     /// <summary>
     /// Logical negation.
     /// </summary>
-    public static string Not => "NOT";
+    public const string Not = "NOT";
 }
