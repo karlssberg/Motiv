@@ -1,4 +1,9 @@
-# Creating metadata propositions as a spec class
+---
+title: Policy<TModel, TMetadata>
+category: building
+---
+
+# Creating metadata propositions as a policy class
 
 ## `Policy<TModel, TMetadata>`
 

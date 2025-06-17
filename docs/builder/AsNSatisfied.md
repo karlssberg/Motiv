@@ -1,3 +1,8 @@
+---
+title: AsNSatisfied()
+category: building
+---
+
 # _n_ satisfied
 
 ```csharp

@@ -5,7 +5,7 @@ category: building
 
 The `WhenTrue()` method is used to yield values when the proposition is satisfied.
 It also implicitly sets `TMetadata` type for the rest of the proposition. Any values yielded from underlying
-propositions (if they exist) will be supplanted by the new value from the`WhenTrue()` method.
+propositions (if they exist) will be supplanted by the new value from the `WhenTrue()` method.
 However, should the underlying yielded values still be required, then it is still possible to
 re-yield them.
 
@@ -31,7 +31,7 @@ This method is overloaded and takes one of the following types
 `WhenTrue(string assertion)`
 
 This overload is unique in that the value it takes can also be used as the propositional statement.
-This means that you can use the parameterless `Create()` method fo finalize the building of the proposition
+This means that you can use the parameterless `Create()` method to finalize the building of the proposition
 (although you can still use the `Create(string statement)` method if you wish).
 When the proposition is satisfied, the assertion value will be used to populate the `Reason`, `Assertions` and
 `Metadata` properties of the result.
@@ -152,6 +152,6 @@ property of the result.
 Spec.Build(new IsEvenProposition())
     .AsAllSatisfied()
     .WhenTrue(eval => new MyMetadata(eval.Assertions.Serialize())))
-    .WhenFalse(new MyMetadata("is odd")
+    .WhenFalse(new MyMetadata("is odd"))
     .Create("is even");
 ```

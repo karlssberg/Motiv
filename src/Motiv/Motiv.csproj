@@ -19,7 +19,7 @@
         <PackageTags>Boolean Logic, Decision Making, Explainability, Visibility, Boolean Blindness, Specification Pattern</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>7.4.3</Version>
+        <Version>8.0.0</Version>
         <TargetFrameworks>netstandard2.0;net8.0;net9.0</TargetFrameworks>
     </PropertyGroup>
 

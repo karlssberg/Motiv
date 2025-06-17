@@ -31,7 +31,7 @@ This method is overloaded and takes one of the following types
 `WhenFalse(string assertion)`
 
 This overload generates an assertion statement when the proposition is not satisfied.
-When the proposition is not satisfied, the metadata returned by the factory function will be used to populate the
+When the proposition is not satisfied, the assertion will be used to populate the
 `Reason`, `Assertions` and `Metadata` properties of the result.
 
 ```csharp
@@ -103,7 +103,7 @@ Spec.Build(new IsEvenProposition())
     .Create();
 ```
 
-### Dynamic assertion (derived from model and underlying result)
+### Dynamic metadata (derived from model and underlying result)
 
 `WhenFalse(Func<TModel, BooleanResultBase<TMetadata>, TMetadata> factory)`
 

@@ -1,3 +1,8 @@
+---
+title: Spec<TModel, TMetadata>
+category: building
+---
+
 # Creating metadata propositions as a spec class
 
 ## `Spec<TModel, TMetadata>`

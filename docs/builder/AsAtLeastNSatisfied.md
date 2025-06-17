@@ -1,3 +1,8 @@
+---
+title: AsAtLeastNSatisfied()
+category: building
+---
+
 # At least _n_ satisfied
 
 ```csharp

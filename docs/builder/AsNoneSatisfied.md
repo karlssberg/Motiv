@@ -1,3 +1,8 @@
+---
+title: AsNoneSatisfied()
+category: building
+---
+
 # None satisfied
 
 ```csharp

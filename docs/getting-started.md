@@ -33,9 +33,9 @@ Motiv is built around three fundamental concepts that work together to solve the
 
 | Concept            | Description                                                                                       |
 |--------------------|---------------------------------------------------------------------------------------------------|
-| **Specifications** | The building blocks of propositions. Can encapsulate logical statements or operations             |
-| **Propositions**   | One or more specifications that together form a meaningful logical statement                      |
-| **Results**        | A logical assertion about a model encapsulating the Boolean result, and metadata about the causes |
+| **Specifications** | The building blocks of logical propositions. Encapsulate boolean expressions or operations          |
+| **Propositions**   | One or more specifications combined to form a meaningful logical statement                        |
+| **Results**        | Rich objects that include both the boolean outcome and detailed metadata about why/how           |
 
 ## Creating Your First Specification
 
@@ -74,7 +74,7 @@ For development and debugging scenarios, `Spec.From()` generates descriptive tec
 // Create a specification with auto-generated assertions
 var isAdultFrom = Spec
     .From((Person person) => person.Age >= 18)
-    .Create("is adult"); // Name is used in explanations
+    .Create("is adult"); // This name is used in explanations
 
 var person = new Person { Name = "Alice", Age = 16 };
 var result = isAdultFrom.IsSatisfiedBy(person);
@@ -162,7 +162,7 @@ var isValidProduct = hasValidName & hasPositivePrice & hasValidDiscount;
 ## Best Practices
 
 1. **Name propositions meaningfully** &ndash; Clear names make code self-documenting
-2. **Keep propositions focused** &ndash; Each propositions should express one logical concept
+2. **Keep propositions focused** &ndash; Each proposition should express one logical concept
 3. **Compose small propositions** &ndash; Build complex logic from simple building blocks
 4. **Use custom messages** &ndash; Provide clear, context-specific explanations
 5. **Consider internationalization** &ndash; For user-facing messages, use resource files

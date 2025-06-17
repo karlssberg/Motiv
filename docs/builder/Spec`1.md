@@ -1,3 +1,8 @@
+---
+title: Spec<TModel>
+category: building
+---
+
 # Creating explanation propositions as a spec class
 
 ## `Spec<TModel>`

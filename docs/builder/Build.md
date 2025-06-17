@@ -31,7 +31,7 @@ Spec.Build((int n) => n % 2 == 0)
 ### From the result of a proposition
 
 ```csharp
-Build<TModel, TMetadata>(Func<TModel, BooleanResultBase<TMetadata>> pred~~ica~~te)
+Build<TModel, TMetadata>(Func<TModel, BooleanResultBase<TMetadata>> predicate)
 ```
 
 This is semantically the same as the previous example, but uses a <xref:Motiv.BooleanResultBase`1> to encapsulate the

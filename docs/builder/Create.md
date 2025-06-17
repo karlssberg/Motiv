@@ -3,6 +3,10 @@ title: Create()
 category: building
 ---
 
+## Overview
+
+The `Create()` method finalizes the specification building process, producing a `SpecBase<TModel, TMetadata>` instance that represents the proposition.
+
 ## Default
 
 ```csharp
@@ -40,22 +44,22 @@ Spec.Build((int n) => n % 2 == 0)
 SpecBase<TModel, TMetadata> Create()
 ```
 
-This method is used to create a new proposition with a propositional statement that is inferred from the
-`WhenTrue()` method.
+When no argument is provided to `Create()`, the method uses a propositional statement that is inferred from the
+previously called `WhenTrue()` method.
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
-    .WhenTrue("is even")
+    .WhenTrue("is even")  // This provides the implicit statement
     .WhenFalse("is odd")
-    .Create();
+    .Create();            // Uses "is even" implicitly
 ```
 
 ## As a policy
 
 Policies are a type of proposition that derive from the `SpecBase<TModel, TMetadata>` class.
-They are created when a proposition only returns a single assertion/metadata-object.
+A policy is created when a proposition returns only a single assertion/metadata-object.
 
-They will be created when both the `WhenTrue()` and `WhenFalse()` methods are used together.
+Policies are automatically created when both the `WhenTrue()` and `WhenFalse()` methods are used together.
 
 ```csharp
 PolicyBase<int, string> isEvenPolicy =
@@ -75,8 +79,8 @@ PolicyBase<int, string> isEvenPolicy =
 
 ## As a specification
 
-Sometimes it is not possible to create a policy because the proposition yields more than one assertion/metadata-object.
-In this case, a `SpecBase<TModel, TMetadata>` object is created instead of a `PolicyBase<TModel, TMetadata>` object.
+When a proposition yields more than one assertion/metadata-object, it cannot be represented as a policy.
+In such cases, a `SpecBase<TModel, TMetadata>` object is created instead of a `PolicyBase<TModel, TMetadata>` object.
 
 ```csharp
 SpecBase<IEnumerable<int>, string> allPositiveSpec =
@@ -86,3 +90,9 @@ SpecBase<IEnumerable<int>, string> allPositiveSpec =
         .WhenFalseYield(eval => eval.FalseModes.Select(n => $"{n} is not positive")) // prevents policy creation
         .Create();
 ```
+
+## See Also
+
+- [WhenTrue()](../assertions/WhenTrue.md)
+- [WhenFalse()](../assertions/WhenFalse.md)
+- [WhenFalseYield()](../assertions/WhenFalseYield.md)

@@ -22,7 +22,7 @@ The proposition is satisfied when the custom higher order predicate is satisfied
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
-    .As(results => results.CountTrue() == result.CountFalse())
+    .As(results => results.CountTrue() == results.CountFalse())
     .Create("has equal amounts of odd and even")
 ```
 

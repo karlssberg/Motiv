@@ -2,7 +2,7 @@
 title: From()
 ---
 
-The `Spec.From()` method is used to create a proposition from a lambda expression trees.
+The `Spec.From()` method is used to create a proposition from lambda expression trees.
 This is the easiest way to use Motiv, as it allows you to create multiple propositions from a single lambda expression.
 
 For example, the following lambda expression:
@@ -62,9 +62,9 @@ result.Satisfied;  // true
 result.Assertions; // ["members.Contains(\"Ben\") == true"]
 ```
 
-## Partial customization
+## Customizing Expressions
 
-## Customizing the assertions/metadata
+### Customizing Assertions and Metadata
 
 Like the `Spec.Build()` method, the `Spec.From()` method can also be used with the `WhenTrue()` and `WhenFalse()`
 methods.
@@ -108,9 +108,9 @@ result.Satisfied;     // false
 result.Assertions;    // ["n is odd", "n <= 0"]
 ```
 
-## Inlining Any and All LINQ methods
+## Inlining Any and All LINQ Methods
 
-Expression can inline the `All` and `Any` methods from LINQ, which will be transformed into their Motiv equivalents.
+Expressions can inline the `All` and `Any` methods from LINQ, which will be transformed into their Motiv equivalents.
 
 For example:
 

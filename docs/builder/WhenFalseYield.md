@@ -75,7 +75,7 @@ Spec.Build((string str) => str.Contains("foo") || str.Contains("bar"))
     .WhenFalseYield(str =>
         [
             new MyMetadata($"'{str}' does not contain 'foo'"),
-            new MyMetadata($"'{str}' does not contains 'bar'")
+            new MyMetadata($"'{str}' does not contain 'bar'")
         ])
     .Create();
 ```
@@ -153,21 +153,21 @@ Spec.Build((int n) => n % 2 == 0))
 ## Usage when building a higher-order proposition from an existing proposition
 
 
-When an existing proposition is used by the <cref:Motiv.Spec.Build> method, the factory function will receive a
-<cref:Motiv.HigherOrderProposition.HigherOrderEvaluation`2>  containing the models and their results.
+When an existing proposition is used by the <xref:Motiv.Spec.Build> method, the factory function will receive a
+<xref:Motiv.HigherOrderProposition.HigherOrderEvaluation`2>  containing the models and their results.
 
 ### Dynamic assertions (derived from higher-order evaluations)
 
 `WhenFalseYield(Func<HigherOrderEvaluation<TModel, TMetadata>, IEnumerable<string>> factory)`
 
-The <cref:Motiv.HigherOrderProposition.HigherOrderEvaluation`2> object packages the models and their 
+The <xref:Motiv.HigherOrderProposition.HigherOrderEvaluation`2> object packages the models and their 
 <xref:Motiv.BooleanResultBase`1> in a way that is convenient for generating custom assertion statements.
 
 ```csharp
 Spec.Build(new IsEvenProposition())
     .AsAllSatisfied()
     .WhenTrue("all are even")
-    .WhenFlaseYield(eval => eval.TrueModels.Select(n => $"{n} is odd"))
+    .WhenFalseYield(eval => eval.TrueModels.Select(n => $"{n} is odd"))
     .Create();
 ```
 
@@ -182,6 +182,6 @@ objects.
 Spec.Build(new IsEvenProposition())
     .AsAllSatisfied()
     .WhenTrue(new MyMetadata("all are even"))
-    .WhenFlaseYield(eval => eval.TrueModels.Select(n => new MyMetadata($"{n} is odd")))
+    .WhenFalseYield(eval => eval.TrueModels.Select(n => new MyMetadata($"{n} is odd")))
     .Create("all even");
 ```

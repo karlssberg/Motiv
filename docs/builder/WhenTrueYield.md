@@ -11,7 +11,11 @@ or maybe you are working with higher-order propositions and want assertions for 
 Different overloads are made available for different use cases—depending on which `Build()` overload was previously 
 chosen.
 
-## New propositions
+## Factory Functions
+
+Different overloads are made available for different use cases—depending on which `Build()` overload was previously chosen.
+
+### New propositions
 
 | Type                                   | Description                                                    |
 |----------------------------------------|----------------------------------------------------------------|
@@ -114,6 +118,8 @@ Spec.Build(new IsEvenProposition())
 
 When a predicate function is used by the `Build()` method, the factory function will receive a
 `HigherOrderBooleanEvaluation<TModel>` containing the models and their results.
+
+### Dynamic assertions (derived from pairwise model and result)
 
 `WhenTrueYield(Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> factory)`
 
