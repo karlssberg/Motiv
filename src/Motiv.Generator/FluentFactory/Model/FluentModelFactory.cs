@@ -258,20 +258,7 @@ public class FluentModelFactory(Compilation compilation)
                 .GetMultipleFluentMethodSymbols(parameter.ParameterSymbol)
                 .ToList();
 
-            if (multipleFluentMethodInfo.Any()
-                && multipleFluentMethodInfo.All(info => info.Diagnostics.Count > 0))
-                _diagnostics.AddRange(
-                [
-                    Diagnostic.Create(
-                        FluentFactoryGenerator.AllFluentMethodTemplatesIncompatible,
-                        parameter.ParameterSymbol
-                            .GetAttribute(TypeName.MultipleFluentMethodsAttribute)?
-                            .GetLocationAtIndex(0),
-                    parameter.ParameterSymbol.ToFullDisplayString()),
-                ]);
-            else
-                _diagnostics.AddRange(multipleFluentMethodInfo
-                    .SelectMany(info => info.Diagnostics));
+            ValidateMultipleFluentMethodCompatibility(parameter, multipleFluentMethodInfo);
 
             var normalizedFluentMethodSymbols = multipleFluentMethodInfo
                 .Where(methodInfo => methodInfo.Diagnostics.Count == 0)
@@ -306,6 +293,25 @@ public class FluentModelFactory(Compilation compilation)
                     node.Key,
                     valueStorages);
         }
+    }
+
+    private void ValidateMultipleFluentMethodCompatibility(FluentMethodParameter parameter,
+        List<(IMethodSymbol Method, ICollection<Diagnostic> Diagnostics)> multipleFluentMethodInfo)
+    {
+        if (multipleFluentMethodInfo.Any()
+            && multipleFluentMethodInfo.All(info => info.Diagnostics.Count > 0))
+            _diagnostics.AddRange(
+            [
+                Diagnostic.Create(
+                    FluentFactoryGenerator.AllFluentMethodTemplatesIncompatible,
+                    parameter.ParameterSymbol
+                        .GetAttribute(TypeName.MultipleFluentMethodsAttribute)?
+                        .GetLocationAtIndex(0),
+                    parameter.ParameterSymbol.ToFullDisplayString()),
+            ]);
+        else
+            _diagnostics.AddRange(multipleFluentMethodInfo
+                .SelectMany(info => info.Diagnostics));
     }
 
     private static IEnumerable<IFluentStep> GetDescendentFluentSteps(IEnumerable<IFluentStep> fluentSteps)
@@ -405,8 +411,7 @@ public class FluentModelFactory(Compilation compilation)
         [
             ..fluentConstructorContexts
                 .SelectMany(ctx => ctx.Constructor.Parameters)
-                .Select(parameter => parameter.Type)
-                .Select(type => type.ContainingNamespace)
+                .Select(parameter => parameter.Type.ContainingNamespace)
                 .Concat(fluentConstructorContexts.Select(ctx => ctx.Constructor.ContainingType.ContainingNamespace))
                 .Select(namespaceSymbol => (namespaceSymbol, displayString: namespaceSymbol.ToDisplayString()))
                 .DistinctBy(ns => ns.displayString)
