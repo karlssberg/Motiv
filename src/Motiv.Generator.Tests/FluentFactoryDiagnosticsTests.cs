@@ -146,7 +146,7 @@ public class FluentFactoryDiagnosticsTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="MyNamespace.Person"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -304,7 +304,7 @@ public class FluentFactoryDiagnosticsTests
                 public static partial class Spec
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="MyNamespace.MyTypeB{TModel, TPredicateResult}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -446,7 +446,7 @@ public class FluentFactoryDiagnosticsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.ExplanationWithNameExpressionTreePropositionFactory{TModel, TPredicateResult}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -523,7 +523,7 @@ public class FluentFactoryDiagnosticsTests
                 public partial class Shape
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Square"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -534,7 +534,7 @@ public class FluentFactoryDiagnosticsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Square"/>
                 /// </summary>
                 public struct Step_0__Test_Shape
@@ -546,7 +546,8 @@ public class FluentFactoryDiagnosticsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.Square.Square(int Width).
+                    ///
                     ///     <seealso cref="Test.Square"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

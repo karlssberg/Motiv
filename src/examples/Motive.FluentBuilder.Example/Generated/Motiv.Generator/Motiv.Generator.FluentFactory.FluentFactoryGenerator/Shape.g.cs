@@ -15,7 +15,7 @@ public partial class Shape
     }
 
     /// <summary>
-    /// Candidate constructor types:
+    /// Constructor type:
     ///     <seealso cref="Circle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -51,7 +51,8 @@ public struct Step_0__Shape
     }
 
     /// <summary>
-    /// Candidate constructor types:
+    /// Creates a new instance using constructor Square.Square(int Width).
+    /// 
     ///     <seealso cref="Square"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -77,7 +78,7 @@ public struct Step_1__Shape
     }
 
     /// <summary>
-    /// Candidate constructor types:
+    /// Constructor type:
     ///     <seealso cref="Cuboid"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -87,7 +88,8 @@ public struct Step_1__Shape
     }
 
     /// <summary>
-    /// Candidate constructor types:
+    /// Creates a new instance using constructor Rectangle.Rectangle(int Width, int Height).
+    /// 
     ///     <seealso cref="Rectangle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -98,7 +100,7 @@ public struct Step_1__Shape
 }
 
 /// <summary>
-/// Candidate constructor types:
+/// Constructor type:
 ///     <seealso cref="Cuboid"/>
 /// </summary>
 public struct Step_2__Shape
@@ -114,7 +116,8 @@ public struct Step_2__Shape
     }
 
     /// <summary>
-    /// Candidate constructor types:
+    /// Creates a new instance using constructor Cuboid.Cuboid(int Width, int Height, int Depth).
+    /// 
     ///     <seealso cref="Cuboid"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -125,7 +128,7 @@ public struct Step_2__Shape
 }
 
 /// <summary>
-/// Candidate constructor types:
+/// Constructor type:
 ///     <seealso cref="Circle"/>
 /// </summary>
 public struct Step_3__Shape
@@ -137,7 +140,8 @@ public struct Step_3__Shape
     }
 
     /// <summary>
-    /// Candidate constructor types:
+    /// Creates a new instance using constructor Circle.Circle(int Radius).
+    /// 
     ///     <seealso cref="Circle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

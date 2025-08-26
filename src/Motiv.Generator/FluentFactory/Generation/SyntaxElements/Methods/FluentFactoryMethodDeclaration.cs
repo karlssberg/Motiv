@@ -41,7 +41,8 @@ public static class FluentFactoryMethodDeclaration
                 TypeParameterList(SeparatedList([..typeParameterSyntaxes])));
     }
 
-    private static MethodDeclarationSyntax CreateMethodDeclarationSyntax(IFluentMethod method,
+    private static MethodDeclarationSyntax CreateMethodDeclarationSyntax(
+        IFluentMethod method,
         ObjectCreationExpressionSyntax returnObjectExpression)
     {
         var methodDeclaration = MethodDeclaration(
@@ -55,7 +56,12 @@ public static class FluentFactoryMethodDeclaration
                 TokenList(
                     Token(SyntaxKind.PublicKeyword)))
             .WithBody(Block(ReturnStatement(returnObjectExpression)))
-            .WithLeadingTrivia(CandidateConstructorTypesTrivia.Create(method.Return.CandidateConstructors));
+            .WithLeadingTrivia(
+                FluentMethodSummaryDocXml.Create(
+                [
+                    method.DocumentationSummary,
+                    ..FluentMethodSummaryDocXml.GenerateCandidateConstructorSeeAlsoLinks(method.Return.CandidateConstructors)
+                ]));
 
         if (method.SourceParameter is not null)
         {

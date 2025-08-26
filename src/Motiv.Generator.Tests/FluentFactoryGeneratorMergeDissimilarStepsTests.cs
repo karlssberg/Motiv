@@ -59,7 +59,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -69,7 +69,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -80,7 +80,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -92,7 +92,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -176,7 +176,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -186,7 +186,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -197,7 +197,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -209,7 +209,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -220,7 +220,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
@@ -234,7 +234,8 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.MyBuildTarget<T1, T2>.MyBuildTarget(T1 value1, T2 value2).
+                    ///
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -245,7 +246,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_2__Test_Factory
@@ -257,7 +258,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -268,7 +269,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_3__Test_Factory
@@ -282,7 +283,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -293,7 +294,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_4__Test_Factory
@@ -309,7 +310,8 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.MyBuildTarget.MyBuildTarget(string string1, string string2, string string3).
+                    ///
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -386,7 +388,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -397,7 +399,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -409,7 +411,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -419,7 +421,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -430,7 +432,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1>
@@ -444,7 +446,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -455,7 +457,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_2__Test_Factory<T1, T2>
@@ -471,7 +473,8 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.MyBuildTarget<T1, T2>.MyBuildTarget(T1 value1, string value2, T2 value3).
+                    ///
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -482,7 +485,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_3__Test_Factory<T1, T2>
@@ -496,7 +499,8 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.MyBuildTarget<T1, T2>.MyBuildTarget(T1 value1, T2 value3).
+                    ///
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -568,7 +572,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -578,7 +582,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -589,7 +593,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -601,7 +605,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -612,7 +616,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
@@ -626,7 +630,8 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.MyBuildTarget<T1, T2>.MyBuildTarget(T1 value1, T2 value2).
+                    ///
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -637,7 +642,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_2__Test_Factory<T2>
@@ -649,7 +654,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -660,7 +665,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_3__Test_Factory<T2, T1>
@@ -674,7 +679,8 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.MyBuildTarget<T1, T2>.MyBuildTarget(T2 value2, T1 value1).
+                    ///
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -772,7 +778,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public partial class Rectangle
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Cuboid"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -942,7 +948,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public partial class MyBuildTargetC<T>
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -952,7 +958,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="TestD.MyBuildTargetD{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1087,7 +1093,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public partial class MyBuildTargetA<T>
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="TestC.MyBuildTargetC{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1097,7 +1103,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1107,7 +1113,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1136,7 +1142,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
                 /// </summary>
                 public struct Step_1__TestFactory_Factory<T>
@@ -1150,7 +1156,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="TestB.MyBuildTargetB{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1268,7 +1274,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public partial class Rectangle
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Cuboid"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1389,7 +1395,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public readonly partial struct PolicyResultPredicatePropositionFactory<TModel, TMetadata>
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MultiAssertionExplanationFromPolicyPropositionFactory{TModel, TMetadata}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1400,7 +1406,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MultiAssertionExplanationFromPolicyPropositionFactory{TModel, TMetadata}"/>
                 /// </summary>
                 public struct Step_1__Test_Spec<TModel, TMetadata>
@@ -1414,7 +1420,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MultiAssertionExplanationFromPolicyPropositionFactory{TModel, TMetadata}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

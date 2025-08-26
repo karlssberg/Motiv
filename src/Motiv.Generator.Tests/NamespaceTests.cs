@@ -119,7 +119,7 @@ public class NamespaceTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.NamespaceA.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -129,7 +129,7 @@ public class NamespaceTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.NamespaceB.MyBuildTargetB{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -256,7 +256,7 @@ public class NamespaceTests
                 public partial class MyBuildTargetB<T>
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.NamespaceA.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

@@ -59,7 +59,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -69,7 +69,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -80,7 +80,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
                 /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T>
@@ -92,7 +92,8 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.Namespace.MyBuildTarget<T>.MyBuildTarget(T data).
+                    ///
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -222,7 +223,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -232,7 +233,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -394,7 +395,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -404,7 +405,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -528,7 +529,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -538,7 +539,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -549,7 +550,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                 /// </summary>
                 public struct Step_1__Test_Namespace_Factory<T>
@@ -563,7 +564,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -574,7 +575,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
                 /// </summary>
                 public struct Step_2__Test_Namespace_Factory<T>
@@ -588,7 +589,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetB{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -713,7 +714,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -723,7 +724,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -733,7 +734,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -744,7 +745,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                 /// </summary>
                 public struct Step_0__Test_Namespace_Factory
@@ -756,7 +757,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -766,7 +767,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -776,7 +777,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -787,7 +788,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                 /// </summary>
                 public struct Step_1__Test_Namespace_Factory<T>
@@ -801,7 +802,8 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.Namespace.MyBuildTargetA<T>.MyBuildTargetA(int number, T data).
+                    ///
                     ///     <seealso cref="Test.Namespace.MyBuildTargetA{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -878,7 +880,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -888,7 +890,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -899,7 +901,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
                 /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T>
@@ -911,7 +913,8 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.Namespace.MyBuildTarget<T>.MyBuildTarget(System.Threading.Tasks.Task<T> data).
+                    ///
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1016,7 +1019,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1026,7 +1029,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1036,7 +1039,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1047,7 +1050,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T1>
@@ -1059,7 +1062,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1069,7 +1072,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1079,7 +1082,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1090,7 +1093,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_1__Test_Namespace_Factory<T1, T2>
@@ -1104,7 +1107,8 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.Namespace.MyBuildTarget<T1, T2>.MyBuildTarget(T1 first, T2 second).
+                    ///
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1209,7 +1213,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1219,7 +1223,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1229,7 +1233,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1240,7 +1244,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T1>
@@ -1252,7 +1256,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1262,7 +1266,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1272,7 +1276,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1348,7 +1352,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1358,7 +1362,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1369,7 +1373,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T1, T2>
@@ -1381,7 +1385,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1455,7 +1459,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1465,7 +1469,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1476,7 +1480,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T1, T2>
@@ -1488,7 +1492,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1595,7 +1599,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public partial class MyBuildTarget
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1605,7 +1609,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1616,7 +1620,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_1__Test_Namespace_Factory<T1, T2>
@@ -1630,7 +1634,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1734,7 +1738,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public static partial class Spec
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="MyNamespace.MyTypeA{TModel, TPredicateResult}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1745,7 +1749,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="MyNamespace.MyTypeA{TModel, TPredicateResult}"/>
                 /// </summary>
                 public struct Step_0__MyNamespace_Spec<TModel, TPredicateResult>
@@ -1757,7 +1761,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="MyNamespace.MyTypeA{TModel, TPredicateResult}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1768,7 +1772,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="MyNamespace.MyTypeA{TModel, TPredicateResult}"/>
                 /// </summary>
                 public struct Step_1__MyNamespace_Spec<TModel, TPredicateResult>
@@ -1782,7 +1786,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="MyNamespace.MyTypeA{TModel, TPredicateResult}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1848,7 +1852,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public static partial class Spec
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="MyNamespace.MyTypeB{TModel, TPredicateResult}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

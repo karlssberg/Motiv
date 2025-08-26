@@ -3,7 +3,7 @@
 public partial record Rectangle
 {
     /// <summary>
-    /// Candidate constructor types:
+    /// Constructor type:
     ///     <seealso cref="Rectangle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -14,7 +14,7 @@ public partial record Rectangle
 }
 
 /// <summary>
-/// Candidate constructor types:
+/// Constructor type:
 ///     <seealso cref="Rectangle"/>
 /// </summary>
 public struct Step_0__Rectangle
@@ -26,7 +26,7 @@ public struct Step_0__Rectangle
     }
 
     /// <summary>
-    /// Candidate constructor types:
+    /// Constructor type:
     ///     <seealso cref="Rectangle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -37,7 +37,7 @@ public struct Step_0__Rectangle
 }
 
 /// <summary>
-/// Candidate constructor types:
+/// Constructor type:
 ///     <seealso cref="Rectangle"/>
 /// </summary>
 public struct Step_1__Rectangle
@@ -51,7 +51,8 @@ public struct Step_1__Rectangle
     }
 
     /// <summary>
-    /// Candidate constructor types:
+    /// Creates a new instance using constructor Rectangle.Rectangle(int Width, int Height).
+    /// 
     ///     <seealso cref="Rectangle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

@@ -35,7 +35,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -88,7 +88,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -99,7 +99,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -111,7 +111,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -167,7 +167,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -178,7 +178,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -190,7 +190,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -251,7 +251,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -262,7 +262,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -274,7 +274,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -285,7 +285,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_1__Test_Factory
@@ -299,7 +299,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -365,7 +365,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -376,7 +376,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -388,7 +388,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -399,7 +399,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_1__Test_Factory
@@ -413,7 +413,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -424,7 +424,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_2__Test_Factory
@@ -440,7 +440,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

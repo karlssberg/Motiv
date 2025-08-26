@@ -38,7 +38,7 @@ public class FluentFactoryGeneratorGenericTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -49,7 +49,7 @@ public class FluentFactoryGeneratorGenericTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
                 /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T>
@@ -61,7 +61,8 @@ public class FluentFactoryGeneratorGenericTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.Namespace.MyBuildTarget<T>.MyBuildTarget(T value).
+                    ///
                     ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -122,7 +123,7 @@ public class FluentFactoryGeneratorGenericTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -133,7 +134,7 @@ public class FluentFactoryGeneratorGenericTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -145,7 +146,7 @@ public class FluentFactoryGeneratorGenericTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -156,7 +157,7 @@ public class FluentFactoryGeneratorGenericTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
@@ -170,7 +171,8 @@ public class FluentFactoryGeneratorGenericTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.MyBuildTarget<T1, T2>.MyBuildTarget(T1 value1, T2 value2).
+                    ///
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -235,7 +237,7 @@ public class FluentFactoryGeneratorGenericTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -246,7 +248,7 @@ public class FluentFactoryGeneratorGenericTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -258,7 +260,7 @@ public class FluentFactoryGeneratorGenericTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -269,7 +271,7 @@ public class FluentFactoryGeneratorGenericTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
@@ -283,7 +285,7 @@ public class FluentFactoryGeneratorGenericTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -294,7 +296,7 @@ public class FluentFactoryGeneratorGenericTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                 /// </summary>
                 public struct Step_2__Test_Factory<T1, T2, T3>
@@ -310,7 +312,8 @@ public class FluentFactoryGeneratorGenericTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.MyBuildTarget<T1, T2, T3>.MyBuildTarget(T1 value1, T2 value2, T3 value3).
+                    ///
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -379,7 +382,7 @@ public class FluentFactoryGeneratorGenericTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -390,7 +393,7 @@ public class FluentFactoryGeneratorGenericTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -402,7 +405,7 @@ public class FluentFactoryGeneratorGenericTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -413,7 +416,7 @@ public class FluentFactoryGeneratorGenericTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
@@ -427,7 +430,7 @@ public class FluentFactoryGeneratorGenericTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -438,7 +441,7 @@ public class FluentFactoryGeneratorGenericTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                 /// </summary>
                 public struct Step_2__Test_Factory<T1, T2, T3>
@@ -454,7 +457,7 @@ public class FluentFactoryGeneratorGenericTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -465,7 +468,7 @@ public class FluentFactoryGeneratorGenericTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
+                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                 /// </summary>
                 public struct Step_3__Test_Factory<T1, T2, T3, T4>
@@ -483,7 +486,8 @@ public class FluentFactoryGeneratorGenericTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
+                    /// Creates a new instance using constructor Test.MyBuildTarget<T1, T2, T3, T4>.MyBuildTarget(T1 value1, T2 value2, T3 value3, T4 value4).
+                    ///
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

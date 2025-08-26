@@ -3,7 +3,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Motiv.Generator.FluentFactory.Generation.SyntaxElements.Methods;
 
-public static class CandidateConstructorTypesTrivia
+public static class FluentMethodSummaryDocXml
 {
     private static readonly SymbolDisplayFormat FullyQualifiedWithoutGlobal = new(
         globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
@@ -11,28 +11,49 @@ public static class CandidateConstructorTypesTrivia
         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
         miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
 
-    public static SyntaxTriviaList Create(IEnumerable<IMethodSymbol> candidateConstructors)
+    public static SyntaxTriviaList Create(
+        IEnumerable<object?> linesOfText)
     {
         IEnumerable<SyntaxTrivia> triviaList =
         [
             Comment($"/// <summary>"),
             CarriageReturnLineFeed,
-            Comment($"/// Candidate constructor types:"),
-            CarriageReturnLineFeed,
-            ..candidateConstructors
-                .Select(ctor => ctor.ContainingType)
-                .Distinct<INamedTypeSymbol>(SymbolEqualityComparer.Default)
-                .OrderBy(type => type.ToDisplayString())
-                .SelectMany<INamedTypeSymbol, SyntaxTrivia>(type =>
-                [
-                    CreateSeeAlsoLink(type),
-                    CarriageReturnLineFeed
-                ]),
+            ..linesOfText.SelectMany(line  =>
+                line switch
+                {
+                    null or "" => [],
+                    SyntaxTrivia trivia => [trivia],
+                    _ => string.IsNullOrWhiteSpace(line.ToString())
+                        ? []
+                        : line.ToString()
+                            .Split(["\r\n", "\n", "\r"], default)
+                            .Select(embeddedLines => string.IsNullOrEmpty(embeddedLines)
+                                ? Comment("///")
+                                : Comment($"/// {embeddedLines}"))
+                }),
             Comment($"/// </summary>"),
-            CarriageReturnLineFeed,
+            CarriageReturnLineFeed
         ];
 
         return TriviaList(triviaList);
+    }
+
+    public static SyntaxTrivia GenerateCandidateConstructorPreamble(
+        ICollection<IMethodSymbol> candidateConstructors)
+    {
+        return Comment(candidateConstructors.Count > 1
+            ? "/// Candidate constructor types:"
+            : "/// Constructor type:");
+    }
+
+    public static IEnumerable<SyntaxTrivia> GenerateCandidateConstructorSeeAlsoLinks(
+        IEnumerable<IMethodSymbol> candidateConstructors)
+    {
+        return candidateConstructors
+            .Select(ctor => ctor.ContainingType)
+            .Distinct<INamedTypeSymbol>(SymbolEqualityComparer.Default)
+            .OrderBy(type => type.ToDisplayString())
+            .Select(CreateSeeAlsoLink);
     }
 
     private static SyntaxTrivia CreateSeeAlsoLink(INamedTypeSymbol typeSymbol)

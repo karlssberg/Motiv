@@ -34,6 +34,31 @@ public class CreationMethod : IFluentMethod
 
     public OrderedDictionary<IParameterSymbol, IFluentValueStorage> ValueSources { get; }
 
+    public string? DocumentationSummary
+    {
+        get
+        {
+            var constructorNames = Return.CandidateConstructors
+                .Select(ctor => ctor.ToFullDisplayString());
+
+            return Return.CandidateConstructors switch
+            {
+                { Length: 1 } =>
+                    $"""
+                     Creates a new instance using constructor {constructorNames.First()}.
+
+                     """,
+                { Length: > 1 } =>
+                    $"""
+                     Creates a new instance using constructors:
+                       {string.Join("\n  ", constructorNames)}.
+
+                     """,
+                _ => null
+            };
+        }
+    }
+
     public IParameterSymbol? SourceParameter => null;
 
     public ImmutableArray<FluentMethodParameter> AvailableParameterFields { get; }

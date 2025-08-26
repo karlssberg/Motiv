@@ -34,6 +34,7 @@ public class MultiMethod : IFluentMethod
         ParameterConverter = parameterConverter;
         AvailableParameterFields = availableParameterFields;
         SiblingMultiMethods = siblingMultiMethods.ToImmutableHashSet<IMethodSymbol>(SymbolEqualityComparer.Default);
+        DocumentationSummary = sourceParameterSymbol.ContainingSymbol.GetDocumentationCommentXml();
     }
 
     public ImmutableHashSet<IMethodSymbol> SiblingMultiMethods { get; }
@@ -47,6 +48,7 @@ public class MultiMethod : IFluentMethod
     public ImmutableArray<FluentMethodParameter> MethodParameters => _lazyMethodParameters.Value;
 
     public OrderedDictionary<IParameterSymbol, IFluentValueStorage> ValueSources { get; }
+    public string? DocumentationSummary { get; }
 
     public IParameterSymbol SourceParameter { get; }
 

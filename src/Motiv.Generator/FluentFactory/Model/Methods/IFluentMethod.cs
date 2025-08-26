@@ -15,4 +15,5 @@ public interface IFluentMethod
     INamespaceSymbol RootNamespace { get; }
     ImmutableArray<FluentMethodParameter> MethodParameters { get; }
     OrderedDictionary<IParameterSymbol, IFluentValueStorage> ValueSources { get; }
+    string? DocumentationSummary { get; }
 }

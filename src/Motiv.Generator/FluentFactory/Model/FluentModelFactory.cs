@@ -97,7 +97,7 @@ public class FluentModelFactory(Compilation compilation)
                         valueStorages))
                 .ToImmutableArray();
 
-        var selectedAndIgnoredMethods = ChooseFluentMethod(candidateFluentMethods);
+        var selectedAndIgnoredMethods = ChooseCandidateFluentMethod(candidateFluentMethods);
 
         var allIgnoredMethods = selectedAndIgnoredMethods
             .SelectMany(pair => pair.IgnoredMethods)
@@ -125,7 +125,7 @@ public class FluentModelFactory(Compilation compilation)
         }
     }
 
-    private static ImmutableArray<SelectedFluentMethod> ChooseFluentMethod(ImmutableArray<IFluentMethod> fluentMethods) =>
+    private static ImmutableArray<SelectedFluentMethod> ChooseCandidateFluentMethod(ImmutableArray<IFluentMethod> fluentMethods) =>
     [
         ..fluentMethods
             .Distinct()

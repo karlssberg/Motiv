@@ -3,7 +3,7 @@
 public partial record Square
 {
     /// <summary>
-    /// Candidate constructor types:
+    /// Constructor type:
     ///     <seealso cref="Square"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -14,7 +14,7 @@ public partial record Square
 }
 
 /// <summary>
-/// Candidate constructor types:
+/// Constructor type:
 ///     <seealso cref="Square"/>
 /// </summary>
 public struct Step_0__Square
@@ -26,7 +26,8 @@ public struct Step_0__Square
     }
 
     /// <summary>
-    /// Candidate constructor types:
+    /// Creates a new instance using constructor Square.Square(int Width).
+    /// 
     ///     <seealso cref="Square"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

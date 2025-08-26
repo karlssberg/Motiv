@@ -46,7 +46,11 @@ public static class FluentStepDeclaration
         };
 
         // Create XML documentation for the struct
-        var xmlDocTrivia = CandidateConstructorTypesTrivia.Create(step.CandidateConstructors);
+        var xmlDocTrivia = FluentMethodSummaryDocXml.Create(
+            [
+                FluentMethodSummaryDocXml.GenerateCandidateConstructorPreamble(step.CandidateConstructors),
+                ..FluentMethodSummaryDocXml.GenerateCandidateConstructorSeeAlsoLinks(step.CandidateConstructors)
+            ]);
 
         var structDeclaration = StructDeclaration(identifier)
         .WithModifiers(accessibilityToken)

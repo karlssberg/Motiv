@@ -3,7 +3,7 @@
 public partial record Cuboid
 {
     /// <summary>
-    /// Candidate constructor types:
+    /// Constructor type:
     ///     <seealso cref="Cuboid"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -14,7 +14,7 @@ public partial record Cuboid
 }
 
 /// <summary>
-/// Candidate constructor types:
+/// Constructor type:
 ///     <seealso cref="Cuboid"/>
 /// </summary>
 public struct Step_0__Cuboid
@@ -26,7 +26,7 @@ public struct Step_0__Cuboid
     }
 
     /// <summary>
-    /// Candidate constructor types:
+    /// Constructor type:
     ///     <seealso cref="Cuboid"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -37,7 +37,7 @@ public struct Step_0__Cuboid
 }
 
 /// <summary>
-/// Candidate constructor types:
+/// Constructor type:
 ///     <seealso cref="Cuboid"/>
 /// </summary>
 public struct Step_1__Cuboid
@@ -51,7 +51,7 @@ public struct Step_1__Cuboid
     }
 
     /// <summary>
-    /// Candidate constructor types:
+    /// Constructor type:
     ///     <seealso cref="Cuboid"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -62,7 +62,7 @@ public struct Step_1__Cuboid
 }
 
 /// <summary>
-/// Candidate constructor types:
+/// Constructor type:
 ///     <seealso cref="Cuboid"/>
 /// </summary>
 public struct Step_2__Cuboid
@@ -78,7 +78,8 @@ public struct Step_2__Cuboid
     }
 
     /// <summary>
-    /// Candidate constructor types:
+    /// Creates a new instance using constructor Cuboid.Cuboid(int Width, int Height, int Depth).
+    /// 
     ///     <seealso cref="Cuboid"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

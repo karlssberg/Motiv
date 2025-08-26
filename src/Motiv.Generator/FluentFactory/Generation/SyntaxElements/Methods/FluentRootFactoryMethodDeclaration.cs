@@ -74,7 +74,13 @@ public static class FluentRootFactoryMethodDeclaration
                 TokenList(
                     Token(SyntaxKind.PublicKeyword)))
             .WithBody(Block(ReturnStatement(returnObjectExpression)))
-            .WithLeadingTrivia(CandidateConstructorTypesTrivia.Create(method.Return.CandidateConstructors));
+            .WithLeadingTrivia(
+                FluentMethodSummaryDocXml.Create(
+                [
+                    method.DocumentationSummary,
+                    FluentMethodSummaryDocXml.GenerateCandidateConstructorPreamble(method.Return.CandidateConstructors),
+                    ..FluentMethodSummaryDocXml.GenerateCandidateConstructorSeeAlsoLinks(method.Return.CandidateConstructors)
+                ]));
 
         if (method.MethodParameters.Length > 0)
         {

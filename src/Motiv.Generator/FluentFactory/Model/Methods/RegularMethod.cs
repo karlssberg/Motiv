@@ -27,6 +27,7 @@ public class RegularMethod : IFluentMethod
         ValueSources = valueStorages;
         AvailableParameterFields = availableParameterFields;
         Return = fluentReturn;
+        DocumentationSummary = sourceParameterSymbol.ContainingSymbol.GetDocumentationCommentXml();
     }
 
     public string Name { get; }
@@ -34,6 +35,8 @@ public class RegularMethod : IFluentMethod
     public ImmutableArray<FluentMethodParameter> MethodParameters { get; }
 
     public OrderedDictionary<IParameterSymbol, IFluentValueStorage> ValueSources { get; }
+
+    public string? DocumentationSummary { get; }
 
     public IParameterSymbol SourceParameter { get; }
 
