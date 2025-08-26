@@ -60,7 +60,7 @@ public static class FluentFactoryMethodDeclaration
                 FluentMethodSummaryDocXml.Create(
                 [
                     method.DocumentationSummary,
-                    ..FluentMethodSummaryDocXml.GenerateCandidateConstructorSeeAlsoLinks(method.Return.CandidateConstructors)
+                    ..FluentMethodSummaryDocXml.GenerateCandidateConstructorTypeSeeAlsoLinks(method.Return.CandidateConstructors)
                 ]));
 
         if (method.SourceParameter is not null)

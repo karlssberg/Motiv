@@ -38,21 +38,35 @@ public static class FluentMethodSummaryDocXml
         return TriviaList(triviaList);
     }
 
-    public static SyntaxTrivia GenerateCandidateConstructorPreamble(
+    public static SyntaxTrivia GenerateCandidateConstructorTypePreamble(
         ICollection<IMethodSymbol> candidateConstructors)
     {
-        return Comment(candidateConstructors.Count > 1
+        var count = candidateConstructors
+            .Select(ctor => ctor.ContainingType)
+            .Distinct<INamedTypeSymbol>(SymbolEqualityComparer.Default)
+            .Count();
+
+        return Comment(count > 1
             ? "/// Candidate constructor types:"
             : "/// Constructor type:");
     }
 
-    public static IEnumerable<SyntaxTrivia> GenerateCandidateConstructorSeeAlsoLinks(
+    public static IEnumerable<SyntaxTrivia> GenerateCandidateConstructors(
+        IEnumerable<IMethodSymbol> candidateConstructors)
+    {
+        return candidateConstructors
+            .Distinct<IMethodSymbol>(SymbolEqualityComparer.Default)
+            .OrderBy(type => type.Name)
+            .Select(str => Comment($"///     {str.ToDisplayString()}"));;
+    }
+
+    public static IEnumerable<SyntaxTrivia> GenerateCandidateConstructorTypeSeeAlsoLinks(
         IEnumerable<IMethodSymbol> candidateConstructors)
     {
         return candidateConstructors
             .Select(ctor => ctor.ContainingType)
             .Distinct<INamedTypeSymbol>(SymbolEqualityComparer.Default)
-            .OrderBy(type => type.ToDisplayString())
+            .OrderBy(type => type.Name)
             .Select(CreateSeeAlsoLink);
     }
 

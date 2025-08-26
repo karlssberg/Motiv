@@ -1159,8 +1159,8 @@ public class FluentFactoryGeneratorMergeTests
                 {
                     /// <summary>
                     /// Candidate constructor types:
-                    ///     <seealso cref="Test.MyBuildTarget"/>
                     ///     <seealso cref="Test.MyBuildTarget{T}"/>
+                    ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Factory WithValueA(in string valueX1)
@@ -1171,8 +1171,8 @@ public class FluentFactoryGeneratorMergeTests
 
                 /// <summary>
                 /// Candidate constructor types:
-                ///     <seealso cref="Test.MyBuildTarget"/>
                 ///     <seealso cref="Test.MyBuildTarget{T}"/>
+                ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
                 {
@@ -1184,8 +1184,8 @@ public class FluentFactoryGeneratorMergeTests
 
                     /// <summary>
                     /// Candidate constructor types:
-                    ///     <seealso cref="Test.MyBuildTarget"/>
                     ///     <seealso cref="Test.MyBuildTarget{T}"/>
+                    ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public Step_1__Test_Factory WithValueB(in string valueX2)
@@ -1196,8 +1196,8 @@ public class FluentFactoryGeneratorMergeTests
 
                 /// <summary>
                 /// Candidate constructor types:
-                ///     <seealso cref="Test.MyBuildTarget"/>
                 ///     <seealso cref="Test.MyBuildTarget{T}"/>
+                ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_1__Test_Factory
                 {

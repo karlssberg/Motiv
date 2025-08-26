@@ -54,8 +54,8 @@ public static class FluentStepMethodDeclaration
             .WithLeadingTrivia(FluentMethodSummaryDocXml.Create(
                 [
                     method.DocumentationSummary,
-                    FluentMethodSummaryDocXml.GenerateCandidateConstructorPreamble(method.Return.CandidateConstructors),
-                    ..FluentMethodSummaryDocXml.GenerateCandidateConstructorSeeAlsoLinks(method.Return.CandidateConstructors)
+                    FluentMethodSummaryDocXml.GenerateCandidateConstructorTypePreamble(method.Return.CandidateConstructors),
+                    ..FluentMethodSummaryDocXml.GenerateCandidateConstructorTypeSeeAlsoLinks(method.Return.CandidateConstructors)
                 ]));
 
         if (method.MethodParameters.Length > 0)
