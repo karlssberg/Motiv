@@ -27,7 +27,7 @@ public struct Step_0__Circle
 
     /// <summary>
     /// Creates a new instance using constructor Circle.Circle(int Radius).
-    /// 
+    ///
     ///     <seealso cref="Circle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

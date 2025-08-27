@@ -47,7 +47,7 @@ public class EnumerableExtensionsTests
         var act = numbers.Where(spec);
 
         // Assert
-        act.ShouldBe((int[])[1, 2]);
+        act.ShouldBe((IEnumerable<int>)[1, 2]);
     }
 
     [Fact]
@@ -97,5 +97,32 @@ public class EnumerableExtensionsTests
 
         // Assert
         act.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Should_return_boolean_result_collection_linq_type_when_calling_where_using_spec()
+    {
+        // Arrange
+        var numbers = Enumerable.Range(1, 10);
+        var isEven = Spec.From((int n) => n % 2 == 0).Create("isEven");
+
+        // Act
+        var result = numbers.Where(isEven);
+
+        result.ShouldBeOfType<BooleanResultsCollection<int, string>>();
+        result.ShouldBeAssignableTo<IEnumerable<int>>();
+    }
+
+    [Fact]
+    public void Should_return_satisfied_boolean_result_collection_linq_type_when_calling_where_using_spec()
+    {
+        // Arrange
+        var numbers = Enumerable.Range(1, 10);
+        var isEven = Spec.From((int n) => n % 2 == 0).Create("isEven");
+
+        // Act
+        var result = numbers.Where(isEven);
+
+        result.AsEnumerable().ShouldBe((IEnumerable<int>)[2, 4, 6, 8, 10]);
     }
 }

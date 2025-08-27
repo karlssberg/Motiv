@@ -1,5 +1,7 @@
-// ReSharper disable once CheckNamespace
 
+
+using Motiv.HigherOrderProposition;
+// ReSharper disable once CheckNamespace
 using Motiv;
 
 // ReSharper disable once CheckNamespace
@@ -23,11 +25,20 @@ public static class EnumerableExtensions
     /// <typeparam name="TModel">The type of the values in the sequence.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
     /// <returns>An <see cref="IEnumerable{TModel}" /> containing only the values that satisfy the specification.</returns>
-    public static IEnumerable<TModel> Where<TModel, TMetadata>(
+    public static BooleanResultsCollection<TModel, TMetadata> Where<TModel, TMetadata>(
         this IEnumerable<TModel> source,
         SpecBase<TModel, TMetadata> spec)
     {
-        return source.Where(model => spec.IsSatisfiedBy(model).Satisfied);
+        var sourceCollection = source as ICollection<TModel> ?? source.ToList();
+
+        var results = sourceCollection
+            .Select<TModel, BooleanResult<TModel, TMetadata>>(model =>
+            {
+                var result = spec.IsSatisfiedBy(model);
+                return new BooleanResult<TModel, TMetadata>(model, result);
+            });
+
+        return new BooleanResultsCollection<TModel, TMetadata>(results);
     }
 
     internal static IEnumerable<T> ReplaceFirstLine<T>(this IEnumerable<T> lines, Func<T, T> prefixFn)

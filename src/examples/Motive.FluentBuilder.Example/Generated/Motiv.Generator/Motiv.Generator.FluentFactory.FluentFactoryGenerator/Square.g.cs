@@ -27,7 +27,7 @@ public struct Step_0__Square
 
     /// <summary>
     /// Creates a new instance using constructor Square.Square(int Width).
-    /// 
+    ///
     ///     <seealso cref="Square"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

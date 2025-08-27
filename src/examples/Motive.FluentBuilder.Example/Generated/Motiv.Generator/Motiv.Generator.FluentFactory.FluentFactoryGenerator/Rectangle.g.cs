@@ -52,7 +52,7 @@ public struct Step_1__Rectangle
 
     /// <summary>
     /// Creates a new instance using constructor Rectangle.Rectangle(int Width, int Height).
-    /// 
+    ///
     ///     <seealso cref="Rectangle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
