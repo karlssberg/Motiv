@@ -656,7 +656,7 @@ public class ExpressionTreeJustificationTests
                 .Create("is-super-user");
 
         var sut =
-            Spec.From((IEnumerable<string> roles) => roles.All(isSuperUser | isAdminResult))
+            Spec.From((IEnumerable<string> roles) => Enumerable.All(roles, isSuperUser | isAdminResult))
                 .Create("all admins or super users");
 
         // Act

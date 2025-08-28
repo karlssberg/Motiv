@@ -189,14 +189,14 @@ flowchart LR
 
 
 ### Design Considerations
-The design of this library was very much an evolutionary process, as it addressed the various pain points that
-inherent in the original Specification pattern, and in early versions of this library.
+The design of this library is very much an evolutionary process, as it addresses the various pain points that
+inherent in the original Specification pattern.
 
 There are a few key design considerations that were made during the development of this library:
 * Avoid over-DRYing.
-  In early versions, effort was made to avoid repetition.
+  In early versions, effort is made to avoid repetition.
   However, this led to perplexing branching logic, such as checking for the presence of a string collection with a
   single item in it.
-  This was caused by a lack of modeling, making code harder to understand and debug.
-  Instead the focus was shifted to making the code more explicit and easier to understand, at the expense of some
+  This is caused by a lack of modeling, making code harder to understand and debug.
+  Instead the focus is shifted to making the code more explicit and easier to understand, at the expense of some
   coincidental duplication.

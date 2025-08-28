@@ -14,7 +14,7 @@ if (user.Age >= 18 &&
     (user.Country == "US" || user.HasInternationalPermit) &&
     !user.IsRestricted)
 {
-    // Which condition failed? The debugger is your only friend.
+    // Which condition failed? How do I debug this?
 }
 ```
 
