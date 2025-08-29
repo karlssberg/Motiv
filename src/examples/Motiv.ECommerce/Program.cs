@@ -1,4 +1,4 @@
-﻿using Motiv.ECommerce;
+using Motiv.ECommerce;
 using Motiv.ECommerce.Models;
 
 var competitorsProducts = new Dictionary<ProductId,PricedProduct>

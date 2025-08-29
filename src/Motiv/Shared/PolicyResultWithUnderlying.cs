@@ -1,4 +1,4 @@
-﻿namespace Motiv.Shared;
+namespace Motiv.Shared;
 
 /// <summary>Represents a boolean result of changing the metadata type.</summary>
 /// <typeparam name="TMetadata">The type of the new metadata.</typeparam>

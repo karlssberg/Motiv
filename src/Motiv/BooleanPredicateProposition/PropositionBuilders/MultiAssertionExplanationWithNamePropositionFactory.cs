@@ -4,6 +4,9 @@ using Motiv.Shared;
 namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 
 /// <summary>A factory for creating propositions based on a predicate and explanations for true and false conditions.</summary>
+/// <param name="predicate">The predicate to use for the specification.</param>
+/// <param name="trueBecause">The explanation for when the predicate is true.</param>
+/// <param name="falseBecause">The explanation for when the predicate is false.</param>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct MultiAssertionExplanationWithNamePropositionFactory<TModel>(
@@ -33,7 +36,7 @@ public readonly partial struct MultiAssertionExplanationWithNamePropositionFacto
     /// the decision.
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<TModel, string> Create(string statement)
     {

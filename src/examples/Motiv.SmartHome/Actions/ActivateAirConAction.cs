@@ -1,4 +1,4 @@
-﻿namespace Motiv.SmartHome.Actions;
+namespace Motiv.SmartHome.Actions;
 
 public class ActivateAirConAction(IEnumerable<string> assertions) : ISmartHomeAction
 {

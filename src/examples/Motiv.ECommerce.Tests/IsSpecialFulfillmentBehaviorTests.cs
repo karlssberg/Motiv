@@ -1,4 +1,4 @@
-﻿using AutoFixture;
+using AutoFixture;
 using Motiv.ECommerce.Models;
 using Motiv.ECommerce.Policies;
 using Shouldly;

@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Motiv.Generator.FluentFactory.Generation;
 using Motiv.Generator.FluentFactory.Model.Steps;
 

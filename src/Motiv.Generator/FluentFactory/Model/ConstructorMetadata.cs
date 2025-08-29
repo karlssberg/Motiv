@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Motiv.Generator.FluentFactory.Analysis;
 using Motiv.Generator.FluentFactory.Model.Storage;

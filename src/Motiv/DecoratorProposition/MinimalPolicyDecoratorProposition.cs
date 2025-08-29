@@ -1,4 +1,4 @@
-﻿using Motiv.Shared;
+using Motiv.Shared;
 
 namespace Motiv.DecoratorProposition;
 

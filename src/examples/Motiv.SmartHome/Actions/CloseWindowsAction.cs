@@ -1,4 +1,4 @@
-﻿namespace Motiv.SmartHome.Actions;
+namespace Motiv.SmartHome.Actions;
 
 public class CloseWindowsAction(IEnumerable<string> assertions) : ISmartHomeAction
 {

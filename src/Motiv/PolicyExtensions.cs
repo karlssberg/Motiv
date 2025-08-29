@@ -1,4 +1,4 @@
-﻿namespace Motiv;
+namespace Motiv;
 
 /// <summary>Extension methods for <see cref="Policy{TInput, TOutput}" />.</summary>
 public static class PolicyExtensions

@@ -1,4 +1,4 @@
-﻿namespace Motiv.ECommerce.Models;
+namespace Motiv.ECommerce.Models;
 
 public record InventoryPricedProduct(string Brand, string Model)
     : PricedProduct(Brand, Model)

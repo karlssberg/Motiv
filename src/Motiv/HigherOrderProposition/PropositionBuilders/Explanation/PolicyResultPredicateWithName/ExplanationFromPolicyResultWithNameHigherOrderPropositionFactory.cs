@@ -1,4 +1,4 @@
-﻿using Motiv.Generator.Attributes;
+using Motiv.Generator.Attributes;
 using Motiv.HigherOrderProposition.PolicyResultPredicate;
 using Motiv.Shared;
 
@@ -9,6 +9,10 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.PolicyRes
 /// This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create a
 /// specification that covers every possibility, so instead it is done on a case-by-case basis.
 /// </summary>
+/// <param name="resultResolver">The function to resolve the policy result.</param>
+/// <param name="higherOrderOperation">The higher-order predicate operation.</param>
+/// <param name="trueBecause">The explanation for when the predicate is true.</param>
+/// <param name="falseBecause">The explanation for when the predicate is false.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
@@ -37,7 +41,7 @@ public readonly partial struct ExplanationFromPolicyResultWithNameHigherOrderPro
     /// the decision.
     /// </summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {

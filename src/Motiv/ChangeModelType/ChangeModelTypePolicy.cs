@@ -1,4 +1,4 @@
-﻿namespace Motiv.ChangeModelType;
+namespace Motiv.ChangeModelType;
 
 internal sealed class ChangeModelTypePolicy<TParentModel, TModel, TMetadata>(
     PolicyBase<TModel, TMetadata> policy,

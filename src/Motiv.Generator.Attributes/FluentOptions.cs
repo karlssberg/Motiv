@@ -1,4 +1,4 @@
-﻿namespace Motiv.Generator.Attributes;
+namespace Motiv.Generator.Attributes;
 
 [Flags]
 public enum FluentOptions

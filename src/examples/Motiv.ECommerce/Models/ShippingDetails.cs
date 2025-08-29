@@ -1,3 +1,3 @@
-﻿namespace Motiv.ECommerce.Models;
+namespace Motiv.ECommerce.Models;
 
 public record ShippingDetails(IEnumerable<InventoryPricedProduct> Products, Order order);

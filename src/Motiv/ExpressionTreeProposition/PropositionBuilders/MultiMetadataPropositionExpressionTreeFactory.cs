@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using Motiv.ExpressionTreeProposition.PropositionBuilders.Overloads;
 using Motiv.Generator.Attributes;
 
@@ -19,6 +19,9 @@ public readonly partial struct MultiMetadataPropositionExpressionTreeFactory<TMo
     /// <summary>
     /// A factory for creating propositions based on the supplied proposition and metadata factories.
     /// </summary>
+    /// <param name="expression">The expression to use for the specification.</param>
+    /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
+    /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataPropositionExpressionTreeFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
@@ -33,6 +36,9 @@ public readonly partial struct MultiMetadataPropositionExpressionTreeFactory<TMo
     /// <summary>
     /// A factory for creating propositions based on the supplied proposition and metadata factories.
     /// </summary>
+    /// <param name="expression">The expression to use for the specification.</param>
+    /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
+    /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataPropositionExpressionTreeFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
@@ -46,7 +52,7 @@ public readonly partial struct MultiMetadataPropositionExpressionTreeFactory<TMo
 
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, TMetadata> Create(string statement) =>
         new ExpressionTreeMultiMetadataProposition<TModel, TMetadata, TPredicateResult>(

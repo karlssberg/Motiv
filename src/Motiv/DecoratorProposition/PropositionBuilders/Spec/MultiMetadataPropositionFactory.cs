@@ -1,4 +1,4 @@
-﻿using Motiv.DecoratorProposition.PropositionBuilders.Overloads;
+using Motiv.DecoratorProposition.PropositionBuilders.Overloads;
 using Motiv.Generator.Attributes;
 using Motiv.Shared;
 
@@ -19,6 +19,9 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TReplacem
     /// <summary>
     /// A factory for creating propositions based on the supplied proposition and metadata factories.
     /// </summary>
+    /// <param name="spec">The specification to decorate.</param>
+    /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
+    /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataPropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
@@ -33,6 +36,9 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TReplacem
      /// <summary>
     /// A factory for creating propositions based on the supplied proposition and metadata factories.
     /// </summary>
+    /// <param name="spec">The specification to decorate.</param>
+    /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
+    /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataPropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
@@ -46,7 +52,7 @@ public readonly partial struct MultiMetadataPropositionFactory<TModel, TReplacem
 
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, TReplacementMetadata> Create(string statement) =>
         new SpecDecoratorMultiMetadataProposition<TModel, TReplacementMetadata, TMetadata>(

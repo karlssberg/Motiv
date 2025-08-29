@@ -4,6 +4,7 @@ using Motiv.Shared;
 namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 
 /// <summary>A builder for creating propositions based on a predicate, or for further refining a proposition.</summary>
+/// <param name="predicate">The predicate function that evaluates the model to a boolean value.</param>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct MinimalBooleanPredicatePropositionFactory<TModel>(
@@ -11,7 +12,7 @@ public readonly partial struct MinimalBooleanPredicatePropositionFactory<TModel>
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, string> Create(string statement)
     {

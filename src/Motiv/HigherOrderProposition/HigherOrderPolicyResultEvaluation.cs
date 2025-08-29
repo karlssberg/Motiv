@@ -1,4 +1,4 @@
-﻿namespace Motiv.HigherOrderProposition;
+namespace Motiv.HigherOrderProposition;
 
 /// <summary>
 /// The meta-result of a higher order evaluation.  It provides properties for common

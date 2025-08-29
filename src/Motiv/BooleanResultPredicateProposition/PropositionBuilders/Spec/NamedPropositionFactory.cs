@@ -7,6 +7,9 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Spec;
 /// <summary>
 /// A factory for creating propositions based on the supplied proposition and explanation factories.
 /// </summary>
+/// <param name="predicate">The predicate to use for the specification.</param>
+/// <param name="trueBecause">The explanation for when the predicate is true.</param>
+/// <param name="falseBecause">The explanation for when the predicate is false.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
@@ -32,7 +35,7 @@ public readonly partial struct NamedPropositionFactory<TModel, TMetadata>(
     /// the decision.
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, string> Create(string statement)
     {

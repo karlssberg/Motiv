@@ -1,4 +1,4 @@
-﻿namespace Motiv.HigherOrderProposition.PropositionBuilders;
+namespace Motiv.HigherOrderProposition.PropositionBuilders;
 
 public readonly struct HigherOrderSpecBooleanPredicateOperation<TModel>(
     Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,

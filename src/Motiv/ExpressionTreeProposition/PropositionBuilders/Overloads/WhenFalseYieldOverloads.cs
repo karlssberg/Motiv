@@ -1,4 +1,4 @@
-﻿using Motiv.Generator.Attributes;
+using Motiv.Generator.Attributes;
 
 namespace Motiv.ExpressionTreeProposition.PropositionBuilders.Overloads;
 

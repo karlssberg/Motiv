@@ -7,6 +7,9 @@ namespace Motiv.DecoratorProposition.PropositionBuilders.Spec;
 /// <summary>
 /// A factory for creating propositions based on the supplied proposition and metadata factories.
 /// </summary>
+/// <param name="spec">The specification to decorate.</param>
+/// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
+/// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
@@ -18,7 +21,7 @@ public readonly partial struct PropositionFactory<TModel, TReplacementMetadata, 
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, TReplacementMetadata> Create(string statement) =>
         new SpecDecoratorProposition<TModel, TReplacementMetadata, TMetadata>(
@@ -28,6 +31,14 @@ public readonly partial struct PropositionFactory<TModel, TReplacementMetadata, 
             new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description));
 }
 
+/// <summary>
+/// A factory for creating propositions based on the supplied proposition and metadata factories.
+/// </summary>
+/// <param name="spec">The specification to decorate.</param>
+/// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
+/// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
+/// <typeparam name="TModel">The type of the model.</typeparam>
+/// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct PropositionFactory<TModel, TReplacementMetadata>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, string> spec,
@@ -36,7 +47,7 @@ public readonly partial struct PropositionFactory<TModel, TReplacementMetadata>(
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, TReplacementMetadata> Create(string statement) =>
         new SpecDecoratorProposition<TModel, TReplacementMetadata, string>(

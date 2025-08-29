@@ -1,4 +1,4 @@
-﻿namespace Motiv.HigherOrderProposition.PropositionBuilders;
+namespace Motiv.HigherOrderProposition.PropositionBuilders;
 
 /// <summary>
 /// Represents a higher-order specification predicate operation.

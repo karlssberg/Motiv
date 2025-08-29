@@ -1,4 +1,4 @@
-﻿namespace Motiv.SmartHome.Actions;
+namespace Motiv.SmartHome.Actions;
 
 public class KeepWindowsOpenAction(IEnumerable<string> assertions) : ISmartHomeAction
 {

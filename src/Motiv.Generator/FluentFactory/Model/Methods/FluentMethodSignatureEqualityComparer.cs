@@ -1,4 +1,4 @@
-﻿namespace Motiv.Generator.FluentFactory.Model.Methods;
+namespace Motiv.Generator.FluentFactory.Model.Methods;
 
 internal sealed class FluentMethodSignatureEqualityComparer : IEqualityComparer<IFluentMethod>
 {

@@ -1,4 +1,4 @@
-﻿using Motiv.ChangeModelType;
+using Motiv.ChangeModelType;
 using Motiv.Not;
 using Motiv.OrElse;
 

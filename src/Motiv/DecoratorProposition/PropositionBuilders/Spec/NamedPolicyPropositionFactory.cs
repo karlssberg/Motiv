@@ -18,6 +18,9 @@ public readonly partial struct NamedPolicyPropositionFactory<TModel, TMetadata>
     /// <summary>
     /// A factory for creating propositions based on the supplied proposition and explanations.
     /// </summary>
+    /// <param name="spec">The specification to decorate.</param>
+    /// <param name="trueBecause">The explanation for when the policy is true.</param>
+    ///
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public NamedPolicyPropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
@@ -45,7 +48,7 @@ public readonly partial struct NamedPolicyPropositionFactory<TModel, TMetadata>
     /// the decision.
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, string> Create(string statement) =>
         new SpecDecoratorWithSingleTrueAssertionProposition<TModel, TMetadata>(

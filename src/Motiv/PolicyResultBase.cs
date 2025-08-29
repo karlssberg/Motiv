@@ -1,4 +1,4 @@
-﻿using Motiv.Not;
+using Motiv.Not;
 using Motiv.OrElse;
 
 namespace Motiv;

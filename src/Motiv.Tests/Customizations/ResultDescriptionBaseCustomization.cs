@@ -1,4 +1,4 @@
-﻿using AutoFixture;
+using AutoFixture;
 
 namespace Motiv.Tests.Customizations;
 

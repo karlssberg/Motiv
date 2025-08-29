@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Motiv.Generator.FluentFactory.Analysis;
 using Motiv.Generator.FluentFactory.Diagnostics;

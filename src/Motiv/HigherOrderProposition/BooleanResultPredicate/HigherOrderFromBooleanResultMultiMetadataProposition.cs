@@ -1,4 +1,4 @@
-﻿namespace Motiv.HigherOrderProposition.BooleanResultPredicate;
+namespace Motiv.HigherOrderProposition.BooleanResultPredicate;
 
 internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>> resultResolver,

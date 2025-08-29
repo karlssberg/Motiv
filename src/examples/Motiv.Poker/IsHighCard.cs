@@ -1,4 +1,4 @@
-﻿using Motiv.Poker.Models;
+using Motiv.Poker.Models;
 
 namespace Motiv.Poker;
 

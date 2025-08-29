@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using Motiv.ExpressionTreeProposition.PropositionBuilders.Overloads;
 using Motiv.Generator.Attributes;
 
@@ -7,6 +7,9 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 /// <summary>
 /// A factory for creating propositions based on the supplied proposition and explanation factories.
 /// </summary>
+/// <param name="expression">The expression to use for the specification.</param>
+/// <param name="trueBecause">The explanation to use when the expression evaluates to true.</param>
+/// <param name="falseBecause">The explanation to use when the expression evaluates to false.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
@@ -20,7 +23,7 @@ public readonly partial struct ExplanationWithNameExpressionTreePropositionFacto
     /// the decision.
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, string> Create(string statement) =>
         new ExpressionTreeWithSingleTrueAssertionProposition<TModel, TPredicateResult>(

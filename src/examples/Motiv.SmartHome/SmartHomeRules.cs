@@ -1,4 +1,4 @@
-﻿using Motiv.SmartHome.Actions;
+using Motiv.SmartHome.Actions;
 
 namespace Motiv.SmartHome;
 

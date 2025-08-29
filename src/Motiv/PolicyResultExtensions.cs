@@ -1,4 +1,4 @@
-﻿namespace Motiv;
+namespace Motiv;
 
 /// <summary>
 /// Extension methods for <see cref="PolicyResultBase{TMetadata}" />.

@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using Motiv.Generator.Attributes;
 
 namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
@@ -15,7 +15,7 @@ public readonly partial struct MinimalExpressionTreePropositionFactory<TModel, T
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, string> Create(string statement) =>
         new ExpressionTreeMultiMetadataProposition<TModel, string, TPredicateResult>(

@@ -1,4 +1,4 @@
-﻿namespace Motiv.HigherOrderProposition.PolicyResultPredicate;
+namespace Motiv.HigherOrderProposition.PolicyResultPredicate;
 
 internal sealed class MinimalHigherOrderFromPolicyResultProposition<TModel, TMetadata>(
     Func<TModel, PolicyResultBase<TMetadata>> resultResolver,

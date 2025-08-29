@@ -1,4 +1,4 @@
-﻿using Motiv.Generator.FluentFactory;
+using Motiv.Generator.FluentFactory;
 using VerifyCS =
     Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentFactory.FluentFactoryGenerator>;
 

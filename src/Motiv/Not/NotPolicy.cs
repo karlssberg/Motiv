@@ -1,4 +1,4 @@
-﻿using Motiv.Traversal;
+using Motiv.Traversal;
 
 namespace Motiv.Not;
 

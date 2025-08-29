@@ -1,4 +1,4 @@
-﻿using Motiv.SmartHome;
+using Motiv.SmartHome;
 
 var rulesEngine = new ActivateSmartHomeRules();
 

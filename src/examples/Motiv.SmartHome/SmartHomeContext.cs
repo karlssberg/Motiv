@@ -1,4 +1,4 @@
-﻿namespace Motiv.SmartHome;
+namespace Motiv.SmartHome;
 
 public record SmartHomeContext
 {

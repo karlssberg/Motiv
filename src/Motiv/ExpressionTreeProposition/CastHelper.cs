@@ -1,4 +1,4 @@
-﻿namespace Motiv.ExpressionTreeProposition;
+namespace Motiv.ExpressionTreeProposition;
 
 internal static class CastHelper
 {

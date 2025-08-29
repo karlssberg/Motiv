@@ -1,4 +1,4 @@
-﻿using AutoFixture;
+using AutoFixture;
 using AutoFixture.Xunit2;
 using Motiv.HigherOrderProposition;
 using Motiv.Shared;

@@ -1,4 +1,4 @@
-﻿namespace Motiv.Generator.FluentFactory;
+namespace Motiv.Generator.FluentFactory;
 
 [Flags]
 public enum FluentFactoryGeneratorOptions

@@ -1,4 +1,4 @@
-﻿
+
 using Motiv.Generator.Attributes;
 
 Console.WriteLine("Hello World!");

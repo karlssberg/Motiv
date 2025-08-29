@@ -1,4 +1,4 @@
-﻿using Motiv.ECommerce.Models;
+using Motiv.ECommerce.Models;
 
 namespace Motiv.ECommerce.Behaviors;
 

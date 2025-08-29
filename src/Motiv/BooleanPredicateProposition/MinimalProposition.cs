@@ -1,4 +1,4 @@
-﻿namespace Motiv.BooleanPredicateProposition;
+namespace Motiv.BooleanPredicateProposition;
 
 internal sealed class MinimalProposition<TModel>(
     Func<TModel, bool> predicate,

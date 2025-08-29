@@ -9,6 +9,9 @@ namespace Motiv.DecoratorProposition.PropositionBuilders.Spec;
 /// This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create
 /// a proposition that covers every possibility, so instead it is done on a case-by-case basis.
 /// </summary>
+/// <param name="spec">The specification to decorate.</param>
+/// <param name="trueBecause">The explanation for when the specification is true.</param>
+/// <param name="falseBecause">The explanation for when the specification is false.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
@@ -21,7 +24,7 @@ public readonly partial struct MultiAssertionExplanationPropositionFactory<TMode
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, string> Create(string statement) =>
         new SpecDecoratorMultiMetadataProposition<TModel, string, TMetadata>(

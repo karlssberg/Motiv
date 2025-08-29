@@ -1,4 +1,4 @@
-﻿using Motiv.BooleanResultPredicateProposition.PropositionBuilders.Overloads;
+using Motiv.BooleanResultPredicateProposition.PropositionBuilders.Overloads;
 using Motiv.Generator.Attributes;
 using Motiv.Shared;
 
@@ -7,6 +7,9 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Policy;
 /// <summary>
 /// A builder for creating propositions using a predicate function that returns a <see cref="PolicyResultBase{TMetadata}"/>.
 /// </summary>
+/// <param name="spec">The predicate function that evaluates the model to a <see cref="PolicyResultBase{TMetadata}"/>.</param>
+/// <param name="whenTrue">The function that returns the metadata to yield when the predicate is true.</param>
+/// <param name="whenFalse">The function that returns the metadata to yield when the predicate is false.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
@@ -18,7 +21,7 @@ public readonly partial struct MetadataFromPolicyResultPropositionFactory<TModel
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, TReplacementMetadata> Create(string statement)
     {

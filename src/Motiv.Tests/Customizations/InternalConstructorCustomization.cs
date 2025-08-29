@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using AutoFixture;
 using AutoFixture.Kernel;
 using MethodInvoker = AutoFixture.Kernel.MethodInvoker;

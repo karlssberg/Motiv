@@ -1,4 +1,4 @@
-﻿namespace Motiv.Shared;
+namespace Motiv.Shared;
 
 internal sealed class ExplanationBooleanResult(BooleanResultBase booleanResult) : BooleanResultBase<string>
 {

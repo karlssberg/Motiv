@@ -1,4 +1,4 @@
-﻿using Motiv.OrElse;
+using Motiv.OrElse;
 
 namespace Motiv.Or;
 

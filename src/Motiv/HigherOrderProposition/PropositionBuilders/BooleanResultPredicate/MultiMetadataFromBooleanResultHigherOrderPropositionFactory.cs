@@ -1,4 +1,4 @@
-﻿using Motiv.Generator.Attributes;
+using Motiv.Generator.Attributes;
 using Motiv.HigherOrderProposition.BooleanResultPredicate;
 using Motiv.Shared;
 
@@ -24,6 +24,10 @@ public readonly partial struct MultiMetadataFromBooleanResultHigherOrderProposit
     /// for handling edge-case scenarios where it would be impossible or impractical to create a proposition that covers
     /// every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
+    /// <param name="resultResolver">The predicate to use for the specification.</param>
+    /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
+    /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
+    /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataFromBooleanResultHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> resultResolver,
@@ -42,6 +46,10 @@ public readonly partial struct MultiMetadataFromBooleanResultHigherOrderProposit
     /// for handling edge-case scenarios where it would be impossible or impractical to create a proposition that covers
     /// every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
+    /// <param name="resultResolver">The predicate to use for the specification.</param>
+    /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
+    /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
+    /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
     [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiMetadataFromBooleanResultHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> resultResolver,
@@ -57,7 +65,7 @@ public readonly partial struct MultiMetadataFromBooleanResultHigherOrderProposit
 
     /// <summary>Creates a specification and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
     public SpecBase<IEnumerable<TModel>, TReplacementMetadata> Create(string statement)
     {

@@ -1,4 +1,4 @@
-﻿namespace Motiv.Tests.HigherOrderProposition;
+namespace Motiv.Tests.HigherOrderProposition;
 
 public class TestModel
 {

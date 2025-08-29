@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using Motiv.ExpressionTreeProposition.PropositionBuilders.Overloads;
 using Motiv.Generator.Attributes;
 
@@ -22,6 +22,9 @@ public readonly partial struct MultiAssertionExplanationExpressionTreePropositio
     /// This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create
     /// a proposition that covers every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
+    /// <param name="expression">The expression to use for the specification.</param>
+    /// <param name="trueBecause">The explanation to use when the expression evaluates to true.</param>
+    /// <param name="falseBecause">The explanation to use when the expression evaluates to false.</param>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiAssertionExplanationExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
@@ -38,6 +41,9 @@ public readonly partial struct MultiAssertionExplanationExpressionTreePropositio
     /// This is particularly useful for handling edge-case scenarios where it would be impossible or impractical to create
     /// a proposition that covers every possibility, so instead it is done on a case-by-case basis.
     /// </summary>
+    /// <param name="expression">The expression to use for the specification.</param>
+    /// <param name="trueBecause">The explanation to use when the expression evaluates to true.</param>
+    /// <param name="falseBecause">The explanation to use when the expression evaluates to false.</param>
     [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
     public MultiAssertionExplanationExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
@@ -53,7 +59,7 @@ public readonly partial struct MultiAssertionExplanationExpressionTreePropositio
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, string> Create(string statement) =>
         new ExpressionTreeMultiMetadataProposition<TModel, string, TPredicateResult>(

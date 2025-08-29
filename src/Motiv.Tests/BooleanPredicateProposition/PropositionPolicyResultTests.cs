@@ -1,4 +1,4 @@
-﻿using AutoFixture;
+using AutoFixture;
 using Motiv.BooleanPredicateProposition;
 using Motiv.Shared;
 using Shouldly;
