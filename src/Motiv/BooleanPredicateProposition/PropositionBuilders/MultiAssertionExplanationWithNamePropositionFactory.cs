@@ -18,7 +18,7 @@ public readonly partial struct MultiAssertionExplanationWithNamePropositionFacto
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
-    /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
+    /// <returns>An instance of <see cref="SpecBase{TModel, string}" />.</returns>
     public SpecBase<TModel, string> Create()
     {
         predicate.ThrowIfNull(nameof(predicate));
@@ -37,7 +37,7 @@ public readonly partial struct MultiAssertionExplanationWithNamePropositionFacto
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
-    /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
+    /// <returns>An instance of <see cref="SpecBase{TModel, string}" />.</returns>
     public SpecBase<TModel, string> Create(string statement)
     {
         predicate.ThrowIfNull(nameof(predicate));
