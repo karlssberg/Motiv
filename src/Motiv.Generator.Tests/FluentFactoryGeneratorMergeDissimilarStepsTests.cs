@@ -82,7 +82,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly string _value1__parameter;
-                    public Step_0__Test_Factory(in string value1)
+                    internal Step_0__Test_Factory(in string value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -195,7 +195,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -217,7 +217,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 {
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
-                    public Step_1__Test_Factory(in T1 value1, in T2 value2)
+                    internal Step_1__Test_Factory(in T1 value1, in T2 value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -241,7 +241,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public struct Step_2__Test_Factory
                 {
                     private readonly string _string1__parameter;
-                    public Step_2__Test_Factory(in string string1)
+                    internal Step_2__Test_Factory(in string string1)
                     {
                         this._string1__parameter = string1;
                     }
@@ -263,7 +263,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 {
                     private readonly string _string1__parameter;
                     private readonly string _string2__parameter;
-                    public Step_3__Test_Factory(in string string1, in string string2)
+                    internal Step_3__Test_Factory(in string string1, in string string2)
                     {
                         this._string1__parameter = string1;
                         this._string2__parameter = string2;
@@ -287,7 +287,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     private readonly string _string1__parameter;
                     private readonly string _string2__parameter;
                     private readonly string _string3__parameter;
-                    public Step_4__Test_Factory(in string string1, in string string2, in string string3)
+                    internal Step_4__Test_Factory(in string string1, in string string2, in string string3)
                     {
                         this._string1__parameter = string1;
                         this._string2__parameter = string2;
@@ -388,7 +388,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -419,7 +419,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 {
                     private readonly T1 _value1__parameter;
                     private readonly string _value2__parameter;
-                    public Step_1__Test_Factory(in T1 value1, in string value2)
+                    internal Step_1__Test_Factory(in T1 value1, in string value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -443,7 +443,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                     private readonly T1 _value1__parameter;
                     private readonly string _value2__parameter;
                     private readonly T2 _value3__parameter;
-                    public Step_2__Test_Factory(in T1 value1, in string value2, in T2 value3)
+                    internal Step_2__Test_Factory(in T1 value1, in string value2, in T2 value3)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -469,7 +469,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 {
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value3__parameter;
-                    public Step_3__Test_Factory(in T1 value1, in T2 value3)
+                    internal Step_3__Test_Factory(in T1 value1, in T2 value3)
                     {
                         this._value1__parameter = value1;
                         this._value3__parameter = value3;
@@ -573,7 +573,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -595,7 +595,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 {
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
-                    public Step_1__Test_Factory(in T1 value1, in T2 value2)
+                    internal Step_1__Test_Factory(in T1 value1, in T2 value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -619,7 +619,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 public struct Step_2__Test_Factory<T2>
                 {
                     private readonly T2 _value2__parameter;
-                    public Step_2__Test_Factory(in T2 value2)
+                    internal Step_2__Test_Factory(in T2 value2)
                     {
                         this._value2__parameter = value2;
                     }
@@ -641,7 +641,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 {
                     private readonly T2 _value2__parameter;
                     private readonly T1 _value1__parameter;
-                    public Step_3__Test_Factory(in T2 value2, in T1 value1)
+                    internal Step_3__Test_Factory(in T2 value2, in T1 value1)
                     {
                         this._value2__parameter = value2;
                         this._value1__parameter = value1;
@@ -1106,7 +1106,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 {
                     private readonly T _valueB1__parameter;
                     private readonly System.Func<string> _valueB2__parameter;
-                    public Step_1__TestFactory_Factory(in T valueB1, in System.Func<string> valueB2)
+                    internal Step_1__TestFactory_Factory(in T valueB1, in System.Func<string> valueB2)
                     {
                         this._valueB1__parameter = valueB1;
                         this._valueB2__parameter = valueB2;
@@ -1362,7 +1362,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
                 {
                     private readonly System.Func<TModel, PolicyResultBase<TMetadata>> _predicate__parameter;
                     private readonly System.Func<TModel, PolicyResultBase<TMetadata>, System.Collections.Generic.IEnumerable<string>> _trueBecause__parameter;
-                    public Step_1__Test_Spec(in System.Func<TModel, PolicyResultBase<TMetadata>> predicate, in System.Func<TModel, PolicyResultBase<TMetadata>, System.Collections.Generic.IEnumerable<string>> trueBecause)
+                    internal Step_1__Test_Spec(in System.Func<TModel, PolicyResultBase<TMetadata>> predicate, in System.Func<TModel, PolicyResultBase<TMetadata>, System.Collections.Generic.IEnumerable<string>> trueBecause)
                     {
                         this._predicate__parameter = predicate;
                         this._trueBecause__parameter = trueBecause;

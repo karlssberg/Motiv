@@ -18,7 +18,7 @@ public partial record Cuboid
 public struct Step_0__Cuboid
 {
     private readonly int _width__parameter;
-    public Step_0__Cuboid(in int width)
+    internal Step_0__Cuboid(in int width)
     {
         this._width__parameter = width;
     }
@@ -40,7 +40,7 @@ public struct Step_1__Cuboid
 {
     private readonly int _width__parameter;
     private readonly int _height__parameter;
-    public Step_1__Cuboid(in int width, in int height)
+    internal Step_1__Cuboid(in int width, in int height)
     {
         this._width__parameter = width;
         this._height__parameter = height;
@@ -64,7 +64,7 @@ public struct Step_2__Cuboid
     private readonly int _width__parameter;
     private readonly int _height__parameter;
     private readonly int _depth__parameter;
-    public Step_2__Cuboid(in int width, in int height, in int depth)
+    internal Step_2__Cuboid(in int width, in int height, in int depth)
     {
         this._width__parameter = width;
         this._height__parameter = height;

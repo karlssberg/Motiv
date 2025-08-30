@@ -18,7 +18,7 @@ public partial record Circle
 public struct Step_0__Circle
 {
     private readonly int _radius__parameter;
-    public Step_0__Circle(in int radius)
+    internal Step_0__Circle(in int radius)
     {
         this._radius__parameter = radius;
     }

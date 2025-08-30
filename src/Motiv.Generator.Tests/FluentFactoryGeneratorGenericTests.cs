@@ -53,7 +53,7 @@ public class FluentFactoryGeneratorGenericTests
                 public struct Step_0__Test_Namespace_Factory<T>
                 {
                     private readonly T _value__parameter;
-                    public Step_0__Test_Namespace_Factory(in T value)
+                    internal Step_0__Test_Namespace_Factory(in T value)
                     {
                         this._value__parameter = value;
                     }
@@ -136,7 +136,7 @@ public class FluentFactoryGeneratorGenericTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -158,7 +158,7 @@ public class FluentFactoryGeneratorGenericTests
                 {
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
-                    public Step_1__Test_Factory(in T1 value1, in T2 value2)
+                    internal Step_1__Test_Factory(in T1 value1, in T2 value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -246,7 +246,7 @@ public class FluentFactoryGeneratorGenericTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -268,7 +268,7 @@ public class FluentFactoryGeneratorGenericTests
                 {
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
-                    public Step_1__Test_Factory(in T1 value1, in T2 value2)
+                    internal Step_1__Test_Factory(in T1 value1, in T2 value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -292,7 +292,7 @@ public class FluentFactoryGeneratorGenericTests
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
                     private readonly T3 _value3__parameter;
-                    public Step_2__Test_Factory(in T1 value1, in T2 value2, in T3 value3)
+                    internal Step_2__Test_Factory(in T1 value1, in T2 value2, in T3 value3)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -385,7 +385,7 @@ public class FluentFactoryGeneratorGenericTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -407,7 +407,7 @@ public class FluentFactoryGeneratorGenericTests
                 {
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
-                    public Step_1__Test_Factory(in T1 value1, in T2 value2)
+                    internal Step_1__Test_Factory(in T1 value1, in T2 value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -431,7 +431,7 @@ public class FluentFactoryGeneratorGenericTests
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
                     private readonly T3 _value3__parameter;
-                    public Step_2__Test_Factory(in T1 value1, in T2 value2, in T3 value3)
+                    internal Step_2__Test_Factory(in T1 value1, in T2 value2, in T3 value3)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -457,7 +457,7 @@ public class FluentFactoryGeneratorGenericTests
                     private readonly T2 _value2__parameter;
                     private readonly T3 _value3__parameter;
                     private readonly T4 _value4__parameter;
-                    public Step_3__Test_Factory(in T1 value1, in T2 value2, in T3 value3, in T4 value4)
+                    internal Step_3__Test_Factory(in T1 value1, in T2 value2, in T3 value3, in T4 value4)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;

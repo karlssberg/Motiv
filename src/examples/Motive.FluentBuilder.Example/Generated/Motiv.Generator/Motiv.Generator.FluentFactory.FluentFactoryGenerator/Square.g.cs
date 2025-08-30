@@ -18,7 +18,7 @@ public partial record Square
 public struct Step_0__Square
 {
     private readonly int _width__parameter;
-    public Step_0__Square(in int width)
+    internal Step_0__Square(in int width)
     {
         this._width__parameter = width;
     }

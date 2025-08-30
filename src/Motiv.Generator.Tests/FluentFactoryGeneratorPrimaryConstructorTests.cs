@@ -102,7 +102,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly int _number__parameter;
-                    public Step_0__Test_Factory(in int number)
+                    internal Step_0__Test_Factory(in int number)
                     {
                         this._number__parameter = number;
                     }
@@ -178,7 +178,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly int _number__parameter;
-                    public Step_0__Test_Factory(in int number)
+                    internal Step_0__Test_Factory(in int number)
                     {
                         this._number__parameter = number;
                     }
@@ -259,7 +259,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly int _number__parameter;
-                    public Step_0__Test_Factory(in int number)
+                    internal Step_0__Test_Factory(in int number)
                     {
                         this._number__parameter = number;
                     }
@@ -281,7 +281,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 {
                     private readonly int _number__parameter;
                     private readonly string _text__parameter;
-                    public Step_1__Test_Factory(in int number, in string text)
+                    internal Step_1__Test_Factory(in int number, in string text)
                     {
                         this._number__parameter = number;
                         this._text__parameter = text;
@@ -368,7 +368,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly int _number__parameter;
-                    public Step_0__Test_Factory(in int number)
+                    internal Step_0__Test_Factory(in int number)
                     {
                         this._number__parameter = number;
                     }
@@ -390,7 +390,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                 {
                     private readonly int _number__parameter;
                     private readonly string _text__parameter;
-                    public Step_1__Test_Factory(in int number, in string text)
+                    internal Step_1__Test_Factory(in int number, in string text)
                     {
                         this._number__parameter = number;
                         this._text__parameter = text;
@@ -414,7 +414,7 @@ public class FluentFactoryGeneratorPrimaryConstructorTests
                     private readonly int _number__parameter;
                     private readonly string _text__parameter;
                     private readonly System.Guid _id__parameter;
-                    public Step_2__Test_Factory(in int number, in string text, in System.Guid id)
+                    internal Step_2__Test_Factory(in int number, in string text, in System.Guid id)
                     {
                         this._number__parameter = number;
                         this._text__parameter = text;

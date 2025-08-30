@@ -14,7 +14,7 @@ public static class FluentStepConstructorDeclaration
 
         var constructor = ConstructorDeclaration(Identifier(step.Name))
             .WithModifiers(TokenList(
-                Token(SyntaxKind.PublicKeyword)))
+                Token(SyntaxKind.InternalKeyword)))
             .WithParameterList(
                 ParameterList(SeparatedList<ParameterSyntax>(constructorParameters)))
             .WithBody(Block(

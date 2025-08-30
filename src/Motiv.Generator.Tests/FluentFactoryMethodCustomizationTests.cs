@@ -128,7 +128,7 @@ public class FluentFactoryMethodCustomizationTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly int _x__parameter;
-                    public Step_0__Test_Factory(in int x)
+                    internal Step_0__Test_Factory(in int x)
                     {
                         this._x__parameter = x;
                     }
@@ -296,7 +296,7 @@ public class FluentFactoryMethodCustomizationTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -381,7 +381,7 @@ public class FluentFactoryMethodCustomizationTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -403,7 +403,7 @@ public class FluentFactoryMethodCustomizationTests
                 {
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
-                    public Step_1__Test_Factory(in T1 value1, in T2 value2)
+                    internal Step_1__Test_Factory(in T1 value1, in T2 value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -493,7 +493,7 @@ public class FluentFactoryMethodCustomizationTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -515,7 +515,7 @@ public class FluentFactoryMethodCustomizationTests
                 {
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
-                    public Step_1__Test_Factory(in T1 value1, in T2 value2)
+                    internal Step_1__Test_Factory(in T1 value1, in T2 value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -539,7 +539,7 @@ public class FluentFactoryMethodCustomizationTests
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
                     private readonly T3 _value3__parameter;
-                    public Step_2__Test_Factory(in T1 value1, in T2 value2, in T3 value3)
+                    internal Step_2__Test_Factory(in T1 value1, in T2 value2, in T3 value3)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -812,7 +812,7 @@ public class FluentFactoryMethodCustomizationTests
             public struct Step_0__Factory
             {
                 private readonly string _value1__parameter;
-                public Step_0__Factory(in string value1)
+                internal Step_0__Factory(in string value1)
                 {
                     this._value1__parameter = value1;
                 }
@@ -937,7 +937,7 @@ public class FluentFactoryMethodCustomizationTests
             public struct Step_0__Factory<T>
             {
                 private readonly T _value1__parameter;
-                public Step_0__Factory(in T value1)
+                internal Step_0__Factory(in T value1)
                 {
                     this._value1__parameter = value1;
                 }
@@ -1085,7 +1085,7 @@ public class FluentFactoryMethodCustomizationTests
             public struct Step_0__Factory<T1>
             {
                 private readonly T1 _value1__parameter;
-                public Step_0__Factory(in T1 value1)
+                internal Step_0__Factory(in T1 value1)
                 {
                     this._value1__parameter = value1;
                 }
@@ -1116,7 +1116,7 @@ public class FluentFactoryMethodCustomizationTests
             {
                 private readonly T1 _value1__parameter;
                 private readonly T2 _value2__parameter;
-                public Step_1__Factory(in T1 value1, in T2 value2)
+                internal Step_1__Factory(in T1 value1, in T2 value2)
                 {
                     this._value1__parameter = value1;
                     this._value2__parameter = value2;
@@ -1339,7 +1339,7 @@ public class FluentFactoryMethodCustomizationTests
             public struct Step_0__Factory<T1A, T1B>
             {
                 private readonly System.Func<T1A, T1B> _factory1__parameter;
-                public Step_0__Factory(in System.Func<T1A, T1B> factory1)
+                internal Step_0__Factory(in System.Func<T1A, T1B> factory1)
                 {
                     this._factory1__parameter = factory1;
                 }
@@ -1370,7 +1370,7 @@ public class FluentFactoryMethodCustomizationTests
             {
                 private readonly System.Func<T1A, T1B> _factory1__parameter;
                 private readonly System.Func<T2A, T2B> _factory2__parameter;
-                public Step_1__Factory(in System.Func<T1A, T1B> factory1, in System.Func<T2A, T2B> factory2)
+                internal Step_1__Factory(in System.Func<T1A, T1B> factory1, in System.Func<T2A, T2B> factory2)
                 {
                     this._factory1__parameter = factory1;
                     this._factory2__parameter = factory2;
@@ -1515,7 +1515,7 @@ public class FluentFactoryMethodCustomizationTests
             public struct Step_0__Factory<T1, T2>
             {
                 private readonly System.Func<T1, T2> _factory1__parameter;
-                public Step_0__Factory(in System.Func<T1, T2> factory1)
+                internal Step_0__Factory(in System.Func<T1, T2> factory1)
                 {
                     this._factory1__parameter = factory1;
                 }
@@ -1546,7 +1546,7 @@ public class FluentFactoryMethodCustomizationTests
             {
                 private readonly System.Func<T1, T2> _factory1__parameter;
                 private readonly System.Func<T2, T3> _factory2__parameter;
-                public Step_1__Factory(in System.Func<T1, T2> factory1, in System.Func<T2, T3> factory2)
+                internal Step_1__Factory(in System.Func<T1, T2> factory1, in System.Func<T2, T3> factory2)
                 {
                     this._factory1__parameter = factory1;
                     this._factory2__parameter = factory2;
@@ -1706,7 +1706,7 @@ public class FluentFactoryMethodCustomizationTests
             public struct Step_0__Factory<T1, T2>
             {
                 private readonly System.Func<T1, T2> _factory1__parameter;
-                public Step_0__Factory(in System.Func<T1, T2> factory1)
+                internal Step_0__Factory(in System.Func<T1, T2> factory1)
                 {
                     this._factory1__parameter = factory1;
                 }
@@ -1859,7 +1859,7 @@ public class FluentFactoryMethodCustomizationTests
             public struct Step_0__Factory<T1, T2>
             {
                 private readonly System.Func<T1, T2> _factory1__parameter;
-                public Step_0__Factory(in System.Func<T1, T2> factory1)
+                internal Step_0__Factory(in System.Func<T1, T2> factory1)
                 {
                     this._factory1__parameter = factory1;
                 }
@@ -2043,7 +2043,7 @@ public class FluentFactoryMethodCustomizationTests
             public struct Step_0__Factory<T1, T2>
             {
                 private readonly System.Func<T1, T2> _factory1__parameter;
-                public Step_0__Factory(in System.Func<T1, T2> factory1)
+                internal Step_0__Factory(in System.Func<T1, T2> factory1)
                 {
                     this._factory1__parameter = factory1;
                 }
@@ -2217,7 +2217,7 @@ public class FluentFactoryMethodCustomizationTests
             public struct Step_0__Factory<T1, T2>
             {
                 private readonly System.Func<T1, T2> _factory1__parameter;
-                public Step_0__Factory(in System.Func<T1, T2> factory1)
+                internal Step_0__Factory(in System.Func<T1, T2> factory1)
                 {
                     this._factory1__parameter = factory1;
                 }
@@ -2368,7 +2368,7 @@ public class FluentFactoryMethodCustomizationTests
             public struct Step_0__Factory<T>
             {
                 private readonly System.Func<T> _value1__parameter;
-                public Step_0__Factory(in System.Func<T> value1)
+                internal Step_0__Factory(in System.Func<T> value1)
                 {
                     this._value1__parameter = value1;
                 }
@@ -2389,7 +2389,7 @@ public class FluentFactoryMethodCustomizationTests
             public struct Step_1__Factory
             {
                 private readonly string _value1__parameter;
-                public Step_1__Factory(in string value1)
+                internal Step_1__Factory(in string value1)
                 {
                     this._value1__parameter = value1;
                 }
@@ -2540,7 +2540,7 @@ public class FluentFactoryMethodCustomizationTests
              public struct Step_0__Factory<T>
              {
                  private readonly System.Func<T> _value1__parameter;
-                 public Step_0__Factory(in System.Func<T> value1)
+                 internal Step_0__Factory(in System.Func<T> value1)
                  {
                      this._value1__parameter = value1;
                  }
@@ -2561,7 +2561,7 @@ public class FluentFactoryMethodCustomizationTests
              public struct Step_1__Factory
              {
                  private readonly System.Func<string> _value1__parameter;
-                 public Step_1__Factory(in System.Func<string> value1)
+                 internal Step_1__Factory(in System.Func<string> value1)
                  {
                      this._value1__parameter = value1;
                  }

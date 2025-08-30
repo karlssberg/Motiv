@@ -18,7 +18,7 @@ public partial record Rectangle
 public struct Step_0__Rectangle
 {
     private readonly int _width__parameter;
-    public Step_0__Rectangle(in int width)
+    internal Step_0__Rectangle(in int width)
     {
         this._width__parameter = width;
     }
@@ -40,7 +40,7 @@ public struct Step_1__Rectangle
 {
     private readonly int _width__parameter;
     private readonly int _height__parameter;
-    public Step_1__Rectangle(in int width, in int height)
+    internal Step_1__Rectangle(in int width, in int height)
     {
         this._width__parameter = width;
         this._height__parameter = height;

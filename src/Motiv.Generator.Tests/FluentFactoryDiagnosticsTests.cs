@@ -334,8 +334,8 @@ public class FluentFactoryDiagnosticsTests
                 },
                 GeneratedSources =
                 {
-                (typeof(FluentFactoryGenerator), "MyNamespace.Spec.g.cs", expected)
-            }
+                    (typeof(FluentFactoryGenerator), "MyNamespace.Spec.g.cs", expected)
+                }
             }
         }.RunAsync();
     }
@@ -423,7 +423,7 @@ public class FluentFactoryDiagnosticsTests
                 public struct Step_0__Test_Spec<TModel, TPredicateResult>
                 {
                     private readonly System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> _expression__parameter;
-                    public Step_0__Test_Spec(in System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression)
+                    internal Step_0__Test_Spec(in System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression)
                     {
                         this._expression__parameter = expression;
                     }
@@ -530,7 +530,7 @@ public class FluentFactoryDiagnosticsTests
                 public struct Step_0__Test_Shape
                 {
                     private readonly int _width__parameter;
-                    public Step_0__Test_Shape(in int width)
+                    internal Step_0__Test_Shape(in int width)
                     {
                         this._width__parameter = width;
                     }

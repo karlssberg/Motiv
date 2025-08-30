@@ -110,7 +110,7 @@ public class NamespaceTests
                 public struct Step_0__Test_Factory<T>
                 {
                     private readonly T _data__parameter;
-                    public Step_0__Test_Factory(in T data)
+                    internal Step_0__Test_Factory(in T data)
                     {
                         this._data__parameter = data;
                     }

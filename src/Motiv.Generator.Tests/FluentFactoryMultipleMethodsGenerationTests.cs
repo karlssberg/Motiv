@@ -83,7 +83,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public struct Step_0__Test_Namespace_Factory<T>
                 {
                     private readonly T _data__parameter;
-                    public Step_0__Test_Namespace_Factory(in T data)
+                    internal Step_0__Test_Namespace_Factory(in T data)
                     {
                         this._data__parameter = data;
                     }
@@ -211,7 +211,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public struct Step_0__Test_Namespace_Factory<T>
                 {
                     private readonly T _data__parameter;
-                    public Step_0__Test_Namespace_Factory(in T data)
+                    internal Step_0__Test_Namespace_Factory(in T data)
                     {
                         this._data__parameter = data;
                     }
@@ -341,7 +341,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public struct Step_0__Test_Namespace_Factory
                 {
                     private readonly int _number__parameter;
-                    public Step_0__Test_Namespace_Factory(in int number)
+                    internal Step_0__Test_Namespace_Factory(in int number)
                     {
                         this._number__parameter = number;
                     }
@@ -375,7 +375,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 {
                     private readonly int _number__parameter;
                     private readonly T _data__parameter;
-                    public Step_1__Test_Namespace_Factory(in int number, in T data)
+                    internal Step_1__Test_Namespace_Factory(in int number, in T data)
                     {
                         this._number__parameter = number;
                         this._data__parameter = data;
@@ -506,7 +506,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public struct Step_0__Test_Namespace_Factory
                 {
                     private readonly int _number__parameter;
-                    public Step_0__Test_Namespace_Factory(in int number)
+                    internal Step_0__Test_Namespace_Factory(in int number)
                     {
                         this._number__parameter = number;
                     }
@@ -537,7 +537,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 {
                     private readonly int _number__parameter;
                     private readonly T _data__parameter;
-                    public Step_1__Test_Namespace_Factory(in int number, in T data)
+                    internal Step_1__Test_Namespace_Factory(in int number, in T data)
                     {
                         this._number__parameter = number;
                         this._data__parameter = data;
@@ -560,7 +560,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 {
                     private readonly int _number__parameter;
                     private readonly System.Func<T> _nativeFunction__parameter;
-                    public Step_2__Test_Namespace_Factory(in int number, in System.Func<T> nativeFunction)
+                    internal Step_2__Test_Namespace_Factory(in int number, in System.Func<T> nativeFunction)
                     {
                         this._number__parameter = number;
                         this._nativeFunction__parameter = nativeFunction;
@@ -724,7 +724,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public struct Step_0__Test_Namespace_Factory
                 {
                     private readonly int _number__parameter;
-                    public Step_0__Test_Namespace_Factory(in int number)
+                    internal Step_0__Test_Namespace_Factory(in int number)
                     {
                         this._number__parameter = number;
                     }
@@ -764,7 +764,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 {
                     private readonly int _number__parameter;
                     private readonly T _data__parameter;
-                    public Step_1__Test_Namespace_Factory(in int number, in T data)
+                    internal Step_1__Test_Namespace_Factory(in int number, in T data)
                     {
                         this._number__parameter = number;
                         this._data__parameter = data;
@@ -873,7 +873,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public struct Step_0__Test_Namespace_Factory<T>
                 {
                     private readonly System.Threading.Tasks.Task<T> _data__parameter;
-                    public Step_0__Test_Namespace_Factory(in System.Threading.Tasks.Task<T> data)
+                    internal Step_0__Test_Namespace_Factory(in System.Threading.Tasks.Task<T> data)
                     {
                         this._data__parameter = data;
                     }
@@ -1018,7 +1018,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public struct Step_0__Test_Namespace_Factory<T1>
                 {
                     private readonly T1 _first__parameter;
-                    public Step_0__Test_Namespace_Factory(in T1 first)
+                    internal Step_0__Test_Namespace_Factory(in T1 first)
                     {
                         this._first__parameter = first;
                     }
@@ -1058,7 +1058,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 {
                     private readonly T1 _first__parameter;
                     private readonly T2 _second__parameter;
-                    public Step_1__Test_Namespace_Factory(in T1 first, in T2 second)
+                    internal Step_1__Test_Namespace_Factory(in T1 first, in T2 second)
                     {
                         this._first__parameter = first;
                         this._second__parameter = second;
@@ -1204,7 +1204,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public struct Step_0__Test_Namespace_Factory<T1>
                 {
                     private readonly T1 _first__parameter;
-                    public Step_0__Test_Namespace_Factory(in T1 first)
+                    internal Step_0__Test_Namespace_Factory(in T1 first)
                     {
                         this._first__parameter = first;
                     }
@@ -1327,7 +1327,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public struct Step_0__Test_Namespace_Factory<T1, T2>
                 {
                     private readonly System.Func<System.Collections.Generic.KeyValuePair<T1, T2>> _first__parameter;
-                    public Step_0__Test_Namespace_Factory(in System.Func<System.Collections.Generic.KeyValuePair<T1, T2>> first)
+                    internal Step_0__Test_Namespace_Factory(in System.Func<System.Collections.Generic.KeyValuePair<T1, T2>> first)
                     {
                         this._first__parameter = first;
                     }
@@ -1430,7 +1430,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public struct Step_0__Test_Namespace_Factory<T1, T2>
                 {
                     private readonly System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> _first__parameter;
-                    public Step_0__Test_Namespace_Factory(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> first)
+                    internal Step_0__Test_Namespace_Factory(in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> first)
                     {
                         this._first__parameter = first;
                     }
@@ -1566,7 +1566,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 {
                     private readonly string _first__parameter;
                     private readonly System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> _second__parameter;
-                    public Step_1__Test_Namespace_Factory(in string first, in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> second)
+                    internal Step_1__Test_Namespace_Factory(in string first, in System.Func<T1, System.Collections.Generic.IEnumerable<int>, T2> second)
                     {
                         this._first__parameter = first;
                         this._second__parameter = second;
@@ -1691,7 +1691,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 public struct Step_0__MyNamespace_Spec<TModel, TPredicateResult>
                 {
                     private readonly System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> _expression__parameter;
-                    public Step_0__MyNamespace_Spec(in System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression)
+                    internal Step_0__MyNamespace_Spec(in System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression)
                     {
                         this._expression__parameter = expression;
                     }
@@ -1713,7 +1713,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
                 {
                     private readonly System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> _expression__parameter;
                     private readonly System.Func<TModel, BooleanResultBase<string>, System.Collections.Generic.IEnumerable<string>> _trueBecause__parameter;
-                    public Step_1__MyNamespace_Spec(in System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression, in System.Func<TModel, BooleanResultBase<string>, System.Collections.Generic.IEnumerable<string>> trueBecause)
+                    internal Step_1__MyNamespace_Spec(in System.Linq.Expressions.Expression<System.Func<TModel, TPredicateResult>> expression, in System.Func<TModel, BooleanResultBase<string>, System.Collections.Generic.IEnumerable<string>> trueBecause)
                     {
                         this._expression__parameter = expression;
                         this._trueBecause__parameter = trueBecause;

@@ -120,7 +120,7 @@ public class FluentFactoryGeneratorNestedGenericTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly System.Func<T1, bool> _value1__parameter;
-                    public Step_0__Test_Factory(in System.Func<T1, bool> value1)
+                    internal Step_0__Test_Factory(in System.Func<T1, bool> value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -206,7 +206,7 @@ public class FluentFactoryGeneratorNestedGenericTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly System.Func<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<T1, T1>>, bool> _value1__parameter;
-                    public Step_0__Test_Factory(in System.Func<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<T1, T1>>, bool> value1)
+                    internal Step_0__Test_Factory(in System.Func<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<T1, T1>>, bool> value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -297,7 +297,7 @@ public class FluentFactoryGeneratorNestedGenericTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly System.Func<T1, bool> _value1__parameter;
-                    public Step_0__Test_Factory(in System.Func<T1, bool> value1)
+                    internal Step_0__Test_Factory(in System.Func<T1, bool> value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -319,7 +319,7 @@ public class FluentFactoryGeneratorNestedGenericTests
                 {
                     private readonly System.Func<T1, bool> _value1__parameter;
                     private readonly System.Collections.Generic.IEnumerable<T2> _value2__parameter;
-                    public Step_1__Test_Factory(in System.Func<T1, bool> value1, in System.Collections.Generic.IEnumerable<T2> value2)
+                    internal Step_1__Test_Factory(in System.Func<T1, bool> value1, in System.Collections.Generic.IEnumerable<T2> value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -408,7 +408,7 @@ public class FluentFactoryGeneratorNestedGenericTests
                 public struct Step_0__Test_Factory<T1, T2>
                 {
                     private readonly System.Func<T1, T2> _value1__parameter;
-                    public Step_0__Test_Factory(in System.Func<T1, T2> value1)
+                    internal Step_0__Test_Factory(in System.Func<T1, T2> value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -430,7 +430,7 @@ public class FluentFactoryGeneratorNestedGenericTests
                 {
                     private readonly System.Func<T1, T2> _value1__parameter;
                     private readonly System.Func<T3, T4> _value2__parameter;
-                    public Step_1__Test_Factory(in System.Func<T1, T2> value1, in System.Func<T3, T4> value2)
+                    internal Step_1__Test_Factory(in System.Func<T1, T2> value1, in System.Func<T3, T4> value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;

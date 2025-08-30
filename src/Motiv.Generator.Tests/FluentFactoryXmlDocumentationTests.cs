@@ -62,7 +62,7 @@ public class FluentFactoryXmlDocumentationTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly string _value__parameter;
-                    public Step_0__Test_Factory(in string value)
+                    internal Step_0__Test_Factory(in string value)
                     {
                         this._value__parameter = value;
                     }
@@ -148,7 +148,7 @@ public class FluentFactoryXmlDocumentationTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly string _value__parameter;
-                    public Step_0__Test_Factory(in string value)
+                    internal Step_0__Test_Factory(in string value)
                     {
                         this._value__parameter = value;
                     }
@@ -267,7 +267,7 @@ public class FluentFactoryXmlDocumentationTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly string _value__parameter;
-                    public Step_0__Test_Factory(in string value)
+                    internal Step_0__Test_Factory(in string value)
                     {
                         this._value__parameter = value;
                     }
@@ -357,7 +357,7 @@ public class FluentFactoryXmlDocumentationTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly string _name__parameter;
-                    public Step_0__Test_Factory(in string name)
+                    internal Step_0__Test_Factory(in string name)
                     {
                         this._name__parameter = name;
                     }
@@ -381,7 +381,7 @@ public class FluentFactoryXmlDocumentationTests
                 {
                     private readonly string _name__parameter;
                     private readonly int _value__parameter;
-                    public Step_1__Test_Factory(in string name, in int value)
+                    internal Step_1__Test_Factory(in string name, in int value)
                     {
                         this._name__parameter = name;
                         this._value__parameter = value;
@@ -469,7 +469,7 @@ public class FluentFactoryXmlDocumentationTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly string _value__parameter;
-                    public Step_0__Test_Factory(in string value)
+                    internal Step_0__Test_Factory(in string value)
                     {
                         this._value__parameter = value;
                     }
@@ -564,7 +564,7 @@ public class FluentFactoryXmlDocumentationTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly string _processor__parameter;
-                    public Step_0__Test_Factory(in string processor)
+                    internal Step_0__Test_Factory(in string processor)
                     {
                         this._processor__parameter = processor;
                     }

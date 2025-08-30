@@ -31,7 +31,7 @@ public partial class Shape
 public struct Step_0__Shape
 {
     private readonly int _width__parameter;
-    public Step_0__Shape(in int width)
+    internal Step_0__Shape(in int width)
     {
         this._width__parameter = width;
     }
@@ -66,7 +66,7 @@ public struct Step_1__Shape
 {
     private readonly int _width__parameter;
     private readonly int _height__parameter;
-    public Step_1__Shape(in int width, in int height)
+    internal Step_1__Shape(in int width, in int height)
     {
         this._width__parameter = width;
         this._height__parameter = height;
@@ -101,7 +101,7 @@ public struct Step_2__Shape
     private readonly int _width__parameter;
     private readonly int _height__parameter;
     private readonly int _depth__parameter;
-    public Step_2__Shape(in int width, in int height, in int depth)
+    internal Step_2__Shape(in int width, in int height, in int depth)
     {
         this._width__parameter = width;
         this._height__parameter = height;
@@ -126,7 +126,7 @@ public struct Step_2__Shape
 public struct Step_3__Shape
 {
     private readonly int _radius__parameter;
-    public Step_3__Shape(in int radius)
+    internal Step_3__Shape(in int radius)
     {
         this._radius__parameter = radius;
     }

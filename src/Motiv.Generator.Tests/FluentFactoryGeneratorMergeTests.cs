@@ -161,7 +161,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -182,7 +182,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_1__Test_Factory
                 {
                     private readonly string _value1__parameter;
-                    public Step_1__Test_Factory(in string value1)
+                    internal Step_1__Test_Factory(in string value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -300,7 +300,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_0__MyFactory_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__MyFactory_Factory(in T1 value1)
+                    internal Step_0__MyFactory_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -321,7 +321,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_1__MyFactory_Factory
                 {
                     private readonly string _value1__parameter;
-                    public Step_1__MyFactory_Factory(in string value1)
+                    internal Step_1__MyFactory_Factory(in string value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -423,7 +423,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -549,7 +549,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -571,7 +571,7 @@ public class FluentFactoryGeneratorMergeTests
                 {
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
-                    public Step_1__Test_Factory(in T1 value1, in T2 value2)
+                    internal Step_1__Test_Factory(in T1 value1, in T2 value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -593,7 +593,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_2__Test_Factory
                 {
                     private readonly string _value1__parameter;
-                    public Step_2__Test_Factory(in string value1)
+                    internal Step_2__Test_Factory(in string value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -615,7 +615,7 @@ public class FluentFactoryGeneratorMergeTests
                 {
                     private readonly string _value1__parameter;
                     private readonly string _value2__parameter;
-                    public Step_3__Test_Factory(in string value1, in string value2)
+                    internal Step_3__Test_Factory(in string value1, in string value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -734,7 +734,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _value1__parameter;
-                    public Step_0__Test_Factory(in T1 value1)
+                    internal Step_0__Test_Factory(in T1 value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -765,7 +765,7 @@ public class FluentFactoryGeneratorMergeTests
                 {
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
-                    public Step_1__Test_Factory(in T1 value1, in T2 value2)
+                    internal Step_1__Test_Factory(in T1 value1, in T2 value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -789,7 +789,7 @@ public class FluentFactoryGeneratorMergeTests
                     private readonly T1 _value1__parameter;
                     private readonly T2 _value2__parameter;
                     private readonly T3 _value3__parameter;
-                    public Step_2__Test_Factory(in T1 value1, in T2 value2, in T3 value3)
+                    internal Step_2__Test_Factory(in T1 value1, in T2 value2, in T3 value3)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -813,7 +813,7 @@ public class FluentFactoryGeneratorMergeTests
                 {
                     private readonly T1 _value1__parameter;
                     private readonly string _value2__parameter;
-                    public Step_3__Test_Factory(in T1 value1, in string value2)
+                    internal Step_3__Test_Factory(in T1 value1, in string value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -837,7 +837,7 @@ public class FluentFactoryGeneratorMergeTests
                     private readonly T1 _value1__parameter;
                     private readonly string _value2__parameter;
                     private readonly string _value3__parameter;
-                    public Step_4__Test_Factory(in T1 value1, in string value2, in string value3)
+                    internal Step_4__Test_Factory(in T1 value1, in string value2, in string value3)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -925,7 +925,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly string _value1__parameter;
-                    public Step_0__Test_Factory(in string value1)
+                    internal Step_0__Test_Factory(in string value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -947,7 +947,7 @@ public class FluentFactoryGeneratorMergeTests
                 {
                     private readonly string _value1__parameter;
                     private readonly string _value2__parameter;
-                    public Step_1__Test_Factory(in string value1, in string value2)
+                    internal Step_1__Test_Factory(in string value1, in string value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -991,7 +991,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_0__Test_MyBuildTarget
                 {
                     private readonly string _value1__parameter;
-                    public Step_0__Test_MyBuildTarget(in string value1)
+                    internal Step_0__Test_MyBuildTarget(in string value1)
                     {
                         this._value1__parameter = value1;
                     }
@@ -1013,7 +1013,7 @@ public class FluentFactoryGeneratorMergeTests
                 {
                     private readonly string _value1__parameter;
                     private readonly string _value2__parameter;
-                    public Step_1__Test_MyBuildTarget(in string value1, in string value2)
+                    internal Step_1__Test_MyBuildTarget(in string value1, in string value2)
                     {
                         this._value1__parameter = value1;
                         this._value2__parameter = value2;
@@ -1127,7 +1127,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_0__Test_Factory
                 {
                     private readonly string _valueX1__parameter;
-                    public Step_0__Test_Factory(in string valueX1)
+                    internal Step_0__Test_Factory(in string valueX1)
                     {
                         this._valueX1__parameter = valueX1;
                     }
@@ -1151,7 +1151,7 @@ public class FluentFactoryGeneratorMergeTests
                 {
                     private readonly string _valueX1__parameter;
                     private readonly string _valueX2__parameter;
-                    public Step_1__Test_Factory(in string valueX1, in string valueX2)
+                    internal Step_1__Test_Factory(in string valueX1, in string valueX2)
                     {
                         this._valueX1__parameter = valueX1;
                         this._valueX2__parameter = valueX2;
@@ -1278,7 +1278,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_0__Test_Factory<T1>
                 {
                     private readonly T1 _valueX1__parameter;
-                    public Step_0__Test_Factory(in T1 valueX1)
+                    internal Step_0__Test_Factory(in T1 valueX1)
                     {
                         this._valueX1__parameter = valueX1;
                     }
@@ -1300,7 +1300,7 @@ public class FluentFactoryGeneratorMergeTests
                 {
                     private readonly T1 _valueX1__parameter;
                     private readonly T2 _valueX2__parameter;
-                    public Step_1__Test_Factory(in T1 valueX1, in T2 valueX2)
+                    internal Step_1__Test_Factory(in T1 valueX1, in T2 valueX2)
                     {
                         this._valueX1__parameter = valueX1;
                         this._valueX2__parameter = valueX2;
@@ -1322,7 +1322,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_2__Test_Factory
                 {
                     private readonly string _valueY1__parameter;
-                    public Step_2__Test_Factory(in string valueY1)
+                    internal Step_2__Test_Factory(in string valueY1)
                     {
                         this._valueY1__parameter = valueY1;
                     }
@@ -1344,7 +1344,7 @@ public class FluentFactoryGeneratorMergeTests
                 {
                     private readonly string _valueY1__parameter;
                     private readonly string _valueY2__parameter;
-                    public Step_3__Test_Factory(in string valueY1, in string valueY2)
+                    internal Step_3__Test_Factory(in string valueY1, in string valueY2)
                     {
                         this._valueY1__parameter = valueY1;
                         this._valueY2__parameter = valueY2;
@@ -1485,7 +1485,7 @@ public class FluentFactoryGeneratorMergeTests
             public struct Step_0__Spec<TModel>
             {
                 private readonly System.Func<TModel, bool> _predicate__parameter;
-                public Step_0__Spec(in System.Func<TModel, bool> predicate)
+                internal Step_0__Spec(in System.Func<TModel, bool> predicate)
                 {
                     this._predicate__parameter = predicate;
                 }
@@ -1518,7 +1518,7 @@ public class FluentFactoryGeneratorMergeTests
             {
                 private readonly System.Func<TModel, bool> _predicate__parameter;
                 private readonly string _trueBecause__parameter;
-                public Step_1__Spec(in System.Func<TModel, bool> predicate, in string trueBecause)
+                internal Step_1__Spec(in System.Func<TModel, bool> predicate, in string trueBecause)
                 {
                     this._predicate__parameter = predicate;
                     this._trueBecause__parameter = trueBecause;
@@ -1559,7 +1559,7 @@ public class FluentFactoryGeneratorMergeTests
             {
                 private readonly System.Func<TModel, bool> _predicate__parameter;
                 private readonly System.Func<TModel, string> _whenTrue__parameter;
-                public Step_2__Spec(in System.Func<TModel, bool> predicate, in System.Func<TModel, string> whenTrue)
+                internal Step_2__Spec(in System.Func<TModel, bool> predicate, in System.Func<TModel, string> whenTrue)
                 {
                     this._predicate__parameter = predicate;
                     this._whenTrue__parameter = whenTrue;
@@ -1753,7 +1753,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_0__Test_Namespace_Factory<T1, T2>
                 {
                     private readonly System.Func<T1, System.Collections.Generic.IEnumerable<T2>> _first__parameter;
-                    public Step_0__Test_Namespace_Factory(in System.Func<T1, System.Collections.Generic.IEnumerable<T2>> first)
+                    internal Step_0__Test_Namespace_Factory(in System.Func<T1, System.Collections.Generic.IEnumerable<T2>> first)
                     {
                         this._first__parameter = first;
                     }
@@ -1774,7 +1774,7 @@ public class FluentFactoryGeneratorMergeTests
                 public struct Step_1__Test_Namespace_Factory<T1, T2>
                 {
                     private readonly System.Func<T1, System.Collections.Generic.ICollection<T2>> _first__parameter;
-                    public Step_1__Test_Namespace_Factory(in System.Func<T1, System.Collections.Generic.ICollection<T2>> first)
+                    internal Step_1__Test_Namespace_Factory(in System.Func<T1, System.Collections.Generic.ICollection<T2>> first)
                     {
                         this._first__parameter = first;
                     }
