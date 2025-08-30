@@ -20,7 +20,6 @@ csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true
 csharp_new_line_before_catch = true
 csharp_new_line_before_finally = true
-csharp_new_line_before_members_in_object_init = true
 csharp_new_line_before_members_in_anonymous_types = true
 csharp_indent_case_contents = true
 csharp_indent_switch_labels = true
