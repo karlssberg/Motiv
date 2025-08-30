@@ -34,7 +34,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.Generator.Tests", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.Generator.Attributes", "src\Motiv.Generator.Attributes\Motiv.Generator.Attributes.csproj", "{6D46EAF3-5ABB-4B38-8C3E-61045119B411}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motive.FluentBuilder.Example", "src\examples\Motive.FluentBuilder.Example\Motive.FluentBuilder.Example.csproj", "{446B3191-C265-4D9D-8253-E083D00B7D1D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.FluentBuilder.Example", "src\examples\Motiv.FluentBuilder.Example\Motiv.FluentBuilder.Example.csproj", "{446B3191-C265-4D9D-8253-E083D00B7D1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

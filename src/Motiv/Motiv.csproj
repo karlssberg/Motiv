@@ -13,7 +13,6 @@
         <Description>Transform the way you work with boolean logic by forming them from discrete propositions. This enables you to dynamically generate custom output, such as providing explanations about the causes behind a result.</Description>
         <Copyright>Copyright (c) 2025 Daniel Karlsson</Copyright>
         <PackageProjectUrl>https://karlssberg.github.io/Motiv</PackageProjectUrl>
-        <PackageLicense>LICENSE</PackageLicense>
         <RepositoryUrl>https://github.com/karlssberg/Motiv</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>Boolean Logic, Decision Making, Explainability, Visibility, Boolean Blindness, Specification Pattern</PackageTags>

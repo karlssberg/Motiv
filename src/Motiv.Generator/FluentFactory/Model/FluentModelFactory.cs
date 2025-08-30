@@ -171,9 +171,9 @@ public class FluentModelFactory(Compilation compilation)
             var containingType = constructorMetadata.Constructor.ContainingType;
             var doNotGenerateCreateMethod = constructorMetadata.Options.HasFlag(NoCreateMethod);
 
-            // TODO: Create Analyzer to check if the target type needs to be partial and instantiatable.
-            // the target type needs to be partial and instantiatable.  To is so avoid hiding other
-            // constructors that begin with the same build steps, but have additional steps
+            // FUTURE ENHANCEMENT: Create a dedicated analyzer to validate that target types are partial and instantiatable.
+            // This would help avoid issues where constructors with similar build steps might be hidden.
+            // Currently handled by the CanBeCustomStep() extension method.
             return containingType.CanBeCustomStep() && doNotGenerateCreateMethod;
         }
 
