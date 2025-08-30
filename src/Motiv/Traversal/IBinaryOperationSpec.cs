@@ -3,9 +3,6 @@ namespace Motiv.Traversal;
 /// <summary>
 /// Represents a binary operation specification.
 /// </summary>
-/// <typeparam name="TModel">
-/// The type of the model.
-/// </typeparam>
 public interface IBinaryOperationSpec : IBooleanOperationSpec
 {
     /// <summary>

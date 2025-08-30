@@ -182,7 +182,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
                 return binaryExpression;
             default:
                 return VisitDefaultBinaryExpression();
-        };
+        }
 
         Expression VisitDefaultBinaryExpression()
         {
@@ -207,7 +207,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         return node;
     }
 
-    private Expression VisitNotExpression(UnaryExpression node)
+    private void VisitNotExpression(UnaryExpression node)
     {
         switch (node)
         {
@@ -215,11 +215,11 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
                 VisitAndMaybeApplyParentheses(typeExpression, typeExpression.Expression);
                 OutputText.Append(" is not ");
                 OutputText.Append(typeExpression.TypeOperand.ToCSharpName());
-                return node;
+                return;
             default:
                 OutputText.Append('!');
                 VisitAndMaybeApplyParentheses(node, node.Operand);
-                return node;
+                return;
         }
     }
 
@@ -235,8 +235,6 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
             }
 
             OutputText.Append('.');
-            OutputText.Append(node.Member.Name);
-            return node;
         }
 
         OutputText.Append(node.Member.Name);
@@ -430,9 +428,10 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
                 OutputText.Append(value);
                 break;
             case ConstantExpression constantExpression:
-                var serialization = SerializeSupported(constantExpression.Value, constantExpression.Type) ??
-                                    constantExpression.Value.ToString();
-                OutputText.Append(serialization);
+                OutputText.Append(
+                    SerializeSupported(constantExpression.Value, constantExpression.Type)
+                        ?? constantExpression.Value?.ToString()
+                        ?? "null");
                 break;
             default:
                 Visit(node);
@@ -675,18 +674,6 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
                 or ExpressionType.ExclusiveOrAssign
                 or ExpressionType.LeftShiftAssign
                 or ExpressionType.RightShiftAssign => 1,
-            ExpressionType.Block
-                or ExpressionType.Loop
-                or ExpressionType.Switch
-                or ExpressionType.Try
-                or ExpressionType.Goto
-                or ExpressionType.Label
-                or ExpressionType.Default
-                or ExpressionType.Extension
-                or ExpressionType.Quote
-                or ExpressionType.DebugInfo
-                or ExpressionType.Dynamic
-                or ExpressionType.RuntimeVariables => 0,
             _ => 0
         };
     }

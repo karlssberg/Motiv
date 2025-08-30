@@ -9,6 +9,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Policy;
 /// A factory for creating propositions based on a predicate and metadata factories.
 /// </summary>
 /// <param name="policy">The policy to use for the specification.</param>
+/// <param name="higherOrderOperation">The higher-order predicate operation to use for the specification.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]

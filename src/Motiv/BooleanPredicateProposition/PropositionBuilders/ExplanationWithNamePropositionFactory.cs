@@ -10,7 +10,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// <param name="falseBecause">The explanation for when the predicate is false.</param>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly partial struct ExplanationWithNamePropositionFactory<TModel>(
+public readonly struct ExplanationWithNamePropositionFactory<TModel>(
     [FluentMethod("Build")]Func<TModel, bool> predicate,
     [FluentMethod("WhenTrue")]string trueBecause,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, string> falseBecause)
@@ -19,7 +19,7 @@ public readonly partial struct ExplanationWithNamePropositionFactory<TModel>(
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
-    /// <returns>An instance of <see cref="PolicyBase{TModel, string}" />.</returns>
+    /// <returns>An instance of <see cref="PolicyBase{TModel, TMetadata}" />.</returns>
     public PolicyBase<TModel, string> Create()
     {
         predicate.ThrowIfNull(nameof(predicate));
@@ -36,7 +36,7 @@ public readonly partial struct ExplanationWithNamePropositionFactory<TModel>(
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
-    /// <returns>An instance of <see cref="PolicyBase{TModel, string}" />.</returns>
+    /// <returns>An instance of <see cref="PolicyBase{TModel, TMetadata}" />.</returns>
     public PolicyBase<TModel, string> Create(string statement)
     {
         predicate.ThrowIfNull(nameof(predicate));
