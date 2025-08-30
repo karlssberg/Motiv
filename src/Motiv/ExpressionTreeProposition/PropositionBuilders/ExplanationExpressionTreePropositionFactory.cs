@@ -16,7 +16,7 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly struct ExplanationExpressionTreePropositionFactory<TModel, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
-    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, string> trueBecause,
+    [MultipleFluentMethods(typeof(WhenTrueOverloads), Priority = -1)]Func<TModel, BooleanResultBase<string>, string> trueBecause,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, BooleanResultBase<string>, string> falseBecause)
 {
     /// <summary>

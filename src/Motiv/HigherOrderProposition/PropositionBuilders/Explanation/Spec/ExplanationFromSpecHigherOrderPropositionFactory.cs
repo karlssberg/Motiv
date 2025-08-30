@@ -19,7 +19,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Spec;
 public readonly struct ExplanationFromSpecHigherOrderPropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,
-    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string> trueBecause,
+    [MultipleFluentMethods(typeof(WhenTrueOverloads), Priority = -1)]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string> trueBecause,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string> falseBecause)
 {
     /// <summary>
