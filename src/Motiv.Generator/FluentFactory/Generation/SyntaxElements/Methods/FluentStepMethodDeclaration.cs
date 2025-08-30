@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -35,6 +35,43 @@ public static class FluentStepMethodDeclaration
         return CreateMethodDeclaration(method, knownConstructorParameters, returnObjectExpression);
     }
 
+    private static List<object?> GetDocumentationLines(IFluentMethod method)
+    {
+        var lines = new List<object?>();
+
+        // Add the main documentation summary
+        if (!string.IsNullOrWhiteSpace(method.DocumentationSummary))
+        {
+            lines.Add(method.DocumentationSummary?.Trim());;
+            // Add empty line separator
+            lines.Add("");
+        }
+
+        // Add constructor type information
+        lines.Add(FluentMethodSummaryDocXml.GenerateCandidateConstructorTypePreamble(method.Return.CandidateConstructors));
+        lines.AddRange(FluentMethodSummaryDocXml.GenerateCandidateConstructorTypeSeeAlsoLinks(method.Return.CandidateConstructors).Cast<object?>());
+
+        return lines;
+    }
+
+    private static List<object?> GetDocumentationLinesWithParameters(IFluentMethod method)
+    {
+        var lines = new List<object?>();
+
+        // Add the main documentation summary
+        if (!string.IsNullOrWhiteSpace(method.DocumentationSummary))
+        {
+            lines.Add(method.DocumentationSummary?.Trim());
+            lines.Add("");
+        }
+
+        // Add constructor type information
+        lines.Add(FluentMethodSummaryDocXml.GenerateCandidateConstructorTypePreamble(method.Return.CandidateConstructors));
+        lines.AddRange(FluentMethodSummaryDocXml.GenerateCandidateConstructorTypeSeeAlsoLinks(method.Return.CandidateConstructors).Cast<object?>());
+
+        return lines;
+    }
+
     private static MethodDeclarationSyntax CreateMethodDeclaration(
         IFluentMethod method,
         ParameterSequence knownConstructorParameters,
@@ -51,12 +88,17 @@ public static class FluentStepMethodDeclaration
                 TokenList(
                     Token(SyntaxKind.PublicKeyword)))
             .WithBody(Block(ReturnStatement(returnObjectExpression)))
-            .WithLeadingTrivia(FluentMethodSummaryDocXml.Create(
-                [
-                    method.DocumentationSummary,
-                    FluentMethodSummaryDocXml.GenerateCandidateConstructorTypePreamble(method.Return.CandidateConstructors),
-                    ..FluentMethodSummaryDocXml.GenerateCandidateConstructorTypeSeeAlsoLinks(method.Return.CandidateConstructors)
-                ]));
+            .WithLeadingTrivia(
+                method switch
+                {
+                    { ParameterDocumentation: not null, MethodParameters.Length: > 0 } =>
+                        FluentMethodSummaryDocXml.CreateWithParameters(
+                            GetDocumentationLinesWithParameters(method),
+                            method.ParameterDocumentation,
+                            method.MethodParameters.Select(p => p.ParameterSymbol.Name.ToCamelCase())),
+                    _ =>
+                        FluentMethodSummaryDocXml.Create(GetDocumentationLinesWithParameters(method))
+                });
 
         if (method.MethodParameters.Length > 0)
         {

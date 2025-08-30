@@ -16,4 +16,5 @@ public interface IFluentMethod
     ImmutableArray<FluentMethodParameter> MethodParameters { get; }
     OrderedDictionary<IParameterSymbol, IFluentValueStorage> ValueSources { get; }
     string? DocumentationSummary { get; }
+    Dictionary<string, string>? ParameterDocumentation { get; }
 }

@@ -59,6 +59,8 @@ public class CreationMethod : IFluentMethod
         }
     }
 
+    public Dictionary<string, string>? ParameterDocumentation => null; // Creation methods don't use template methods
+
     public IParameterSymbol? SourceParameter => null;
 
     public ImmutableArray<FluentMethodParameter> AvailableParameterFields { get; }

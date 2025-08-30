@@ -18,24 +18,37 @@ public static class FluentMethodSummaryDocXml
         [
             Comment($"/// <summary>"),
             CarriageReturnLineFeed,
-            ..linesOfText.SelectMany(line  =>
-                line switch
-                {
-                    null or "" => [],
-                    SyntaxTrivia trivia => [trivia],
-                    _ => string.IsNullOrWhiteSpace(line.ToString())
-                        ? []
-                        : line.ToString()
-                            .Split(["\r\n", "\n", "\r"], default)
-                            .Select(embeddedLines => string.IsNullOrEmpty(embeddedLines)
-                                ? Comment("///")
-                                : Comment($"/// {embeddedLines}"))
-                }),
+            ..linesOfText.SelectMany(ConvertLine),
             Comment($"/// </summary>"),
             CarriageReturnLineFeed
         ];
 
         return TriviaList(triviaList);
+
+        IEnumerable<SyntaxTrivia> ConvertLine(object? line)
+        {
+            return line switch
+            {
+                null => [],
+                "" => [Comment("///")],
+                SyntaxTrivia trivia => [trivia],
+                _ when string.IsNullOrWhiteSpace(line.ToString()) => [Comment("///")],
+                _ => ConvertLineEndings(line.ToString())
+            };
+        }
+
+        IEnumerable<SyntaxTrivia> ConvertLineEndings(string line)
+        {
+            return line
+                .Split(["\r\n", "\n", "\r"], default)
+                .SelectMany(IEnumerable<SyntaxTrivia> (embeddedLines)  =>
+                    embeddedLines switch
+                    {
+                        null => [],
+                        "" => [Comment("///")],
+                        _ => [Comment($"/// {embeddedLines}")]
+                    });
+        }
     }
 
     public static SyntaxTrivia GenerateCandidateConstructorTypePreamble(
@@ -103,5 +116,62 @@ public static class FluentMethodSummaryDocXml
 
         // Format as NameSpace.TypeName{T1, T2}
         return $"{baseTypeName}{{{typeArgs}}}";
+    }
+
+    public static SyntaxTriviaList CreateWithParameters(
+        IEnumerable<object?> linesOfText,
+        Dictionary<string, string>? parameterDocumentation,
+        IEnumerable<string> parameterNames)
+    {
+        var triviaList = new List<SyntaxTrivia>
+        {
+            Comment($"/// <summary>"),
+            CarriageReturnLineFeed
+        };
+
+        triviaList.AddRange(linesOfText.SelectMany(ConvertLine));
+
+        triviaList.Add(Comment($"/// </summary>"));
+        triviaList.Add(CarriageReturnLineFeed);
+
+        // Add parameter documentation if available
+        if (parameterDocumentation != null)
+        {
+            foreach (var paramName in parameterNames)
+            {
+                if (parameterDocumentation.TryGetValue(paramName, out var paramDoc))
+                {
+                    triviaList.Add(Comment($"/// <param name=\"{paramName}\">{paramDoc}</param>"));
+                    triviaList.Add(CarriageReturnLineFeed);
+                }
+            }
+        }
+
+        return TriviaList(triviaList);
+
+        IEnumerable<SyntaxTrivia> ConvertLine(object? line)
+        {
+            return line switch
+            {
+                null => [],
+                "" => [Comment("///")],
+                SyntaxTrivia trivia => [trivia],
+                _ when string.IsNullOrWhiteSpace(line.ToString()) => [Comment("///")],
+                _ => ConvertLineEndings(line.ToString())
+            };
+        }
+
+        IEnumerable<SyntaxTrivia> ConvertLineEndings(string line)
+        {
+            return line
+                .Split(["\r\n", "\n", "\r"], default)
+                .SelectMany(IEnumerable<SyntaxTrivia> (embeddedLines)  =>
+                    embeddedLines switch
+                    {
+                        null => [],
+                        "" => [Comment("///")],
+                        _ => [Comment($"/// {embeddedLines}")]
+                    });
+        }
     }
 }
