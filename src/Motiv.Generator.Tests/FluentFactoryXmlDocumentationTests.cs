@@ -1,5 +1,3 @@
-using Microsoft.CodeAnalysis.Testing;
-using Xunit;
 using Motiv.Generator.FluentFactory;
 using VerifyCS =
     Motiv.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.Generator.FluentFactory.FluentFactoryGenerator>;

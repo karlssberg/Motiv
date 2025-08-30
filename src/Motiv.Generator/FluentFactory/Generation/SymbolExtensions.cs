@@ -70,7 +70,7 @@ public static class SymbolExtensions
 
     public static IEnumerable<ITypeParameterSymbol> GetGenericTypeArguments(this ITypeSymbol type)
     {
-        return GenericTypeArgumentsInternal(type).DistinctBy(type => type.Name);
+        return GenericTypeArgumentsInternal(type).DistinctBy(t => t.Name);
     }
 
     private static IEnumerable<ITypeParameterSymbol> GenericTypeArgumentsInternal(ITypeSymbol type)
@@ -189,13 +189,7 @@ public static class SymbolExtensions
            _ => [SyntaxKind.None]
        };
 
-   private static readonly SymbolDisplayFormat NameFormat = new(
-         typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameOnly,
-         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-         miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes
-    );
-
-    public static string ToUnqualifiedDisplayString(this ITypeSymbol typeSymbol) =>
+   public static string ToUnqualifiedDisplayString(this ITypeSymbol typeSymbol) =>
        typeSymbol.ToDisplayString(TypeNameOnlyFormat);
 
    public static string ToDynamicDisplayString(this ITypeSymbol typeSymbol, INamespaceSymbol currentNamespace)

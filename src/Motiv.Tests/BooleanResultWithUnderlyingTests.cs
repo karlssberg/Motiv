@@ -2,7 +2,6 @@ using AutoFixture;
 using Motiv.Shared;
 using Motiv.Tests.Customizations;
 using NSubstitute;
-using Shouldly;
 
 namespace Motiv.Tests;
 

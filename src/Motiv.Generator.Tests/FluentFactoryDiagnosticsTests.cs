@@ -1,4 +1,3 @@
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 using Motiv.Generator.FluentFactory;
 using static Microsoft.CodeAnalysis.DiagnosticSeverity;

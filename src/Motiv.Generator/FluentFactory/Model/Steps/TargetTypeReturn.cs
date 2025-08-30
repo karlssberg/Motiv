@@ -16,7 +16,7 @@ public class TargetTypeReturn(
             .Where(parameter => parameter.Type.IsOpenGenericType())
     ];
 
-    public OrderedDictionary<IParameterSymbol, IFluentValueStorage> ValueStorage { get; set; }
+    public OrderedDictionary<IParameterSymbol, IFluentValueStorage> ValueStorage { get; set; } = new();
 
     public ImmutableArray<IMethodSymbol> CandidateConstructors => candidateConstructors;
 

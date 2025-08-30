@@ -2,7 +2,6 @@ using AutoFixture;
 using Motiv.HigherOrderProposition;
 using Motiv.Shared;
 using NSubstitute;
-using Shouldly;
 
 namespace Motiv.Tests.HigherOrderProposition;
 

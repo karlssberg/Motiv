@@ -22,16 +22,16 @@ public class DynamicPricingPolicyTests
                                                             },
     };
 
-    private static HashSet<InventoryPricedProduct> Stock =
+    private static readonly HashSet<InventoryPricedProduct> Stock =
     [
-        new InventoryPricedProduct("Apple", "iPhone 12")
+        new("Apple", "iPhone 12")
         {
             Price = 899.99m,
             InStoreStockLevel = 5,
             WarehouseStockLevel = 10,
             DateInStock = Now.AddDays(-100)
         },
-        new InventoryPricedProduct("Samsung", "Galaxy S21")
+        new("Samsung", "Galaxy S21")
         {
             Price = 649.99m,
             InStoreStockLevel = 15,
@@ -39,7 +39,7 @@ public class DynamicPricingPolicyTests
             DateInStock = Now.AddDays(-90)
 
         },
-        new InventoryPricedProduct("Google", "Pixel 5")
+        new("Google", "Pixel 5")
         {
             Price = 699.99m,
             InStoreStockLevel = 0,

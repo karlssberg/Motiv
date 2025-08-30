@@ -1,5 +1,3 @@
-using Shouldly;
-
 namespace Motiv.Tests;
 
 public class BooleanPredicateExplanationPropositionTests
@@ -63,20 +61,20 @@ public class BooleanPredicateExplanationPropositionTests
         // Arrange
         var firstSpec = Spec
             .Build((bool m) => m == other)
-            .WhenTrueYield(m => ["first is true"])
+            .WhenTrueYield(_ => ["first is true"])
             .WhenFalse("first is false")
             .Create("first true");
 
         var secondSpec = Spec
             .Build((bool m) => m == other)
             .WhenTrue("second is true")
-            .WhenFalseYield(m => ["second is false"])
+            .WhenFalseYield(_ => ["second is false"])
             .Create("is second true");
 
         var thirdSpec = Spec
             .Build((bool m) => m == other)
-            .WhenTrueYield(m => ["first is true"])
-            .WhenFalseYield(m => ["second is false"])
+            .WhenTrueYield(_ => ["first is true"])
+            .WhenFalseYield(_ => ["second is false"])
             .Create("is third true");
 
         var spec = firstSpec | secondSpec | thirdSpec;
@@ -143,20 +141,20 @@ public class BooleanPredicateExplanationPropositionTests
         // Arrange
         var firstSpec = Spec
             .Build((bool m) => m)
-            .WhenTrueYield(m => ["first is true"])
+            .WhenTrueYield(_ => ["first is true"])
             .WhenFalse("first is false")
             .Create("first true");
 
         var secondSpec = Spec
             .Build((bool m) => m)
             .WhenTrue("second is true")
-            .WhenFalseYield(m => ["second is false"])
+            .WhenFalseYield(_ => ["second is false"])
             .Create("second true");
 
         var thirdSpec = Spec
             .Build((bool m) => m)
-            .WhenTrueYield(m => ["third is true"])
-            .WhenFalseYield(m => ["third is false"])
+            .WhenTrueYield(_ => ["third is true"])
+            .WhenFalseYield(_ => ["third is false"])
             .Create("third true");
 
         var spec = firstSpec | secondSpec | thirdSpec;
@@ -247,7 +245,7 @@ public class BooleanPredicateExplanationPropositionTests
         var spec =
             Spec.Build((bool m) => m)
                 .WhenTrue("true assertion")
-                .WhenFalseYield(m => ["false assertion"])
+                .WhenFalseYield(_ => ["false assertion"])
                 .Create("propositional statement");
 
         var result = spec.IsSatisfiedBy(model);
@@ -270,7 +268,7 @@ public class BooleanPredicateExplanationPropositionTests
         var spec =
             Spec.Build((bool m) => m)
                 .WhenTrue("true assertion")
-                .WhenFalseYield(m => ["false assertion"])
+                .WhenFalseYield(_ => ["false assertion"])
                 .Create();
 
         var result = spec.IsSatisfiedBy(model);
@@ -326,7 +324,7 @@ public class BooleanPredicateExplanationPropositionTests
         var spec =
             Spec.Build((bool m) => m)
                 .WhenTrue(_ => "true assertion")
-                .WhenFalseYield(m => ["false assertion"])
+                .WhenFalseYield(_ => ["false assertion"])
                 .Create("propositional statement");
 
         var result = spec.IsSatisfiedBy(model);
@@ -350,13 +348,13 @@ public class BooleanPredicateExplanationPropositionTests
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)
-                .WhenTrue(m => "true assertion")
+                .WhenTrue(_ => "true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
             Spec.Build((bool m) => m)
-                .WhenTrue(m => "true assertion")
+                .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
@@ -381,8 +379,8 @@ public class BooleanPredicateExplanationPropositionTests
         // Arrange
         var spec =
             Spec.Build((bool m) => m)
-                .WhenTrue(m => "true assertion")
-                .WhenFalseYield(m => ["false assertion"])
+                .WhenTrue(_ => "true assertion")
+                .WhenFalseYield(_ => ["false assertion"])
                 .Create("propositional statement");
 
         var result = spec.IsSatisfiedBy(model);
@@ -406,13 +404,13 @@ public class BooleanPredicateExplanationPropositionTests
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)
-                .WhenTrueYield(m => ["true assertion"])
+                .WhenTrueYield(_ => ["true assertion"])
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
             Spec.Build((bool m) => m)
-                .WhenTrueYield(m => ["true assertion"])
+                .WhenTrueYield(_ => ["true assertion"])
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 

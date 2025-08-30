@@ -1,7 +1,6 @@
 using AutoFixture;
 using Motiv.BooleanPredicateProposition;
 using Motiv.Shared;
-using Shouldly;
 
 namespace Motiv.Tests.BooleanPredicateProposition;
 

@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Motiv.Generator.FluentFactory.Generation;
@@ -99,7 +98,7 @@ public class MultiMethod : IFluentMethod
             var paramElement = xmlDoc.Descendants("param")
                 .FirstOrDefault(p => p.Attribute("name")?.Value == parameterSymbol.Name);
 
-            return paramElement?.Value?.Trim();
+            return paramElement?.Value.Trim();
         }
         catch
         {
@@ -118,7 +117,7 @@ public class MultiMethod : IFluentMethod
             // Parse XML to extract summary documentation
             var doc = XDocument.Parse(xmlDoc);
             var summaryElement = doc.Descendants("summary").FirstOrDefault();
-            return summaryElement?.Value?.Trim();
+            return summaryElement?.Value.Trim();
         }
         catch
         {
@@ -143,11 +142,11 @@ public class MultiMethod : IFluentMethod
             foreach (var paramElement in paramElements)
             {
                 var name = paramElement.Attribute("name")?.Value;
-                var description = paramElement.Value?.Trim();
+                var description = paramElement.Value.Trim();
 
                 if (!string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(description))
                 {
-                    paramDocs[name] = description;
+                    paramDocs[name!] = description;
                 }
             }
 

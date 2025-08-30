@@ -96,7 +96,7 @@ public class Trie<TKey, TValue>
     {
         public ImmutableArray<TKey> Key { get; } = key;
         public OrderedDictionary<TKey, Node> Children { get; } = new();
-        public bool IsEnd { get; set; } = false;
+        public bool IsEnd { get; set; }
         public IList<TValue> Values { get; } = new List<TValue>();
 
         public IList<TValue> EndValues { get; } = new List<TValue>();

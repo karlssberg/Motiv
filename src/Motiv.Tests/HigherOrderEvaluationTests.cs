@@ -1,5 +1,3 @@
-using Shouldly;
-
 namespace Motiv.Tests;
 
 public class HigherOrderBooleanResultEvaluationTests

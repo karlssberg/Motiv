@@ -1,6 +1,5 @@
 using AutoFixture;
 using Motiv.HigherOrderProposition;
-using Shouldly;
 
 namespace Motiv.Tests.HigherOrderProposition;
 

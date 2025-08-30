@@ -158,20 +158,6 @@ public class IsSpecialFulfillmentBehaviorTests
             }
         };
 
-    private static FulfillmentContext ToContext(FulfillmentContext context) =>
-        context with
-        {
-            Order = context.Order with
-            {
-                Products = context.Order.Products
-                    .Select(product => product with
-                    {
-                        ExpireDate = context.OrderDate.AddDays(1),
-                        DateInStock = context.OrderDate.AddDays(-1)
-                    })
-            }
-        };
-
     private static FulfillmentContext ToShipFromStoreContext(FulfillmentContext context) =>
         context with
         {

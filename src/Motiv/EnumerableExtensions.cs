@@ -1,6 +1,3 @@
-
-
-using System.Runtime.CompilerServices;
 using Motiv.HigherOrderProposition;
 // ReSharper disable once CheckNamespace
 using Motiv;

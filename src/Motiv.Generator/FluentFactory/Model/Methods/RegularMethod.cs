@@ -82,7 +82,7 @@ public class RegularMethod : IFluentMethod
             var paramElement = xmlDoc.Descendants("param")
                 .FirstOrDefault(p => p.Attribute("name")?.Value == parameterSymbol.Name);
 
-            return paramElement?.Value?.Trim();
+            return paramElement?.Value.Trim();
         }
         catch
         {
@@ -101,7 +101,7 @@ public class RegularMethod : IFluentMethod
             // Parse XML to extract summary documentation
             var doc = XDocument.Parse(xmlDoc);
             var summaryElement = doc.Descendants("summary").FirstOrDefault();
-            return summaryElement?.Value?.Trim();
+            return summaryElement?.Value.Trim();
         }
         catch
         {

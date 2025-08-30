@@ -1,6 +1,5 @@
 using Motiv.HigherOrderProposition;
 using Motiv.Shared;
-using Shouldly;
 
 namespace Motiv.Tests.HigherOrderProposition;
 

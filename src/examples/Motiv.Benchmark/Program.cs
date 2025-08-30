@@ -3,7 +3,7 @@ using BenchmarkDotNet.Diagnostics.dotTrace;
 using BenchmarkDotNet.Running;
 using Motiv.Benchmark;
 
-var summary = BenchmarkRunner.Run<MotivBenchmark>();
+_ = BenchmarkRunner.Run<MotivBenchmark>();
 
 namespace Motiv.Benchmark
 {
@@ -11,15 +11,10 @@ namespace Motiv.Benchmark
     [InProcess]
     public class MotivBenchmark
     {
-        private readonly PolicyBase<int, string> _isPositive;
         private readonly SpecBase<int, string> _isPositiveFromExpression;
 
         public MotivBenchmark()
         {
-            _isPositive = Spec
-                .Build((int n) => n > 0)
-                .Create("is positive");
-
             _isPositiveFromExpression = Spec
                 .From((int n) => n > 0)
                 .WhenTrue("is positive")

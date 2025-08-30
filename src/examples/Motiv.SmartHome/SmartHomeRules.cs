@@ -2,7 +2,7 @@ using Motiv.SmartHome.Actions;
 
 namespace Motiv.SmartHome;
 
-public class ActivateSmartHomeRules()
+public class ActivateSmartHomeRules
 {
     private IEnumerable<SpecBase<SmartHomeContext, ISmartHomeAction>> Specs =>
     [

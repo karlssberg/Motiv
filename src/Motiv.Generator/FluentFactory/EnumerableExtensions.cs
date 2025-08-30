@@ -29,9 +29,9 @@ public static class EnumerableExtensions
             : source.Append(value);
     }
 
-    public static IEnumerable<TValue> DistinctBy<TTKey, TValue>(this IEnumerable<TValue> types, Func<TValue, TTKey> keySelector)
+    public static IEnumerable<TValue> DistinctBy<TKey, TValue>(this IEnumerable<TValue> types, Func<TValue, TKey> keySelector)
     {
-        var set = new HashSet<TTKey>();
+        var set = new HashSet<TKey>();
         foreach (var type in types)
         {
             if (set.Add(keySelector(type)))

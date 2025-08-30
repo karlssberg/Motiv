@@ -6,7 +6,7 @@ namespace Motiv.Generator.FluentFactory.Model;
 
 public static class FluentMethodExtensions
 {
-    private static readonly SymbolDisplayFormat _fullFormat = new(
+    private static readonly SymbolDisplayFormat FullFormat = new(
         typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters |
                          SymbolDisplayGenericsOptions.IncludeTypeConstraints |
@@ -22,21 +22,21 @@ public static class FluentMethodExtensions
     public static string ToDisplayString(this IFluentMethod method) =>
         method switch
         {
-            MultiMethod multiMethod => multiMethod.ParameterConverter.ToDisplayString(_fullFormat),
+            MultiMethod multiMethod => multiMethod.ParameterConverter.ToDisplayString(FullFormat),
             _ => method.SerializeFluentMethod()
         };
 
     private static string SerializeFluentMethod(this IFluentMethod method)
     {
         var typeParameterDisplayStrings = method.TypeParameters
-            .Select(fluentTypeParameter => fluentTypeParameter.TypeParameterSymbol.ToDisplayString(_fullFormat));
+            .Select(fluentTypeParameter => fluentTypeParameter.TypeParameterSymbol.ToDisplayString(FullFormat));
 
         var typeParameterList = method.TypeParameters.Length > 0
             ? $"<{string.Join(", ", typeParameterDisplayStrings)}>"
             : string.Empty;
 
         var parameterDisplayStrings = method.MethodParameters
-            .Select(p => p.ParameterSymbol.ToDisplayString(_fullFormat));
+            .Select(p => p.ParameterSymbol.ToDisplayString(FullFormat));
 
         return $"{method.Name}{typeParameterList}({string.Join(", ", parameterDisplayStrings)})";
     }

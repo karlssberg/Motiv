@@ -285,10 +285,4 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                 : FluentFactoryGeneratorOptions.None)
             .Aggregate((prev, next) => prev | next);
     }
-
-    [Conditional("DEBUG")]
-    private static void AttachDebugger()
-    {
-        if (!Debugger.IsAttached) Debugger.Launch();
-    }
 }

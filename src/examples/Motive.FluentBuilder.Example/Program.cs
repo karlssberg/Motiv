@@ -1,17 +1,16 @@
 
 using Motiv.Generator.Attributes;
 
-Console.WriteLine("Hello World!");
+// Check for compile time errors
+Rectangle.WithWidth(10).WithHeight(20).Create();
+Square.WithWidth(10).Create();
+Circle.WithRadius(5).Create();
+Cuboid.WithWidth(10).WithHeight(20).WithDepth(30).Create();
 
-var rectangle = Rectangle.WithWidth(10).WithHeight(20).Create();
-var square = Square.WithWidth(10).Create();
-var circle = Circle.WithRadius(5).Create();
-var cuboid = Cuboid.WithWidth(10).WithHeight(20).WithDepth(30).Create();
-
-var rectangleFromShape = Shape.WithWidth(10).WithHeight(20).Create();
-var squareFromShape = Shape.WithWidth(10).Create();
-var circleFromShape = Shape.WithRadius(5).Create();
-var cuboidFromShape = Shape.WithWidth(10).WithHeight(20).WithDepth(30).Create();
+Shape.WithWidth(10).WithHeight(20).Create();
+Shape.WithWidth(10).Create();
+Shape.WithRadius(5).Create();
+Shape.WithWidth(10).WithHeight(20).WithDepth(30).Create();
 
 [FluentFactory]
 public partial class Shape;

@@ -35,24 +35,6 @@ public static class FluentStepMethodDeclaration
         return CreateMethodDeclaration(method, knownConstructorParameters, returnObjectExpression);
     }
 
-    private static List<object?> GetDocumentationLines(IFluentMethod method)
-    {
-        var lines = new List<object?>();
-
-        // Add the main documentation summary
-        if (!string.IsNullOrWhiteSpace(method.DocumentationSummary))
-        {
-            lines.Add(method.DocumentationSummary?.Trim());;
-            // Add empty line separator
-            lines.Add("");
-        }
-
-        // Add constructor type information
-        lines.AddRange(FluentMethodSummaryDocXml.GenerateCandidateConstructorTypeSeeAlsoLinks(method.Return.CandidateConstructors).Cast<object?>());
-
-        return lines;
-    }
-
     private static List<object?> GetDocumentationLinesWithParameters(IFluentMethod method)
     {
         var lines = new List<object?>();

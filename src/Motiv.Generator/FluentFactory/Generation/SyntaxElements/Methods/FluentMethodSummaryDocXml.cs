@@ -58,7 +58,7 @@ public static class FluentMethodSummaryDocXml
         return candidateConstructors
             .Distinct<IMethodSymbol>(SymbolEqualityComparer.Default)
             .OrderBy(type => type.Name)
-            .Select(str => Comment($"///     {str.ToDisplayString()}"));;
+            .Select(str => Comment($"///     {str.ToDisplayString()}"));
     }
 
     public static IEnumerable<SyntaxTrivia> GenerateCandidateConstructorTypeSeeAlsoLinks(

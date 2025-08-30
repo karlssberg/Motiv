@@ -59,7 +59,7 @@ public static class FluentStepCreationExpression
         TypeSyntax name)
     {
         var argumentList = arguments.ToList();
-        var parameterConverterMethod = method.ParameterConverter!;
+        var parameterConverterMethod = method.ParameterConverter;
 
         var fieldArgumentsIndex = argumentList.Count - method.MethodParameters.Length;
         var fieldSourcedArguments = argumentList.Take(fieldArgumentsIndex);
