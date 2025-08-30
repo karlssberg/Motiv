@@ -2265,7 +2265,7 @@ public class FluentFactoryMethodCustomizationTests
     }
 
     [Fact]
-    public async Task Given_duplicate_non_converter_and_converter_parameters_Should_afford_precedence_to_non_converter()
+    public async Task Given_duplicate_non_converter_and_converter_parameters_Should_afford_precedence_to_non_converter_by_default()
     {
         const string code =
             """
@@ -2436,8 +2436,159 @@ public class FluentFactoryMethodCustomizationTests
         }.RunAsync();
     }
 
+     [Fact]
+     public async Task Given_duplicate_non_converter_and_converter_parameters_Should_afford_explicitly_declared_positive_precedence_over_undeclared()
+     {
+         const string code =
+             """
+             using System;
+             using Motiv.Generator.Attributes;
 
 
+             [FluentFactory]
+             public static partial class Factory;
+
+             public class MyClassA<T>
+             {
+                 [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                 public MyClassA(
+                     [MultipleFluentMethods(typeof(Overloads), Priority=1)]Func<T> value1,
+                     [FluentMethod("Create")]Func<T> value2)
+                 {
+                     Value1 = value1;
+                     Value2 = value2;
+                 }
+
+                 public Func<T> Value1 { get; set; }
+                 public Func<T> Value2 { get; set; }
+             }
+
+             public class MyClassB
+             {
+                 [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                 public MyClassB(
+                     [FluentMethod("Value")]string value1,
+                     [FluentMethod("Create")]Func<string> value2)
+                 {
+                     Value1 = value1;
+                     Value2 = value2;
+                 }
+
+                 public string Value1 { get; set; }
+                 public Func<string> Value2 { get; set; }
+             }
+
+             public class MyClassC
+             {
+                 [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                 public MyClassC(
+                     [MultipleFluentMethods(typeof(Overloads), Priority=2)]Func<string> value1,
+                     [FluentMethod("Create")]Func<int> value2)
+                 {
+                     Value1 = value1;
+                     Value2 = value2;
+                 }
+
+                 public Func<string> Value1 { get; set; }
+                 public Func<int> Value2 { get; set; }
+             }
+
+             public static class Overloads
+             {
+                 [FluentMethodTemplate]
+                 public static Func<T> Value<T>(T value)
+                 {
+                     return () => value;
+                 }
+
+                 [FluentMethodTemplate]
+                 public static Func<string> Value(string value)
+                 {
+                     return () => value;
+                 }
+             }
+             """;
+
+         const string expected =
+             """
+             using System;
+
+             public static partial class Factory
+             {
+                 /// <summary>
+                 ///     <seealso cref="MyClassA{T}"/>
+                 /// </summary>
+                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                 public static Step_0__Factory<T> Value<T>(in T value)
+                 {
+                     return new Step_0__Factory<T>(Overloads.Value<T>(value));
+                 }
+
+                 /// <summary>
+                 ///     <seealso cref="MyClassC"/>
+                 /// </summary>
+                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                 public static Step_1__Factory Value(in string value)
+                 {
+                     return new Step_1__Factory(Overloads.Value<string>(value));
+                 }
+             }
+
+             /// <summary>
+             ///     <seealso cref="MyClassA{T}"/>
+             /// </summary>
+             public struct Step_0__Factory<T>
+             {
+                 private readonly System.Func<T> _value1__parameter;
+                 public Step_0__Factory(in System.Func<T> value1)
+                 {
+                     this._value1__parameter = value1;
+                 }
+
+                 /// <summary>
+                 ///     <seealso cref="MyClassA{T}"/>
+                 /// </summary>
+                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                 public MyClassA<T> Create(in System.Func<T> value2)
+                 {
+                     return new MyClassA<T>(this._value1__parameter, value2);
+                 }
+             }
+
+             /// <summary>
+             ///     <seealso cref="MyClassC"/>
+             /// </summary>
+             public struct Step_1__Factory
+             {
+                 private readonly System.Func<string> _value1__parameter;
+                 public Step_1__Factory(in System.Func<string> value1)
+                 {
+                     this._value1__parameter = value1;
+                 }
+
+                 /// <summary>
+                 ///     <seealso cref="MyClassC"/>
+                 /// </summary>
+                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                 public MyClassC Create(in System.Func<int> value2)
+                 {
+                     return new MyClassC(this._value1__parameter, value2);
+                 }
+             }
+             """;
+
+         await new VerifyCS.Test
+         {
+             TestState =
+             {
+                 Sources = { (SourceFile, code) },
+                 GeneratedSources =
+                 {
+                     (typeof(FluentFactoryGenerator), "Factory.g.cs", expected)
+                 }
+             }
+         }.RunAsync();
+     }
 
         [Fact]
     public async Task Given_that_a_template_method_has_additional_parameters_Should_include_additional_parameters_in_step_method()

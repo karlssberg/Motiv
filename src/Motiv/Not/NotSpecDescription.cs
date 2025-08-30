@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Motiv.Traversal;
 
 namespace Motiv.Not;
@@ -13,9 +14,11 @@ internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMe
         var lines = operand.Description
             .GetDetailsAsLines()
             .ReplaceFirstLine(firstLine =>
-                firstLine.StartsWith("!")
-                ? firstLine.Substring(1)
-                : $"!{firstLine}");
+                ExpressionNegationMappings.Instance.TryGetValue(firstLine, out var mappedNegation)
+                    ? mappedNegation
+                    : firstLine.StartsWith("!")
+                        ? firstLine.Substring(1)
+                        : $"!{firstLine}");
 
         foreach (var line in lines)
             yield return line;

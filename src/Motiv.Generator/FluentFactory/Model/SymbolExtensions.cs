@@ -152,4 +152,23 @@ public static class SymbolExtensions
         var isStatic = containingType.IsStatic;
         return isPartial && !isStatic;
     }
+
+    public static int GetFluentMethodPriority(this IParameterSymbol parameterSymbol)
+    {
+        const string priorityPropertyName = nameof(Attributes.FluentMethodAttribute.Priority);
+
+        var attribute = parameterSymbol.GetAttribute(MultipleFluentMethodsAttribute)
+            ?? parameterSymbol.GetAttribute(FluentMethodAttribute);
+        if (attribute == null) return 0; // Default priority for parameters without the attribute
+
+        // Look for Priority named argument
+        var priorityArg = attribute.NamedArguments
+            .FirstOrDefault(na => na.Key == priorityPropertyName);
+
+        return priorityArg.Value switch
+        {
+            { Value: int value, IsNull: false } => value,
+            _ => 0
+        };
+    }
 }

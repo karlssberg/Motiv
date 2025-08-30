@@ -15,4 +15,7 @@ internal class ExpressionNegationMappings() : ReadOnlyDictionary<string, string>
         ["OR"] = "NOR",
         ["OR ELSE"] = "NOR ELSE",
         ["XOR"] = "XNOR"
-    });
+    })
+{
+    public static ExpressionNegationMappings Instance { get; } = new();
+}

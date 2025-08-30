@@ -132,11 +132,13 @@ public class FluentModelFactory(Compilation compilation)
             .GroupBy(m => m, FluentMethodSignatureEqualityComparer.Default)
             .Select(fluentMethodGroup =>
             {
-                var regularMethod = fluentMethodGroup.OfType<RegularMethod>()
-                    .OrderBy(m => m.SourceParameter.Name)
-                    .FirstOrDefault();
+                var orderedMethods = fluentMethodGroup
+                    .Select(m => (FluentMethod: m, Priority: m.SourceParameter?.GetFluentMethodPriority() ?? 0))
+                    .OrderByDescending(m => m.Priority)
+                    .ThenByDescending(m => m.FluentMethod is RegularMethod ? 1 : 0)
+                    .ThenBy(m => m.FluentMethod.Name);
 
-                var selectedMethod = regularMethod ?? fluentMethodGroup.First();
+                var selectedMethod = orderedMethods.First().FluentMethod;
 
                 return new SelectedFluentMethod(
                     selectedMethod,
