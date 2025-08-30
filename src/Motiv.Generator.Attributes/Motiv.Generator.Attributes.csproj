@@ -6,6 +6,11 @@
         <LangVersion>13</LangVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <TargetFramework>netstandard2.0</TargetFramework>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
 
 </Project>
