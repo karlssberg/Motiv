@@ -51,18 +51,6 @@ public static class FluentMethodSummaryDocXml
         }
     }
 
-    public static SyntaxTrivia GenerateCandidateConstructorTypePreamble(
-        ICollection<IMethodSymbol> candidateConstructors)
-    {
-        var count = candidateConstructors
-            .Select(ctor => ctor.ContainingType)
-            .Distinct<INamedTypeSymbol>(SymbolEqualityComparer.Default)
-            .Count();
-
-        return Comment(count > 1
-            ? "/// Candidate constructor types:"
-            : "/// Constructor type:");
-    }
 
     public static IEnumerable<SyntaxTrivia> GenerateCandidateConstructors(
         IEnumerable<IMethodSymbol> candidateConstructors)

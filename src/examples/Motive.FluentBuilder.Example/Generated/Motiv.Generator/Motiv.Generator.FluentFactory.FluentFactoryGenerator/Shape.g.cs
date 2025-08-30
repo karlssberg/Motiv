@@ -3,7 +3,6 @@
 public partial class Shape
 {
     /// <summary>
-    /// Candidate constructor types:
     ///     <seealso cref="Cuboid"/>
     ///     <seealso cref="Rectangle"/>
     ///     <seealso cref="Square"/>
@@ -15,7 +14,6 @@ public partial class Shape
     }
 
     /// <summary>
-    /// Constructor type:
     ///     <seealso cref="Circle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -26,7 +24,6 @@ public partial class Shape
 }
 
 /// <summary>
-/// Candidate constructor types:
 ///     <seealso cref="Cuboid"/>
 ///     <seealso cref="Rectangle"/>
 ///     <seealso cref="Square"/>
@@ -40,7 +37,6 @@ public struct Step_0__Shape
     }
 
     /// <summary>
-    /// Candidate constructor types:
     ///     <seealso cref="Cuboid"/>
     ///     <seealso cref="Rectangle"/>
     /// </summary>
@@ -63,7 +59,6 @@ public struct Step_0__Shape
 }
 
 /// <summary>
-/// Candidate constructor types:
 ///     <seealso cref="Cuboid"/>
 ///     <seealso cref="Rectangle"/>
 /// </summary>
@@ -78,7 +73,6 @@ public struct Step_1__Shape
     }
 
     /// <summary>
-    /// Constructor type:
     ///     <seealso cref="Cuboid"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -100,7 +94,6 @@ public struct Step_1__Shape
 }
 
 /// <summary>
-/// Constructor type:
 ///     <seealso cref="Cuboid"/>
 /// </summary>
 public struct Step_2__Shape
@@ -128,7 +121,6 @@ public struct Step_2__Shape
 }
 
 /// <summary>
-/// Constructor type:
 ///     <seealso cref="Circle"/>
 /// </summary>
 public struct Step_3__Shape

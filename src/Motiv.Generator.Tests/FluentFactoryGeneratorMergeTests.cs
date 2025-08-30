@@ -50,7 +50,6 @@ public class FluentFactoryGeneratorMergeTests
             public partial class MyClass
             {
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -60,7 +59,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -139,7 +137,6 @@ public class FluentFactoryGeneratorMergeTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -149,7 +146,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -160,7 +156,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -172,7 +167,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -183,7 +177,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_1__Test_Factory
@@ -195,7 +188,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -284,7 +276,6 @@ public class FluentFactoryGeneratorMergeTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="TestA.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -294,7 +285,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="TestB.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -305,7 +295,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="TestA.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__MyFactory_Factory<T1>
@@ -317,7 +306,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="TestA.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -328,7 +316,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="TestB.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_1__MyFactory_Factory
@@ -340,7 +327,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="TestB.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -420,7 +406,6 @@ public class FluentFactoryGeneratorMergeTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     ///     <seealso cref="Test.MyBuildTarget{T1}"/>
                     /// </summary>
@@ -432,7 +417,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 ///     <seealso cref="Test.MyBuildTarget{T1}"/>
                 /// </summary>
@@ -445,7 +429,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -455,7 +438,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -543,7 +525,6 @@ public class FluentFactoryGeneratorMergeTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -553,7 +534,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -564,7 +544,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -576,7 +555,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -587,7 +565,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
@@ -601,7 +578,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -612,7 +588,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_2__Test_Factory
@@ -624,7 +599,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -635,7 +609,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_3__Test_Factory
@@ -649,7 +622,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -745,7 +717,6 @@ public class FluentFactoryGeneratorMergeTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     ///     <seealso cref="Test.MyBuildTarget{T1}"/>
                     /// </summary>
@@ -757,7 +728,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                 ///     <seealso cref="Test.MyBuildTarget{T1}"/>
                 /// </summary>
@@ -770,7 +740,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -780,7 +749,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -791,7 +759,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
@@ -805,7 +772,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -816,7 +782,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                 /// </summary>
                 public struct Step_2__Test_Factory<T1, T2, T3>
@@ -832,7 +797,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -843,7 +807,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1}"/>
                 /// </summary>
                 public struct Step_3__Test_Factory<T1>
@@ -857,7 +820,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -868,7 +830,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1}"/>
                 /// </summary>
                 public struct Step_4__Test_Factory<T1>
@@ -884,7 +845,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -950,7 +910,6 @@ public class FluentFactoryGeneratorMergeTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -961,7 +920,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -973,7 +931,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -984,7 +941,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_1__Test_Factory
@@ -1020,7 +976,6 @@ public class FluentFactoryGeneratorMergeTests
                 public partial class MyBuildTarget
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1031,7 +986,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_MyBuildTarget
@@ -1043,7 +997,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1054,7 +1007,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_1__Test_MyBuildTarget
@@ -1158,7 +1110,6 @@ public class FluentFactoryGeneratorMergeTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
                     ///     <seealso cref="Test.MyBuildTarget{T}"/>
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
@@ -1170,7 +1121,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="Test.MyBuildTarget{T}"/>
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
@@ -1183,7 +1133,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
                     ///     <seealso cref="Test.MyBuildTarget{T}"/>
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
@@ -1195,7 +1144,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="Test.MyBuildTarget{T}"/>
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
@@ -1210,7 +1158,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1220,7 +1167,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1308,7 +1254,6 @@ public class FluentFactoryGeneratorMergeTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1318,7 +1263,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1329,7 +1273,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -1341,7 +1284,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1352,7 +1294,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
@@ -1366,7 +1307,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1377,7 +1317,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_2__Test_Factory
@@ -1389,7 +1328,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1400,7 +1338,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_3__Test_Factory
@@ -1414,7 +1351,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1530,7 +1466,6 @@ public class FluentFactoryGeneratorMergeTests
             public static partial class Spec
             {
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
                 ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
                 ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
@@ -1543,7 +1478,6 @@ public class FluentFactoryGeneratorMergeTests
             }
 
             /// <summary>
-            /// Candidate constructor types:
             ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
             ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
             ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
@@ -1557,7 +1491,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
                 ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
                 /// </summary>
@@ -1568,7 +1501,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1579,7 +1511,6 @@ public class FluentFactoryGeneratorMergeTests
             }
 
             /// <summary>
-            /// Candidate constructor types:
             ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
             ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
             /// </summary>
@@ -1594,7 +1525,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1604,7 +1534,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="ExplanationWithNamePropositionFactory{TModel}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1614,7 +1543,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MultiAssertionExplanationWithNamePropositionFactory{TModel}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1625,7 +1553,6 @@ public class FluentFactoryGeneratorMergeTests
             }
 
             /// <summary>
-            /// Constructor type:
             ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
             /// </summary>
             public struct Step_2__Spec<TModel>
@@ -1639,7 +1566,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1649,7 +1575,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="ExplanationPropositionFactory{TModel}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1786,7 +1711,6 @@ public class FluentFactoryGeneratorMergeTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyEnumerableBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1796,7 +1720,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyEnumerableBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1806,7 +1729,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyCollectionBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1816,7 +1738,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyCollectionBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1827,7 +1748,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyEnumerableBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Namespace_Factory<T1, T2>
@@ -1839,7 +1759,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyEnumerableBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1850,7 +1769,6 @@ public class FluentFactoryGeneratorMergeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.Namespace.MyCollectionBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_1__Test_Namespace_Factory<T1, T2>
@@ -1862,7 +1780,6 @@ public class FluentFactoryGeneratorMergeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.Namespace.MyCollectionBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

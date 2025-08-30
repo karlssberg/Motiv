@@ -3,7 +3,6 @@
 public partial record Circle
 {
     /// <summary>
-    /// Constructor type:
     ///     <seealso cref="Circle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -14,7 +13,6 @@ public partial record Circle
 }
 
 /// <summary>
-/// Constructor type:
 ///     <seealso cref="Circle"/>
 /// </summary>
 public struct Step_0__Circle

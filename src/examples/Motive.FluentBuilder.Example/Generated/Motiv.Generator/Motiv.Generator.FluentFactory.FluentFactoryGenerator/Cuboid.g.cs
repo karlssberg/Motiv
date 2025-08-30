@@ -3,7 +3,6 @@
 public partial record Cuboid
 {
     /// <summary>
-    /// Constructor type:
     ///     <seealso cref="Cuboid"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -14,7 +13,6 @@ public partial record Cuboid
 }
 
 /// <summary>
-/// Constructor type:
 ///     <seealso cref="Cuboid"/>
 /// </summary>
 public struct Step_0__Cuboid
@@ -26,7 +24,6 @@ public struct Step_0__Cuboid
     }
 
     /// <summary>
-    /// Constructor type:
     ///     <seealso cref="Cuboid"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -37,7 +34,6 @@ public struct Step_0__Cuboid
 }
 
 /// <summary>
-/// Constructor type:
 ///     <seealso cref="Cuboid"/>
 /// </summary>
 public struct Step_1__Cuboid
@@ -51,7 +47,6 @@ public struct Step_1__Cuboid
     }
 
     /// <summary>
-    /// Constructor type:
     ///     <seealso cref="Cuboid"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -62,7 +57,6 @@ public struct Step_1__Cuboid
 }
 
 /// <summary>
-/// Constructor type:
 ///     <seealso cref="Cuboid"/>
 /// </summary>
 public struct Step_2__Cuboid

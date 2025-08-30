@@ -40,7 +40,6 @@ public class FluentFactoryRootTypeTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -99,7 +98,6 @@ public class FluentFactoryRootTypeTests
                 public partial record Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -158,7 +156,6 @@ public class FluentFactoryRootTypeTests
                 public partial struct Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -217,7 +214,6 @@ public class FluentFactoryRootTypeTests
                 public partial record struct Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -279,7 +275,6 @@ public class FluentFactoryRootTypeTests
                 public partial record struct Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -342,7 +337,6 @@ public class FluentFactoryRootTypeTests
                 public partial record struct Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -353,7 +347,6 @@ public class FluentFactoryRootTypeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -365,7 +358,6 @@ public class FluentFactoryRootTypeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -376,7 +368,6 @@ public class FluentFactoryRootTypeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_1__Test_Factory
@@ -390,7 +381,6 @@ public class FluentFactoryRootTypeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -455,7 +445,6 @@ public class FluentFactoryRootTypeTests
                 public partial record struct Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -466,7 +455,6 @@ public class FluentFactoryRootTypeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1, T2>
@@ -478,7 +466,6 @@ public class FluentFactoryRootTypeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -489,7 +476,6 @@ public class FluentFactoryRootTypeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
@@ -503,7 +489,6 @@ public class FluentFactoryRootTypeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -581,7 +566,6 @@ public class FluentFactoryRootTypeTests
                 public partial record struct Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
                     ///     <seealso cref="Test.MyBuildTargetA"/>
                     ///     <seealso cref="Test.MyBuildTargetB"/>
                     /// </summary>
@@ -593,7 +577,6 @@ public class FluentFactoryRootTypeTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="Test.MyBuildTargetA"/>
                 ///     <seealso cref="Test.MyBuildTargetB"/>
                 /// </summary>
@@ -606,7 +589,6 @@ public class FluentFactoryRootTypeTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
                     ///     <seealso cref="Test.MyBuildTargetA"/>
                     ///     <seealso cref="Test.MyBuildTargetB"/>
                     /// </summary>
@@ -620,7 +602,6 @@ public class FluentFactoryRootTypeTests
                 public partial class MyBuildTargetB
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTargetA"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -631,7 +612,6 @@ public class FluentFactoryRootTypeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTargetA"/>
                 /// </summary>
                 public struct Step_2__Test_Factory
@@ -647,7 +627,6 @@ public class FluentFactoryRootTypeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTargetA"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -700,7 +679,6 @@ public class FluentFactoryRootTypeTests
                 public partial record struct Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
                     ///     <seealso cref="Test.MyBuildTargetA"/>
                     ///     <seealso cref="Test.MyBuildTargetB"/>
                     /// </summary>
@@ -712,7 +690,6 @@ public class FluentFactoryRootTypeTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="Test.MyBuildTargetA"/>
                 ///     <seealso cref="Test.MyBuildTargetB"/>
                 /// </summary>
@@ -725,7 +702,6 @@ public class FluentFactoryRootTypeTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
                     ///     <seealso cref="Test.MyBuildTargetA"/>
                     ///     <seealso cref="Test.MyBuildTargetB"/>
                     /// </summary>
@@ -739,7 +715,6 @@ public class FluentFactoryRootTypeTests
                 public partial class MyBuildTargetB
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTargetA"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -750,7 +725,6 @@ public class FluentFactoryRootTypeTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTargetA"/>
                 /// </summary>
                 public struct Step_2__Test_Factory
@@ -766,7 +740,6 @@ public class FluentFactoryRootTypeTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTargetA"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

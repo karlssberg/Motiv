@@ -40,7 +40,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -106,7 +105,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -117,7 +115,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -129,7 +126,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -195,7 +191,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -206,7 +201,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -218,7 +212,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -289,7 +282,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -300,7 +292,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -312,7 +303,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -323,7 +313,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
@@ -337,7 +326,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -405,7 +393,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4, T5, T6}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -416,7 +403,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4, T5, T6}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1, T2>
@@ -428,7 +414,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4, T5, T6}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -439,7 +424,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4, T5, T6}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2, T3, T4>
@@ -453,7 +437,6 @@ public class FluentFactoryGeneratorNestedGenericTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4, T5, T6}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

@@ -3,7 +3,6 @@
 public partial record Square
 {
     /// <summary>
-    /// Constructor type:
     ///     <seealso cref="Square"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -14,7 +13,6 @@ public partial record Square
 }
 
 /// <summary>
-/// Constructor type:
 ///     <seealso cref="Square"/>
 /// </summary>
 public struct Step_0__Square

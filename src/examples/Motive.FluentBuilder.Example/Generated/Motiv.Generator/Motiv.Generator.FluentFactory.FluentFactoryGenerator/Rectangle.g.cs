@@ -3,7 +3,6 @@
 public partial record Rectangle
 {
     /// <summary>
-    /// Constructor type:
     ///     <seealso cref="Rectangle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -14,7 +13,6 @@ public partial record Rectangle
 }
 
 /// <summary>
-/// Constructor type:
 ///     <seealso cref="Rectangle"/>
 /// </summary>
 public struct Step_0__Rectangle
@@ -26,7 +24,6 @@ public struct Step_0__Rectangle
     }
 
     /// <summary>
-    /// Constructor type:
     ///     <seealso cref="Rectangle"/>
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -37,7 +34,6 @@ public struct Step_0__Rectangle
 }
 
 /// <summary>
-/// Constructor type:
 ///     <seealso cref="Rectangle"/>
 /// </summary>
 public struct Step_1__Rectangle

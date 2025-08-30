@@ -42,7 +42,6 @@ public class FluentFactoryMethodCustomizationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -114,7 +113,6 @@ public class FluentFactoryMethodCustomizationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -125,7 +123,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -137,7 +134,6 @@ public class FluentFactoryMethodCustomizationTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -147,7 +143,6 @@ public class FluentFactoryMethodCustomizationTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -217,7 +212,6 @@ public class FluentFactoryMethodCustomizationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -227,7 +221,6 @@ public class FluentFactoryMethodCustomizationTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -288,7 +281,6 @@ public class FluentFactoryMethodCustomizationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -299,7 +291,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -311,7 +302,6 @@ public class FluentFactoryMethodCustomizationTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -376,7 +366,6 @@ public class FluentFactoryMethodCustomizationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -387,7 +376,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -399,7 +387,6 @@ public class FluentFactoryMethodCustomizationTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -410,7 +397,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
@@ -424,7 +410,6 @@ public class FluentFactoryMethodCustomizationTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -493,7 +478,6 @@ public class FluentFactoryMethodCustomizationTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -504,7 +488,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                 /// </summary>
                 public struct Step_0__Test_Factory<T1>
@@ -516,7 +499,6 @@ public class FluentFactoryMethodCustomizationTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -527,7 +509,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                 /// </summary>
                 public struct Step_1__Test_Factory<T1, T2>
@@ -541,7 +522,6 @@ public class FluentFactoryMethodCustomizationTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -552,7 +532,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                 /// </summary>
                 public struct Step_2__Test_Factory<T1, T2, T3>
@@ -568,7 +547,6 @@ public class FluentFactoryMethodCustomizationTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget{T1, T2, T3, T4}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -637,7 +615,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -647,7 +624,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -715,7 +691,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -725,7 +700,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -814,7 +788,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -824,7 +797,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -835,7 +807,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Constructor type:
             ///     <seealso cref="MyClass"/>
             /// </summary>
             public struct Step_0__Factory
@@ -847,7 +818,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -857,7 +827,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -944,7 +913,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -954,7 +922,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -965,7 +932,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Constructor type:
             ///     <seealso cref="MyClass{T}"/>
             /// </summary>
             public struct Step_0__Factory<T>
@@ -977,7 +943,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -987,7 +952,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1097,7 +1061,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1, T2, T3}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1107,7 +1070,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1, T2, T3}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1118,7 +1080,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Constructor type:
             ///     <seealso cref="MyClass{T1, T2, T3}"/>
             /// </summary>
             public struct Step_0__Factory<T1>
@@ -1130,7 +1091,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1, T2, T3}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1140,7 +1100,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1, T2, T3}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1151,7 +1110,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Constructor type:
             ///     <seealso cref="MyClass{T1, T2, T3}"/>
             /// </summary>
             public struct Step_1__Factory<T1, T2>
@@ -1165,7 +1123,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1, T2, T3}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1175,7 +1132,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1, T2, T3}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1245,7 +1201,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1A, T1B}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1255,7 +1210,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1A, T1B}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1361,7 +1315,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1371,7 +1324,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1382,7 +1334,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Constructor type:
             ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
             /// </summary>
             public struct Step_0__Factory<T1A, T1B>
@@ -1394,7 +1345,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1404,7 +1354,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1415,7 +1364,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Constructor type:
             ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
             /// </summary>
             public struct Step_1__Factory<T1A, T1B, T2A, T2B>
@@ -1429,7 +1377,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1439,7 +1386,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1A, T1B, T2A, T2B, T3A, T3B}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1545,7 +1491,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1555,7 +1500,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1566,7 +1510,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Constructor type:
             ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
             /// </summary>
             public struct Step_0__Factory<T1, T2>
@@ -1578,7 +1521,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1588,7 +1530,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1599,7 +1540,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Constructor type:
             ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
             /// </summary>
             public struct Step_1__Factory<T1, T2, T3>
@@ -1613,7 +1553,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1623,7 +1562,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClass{T1, T2, T3, T4}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1741,7 +1679,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
@@ -1752,7 +1689,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
@@ -1764,7 +1700,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Candidate constructor types:
             ///     <seealso cref="MyClassA{T1, T2}"/>
             ///     <seealso cref="MyClassB{T1, T2}"/>
             /// </summary>
@@ -1777,7 +1712,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1787,7 +1721,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1797,7 +1730,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1807,7 +1739,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1901,7 +1832,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
@@ -1912,7 +1842,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
@@ -1924,7 +1853,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Candidate constructor types:
             ///     <seealso cref="MyClassA{T1, T2}"/>
             ///     <seealso cref="MyClassB{T1, T2}"/>
             /// </summary>
@@ -1937,7 +1865,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -1947,7 +1874,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -2090,7 +2016,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
@@ -2101,7 +2026,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
@@ -2113,7 +2037,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Candidate constructor types:
             ///     <seealso cref="MyClassA{T1, T2}"/>
             ///     <seealso cref="MyClassB{T1, T2}"/>
             /// </summary>
@@ -2126,7 +2049,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -2136,7 +2058,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -2146,7 +2067,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -2270,7 +2190,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
@@ -2281,7 +2200,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
@@ -2293,7 +2211,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Candidate constructor types:
             ///     <seealso cref="MyClassA{T1, T2}"/>
             ///     <seealso cref="MyClassB{T1, T2}"/>
             /// </summary>
@@ -2306,7 +2223,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -2316,7 +2232,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -2326,7 +2241,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassB{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -2430,7 +2344,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassA{T}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -2440,7 +2353,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassB"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -2451,7 +2363,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Constructor type:
             ///     <seealso cref="MyClassA{T}"/>
             /// </summary>
             public struct Step_0__Factory<T>
@@ -2463,7 +2374,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassA{T}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -2474,7 +2384,6 @@ public class FluentFactoryMethodCustomizationTests
             }
 
             /// <summary>
-            /// Constructor type:
             ///     <seealso cref="MyClassB"/>
             /// </summary>
             public struct Step_1__Factory
@@ -2486,7 +2395,6 @@ public class FluentFactoryMethodCustomizationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassB"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -2571,7 +2479,6 @@ public class FluentFactoryMethodCustomizationTests
             public static partial class Factory
             {
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="MyClassA{T1, T2}"/>
                 /// </summary>
                 [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]

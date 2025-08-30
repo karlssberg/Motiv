@@ -78,7 +78,6 @@ public static class FluentRootFactoryMethodDeclaration
                 FluentMethodSummaryDocXml.Create(
                 [
                     method.DocumentationSummary,
-                    FluentMethodSummaryDocXml.GenerateCandidateConstructorTypePreamble(method.Return.CandidateConstructors),
                     ..FluentMethodSummaryDocXml.GenerateCandidateConstructorTypeSeeAlsoLinks(method.Return.CandidateConstructors)
                 ]));
 

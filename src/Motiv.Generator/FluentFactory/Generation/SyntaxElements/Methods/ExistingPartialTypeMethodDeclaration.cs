@@ -39,7 +39,6 @@ public static class ExistingPartialTypeMethodDeclaration
                 FluentMethodSummaryDocXml.Create(
                     [
                         method.DocumentationSummary,
-                        FluentMethodSummaryDocXml.GenerateCandidateConstructorTypePreamble(method.Return.CandidateConstructors),
                         ..FluentMethodSummaryDocXml.GenerateCandidateConstructorTypeSeeAlsoLinks(method.Return.CandidateConstructors)
                     ]));
 

@@ -59,7 +59,6 @@ public class FluentFactoryDiagnosticsTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Candidate constructor types:
                     ///     <seealso cref="MyNamespace.Company"/>
                     ///     <seealso cref="MyNamespace.Person"/>
                     /// </summary>
@@ -146,7 +145,6 @@ public class FluentFactoryDiagnosticsTests
                 public static partial class Factory
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="MyNamespace.Person"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -304,7 +302,6 @@ public class FluentFactoryDiagnosticsTests
                 public static partial class Spec
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="MyNamespace.MyTypeB{TModel, TPredicateResult}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -408,7 +405,6 @@ public class FluentFactoryDiagnosticsTests
                 public static partial class Spec
                 {
                     /// <summary>
-                    /// Candidate constructor types:
                     ///     <seealso cref="Test.ExplanationExpressionTreePropositionFactory{TModel, TPredicateResult}"/>
                     ///     <seealso cref="Test.ExplanationWithNameExpressionTreePropositionFactory{TModel, TPredicateResult}"/>
                     ///     <seealso cref="Test.MultiAssertionExplanationExpressionTreePropositionFactory{TModel, TPredicateResult}"/>
@@ -421,7 +417,6 @@ public class FluentFactoryDiagnosticsTests
                 }
 
                 /// <summary>
-                /// Candidate constructor types:
                 ///     <seealso cref="Test.ExplanationExpressionTreePropositionFactory{TModel, TPredicateResult}"/>
                 ///     <seealso cref="Test.ExplanationWithNameExpressionTreePropositionFactory{TModel, TPredicateResult}"/>
                 ///     <seealso cref="Test.MultiAssertionExplanationExpressionTreePropositionFactory{TModel, TPredicateResult}"/>
@@ -435,7 +430,6 @@ public class FluentFactoryDiagnosticsTests
                     }
 
                     /// <summary>
-                    /// Candidate constructor types:
                     ///     <seealso cref="Test.ExplanationExpressionTreePropositionFactory{TModel, TPredicateResult}"/>
                     ///     <seealso cref="Test.MultiAssertionExplanationExpressionTreePropositionFactory{TModel, TPredicateResult}"/>
                     /// </summary>
@@ -446,7 +440,6 @@ public class FluentFactoryDiagnosticsTests
                     }
 
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.ExplanationWithNameExpressionTreePropositionFactory{TModel, TPredicateResult}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -523,7 +516,6 @@ public class FluentFactoryDiagnosticsTests
                 public partial class Shape
                 {
                     /// <summary>
-                    /// Constructor type:
                     ///     <seealso cref="Test.Square"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -534,7 +526,6 @@ public class FluentFactoryDiagnosticsTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.Square"/>
                 /// </summary>
                 public struct Step_0__Test_Shape

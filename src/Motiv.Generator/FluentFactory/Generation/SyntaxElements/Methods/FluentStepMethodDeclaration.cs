@@ -48,7 +48,6 @@ public static class FluentStepMethodDeclaration
         }
 
         // Add constructor type information
-        lines.Add(FluentMethodSummaryDocXml.GenerateCandidateConstructorTypePreamble(method.Return.CandidateConstructors));
         lines.AddRange(FluentMethodSummaryDocXml.GenerateCandidateConstructorTypeSeeAlsoLinks(method.Return.CandidateConstructors).Cast<object?>());
 
         return lines;
@@ -66,7 +65,6 @@ public static class FluentStepMethodDeclaration
         }
 
         // Add constructor type information
-        lines.Add(FluentMethodSummaryDocXml.GenerateCandidateConstructorTypePreamble(method.Return.CandidateConstructors));
         lines.AddRange(FluentMethodSummaryDocXml.GenerateCandidateConstructorTypeSeeAlsoLinks(method.Return.CandidateConstructors).Cast<object?>());
 
         return lines;

@@ -49,7 +49,6 @@ public class FluentFactoryXmlDocumentationTests
                     /// <summary>
                     /// The initial value for the target.
                     ///
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -60,7 +59,6 @@ public class FluentFactoryXmlDocumentationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -137,7 +135,6 @@ public class FluentFactoryXmlDocumentationTests
                     /// <summary>
                     /// Constructs a new instance with the given value.
                     ///
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -148,7 +145,6 @@ public class FluentFactoryXmlDocumentationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -245,7 +241,6 @@ public class FluentFactoryXmlDocumentationTests
                     /// <summary>
                     /// Sets the value directly from a string.
                     ///
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     /// <param name="value">The string value to set.</param>
@@ -258,7 +253,6 @@ public class FluentFactoryXmlDocumentationTests
                     /// <summary>
                     /// Sets the value from an integer by converting to string.
                     ///
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     /// <param name="value">The integer value to convert.</param>
@@ -270,7 +264,6 @@ public class FluentFactoryXmlDocumentationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -351,7 +344,6 @@ public class FluentFactoryXmlDocumentationTests
                     /// <summary>
                     /// The name of the instance.
                     ///
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -362,7 +354,6 @@ public class FluentFactoryXmlDocumentationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -376,7 +367,6 @@ public class FluentFactoryXmlDocumentationTests
                     /// <summary>
                     /// The numeric value to store.
                     ///
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -387,7 +377,6 @@ public class FluentFactoryXmlDocumentationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_1__Test_Factory
@@ -467,7 +456,6 @@ public class FluentFactoryXmlDocumentationTests
                     /// <summary>
                     /// <!-- Badly formed XML comment ignored for member "M:Test.MyBuildTarget.#ctor(System.String)" -->
                     ///
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -478,7 +466,6 @@ public class FluentFactoryXmlDocumentationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory
@@ -564,7 +551,6 @@ public class FluentFactoryXmlDocumentationTests
                     /// <summary>
                     /// This template method documentation should take precedence.
                     ///
-                    /// Constructor type:
                     ///     <seealso cref="Test.MyBuildTarget"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -575,7 +561,6 @@ public class FluentFactoryXmlDocumentationTests
                 }
 
                 /// <summary>
-                /// Constructor type:
                 ///     <seealso cref="Test.MyBuildTarget"/>
                 /// </summary>
                 public struct Step_0__Test_Factory

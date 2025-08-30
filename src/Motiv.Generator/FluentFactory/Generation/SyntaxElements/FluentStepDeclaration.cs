@@ -48,7 +48,6 @@ public static class FluentStepDeclaration
         // Create XML documentation for the struct
         var xmlDocTrivia = FluentMethodSummaryDocXml.Create(
             [
-                FluentMethodSummaryDocXml.GenerateCandidateConstructorTypePreamble(step.CandidateConstructors),
                 ..FluentMethodSummaryDocXml.GenerateCandidateConstructorTypeSeeAlsoLinks(step.CandidateConstructors)
             ]);
 
