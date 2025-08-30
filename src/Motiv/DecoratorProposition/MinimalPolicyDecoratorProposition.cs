@@ -2,7 +2,7 @@ using Motiv.Shared;
 
 namespace Motiv.DecoratorProposition;
 
-internal sealed partial class MinimalPolicyDecoratorProposition<TModel, TMetadata>(
+internal sealed class MinimalPolicyDecoratorProposition<TModel, TMetadata>(
     PolicyBase<TModel, TMetadata> underlyingPolicy,
     ISpecDescription description)
     : PolicyBase<TModel, TMetadata>

@@ -9,7 +9,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// </summary>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
-public readonly partial struct MultiMetadataPropositionFactory<TModel, TMetadata>
+public readonly struct MultiMetadataPropositionFactory<TModel, TMetadata>
 {
     private readonly Func<TModel, bool> _predicate;
     private readonly Func<TModel, IEnumerable<TMetadata>> _whenTrue;

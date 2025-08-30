@@ -11,7 +11,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Spec;
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-public readonly partial struct MultiAssertionFromSpecHigherOrderPropositionFactory<TModel, TMetadata>
+public readonly struct MultiAssertionFromSpecHigherOrderPropositionFactory<TModel, TMetadata>
 {
     private readonly SpecBase<TModel, TMetadata> _spec;
     private readonly HigherOrderSpecPredicateOperation<TModel, TMetadata> _higherOrderOperation;

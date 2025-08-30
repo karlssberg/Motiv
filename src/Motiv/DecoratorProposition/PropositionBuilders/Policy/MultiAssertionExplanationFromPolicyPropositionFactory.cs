@@ -11,7 +11,7 @@ namespace Motiv.DecoratorProposition.PropositionBuilders.Policy;
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
-public readonly partial struct MultiAssertionExplanationFromPolicyPropositionFactory<TModel, TMetadata>
+public readonly struct MultiAssertionExplanationFromPolicyPropositionFactory<TModel, TMetadata>
 {
     private readonly PolicyBase<TModel, TMetadata> _policy;
     private readonly Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> _trueBecause;

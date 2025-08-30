@@ -10,7 +10,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanPredicate;
 /// every possibility, so instead it is done on a case-by-case basis.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-public readonly partial struct MultiAssertionExplanationHigherOrderPropositionFactory<TModel>
+public readonly struct MultiAssertionExplanationHigherOrderPropositionFactory<TModel>
 {
     private readonly Func<TModel, bool> _resultResolver;
     private readonly HigherOrderSpecBooleanPredicateOperation<TModel> _higherOrderOperation;

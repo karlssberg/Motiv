@@ -11,7 +11,7 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
-public readonly partial struct MultiAssertionExplanationExpressionTreePropositionFactory<TModel, TPredicateResult>
+public readonly struct MultiAssertionExplanationExpressionTreePropositionFactory<TModel, TPredicateResult>
 {
     private readonly Expression<Func<TModel, TPredicateResult>> _expression;
     private readonly Func<TModel, BooleanResultBase<string>, IEnumerable<string>> _trueBecause;

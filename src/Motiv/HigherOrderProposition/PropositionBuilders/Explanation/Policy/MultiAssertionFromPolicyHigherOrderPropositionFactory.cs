@@ -11,7 +11,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Policy;
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the policy</typeparam>
-public readonly partial struct MultiAssertionFromPolicyHigherOrderPropositionFactory<TModel, TMetadata>
+public readonly struct MultiAssertionFromPolicyHigherOrderPropositionFactory<TModel, TMetadata>
 {
     private readonly PolicyBase<TModel, TMetadata> _policy;
     private readonly HigherOrderPolicyPredicateOperation<TModel, TMetadata> _higherOrderOperation;

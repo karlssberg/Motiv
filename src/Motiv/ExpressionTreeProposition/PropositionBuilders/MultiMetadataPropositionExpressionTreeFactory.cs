@@ -10,7 +10,7 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
 /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
-public readonly partial struct MultiMetadataPropositionExpressionTreeFactory<TModel, TMetadata, TPredicateResult>
+public readonly struct MultiMetadataPropositionExpressionTreeFactory<TModel, TMetadata, TPredicateResult>
 {
     private readonly Expression<Func<TModel, TPredicateResult>> _expression;
     private readonly Func<TModel, BooleanResultBase<string>, IEnumerable<TMetadata>> _whenTrue;

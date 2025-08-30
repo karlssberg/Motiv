@@ -150,11 +150,4 @@ public class HigherOrderBooleanResultTests
     }
 }
 
-
-
-public class TestMetadata
-{
-    int Id { get; set; }
-}
-
-public class TestUnderlyingMetadata { }
+public class TestMetadata;

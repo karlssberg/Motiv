@@ -2,7 +2,7 @@ using Motiv.Shared;
 
 namespace Motiv.DecoratorProposition;
 
-internal sealed partial class PolicyDecoratorWithSingleTrueAssertionProposition<TModel, TUnderlyingMetadata>(
+internal sealed class PolicyDecoratorWithSingleTrueAssertionProposition<TModel, TUnderlyingMetadata>(
     PolicyBase<TModel, TUnderlyingMetadata> underlyingPolicy,
     string trueBecause,
     Func<TModel, PolicyResultBase<TUnderlyingMetadata>, string> whenFalse,

@@ -10,7 +10,7 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Policy;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
-public readonly partial struct MultiMetadataFromPolicyResultPropositionFactory<TModel, TReplacementMetadata, TMetadata>
+public readonly struct MultiMetadataFromPolicyResultPropositionFactory<TModel, TReplacementMetadata, TMetadata>
 {
     private readonly Func<TModel, PolicyResultBase<TMetadata>> _spec;
     private readonly Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> _whenTrue;

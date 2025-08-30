@@ -19,7 +19,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTr
 /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
 /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly partial struct MetadataHigherOrderExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult>(
+public readonly struct MetadataHigherOrderExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,
     [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, TMetadata> whenTrue,

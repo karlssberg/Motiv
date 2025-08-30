@@ -472,11 +472,11 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         return Spec
             .From(predicate)
             .AsAllSatisfied()
-            .Create(CreateExpressionStatement<T>(statement))
+            .Create(CreateExpressionStatement(statement))
             .ChangeModelTo<TCollection>();
     }
 
-    private static Expression CreateExpressionStatement<T>(Expression statement)
+    private static UnaryExpression CreateExpressionStatement(Expression statement)
     {
         return Expression.Convert(statement, typeof(object));
     }

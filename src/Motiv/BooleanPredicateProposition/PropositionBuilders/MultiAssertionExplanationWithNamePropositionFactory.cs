@@ -9,7 +9,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// <param name="falseBecause">The explanation for when the predicate is false.</param>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly partial struct MultiAssertionExplanationWithNamePropositionFactory<TModel>(
+public readonly struct MultiAssertionExplanationWithNamePropositionFactory<TModel>(
     [FluentMethod("Build")]Func<TModel, bool> predicate,
     [FluentMethod("WhenTrue")]string trueBecause,
     [FluentMethod("WhenFalseYield")]Func<TModel, IEnumerable<string>> falseBecause)

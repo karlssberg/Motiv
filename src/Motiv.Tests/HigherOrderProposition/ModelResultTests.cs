@@ -106,7 +106,7 @@ public class ModelResultTests
         var toString = result.ToString();
 
         // Assert
-        toString.ShouldContain(model?.ToString() ?? string.Empty);
+        toString.ShouldContain(model.ToString() ?? string.Empty);
         toString.ShouldContain(satisfied.ToString());
     }
 }

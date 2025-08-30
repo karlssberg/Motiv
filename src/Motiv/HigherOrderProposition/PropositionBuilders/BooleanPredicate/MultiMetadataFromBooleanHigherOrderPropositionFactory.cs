@@ -11,7 +11,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanPredicate;
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
-public readonly partial struct MultiMetadataFromBooleanHigherOrderPropositionFactory<TModel, TMetadata>
+public readonly struct MultiMetadataFromBooleanHigherOrderPropositionFactory<TModel, TMetadata>
 {
     private readonly Func<TModel, bool> _resultResolver;
     private readonly HigherOrderSpecBooleanPredicateOperation<TModel> _higherOrderOperation;

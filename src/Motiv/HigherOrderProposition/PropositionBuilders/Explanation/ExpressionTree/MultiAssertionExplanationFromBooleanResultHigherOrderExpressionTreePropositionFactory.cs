@@ -10,7 +10,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Expressio
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TPredicateResult">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly partial struct MultiAssertionExplanationFromBooleanResultHigherOrderExpressionTreePropositionFactory<TModel, TPredicateResult>
+public readonly struct MultiAssertionExplanationFromBooleanResultHigherOrderExpressionTreePropositionFactory<TModel, TPredicateResult>
 {
     private readonly Expression<Func<TModel, TPredicateResult>> _expression;
     private readonly HigherOrderSpecPredicateOperation<TModel, string> _higherOrderOperation;

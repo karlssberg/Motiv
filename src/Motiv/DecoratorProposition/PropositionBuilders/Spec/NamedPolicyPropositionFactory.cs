@@ -9,7 +9,7 @@ namespace Motiv.DecoratorProposition.PropositionBuilders.Spec;
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
-public readonly partial struct NamedPolicyPropositionFactory<TModel, TMetadata>
+public readonly struct NamedPolicyPropositionFactory<TModel, TMetadata>
 {
     private readonly SpecBase<TModel, TMetadata> _spec;
     private readonly string _trueBecause;

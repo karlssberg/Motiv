@@ -196,18 +196,6 @@ public class BooleanResultWithUnderlyingTests
             fixture.CreateMany<BooleanResultBase<T>>(),
             fixture.Create<T>());
 
-    private static PolicyResult<T> CreateUnsatisfiedPolicyResult<T>(IFixture fixture) =>
-        new(
-            false,
-            fixture.Create<MetadataNode<T>>(),
-            fixture.Create<Explanation>(),
-            fixture.Create<ResultDescriptionBase>(),
-            fixture.CreateMany<BooleanResultBase<T>>(),
-            fixture.CreateMany<BooleanResultBase<T>>(),
-            fixture.CreateMany<BooleanResultBase<T>>(),
-            fixture.CreateMany<BooleanResultBase<T>>(),
-            fixture.Create<T>());
-
     public class TestUnderlyingMetadata
     {
     }

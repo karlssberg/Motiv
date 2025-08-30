@@ -2,7 +2,7 @@ using Motiv.Shared;
 
 namespace Motiv.DecoratorProposition;
 
-internal sealed partial class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TUnderlyingMetadata>(
+internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
     string trueBecause,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> whenFalse,

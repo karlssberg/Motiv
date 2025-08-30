@@ -13,7 +13,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly partial struct MetadataPropositionFactory<TModel, TMetadata>(
+public readonly struct MetadataPropositionFactory<TModel, TMetadata>(
     [FluentMethod("Build")]Func<TModel, bool> predicate,
     [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, TMetadata> whenTrue,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, TMetadata> whenFalse)

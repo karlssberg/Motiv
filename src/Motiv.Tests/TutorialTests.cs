@@ -185,13 +185,12 @@ public class TutorialTests
         result.Reason.ShouldBe("!basket is empty");
     }
 
+#if !NETFRAMEWORK && !NETSTANDARD2_0
     private class IsNegativeIntegerProposition() : Spec<int>(
         Spec.Build((int n) => n < 0)
             .WhenTrue(n => $"{n} is negative")
             .WhenFalse(n => $"{n} is not negative")
             .Create("is negative"));
-
-#if !NETFRAMEWORK && !NETSTANDARD2_0
 
     [Fact]
     public void Should_demonstrate_is_even_spec_as_an_all_satisfied_higher_order_logic()

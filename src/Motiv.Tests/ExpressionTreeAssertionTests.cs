@@ -425,7 +425,6 @@ public class ExpressionTreeAssertionTests
     [InlineData(0, "new int[] { 1, 2, 3, 4, 5, 6 }.Length != n")]
     public void Should_assert_expressions_containing_a_new_array_expression_with_max_size(int model, string expectedAssertion)
     {
-        var x = Spec.Build((int n ) => n > 0).Create("n positive");
         // Assemble
         var sut = Spec
             .From((int n) => new[] { 1, 2, 3, 4, 5, 6 }.Length == n)

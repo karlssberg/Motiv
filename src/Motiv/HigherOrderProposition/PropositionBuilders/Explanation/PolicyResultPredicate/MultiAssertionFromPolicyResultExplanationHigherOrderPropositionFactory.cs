@@ -9,7 +9,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.PolicyRes
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-public readonly partial struct MultiAssertionExplanationFromPolicyResultHigherOrderPropositionFactory<TModel, TMetadata>
+public readonly struct MultiAssertionExplanationFromPolicyResultHigherOrderPropositionFactory<TModel, TMetadata>
 {
     private readonly Func<TModel, PolicyResultBase<TMetadata>> _resultResolver;
     private readonly HigherOrderPolicyPredicateOperation<TModel, TMetadata> _higherOrderOperation;

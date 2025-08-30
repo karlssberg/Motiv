@@ -8,7 +8,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// A factory for creating propositions based on the supplied predicate and metadata factories.
 /// </summary>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
-public readonly partial struct MultiAssertionExplanationPropositionFactory<TModel>
+public readonly struct MultiAssertionExplanationPropositionFactory<TModel>
 {
     private readonly Func<TModel, bool> _predicate;
     private readonly Func<TModel, IEnumerable<string>> _whenTrue;

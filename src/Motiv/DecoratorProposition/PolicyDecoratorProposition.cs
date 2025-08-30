@@ -2,7 +2,7 @@ using Motiv.Shared;
 
 namespace Motiv.DecoratorProposition;
 
-internal sealed partial class PolicyDecoratorProposition<TModel, TMetadata, TUnderlyingMetadata>(
+internal sealed class PolicyDecoratorProposition<TModel, TMetadata, TUnderlyingMetadata>(
     PolicyBase<TModel, TUnderlyingMetadata> underlyingSpec,
     Func<TModel, PolicyResultBase<TUnderlyingMetadata>, TMetadata> whenTrue,
     Func<TModel, PolicyResultBase<TUnderlyingMetadata>, TMetadata> whenFalse,

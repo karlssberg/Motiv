@@ -2,7 +2,7 @@ using Motiv.Shared;
 
 namespace Motiv.DecoratorProposition;
 
-internal sealed partial class SpecDecoratorProposition<TModel, TMetadata, TUnderlyingMetadata>(
+internal sealed class SpecDecoratorProposition<TModel, TMetadata, TUnderlyingMetadata>(
     SpecBase<TModel, TUnderlyingMetadata> underlyingSpec,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue,
     Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenFalse,

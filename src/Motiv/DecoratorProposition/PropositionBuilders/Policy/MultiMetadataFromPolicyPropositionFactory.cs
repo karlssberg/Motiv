@@ -10,7 +10,7 @@ namespace Motiv.DecoratorProposition.PropositionBuilders.Policy;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
-public readonly partial struct MultiMetadataFromPolicyPropositionFactory<TModel, TReplacementMetadata, TMetadata>
+public readonly struct MultiMetadataFromPolicyPropositionFactory<TModel, TReplacementMetadata, TMetadata>
 {
     private readonly PolicyBase<TModel, TMetadata> _spec;
     private readonly Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> _whenTrue;

@@ -142,7 +142,7 @@ namespace Motiv.Tests.HigherOrderProposition;
 
             // Assert
             description.ShouldNotBeNull();
-            description!.Reason.ShouldBe(reason);
+            description.Reason.ShouldBe(reason);
         }
     }
 

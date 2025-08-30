@@ -47,7 +47,7 @@ public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TMod
 /// <param name="higherOrderOperation">The higher-order predicate operation.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TModel>(
+public readonly struct MinimalHigherOrderFromSpecPropositionFactory<TModel>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, string> spec,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation)
 {
