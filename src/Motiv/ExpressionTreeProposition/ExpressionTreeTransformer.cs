@@ -388,7 +388,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         return Spec
             .Build(spec.ToExplanationSpec())
             .AsAnySatisfied()
-            .Create(CreateExpressionStatement<T>(statement))
+            .Create(CreateExpressionStatement(statement))
             .ChangeModelTo<TCollection>();
     }
 
@@ -398,7 +398,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         return Spec
             .From(predicate)
             .AsAnySatisfied()
-            .Create(CreateExpressionStatement<T>(statement))
+            .Create(CreateExpressionStatement(statement))
             .ChangeModelTo<TCollection>();
     }
 
@@ -408,7 +408,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         return Spec
             .From(predicate)
             .AsAnySatisfied()
-            .Create(CreateExpressionStatement<T>(statement))
+            .Create(CreateExpressionStatement(statement))
             .ChangeModelTo<TCollection>();
     }
 
@@ -418,7 +418,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         return Spec
             .From(predicate)
             .AsAnySatisfied()
-            .Create(CreateExpressionStatement<T>(statement))
+            .Create(CreateExpressionStatement(statement))
             .ChangeModelTo<TCollection>();
     }
 
@@ -444,7 +444,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         return Spec
             .Build(spec.ToExplanationSpec())
             .AsAllSatisfied()
-            .Create(CreateExpressionStatement<T>(statement))
+            .Create(CreateExpressionStatement(statement))
             .ChangeModelTo<TCollection>();
     }
 
@@ -453,7 +453,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         return Spec
             .From(predicate)
             .AsAllSatisfied()
-            .Create(CreateExpressionStatement<T>(statement))
+            .Create(CreateExpressionStatement(statement))
             .ChangeModelTo<TCollection>();
     }
 
@@ -462,7 +462,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         return Spec
             .From(predicate)
             .AsAllSatisfied()
-            .Create(CreateExpressionStatement<T>(statement))
+            .Create(CreateExpressionStatement(statement))
             .ChangeModelTo<TCollection>();
     }
 
