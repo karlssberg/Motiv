@@ -1,4 +1,4 @@
-using Motiv.Generator;
+using Motiv.FluentFactory.Generator;
 using Motiv.Shared;
 
 namespace Motiv.DecoratorProposition.PropositionBuilders.Policy;

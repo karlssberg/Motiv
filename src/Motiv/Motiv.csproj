@@ -36,6 +36,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Motiv.Generator\Motiv.Generator.csproj" OutputItemType="Analyzer" />
+      <ProjectReference Include="..\Motiv.FluentFactory.Generator\Motiv.FluentFactory.Generator.csproj" OutputItemType="Analyzer" />
     </ItemGroup>
 </Project>

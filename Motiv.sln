@@ -28,9 +28,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.SmartHome.Tests", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.Benchmark", "src\examples\Motiv.Benchmark\Motiv.Benchmark.csproj", "{73CB2210-88E4-4737-9153-29A799F834E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.Generator", "src\Motiv.Generator\Motiv.Generator.csproj", "{76617011-4363-483E-AEE8-620CD2E059D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.FluentFactory.Generator", "src\Motiv.FluentFactory.Generator\Motiv.FluentFactory.Generator.csproj", "{76617011-4363-483E-AEE8-620CD2E059D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.Generator.Tests", "src\Motiv.Generator.Tests\Motiv.Generator.Tests.csproj", "{672EDBEE-05D3-4294-9D6D-581CA1CF05B6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.FluentFactory.Generator.Tests", "src\Motiv.FluentFactory.Generator.Tests\Motiv.FluentFactory.Generator.Tests.csproj", "{672EDBEE-05D3-4294-9D6D-581CA1CF05B6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.FluentBuilder.Example", "src\examples\Motiv.FluentBuilder.Example\Motiv.FluentBuilder.Example.csproj", "{446B3191-C265-4D9D-8253-E083D00B7D1D}"
 EndProject

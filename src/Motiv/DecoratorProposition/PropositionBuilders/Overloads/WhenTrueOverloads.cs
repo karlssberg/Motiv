@@ -1,4 +1,4 @@
-using Motiv.Generator;
+using Motiv.FluentFactory.Generator;
 
 namespace Motiv.DecoratorProposition.PropositionBuilders.Overloads;
 

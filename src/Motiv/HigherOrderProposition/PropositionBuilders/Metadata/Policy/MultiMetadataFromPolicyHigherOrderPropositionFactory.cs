@@ -1,4 +1,4 @@
-using Motiv.Generator;
+using Motiv.FluentFactory.Generator;
 using Motiv.HigherOrderProposition.PolicyResultPredicate;
 using Motiv.Shared;
 

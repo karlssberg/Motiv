@@ -1,5 +1,5 @@
 using Motiv.BooleanResultPredicateProposition.PropositionBuilders.Overloads;
-using Motiv.Generator;
+using Motiv.FluentFactory.Generator;
 using Motiv.Shared;
 
 namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Policy;

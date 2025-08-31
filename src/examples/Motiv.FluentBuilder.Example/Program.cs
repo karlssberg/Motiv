@@ -1,4 +1,4 @@
-using Motiv.Generator;
+using Motiv.FluentFactory.Generator;
 
 // Check for compile time errors
 Rectangle.WithWidth(10).WithHeight(20).Create();

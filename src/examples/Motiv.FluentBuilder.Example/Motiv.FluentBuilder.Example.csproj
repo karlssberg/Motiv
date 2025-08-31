@@ -13,11 +13,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Motiv.Generator\Motiv.Generator.csproj"
+        <ProjectReference Include="..\..\Motiv.FluentFactory.Generator\Motiv.FluentFactory.Generator.csproj"
                           OutputItemType="Analyzer"/>
     </ItemGroup>
     <ItemGroup>
         <Compile Remove="**/*.g.cs" />
         <None Include="**/*.g.cs" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Generated\" />
     </ItemGroup>
 </Project>
