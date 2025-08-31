@@ -31,13 +31,15 @@ public static class RootTypeDeclaration
                     .WithCloseBraceToken(Token(SyntaxKind.CloseBraceToken))
                     .WithModifiers(
                         TokenList(GetRootTypeModifiers(file).Append(Token(SyntaxKind.RecordKeyword))))
-                    .WithTypeParameterList(CreateTypeParameterList(file.RootType)),
+                    .WithTypeParameterList(CreateTypeParameterList(file.RootType))
+                    .WithConstraintClauses(CreateTypeParameterConstraints(file.RootType)),
 
             TypeKind.Struct =>
                 StructDeclaration(identifier)
                     .WithModifiers(
                         TokenList(GetRootTypeModifiers(file)))
-                    .WithTypeParameterList(CreateTypeParameterList(file.RootType)),
+                    .WithTypeParameterList(CreateTypeParameterList(file.RootType))
+                    .WithConstraintClauses(CreateTypeParameterConstraints(file.RootType)),
 
             TypeKind.Class when file.IsRecord =>
                 RecordDeclaration(SyntaxKind.RecordDeclaration, Token(SyntaxKind.RecordKeyword), identifier)
@@ -45,13 +47,15 @@ public static class RootTypeDeclaration
                     .WithCloseBraceToken(Token(SyntaxKind.CloseBraceToken))
                     .WithModifiers(
                         TokenList(GetRootTypeModifiers(file)))
-                    .WithTypeParameterList(CreateTypeParameterList(file.RootType)),
+                    .WithTypeParameterList(CreateTypeParameterList(file.RootType))
+                    .WithConstraintClauses(CreateTypeParameterConstraints(file.RootType)),
 
             _ =>
                 ClassDeclaration(identifier)
                     .WithModifiers(
                         TokenList(GetRootTypeModifiers(file)))
                     .WithTypeParameterList(CreateTypeParameterList(file.RootType))
+                    .WithConstraintClauses(CreateTypeParameterConstraints(file.RootType))
         };
 
         return typeDeclaration.WithMembers(
@@ -68,6 +72,45 @@ public static class RootTypeDeclaration
             .ToArray();
 
         return TypeParameterList(SeparatedList(typeParameters));
+    }
+
+    private static SyntaxList<TypeParameterConstraintClauseSyntax> CreateTypeParameterConstraints(INamedTypeSymbol rootType)
+    {
+        if (!rootType.IsGenericType || rootType.TypeParameters.Length == 0)
+            return List<TypeParameterConstraintClauseSyntax>();
+
+        var constraintClauses = rootType.TypeParameters
+            .Where(tp => tp.HasConstructorConstraint || tp.HasReferenceTypeConstraint || tp.HasValueTypeConstraint || tp.ConstraintTypes.Length > 0)
+            .Select(tp =>
+            {
+                var constraints = new List<TypeParameterConstraintSyntax>();
+
+                // Add reference type constraint (class)
+                if (tp.HasReferenceTypeConstraint)
+                    constraints.Add(ClassOrStructConstraint(SyntaxKind.ClassConstraint));
+
+                // Add value type constraint (struct)
+                if (tp.HasValueTypeConstraint)
+                    constraints.Add(ClassOrStructConstraint(SyntaxKind.StructConstraint));
+
+                // Add type constraints
+                foreach (var constraintType in tp.ConstraintTypes)
+                {
+                    var typeName = constraintType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                        .WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
+                    constraints.Add(TypeConstraint(ParseTypeName(typeName)));
+                }
+
+                // Add constructor constraint (new())
+                if (tp.HasConstructorConstraint)
+                    constraints.Add(ConstructorConstraint());
+
+                return TypeParameterConstraintClause(tp.Name)
+                    .WithConstraints(SeparatedList(constraints));
+            })
+            .ToArray();
+
+        return List(constraintClauses);
     }
 
     private static IEnumerable<SyntaxToken> GetRootTypeModifiers(FluentFactoryCompilationUnit file)

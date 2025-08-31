@@ -1,4 +1,5 @@
 ﻿public partial record Circle<T>
+    where T : System.Numerics.INumber<T>
 {
     /// <summary>
     ///     <seealso cref="Circle{T}"/>
@@ -13,7 +14,7 @@
 /// <summary>
 ///     <seealso cref="Circle{T}"/>
 /// </summary>
-public struct Step_0__Circle____<T>
+public struct Step_0__Circle____<T> where T : System.Numerics.INumber<T>
 {
     private readonly T _radius__parameter;
     internal Step_0__Circle____(in T radius)

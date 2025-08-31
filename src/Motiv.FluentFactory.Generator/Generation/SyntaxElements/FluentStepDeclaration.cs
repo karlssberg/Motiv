@@ -71,6 +71,7 @@ public static class FluentStepDeclaration
         .WithModifiers(accessibilityToken)
         .WithLeadingTrivia(xmlDocTrivia)
         .WithTypeParameterList(typeParameterList)
+        .WithConstraintClauses(CreateTypeParameterConstraints(step.RootType.TypeParameters))
         .WithMembers(List<MemberDeclarationSyntax>([
             ..fieldDeclarations,
             constructor,
@@ -78,5 +79,44 @@ public static class FluentStepDeclaration
         ]));
 
         return structDeclaration;
+    }
+
+    private static SyntaxList<TypeParameterConstraintClauseSyntax> CreateTypeParameterConstraints(IReadOnlyList<ITypeParameterSymbol> typeParameters)
+    {
+        if (typeParameters.Count == 0)
+            return List<TypeParameterConstraintClauseSyntax>();
+
+        var constraintClauses = typeParameters
+            .Where(tp => tp.HasConstructorConstraint || tp.HasReferenceTypeConstraint || tp.HasValueTypeConstraint || tp.ConstraintTypes.Length > 0)
+            .Select(tp =>
+            {
+                var constraints = new List<TypeParameterConstraintSyntax>();
+
+                // Add reference type constraint (class)
+                if (tp.HasReferenceTypeConstraint)
+                    constraints.Add(ClassOrStructConstraint(SyntaxKind.ClassConstraint));
+
+                // Add value type constraint (struct)
+                if (tp.HasValueTypeConstraint)
+                    constraints.Add(ClassOrStructConstraint(SyntaxKind.StructConstraint));
+
+                // Add type constraints
+                foreach (var constraintType in tp.ConstraintTypes)
+                {
+                    var typeName = constraintType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                        .WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
+                    constraints.Add(TypeConstraint(ParseTypeName(typeName)));
+                }
+
+                // Add constructor constraint (new())
+                if (tp.HasConstructorConstraint)
+                    constraints.Add(ConstructorConstraint());
+
+                return TypeParameterConstraintClause(tp.Name)
+                    .WithConstraints(SeparatedList(constraints));
+            })
+            .ToArray();
+
+        return List(constraintClauses);
     }
 }

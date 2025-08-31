@@ -1,4 +1,5 @@
 ﻿public partial record Square<T>
+    where T : System.Numerics.INumber<T>
 {
     /// <summary>
     ///     <seealso cref="Square{T}"/>
@@ -13,7 +14,7 @@
 /// <summary>
 ///     <seealso cref="Square{T}"/>
 /// </summary>
-public struct Step_0__Square____<T>
+public struct Step_0__Square____<T> where T : System.Numerics.INumber<T>
 {
     private readonly T _width__parameter;
     internal Step_0__Square____(in T width)

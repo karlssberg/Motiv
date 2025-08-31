@@ -1,4 +1,5 @@
 ﻿public partial record Rectangle<T>
+    where T : System.Numerics.INumber<T>
 {
     /// <summary>
     ///     <seealso cref="Rectangle{T}"/>
@@ -13,7 +14,7 @@
 /// <summary>
 ///     <seealso cref="Rectangle{T}"/>
 /// </summary>
-public struct Step_0__Rectangle____<T>
+public struct Step_0__Rectangle____<T> where T : System.Numerics.INumber<T>
 {
     private readonly T _width__parameter;
     internal Step_0__Rectangle____(in T width)
@@ -34,7 +35,7 @@ public struct Step_0__Rectangle____<T>
 /// <summary>
 ///     <seealso cref="Rectangle{T}"/>
 /// </summary>
-public struct Step_1__Rectangle____<T>
+public struct Step_1__Rectangle____<T> where T : System.Numerics.INumber<T>
 {
     private readonly T _width__parameter;
     private readonly T _height__parameter;

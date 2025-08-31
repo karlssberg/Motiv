@@ -1,4 +1,5 @@
 ﻿public partial record Cuboid<T>
+    where T : System.Numerics.INumber<T>
 {
     /// <summary>
     ///     <seealso cref="Cuboid{T}"/>
@@ -13,7 +14,7 @@
 /// <summary>
 ///     <seealso cref="Cuboid{T}"/>
 /// </summary>
-public struct Step_0__Cuboid____<T>
+public struct Step_0__Cuboid____<T> where T : System.Numerics.INumber<T>
 {
     private readonly T _width__parameter;
     internal Step_0__Cuboid____(in T width)
@@ -34,7 +35,7 @@ public struct Step_0__Cuboid____<T>
 /// <summary>
 ///     <seealso cref="Cuboid{T}"/>
 /// </summary>
-public struct Step_1__Cuboid____<T>
+public struct Step_1__Cuboid____<T> where T : System.Numerics.INumber<T>
 {
     private readonly T _width__parameter;
     private readonly T _height__parameter;
@@ -57,7 +58,7 @@ public struct Step_1__Cuboid____<T>
 /// <summary>
 ///     <seealso cref="Cuboid{T}"/>
 /// </summary>
-public struct Step_2__Cuboid____<T>
+public struct Step_2__Cuboid____<T> where T : System.Numerics.INumber<T>
 {
     private readonly T _width__parameter;
     private readonly T _height__parameter;
