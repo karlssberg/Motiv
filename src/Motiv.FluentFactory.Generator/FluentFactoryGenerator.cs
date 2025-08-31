@@ -68,7 +68,6 @@ public class FluentFactoryGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        //AttachDebugger();
         var compilationProvider = context.CompilationProvider;
 
         // Step 1: Match FluentConstructorAttribute usages
@@ -142,8 +141,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         SyntaxNode syntaxTree,
         CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-            return [];
+        cancellationToken.ThrowIfCancellationRequested();
 
         var semanticModel = compilation.GetSemanticModel(syntaxTree.SyntaxTree);
 
