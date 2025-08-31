@@ -2,7 +2,7 @@ using Motiv.Generator;
 using Motiv.HigherOrderProposition.BooleanResultPredicate;
 using Motiv.Shared;
 
-namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.BooleanResultPredicate;
+namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanResultPredicate;
 
 /// <summary>
 /// A factory for creating propositions based on a predicate and metadata factories. This is particularly useful

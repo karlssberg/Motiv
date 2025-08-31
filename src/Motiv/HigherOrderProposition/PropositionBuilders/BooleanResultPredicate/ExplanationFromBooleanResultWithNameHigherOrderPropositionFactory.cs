@@ -2,7 +2,7 @@ using Motiv.Generator;
 using Motiv.HigherOrderProposition.BooleanResultPredicate;
 using Motiv.Shared;
 
-namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.BooleanResultPredicateWithName;
+namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanResultPredicate;
 
 /// <summary>
 /// A factory for creating specifications based on a predicate and explanations for true and false conditions.

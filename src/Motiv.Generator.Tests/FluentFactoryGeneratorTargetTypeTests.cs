@@ -1,5 +1,3 @@
-using Motiv.Generator.FluentFactory;
-
 namespace Motiv.Generator.Tests;
 using VerifyCS = CSharpSourceGeneratorVerifier<FluentFactoryGenerator>;
 

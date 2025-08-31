@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Motiv.Generator;
-using Motiv.Generator.FluentFactory;
 
 namespace Motiv.Generator.Tests;
 

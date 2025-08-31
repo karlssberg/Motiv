@@ -1,4 +1,3 @@
-
 using Motiv.Generator;
 
 // Check for compile time errors
