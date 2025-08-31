@@ -1,7 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 
 namespace Motiv.FluentFactory.Generator;
 
+[ExcludeFromCodeCoverage]
 public class FluentException : Exception
 {
     public FluentException()

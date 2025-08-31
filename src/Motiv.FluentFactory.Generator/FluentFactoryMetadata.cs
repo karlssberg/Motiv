@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Motiv.FluentFactory.Generator;
 
+[ExcludeFromCodeCoverage]
 public record FluentFactoryMetadata
 {
     public bool AttributePresent { get; private set; } = true;
