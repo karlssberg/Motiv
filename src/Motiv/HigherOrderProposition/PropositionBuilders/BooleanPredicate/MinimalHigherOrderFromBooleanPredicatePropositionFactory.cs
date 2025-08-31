@@ -12,7 +12,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanPredicate;
 /// <param name="predicate">The predicate to use for the specification.</param>
 /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+[FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly partial struct MinimalHigherOrderFromBooleanPredicatePropositionFactory<TModel>(
     [FluentMethod("Build")]Func<TModel, bool> predicate,
     [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation)

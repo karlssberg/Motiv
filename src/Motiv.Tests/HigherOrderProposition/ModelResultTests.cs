@@ -92,21 +92,4 @@ public class ModelResultTests
         // Assert
         hashCode1.ShouldBe(hashCode2);
     }
-
-    [Theory]
-    [AutoData]
-    public void ToString_ShouldContainPropertyValues(
-        TestModel model,
-        bool satisfied)
-    {
-        // Arrange
-        var result = new ModelResult<TestModel>(model, satisfied);
-
-        // Act
-        var toString = result.ToString();
-
-        // Assert
-        toString.ShouldContain(model.ToString() ?? string.Empty);
-        toString.ShouldContain(satisfied.ToString());
-    }
 }

@@ -41,7 +41,7 @@ internal sealed class PolicyDecoratorMultiMetadataProposition<TModel, TMetadata,
             new MetadataNode<TMetadata>(metadata.Value,
                 booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []));
 
-        var description = new Lazy<ResultDescriptionBase>(() =>
+        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
                 Description.ToReason(booleanResult.Satisfied),
@@ -51,6 +51,6 @@ internal sealed class PolicyDecoratorMultiMetadataProposition<TModel, TMetadata,
             booleanResult,
             () => metadataTier.Value,
             () => explanation.Value,
-            () => description.Value);
+            () => resultDescription.Value);
     }
 }

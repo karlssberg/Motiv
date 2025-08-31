@@ -12,7 +12,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanPredicate;
 /// <param name="trueBecause">The explanation for when the predicate is true.</param>
 /// <param name="falseBecause">The explanation for when the predicate is false.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+[FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
 public readonly struct MultiAssertionExplanationWithNameHigherOrderPropositionFactory<TModel>(
     [FluentMethod("Build")]Func<TModel, bool> resultResolver,
     [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,

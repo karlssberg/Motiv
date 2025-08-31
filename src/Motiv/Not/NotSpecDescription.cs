@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using Motiv.Traversal;
 
 namespace Motiv.Not;
