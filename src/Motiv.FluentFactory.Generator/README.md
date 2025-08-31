@@ -12,22 +12,29 @@ creation using a structured, step-by-step approach.
 ```
 
 [FluentFactory]
-public partial class Quad;
+public partial class Shape;
 
-[FluentConstructor(typeof(Rectangle))]
-public partial record Rectangle(int Width, int Height);
+[FluentConstructor(typeof(Shape), CreateMethodName = "CreateSquare")]
+public record Square(int Width);
 
-[FluentFactory]
-[FluentConstructor(typeof(Rectangle))]
-public partial record Square(int Width);
+[FluentConstructor(typeof(Shape), CreateMethodName = "CreateRectangle")]
+public record Rectangle(int Width, int Height);
+
+[FluentConstructor(typeof(Shape), CreateMethodName = "CreateDiamond")]
+public record Diamond(int Width, int Height);
 
 
-// Fluent API usage:
-var rectangle = Quad.WithWidth(5)
-                         .WithHeight(10)
-                         .Create();
-                         
-var square = new Square(10).WithWidth(5).Create();
+// Fluent API usage:                   
+var square = Shape.WithWidth(5)
+                  .CreateSquare();
+                  
+var rectangle = Shape.WithWidth(5)
+                     .WithHeight(10)
+                     .CreateRectangle();
+                   
+var diamond = Shape.WithWidth(5)
+                   .WithHeight(10)
+                   .CreateDiamond();
 
 ```
 

@@ -490,4 +490,187 @@ public class FluentFactoryGeneratorGenericTests
             }
         }.RunAsync();
     }
+
+    [Fact]
+    public async Task Should_generate_a_generic_root_fluent_factory_type_when_the_original_is_generic()
+    {
+        const string code =
+            """
+            using Motiv.FluentFactory.Generator;
+
+            namespace Test.Namespace
+            {
+                [FluentFactory]
+                public partial class Factory<T>;
+
+                public class MyBuildTarget<T>
+                {
+                    [FluentConstructor(typeof(Factory<>))]
+                    public MyBuildTarget(T value)
+                    {
+                        Value = value;
+                    }
+
+                    public T Value { get; set; }
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            namespace Test.Namespace
+            {
+                public partial class Factory<T>
+                {
+                    /// <summary>
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory____<T> WithValue(in T value)
+                    {
+                        return new Step_0__Test_Namespace_Factory____<T>(value);
+                    }
+                }
+
+                /// <summary>
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                /// </summary>
+                public struct Step_0__Test_Namespace_Factory____<T>
+                {
+                    private readonly T _value__parameter;
+                    internal Step_0__Test_Namespace_Factory____(in T value)
+                    {
+                        this._value__parameter = value;
+                    }
+
+                    /// <summary>
+                    /// Creates a new instance using constructor Test.Namespace.MyBuildTarget<T>.MyBuildTarget(T value).
+                    ///
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyBuildTarget<T> Create()
+                    {
+                        return new MyBuildTarget<T>(this._value__parameter);
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Test.Namespace.Factory____.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_generate_a_generic_root_fluent_factory_type_when_the_original_is_generic_and_multiple_steps_exist()
+    {
+        const string code =
+            """
+            using Motiv.FluentFactory.Generator;
+
+            namespace Test.Namespace
+            {
+                [FluentFactory]
+                public partial class Factory<T>;
+
+                public class MyBuildTarget<T, TAlt>
+                {
+                    [FluentConstructor(typeof(Factory<>))]
+                    public MyBuildTarget(T value1, TAlt value2)
+                    {
+                        Value1 = value1;
+                        Value2 = value2;
+                    }
+
+                    public T Value1 { get; set; }
+                    public TAlt Value2 { get; set; }
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            namespace Test.Namespace
+            {
+                public partial class Factory<T>
+                {
+                    /// <summary>
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory____<T> WithValue1(in T value1)
+                    {
+                        return new Step_0__Test_Namespace_Factory____<T>(value1);
+                    }
+                }
+
+                /// <summary>
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                /// </summary>
+                public struct Step_0__Test_Namespace_Factory____<T>
+                {
+                    private readonly T _value1__parameter;
+                    internal Step_0__Test_Namespace_Factory____(in T value1)
+                    {
+                        this._value1__parameter = value1;
+                    }
+
+                    /// <summary>
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public Step_1__Test_Namespace_Factory____<T> WithValue2<TAlt>(in TAlt value2)
+                    {
+                        return new Step_1__Test_Namespace_Factory____<T>(this._value1__parameter, value2);
+                    }
+                }
+
+                /// <summary>
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                /// </summary>
+                public struct Step_1__Test_Namespace_Factory____<T, TAlt>
+                {
+                    private readonly T _value1__parameter;
+                    private readonly TAlt _value2__parameter;
+                    internal Step_1__Test_Namespace_Factory____(in T value1, in TAlt value2)
+                    {
+                        this._value1__parameter = value1;
+                        this._value2__parameter = value2;
+                    }
+
+                    /// <summary>
+                    /// Creates a new instance using constructor Test.Namespace.MyBuildTarget<T>.MyBuildTarget(T value1, TAlt value2).
+                    ///
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyBuildTarget<T> Create()
+                    {
+                        return new MyBuildTarget<T>(this._value1__parameter, this._value2__parameter);
+                    }
+                }
+             }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Test.Namespace.Factory____.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
 }

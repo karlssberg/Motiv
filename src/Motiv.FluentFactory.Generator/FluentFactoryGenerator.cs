@@ -156,11 +156,8 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                 {
                     var attributePresent = metadata.AttributePresent;
                     var rootTypeFullName = metadata.RootTypeFullName;
-                    if (!attributePresent || string.IsNullOrWhiteSpace(rootTypeFullName))
-                        return [];
-
-                    var alreadyDeclaredRootType = semanticModel.Compilation.GetTypeByMetadataName(rootTypeFullName);
-                    if (!IsRootTypeDecoratedWithAttribute(alreadyDeclaredRootType))
+                    if (!attributePresent || string.IsNullOrWhiteSpace(rootTypeFullName)
+                                          || !IsRootTypeDecoratedWithAttribute(metadata.RootTypeSymbol))
                         return [];
 
                     return symbol switch
@@ -169,13 +166,13 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                         [
                             new FluentConstructorContext(
                                 constructor,
-                                alreadyDeclaredRootType!,
+                                metadata.RootTypeSymbol,
                                 metadata,
                                 semanticModel)
                         ],
                         INamedTypeSymbol type => CreateFluentConstructorContexts(
                             type,
-                            alreadyDeclaredRootType!,
+                            metadata.RootTypeSymbol,
                             metadata),
                         _ => []
                     };
@@ -230,7 +227,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                     return FluentFactoryMetadata.Invalid;
 
                 var typeArg = attribute.ConstructorArguments.FirstOrDefault();
-                if (typeArg.IsNull || typeArg.Value is not ITypeSymbol typeSymbol)
+                if (typeArg.IsNull || typeArg.Value is not INamedTypeSymbol typeSymbol)
                     return FluentFactoryMetadata.Invalid;
 
                 // Grab the options flags symbol
@@ -245,7 +242,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                     .Value;
                 var createMethodName = createMethodNameArgument.Value as string;
 
-                return new FluentFactoryMetadata
+                return new FluentFactoryMetadata(typeSymbol)
                 {
                     Options = options,
                     RootTypeFullName = typeSymbol.ToDisplayString(),

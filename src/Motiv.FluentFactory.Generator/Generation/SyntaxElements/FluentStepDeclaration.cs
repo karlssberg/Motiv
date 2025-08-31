@@ -34,6 +34,22 @@ public static class FluentStepDeclaration
             ? genericName.Identifier
             : ((SimpleNameSyntax)name).Identifier;
 
+        // Extract type parameter list from the generic name if present
+        TypeParameterListSyntax? typeParameterList = null;
+        if (name is GenericNameSyntax genericNameSyntax)
+        {
+            var typeArgs = genericNameSyntax.TypeArgumentList.Arguments;
+            var typeParameters = typeArgs
+                .OfType<IdentifierNameSyntax>()
+                .Select(arg => TypeParameter(arg.Identifier.ValueText))
+                .ToArray();
+
+            if (typeParameters.Length > 0)
+            {
+                typeParameterList = TypeParameterList(SeparatedList(typeParameters));
+            }
+        }
+
         SyntaxTokenList accessibilityToken = step.Accessibility switch
         {
             Accessibility.Public => [Token(SyntaxKind.PublicKeyword)],
@@ -54,6 +70,7 @@ public static class FluentStepDeclaration
         var structDeclaration = StructDeclaration(identifier)
         .WithModifiers(accessibilityToken)
         .WithLeadingTrivia(xmlDocTrivia)
+        .WithTypeParameterList(typeParameterList)
         .WithMembers(List<MemberDeclarationSyntax>([
             ..fieldDeclarations,
             constructor,

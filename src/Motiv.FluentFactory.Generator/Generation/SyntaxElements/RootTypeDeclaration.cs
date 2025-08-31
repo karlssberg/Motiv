@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -21,7 +22,7 @@ public static class RootTypeDeclaration
     {
         var rootMethodDeclarations = GetRootMethodDeclarations(file);
 
-        var identifier = IdentifierName(file.RootType.ToDisplayString(NameOnlyFormat)).Identifier;
+        var identifier = Identifier(file.RootType.Name);
         TypeDeclarationSyntax typeDeclaration = file.TypeKind switch
         {
             TypeKind.Struct when file.IsRecord  =>
@@ -29,28 +30,44 @@ public static class RootTypeDeclaration
                     .WithOpenBraceToken(Token(SyntaxKind.OpenBraceToken))
                     .WithCloseBraceToken(Token(SyntaxKind.CloseBraceToken))
                     .WithModifiers(
-                        TokenList(GetRootTypeModifiers(file).Append(Token(SyntaxKind.RecordKeyword)))),
+                        TokenList(GetRootTypeModifiers(file).Append(Token(SyntaxKind.RecordKeyword))))
+                    .WithTypeParameterList(CreateTypeParameterList(file.RootType)),
 
             TypeKind.Struct =>
                 StructDeclaration(identifier)
                     .WithModifiers(
-                        TokenList(GetRootTypeModifiers(file))),
+                        TokenList(GetRootTypeModifiers(file)))
+                    .WithTypeParameterList(CreateTypeParameterList(file.RootType)),
 
             TypeKind.Class when file.IsRecord =>
                 RecordDeclaration(SyntaxKind.RecordDeclaration, Token(SyntaxKind.RecordKeyword), identifier)
                     .WithOpenBraceToken(Token(SyntaxKind.OpenBraceToken))
                     .WithCloseBraceToken(Token(SyntaxKind.CloseBraceToken))
                     .WithModifiers(
-                        TokenList(GetRootTypeModifiers(file))),
+                        TokenList(GetRootTypeModifiers(file)))
+                    .WithTypeParameterList(CreateTypeParameterList(file.RootType)),
 
             _ =>
                 ClassDeclaration(identifier)
                     .WithModifiers(
                         TokenList(GetRootTypeModifiers(file)))
+                    .WithTypeParameterList(CreateTypeParameterList(file.RootType))
         };
 
         return typeDeclaration.WithMembers(
             List(rootMethodDeclarations.OfType<MemberDeclarationSyntax>()));
+    }
+
+    private static TypeParameterListSyntax? CreateTypeParameterList(INamedTypeSymbol rootType)
+    {
+        if (!rootType.IsGenericType || rootType.TypeParameters.Length == 0)
+            return null;
+
+        var typeParameters = rootType.TypeParameters
+            .Select(tp => TypeParameter(tp.Name))
+            .ToArray();
+
+        return TypeParameterList(SeparatedList(typeParameters));
     }
 
     private static IEnumerable<SyntaxToken> GetRootTypeModifiers(FluentFactoryCompilationUnit file)
@@ -71,9 +88,9 @@ public static class RootTypeDeclaration
         return file.FluentMethods
             .Select<IFluentMethod, MethodDeclarationSyntax>(method => method switch
             {
-                { Return: TargetTypeReturn } => FluentRootFactoryMethodDeclaration.Create(file.RootType.ContainingNamespace, method),
-                MultiMethod multiMethod => FluentStepMethodDeclaration.Create(multiMethod, [], file.RootType.ContainingNamespace),
-                _ => FluentStepMethodDeclaration.Create(method, [], file.RootType.ContainingNamespace)
+                { Return: TargetTypeReturn } => FluentRootFactoryMethodDeclaration.Create(file.RootType.ContainingNamespace, method, file.RootType),
+                MultiMethod multiMethod => FluentStepMethodDeclaration.Create(multiMethod, [], file.RootType.ContainingNamespace, file.RootType.TypeParameters),
+                _ => FluentStepMethodDeclaration.Create(method, [], file.RootType.ContainingNamespace, file.RootType.TypeParameters)
             })
             .Select(method =>
             {

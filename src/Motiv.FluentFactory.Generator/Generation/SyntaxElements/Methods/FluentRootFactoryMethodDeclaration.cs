@@ -13,7 +13,8 @@ public static class FluentRootFactoryMethodDeclaration
 {
     public static MethodDeclarationSyntax Create(
         INamespaceSymbol currentNamespace,
-        IFluentMethod method)
+        IFluentMethod method,
+        INamedTypeSymbol rootType)
     {
         var fieldSourcedArguments = GetFieldSourcedArguments(method);
 
@@ -30,7 +31,7 @@ public static class FluentRootFactoryMethodDeclaration
         if (!method.TypeParameters.Any())
             return methodDeclaration;
 
-        var typeParameterSyntaxes = GetTypeParameterSyntaxes(method);
+        var typeParameterSyntaxes = GetTypeParameterSyntaxes(method, rootType);
 
         if (typeParameterSyntaxes.Length == 0)
             return methodDeclaration;
@@ -40,8 +41,14 @@ public static class FluentRootFactoryMethodDeclaration
                 TypeParameterList(SeparatedList([..typeParameterSyntaxes])));
     }
 
-    private static ImmutableArray<TypeParameterSyntax> GetTypeParameterSyntaxes(IFluentMethod method)
+    private static ImmutableArray<TypeParameterSyntax> GetTypeParameterSyntaxes(IFluentMethod method, INamedTypeSymbol? rootType)
     {
+        // For generic root types, don't add type parameters that are already defined by the root type
+        if (rootType?.IsGenericType == true)
+        {
+            return [];
+        }
+
         var targetTypeParameterSyntaxes = method.Return switch
         {
             TargetTypeReturn targetTypeReturn => targetTypeReturn.Constructor.ContainingType.OriginalDefinition.TypeParameters
@@ -52,12 +59,11 @@ public static class FluentRootFactoryMethodDeclaration
         var accumulatedTypeParameterSyntaxes = method.TypeParameters
             .Select(typeParameter => typeParameter.TypeParameterSymbol.ToTypeParameterSyntax());
 
-        return
-        [
-            ..accumulatedTypeParameterSyntaxes
-                .Concat(targetTypeParameterSyntaxes)
-                .DistinctBy(typeParameter => typeParameter.Identifier.Text)
-        ];
+        var allTypeParameters = accumulatedTypeParameterSyntaxes
+            .Concat(targetTypeParameterSyntaxes)
+            .DistinctBy(typeParameter => typeParameter.Identifier.Text);
+
+        return [..allTypeParameters];
     }
 
     private static MethodDeclarationSyntax GetMethodDeclarationSyntax(IFluentMethod method,
