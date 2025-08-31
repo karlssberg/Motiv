@@ -15,20 +15,22 @@ public class CreationMethod : IFluentMethod
         INamespaceSymbol rootNamespace,
         ConstructorMetadata constructorMetadata,
         ImmutableArray<FluentMethodParameter> availableParameterFields,
-        OrderedDictionary<IParameterSymbol, IFluentValueStorage> valueSources)
+        OrderedDictionary<IParameterSymbol, IFluentValueStorage> valueSources,
+        string? createMethodName = null)
     {
         _lazyTypeParameters = new Lazy<ImmutableArray<FluentTypeParameter>>(GetFluentTypeParameter);
 
         RootNamespace = rootNamespace;
         AvailableParameterFields = availableParameterFields;
         ValueSources = valueSources;
+        Name = createMethodName ?? "Create";
         Return = new TargetTypeReturn(
             constructorMetadata.Constructor,
             [..constructorMetadata.CandidateConstructors],
             new ParameterSequence(availableParameterFields.Select(p => p.ParameterSymbol)));
     }
 
-    public string Name => "Create";
+    public string Name { get; }
 
     public ImmutableArray<FluentMethodParameter> MethodParameters { get; } = [];
 

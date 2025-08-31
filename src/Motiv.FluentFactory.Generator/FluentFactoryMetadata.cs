@@ -8,6 +8,7 @@ public record FluentFactoryMetadata
     public bool AttributePresent { get; private set; } = true;
     public string RootTypeFullName { get; set; } = string.Empty;
     public FluentFactoryGeneratorOptions Options { get; set; } = FluentFactoryGeneratorOptions.None;
+    public string? CreateMethodName { get; set; }
 
     public static FluentFactoryMetadata Invalid => new() { AttributePresent = false };
 

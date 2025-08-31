@@ -9,4 +9,6 @@ public sealed class FluentConstructorAttribute(Type rootType) : Attribute
     public Type RootType { get; } = rootType;
 
     public FluentOptions Options { get; set; }
+
+    public string? CreateMethodName { get; set; }
 }

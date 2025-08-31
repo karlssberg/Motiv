@@ -19,6 +19,7 @@ public record FluentConstructorContext
         Constructor = constructor;
         Options = metadata.Options;
         RootTypeFullName = metadata.RootTypeFullName;
+        CreateMethodName = metadata.CreateMethodName;
         IsStatic = rootSymbol.IsStatic;
         IsRecord = rootSymbol.IsRecord;
         TypeKind = rootSymbol.TypeKind;
@@ -63,6 +64,8 @@ public record FluentConstructorContext
     public IMethodSymbol Constructor { get; }
 
     public string RootTypeFullName { get; }
+
+    public string? CreateMethodName { get; }
 
     public SyntaxTokenList OriginalTypeModifiers { get; }
 

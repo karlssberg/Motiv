@@ -234,15 +234,22 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                     return FluentFactoryMetadata.Invalid;
 
                 // Grab the options flags symbol
-                var namedAttributeArgument = attribute.NamedArguments
+                var optionsArgument = attribute.NamedArguments
                     .FirstOrDefault(namedArg => namedArg.Key == nameof(FluentConstructorAttribute.Options))
                     .Value;
-                var options = ConvertToFluentFactoryGeneratorOptions(namedAttributeArgument);
+                var options = ConvertToFluentFactoryGeneratorOptions(optionsArgument);
+
+                // Grab the create method name
+                var createMethodNameArgument = attribute.NamedArguments
+                    .FirstOrDefault(namedArg => namedArg.Key == nameof(FluentConstructorAttribute.CreateMethodName))
+                    .Value;
+                var createMethodName = createMethodNameArgument.Value as string;
 
                 return new FluentFactoryMetadata
                 {
                     Options = options,
-                    RootTypeFullName = typeSymbol.ToDisplayString()
+                    RootTypeFullName = typeSymbol.ToDisplayString(),
+                    CreateMethodName = createMethodName
                 };
             });
     }

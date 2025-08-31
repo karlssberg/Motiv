@@ -364,7 +364,8 @@ public class FluentModelFactory(Compilation compilation)
                 rootType.ContainingNamespace,
                 value,
                 node.Key,
-                valueSources);
+                valueSources,
+                value.Context.CreateMethodName);
 
         foreach (var createMethod in creationMethods)
         {
