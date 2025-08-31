@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 
 namespace Motiv.Generator.FluentFactory.Model;
 
-public class Trie<TKey, TValue>
+public class Trie<TKey, TValue> where TKey : notnull
 {
     // Root node of the trie
     public Node Root { get; } = new([]);

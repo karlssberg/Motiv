@@ -3,7 +3,7 @@ using System.Collections;
 namespace Motiv.Generator.FluentFactory.Model;
 
 public class OrderedDictionary<TKey, TValue>(IEqualityComparer<TKey>? comparer = null)
-    : IDictionary<TKey, TValue>
+    : IDictionary<TKey, TValue> where TKey : notnull
 {
     private readonly Dictionary<TKey, TValue> _dictionary = comparer is not null
                                                             ? new Dictionary<TKey, TValue>(comparer)

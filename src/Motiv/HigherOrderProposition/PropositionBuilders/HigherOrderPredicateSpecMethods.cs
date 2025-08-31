@@ -1,4 +1,4 @@
-using Motiv.Generator.Attributes;
+using Motiv.Generator;
 
 namespace Motiv.HigherOrderProposition.PropositionBuilders;
 

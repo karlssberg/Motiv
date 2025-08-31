@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using Motiv.Generator.Attributes;
+using Motiv.Generator;
 
 namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 

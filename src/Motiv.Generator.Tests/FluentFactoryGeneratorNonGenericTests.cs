@@ -12,7 +12,7 @@ public class FluentFactoryGeneratorNonGenericTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -93,7 +93,7 @@ public class FluentFactoryGeneratorNonGenericTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -177,7 +177,7 @@ public class FluentFactoryGeneratorNonGenericTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -289,7 +289,7 @@ public class FluentFactoryGeneratorNonGenericTests
             """
             using System;
             using System.Text.RegularExpressions;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 

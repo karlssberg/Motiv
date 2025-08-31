@@ -1,7 +1,6 @@
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Motiv.Generator.Attributes;
 using Motiv.Generator.FluentFactory.Analysis;
 using Motiv.Generator.FluentFactory.Generation.SyntaxElements;
 using Motiv.Generator.FluentFactory.Model;

@@ -11,7 +11,7 @@ public class FluentFactoryGeneratorGenericTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {
@@ -90,7 +90,7 @@ public class FluentFactoryGeneratorGenericTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -196,7 +196,7 @@ public class FluentFactoryGeneratorGenericTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -331,7 +331,7 @@ public class FluentFactoryGeneratorGenericTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 

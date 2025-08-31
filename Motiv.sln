@@ -32,8 +32,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.Generator", "src\Moti
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.Generator.Tests", "src\Motiv.Generator.Tests\Motiv.Generator.Tests.csproj", "{672EDBEE-05D3-4294-9D6D-581CA1CF05B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.Generator.Attributes", "src\Motiv.Generator.Attributes\Motiv.Generator.Attributes.csproj", "{6D46EAF3-5ABB-4B38-8C3E-61045119B411}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.FluentBuilder.Example", "src\examples\Motiv.FluentBuilder.Example\Motiv.FluentBuilder.Example.csproj", "{446B3191-C265-4D9D-8253-E083D00B7D1D}"
 EndProject
 Global
@@ -86,10 +84,6 @@ Global
 		{672EDBEE-05D3-4294-9D6D-581CA1CF05B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{672EDBEE-05D3-4294-9D6D-581CA1CF05B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{672EDBEE-05D3-4294-9D6D-581CA1CF05B6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6D46EAF3-5ABB-4B38-8C3E-61045119B411}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6D46EAF3-5ABB-4B38-8C3E-61045119B411}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6D46EAF3-5ABB-4B38-8C3E-61045119B411}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6D46EAF3-5ABB-4B38-8C3E-61045119B411}.Release|Any CPU.Build.0 = Release|Any CPU
 		{446B3191-C265-4D9D-8253-E083D00B7D1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{446B3191-C265-4D9D-8253-E083D00B7D1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{446B3191-C265-4D9D-8253-E083D00B7D1D}.Release|Any CPU.ActiveCfg = Release|Any CPU

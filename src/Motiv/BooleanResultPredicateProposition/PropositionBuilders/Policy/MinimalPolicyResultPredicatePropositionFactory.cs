@@ -1,4 +1,4 @@
-using Motiv.Generator.Attributes;
+using Motiv.Generator;
 using Motiv.Shared;
 
 namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Policy;

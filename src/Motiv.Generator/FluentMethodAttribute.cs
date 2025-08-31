@@ -1,4 +1,4 @@
-namespace Motiv.Generator.Attributes;
+﻿namespace Motiv.Generator;
 
 [AttributeUsage(AttributeTargets.Parameter)]
 public class FluentMethodAttribute(string methodName) : Attribute

@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using Motiv.Generator.Attributes;
+using Motiv.Generator;
 using Motiv.HigherOrderProposition.PolicyResultPredicate;
 using Motiv.Shared;
 

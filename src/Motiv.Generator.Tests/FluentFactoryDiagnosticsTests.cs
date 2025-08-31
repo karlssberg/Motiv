@@ -18,7 +18,7 @@ public class FluentFactoryDiagnosticsTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace MyNamespace
             {
@@ -95,7 +95,7 @@ public class FluentFactoryDiagnosticsTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace MyNamespace
             {
@@ -183,7 +183,7 @@ public class FluentFactoryDiagnosticsTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
             using System.Linq.Expressions;
 
             namespace MyNamespace;
@@ -256,7 +256,7 @@ public class FluentFactoryDiagnosticsTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
             using System.Linq.Expressions;
 
             namespace MyNamespace;
@@ -348,7 +348,7 @@ public class FluentFactoryDiagnosticsTests
             using System;
             using System.Collections.Generic;
             using System.Linq.Expressions;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -494,7 +494,7 @@ public class FluentFactoryDiagnosticsTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 

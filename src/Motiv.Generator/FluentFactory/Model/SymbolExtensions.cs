@@ -32,8 +32,8 @@ public static class SymbolExtensions
 
     public static string GetFluentMethodName(this IParameterSymbol parameterSymbol)
     {
-        var regularMethodAttribute = parameterSymbol.GetAttribute(FluentMethodAttribute);
-        var multipleMethodAttribute = parameterSymbol.GetAttribute(MultipleFluentMethodsAttribute);
+        var regularMethodAttribute = parameterSymbol.GetAttribute(TypeName.FluentMethodAttribute);
+        var multipleMethodAttribute = parameterSymbol.GetAttribute(TypeName.MultipleFluentMethodsAttribute);
 
         var name = (regularMethodAttribute, mutlipleMethodAttribute: multipleMethodAttribute) switch
         {
@@ -51,7 +51,7 @@ public static class SymbolExtensions
         this Compilation compilation,
         IParameterSymbol parameterSymbol)
     {
-        var attribute = parameterSymbol.GetAttribute(MultipleFluentMethodsAttribute);
+        var attribute = parameterSymbol.GetAttribute(TypeName.MultipleFluentMethodsAttribute);
 
         var methodTemplateClass = attribute?.ConstructorArguments.FirstOrDefault();
         if (methodTemplateClass?.Value is not ITypeSymbol methodTemplateClassSymbol)
@@ -70,7 +70,7 @@ public static class SymbolExtensions
             .OfType<IMethodSymbol>()
             .Where(method => !method.IsImplicitlyDeclared)
             .Where(method => method.GetAttributes().Any(a =>
-                a.AttributeClass?.ToDisplayString() == FluentMethodTemplateAttribute))
+                a.AttributeClass?.ToDisplayString() == TypeName.FluentMethodTemplateAttribute))
             .Select(method =>
             {
                 List<Diagnostic> diagnostics = [];
@@ -155,10 +155,10 @@ public static class SymbolExtensions
 
     public static int GetFluentMethodPriority(this IParameterSymbol parameterSymbol)
     {
-        const string priorityPropertyName = nameof(Attributes.FluentMethodAttribute.Priority);
+        const string priorityPropertyName = nameof(FluentMethodAttribute.Priority);
 
-        var attribute = parameterSymbol.GetAttribute(MultipleFluentMethodsAttribute)
-            ?? parameterSymbol.GetAttribute(FluentMethodAttribute);
+        var attribute = parameterSymbol.GetAttribute(TypeName.MultipleFluentMethodsAttribute)
+            ?? parameterSymbol.GetAttribute(TypeName.FluentMethodAttribute);
         if (attribute == null) return 0; // Default priority for parameters without the attribute
 
         // Look for Priority named argument

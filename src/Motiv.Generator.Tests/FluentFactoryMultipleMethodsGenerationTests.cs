@@ -16,7 +16,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {
@@ -121,7 +121,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {
@@ -256,7 +256,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {
@@ -421,7 +421,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {
@@ -616,7 +616,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {
@@ -804,7 +804,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
             """
             using System;
             using System.Threading.Tasks;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {
@@ -912,7 +912,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {
@@ -1098,7 +1098,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {
@@ -1259,7 +1259,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {
@@ -1364,7 +1364,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {
@@ -1467,7 +1467,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {
@@ -1613,7 +1613,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
             using System.Linq.Expressions;
 
             namespace MyNamespace;
@@ -1751,7 +1751,7 @@ public class FluentFactoryMultipleMethodsGenerationTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
             using System.Linq.Expressions;
 
             namespace MyNamespace;

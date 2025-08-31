@@ -11,7 +11,7 @@ public class FluentFactoryGeneratorTargetTypeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -70,7 +70,7 @@ public class FluentFactoryGeneratorTargetTypeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -123,7 +123,7 @@ public class FluentFactoryGeneratorTargetTypeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -181,7 +181,7 @@ public class FluentFactoryGeneratorTargetTypeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -234,7 +234,7 @@ public class FluentFactoryGeneratorTargetTypeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -292,7 +292,7 @@ public class FluentFactoryGeneratorTargetTypeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 

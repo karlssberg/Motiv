@@ -17,7 +17,7 @@ public class FluentFactoryGeneratorMergeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             public class MyClass<T>
             {
@@ -88,7 +88,7 @@ public class FluentFactoryGeneratorMergeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -218,7 +218,7 @@ public class FluentFactoryGeneratorMergeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace MyFactory
             {
@@ -357,7 +357,7 @@ public class FluentFactoryGeneratorMergeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -468,7 +468,7 @@ public class FluentFactoryGeneratorMergeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -652,7 +652,7 @@ public class FluentFactoryGeneratorMergeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -875,7 +875,7 @@ public class FluentFactoryGeneratorMergeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -1053,7 +1053,7 @@ public class FluentFactoryGeneratorMergeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -1197,7 +1197,7 @@ public class FluentFactoryGeneratorMergeTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -1383,7 +1383,7 @@ public class FluentFactoryGeneratorMergeTests
             using System;
             using System.Collections.Generic;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Spec;
@@ -1640,7 +1640,7 @@ public class FluentFactoryGeneratorMergeTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test.Namespace
             {

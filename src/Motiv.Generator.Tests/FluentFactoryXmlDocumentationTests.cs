@@ -13,7 +13,7 @@ public class FluentFactoryXmlDocumentationTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -100,7 +100,7 @@ public class FluentFactoryXmlDocumentationTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -186,7 +186,7 @@ public class FluentFactoryXmlDocumentationTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -305,7 +305,7 @@ public class FluentFactoryXmlDocumentationTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -420,7 +420,7 @@ public class FluentFactoryXmlDocumentationTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -506,7 +506,7 @@ public class FluentFactoryXmlDocumentationTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 

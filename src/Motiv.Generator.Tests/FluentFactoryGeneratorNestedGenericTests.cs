@@ -12,7 +12,7 @@ public class FluentFactoryGeneratorNestedGenericTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -71,7 +71,7 @@ public class FluentFactoryGeneratorNestedGenericTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -158,7 +158,7 @@ public class FluentFactoryGeneratorNestedGenericTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -244,7 +244,7 @@ public class FluentFactoryGeneratorNestedGenericTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -356,7 +356,7 @@ public class FluentFactoryGeneratorNestedGenericTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 

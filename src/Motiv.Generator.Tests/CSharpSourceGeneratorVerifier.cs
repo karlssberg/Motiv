@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
-using Motiv.Generator.Attributes;
+using Motiv.Generator;
 using Motiv.Generator.FluentFactory;
 
 namespace Motiv.Generator.Tests;
@@ -16,7 +16,6 @@ public static class CSharpSourceGeneratorVerifier<TSourceGenerator>
         public Test()
         {
             TestState.AdditionalReferences.Add(typeof(FluentFactoryGenerator).Assembly);
-            TestState.AdditionalReferences.Add(typeof(FluentConstructorAttribute).Assembly);
 
             // Add the source for required types
             TestState.Sources.Add(

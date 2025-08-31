@@ -16,7 +16,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -118,7 +118,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -327,7 +327,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -508,7 +508,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -680,7 +680,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -775,7 +775,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace TestFactory
             {
@@ -952,7 +952,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace TestFactory
             {
@@ -1163,7 +1163,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -1259,7 +1259,7 @@ public class FluentFactoryGeneratorMergeDissimilarStepsTests
             """
             using System;
             using System.Collections.Generic;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 

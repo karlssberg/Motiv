@@ -56,7 +56,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Motiv.Generator.Attributes\Motiv.Generator.Attributes.csproj" />
       <ProjectReference Include="..\Motiv.Generator\Motiv.Generator.csproj" GeneratePathProperty="true" PrivateAssets="all" OutputItemType="Analyzer" />
     </ItemGroup>
 

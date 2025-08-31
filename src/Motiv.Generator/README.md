@@ -1,10 +1,10 @@
-﻿# Motiv.Generator.Attributes
+﻿# Motiv.Generator
 
-This package provides attributes for use with the Motiv code generator to create fluent API builders automatically.
+This package provides source generation and attributes for creating fluent API builders automatically.
 
 ## Overview
 
-The Motiv.Generator.Attributes package contains attributes that can be applied to classes, constructors, and parameters to generate fluent builder patterns automatically. This enables the creation of readable, chainable APIs without the need to manually write builder classes.
+The Motiv.Generator package contains both the attributes that can be applied to classes, constructors, and parameters, and the source generator that creates fluent builder patterns automatically. This enables the creation of readable, chainable APIs without the need to manually write builder classes.
 
 ## Attributes
 
@@ -109,14 +109,12 @@ An enumeration that provides options for controlling the generation behavior:
 ## Usage
 
 1. Install this package in your project
-2. Install the Motiv.Generator package for the actual code generation
-3. Apply the appropriate attributes to your classes and constructors
-4. Build your project to generate the fluent builder classes
+2. Apply the appropriate attributes to your classes and constructors
+3. Build your project to generate the fluent builder classes
 
 ## Requirements
 
 - .NET Standard 2.0 or higher
-- Motiv.Generator package for code generation
 
 ## License
 

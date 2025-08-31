@@ -16,7 +16,7 @@ public class FluentFactoryMethodCustomizationTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -71,7 +71,7 @@ public class FluentFactoryMethodCustomizationTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
             using System;
             using System.Collections.Generic;
 
@@ -172,7 +172,7 @@ public class FluentFactoryMethodCustomizationTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
             using System;
             using System.Collections.Generic;
 
@@ -250,7 +250,7 @@ public class FluentFactoryMethodCustomizationTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -331,7 +331,7 @@ public class FluentFactoryMethodCustomizationTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -439,7 +439,7 @@ public class FluentFactoryMethodCustomizationTests
     {
         const string code =
             """
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             namespace Test;
 
@@ -577,7 +577,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;
@@ -653,7 +653,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;
@@ -729,7 +729,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;
@@ -856,7 +856,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;
@@ -981,7 +981,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;
@@ -1161,7 +1161,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;
@@ -1239,7 +1239,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;
@@ -1415,7 +1415,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;
@@ -1591,7 +1591,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;
@@ -1768,7 +1768,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;
@@ -1943,7 +1943,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;
@@ -2117,7 +2117,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;
@@ -2270,7 +2270,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
 
             [FluentFactory]
@@ -2442,7 +2442,7 @@ public class FluentFactoryMethodCustomizationTests
          const string code =
              """
              using System;
-             using Motiv.Generator.Attributes;
+             using Motiv.Generator;
 
 
              [FluentFactory]
@@ -2596,7 +2596,7 @@ public class FluentFactoryMethodCustomizationTests
         const string code =
             """
             using System;
-            using Motiv.Generator.Attributes;
+            using Motiv.Generator;
 
             [FluentFactory]
             public static partial class Factory;

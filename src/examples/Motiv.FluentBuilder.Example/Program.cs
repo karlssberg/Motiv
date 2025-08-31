@@ -1,5 +1,5 @@
 
-using Motiv.Generator.Attributes;
+using Motiv.Generator;
 
 // Check for compile time errors
 Rectangle.WithWidth(10).WithHeight(20).Create();
