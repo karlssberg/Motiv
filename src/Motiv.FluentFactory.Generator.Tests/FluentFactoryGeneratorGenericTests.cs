@@ -604,7 +604,7 @@ public class FluentFactoryGeneratorGenericTests
                 public partial class Factory<T>
                 {
                     /// <summary>
-                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T, TAlt}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                     public static Step_0__Test_Namespace_Factory____<T> WithValue1(in T value1)
@@ -614,7 +614,7 @@ public class FluentFactoryGeneratorGenericTests
                 }
 
                 /// <summary>
-                ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T, TAlt}"/>
                 /// </summary>
                 public struct Step_0__Test_Namespace_Factory____<T>
                 {
@@ -625,17 +625,17 @@ public class FluentFactoryGeneratorGenericTests
                     }
 
                     /// <summary>
-                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T, TAlt}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public Step_1__Test_Namespace_Factory____<T> WithValue2<TAlt>(in TAlt value2)
+                    public Step_1__Test_Namespace_Factory____<T, TAlt> WithValue2<TAlt>(in TAlt value2)
                     {
-                        return new Step_1__Test_Namespace_Factory____<T>(this._value1__parameter, value2);
+                        return new Step_1__Test_Namespace_Factory____<T, TAlt>(this._value1__parameter, value2);
                     }
                 }
 
                 /// <summary>
-                ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T, TAlt}"/>
                 /// </summary>
                 public struct Step_1__Test_Namespace_Factory____<T, TAlt>
                 {
@@ -648,17 +648,17 @@ public class FluentFactoryGeneratorGenericTests
                     }
 
                     /// <summary>
-                    /// Creates a new instance using constructor Test.Namespace.MyBuildTarget<T>.MyBuildTarget(T value1, TAlt value2).
+                    /// Creates a new instance using constructor Test.Namespace.MyBuildTarget<T, TAlt>.MyBuildTarget(T value1, TAlt value2).
                     ///
-                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T, TAlt}"/>
                     /// </summary>
                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public MyBuildTarget<T> Create()
+                    public MyBuildTarget<T, TAlt> Create()
                     {
-                        return new MyBuildTarget<T>(this._value1__parameter, this._value2__parameter);
+                        return new MyBuildTarget<T, TAlt>(this._value1__parameter, this._value2__parameter);
                     }
                 }
-             }
+            }
             """;
 
         await new VerifyCS.Test
