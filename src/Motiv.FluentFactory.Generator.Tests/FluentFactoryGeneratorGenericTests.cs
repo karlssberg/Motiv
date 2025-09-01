@@ -756,4 +756,86 @@ public class FluentFactoryGeneratorGenericTests
             }
         }.RunAsync();
     }
+
+    [Fact]
+    public async Task Should_generate_a_generic_target_types_with_constraints_when_the_root_fluent_factory_type_is_non_generic()
+    {
+        const string code =
+            """
+            using System;
+            using Motiv.FluentFactory.Generator;
+
+            namespace Test.Namespace
+            {
+                [FluentFactory]
+                public partial class Factory
+                {
+                }
+
+                public class MyBuildTarget<T> where T : struct, IComparable<T>
+                {
+                    [FluentConstructor(typeof(Factory<>))]
+                    public MyBuildTarget(T value)
+                    {
+                        Value = value;
+                    }
+
+                    public T Value { get; set; }
+                }
+            }
+            """;
+
+        const string expected =
+            """
+            namespace Test.Namespace
+            {
+                public partial class Factory
+                {
+                    /// <summary>
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_Factory____<T> WithValue<T>(in T value) where T : struct, System.IComparable<T>
+                    {
+                        return new Step_0__Test_Namespace_Factory____<T>(value);
+                    }
+                }
+
+                /// <summary>
+                ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                /// </summary>
+                public struct Step_0__Test_Namespace_Factory____<T> where T : struct, System.IComparable<T>
+                {
+                    private readonly T _value__parameter;
+                    internal Step_0__Test_Namespace_Factory____(in T value)
+                    {
+                        this._value__parameter = value;
+                    }
+
+                    /// <summary>
+                    /// Creates a new instance using constructor Test.Namespace.MyBuildTarget<T>.MyBuildTarget(T value).
+                    ///
+                    ///     <seealso cref="Test.Namespace.MyBuildTarget{T}"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyBuildTarget<T> Create()
+                    {
+                        return new MyBuildTarget<T>(this._value__parameter);
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { code },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Test.Namespace.Factory.g.cs", expected)
+                }
+            }
+        }.RunAsync();
+    }
 }

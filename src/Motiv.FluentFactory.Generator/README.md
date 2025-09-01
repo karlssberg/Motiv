@@ -14,28 +14,20 @@ creation using a structured, step-by-step approach.
 [FluentFactory]
 public partial class Shape;
 
-[FluentConstructor(typeof(Shape), CreateMethodName = "CreateSquare")]
-public record Square(int Width);
-
 [FluentConstructor(typeof(Shape), CreateMethodName = "CreateRectangle")]
 public record Rectangle(int Width, int Height);
 
 [FluentConstructor(typeof(Shape), CreateMethodName = "CreateDiamond")]
 public record Diamond(int Width, int Height);
 
+[FluentConstructor(typeof(Shape), CreateMethodName = "CreateSquare")]
+public record Square(int Width);
 
-// Fluent API usage:                   
-var square = Shape.WithWidth(5)
-                  .CreateSquare();
-                  
-var rectangle = Shape.WithWidth(5)
-                     .WithHeight(10)
-                     .CreateRectangle();
-                   
-var diamond = Shape.WithWidth(5)
-                   .WithHeight(10)
-                   .CreateDiamond();
 
+// Fluent API usage:                               
+var rectangle = Shape.WithWidth(5).WithHeight(10).CreateRectangle();                   
+var diamond   = Shape.WithWidth(5).WithHeight(10).CreateDiamond();
+var square    = Shape.WithWidth(5).CreateSquare();      
 ```
 
 ### Key Benefits

@@ -36,9 +36,19 @@ public static class FluentRootFactoryMethodDeclaration
         if (typeParameterSyntaxes.Length == 0)
             return methodDeclaration;
 
-        return methodDeclaration
+        var methodWithTypeParameters = methodDeclaration
             .WithTypeParameterList(
                 TypeParameterList(SeparatedList([..typeParameterSyntaxes])));
+
+        // Add constraint clauses for type parameters
+        var constraintClauses = GetConstraintClauses(method, rootType);
+        if (constraintClauses.Length > 0)
+        {
+            methodWithTypeParameters = methodWithTypeParameters
+                .WithConstraintClauses(List(constraintClauses));
+        }
+
+        return methodWithTypeParameters;
     }
 
     private static ImmutableArray<TypeParameterSyntax> GetTypeParameterSyntaxes(IFluentMethod method, INamedTypeSymbol? rootType)
@@ -64,6 +74,100 @@ public static class FluentRootFactoryMethodDeclaration
             .DistinctBy(typeParameter => typeParameter.Identifier.Text);
 
         return [..allTypeParameters];
+    }
+
+    private static ImmutableArray<TypeParameterConstraintClauseSyntax> GetConstraintClauses(IFluentMethod method, INamedTypeSymbol? rootType)
+    {
+        // For generic root types, don't add constraint clauses for type parameters already defined by the root type
+        if (rootType?.IsGenericType == true)
+        {
+            return [];
+        }
+
+        var constraintClauses = new List<TypeParameterConstraintClauseSyntax>();
+
+        // Get target type parameters and their constraints
+        if (method.Return is TargetTypeReturn targetTypeReturn)
+        {
+            foreach (var typeParam in targetTypeReturn.Constructor.ContainingType.OriginalDefinition.TypeParameters)
+            {
+                var constraints = new List<TypeParameterConstraintSyntax>();
+
+                // Add value type constraint
+                if (typeParam.HasValueTypeConstraint)
+                {
+                    constraints.Add(ClassOrStructConstraint(SyntaxKind.StructConstraint));
+                }
+
+                // Add reference type constraint
+                if (typeParam.HasReferenceTypeConstraint)
+                {
+                    constraints.Add(ClassOrStructConstraint(SyntaxKind.ClassConstraint));
+                }
+
+                // Add constructor constraint
+                if (typeParam.HasConstructorConstraint)
+                {
+                    constraints.Add(ConstructorConstraint());
+                }
+
+                // Add type constraints
+                foreach (var constraintType in typeParam.ConstraintTypes)
+                {
+                    constraints.Add(TypeConstraint(
+                        IdentifierName(constraintType.ToDisplayString())));
+                }
+
+                if (constraints.Count > 0)
+                {
+                    constraintClauses.Add(
+                        TypeParameterConstraintClause(
+                            IdentifierName(typeParam.Name))
+                        .WithConstraints(SeparatedList(constraints)));
+                }
+            }
+        }
+
+        // Add constraints from method type parameters
+        foreach (var typeParam in method.TypeParameters)
+        {
+            var constraints = new List<TypeParameterConstraintSyntax>();
+
+            // Add value type constraint
+            if (typeParam.TypeParameterSymbol.HasValueTypeConstraint)
+            {
+                constraints.Add(ClassOrStructConstraint(SyntaxKind.StructConstraint));
+            }
+
+            // Add reference type constraint
+            if (typeParam.TypeParameterSymbol.HasReferenceTypeConstraint)
+            {
+                constraints.Add(ClassOrStructConstraint(SyntaxKind.ClassConstraint));
+            }
+
+            // Add constructor constraint
+            if (typeParam.TypeParameterSymbol.HasConstructorConstraint)
+            {
+                constraints.Add(ConstructorConstraint());
+            }
+
+            // Add type constraints
+            foreach (var constraintType in typeParam.TypeParameterSymbol.ConstraintTypes)
+            {
+                constraints.Add(TypeConstraint(
+                    IdentifierName(constraintType.ToDisplayString())));
+            }
+
+            if (constraints.Count > 0)
+            {
+                constraintClauses.Add(
+                    TypeParameterConstraintClause(
+                        IdentifierName(typeParam.TypeParameterSymbol.Name))
+                    .WithConstraints(SeparatedList(constraints)));
+            }
+        }
+
+        return [..constraintClauses];
     }
 
     private static MethodDeclarationSyntax GetMethodDeclarationSyntax(IFluentMethod method,

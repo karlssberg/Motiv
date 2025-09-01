@@ -210,10 +210,29 @@ public class FluentFactoryGenerator : IIncrementalGenerator
 
     private static bool IsRootTypeDecoratedWithAttribute(INamedTypeSymbol? alreadyDeclaredRootType)
     {
-        return alreadyDeclaredRootType is not null
-               && alreadyDeclaredRootType
-                   .GetAttributes()
-                   .Any(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentFactoryAttribute);
+        if (alreadyDeclaredRootType is null)
+            return false;
+
+        // First, try direct matching
+        if (alreadyDeclaredRootType.GetAttributes()
+            .Any(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentFactoryAttribute))
+        {
+            return true;
+        }
+
+        // If the alreadyDeclaredRootType is generic (e.g., Factory<>), also check its original definition
+        // This handles cases where the attribute references typeof(Factory<>) but the actual type is Factory
+        if (alreadyDeclaredRootType.IsGenericType)
+        {
+            var originalDefinition = alreadyDeclaredRootType.OriginalDefinition;
+            if (originalDefinition.GetAttributes()
+                .Any(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentFactoryAttribute))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static IEnumerable<FluentFactoryMetadata> GetFluentFactoryMetadata(ISymbol symbol)

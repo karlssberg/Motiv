@@ -53,7 +53,37 @@ public static class SymbolExtensions
 
     public static TypeParameterSyntax ToTypeParameterSyntax(this ITypeParameterSymbol typeParameter)
     {
-        return SyntaxFactory.TypeParameter(SyntaxFactory.Identifier(typeParameter.Name));
+        var typeParameterSyntax = SyntaxFactory.TypeParameter(SyntaxFactory.Identifier(typeParameter.Name));
+
+        // Add constraints if they exist
+        var constraints = new List<TypeParameterConstraintSyntax>();
+
+        // Add value type constraint
+        if (typeParameter.HasValueTypeConstraint)
+        {
+            constraints.Add(SyntaxFactory.ClassOrStructConstraint(SyntaxKind.StructConstraint));
+        }
+
+        // Add reference type constraint
+        if (typeParameter.HasReferenceTypeConstraint)
+        {
+            constraints.Add(SyntaxFactory.ClassOrStructConstraint(SyntaxKind.ClassConstraint));
+        }
+
+        // Add constructor constraint
+        if (typeParameter.HasConstructorConstraint)
+        {
+            constraints.Add(SyntaxFactory.ConstructorConstraint());
+        }
+
+        // Add type constraints
+        foreach (var constraintType in typeParameter.ConstraintTypes)
+        {
+            constraints.Add(SyntaxFactory.TypeConstraint(
+                SyntaxFactory.IdentifierName(constraintType.ToDisplayString())));
+        }
+
+        return typeParameterSyntax;
     }
 
     public static IEnumerable<ITypeParameterSymbol> GetGenericTypeParameters(this ITypeSymbol type)
