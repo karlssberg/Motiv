@@ -8,6 +8,7 @@
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public static Step_0__Shape<T> WithWidth<T>(in T width)
+        where T : System.Numerics.INumber<T>
     {
         return new Step_0__Shape<T>(width);
     }
@@ -17,6 +18,7 @@
     /// </summary>
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     public static Step_3__Shape<T> WithRadius<T>(in T radius)
+        where T : System.Numerics.INumber<T>
     {
         return new Step_3__Shape<T>(radius);
     }
@@ -28,7 +30,7 @@
 ///     <seealso cref="Rectangle{T}"/>
 ///     <seealso cref="Square{T}"/>
 /// </summary>
-public struct Step_0__Shape<T>
+public struct Step_0__Shape<T> where T : System.Numerics.INumber<T>
 {
     private readonly T _width__parameter;
     internal Step_0__Shape(in T width)
@@ -64,7 +66,7 @@ public struct Step_0__Shape<T>
 ///     <seealso cref="Diamond{T}"/>
 ///     <seealso cref="Rectangle{T}"/>
 /// </summary>
-public struct Step_1__Shape<T>
+public struct Step_1__Shape<T> where T : System.Numerics.INumber<T>
 {
     private readonly T _width__parameter;
     private readonly T _height__parameter;
@@ -109,7 +111,7 @@ public struct Step_1__Shape<T>
 /// <summary>
 ///     <seealso cref="Cuboid{T}"/>
 /// </summary>
-public struct Step_2__Shape<T>
+public struct Step_2__Shape<T> where T : System.Numerics.INumber<T>
 {
     private readonly T _width__parameter;
     private readonly T _height__parameter;
@@ -136,7 +138,7 @@ public struct Step_2__Shape<T>
 /// <summary>
 ///     <seealso cref="Circle{T}"/>
 /// </summary>
-public struct Step_3__Shape<T>
+public struct Step_3__Shape<T> where T : System.Numerics.INumber<T>
 {
     private readonly T _radius__parameter;
     internal Step_3__Shape(in T radius)

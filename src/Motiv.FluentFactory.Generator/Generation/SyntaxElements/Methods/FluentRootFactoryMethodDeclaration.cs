@@ -28,7 +28,13 @@ public static class FluentRootFactoryMethodDeclaration
 
         var methodDeclaration = GetMethodDeclarationSyntax(method, returnObjectExpression);
 
-        if (!method.TypeParameters.Any())
+        // Check if we have method type parameters or target type parameters for non-generic root types
+        var hasMethodTypeParameters = method.TypeParameters.Any();
+        var shouldIncludeTargetTypeParameters = rootType?.IsGenericType != true &&
+                                               method.Return is TargetTypeReturn targetTypeReturn &&
+                                               targetTypeReturn.Constructor.ContainingType.IsGenericType;
+
+        if (!hasMethodTypeParameters && !shouldIncludeTargetTypeParameters)
             return methodDeclaration;
 
         var typeParameterSyntaxes = GetTypeParameterSyntaxes(method, rootType);
@@ -54,17 +60,17 @@ public static class FluentRootFactoryMethodDeclaration
     private static ImmutableArray<TypeParameterSyntax> GetTypeParameterSyntaxes(IFluentMethod method, INamedTypeSymbol? rootType)
     {
         // For generic root types, don't add type parameters that are already defined by the root type
-        if (rootType?.IsGenericType == true)
-        {
-            return [];
-        }
+        // For non-generic root types, we need to include all target type parameters
+        var shouldIncludeTargetTypeParameters = rootType?.IsGenericType != true;
 
-        var targetTypeParameterSyntaxes = method.Return switch
-        {
-            TargetTypeReturn targetTypeReturn => targetTypeReturn.Constructor.ContainingType.OriginalDefinition.TypeParameters
-                .Select(typeParameterSymbol => typeParameterSymbol.ToTypeParameterSyntax()),
-            _ => []
-        };
+        var targetTypeParameterSyntaxes = shouldIncludeTargetTypeParameters
+            ? method.Return switch
+            {
+                TargetTypeReturn targetTypeReturn => targetTypeReturn.Constructor.ContainingType.OriginalDefinition.TypeParameters
+                    .Select(typeParameterSymbol => typeParameterSymbol.ToTypeParameterSyntax()),
+                _ => []
+            }
+            : [];
 
         var accumulatedTypeParameterSyntaxes = method.TypeParameters
             .Select(typeParameter => typeParameter.TypeParameterSymbol.ToTypeParameterSyntax());
@@ -79,15 +85,13 @@ public static class FluentRootFactoryMethodDeclaration
     private static ImmutableArray<TypeParameterConstraintClauseSyntax> GetConstraintClauses(IFluentMethod method, INamedTypeSymbol? rootType)
     {
         // For generic root types, don't add constraint clauses for type parameters already defined by the root type
-        if (rootType?.IsGenericType == true)
-        {
-            return [];
-        }
+        // For non-generic root types, we need to include all target type constraints
+        var shouldIncludeTargetTypeConstraints = rootType?.IsGenericType != true;
 
         var constraintClauses = new List<TypeParameterConstraintClauseSyntax>();
 
         // Get target type parameters and their constraints
-        if (method.Return is TargetTypeReturn targetTypeReturn)
+        if (shouldIncludeTargetTypeConstraints && method.Return is TargetTypeReturn targetTypeReturn)
         {
             foreach (var typeParam in targetTypeReturn.Constructor.ContainingType.OriginalDefinition.TypeParameters)
             {
@@ -114,8 +118,9 @@ public static class FluentRootFactoryMethodDeclaration
                 // Add type constraints
                 foreach (var constraintType in typeParam.ConstraintTypes)
                 {
-                    constraints.Add(TypeConstraint(
-                        IdentifierName(constraintType.ToDisplayString())));
+                    var typeName = constraintType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                        .WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
+                    constraints.Add(TypeConstraint(ParseTypeName(typeName)));
                 }
 
                 if (constraints.Count > 0)
@@ -154,8 +159,9 @@ public static class FluentRootFactoryMethodDeclaration
             // Add type constraints
             foreach (var constraintType in typeParam.TypeParameterSymbol.ConstraintTypes)
             {
-                constraints.Add(TypeConstraint(
-                    IdentifierName(constraintType.ToDisplayString())));
+                var typeName = constraintType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                    .WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
+                constraints.Add(TypeConstraint(ParseTypeName(typeName)));
             }
 
             if (constraints.Count > 0)

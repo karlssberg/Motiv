@@ -67,11 +67,14 @@ public static class FluentStepDeclaration
                 ..FluentMethodSummaryDocXml.GenerateCandidateConstructorTypeSeeAlsoLinks(step.CandidateConstructors)
             ]);
 
+        // Get type parameters for constraints - use target type parameters for non-generic root types
+        var constraintTypeParameters = GetConstraintTypeParameters(step);
+
         var structDeclaration = StructDeclaration(identifier)
         .WithModifiers(accessibilityToken)
         .WithLeadingTrivia(xmlDocTrivia)
         .WithTypeParameterList(typeParameterList)
-        .WithConstraintClauses(CreateTypeParameterConstraints(step.RootType.TypeParameters))
+        .WithConstraintClauses(CreateTypeParameterConstraints(constraintTypeParameters))
         .WithMembers(List<MemberDeclarationSyntax>([
             ..fieldDeclarations,
             constructor,
@@ -79,6 +82,40 @@ public static class FluentStepDeclaration
         ]));
 
         return structDeclaration;
+    }
+
+    private static IReadOnlyList<ITypeParameterSymbol> GetConstraintTypeParameters(RegularFluentStep step)
+    {
+        // For non-generic root types, extract type parameters from candidate constructors
+        if (!step.RootType.IsGenericType)
+        {
+            var targetTypeParameters = new List<ITypeParameterSymbol>();
+
+            // Get type parameters from all candidate constructors
+            foreach (var constructor in step.CandidateConstructors)
+            {
+                var targetType = constructor.ContainingType;
+                if (targetType.IsGenericType)
+                {
+                    targetTypeParameters.AddRange(targetType.OriginalDefinition.TypeParameters);
+                }
+            }
+
+            // Get the generic type arguments that are actually used in this step
+            var usedGenericArguments = step.GenericConstructorParameters
+                .SelectMany(p => p.Type.GetGenericTypeArguments())
+                .DistinctBy(symbol => symbol.Name)
+                .ToArray();
+
+            // Only return type parameters that are actually used in this step
+            return targetTypeParameters
+                .Where(tp => usedGenericArguments.Any(arg => arg.Name == tp.Name))
+                .DistinctBy(tp => tp.Name)
+                .ToArray();
+        }
+
+        // For generic root types, use the root type's type parameters
+        return step.RootType.TypeParameters;
     }
 
     private static SyntaxList<TypeParameterConstraintClauseSyntax> CreateTypeParameterConstraints(IReadOnlyList<ITypeParameterSymbol> typeParameters)
