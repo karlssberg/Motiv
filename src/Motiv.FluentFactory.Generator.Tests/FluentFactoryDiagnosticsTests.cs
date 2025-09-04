@@ -212,18 +212,6 @@ public class FluentFactoryDiagnosticsTests
             }
             """;
 
-        const string expected =
-            """
-            using System;
-
-            namespace MyNamespace
-            {
-                public static partial class Spec
-                {
-                }
-            }
-            """;
-
         return new VerifyCS.Test
         {
             TestState =
@@ -239,11 +227,7 @@ public class FluentFactoryDiagnosticsTests
                         .CompilerError(UnreachableConstructor.Id)
                         .WithSpan(SourceFile, 14, 32, 14, 39)
                         .WithArguments("MyTypeB<TModel, TPredicateResult>.MyTypeB(Func<TModel, BooleanResultBase<string>, string> trueBecause)")
-                },
-                GeneratedSources =
-                {
-                (typeof(FluentFactoryGenerator), "MyNamespace.Spec.g.cs", expected)
-            }
+                }
             }
         }.RunAsync();
     }

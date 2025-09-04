@@ -1,4 +1,5 @@
-﻿using VerifyCS =
+﻿using Microsoft.CodeAnalysis.Testing;
+using VerifyCS =
     Motiv.FluentFactory.Generator.Tests.CSharpSourceGeneratorVerifier<Motiv.FluentFactory.Generator.FluentFactoryGenerator>;
 
 namespace Motiv.FluentFactory.Generator.Tests;
@@ -172,11 +173,13 @@ public class FluentFactoryGeneratorBugDiscoveryTests
         }.RunAsync();
     }
 
-    [Fact]
-    public async Task Should_handle_empty_or_whitespace_create_method_names()
+    [Theory]
+    [ClassData(typeof(InvalidMethodNames))]
+    public async Task Should_handle_invalid_create_method_names(string invalidMethodName)
     {
-        // Tests CreateMethodName handling with edge case values
-        const string source = """
+        // Tests CreateMethodName handling with edge case error values and putting red squiggles on them
+        var source =
+          $$"""
             using Motiv.FluentFactory.Generator;
 
             namespace Test.Namespace
@@ -185,22 +188,22 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                 public partial class MyTarget;
 
                 [FluentFactory]
-                [FluentConstructor(typeof(MyTarget), CreateMethodName = "")]
+                [FluentConstructor(typeof(MyTarget), CreateMethodName = {{invalidMethodName}})]
                 public partial record EmptyName(int Value);
-
-                [FluentFactory]
-                [FluentConstructor(typeof(MyTarget), CreateMethodName = "   ")]
-                public partial record WhitespaceName(int Value);
-
-                [FluentFactory]
-                [FluentConstructor(typeof(MyTarget), CreateMethodName = null)]
-                public partial record NullName(int Value);
             }
             """;
 
         await new VerifyCS.Test
         {
-            TestState = { Sources = { source } }
+            TestState =
+            {
+                Sources = { (SourceFile, source) },
+                ExpectedDiagnostics =
+                {
+                    DiagnosticResult.CompilerError("MOTIV007")
+                        .WithSpan("Source.cs", 10, 27, 10, 36),
+                }
+            }
         }.RunAsync();
     }
 
@@ -208,7 +211,8 @@ public class FluentFactoryGeneratorBugDiscoveryTests
     public async Task Should_handle_generic_type_attribute_matching_edge_cases()
     {
         // Tests the IsRootTypeDecoratedWithAttribute logic with complex generic scenarios
-        const string source = """
+        const string source =
+            """
             using Motiv.FluentFactory.Generator;
 
             namespace Test.Namespace
@@ -230,9 +234,11 @@ public class FluentFactoryGeneratorBugDiscoveryTests
 
         await new VerifyCS.Test
         {
-            TestState = { Sources = { source } }
+            TestState = { Sources = { source } },
+            ExpectedDiagnostics = {}
         }.RunAsync();
     }
+
 
     [Fact]
     public async Task Should_handle_enum_flag_combinations_correctly()

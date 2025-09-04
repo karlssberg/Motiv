@@ -11,7 +11,6 @@ public static class CompilationUnit
     public static SyntaxNode CreateCompilationUnit(
         FluentFactoryCompilationUnit file)
     {
-
         var usingDirectiveSyntaxes = file.Usings
             .Where(namespaceSymbol => !namespaceSymbol.IsGlobalNamespace)
             .Where(namespaceSymbol => namespaceSymbol.OriginalDefinition.ToDisplayString() != file.Namespace)

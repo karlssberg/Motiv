@@ -66,6 +66,14 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor InvalidCreateMethodName = new(
+        id: "MOTIV007",
+        title: "Invalid CreateMethodName",
+        category: Category,
+        messageFormat: "CreateMethodName must be a valid identifier",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var compilationProvider = context.CompilationProvider;
@@ -124,15 +132,16 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         SourceProductionContext context,
         FluentFactoryCompilationUnit builder)
     {
-        var source = CompilationUnit.CreateCompilationUnit(builder).NormalizeWhitespace().ToString();
-
         context.CancellationToken.ThrowIfCancellationRequested();
 
         foreach (var diagnostic in builder.Diagnostics)
         {
             context.ReportDiagnostic(diagnostic);
         }
+        if (builder.IsEmpty)
+            return;
 
+        var source = CompilationUnit.CreateCompilationUnit(builder).NormalizeWhitespace().ToString();
         context.AddSource($"{builder.RootType.ToFileName()}.g.cs", source);
     }
 
@@ -297,6 +306,9 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                 return memberValue != 0 && (value & memberValue) == memberValue;
             })
             .ToList();
+
+        if (setFlags.Count == 0)
+            return FluentFactoryGeneratorOptions.None;
 
         return setFlags
             .Select(flag => Enum.TryParse<FluentFactoryGeneratorOptions>(flag.Name, true, out var option)

@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Motiv.FluentFactory.Generator.Analysis;
 using Motiv.FluentFactory.Generator.Diagnostics;
 using Motiv.FluentFactory.Generator.Generation;
@@ -28,6 +29,14 @@ public class FluentModelFactory(Compilation compilation)
 
         var usings = GetUsingStatements(fluentConstructorContexts);
 
+        var validationDiagnostics = Validate(fluentConstructorContexts);
+        _diagnostics.AddRange(validationDiagnostics);
+
+        if (_diagnostics.Any())
+        {
+            return new FluentFactoryCompilationUnit(rootType) { Diagnostics = _diagnostics, Usings = usings };
+        }
+
         var stepTrie = CreateFluentStepTrie(fluentConstructorContexts);
 
         var fluentRootMethods = ConvertNodeToFluentFluentMethods(rootType, stepTrie.Root, []);
@@ -52,18 +61,66 @@ public class FluentModelFactory(Compilation compilation)
 
         _diagnostics.AddRange(_unreachableConstructorAnalyzer.GetUnreachableConstructorsDiagnostics());
         var sampleConstructorContext = fluentConstructorContexts.First();
-        return new FluentFactoryCompilationUnit(
-            rootType,
-            fluentRootMethods,
-            fluentBuilderSteps,
-            usings)
+
+        return new FluentFactoryCompilationUnit(rootType)
         {
+            FluentMethods = fluentRootMethods,
+            FluentSteps = fluentBuilderSteps,
+            Usings = usings,
             IsStatic = sampleConstructorContext.IsStatic,
             TypeKind = sampleConstructorContext.TypeKind,
             Accessibility = sampleConstructorContext.Accessibility,
             IsRecord = sampleConstructorContext.IsRecord,
             Diagnostics = _diagnostics
         };
+    }
+
+    private IEnumerable<Diagnostic> Validate(ImmutableArray<FluentConstructorContext> fluentConstructorContexts)
+    {
+        foreach (var context in fluentConstructorContexts)
+        {
+            // Skip validation if CreateMethodName is null or empty
+            var createMethodName = context.CreateMethodName?.Trim();
+            if (string.IsNullOrEmpty(createMethodName))
+                continue;
+
+            var isFirstCharValid = char.IsLetter(createMethodName![0]);
+            var areRemainingCharsValid = createMethodName.Skip(1).All(char.IsLetterOrDigit);
+            if (isFirstCharValid && areRemainingCharsValid)
+                continue;
+
+            // Get the FluentConstructorAttribute to find the CreateMethodName location
+            var fluentConstructorAttribute = context.Constructor.GetAttributes()
+                .FirstOrDefault(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentConstructorAttribute);
+
+            yield return Diagnostic.Create(
+                FluentFactoryGenerator.InvalidCreateMethodName,
+                FindLocation(fluentConstructorAttribute, context));
+        }
+
+        yield break;
+
+        Location FindLocation(AttributeData? fluentConstructorAttribute, FluentConstructorContext context)
+        {
+            Location location;
+            if (fluentConstructorAttribute?.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax attributeSyntax)
+            {
+                // Find the CreateMethodName named argument
+                var createMethodNameArg = attributeSyntax.ArgumentList?.Arguments
+                    .OfType<AttributeArgumentSyntax>()
+                    .FirstOrDefault(arg => arg.NameEquals?.Name?.Identifier.ValueText == "CreateMethodName");
+
+                location = createMethodNameArg != null
+                    ? createMethodNameArg.Expression.GetLocation()
+                    : attributeSyntax.GetLocation();
+            }
+            else
+            {
+                location = context.Constructor.Locations.FirstOrDefault() ?? Location.None;
+            }
+
+            return location;
+        }
     }
 
     private ImmutableArray<IFluentMethod> ConvertNodeToFluentFluentMethods(
