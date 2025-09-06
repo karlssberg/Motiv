@@ -77,6 +77,21 @@ public class FluentModelFactory(Compilation compilation)
 
     private IEnumerable<Diagnostic> Validate(ImmutableArray<FluentConstructorContext> fluentConstructorContexts)
     {
+        // Check if the target type has the FluentFactory attribute
+        foreach (var context in fluentConstructorContexts)
+        {
+            if (!IsRootTypeDecoratedWithAttribute(context.RootType))
+            {
+                var fluentConstructorAttr = context.Constructor.GetAttributes()
+                    .FirstOrDefault(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentConstructorAttribute);
+
+                yield return Diagnostic.Create(
+                    FluentFactoryGenerator.FluentConstructorTargetTypeMissingFluentFactory,
+                    FindRootTypeLocation(fluentConstructorAttr, context),
+                    context.RootType.ToDisplayString());
+            }
+        }
+
         foreach (var context in fluentConstructorContexts)
         {
             var isFirstCharValid = context.CreateMethodName?.Select(char.IsLetter).FirstOrDefault() ?? true;
@@ -114,6 +129,54 @@ public class FluentModelFactory(Compilation compilation)
 
         yield break;
 
+        bool IsRootTypeDecoratedWithAttribute(INamedTypeSymbol? rootType)
+        {
+            if (rootType is null)
+                return false;
+
+            // First, try direct matching
+            if (rootType.GetAttributes()
+                .Any(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentFactoryAttribute))
+            {
+                return true;
+            }
+
+            // If the rootType is generic (e.g., Factory<>), also check its original definition
+            if (rootType.IsGenericType)
+            {
+                var originalDefinition = rootType.OriginalDefinition;
+                if (originalDefinition.GetAttributes()
+                    .Any(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentFactoryAttribute))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        Location FindRootTypeLocation(AttributeData? fluentConstructorAttribute, FluentConstructorContext context)
+        {
+            Location location;
+            if (fluentConstructorAttribute?.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax attributeSyntax)
+            {
+                // Find the typeof argument that references the root type
+                var typeofArg = attributeSyntax.ArgumentList?.Arguments
+                    .OfType<AttributeArgumentSyntax>()
+                    .FirstOrDefault(arg => arg.Expression is TypeOfExpressionSyntax);
+
+                location = typeofArg != null
+                    ? typeofArg.Expression.GetLocation()
+                    : attributeSyntax.GetLocation();
+            }
+            else
+            {
+                location = context.Constructor.Locations.FirstOrDefault() ?? Location.None;
+            }
+
+            return location;
+        }
+
         Location FindLocation(AttributeData? fluentConstructorAttribute, FluentConstructorContext context)
         {
             Location location;
@@ -122,7 +185,7 @@ public class FluentModelFactory(Compilation compilation)
                 // Find the CreateMethodName named argument
                 var createMethodNameArg = attributeSyntax.ArgumentList?.Arguments
                     .OfType<AttributeArgumentSyntax>()
-                    .FirstOrDefault(arg => arg.NameEquals?.Name?.Identifier.ValueText == "CreateMethodName");
+                    .FirstOrDefault(arg => arg.NameEquals?.Name.Identifier.ValueText == "CreateMethodName");
 
                 location = createMethodNameArg != null
                     ? createMethodNameArg.Expression.GetLocation()

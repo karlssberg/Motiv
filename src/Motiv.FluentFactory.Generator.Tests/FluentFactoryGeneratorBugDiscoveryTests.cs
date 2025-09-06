@@ -8,7 +8,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
 {
     private const string SourceFile = "Source.cs";
     [Fact]
-    public async Task Should_handle_primary_constructor_selection_deterministically()
+    public async Task Shoula_allow_primary_constructor_selection_deterministically()
     {
         // This tests the potential bug in CreateConstructorContexts where it selects
         // "FirstOrDefault(c => c.Parameters.Length > 0)" which might be non-deterministic
@@ -38,7 +38,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
     }
 
     [Fact]
-    public async Task Should_handle_invalid_enum_values_in_options_conversion()
+    public async Task Should_error_when_invalid_enum_values_in_options_conversion()
     {
         // This tests the enum conversion logic with invalid enum values.  999 bits matches NoCreateMethod (i.e. 1).
         const string source = """
@@ -88,7 +88,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
     }
 
     [Fact]
-    public async Task Should_handle_multiple_fluent_constructor_attributes_with_conflicting_create_method_names()
+    public async Task Should_allow_multiple_fluent_constructor_attributes_with_different_create_method_names()
     {
         // Tests what happens when multiple FluentConstructor attributes have different CreateMethodName values
         const string source = """
@@ -175,7 +175,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
 
     [Theory]
     [ClassData(typeof(InvalidMethodNames))]
-    public async Task Should_handle_invalid_create_method_names(string invalidMethodName)
+    public async Task Should_error_when_invalid_create_method_names(string invalidMethodName)
     {
         // Tests CreateMethodName handling with edge case error values and putting red squiggles on them
         var source =
@@ -208,7 +208,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
     }
 
     [Fact]
-    public async Task Should_handle_duplicate_fluent_constructor_attributes_with_identical_parameters()
+    public async Task Should_error_when_duplicate_fluent_constructor_attributes_with_identical_parameters()
     {
         // Tests what happens with completely identical FluentConstructor attributes
         const string source =
@@ -353,7 +353,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
     }
 
     [Fact]
-    public async Task Should_handle_fluent_factory_attribute_on_non_target_type()
+    public async Task Should_error_when_fluent_factory_attribute_on_non_target_type()
     {
         // Tests what happens when FluentFactory is missing on referenced type
         const string source =
@@ -373,7 +373,13 @@ public class FluentFactoryGeneratorBugDiscoveryTests
 
         await new VerifyCS.Test
         {
-            TestState = { Sources = { source } }
+            TestState = { Sources = { (SourceFile, source) } },
+            ExpectedDiagnostics =
+            {
+                DiagnosticResult.CompilerError("MOTIV009")
+                    .WithSpan("Source.cs", 10, 27, 10, 40)
+                    .WithMessage("FluentConstructor references type 'Test.Namespace.MyTarget' which does not have the FluentFactory attribute"),
+            }
         }.RunAsync();
     }
 }

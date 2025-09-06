@@ -82,6 +82,14 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor FluentConstructorTargetTypeMissingFluentFactory = new(
+        id: "MOTIV009",
+        title: "FluentConstructor target type missing FluentFactory attribute",
+        category: Category,
+        messageFormat: "FluentConstructor references type '{0}' which does not have the FluentFactory attribute",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var compilationProvider = context.CompilationProvider;
@@ -173,8 +181,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                 {
                     var attributePresent = metadata.AttributePresent;
                     var rootTypeFullName = metadata.RootTypeFullName;
-                    if (!attributePresent || string.IsNullOrWhiteSpace(rootTypeFullName)
-                                          || !IsRootTypeDecoratedWithAttribute(metadata.RootTypeSymbol))
+                    if (!attributePresent || string.IsNullOrWhiteSpace(rootTypeFullName))
                         return [];
 
                     return symbol switch
@@ -223,33 +230,6 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                             semanticModel))
             ];
         }
-    }
-
-    private static bool IsRootTypeDecoratedWithAttribute(INamedTypeSymbol? alreadyDeclaredRootType)
-    {
-        if (alreadyDeclaredRootType is null)
-            return false;
-
-        // First, try direct matching
-        if (alreadyDeclaredRootType.GetAttributes()
-            .Any(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentFactoryAttribute))
-        {
-            return true;
-        }
-
-        // If the alreadyDeclaredRootType is generic (e.g., Factory<>), also check its original definition
-        // This handles cases where the attribute references typeof(Factory<>) but the actual type is Factory
-        if (alreadyDeclaredRootType.IsGenericType)
-        {
-            var originalDefinition = alreadyDeclaredRootType.OriginalDefinition;
-            if (originalDefinition.GetAttributes()
-                .Any(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentFactoryAttribute))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static IEnumerable<FluentFactoryMetadata> GetFluentFactoryMetadata(ISymbol symbol)
