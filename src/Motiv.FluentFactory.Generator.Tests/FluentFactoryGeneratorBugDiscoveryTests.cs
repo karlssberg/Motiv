@@ -459,8 +459,6 @@ public class FluentFactoryGeneratorBugDiscoveryTests
             }
             """;
 
-
-
         await new VerifyCS.Test
         {
             TestState =
