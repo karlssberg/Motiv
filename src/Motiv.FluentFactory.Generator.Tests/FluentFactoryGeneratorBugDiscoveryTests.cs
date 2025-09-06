@@ -474,37 +474,59 @@ public class FluentFactoryGeneratorBugDiscoveryTests
         }.RunAsync();
     }
 
-//     [Fact]
-//     public async Task Should_error_when_duplicate_fluent_constructor_attributes_with_identical_parameters()
-//     {
-//         // Tests what happens with completely identical FluentConstructor attributes
-//         const string source =
-//             """
-//             using Motiv.FluentFactory.Generator;
-//
-//             namespace Test.Namespace
-//             {
-//                 [FluentFactory]
-//                 public partial class MyTarget;
-//
-//                 [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")]
-//                 [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")] // Exact duplicate
-//                 public partial record DuplicateAttributes(int Value);
-//             }
-//             """;
-//
-//         await new VerifyCS.Test
-//         {
-//             TestState = { Sources = { (SourceFile, source) } },
-//             ExpectedDiagnostics =
-//             {
-//                 DiagnosticResult.CompilerError("MOTIV008")
-//                     .WithSpan("Source.cs", 10, 27, 10, 46)
-//                     .WithSpan("Source.cs", 10, 27, 10, 46)
-//                     .WithMessage("CreateMethodName must be unique")
-//             }
-//         }.RunAsync();
-//     }
+     [Theory][InlineData("_")]
+     [InlineData("__")]
+     [InlineData("_1")]
+     [InlineData("MethodWith数字")]
+     [InlineData("Methodαβγ")]
+     [InlineData("Method_åäö")]
+     [InlineData("GetΣΔΦ")]
+     [InlineData("@class")] // Escaped keyword
+     [InlineData("@if")] // Escaped keyword
+     [InlineData("@foreach")] // Escaped keyword
+     [InlineData("@int")] // Escaped keyword
+     [InlineData("@string")] // Escaped keyword
+     [InlineData("@void")] // Escaped keyword
+     [InlineData("@namespace")] // Escaped keyword
+     [InlineData("Method__With__Double__Underscores")]
+     [InlineData("Create")]
+
+     public async Task Should_error_when_duplicate_fluent_constructor_attributes_with_identical_parameters(
+         string methodName)
+     {
+         // Tests what happens with completely identical FluentConstructor attributes
+         var createMethodNameArgument =
+             $"""
+              CreateMethodName = "{methodName}"
+              """;
+
+         var source =
+           $$"""
+             using Motiv.FluentFactory.Generator;
+
+             namespace Test.Namespace
+             {
+                 [FluentFactory]
+                 public partial class MyTarget;
+
+                 [FluentConstructor(typeof(MyTarget), {{createMethodNameArgument}})] // First occurrence
+                 [FluentConstructor(typeof(MyTarget), {{createMethodNameArgument}})] // Exact duplicate
+                 public partial record DuplicateAttributes(int Value);
+             }
+             """;
+
+         await new VerifyCS.Test
+         {
+             TestState = { Sources = { (SourceFile, source) } },
+             ExpectedDiagnostics =
+             {
+                 DiagnosticResult.CompilerError("MOTIV008")
+                     .WithSpan("Source.cs", 8, 41, 8, 41 + createMethodNameArgument.Length)
+                     .WithSpan("Source.cs", 9, 41, 9, 41 + createMethodNameArgument.Length)
+                     .WithMessage("CreateMethodName must be unique")
+             }
+         }.RunAsync();
+     }
 
 //     [Fact]
 //     public async Task Should_allow_duplicates_method_names_located_on_different_decision_paths()
