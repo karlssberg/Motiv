@@ -74,6 +74,14 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor DuplicateCreateMethodName = new(
+        id: "MOTIV008",
+        title: "Duplicate CreateMethodName",
+        category: Category,
+        messageFormat: "CreateMethodName must be unique",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var compilationProvider = context.CompilationProvider;

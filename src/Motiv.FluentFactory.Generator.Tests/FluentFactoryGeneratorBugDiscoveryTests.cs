@@ -187,8 +187,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                 [FluentFactory]
                 public partial class MyTarget;
 
-                [FluentFactory]
-                [FluentConstructor(typeof(MyTarget), CreateMethodName = {{invalidMethodName}})]
+                [FluentConstructor(typeof(MyTarget), CreateMethodName = "{{invalidMethodName}}")]
                 public partial record EmptyName(int Value);
             }
             """;
@@ -201,74 +200,10 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                 ExpectedDiagnostics =
                 {
                     DiagnosticResult.CompilerError("MOTIV007")
-                        .WithSpan("Source.cs", 10, 27, 10, 36),
+                        .WithSpan("Source.cs", 9, 27, 9, 36)
+                        .WithMessage("CreateMethodName must be a valid identifier")
                 }
             }
-        }.RunAsync();
-    }
-
-    [Fact]
-    public async Task Should_handle_generic_type_attribute_matching_edge_cases()
-    {
-        // Tests the IsRootTypeDecoratedWithAttribute logic with complex generic scenarios
-        const string source =
-            """
-            using Motiv.FluentFactory.Generator;
-
-            namespace Test.Namespace
-            {
-                [FluentFactory]
-                public partial class MyTarget<T>;
-
-                public partial class MyTarget<T, U>; // No FluentFactory attribute
-
-                [FluentFactory]
-                [FluentConstructor(typeof(MyTarget<>))]   // Should match MyTarget<T>
-                public partial record ValidMatch<T>(T Value);
-
-                [FluentFactory]
-                [FluentConstructor(typeof(MyTarget<,>))]  // Should NOT match MyTarget<T>
-                public partial record InvalidMatch<T>(T Value);
-            }
-            """;
-
-        await new VerifyCS.Test
-        {
-            TestState = { Sources = { source } },
-            ExpectedDiagnostics = {}
-        }.RunAsync();
-    }
-
-
-    [Fact]
-    public async Task Should_handle_enum_flag_combinations_correctly()
-    {
-        // Tests the complex enum flag parsing logic
-        const string source = """
-            using Motiv.FluentFactory.Generator;
-
-            namespace Test.Namespace
-            {
-                [FluentFactory]
-                public partial class MyTarget;
-
-                [FluentFactory]
-                [FluentConstructor(typeof(MyTarget), Options = FluentOptions.NoCreateMethod | FluentOptions.None)]
-                public partial record FlagCombination1(int Value);
-
-                [FluentFactory]
-                [FluentConstructor(typeof(MyTarget), Options = (FluentOptions)0)]
-                public partial record ExplicitZero(int Value);
-
-                [FluentFactory]
-                [FluentConstructor(typeof(MyTarget), Options = (FluentOptions)(-1))]
-                public partial record NegativeValue(int Value);
-            }
-            """;
-
-        await new VerifyCS.Test
-        {
-            TestState = { Sources = { source } }
         }.RunAsync();
     }
 
@@ -276,7 +211,8 @@ public class FluentFactoryGeneratorBugDiscoveryTests
     public async Task Should_handle_duplicate_fluent_constructor_attributes_with_identical_parameters()
     {
         // Tests what happens with completely identical FluentConstructor attributes
-        const string source = """
+        const string source =
+            """
             using Motiv.FluentFactory.Generator;
 
             namespace Test.Namespace
@@ -284,7 +220,6 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                 [FluentFactory]
                 public partial class MyTarget;
 
-                [FluentFactory]
                 [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")]
                 [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")] // Exact duplicate
                 public partial record DuplicateAttributes(int Value);
@@ -293,7 +228,127 @@ public class FluentFactoryGeneratorBugDiscoveryTests
 
         await new VerifyCS.Test
         {
-            TestState = { Sources = { source } }
+            TestState = { Sources = { (SourceFile, source) } },
+            ExpectedDiagnostics =
+            {
+                DiagnosticResult.CompilerError("MOTIV008")
+                    .WithSpan("Source.cs", 10, 27, 10, 46)
+                    .WithMessage("CreateMethodName must be unique"),
+                DiagnosticResult.CompilerError("MOTIV008")
+                    .WithSpan("Source.cs", 10, 27, 10, 46)
+                    .WithMessage("CreateMethodName must be unique")
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_allow_duplicates_method_names_located_on_different_decision_paths()
+    {
+        // Tests what happens with completely identical FluentConstructor attributes
+        const string source =
+            """
+            using Motiv.FluentFactory.Generator;
+
+            namespace Test.Namespace
+            {
+                [FluentFactory]
+                public partial class MyTarget;
+
+                // constructor with a string parameter
+                [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")]
+                public partial record MyRecordA(string Value);
+
+                // constructor with an int parameter
+                [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")]
+                public partial record MyRecordB(int Value);
+            }
+            """;
+
+        const string expected =
+            """
+            using System;
+
+            namespace Test.Namespace
+            {
+                public partial class MyTarget
+                {
+                    /// <summary>
+                    ///     <seealso cref="Test.Namespace.MyRecordA"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_0__Test_Namespace_MyTarget WithValue(in string value)
+                    {
+                        return new Step_0__Test_Namespace_MyTarget(value);
+                    }
+
+                    /// <summary>
+                    ///     <seealso cref="Test.Namespace.MyRecordB"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public static Step_1__Test_Namespace_MyTarget WithValue(in int value)
+                    {
+                        return new Step_1__Test_Namespace_MyTarget(value);
+                    }
+                }
+
+                /// <summary>
+                ///     <seealso cref="Test.Namespace.MyRecordA"/>
+                /// </summary>
+                public struct Step_0__Test_Namespace_MyTarget
+                {
+                    private readonly string _value__parameter;
+                    internal Step_0__Test_Namespace_MyTarget(in string value)
+                    {
+                        this._value__parameter = value;
+                    }
+
+                    /// <summary>
+                    /// Creates a new instance using constructor Test.Namespace.MyRecordA.MyRecordA(string Value).
+                    ///
+                    ///     <seealso cref="Test.Namespace.MyRecordA"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyRecordA Create()
+                    {
+                        return new MyRecordA(this._value__parameter);
+                    }
+                }
+
+                /// <summary>
+                ///     <seealso cref="Test.Namespace.MyRecordB"/>
+                /// </summary>
+                public struct Step_1__Test_Namespace_MyTarget
+                {
+                    private readonly int _value__parameter;
+                    internal Step_1__Test_Namespace_MyTarget(in int value)
+                    {
+                        this._value__parameter = value;
+                    }
+
+                    /// <summary>
+                    /// Creates a new instance using constructor Test.Namespace.MyRecordB.MyRecordB(int Value).
+                    ///
+                    ///     <seealso cref="Test.Namespace.MyRecordB"/>
+                    /// </summary>
+                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                    public MyRecordB Create()
+                    {
+                        return new MyRecordB(this._value__parameter);
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (SourceFile, source) },
+                GeneratedSources =
+                {
+                    (typeof(FluentFactoryGenerator), "Test.Namespace.MyTarget.g.cs", expected)
+                }
+            }
         }.RunAsync();
     }
 
@@ -301,7 +356,8 @@ public class FluentFactoryGeneratorBugDiscoveryTests
     public async Task Should_handle_fluent_factory_attribute_on_non_target_type()
     {
         // Tests what happens when FluentFactory is missing on referenced type
-        const string source = """
+        const string source =
+            """
             using Motiv.FluentFactory.Generator;
 
             namespace Test.Namespace

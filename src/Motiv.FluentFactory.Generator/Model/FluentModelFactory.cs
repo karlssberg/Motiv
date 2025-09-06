@@ -79,13 +79,8 @@ public class FluentModelFactory(Compilation compilation)
     {
         foreach (var context in fluentConstructorContexts)
         {
-            // Skip validation if CreateMethodName is null or empty
-            var createMethodName = context.CreateMethodName?.Trim();
-            if (string.IsNullOrEmpty(createMethodName))
-                continue;
-
-            var isFirstCharValid = char.IsLetter(createMethodName![0]);
-            var areRemainingCharsValid = createMethodName.Skip(1).All(char.IsLetterOrDigit);
+            var isFirstCharValid = context.CreateMethodName?.Select(char.IsLetter).FirstOrDefault() ?? true;
+            var areRemainingCharsValid = context.CreateMethodName?.Skip(1).All(char.IsLetterOrDigit) ?? true;
             if (isFirstCharValid && areRemainingCharsValid)
                 continue;
 
@@ -96,6 +91,25 @@ public class FluentModelFactory(Compilation compilation)
             yield return Diagnostic.Create(
                 FluentFactoryGenerator.InvalidCreateMethodName,
                 FindLocation(fluentConstructorAttribute, context));
+        }
+
+        // Check for duplicate CreateMethodName values within the same type
+        var duplicateGroups = fluentConstructorContexts
+            .Where(context => !string.IsNullOrEmpty(context.CreateMethodName))
+            .GroupBy(context => new { context.CreateMethodName, TypeName = context.Constructor.ContainingType.ToDisplayString() })
+            .Where(group => group.Count() > 1);
+
+        foreach (var duplicateGroup in duplicateGroups)
+        {
+            foreach (var context in duplicateGroup)
+            {
+                var fluentConstructorAttribute = context.Constructor.GetAttributes()
+                    .FirstOrDefault(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentConstructorAttribute);
+
+                yield return Diagnostic.Create(
+                    FluentFactoryGenerator.DuplicateCreateMethodName,
+                    FindLocation(fluentConstructorAttribute, context));
+            }
         }
 
         yield break;
