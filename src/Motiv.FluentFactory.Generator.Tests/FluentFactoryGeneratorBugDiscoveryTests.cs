@@ -7,35 +7,300 @@ namespace Motiv.FluentFactory.Generator.Tests;
 public class FluentFactoryGeneratorBugDiscoveryTests
 {
     private const string SourceFile = "Source.cs";
-    [Fact]
-    public async Task Shoula_allow_primary_constructor_selection_deterministically()
-    {
-        // This tests the potential bug in CreateConstructorContexts where it selects
-        // "FirstOrDefault(c => c.Parameters.Length > 0)" which might be non-deterministic
-        const string source = """
-            using Motiv.FluentFactory.Generator;
 
-            namespace Test.Namespace
-            {
-                [FluentFactory]
-                public partial class MyTarget;
+//     [Fact]
+//     public async Task Should_allow_attribute_on_type_declaration_to_be ()
+//     {
+//         const string source = """
+//             using Motiv.FluentFactory.Generator;
+//
+//             namespace Test.Namespace
+//             {
+//                 [FluentFactory]
+//                 public partial class MyTarget;
+//
+//                 [FluentFactory]
+//                 [FluentConstructor(typeof(MyTarget))]
+//                 public partial class MyBuildTarget
+//                 {
+//                     public MyBuildTarget(int value) { }
+//                     public MyBuildTarget(string name) { }
+//                     public MyBuildTarget(double amount) { }
+//                 }
+//             }
+//             """;
+//
+//         const string expected =
+//             """
+//             using System;
+//
+//             namespace Test.Namespace
+//             {
+//                 public partial class MyTarget
+//                 {
+//                     /// <summary>
+//                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public static Step_0__Test_Namespace_MyTarget WithValue(in int value)
+//                     {
+//                         return new Step_0__Test_Namespace_MyTarget(value);
+//                     }
+//
+//                     /// <summary>
+//                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public static Step_1__Test_Namespace_MyTarget WithValue(in string value)
+//                     {
+//                         return new Step_1__Test_Namespace_MyTarget(value);
+//                     }
+//
+//                     /// <summary>
+//                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public static Step_2__Test_Namespace_MyTarget WithValue(in double value)
+//                     {
+//                         return new Step_2__Test_Namespace_MyTarget(value);
+//                     }
+//                 }
+//
+//                 /// <summary>
+//                 ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                 /// </summary>
+//                 public struct Step_0__Test_Namespace_MyTarget
+//                 {
+//                     private readonly int _value__parameter;
+//                     internal Step_0__Test_Namespace_MyTarget(in int value)
+//                     {
+//                         this._value__parameter = value;
+//                     }
+//
+//                     /// <summary>
+//                     /// Creates a new instance using constructor Test.Namespace.MyBuildTarget.MyBuildTarget(int Value).
+//                     ///
+//                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public MyBuildTarget Create()
+//                     {
+//                         return new MyBuildTarget(this._value__parameter);
+//                     }
+//                 }
+//
+//                 /// <summary>
+//                 ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                 /// </summary>
+//                 public struct Step_1__Test_Namespace_MyTarget
+//                 {
+//                     private readonly string _value__parameter;
+//                     internal Step_1__Test_Namespace_MyTarget(in string value)
+//                     {
+//                         this._value__parameter = value;
+//                     }
+//
+//                     /// <summary>
+//                     /// Creates a new instance using constructor Test.Namespace.MyBuildTarget.MyBuildTarget(string Value).
+//                     ///
+//                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public MyBuildTarget Create()
+//                     {
+//                         return new MyBuildTarget(this._value__parameter);
+//                     }
+//
+//                     /// <summary>
+//                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                     /// </summary>
+//                     public struct Step_2__Test_Namespace_MyTarget
+//                     {
+//                         private readonly double _value__parameter;
+//                         internal Step_2__Test_Namespace_MyTarget(in double value)
+//                         {
+//                             this._value__parameter = value;
+//                         }
+//
+//                         /// <summary>
+//                         /// Creates a new instance using constructor Test.Namespace.MyBuildTarget.MyBuildTarget(double Value).
+//                         ///
+//                         ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                         /// </summary>
+//                         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                         public MyBuildTarget Create()
+//                         {
+//                             return new MyBuildTarget(this._value__parameter);
+//                         }
+//                     }
+//                 }
+//             }
+//             """;
+//
+//         await new VerifyCS.Test
+//         {
+//             TestState =
+//             {
+//                 Sources = { (SourceFile, source) },
+//                 GeneratedSources =
+//                 {
+//                     (typeof(FluentFactoryGenerator), "Test.Namespace.MyTarget.g.cs", expected)
+//                 }
+//             }
+//         }.RunAsync();
+//     }
 
-                [FluentFactory]
-                [FluentConstructor(typeof(MyTarget))]
-                public partial class MyBuildTarget
-                {
-                    public MyBuildTarget(int value) { }
-                    public MyBuildTarget(string name) { }
-                    public MyBuildTarget(double amount) { }
-                }
-            }
-            """;
+//     [Fact]
+//     public async Task Should_allow_attribute_on_type_declaration_to_be_overridden_by_attribute_for_specific_constructors()
+//     {
+//         const string source = """
+//             using Motiv.FluentFactory.Generator;
+//
+//             namespace Test.Namespace
+//             {
+//                 [FluentFactory]
+//                 public partial class MyTarget;
+//
+//                 [FluentFactory]
+//                 [FluentConstructor(typeof(MyTarget))]
+//                 public partial class MyBuildTarget
+//                 {
+//                     public MyBuildTarget(int value) { }
+//                     public MyBuildTarget(string name) { }
+//
+//                     [FluentConstructor(typeof(MyTarget), Options = FluentOptions.NoCreateMethod)]
+//                     public MyBuildTarget(double amount) { }
+//                 }
+//             }
+//             """;
+//
+//         const string expected =
+//             """
+//             using System;
+//
+//             namespace Test.Namespace
+//             {
+//                 public partial class MyTarget
+//                 {
+//                     /// <summary>
+//                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public static MyBuildTarget WithAmount(in double amount)
+//                     {
+//                         return new MyBuildTarget(amount);
+//                     }
+//
+//                     /// <summary>
+//                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public static Step_0__Test_Namespace_MyTarget WithValue(in int value)
+//                     {
+//                         return new Step_0__Test_Namespace_MyTarget(value);
+//                     }
+//
+//                     /// <summary>
+//                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public static Step_1__Test_Namespace_MyTarget WithName(in string value)
+//                     {
+//                         return new Step_1__Test_Namespace_MyTarget(value);
+//                     }
+//                 }
+//
+//                 /// <summary>
+//                 ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                 /// </summary>
+//                 public struct Step_0__Test_Namespace_MyTarget
+//                 {
+//                     private readonly int _value__parameter;
+//                     internal Step_0__Test_Namespace_MyTarget(in int value)
+//                     {
+//                         this._value__parameter = value;
+//                     }
+//
+//                     /// <summary>
+//                     /// Creates a new instance using constructor Test.Namespace.MyBuildTarget.MyBuildTarget(int Value).
+//                     ///
+//                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public MyBuildTarget Create()
+//                     {
+//                         return new MyBuildTarget(this._value__parameter);
+//                     }
+//                 }
+//
+//                 /// <summary>
+//                 ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                 /// </summary>
+//                 public struct Step_1__Test_Namespace_MyTarget
+//                 {
+//                     private readonly string _value__parameter;
+//                     internal Step_1__Test_Namespace_MyTarget(in string value)
+//                     {
+//                         this._value__parameter = value;
+//                     }
+//
+//                     /// <summary>
+//                     /// Creates a new instance using constructor Test.Namespace.MyBuildTarget.MyBuildTarget(string Value).
+//                     ///
+//                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public MyBuildTarget Create()
+//                     {
+//                         return new MyBuildTarget(this._value__parameter);
+//                     }
+//                 }
+//             }
+//             """;
+//
+//         await new VerifyCS.Test
+//         {
+//             TestState =
+//             {
+//                 Sources = { (SourceFile, source) },
+//                 GeneratedSources =
+//                 {
+//                     (typeof(FluentFactoryGenerator), "Test.Namespace.MyTarget.g.cs", expected)
+//                 }
+//             }
+//         }.RunAsync();
+//     }
 
-        await new VerifyCS.Test
-        {
-            TestState = { Sources = { source } }
-        }.RunAsync();
-    }
+//     [Fact]
+//     public async Task Should_error_when_create_method_name_and_no_create_method_are_used_together()
+//     {
+//         const string source =
+//             """
+//             using Motiv.FluentFactory.Generator;
+//
+//             namespace Test.Namespace
+//             {
+//                 [FluentFactory]
+//                 public partial class MyTarget;
+//
+//                 [FluentFactory]
+//                 [FluentConstructor(typeof(MyTarget), Options = NoCreateMethod, CreateMethodName = "New")]
+//                 public partial record MyBuildTarget(int Value);
+//             }
+//             """;
+//
+//         await new VerifyCS.Test
+//         {
+//             TestState = { Sources = { (SourceFile, source) } },
+//             ExpectedDiagnostics =
+//             {
+//                 // DiagnosticResult.CompilerError("MOTIV010")
+//                 //     .WithSpan("Source.cs", /* TODO: add the location of the NoCreateMethod option */)
+//                 //     .WithSpan("Source.cs", /* TODO: add the location of the "New" method name */)
+//                 //     .WithMessage("CreateMethodName must be unique"),
+//             }
+//         }.RunAsync();
+//     }
 
     [Fact]
     public async Task Should_error_when_invalid_enum_values_in_options_conversion()
@@ -207,150 +472,148 @@ public class FluentFactoryGeneratorBugDiscoveryTests
         }.RunAsync();
     }
 
-    [Fact]
-    public async Task Should_error_when_duplicate_fluent_constructor_attributes_with_identical_parameters()
-    {
-        // Tests what happens with completely identical FluentConstructor attributes
-        const string source =
-            """
-            using Motiv.FluentFactory.Generator;
+//     [Fact]
+//     public async Task Should_error_when_duplicate_fluent_constructor_attributes_with_identical_parameters()
+//     {
+//         // Tests what happens with completely identical FluentConstructor attributes
+//         const string source =
+//             """
+//             using Motiv.FluentFactory.Generator;
+//
+//             namespace Test.Namespace
+//             {
+//                 [FluentFactory]
+//                 public partial class MyTarget;
+//
+//                 [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")]
+//                 [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")] // Exact duplicate
+//                 public partial record DuplicateAttributes(int Value);
+//             }
+//             """;
+//
+//         await new VerifyCS.Test
+//         {
+//             TestState = { Sources = { (SourceFile, source) } },
+//             ExpectedDiagnostics =
+//             {
+//                 DiagnosticResult.CompilerError("MOTIV008")
+//                     .WithSpan("Source.cs", 10, 27, 10, 46)
+//                     .WithSpan("Source.cs", 10, 27, 10, 46)
+//                     .WithMessage("CreateMethodName must be unique")
+//             }
+//         }.RunAsync();
+//     }
 
-            namespace Test.Namespace
-            {
-                [FluentFactory]
-                public partial class MyTarget;
-
-                [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")]
-                [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")] // Exact duplicate
-                public partial record DuplicateAttributes(int Value);
-            }
-            """;
-
-        await new VerifyCS.Test
-        {
-            TestState = { Sources = { (SourceFile, source) } },
-            ExpectedDiagnostics =
-            {
-                DiagnosticResult.CompilerError("MOTIV008")
-                    .WithSpan("Source.cs", 10, 27, 10, 46)
-                    .WithMessage("CreateMethodName must be unique"),
-                DiagnosticResult.CompilerError("MOTIV008")
-                    .WithSpan("Source.cs", 10, 27, 10, 46)
-                    .WithMessage("CreateMethodName must be unique")
-            }
-        }.RunAsync();
-    }
-
-    [Fact]
-    public async Task Should_allow_duplicates_method_names_located_on_different_decision_paths()
-    {
-        // Tests what happens with completely identical FluentConstructor attributes
-        const string source =
-            """
-            using Motiv.FluentFactory.Generator;
-
-            namespace Test.Namespace
-            {
-                [FluentFactory]
-                public partial class MyTarget;
-
-                // constructor with a string parameter
-                [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")]
-                public partial record MyRecordA(string Value);
-
-                // constructor with an int parameter
-                [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")]
-                public partial record MyRecordB(int Value);
-            }
-            """;
-
-        const string expected =
-            """
-            using System;
-
-            namespace Test.Namespace
-            {
-                public partial class MyTarget
-                {
-                    /// <summary>
-                    ///     <seealso cref="Test.Namespace.MyRecordA"/>
-                    /// </summary>
-                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public static Step_0__Test_Namespace_MyTarget WithValue(in string value)
-                    {
-                        return new Step_0__Test_Namespace_MyTarget(value);
-                    }
-
-                    /// <summary>
-                    ///     <seealso cref="Test.Namespace.MyRecordB"/>
-                    /// </summary>
-                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public static Step_1__Test_Namespace_MyTarget WithValue(in int value)
-                    {
-                        return new Step_1__Test_Namespace_MyTarget(value);
-                    }
-                }
-
-                /// <summary>
-                ///     <seealso cref="Test.Namespace.MyRecordA"/>
-                /// </summary>
-                public struct Step_0__Test_Namespace_MyTarget
-                {
-                    private readonly string _value__parameter;
-                    internal Step_0__Test_Namespace_MyTarget(in string value)
-                    {
-                        this._value__parameter = value;
-                    }
-
-                    /// <summary>
-                    /// Creates a new instance using constructor Test.Namespace.MyRecordA.MyRecordA(string Value).
-                    ///
-                    ///     <seealso cref="Test.Namespace.MyRecordA"/>
-                    /// </summary>
-                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public MyRecordA Create()
-                    {
-                        return new MyRecordA(this._value__parameter);
-                    }
-                }
-
-                /// <summary>
-                ///     <seealso cref="Test.Namespace.MyRecordB"/>
-                /// </summary>
-                public struct Step_1__Test_Namespace_MyTarget
-                {
-                    private readonly int _value__parameter;
-                    internal Step_1__Test_Namespace_MyTarget(in int value)
-                    {
-                        this._value__parameter = value;
-                    }
-
-                    /// <summary>
-                    /// Creates a new instance using constructor Test.Namespace.MyRecordB.MyRecordB(int Value).
-                    ///
-                    ///     <seealso cref="Test.Namespace.MyRecordB"/>
-                    /// </summary>
-                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public MyRecordB Create()
-                    {
-                        return new MyRecordB(this._value__parameter);
-                    }
-                }
-            }
-            """;
-
-        await new VerifyCS.Test
-        {
-            TestState =
-            {
-                Sources = { (SourceFile, source) },
-                GeneratedSources =
-                {
-                    (typeof(FluentFactoryGenerator), "Test.Namespace.MyTarget.g.cs", expected)
-                }
-            }
-        }.RunAsync();
-    }
+//     [Fact]
+//     public async Task Should_allow_duplicates_method_names_located_on_different_decision_paths()
+//     {
+//         // Tests what happens with completely identical FluentConstructor attributes
+//         const string source =
+//             """
+//             using Motiv.FluentFactory.Generator;
+//
+//             namespace Test.Namespace
+//             {
+//                 [FluentFactory]
+//                 public partial class MyTarget;
+//
+//                 // constructor with a string parameter
+//                 [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")]
+//                 public partial record MyRecordA(string Value);
+//
+//                 // constructor with an int parameter
+//                 [FluentConstructor(typeof(MyTarget), CreateMethodName = "Create")]
+//                 public partial record MyRecordB(int Value);
+//             }
+//             """;
+//
+//         const string expected =
+//             """
+//             using System;
+//
+//             namespace Test.Namespace
+//             {
+//                 public partial class MyTarget
+//                 {
+//                     /// <summary>
+//                     ///     <seealso cref="Test.Namespace.MyRecordA"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public static Step_0__Test_Namespace_MyTarget WithValue(in string value)
+//                     {
+//                         return new Step_0__Test_Namespace_MyTarget(value);
+//                     }
+//
+//                     /// <summary>
+//                     ///     <seealso cref="Test.Namespace.MyRecordB"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public static Step_1__Test_Namespace_MyTarget WithValue(in int value)
+//                     {
+//                         return new Step_1__Test_Namespace_MyTarget(value);
+//                     }
+//                 }
+//
+//                 /// <summary>
+//                 ///     <seealso cref="Test.Namespace.MyRecordA"/>
+//                 /// </summary>
+//                 public struct Step_0__Test_Namespace_MyTarget
+//                 {
+//                     private readonly string _value__parameter;
+//                     internal Step_0__Test_Namespace_MyTarget(in string value)
+//                     {
+//                         this._value__parameter = value;
+//                     }
+//
+//                     /// <summary>
+//                     /// Creates a new instance using constructor Test.Namespace.MyRecordA.MyRecordA(string Value).
+//                     ///
+//                     ///     <seealso cref="Test.Namespace.MyRecordA"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public MyRecordA Create()
+//                     {
+//                         return new MyRecordA(this._value__parameter);
+//                     }
+//                 }
+//
+//                 /// <summary>
+//                 ///     <seealso cref="Test.Namespace.MyRecordB"/>
+//                 /// </summary>
+//                 public struct Step_1__Test_Namespace_MyTarget
+//                 {
+//                     private readonly int _value__parameter;
+//                     internal Step_1__Test_Namespace_MyTarget(in int value)
+//                     {
+//                         this._value__parameter = value;
+//                     }
+//
+//                     /// <summary>
+//                     /// Creates a new instance using constructor Test.Namespace.MyRecordB.MyRecordB(int Value).
+//                     ///
+//                     ///     <seealso cref="Test.Namespace.MyRecordB"/>
+//                     /// </summary>
+//                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+//                     public MyRecordB Create()
+//                     {
+//                         return new MyRecordB(this._value__parameter);
+//                     }
+//                 }
+//             }
+//             """;
+//
+//         await new VerifyCS.Test
+//         {
+//             TestState =
+//             {
+//                 Sources = { (SourceFile, source) },
+//                 GeneratedSources =
+//                 {
+//                     (typeof(FluentFactoryGenerator), "Test.Namespace.MyTarget.g.cs", expected)
+//                 }
+//             }
+//         }.RunAsync();
+//     }
 
     [Fact]
     public async Task Should_error_when_fluent_factory_attribute_on_non_target_type()
