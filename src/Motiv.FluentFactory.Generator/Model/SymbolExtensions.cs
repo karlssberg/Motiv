@@ -170,4 +170,18 @@ public static class SymbolExtensions
             _ => 0
         };
     }
+
+    public static bool HasAttribute(this ISymbol type,TypeName attribute) =>
+        GetAttributes(type, attribute).Any();
+
+    public static bool HasAttribute<TAttribute>(this ISymbol type) where TAttribute : Attribute =>
+        GetAttributes<TAttribute>(type).Any();
+
+    public static IEnumerable<AttributeData> GetAttributes(this ISymbol type, TypeName attribute) =>
+        type.GetAttributes()
+            .Where(attr => attr.AttributeClass?.ToDisplayString() == attribute);
+
+    public static IEnumerable<AttributeData> GetAttributes<TAttribute>(this ISymbol type) where TAttribute : Attribute =>
+        type.GetAttributes()
+            .Where(attr => attr.AttributeClass?.ToDisplayString() == typeof(TAttribute).FullName);
 }
