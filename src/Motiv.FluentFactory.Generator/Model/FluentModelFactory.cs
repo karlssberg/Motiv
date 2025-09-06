@@ -78,65 +78,56 @@ public class FluentModelFactory(Compilation compilation)
     private IEnumerable<Diagnostic> Validate(ImmutableArray<FluentConstructorContext> fluentConstructorContexts)
     {
         // Check if the target type has the FluentFactory attribute
-        foreach (var context in fluentConstructorContexts)
+        foreach (var context in fluentConstructorContexts.Where(context =>
+                     !IsRootTypeDecoratedWithAttribute(context.RootType)))
         {
-            if (!IsRootTypeDecoratedWithAttribute(context.RootType))
-            {
-                var fluentConstructorAttr = context.Constructor.GetAttributes()
-                    .FirstOrDefault(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentConstructorAttribute);
-
-                yield return Diagnostic.Create(
-                    FluentFactoryGenerator.FluentConstructorTargetTypeMissingFluentFactory,
-                    FindRootTypeLocation(fluentConstructorAttr, context),
-                    context.RootType.ToDisplayString());
-            }
+            yield return Diagnostic.Create(
+                FluentFactoryGenerator.FluentConstructorTargetTypeMissingFluentFactory,
+                FindRootTypeLocation(context.AttributeData, context),
+                context.RootType.ToDisplayString());
         }
 
-        foreach (var context in fluentConstructorContexts)
+        // Check for valid CreateMethodName values
+        var constructorContextWithInvalidCreateMethodName = fluentConstructorContexts
+            .Where(context =>
+            {
+                var isFirstCharValid = context.CreateMethodName?.Select(char.IsLetter).FirstOrDefault() ?? true;
+                var areRemainingCharsValid = context.CreateMethodName?.Skip(1).All(char.IsLetterOrDigit) ?? true;
+                return !(isFirstCharValid && areRemainingCharsValid);
+            });
+        foreach (var context in constructorContextWithInvalidCreateMethodName)
         {
-            var isFirstCharValid = context.CreateMethodName?.Select(char.IsLetter).FirstOrDefault() ?? true;
-            var areRemainingCharsValid = context.CreateMethodName?.Skip(1).All(char.IsLetterOrDigit) ?? true;
-            if (isFirstCharValid && areRemainingCharsValid)
-                continue;
-
-            // Get the FluentConstructorAttribute to find the CreateMethodName location
-            var fluentConstructorAttribute = context.Constructor.GetAttributes()
-                .FirstOrDefault(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentConstructorAttribute);
-
             yield return Diagnostic.Create(
                 FluentFactoryGenerator.InvalidCreateMethodName,
-                FindLocation(fluentConstructorAttribute, context));
+                FindCreateMethodNameArgumentLocation(context));
         }
 
         // Check for duplicate CreateMethodName values within the same type
         var duplicateGroups = fluentConstructorContexts
             .Where(context => !string.IsNullOrEmpty(context.CreateMethodName))
-            .GroupBy(context => new { context.CreateMethodName, TypeName = context.Constructor.ContainingType.ToDisplayString() })
+            .GroupBy(context => new
+                { context.CreateMethodName, TypeName = context.Constructor.ContainingType.ToDisplayString() })
             .Where(group => group.Count() > 1);
 
-        foreach (var duplicateGroup in duplicateGroups)
+        foreach (var context in duplicateGroups.SelectMany(c => c))
         {
-            foreach (var context in duplicateGroup)
-            {
-                var fluentConstructorAttribute = context.Constructor.GetAttributes()
-                    .FirstOrDefault(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentConstructorAttribute);
-
-                yield return Diagnostic.Create(
-                    FluentFactoryGenerator.DuplicateCreateMethodName,
-                    FindLocation(fluentConstructorAttribute, context));
-            }
+            yield return Diagnostic.Create(
+                FluentFactoryGenerator.DuplicateCreateMethodName,
+                FindCreateMethodNameArgumentLocation(context));
         }
 
         // Check for NoCreateMethod option used with CreateMethodName
-        foreach (var context in fluentConstructorContexts)
+        var conflictedMethodNameFluentConstructorContexts = fluentConstructorContexts.Where(context =>
+            context.Options.HasFlag(NoCreateMethod)
+            && !string.IsNullOrEmpty(context.CreateMethodName));
+
+        foreach (var context in conflictedMethodNameFluentConstructorContexts)
         {
-            if (context.Options.HasFlag(FluentFactoryGeneratorOptions.NoCreateMethod) &&
-                !string.IsNullOrEmpty(context.CreateMethodName))
-            {
-                yield return Diagnostic.Create(
-                    FluentFactoryGenerator.CreateMethodNameWithNoCreateMethod,
-                    FindNoCreateMethodAndCreateMethodNameLocations(context));
-            }
+            yield return Diagnostic.Create(
+                FluentFactoryGenerator.CreateMethodNameWithNoCreateMethod,
+                context.AttributeData.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax attributeSyntax
+                    ? attributeSyntax.GetLocation()
+                    : Location.None);
         }
 
         yield break;
@@ -189,10 +180,10 @@ public class FluentModelFactory(Compilation compilation)
             return location;
         }
 
-        Location FindLocation(AttributeData? fluentConstructorAttribute, FluentConstructorContext context)
+        Location FindCreateMethodNameArgumentLocation(FluentConstructorContext context)
         {
             Location location;
-            if (fluentConstructorAttribute?.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax attributeSyntax)
+            if (context.AttributeData.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax attributeSyntax)
             {
                 // Find the CreateMethodName named argument
                 var createMethodNameArg = attributeSyntax.ArgumentList?.Arguments
@@ -200,24 +191,8 @@ public class FluentModelFactory(Compilation compilation)
                     .FirstOrDefault(arg => arg.NameEquals?.Name.Identifier.ValueText == "CreateMethodName");
 
                 location = createMethodNameArg != null
-                    ? createMethodNameArg.Expression.GetLocation()
+                    ? createMethodNameArg.GetLocation()
                     : attributeSyntax.GetLocation();
-            }
-            else
-            {
-                location = context.Constructor.Locations.FirstOrDefault() ?? Location.None;
-            }
-
-            return location;
-        }
-
-        Location FindNoCreateMethodAndCreateMethodNameLocations(FluentConstructorContext context)
-        {
-            Location location;
-            if (context.AttributeData.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax attributeSyntax)
-            {
-                // Return the entire attribute location to show squiggles under the attribute usage
-                location = attributeSyntax.GetLocation();
             }
             else
             {

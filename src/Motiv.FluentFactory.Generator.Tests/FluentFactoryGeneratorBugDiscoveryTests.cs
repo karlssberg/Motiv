@@ -161,7 +161,6 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                  [FluentFactory]
                  public partial class MyTarget;
 
-                 [FluentFactory]
                  [FluentConstructor(typeof(MyTarget))]
                  public partial class MyBuildTarget
                  {
@@ -313,7 +312,6 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                 [FluentFactory]
                 public partial class MyTarget;
 
-                [FluentFactory]
                 [FluentConstructor(typeof(MyTarget), Options = (FluentOptions)999)] // Invalid enum value
                 public partial record MyBuildTarget(int Value);
             }
@@ -442,6 +440,11 @@ public class FluentFactoryGeneratorBugDiscoveryTests
     public async Task Should_error_when_invalid_create_method_names(string invalidMethodName)
     {
         // Tests CreateMethodName handling with edge case error values and putting red squiggles on them
+        var createMethodNameArgument =
+            $"""
+             CreateMethodName = "{invalidMethodName}"
+             """;
+
         var source =
           $$"""
             using Motiv.FluentFactory.Generator;
@@ -451,10 +454,12 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                 [FluentFactory]
                 public partial class MyTarget;
 
-                [FluentConstructor(typeof(MyTarget), CreateMethodName = "{{invalidMethodName}}")]
+                [FluentConstructor(typeof(MyTarget), {{createMethodNameArgument}})]
                 public partial record EmptyName(int Value);
             }
             """;
+
+
 
         await new VerifyCS.Test
         {
@@ -464,7 +469,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                 ExpectedDiagnostics =
                 {
                     DiagnosticResult.CompilerError("MOTIV007")
-                        .WithSpan("Source.cs", 9, 27, 9, 36)
+                        .WithSpan("Source.cs", 8, 42, 8, 42 + createMethodNameArgument.Length)
                         .WithMessage("CreateMethodName must be a valid identifier")
                 }
             }
@@ -639,7 +644,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
             ExpectedDiagnostics =
             {
                 DiagnosticResult.CompilerError("MOTIV009")
-                    .WithSpan("Source.cs", 10, 27, 10, 40)
+                    .WithSpan("Source.cs", 9, 24, 9, 40)
                     .WithMessage("FluentConstructor references type 'Test.Namespace.MyTarget' which does not have the FluentFactory attribute"),
             }
         }.RunAsync();
