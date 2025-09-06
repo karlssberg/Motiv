@@ -101,6 +101,8 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                 {
                     // Capture primary constructors
                     TypeDeclarationSyntax { ParameterList: not null, AttributeLists.Count: > 0 } => true,
+                    // Capture type declarations with FluentConstructor attributes (for applying to all constructors)
+                    TypeDeclarationSyntax { AttributeLists.Count: > 0 } => true,
                     // Capture explicit constructors
                     ConstructorDeclarationSyntax { AttributeLists.Count: > 0 } => true,
                     _ => false
@@ -208,17 +210,6 @@ public class FluentFactoryGenerator : IIncrementalGenerator
             INamedTypeSymbol alreadyDeclaredRootType,
             FluentFactoryMetadata metadata)
         {
-            var primaryCtor = type.Constructors.FirstOrDefault(c => c.Parameters.Length > 0);
-            if (primaryCtor != null)
-                return
-                [
-                    new FluentConstructorContext(
-                        primaryCtor,
-                        alreadyDeclaredRootType,
-                        metadata,
-                        semanticModel)
-                ];
-
             return
             [
                 ..type.Constructors

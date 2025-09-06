@@ -78,7 +78,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                      }
 
                      /// <summary>
-                     /// Creates a new instance using constructor Test.Namespace.MyBuildTarget.MyBuildTarget(int Value).
+                     /// Creates a new instance using constructor Test.Namespace.MyBuildTarget.MyBuildTarget(int value).
                      ///
                      ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
                      /// </summary>
