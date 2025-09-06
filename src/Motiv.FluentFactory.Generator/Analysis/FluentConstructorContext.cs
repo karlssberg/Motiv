@@ -14,12 +14,14 @@ public record FluentConstructorContext
         IMethodSymbol constructor,
         INamedTypeSymbol rootSymbol,
         FluentFactoryMetadata metadata,
+        bool isAttributedUsedOnContainingType,
         SemanticModel semanticModel)
     {
         Constructor = constructor;
         Options = metadata.Options;
         RootTypeFullName = metadata.RootTypeFullName;
         CreateMethodName = metadata.CreateMethodName;
+        IsAttributedUsedOnContainingType = isAttributedUsedOnContainingType;
         IsStatic = rootSymbol.IsStatic;
         IsRecord = rootSymbol.IsRecord;
         TypeKind = rootSymbol.TypeKind;
@@ -66,6 +68,8 @@ public record FluentConstructorContext
     public string RootTypeFullName { get; }
 
     public string? CreateMethodName { get; }
+
+    public bool IsAttributedUsedOnContainingType { get; }
 
     public SyntaxTokenList OriginalTypeModifiers { get; }
 

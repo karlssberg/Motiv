@@ -135,13 +135,42 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                 return builderContextsCollection
                     .SelectMany(builderContexts => builderContexts)
                     .GroupBy(builderContext => builderContext.RootType, SymbolEqualityComparer.Default)
-                    .Select(group =>
-                        new FluentModelFactory(compilation).CreateFluentFactoryCompilationUnit((INamedTypeSymbol)group.Key!, [..group]));
+                    .Select(fluentApiConstructors =>
+                        new FluentModelFactory(compilation)
+                            .CreateFluentFactoryCompilationUnit(
+                                (INamedTypeSymbol)fluentApiConstructors.Key!,
+                                [..DeDuplicateFluentConstructors(fluentApiConstructors)]));
             })
             .WithTrackingName("ConstructorModelsToFluentBuilderFiles");
 
         // Step 4: Write the generated files.
         context.RegisterSourceOutput(consolidated, Execute);
+    }
+
+    private static IEnumerable<FluentConstructorContext> DeDuplicateFluentConstructors(
+        IEnumerable<FluentConstructorContext> fluentApiConstructors) =>
+        fluentApiConstructors
+            .GroupBy(constructorContext => constructorContext.Constructor,
+                SymbolEqualityComparer.Default)
+            .SelectMany(ChooseOverridingConstructors);
+
+    private static ImmutableList<FluentConstructorContext> ChooseOverridingConstructors(IEnumerable<FluentConstructorContext> duplicateConstructors)
+    {
+        var emptyList = ImmutableList<FluentConstructorContext>.Empty;
+        var (usedOnType, usedOnConstructor) = duplicateConstructors
+            .Aggregate(
+                (OnType: emptyList, OnConstructor: emptyList),
+                (whenAttributes, ctor) => ctor.IsAttributedUsedOnContainingType switch
+                {
+                    true => (whenAttributes.OnType.Add(ctor),
+                        whenAttributes.OnConstructor),
+                    false => (whenAttributes.OnType,
+                        whenAttributes.OnConstructor.Add(ctor)),
+                });
+
+        return usedOnConstructor.Any()
+            ? usedOnConstructor
+            : usedOnType;
     }
 
     private static void Execute(
@@ -192,9 +221,10 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                                 constructor,
                                 metadata.RootTypeSymbol,
                                 metadata,
+                                false,
                                 semanticModel)
                         ],
-                        INamedTypeSymbol type => CreateFluentConstructorContexts(
+                        INamedTypeSymbol type => CreateContainingTypeFluentConstructorContexts(
                             type,
                             metadata.RootTypeSymbol,
                             metadata),
@@ -203,7 +233,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                 })
         ];
 
-        ImmutableArray<FluentConstructorContext> CreateFluentConstructorContexts(
+        ImmutableArray<FluentConstructorContext> CreateContainingTypeFluentConstructorContexts(
             INamedTypeSymbol type,
             INamedTypeSymbol alreadyDeclaredRootType,
             FluentFactoryMetadata metadata)
@@ -218,6 +248,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                             ctor,
                             alreadyDeclaredRootType,
                             metadata,
+                            true,
                             semanticModel))
             ];
         }

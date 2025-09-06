@@ -186,15 +186,6 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                      ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
                      /// </summary>
                      [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                     public static MyBuildTarget WithAmount(in double amount)
-                     {
-                         return new MyBuildTarget(amount);
-                     }
-
-                     /// <summary>
-                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
-                     /// </summary>
-                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
                      public static Step_0__Test_Namespace_MyTarget WithValue(in int value)
                      {
                          return new Step_0__Test_Namespace_MyTarget(value);
@@ -207,6 +198,15 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                      public static Step_1__Test_Namespace_MyTarget WithName(in string name)
                      {
                          return new Step_1__Test_Namespace_MyTarget(name);
+                     }
+
+                     /// <summary>
+                     ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
+                     /// </summary>
+                     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                     public static MyBuildTarget WithAmount(in double amount)
+                     {
+                         return new MyBuildTarget(amount);
                      }
                  }
 
@@ -222,7 +222,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                      }
 
                      /// <summary>
-                     /// Creates a new instance using constructor Test.Namespace.MyBuildTarget.MyBuildTarget(int Value).
+                     /// Creates a new instance using constructor Test.Namespace.MyBuildTarget.MyBuildTarget(int value).
                      ///
                      ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
                      /// </summary>
