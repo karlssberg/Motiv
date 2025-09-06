@@ -99,8 +99,6 @@ public class FluentFactoryGenerator : IIncrementalGenerator
             .ForAttributeWithMetadataName(TypeName.FluentConstructorAttribute,
                 (node, _) => node switch
                 {
-                    // Capture primary constructors
-                    TypeDeclarationSyntax { ParameterList: not null, AttributeLists.Count: > 0 } => true,
                     // Capture type declarations with FluentConstructor attributes (for applying to all constructors)
                     TypeDeclarationSyntax { AttributeLists.Count: > 0 } => true,
                     // Capture explicit constructors
@@ -210,9 +208,11 @@ public class FluentFactoryGenerator : IIncrementalGenerator
             INamedTypeSymbol alreadyDeclaredRootType,
             FluentFactoryMetadata metadata)
         {
+
             return
             [
                 ..type.Constructors
+                    .Where(ctor => !ctor.IsImplicitlyDeclared)
                     .Select(ctor =>
                         new FluentConstructorContext(
                             ctor,
