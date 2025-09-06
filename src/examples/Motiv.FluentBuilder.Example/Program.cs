@@ -22,3 +22,4 @@ Shape.WithRadius(5L).CreateCircle();
 
 Line.X(10).Y(20).Create();
 Line.X(10d).Y(20d).Z(30d).Create();
+

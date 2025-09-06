@@ -12,12 +12,14 @@ public record FluentConstructorContext
 {
     public FluentConstructorContext(
         IMethodSymbol constructor,
+        AttributeData attributeData,
         INamedTypeSymbol rootSymbol,
         FluentFactoryMetadata metadata,
         bool isAttributedUsedOnContainingType,
         SemanticModel semanticModel)
     {
         Constructor = constructor;
+        AttributeData = attributeData;
         Options = metadata.Options;
         RootTypeFullName = metadata.RootTypeFullName;
         CreateMethodName = metadata.CreateMethodName;
@@ -64,6 +66,7 @@ public record FluentConstructorContext
     public TypeKind TypeKind { get; }
 
     public IMethodSymbol Constructor { get; }
+    public AttributeData AttributeData { get; }
 
     public string RootTypeFullName { get; }
 

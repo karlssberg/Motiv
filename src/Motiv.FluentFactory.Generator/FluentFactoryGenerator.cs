@@ -227,6 +227,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                         [
                             new FluentConstructorContext(
                                 constructor,
+                                metadata.AttributeData!,
                                 metadata.RootTypeSymbol,
                                 metadata,
                                 false,
@@ -246,7 +247,6 @@ public class FluentFactoryGenerator : IIncrementalGenerator
             INamedTypeSymbol alreadyDeclaredRootType,
             FluentFactoryMetadata metadata)
         {
-
             return
             [
                 ..type.Constructors
@@ -254,6 +254,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                     .Select(ctor =>
                         new FluentConstructorContext(
                             ctor,
+                            metadata.AttributeData!,
                             alreadyDeclaredRootType,
                             metadata,
                             true,
@@ -292,7 +293,8 @@ public class FluentFactoryGenerator : IIncrementalGenerator
                 {
                     Options = options,
                     RootTypeFullName = typeSymbol.ToDisplayString(),
-                    CreateMethodName = createMethodName
+                    CreateMethodName = createMethodName,
+                    AttributeData = attribute,
                 };
             });
     }

@@ -283,7 +283,6 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                  [FluentFactory]
                  public partial class MyTarget;
 
-                 [FluentFactory]
                  [FluentConstructor(typeof(MyTarget), Options = FluentOptions.NoCreateMethod, CreateMethodName = "New")]
                  public partial record MyBuildTarget(int Value);
              }
@@ -296,7 +295,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
              ExpectedDiagnostics =
              {
                  DiagnosticResult.CompilerError("MOTIV010")
-                     .WithSpan("Source.cs", 10, 27, 10, 40)
+                     .WithSpan("Source.cs", 8, 6, 8, 107)
                      .WithMessage("CreateMethodName cannot be used with NoCreateMethod option"),
              }
          }.RunAsync();

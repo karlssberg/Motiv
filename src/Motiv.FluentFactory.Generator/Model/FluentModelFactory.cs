@@ -133,12 +133,9 @@ public class FluentModelFactory(Compilation compilation)
             if (context.Options.HasFlag(FluentFactoryGeneratorOptions.NoCreateMethod) &&
                 !string.IsNullOrEmpty(context.CreateMethodName))
             {
-                var fluentConstructorAttribute = context.Constructor.GetAttributes()
-                    .FirstOrDefault(attr => attr.AttributeClass?.ToDisplayString() == TypeName.FluentConstructorAttribute);
-
                 yield return Diagnostic.Create(
                     FluentFactoryGenerator.CreateMethodNameWithNoCreateMethod,
-                    FindNoCreateMethodAndCreateMethodNameLocations(fluentConstructorAttribute, context));
+                    FindNoCreateMethodAndCreateMethodNameLocations(context));
             }
         }
 
@@ -214,31 +211,13 @@ public class FluentModelFactory(Compilation compilation)
             return location;
         }
 
-        Location FindNoCreateMethodAndCreateMethodNameLocations(AttributeData? fluentConstructorAttribute, FluentConstructorContext context)
+        Location FindNoCreateMethodAndCreateMethodNameLocations(FluentConstructorContext context)
         {
             Location location;
-            if (fluentConstructorAttribute?.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax attributeSyntax)
+            if (context.AttributeData.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax attributeSyntax)
             {
-                // Find the CreateMethodName named argument first (more specific location)
-                var createMethodNameArg = attributeSyntax.ArgumentList?.Arguments
-                    .OfType<AttributeArgumentSyntax>()
-                    .FirstOrDefault(arg => arg.NameEquals?.Name.Identifier.ValueText == "CreateMethodName");
-
-                if (createMethodNameArg != null)
-                {
-                    location = createMethodNameArg.Expression.GetLocation();
-                }
-                else
-                {
-                    // Fall back to Options location
-                    var optionsArg = attributeSyntax.ArgumentList?.Arguments
-                        .OfType<AttributeArgumentSyntax>()
-                        .FirstOrDefault(arg => arg.NameEquals?.Name.Identifier.ValueText == "Options");
-
-                    location = optionsArg != null
-                        ? optionsArg.Expression.GetLocation()
-                        : attributeSyntax.GetLocation();
-                }
+                // Return the entire attribute location to show squiggles under the attribute usage
+                location = attributeSyntax.GetLocation();
             }
             else
             {
