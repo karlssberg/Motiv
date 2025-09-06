@@ -90,6 +90,14 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor CreateMethodNameWithNoCreateMethod = new(
+        id: "MOTIV010",
+        title: "CreateMethodName specified with NoCreateMethod option",
+        category: Category,
+        messageFormat: "CreateMethodName cannot be used with NoCreateMethod option",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var compilationProvider = context.CompilationProvider;

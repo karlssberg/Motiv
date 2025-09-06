@@ -271,36 +271,36 @@ public class FluentFactoryGeneratorBugDiscoveryTests
          }.RunAsync();
      }
 
-//     [Fact]
-//     public async Task Should_error_when_create_method_name_and_no_create_method_are_used_together()
-//     {
-//         const string source =
-//             """
-//             using Motiv.FluentFactory.Generator;
-//
-//             namespace Test.Namespace
-//             {
-//                 [FluentFactory]
-//                 public partial class MyTarget;
-//
-//                 [FluentFactory]
-//                 [FluentConstructor(typeof(MyTarget), Options = NoCreateMethod, CreateMethodName = "New")]
-//                 public partial record MyBuildTarget(int Value);
-//             }
-//             """;
-//
-//         await new VerifyCS.Test
-//         {
-//             TestState = { Sources = { (SourceFile, source) } },
-//             ExpectedDiagnostics =
-//             {
-//                 // DiagnosticResult.CompilerError("MOTIV010")
-//                 //     .WithSpan("Source.cs", /* TODO: add the location of the NoCreateMethod option */)
-//                 //     .WithSpan("Source.cs", /* TODO: add the location of the "New" method name */)
-//                 //     .WithMessage("CreateMethodName must be unique"),
-//             }
-//         }.RunAsync();
-//     }
+     [Fact]
+     public async Task Should_error_when_create_method_name_and_no_create_method_are_used_together()
+     {
+         const string source =
+             """
+             using Motiv.FluentFactory.Generator;
+
+             namespace Test.Namespace
+             {
+                 [FluentFactory]
+                 public partial class MyTarget;
+
+                 [FluentFactory]
+                 [FluentConstructor(typeof(MyTarget), Options = FluentOptions.NoCreateMethod, CreateMethodName = "New")]
+                 public partial record MyBuildTarget(int Value);
+             }
+             """;
+
+         // Does not generate any code.
+         await new VerifyCS.Test
+         {
+             TestState = { Sources = { (SourceFile, source) } },
+             ExpectedDiagnostics =
+             {
+                 DiagnosticResult.CompilerError("MOTIV010")
+                     .WithSpan("Source.cs", 10, 27, 10, 40)
+                     .WithMessage("CreateMethodName cannot be used with NoCreateMethod option"),
+             }
+         }.RunAsync();
+     }
 
     [Fact]
     public async Task Should_error_when_invalid_enum_values_in_options_conversion()
