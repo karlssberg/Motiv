@@ -1,4 +1,3 @@
-using System.Collections;
 using Microsoft.CodeAnalysis;
 
 namespace Motiv.FluentFactory.Generator;

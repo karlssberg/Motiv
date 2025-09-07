@@ -1,5 +1,4 @@
 using Motiv.FluentBuilder.Example;
-using Motiv.FluentFactory.Generator;
 
 // Examples of consuming the generated code
 
