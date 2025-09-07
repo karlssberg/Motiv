@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Motiv.FluentFactory.Generator.Analysis;
@@ -31,8 +32,13 @@ internal static class FluentConstructorValidatorExtensions
 
     private static IEnumerable<Diagnostic> ValidateCreateMethodNames(ImmutableArray<FluentConstructorContext> fluentConstructorContexts)
     {
-        // Check for valid CreateMethodName values
+        // Get contexts that have duplicates - we'll skip MOTIV007 for these since MOTIV008 will be reported
+        var duplicateContexts = new HashSet<FluentConstructorContext>(GetDuplicateConstructorContexts(fluentConstructorContexts)
+            .SelectMany(group => group));
+
+        // Check for valid CreateMethodName values, but skip those that are duplicates
         var constructorContextWithInvalidCreateMethodName = fluentConstructorContexts
+            .Except(duplicateContexts)
             .Where(context =>
             {
                 var isFirstCharValid = context.CreateMethodName?.Select(char.IsLetter).FirstOrDefault() ?? true;
@@ -51,19 +57,30 @@ internal static class FluentConstructorValidatorExtensions
     private static IEnumerable<Diagnostic> ValidateDuplicateCreateMethodNames(ImmutableArray<FluentConstructorContext> fluentConstructorContexts)
     {
         // Check for duplicate CreateMethodName values within the same type
-        var duplicateGroups = fluentConstructorContexts
-            .Where(context => !string.IsNullOrEmpty(context.CreateMethodName))
-            .GroupBy(context => new
-                { context.CreateMethodName, TypeName = context.Constructor.ContainingType.ToDisplayString() })
-            .Where(group => group.Count() > 1);
+        var duplicateGroups = GetDuplicateConstructorContexts(fluentConstructorContexts);
 
-        foreach (var context in duplicateGroups.SelectMany(c => c))
+        foreach (var group in duplicateGroups)
         {
+
+            var contexts = group.ToList();
+            var primaryLocation = FindCreateMethodNameArgumentLocation(contexts[0]);
+            var additionalLocations = contexts
+                .Skip(1)
+                .Select(FindCreateMethodNameArgumentLocation);
+
             yield return Diagnostic.Create(
                 FluentFactoryGenerator.DuplicateCreateMethodName,
-                FindCreateMethodNameArgumentLocation(context));
+                primaryLocation,
+                additionalLocations: additionalLocations);
         }
     }
+
+    private static IEnumerable<IGrouping<(string? CreateMethodName, string TypeName), FluentConstructorContext>> GetDuplicateConstructorContexts(
+        ImmutableArray<FluentConstructorContext> fluentConstructorContexts) =>
+        fluentConstructorContexts
+            .Where(context => !string.IsNullOrEmpty(context.CreateMethodName))
+            .GroupBy(context =>(context.CreateMethodName, TypeName: context.Constructor.ContainingType.ToDisplayString()))
+            .Where(group => group.Count() > 1);
 
     private static IEnumerable<Diagnostic> ValidateCreateMethodNameConflicts(ImmutableArray<FluentConstructorContext> fluentConstructorContexts)
     {

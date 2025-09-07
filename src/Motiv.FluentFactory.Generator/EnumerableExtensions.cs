@@ -1,3 +1,4 @@
+using System.Collections;
 using Microsoft.CodeAnalysis;
 
 namespace Motiv.FluentFactory.Generator;
@@ -50,4 +51,5 @@ public static class EnumerableExtensions
 
         return source;
     }
+
 }
