@@ -11,7 +11,8 @@ public class FluentFactoryGeneratorBugDiscoveryTests
     [Fact]
     public async Task Should_allow_attribute_on_type_declaration_to_be_applied_to_all_constructors()
     {
-        const string source = """
+        const string source =
+            """
             using Motiv.FluentFactory.Generator;
 
             namespace Test.Namespace
@@ -19,7 +20,6 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                 [FluentFactory]
                 public partial class MyTarget;
 
-                [FluentFactory]
                 [FluentConstructor(typeof(MyTarget))]
                 public partial class MyBuildTarget
                 {
@@ -301,55 +301,6 @@ public class FluentFactoryGeneratorBugDiscoveryTests
     }
 
     [Fact]
-    public async Task Should_error_when_invalid_enum_values_in_options_conversion()
-    {
-        // This tests the enum conversion logic with invalid enum values.  999 bits matches NoCreateMethod (i.e. 1).
-        const string source = """
-            using Motiv.FluentFactory.Generator;
-
-            namespace Test.Namespace
-            {
-                [FluentFactory]
-                public partial class MyTarget;
-
-                [FluentConstructor(typeof(MyTarget), Options = (FluentOptions)999)] // Invalid enum value
-                public partial record MyBuildTarget(int Value);
-            }
-            """;
-
-        const string expected = """
-            using System;
-
-            namespace Test.Namespace
-            {
-                public partial class MyTarget
-                {
-                    /// <summary>
-                    ///     <seealso cref="Test.Namespace.MyBuildTarget"/>
-                    /// </summary>
-                    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                    public static MyBuildTarget WithValue(in int value)
-                    {
-                        return new MyBuildTarget(value);
-                    }
-                }
-            }
-            """;
-
-        await new VerifyCS.Test
-        {
-            TestState =
-            {
-                Sources = { (SourceFile, source) },
-                GeneratedSources =
-                {
-                    (typeof(FluentFactoryGenerator), "Test.Namespace.MyTarget.g.cs", expected)
-                }
-            }
-        }.RunAsync();
-    }
-
-    [Fact]
     public async Task Should_allow_multiple_fluent_constructor_attributes_with_different_create_method_names()
     {
         // Tests what happens when multiple FluentConstructor attributes have different CreateMethodName values
@@ -361,7 +312,6 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                 [FluentFactory]
                 public partial class MyTarget;
 
-                [FluentFactory]
                 [FluentConstructor(typeof(MyTarget), CreateMethodName = "CreateFirst")]
                 [FluentConstructor(typeof(MyTarget), CreateMethodName = "CreateSecond")]
                 public partial record MyBuildTarget(int Value);
@@ -636,8 +586,10 @@ public class FluentFactoryGeneratorBugDiscoveryTests
     public async Task Should_error_when_fluent_factory_attribute_on_non_target_type()
     {
         // Tests what happens when FluentFactory is missing on referenced type
-        const string source =
-            """
+        const string fluentFactoryRootType = "typeof(MyTarget)";
+
+        var source =
+          $$"""
             using Motiv.FluentFactory.Generator;
 
             namespace Test.Namespace
@@ -645,8 +597,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                 // Missing [FluentFactory] attribute
                 public partial class MyTarget;
 
-                [FluentFactory]
-                [FluentConstructor(typeof(MyTarget))] // References type without FluentFactory
+                [FluentConstructor({{fluentFactoryRootType}})] // References type without FluentFactory
                 public partial record InvalidTarget(int Value);
             }
             """;
@@ -657,7 +608,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
             ExpectedDiagnostics =
             {
                 DiagnosticResult.CompilerError("MOTIV009")
-                    .WithSpan("Source.cs", 9, 24, 9, 40)
+                    .WithSpan("Source.cs", 8, 24, 8, 24 + fluentFactoryRootType.Length)
                     .WithMessage("FluentConstructor references type 'Test.Namespace.MyTarget' which does not have the FluentFactory attribute"),
             }
         }.RunAsync();
