@@ -31,7 +31,7 @@ internal static class FluentConstructorValidatorExtensions
 
     private static IEnumerable<Diagnostic> ValidateCreateMethodNames(ImmutableArray<FluentConstructorContext> fluentConstructorContexts)
     {
-        // Get contexts that have duplicates - we'll skip MOTIV007 for these since MOTIV008 will be reported
+        // Get contexts that have duplicates - we'll skip MFFG0007 for these since MFFG0008 will be reported
         var duplicateContexts = new HashSet<FluentConstructorContext>(GetDuplicateConstructorContexts(fluentConstructorContexts)
             .SelectMany(group => group));
 

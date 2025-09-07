@@ -163,7 +163,7 @@ public class FluentFactoryDiagnosticsTests
                 ExpectedDiagnostics =
                 {
                     DiagnosticResult
-                        .CompilerError("MOTIV001")
+                        .CompilerError("MFFG0001")
                         .WithSpan("Source.cs", 23, 16, 23, 23)
                         .WithArguments("Company.Company(int? id)"),
                 },

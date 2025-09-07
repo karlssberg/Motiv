@@ -13,7 +13,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
     private const string Category = "FluentFactory";
 
     public static readonly DiagnosticDescriptor UnreachableConstructor = new(
-        id: "MOTIV001",
+        id: "MFFG0001",
         title: "Unreachable fluent constructor",
         messageFormat:
         "Unreachable fluent constructor '{0}'",
@@ -23,7 +23,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         customTags: [WellKnownDiagnosticTags.Unnecessary]);
 
     public static readonly DiagnosticDescriptor ContainsSupersededFluentMethodTemplate = new(
-        id: "MOTIV002",
+        id: "MFFG0002",
         title: "Multiple fluent method contains superseded method",
         messageFormat: "Ignoring fluent-method-template '{0}', used by the parameter '{1}' in the constructor '{2}'. Instead, {3}.",
         category: Category,
@@ -32,7 +32,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         customTags: [WellKnownDiagnosticTags.Unnecessary]);
 
     public static readonly DiagnosticDescriptor IncompatibleFluentMethodTemplate = new(
-        id: "MOTIV003",
+        id: "MFFG0003",
         title: "Fluent method template not compatible",
         category: Category,
         messageFormat: "Incompatible return type to the method '{0}'. It is not assignable to the fluent constructor parameter '{1}'.",
@@ -41,7 +41,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         customTags: [WellKnownDiagnosticTags.Unnecessary]);
 
     public static readonly DiagnosticDescriptor AllFluentMethodTemplatesIncompatible = new(
-        id: "MOTIV004",
+        id: "MFFG0004",
         title: "All fluent method template incompatible",
         category: Category,
         messageFormat: "None of the fluent-method-templates have return types that are assignable to the fluent constructor parameter '{0}'",
@@ -50,7 +50,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         customTags: [WellKnownDiagnosticTags.Unnecessary]);
 
     public static readonly DiagnosticDescriptor FluentMethodTemplateAttributeNotStatic = new(
-        id: "MOTIV005",
+        id: "MFFG0005",
         title: "Fluent method template not static",
         category: Category,
         messageFormat: "Static method required '{0}'",
@@ -58,7 +58,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor FluentMethodTemplateSuperseded = new(
-        id: "MOTIV006",
+        id: "MFFG0006",
         title: "Fluent method template superseded",
         category: Category,
         messageFormat: "Fluent method template '{0}' is not being applied for the fluent constructor parameter '{1}' in constructor '{2}'. " +
@@ -67,7 +67,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor InvalidCreateMethodName = new(
-        id: "MOTIV007",
+        id: "MFFG0007",
         title: "Invalid CreateMethodName",
         category: Category,
         messageFormat: "CreateMethodName must be a valid identifier",
@@ -75,7 +75,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor DuplicateCreateMethodName = new(
-        id: "MOTIV008",
+        id: "MFFG0008",
         title: "Duplicate CreateMethodName",
         category: Category,
         messageFormat: "CreateMethodName must be unique",
@@ -83,7 +83,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor FluentConstructorTargetTypeMissingFluentFactory = new(
-        id: "MOTIV009",
+        id: "MFFG0009",
         title: "FluentConstructor target type missing FluentFactory attribute",
         category: Category,
         messageFormat: "FluentConstructor references type '{0}' which does not have the FluentFactory attribute",
@@ -91,7 +91,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor CreateMethodNameWithNoCreateMethod = new(
-        id: "MOTIV010",
+        id: "MFFG0010",
         title: "CreateMethodName specified with NoCreateMethod option",
         category: Category,
         messageFormat: "CreateMethodName cannot be used with NoCreateMethod option",

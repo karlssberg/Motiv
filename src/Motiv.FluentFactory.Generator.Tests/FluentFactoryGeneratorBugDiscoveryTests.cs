@@ -293,7 +293,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
             TestState = { Sources = { (SourceFile, source) } },
             ExpectedDiagnostics =
             {
-                DiagnosticResult.CompilerError("MOTIV010")
+                DiagnosticResult.CompilerError("MFFG0010")
                     .WithSpan("Source.cs", 8, 6, 8, 107)
                     .WithMessage("CreateMethodName cannot be used with NoCreateMethod option"),
             }
@@ -416,7 +416,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
                 Sources = { (SourceFile, source) },
                 ExpectedDiagnostics =
                 {
-                    DiagnosticResult.CompilerError("MOTIV007")
+                    DiagnosticResult.CompilerError("MFFG0007")
                         .WithSpan("Source.cs", 8, 42, 8, 42 + createMethodNameArgument.Length)
                         .WithMessage("CreateMethodName must be a valid identifier")
                 }
@@ -463,7 +463,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
             TestState = { Sources = { (SourceFile, source) } },
             ExpectedDiagnostics =
             {
-                DiagnosticResult.CompilerError("MOTIV008")
+                DiagnosticResult.CompilerError("MFFG0008")
                     .WithSpan("Source.cs", 8, 42, 8, 42 + createMethodNameArgument.Length)
                     .WithSpan("Source.cs", 9, 42, 9, 42 + createMethodNameArgument.Length)
                     .WithMessage("CreateMethodName must be unique")
@@ -607,7 +607,7 @@ public class FluentFactoryGeneratorBugDiscoveryTests
             TestState = { Sources = { (SourceFile, source) } },
             ExpectedDiagnostics =
             {
-                DiagnosticResult.CompilerError("MOTIV009")
+                DiagnosticResult.CompilerError("MFFG0009")
                     .WithSpan("Source.cs", 8, 24, 8, 24 + fluentFactoryRootType.Length)
                     .WithMessage("FluentConstructor references type 'Test.Namespace.MyTarget' which does not have the FluentFactory attribute"),
             }

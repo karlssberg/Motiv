@@ -27,4 +27,12 @@
         <Using Include="Xunit"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" />
+    </ItemGroup>
+
+    <!-- <ItemGroup>
+      <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" />
+    </ItemGroup> -->
+
 </Project>
