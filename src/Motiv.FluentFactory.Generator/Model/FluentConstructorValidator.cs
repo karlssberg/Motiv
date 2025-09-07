@@ -39,18 +39,22 @@ internal static class FluentConstructorValidatorExtensions
         // Check for valid CreateMethodName values, but skip those that are duplicates
         var constructorContextWithInvalidCreateMethodName = fluentConstructorContexts
             .Except(duplicateContexts)
-            .Where(context =>
-            {
-                var isFirstCharValid = context.CreateMethodName?.Select(char.IsLetter).FirstOrDefault() ?? true;
-                var areRemainingCharsValid = context.CreateMethodName?.Skip(1).All(char.IsLetterOrDigit) ?? true;
-                return !(isFirstCharValid && areRemainingCharsValid);
-            });
+            .Where(IsMethodNameValid);
 
         foreach (var context in constructorContextWithInvalidCreateMethodName)
         {
             yield return Diagnostic.Create(
                 FluentFactoryGenerator.InvalidCreateMethodName,
                 FindCreateMethodNameArgumentLocation(context));
+        }
+
+        yield break;
+
+        bool IsMethodNameValid(FluentConstructorContext context)
+        {
+            var isFirstCharValid = context.CreateMethodName?.Select(char.IsLetter).FirstOrDefault() ?? true;
+            var areRemainingCharsValid = context.CreateMethodName?.Skip(1).All(char.IsLetterOrDigit) ?? true;
+            return !(isFirstCharValid && areRemainingCharsValid);
         }
     }
 
