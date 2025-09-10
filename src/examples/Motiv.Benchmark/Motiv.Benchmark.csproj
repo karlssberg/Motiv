@@ -6,9 +6,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
-      <PackageReference Include="BenchmarkDotNet.Diagnostics.dotTrace" Version="0.14.0" />
-      <PackageReference Include="System.Collections.Immutable" Version="9.0.8" />
+      <PackageReference Include="BenchmarkDotNet" />
+      <PackageReference Include="BenchmarkDotNet.Diagnostics.dotTrace" />
+      <PackageReference Include="System.Collections.Immutable" />
     </ItemGroup>
 
     <ItemGroup>
