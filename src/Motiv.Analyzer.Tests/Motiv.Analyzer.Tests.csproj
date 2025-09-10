@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="6.0.2"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.14.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.2" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" Version="1.1.2" />
@@ -29,12 +30,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" />
-      <ProjectReference Include="..\Motiv\Motiv.csproj" />
+      <ProjectReference Include="..\Motiv.Analyzer\Motiv.Analyzer.csproj" />
     </ItemGroup>
-
-    <!-- <ItemGroup>
-      <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" />
-    </ItemGroup> -->
 
 </Project>

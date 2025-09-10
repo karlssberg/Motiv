@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 
-namespace Motiv.CodeFix.Tests;
+namespace Motiv.Analyzer.Tests;
 
 public static class CSharpDiagnosticAnalyzerVerifier<TAnalyzer>
     where TAnalyzer : DiagnosticAnalyzer, new()

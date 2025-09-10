@@ -15,19 +15,7 @@
         <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" PrivateAssets="all" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" PrivateAssets="all" />
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.14.0" />
         <PackageReference Include="System.Collections.Immutable" Version="9.0.8" />
         <PackageReference Include="System.Composition" Version="9.0.0" />
-    </ItemGroup>
-    <ItemGroup>
-        <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs/$(AssemblyName).dll" Visible="false" />
-    </ItemGroup>
-    <ItemGroup>
-      <AdditionalFiles Remove="AnalyzerReleases.Shipped.md" />
-      <AdditionalFiles Remove="AnalyzerReleases.Unshipped.md" />
-    </ItemGroup>
-    <ItemGroup>
-      <ProjectReference Include="..\Motiv.Analyzer\Motiv.Analyzer.csproj" />
-      <ProjectReference Include="..\Motiv\Motiv.csproj" />
     </ItemGroup>
 </Project>
