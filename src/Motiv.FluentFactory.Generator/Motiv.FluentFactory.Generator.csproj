@@ -1,10 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
         <TargetFramework>netstandard2.0</TargetFramework>
-        <LangVersion>latest</LangVersion>
         <IncludeBuildOutput>true</IncludeBuildOutput>
         <IsRoslynComponent>true</IsRoslynComponent>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
@@ -14,15 +11,8 @@
         <PackageId>Motiv.FluentFactory.Generator</PackageId>
         <Title>Motiv Fluent Builder Generator</Title>
         <Description>Source generator and attributes for creating fluent API builders automatically. This package provides both the attributes that can be applied to classes, constructors, and parameters, and the source generator that creates fluent builder patterns.</Description>
-        <Authors>Daniel Karlsson</Authors>
-        <Copyright>Copyright (c) 2025 Daniel Karlsson</Copyright>
-        <PackageProjectUrl>https://karlssberg.github.io/Motiv</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/karlssberg/Motiv</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
         <PackageTags>Code Generation, Fluent API, Builder Pattern, Source Generator, Attributes</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>8.0.0</Version>
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />

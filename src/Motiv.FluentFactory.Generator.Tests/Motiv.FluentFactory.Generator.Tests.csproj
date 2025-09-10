@@ -1,9 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <LangVersion>latest</LangVersion>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <RootNamespace>Motiv.FluentFactory.Generator.Tests</RootNamespace>
         <OutputType>Library</OutputType>
