@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
@@ -31,7 +31,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" />
-      <ProjectReference Include="..\Motiv\Motiv.csproj" />
+      <ProjectReference Include="..\Motiv\Motiv.csproj" SetTargetFramework="TargetFramework=netstandard2.0" />
     </ItemGroup>
 
     <!-- <ItemGroup>
