@@ -16,6 +16,11 @@ public static class SpecInvocationExpressionSyntax
         return CreateInternal(specName.ToString(), modelVariableName.ToString());
     }
 
+    public static ExpressionSyntax Create(IdentifierNameSyntax specName, IdentifierNameSyntax modelVariableName)
+    {
+        return CreateInternal(specName.ToString(), modelVariableName.ToString());
+    }
+
     private static ExpressionSyntax CreateInternal(string specName, string modelObjectCreation)
     {
         var propositionInvocationSource =

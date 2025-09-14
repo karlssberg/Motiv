@@ -27,7 +27,7 @@ public class MotivConvertToSpecTests
             }
             """;
 
-        var expectedTransformedCode =
+        const string expectedTransformedCode =
           $$"""
             using Motiv;
 
@@ -79,7 +79,7 @@ public class MotivConvertToSpecTests
               }
               """;
 
-        var expectedTransformedCode =
+        const string expectedTransformedCode =
           $$"""
             using Motiv;
 
@@ -87,14 +87,14 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                public bool IsValid(int value)
+                public bool IsValid(int valueA, int valueB, bool valueC)
                 {
-                    return new Proposition().IsSatisfiedBy(value).Satisfied;
+                    return new Proposition().IsSatisfiedBy(new Model(valueA, valueB, valueC)).Satisfied;
                 }
             }
 
-            public class Proposition() : Spec<int>(() =>
-                Spec.Build((int value) => {{booleanExpression}})
+            public class Proposition() : Spec<Model>(() =>
+                Spec.Build((Model model) => model.ValueA > model.ValueB && model.ValueC)
                     .WhenTrue("({{booleanExpression}}) == true")
                     .WhenFalse("({{booleanExpression}}) == false")
                     .Create());

@@ -74,5 +74,62 @@ public class FindBooleanExpressionsTests
                 }
             }
         }.RunAsync();
+    }[Fact]
+    public async Task Should_ignore_boolean_expressions_inside_spec_fluent_builder()
+    {
+        const string source =
+            """
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public static readonly SpecBase<int, string> IsPositive =
+                    Spec.Build((int value) => value > 0)
+                        .WhenTrue("Value is positive")
+                        .WhenFalse("Value is not positive")
+                        .Create();
+            }
+            """;
+
+        // No diagnostics should be reported since the expression is inside Spec.Build()
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            ExpectedDiagnostics = { } // Empty - no diagnostics expected
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_ignore_boolean_expressions_deeply_nested_inside_spec_fluent_builder()
+    {
+        const string source =
+            """
+            using System;
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public static readonly SpecBase<int, string> IsPositive =
+                    Spec.Build((int value) =>
+                         {
+                             Func<bool> nested = () => value > 0;
+                             return nested();
+                         })
+                        .WhenTrue("Value is positive")
+                        .WhenFalse("Value is not positive")
+                        .Create();
+            }
+            """;
+
+        // No diagnostics should be reported since the expression is inside Spec.Build()
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            ExpectedDiagnostics = { } // Empty - no diagnostics expected
+        }.RunAsync();
     }
 }

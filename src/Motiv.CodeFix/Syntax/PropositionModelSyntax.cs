@@ -34,7 +34,8 @@ public static class PropositionModelSyntax
                 [
                     constructor,
                     ..propertyDeclarationSyntaxes
-                ]);
+                ])
+            .NormalizeWhitespace();
     }
 
     private static IEnumerable<PropertyDeclarationSyntax> CreateProperties(ImmutableList<(string Name, ITypeSymbol TypeSymbol)> variables, SyntaxList<AccessorDeclarationSyntax> autoPropertySyntax)
@@ -43,8 +44,7 @@ public static class PropositionModelSyntax
             .Select(v =>
                 PropertyDeclaration(ParseTypeName(v.TypeSymbol.ToDisplayString()), v.Name.Capitalize())
                     .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-                    .WithAccessorList(AccessorList(autoPropertySyntax))
-                    .WithInitializer(EqualsValueClause(IdentifierName(v.Name))));
+                    .WithAccessorList(AccessorList(List([AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(Token(SyntaxKind.SemicolonToken))]))));
     }
 
     private static ConstructorDeclarationSyntax CreateConstructor(string modelName, ImmutableList<(string Name, ITypeSymbol TypeSymbol)> variables)
@@ -65,9 +65,10 @@ public static class PropositionModelSyntax
                             ExpressionStatement(
                                 AssignmentExpression(
                                     SyntaxKind.SimpleAssignmentExpression,
-                                    IdentifierName(v.Name),
+                                    IdentifierName(v.Name.Capitalize()),
                                     IdentifierName(v.Name)))))));
     }
+
 
     private static SyntaxList<AccessorDeclarationSyntax> AutoPropertySyntax(
         SyntaxKind getterKind = SyntaxKind.GetAccessorDeclaration,

@@ -31,11 +31,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" />
-      <ProjectReference Include="..\Motiv\Motiv.csproj" SetTargetFramework="TargetFramework=netstandard2.0" />
+      <ProjectReference Include="..\Motiv\Motiv.csproj"  />
     </ItemGroup>
-
-    <!-- <ItemGroup>
-      <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" />
-    </ItemGroup> -->
-
 </Project>

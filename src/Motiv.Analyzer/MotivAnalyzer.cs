@@ -39,19 +39,39 @@ public class MotivAnalyzer : DiagnosticAnalyzer
     {
         var binaryExpression = (BinaryExpressionSyntax)context.Node;
 
-        // Check if the binary expression is in a boolean method return statement
-        var returnStatement = binaryExpression.FirstAncestorOrSelf<ReturnStatementSyntax>();
-        if (returnStatement == null) return;
+        if (binaryExpression.Parent is BinaryExpressionSyntax) return;
 
-        var method = returnStatement.FirstAncestorOrSelf<MethodDeclarationSyntax>();
-        if (method == null) return;
-
-        // Check if this is a boolean method
-        var returnType = method.ReturnType.ToString();
-        if (returnType != "bool") return;
+        // Check if this expression is inside a Spec.Build() lambda - if so, ignore it
+        if (IsInsideSpecBuildLambda(binaryExpression, context.SemanticModel)) return;
 
         // Report diagnostic for the boolean expression
         var diagnostic = Diagnostic.Create(Motiv0001, binaryExpression.GetLocation());
         context.ReportDiagnostic(diagnostic);
+    }
+
+    private static bool IsInsideSpecBuildLambda(SyntaxNode node, SemanticModel semanticModel)
+    {
+        // Walk up the syntax tree to find if we're inside a lambda expression
+        var lambda = node.FirstAncestorOrSelf<LambdaExpressionSyntax>();
+
+        // Check if the lambda is an argument to Spec.Build()
+        var invocation = lambda?.FirstAncestorOrSelf<InvocationExpressionSyntax>();
+        if (invocation is null) return false;
+
+        // Check if this is a call to Spec.Build with strong typing
+        if (invocation.Expression is MemberAccessExpressionSyntax memberAccess &&
+            memberAccess.Name.Identifier.ValueText == "Build")
+        {
+            // Use semantic model to get the symbol for the expression (should be Spec)
+            var symbolInfo = semanticModel.GetSymbolInfo(memberAccess.Expression);
+            if (symbolInfo.Symbol is INamedTypeSymbol typeSymbol)
+            {
+                // Check if the type is Motiv.Spec
+                return typeSymbol.ContainingNamespace.Name == "Motiv" &&
+                       typeSymbol.Name == "Spec";
+            }
+        }
+
+        return false;
     }
 }

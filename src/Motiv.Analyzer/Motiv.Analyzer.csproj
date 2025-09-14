@@ -18,4 +18,11 @@
         <PackageReference Include="System.Collections.Immutable" />
         <PackageReference Include="System.Composition" />
     </ItemGroup>
+    <ItemGroup>
+        <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs/$(AssemblyName).dll" Visible="false" />
+    </ItemGroup>
+    <ItemGroup>
+        <AdditionalFiles Remove="AnalyzerReleases.Shipped.md" />
+        <AdditionalFiles Remove="AnalyzerReleases.Unshipped.md" />
+    </ItemGroup>
 </Project>

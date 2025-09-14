@@ -14,7 +14,9 @@ public static class CSharpDiagnosticAnalyzerVerifier<TAnalyzer>
     {
         public Test()
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
             TestState.AdditionalReferences.Add(typeof(MotivAnalyzer).Assembly);
+            TestState.AdditionalReferences.Add(typeof(Spec).Assembly);
 
             // Add the source for required types
             TestState.Sources.Add(
