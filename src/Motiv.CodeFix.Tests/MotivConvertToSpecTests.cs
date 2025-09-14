@@ -7,8 +7,10 @@ namespace Motiv.CodeFix.Tests;
 public class MotivConvertToSpecTests
 {
     private const string Source = "Source.cs";
+
+
     [Fact]
-    public async Task Should_convert_boolean_expressions_that_can_be_converted_to_spec()
+    public async Task Should_convert_single_variable_boolean_expressions_that_can_be_converted_to_spec()
     {
         const string booleanExpression = "value > 0";
 
@@ -25,26 +27,24 @@ public class MotivConvertToSpecTests
             }
             """;
 
-        const string expectedTransformedCode =
-            """
+        var expectedTransformedCode =
+          $$"""
             using Motiv;
 
             namespace MyNamespace;
 
             public class MyClass
             {
-                private static readonly IsValidSpec IsValidSpec = new();
-
                 public bool IsValid(int value)
                 {
-                    return IsValidSpec.IsSatisfiedBy(value).Satisfied;
+                    return new Proposition().IsSatisfiedBy(value).Satisfied;
                 }
             }
 
-            public class IsValidSpec() : Spec<int>(() =>
-                Spec.Build((int value) => value > 0)
-                    .WhenTrue("value is greater than 0")
-                    .WhenFalse("value is not greater than 0")
+            public class Proposition() : Spec<int>(() =>
+                Spec.Build((int value) => {{booleanExpression}})
+                    .WhenTrue("({{booleanExpression}}) == true")
+                    .WhenFalse("({{booleanExpression}}) == false")
                     .Create());
             """;
 
@@ -56,7 +56,73 @@ public class MotivConvertToSpecTests
             {
                 // This should expect a diagnostic when a boolean method is found that could be converted to a spec
                 new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Hidden)
-                    .WithSpan(Source, 7, 16, 7, 25)
+                    .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_convert_multiple_variable_boolean_expressions_that_can_be_converted_to_spec()
+    {
+        const string booleanExpression = "valueA > valueB && valueC";
+
+        const string source =
+            $$"""
+              namespace MyNamespace;
+
+              public class MyClass
+              {
+                  public bool IsValid(int valueA, int valueB, bool valueC)
+                  {
+                      return {{booleanExpression}};
+                  }
+              }
+              """;
+
+        var expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool IsValid(int value)
+                {
+                    return new Proposition().IsSatisfiedBy(value).Satisfied;
+                }
+            }
+
+            public class Proposition() : Spec<int>(() =>
+                Spec.Build((int value) => {{booleanExpression}})
+                    .WhenTrue("({{booleanExpression}}) == true")
+                    .WhenFalse("({{booleanExpression}}) == false")
+                    .Create());
+
+            public class Model
+            {
+                public Model(int valueA, int valueB, bool valueC)
+                {
+                    ValueA = valueA;
+                    ValueB = valueB;
+                    ValueC = valueC;
+                }
+
+                public int ValueA { get; }
+                public int ValueB { get; }
+                public bool ValueC { get; }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) }},
+            ExpectedDiagnostics =
+            {
+                // This should expect a diagnostic when a boolean method is found that could be converted to a spec
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Hidden)
+                    .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
             }
         }.RunAsync();
     }

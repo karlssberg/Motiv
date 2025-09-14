@@ -10,7 +10,7 @@ namespace Motiv.Analyzer;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class MotivAnalyzer : DiagnosticAnalyzer
 {
-    public static readonly DiagnosticDescriptor Rule = new(
+    public static readonly DiagnosticDescriptor Motiv0001 = new(
         "MOTIV0001",
         "Convert to proposition",
         "The boolean expression can be converted to a logical proposition",
@@ -19,7 +19,7 @@ public class MotivAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true,
         description: "Converts a boolean expression into logical proposition.");
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [Rule];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [Motiv0001];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -51,7 +51,7 @@ public class MotivAnalyzer : DiagnosticAnalyzer
         if (returnType != "bool") return;
 
         // Report diagnostic for the boolean expression
-        var diagnostic = Diagnostic.Create(Rule, binaryExpression.GetLocation());
+        var diagnostic = Diagnostic.Create(Motiv0001, binaryExpression.GetLocation());
         context.ReportDiagnostic(diagnostic);
     }
 }

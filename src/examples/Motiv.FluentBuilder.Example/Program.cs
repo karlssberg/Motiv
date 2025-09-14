@@ -21,3 +21,7 @@ Shape.WithRadius(5L).CreateCircle();
 
 Line.X(10).Y(20).Create();
 Line.X(10d).Y(20d).Z(30d).Create();
+
+const bool x = 3 > 2 && 4 > 3;
+
+Console.WriteLine(x);
