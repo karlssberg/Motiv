@@ -19,7 +19,7 @@ public class TutorialTests
     }
 
     [Fact]
-    public void Should_deomo_a_basic_spec_using_strings_as_assertions()
+    public void Should_demo_a_basic_spec_using_strings_as_assertions()
     {
         var isEven = Spec
             .Build<int>(n => n % 2 == 0)
