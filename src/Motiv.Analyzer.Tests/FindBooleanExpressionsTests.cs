@@ -74,7 +74,9 @@ public class FindBooleanExpressionsTests
                 }
             }
         }.RunAsync();
-    }[Fact]
+    }
+
+    [Fact]
     public async Task Should_ignore_boolean_expressions_inside_spec_fluent_builder()
     {
         const string source =

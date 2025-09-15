@@ -16,6 +16,7 @@ public static class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
     {
         public Test()
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
             TestState.AdditionalReferences.Add(typeof(MotivCodeFixProvider).Assembly);
             TestState.AdditionalReferences.Add(typeof(Spec<>).Assembly);
 

@@ -18,7 +18,7 @@ public static class PropositionModelSyntax
                     ILocalSymbol localSymbol => (localSymbol.Name, localSymbol.Type),
                     IFieldSymbol fieldSymbol => (fieldSymbol.Name, fieldSymbol.Type),
                     IPropertySymbol propertySymbol => (propertySymbol.Name, propertySymbol.Type),
-                    _ => throw new Exception("Unknown symbol type")
+                    _ => throw new InvalidOperationException("Unknown symbol type")
                 })
             .ToImmutableList();
 
@@ -42,7 +42,7 @@ public static class PropositionModelSyntax
     {
         return variables
             .Select(v =>
-                PropertyDeclaration(ParseTypeName(v.TypeSymbol.ToDisplayString()), v.Name.Capitalize())
+                PropertyDeclaration(ParseTypeName(v.TypeSymbol.GetCSharpTypeName()), v.Name.Capitalize())
                     .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
                     .WithAccessorList(AccessorList(List([AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(Token(SyntaxKind.SemicolonToken))]))));
     }
@@ -56,7 +56,7 @@ public static class PropositionModelSyntax
                 [..
                     variables.Select(v =>
                         Parameter(Identifier(v.Name))
-                            .WithType(ParseTypeName(v.TypeSymbol.ToDisplayString())))
+                            .WithType(ParseTypeName(v.TypeSymbol.GetCSharpTypeName())))
                 ]))
             .WithBody(
                 Block(
@@ -68,7 +68,6 @@ public static class PropositionModelSyntax
                                     IdentifierName(v.Name.Capitalize()),
                                     IdentifierName(v.Name)))))));
     }
-
 
     private static SyntaxList<AccessorDeclarationSyntax> AutoPropertySyntax(
         SyntaxKind getterKind = SyntaxKind.GetAccessorDeclaration,
