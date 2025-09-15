@@ -1,8 +1,7 @@
 ﻿using Microsoft.CodeAnalysis.Testing;
-using VerifyCS =
-    Motiv.Analyzer.Tests.CSharpDiagnosticAnalyzerVerifier<Motiv.Analyzer.MotivAnalyzer>;
+using VerifyCS = Motiv.CodeFix.Tests.CSharpDiagnosticAnalyzerVerifier<Motiv.CodeFix.MotivAnalyzer>;
 
-namespace Motiv.Analyzer.Tests;
+namespace Motiv.CodeFix.Tests;
 
 public class FindBooleanExpressionsTests
 {

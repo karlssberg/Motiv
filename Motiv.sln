@@ -38,10 +38,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.CodeFix", "src\Motiv.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.CodeFix.Tests", "src\Motiv.CodeFix.Tests\Motiv.CodeFix.Tests.csproj", "{7C2ECDA2-0929-4B30-9E88-62D1859B5881}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.Analyzer", "src\Motiv.Analyzer\Motiv.Analyzer.csproj", "{1AEB4A48-9CA2-48F9-A431-059F13FA8C50}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.Analyzer.Tests", "src\Motiv.Analyzer.Tests\Motiv.Analyzer.Tests.csproj", "{50D636EC-E156-431F-9EED-A8B0D620F1B2}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,14 +100,6 @@ Global
 		{7C2ECDA2-0929-4B30-9E88-62D1859B5881}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C2ECDA2-0929-4B30-9E88-62D1859B5881}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C2ECDA2-0929-4B30-9E88-62D1859B5881}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1AEB4A48-9CA2-48F9-A431-059F13FA8C50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1AEB4A48-9CA2-48F9-A431-059F13FA8C50}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1AEB4A48-9CA2-48F9-A431-059F13FA8C50}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1AEB4A48-9CA2-48F9-A431-059F13FA8C50}.Release|Any CPU.Build.0 = Release|Any CPU
-		{50D636EC-E156-431F-9EED-A8B0D620F1B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{50D636EC-E156-431F-9EED-A8B0D620F1B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{50D636EC-E156-431F-9EED-A8B0D620F1B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{50D636EC-E156-431F-9EED-A8B0D620F1B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3DE80EE6-5C49-48D4-A76E-570BEDFE3CF2} = {E076512D-63A8-45CA-86B2-8E8E85716CBA}

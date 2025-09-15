@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Motiv.Analyzer;
+namespace Motiv.CodeFix;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class MotivAnalyzer : DiagnosticAnalyzer
