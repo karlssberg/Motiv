@@ -16,10 +16,11 @@ public class MotivCodeFixProvider : CodeFixProvider
 
     public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
+        System.Diagnostics.Debugger.Launch(); // This is not doing anything, so I think this something is up with triggering this code fix.
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         if (root is null) return;
 
-        var logicalExpressionConverter = new LogicalExpressionToSpecConverter("Proposition", "Model", context);
+        var logicalExpressionConverter = new LogicalExpressionToSpecConverter("Proposition", "Model", context.Document);
 
         var diagnostics = context.Diagnostics
             .Where(diag => diag.Id == MotivAnalyzer.Motiv0001.Id);

@@ -11,7 +11,7 @@ namespace Motiv.CodeFix;
 public class LogicalExpressionToSpecConverter(
     string propositionName,
     string defaultModelName,
-    CodeFixContext context)
+    Document document)
 {
 
     public async Task<Document> Convert(
@@ -19,13 +19,13 @@ public class LogicalExpressionToSpecConverter(
         ExpressionSyntax logicalExpressionSyntax,
         CancellationToken cancellationToken = default)
     {
-        var root = await context.Document
+        var root = await document
             .GetSyntaxRootAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        if (root is null) return context.Document;
+        if (root is null) return document;
 
-        var semanticModel = await context.Document
+        var semanticModel = await document
                                 .GetSemanticModelAsync(cancellationToken)
                                 .ConfigureAwait(false)
                             ?? throw new InvalidOperationException("Could not get semantic model for document");
@@ -40,7 +40,7 @@ public class LogicalExpressionToSpecConverter(
                     : AddToCompilationUnit(newRoot, rootMembers);
         newRoot = AddMotivUsingStatementsIfNeeded(newRoot);
 
-        return context.Document.WithSyntaxRoot(newRoot);
+        return document.WithSyntaxRoot(newRoot);
     }
 
     private IEnumerable<MemberDeclarationSyntax> GetRootMembers(
