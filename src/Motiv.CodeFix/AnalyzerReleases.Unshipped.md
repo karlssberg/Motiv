@@ -3,6 +3,6 @@
 
 ### New Rules
 
-| Rule ID   | Category | Severity | Notes         |
-|-----------|----------|----------|---------------|
-| MOTIV0001 | Category | Hidden   | MotivAnalyzer |
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+MOTIV0001 | Category | Hidden | MotivAnalyzer
