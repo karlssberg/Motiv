@@ -20,7 +20,7 @@ internal static class FluentConstructorValidatorExtensions
     {
         // Check if the target type has the FluentFactory attribute
         var constructorContexts = fluentConstructorContexts
-            .Where(context => !context.RootType.HasAttribute<FluentFactoryAttribute>());
+            .Where(context => !context.RootType.HasAttribute(TypeName.FluentFactoryAttribute));
 
         foreach (var context in constructorContexts)
             yield return Diagnostic.Create(

@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 using Motiv.ExpressionTreeProposition;
-using Motiv.FluentFactory.Generator;
+using Motiv.FluentFactory.Attributes;
 using Motiv.HigherOrderProposition.ExpressionTree;
 
 namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTree;

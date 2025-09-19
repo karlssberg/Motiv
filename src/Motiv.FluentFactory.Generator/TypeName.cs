@@ -3,7 +3,7 @@ namespace Motiv.FluentFactory.Generator;
 public class TypeName
 {
     private readonly string _fullName;
-    private const string GeneratorNamespace = "Motiv.FluentFactory.Generator.";
+    private const string GeneratorNamespace = "Motiv.FluentFactory.Attributes.";
 
     private TypeName(string fullName)
     {

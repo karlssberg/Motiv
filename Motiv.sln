@@ -38,6 +38,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.CodeFix", "src\Motiv.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.CodeFix.Tests", "src\Motiv.CodeFix.Tests\Motiv.CodeFix.Tests.csproj", "{7C2ECDA2-0929-4B30-9E88-62D1859B5881}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.FluentFactory.Attributes", "src\Motiv.FluentFactory.Attributes\Motiv.FluentFactory.Attributes.csproj", "{AFC7670D-8F73-40C1-9A4B-1E932F133DED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -100,6 +102,10 @@ Global
 		{7C2ECDA2-0929-4B30-9E88-62D1859B5881}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C2ECDA2-0929-4B30-9E88-62D1859B5881}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C2ECDA2-0929-4B30-9E88-62D1859B5881}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFC7670D-8F73-40C1-9A4B-1E932F133DED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFC7670D-8F73-40C1-9A4B-1E932F133DED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFC7670D-8F73-40C1-9A4B-1E932F133DED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFC7670D-8F73-40C1-9A4B-1E932F133DED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3DE80EE6-5C49-48D4-A76E-570BEDFE3CF2} = {E076512D-63A8-45CA-86B2-8E8E85716CBA}

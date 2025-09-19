@@ -1,4 +1,4 @@
-using Motiv.FluentFactory.Generator;
+using Motiv.FluentFactory.Attributes;
 using Motiv.HigherOrderProposition.BooleanPredicate;
 using Motiv.Shared;
 

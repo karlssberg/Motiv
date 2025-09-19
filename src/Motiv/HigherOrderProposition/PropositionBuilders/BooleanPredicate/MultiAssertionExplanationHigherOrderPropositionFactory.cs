@@ -1,5 +1,5 @@
 using Motiv.ExpressionTreeProposition;
-using Motiv.FluentFactory.Generator;
+using Motiv.FluentFactory.Attributes;
 using Motiv.HigherOrderProposition.BooleanPredicate;
 
 namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanPredicate;

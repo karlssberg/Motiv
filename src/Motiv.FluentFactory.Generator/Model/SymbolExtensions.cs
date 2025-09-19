@@ -154,7 +154,7 @@ public static class SymbolExtensions
 
     public static int GetFluentMethodPriority(this IParameterSymbol parameterSymbol)
     {
-        const string priorityPropertyName = nameof(FluentMethodAttribute.Priority);
+        const string priorityPropertyName = "Priority";
 
         var attribute = parameterSymbol.GetAttribute(TypeName.MultipleFluentMethodsAttribute)
             ?? parameterSymbol.GetAttribute(TypeName.FluentMethodAttribute);

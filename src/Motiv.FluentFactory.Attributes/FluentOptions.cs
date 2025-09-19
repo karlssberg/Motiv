@@ -1,5 +1,8 @@
-namespace Motiv.FluentFactory.Generator;
+namespace Motiv.FluentFactory.Attributes;
 
+/// <summary>
+/// Options for the fluent factory generation.
+/// </summary>
 [Flags]
 public enum FluentOptions
 {

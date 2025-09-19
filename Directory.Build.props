@@ -5,8 +5,6 @@
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <WarningsAsErrors />
-        <WarningsNotAsErrors />
 
         <!-- Common package metadata -->
         <Authors>Daniel Karlsson</Authors>

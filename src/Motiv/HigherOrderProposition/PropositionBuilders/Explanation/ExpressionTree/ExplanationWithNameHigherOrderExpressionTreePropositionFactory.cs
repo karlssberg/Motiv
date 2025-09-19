@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using Motiv.FluentFactory.Generator;
+using Motiv.FluentFactory.Attributes;
 using Motiv.HigherOrderProposition.ExpressionTree;
 using SpecDescription = Motiv.ExpressionTreeProposition.SpecDescription;
 

@@ -279,13 +279,13 @@ public class FluentFactoryGenerator : IIncrementalGenerator
 
                 // Grab the options flags symbol
                 var optionsArgument = attribute.NamedArguments
-                    .FirstOrDefault(namedArg => namedArg.Key == nameof(FluentConstructorAttribute.Options))
+                    .FirstOrDefault(namedArg => namedArg.Key == "Options")
                     .Value;
                 var options = ConvertToFluentFactoryGeneratorOptions(optionsArgument);
 
                 // Grab the create method name
                 var createMethodNameArgument = attribute.NamedArguments
-                    .FirstOrDefault(namedArg => namedArg.Key == nameof(FluentConstructorAttribute.CreateMethodName))
+                    .FirstOrDefault(namedArg => namedArg.Key == "CreateMethodName")
                     .Value;
                 var createMethodName = createMethodNameArgument.Value as string;
 
@@ -306,7 +306,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
             return FluentFactoryGeneratorOptions.None;
 
         // Get the underlying int value
-        var value = (int?)namedAttributeArgument.Value ?? (int)FluentOptions.None;
+        var value = (int?)namedAttributeArgument.Value ?? 0;
 
         // Get the type symbol for the enum
         if (namedAttributeArgument.Type is not INamedTypeSymbol enumType)
@@ -322,7 +322,7 @@ public class FluentFactoryGenerator : IIncrementalGenerator
         var setFlags = flagMembers
             .Where(member =>
             {
-                var memberValue = (int?)member.ConstantValue ?? (int)FluentOptions.None;
+                var memberValue = (int?)member.ConstantValue ?? 0;
                 return memberValue != 0 && (value & memberValue) == memberValue;
             })
             .ToList();
