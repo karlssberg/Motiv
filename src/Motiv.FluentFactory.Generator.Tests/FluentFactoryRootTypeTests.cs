@@ -19,7 +19,7 @@ public class FluentFactoryRootTypeTests
 
             public class MyBuildTarget
             {
-                [Motiv.FluentFactory.Generator.FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                 public MyBuildTarget(int value)
                 {
                     Value = value;
@@ -77,7 +77,7 @@ public class FluentFactoryRootTypeTests
 
             public class MyBuildTarget
             {
-                [Motiv.FluentFactory.Generator.FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                 public MyBuildTarget(int value)
                 {
                     Value = value;
@@ -135,7 +135,7 @@ public class FluentFactoryRootTypeTests
 
             public class MyBuildTarget
             {
-                [Motiv.FluentFactory.Generator.FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                 public MyBuildTarget(int value)
                 {
                     Value = value;
@@ -193,7 +193,7 @@ public class FluentFactoryRootTypeTests
 
             public class MyBuildTarget
             {
-                [Motiv.FluentFactory.Generator.FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                 public MyBuildTarget(in int value)
                 {
                     Value = value;
@@ -251,7 +251,7 @@ public class FluentFactoryRootTypeTests
 
             public class MyBuildTarget
             {
-                [Motiv.FluentFactory.Generator.FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                 public MyBuildTarget(in MyParameterValue value)
                 {
                     Value = value;
@@ -312,7 +312,7 @@ public class FluentFactoryRootTypeTests
 
             public partial class MyBuildTarget
             {
-                [Motiv.FluentFactory.Generator.FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                 public MyBuildTarget(in MyParameterValue value1, in MyParameterValue value2, MyParameterValue value3)
                 {
                     Value1 = value1;
@@ -420,7 +420,7 @@ public class FluentFactoryRootTypeTests
 
             public partial class MyBuildTarget<T1, T2>
             {
-                [Motiv.FluentFactory.Generator.FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                 public MyBuildTarget(in MyParameterValue<T1, T2> value1, in MyParameterValue<T1, T2> value2, MyParameterValue<T1, T2> value3)
                 {
                     Value1 = value1;
@@ -526,7 +526,7 @@ public class FluentFactoryRootTypeTests
 
             public partial class MyBuildTargetA
             {
-                [Motiv.FluentFactory.Generator.FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                 public MyBuildTargetA(in MyParameterValue value1, in MyParameterValue value2, MyParameterValue value3, MyParameterValue value4)
                 {
                     Value1 = value1;
@@ -543,7 +543,7 @@ public class FluentFactoryRootTypeTests
 
             public partial class MyBuildTargetB
             {
-                [Motiv.FluentFactory.Generator.FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+                [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
                 public MyBuildTargetB(in MyParameterValue value1, in MyParameterValue value2)
                 {
                     Value1 = value1;
@@ -661,10 +661,10 @@ public class FluentFactoryRootTypeTests
             [FluentFactory]
             public partial record struct Factory;
 
-            [Motiv.FluentFactory.Generator.FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+            [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
             public partial class MyBuildTargetA(MyParameterValue value1, MyParameterValue value2, MyParameterValue value3, MyParameterValue value4);
 
-            [Motiv.FluentFactory.Generator.FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
+            [FluentConstructor(typeof(Factory), Options = FluentOptions.NoCreateMethod)]
             public partial class MyBuildTargetB(MyParameterValue value1, MyParameterValue value2);
 
             public record MyParameterValue();
