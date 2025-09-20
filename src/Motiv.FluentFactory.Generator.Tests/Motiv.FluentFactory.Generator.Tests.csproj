@@ -54,6 +54,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Motiv.FluentFactory.Generator\Motiv.FluentFactory.Generator.csproj" GeneratePathProperty="true" PrivateAssets="all" OutputItemType="Analyzer" />
+      <ProjectReference Include="..\Motiv.FluentFactory.Attributes\Motiv.FluentFactory.Attributes.csproj" />
     </ItemGroup>
 
 </Project>

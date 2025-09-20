@@ -13,17 +13,22 @@ public static class CSharpSourceGeneratorVerifier<TSourceGenerator>
     {
         public Test()
         {
+            // Reference the generator assembly (for any shared types if needed)
             TestState.AdditionalReferences.Add(typeof(FluentFactoryGenerator).Assembly);
+            // Reference the attributes assembly so test code can resolve attribute types
+            TestState.AdditionalReferences.Add(typeof(Attributes.FluentConstructorAttribute).Assembly);
 
-            // Add the source for required types
+            // Add the source for required types and global aliases mapping old attribute names
             TestState.Sources.Add(
                 """
+                // Global aliases so tests written against the old namespace still compile
+                global using Motiv.FluentFactory.Attributes;
 
+                // Provide IsExternalInit for record-like features in older targets
                 namespace System.Runtime.CompilerServices
                 {
                     internal static class IsExternalInit {}
                 }
-
                 """);
         }
 

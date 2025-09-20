@@ -2,7 +2,8 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
-        <IncludeBuildOutput>true</IncludeBuildOutput>
+        <!-- For source generators, don't include the DLL in lib; ship it under analyzers -->
+        <IncludeBuildOutput>false</IncludeBuildOutput>
         <IsRoslynComponent>true</IsRoslynComponent>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <AnalyzerLanguage>cs</AnalyzerLanguage>
@@ -13,7 +14,9 @@
         <Description>Source generator and attributes for creating fluent API builders automatically. This package provides both the attributes that can be applied to classes, constructors, and parameters, and the source generator that creates fluent builder patterns.</Description>
         <PackageTags>Code Generation, Fluent API, Builder Pattern, Source Generator, Attributes</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <DevelopmentDependency>true</DevelopmentDependency>
     </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.Common" PrivateAssets="all" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
@@ -22,7 +25,14 @@
         <PackageReference Include="System.Composition" />
     </ItemGroup>
 
+    <!-- Ship the generator as an analyzer -->
     <ItemGroup>
+        <Analyzer Include="$(TargetPath)" Pack="true" PackagePath="analyzers/dotnet/cs" />
+    </ItemGroup>
+
+    <!-- Bundle the Attributes assembly in lib for consumers -->
+    <ItemGroup>
+        <ProjectReference Include="..\Motiv.FluentFactory.Attributes\Motiv.FluentFactory.Attributes.csproj" ReferenceOutputAssembly="false" />
         <None Include="README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 </Project>

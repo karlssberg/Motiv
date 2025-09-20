@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using Motiv.FluentFactory.Generator;
+using Motiv.FluentFactory.Attributes;
 
 namespace Motiv.FluentBuilder.Example;
 
