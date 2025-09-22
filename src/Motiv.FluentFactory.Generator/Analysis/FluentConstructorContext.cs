@@ -21,7 +21,6 @@ public record FluentConstructorContext
         Constructor = constructor;
         AttributeData = attributeData;
         Options = metadata.Options;
-        RootTypeFullName = metadata.RootTypeFullName;
         CreateMethodName = metadata.CreateMethodName;
         IsAttributedUsedOnContainingType = isAttributedUsedOnContainingType;
         IsStatic = rootSymbol.IsStatic;
@@ -50,7 +49,7 @@ public record FluentConstructorContext
         }
     }
 
-    public INamedTypeSymbol RootType { get; set; }
+    public INamedTypeSymbol RootType { get; }
 
     public OrderedDictionary<IParameterSymbol, IFluentValueStorage> ValueStorage { get; } =
         new(FluentParameterComparer.Default);
@@ -67,8 +66,6 @@ public record FluentConstructorContext
 
     public IMethodSymbol Constructor { get; }
     public AttributeData AttributeData { get; }
-
-    public string RootTypeFullName { get; }
 
     public string? CreateMethodName { get; }
 

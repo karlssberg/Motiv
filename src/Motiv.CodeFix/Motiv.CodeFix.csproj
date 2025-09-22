@@ -5,6 +5,7 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <EnableAnalyzerReleaseTracking>false</EnableAnalyzerReleaseTracking>
         <IncludeBuildOutput>false</IncludeBuildOutput>
+        <IsRoslynComponent>true</IsRoslynComponent>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <DevelopmentDependency>true</DevelopmentDependency>
         <AnalyzerLanguage>cs</AnalyzerLanguage>
@@ -21,9 +22,6 @@
         <PackageReference Include="System.Composition" />
     </ItemGroup>
     <ItemGroup>
-        <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs/$(AssemblyName).dll" Visible="false" />
-    </ItemGroup>
-    <ItemGroup>
-      <ProjectReference Include="..\Motiv\Motiv.csproj" />
+        <Analyzer Include="$(TargetPath)" Pack="true" PackagePath="analyzers/dotnet/cs" Condition="Exists('$(TargetPath)')" />
     </ItemGroup>
 </Project>

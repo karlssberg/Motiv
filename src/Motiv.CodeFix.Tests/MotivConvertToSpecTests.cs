@@ -55,7 +55,7 @@ public class MotivConvertToSpecTests
             ExpectedDiagnostics =
             {
                 // This should expect a diagnostic when a boolean method is found that could be converted to a spec
-                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Hidden)
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
                     .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
             }
         }.RunAsync();
@@ -121,7 +121,7 @@ public class MotivConvertToSpecTests
             ExpectedDiagnostics =
             {
                 // This should expect a diagnostic when a boolean method is found that could be converted to a spec
-                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Hidden)
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
                     .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
             }
         }.RunAsync();

@@ -11,9 +11,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Motiv.CodeFix\Motiv.CodeFix.csproj" />
+        <ProjectReference Include="..\..\Motiv.CodeFix\Motiv.CodeFix.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\..\Motiv.FluentFactory.Attributes\Motiv.FluentFactory.Attributes.csproj" />
         <ProjectReference Include="..\..\Motiv.FluentFactory.Generator\Motiv.FluentFactory.Generator.csproj"
-                          OutputItemType="Analyzer"/>
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false"/>
     </ItemGroup>
     <ItemGroup>
         <Compile Remove="**/*.g.cs" />

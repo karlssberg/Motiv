@@ -11,10 +11,10 @@ public class MotivAnalyzer : DiagnosticAnalyzer
 {
     public static readonly DiagnosticDescriptor Motiv0001 = new(
         "MOTIV0001",
-        "Convert to proposition",
-        "The boolean expression can be converted to a logical proposition",
+        "Boolean Blindness",
+        "Add provenance to the boolean expression",
         "Category",
-        DiagnosticSeverity.Hidden,
+        DiagnosticSeverity.Info,
         isEnabledByDefault: true,
         description: "Converts a boolean expression into logical proposition.");
 

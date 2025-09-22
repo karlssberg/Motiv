@@ -34,7 +34,7 @@ public class FindBooleanExpressionsTests
                 ExpectedDiagnostics =
                 {
                     // This should expect a diagnostic when a boolean method is found that could be converted to a spec
-                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Hidden)
+                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
                         .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
                 }
             }
@@ -68,7 +68,7 @@ public class FindBooleanExpressionsTests
                 ExpectedDiagnostics =
                 {
                     // This should expect a diagnostic when a boolean method is found that could be converted to a spec
-                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Hidden)
+                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
                         .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
                 }
             }

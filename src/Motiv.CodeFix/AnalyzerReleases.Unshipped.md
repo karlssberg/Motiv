@@ -5,4 +5,4 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MOTIV0001 | Category | Hidden | MotivAnalyzer
+MOTIV0001 | Category | Info | MotivAnalyzer

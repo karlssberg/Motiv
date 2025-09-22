@@ -27,12 +27,13 @@
 
     <!-- Ship the generator as an analyzer -->
     <ItemGroup>
-        <Analyzer Include="$(TargetPath)" Pack="true" PackagePath="analyzers/dotnet/cs" />
+        <Analyzer Include="$(TargetPath)" Pack="true" PackagePath="analyzers/dotnet/cs" Condition="Exists('$(TargetPath)')" />
     </ItemGroup>
 
     <!-- Bundle the Attributes assembly in lib for consumers -->
     <ItemGroup>
         <ProjectReference Include="..\Motiv.FluentFactory.Attributes\Motiv.FluentFactory.Attributes.csproj" ReferenceOutputAssembly="false" />
+        <None Include="..\Motiv.FluentFactory.Attributes\bin\$(Configuration)\netstandard2.0\Motiv.FluentFactory.Attributes.dll" Pack="true" PackagePath="lib/netstandard2.0" />
         <None Include="README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 </Project>
