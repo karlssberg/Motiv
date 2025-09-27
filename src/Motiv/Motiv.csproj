@@ -26,11 +26,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj"
-                        OutputItemType="Analyzer"
-                        ReferenceOutputAssembly="false">
-        <PrivateAssets>all</PrivateAssets>
-      </ProjectReference>
       <ProjectReference Include="..\Motiv.FluentFactory.Attributes\Motiv.FluentFactory.Attributes.csproj">
         <PrivateAssets>all</PrivateAssets>
       </ProjectReference>
@@ -40,4 +35,6 @@
         <PrivateAssets>all</PrivateAssets>
       </ProjectReference>
     </ItemGroup>
+
+    <!-- Ensure analyzers from project references are included in the NuGet package -->
 </Project>
