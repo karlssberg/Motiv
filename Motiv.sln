@@ -30,6 +30,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.Benchmark", "src\exam
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.Package", "src\Motiv.Package\Motiv.Package.csproj", "{9D533FCD-14F0-47C7-B6DC-6BE0D4DC6B36}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.CodeFix", "src\Motiv.CodeFix\Motiv.CodeFix.csproj", "{17CAB8FC-0B85-4112-8EBE-9A3D0C8652C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motiv.CodeFix.Tests", "src\Motiv.CodeFix.Tests\Motiv.CodeFix.Tests.csproj", "{BC7D0D42-958A-46CE-81EE-4862F34632DD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +80,14 @@ Global
 		{9D533FCD-14F0-47C7-B6DC-6BE0D4DC6B36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D533FCD-14F0-47C7-B6DC-6BE0D4DC6B36}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D533FCD-14F0-47C7-B6DC-6BE0D4DC6B36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17CAB8FC-0B85-4112-8EBE-9A3D0C8652C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17CAB8FC-0B85-4112-8EBE-9A3D0C8652C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17CAB8FC-0B85-4112-8EBE-9A3D0C8652C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17CAB8FC-0B85-4112-8EBE-9A3D0C8652C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC7D0D42-958A-46CE-81EE-4862F34632DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC7D0D42-958A-46CE-81EE-4862F34632DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC7D0D42-958A-46CE-81EE-4862F34632DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC7D0D42-958A-46CE-81EE-4862F34632DD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3DE80EE6-5C49-48D4-A76E-570BEDFE3CF2} = {E076512D-63A8-45CA-86B2-8E8E85716CBA}

@@ -4,11 +4,15 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Motiv.xml</DocumentationFile>
         <TargetFrameworks>netstandard2.0;net8.0;net9.0</TargetFrameworks>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
         <InternalsVisibleTo Include="$(AssemblyName).Tests" />
     </ItemGroup>
 
-    <!-- Ensure analyzers from project references are included in the NuGet package -->
+    <ItemGroup>
+        <PackageReference Include="Motiv.FluentFactory" />
+    </ItemGroup>
+
 </Project>
