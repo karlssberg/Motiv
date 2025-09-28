@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Motiv.FluentFactory" />
+      <PackageReference Include="Motiv.FluentFactory" PrivateAssets="all" />
     </ItemGroup>
 
 </Project>

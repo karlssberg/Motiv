@@ -19,7 +19,4 @@
         <PackageReference Include="System.Collections.Immutable" />
         <PackageReference Include="System.Composition" />
     </ItemGroup>
-    <ItemGroup>
-        <Analyzer Include="$(TargetPath)" Pack="true" PackagePath="analyzers/dotnet/cs" Condition="Exists('$(TargetPath)')" />
-    </ItemGroup>
 </Project>

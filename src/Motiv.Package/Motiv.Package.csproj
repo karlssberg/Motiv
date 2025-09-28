@@ -16,14 +16,10 @@
     <ItemGroup>
         <None Include="..\..\README.md" Pack="true" PackagePath="\" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
-        <None Include="..\Motiv.CodeFix\bin\$(Configuration)\netstandard2.0\Motiv.CodeFix.dll"
-              Pack="true"
-              PackagePath="analyzers/dotnet/cs"
-              Visible="false" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Motiv\Motiv.csproj" />
-        <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" PrivateAssets="all" />
+        <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" PrivateAssets="all" OutputItemType="Analyzer" />
     </ItemGroup>
 </Project>
