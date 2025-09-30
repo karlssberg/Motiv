@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Motiv.Analyzer;
 
 namespace Motiv.CodeFix;
 
@@ -11,7 +12,7 @@ namespace Motiv.CodeFix;
 public class MotivCodeFixProvider : CodeFixProvider
 {
     // Use literal ID string to avoid any potential type initialization issues during MEF discovery
-    public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create("MOTIV0001");
+    public sealed override ImmutableArray<string> FixableDiagnosticIds => [MotivAnalyzer.Motiv0001.Id];
 
     public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
@@ -24,8 +25,11 @@ public class MotivCodeFixProvider : CodeFixProvider
 
         foreach (var diagnostic in context.Diagnostics)
         {
+            if (!diagnostic.Id.Equals(MotivAnalyzer.Motiv0001.Id, StringComparison.OrdinalIgnoreCase))
+                continue;
+
             // Ensure we only attempt to fix when the node is an expression
-            var node = root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true);
+            var node = root.FindNode(diagnostic.Location.SourceSpan);
             if (node is not ExpressionSyntax expressionSyntax)
                 continue;
 

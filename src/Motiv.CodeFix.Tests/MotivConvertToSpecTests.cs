@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis.Testing;
 using VerifyCS =
-    Motiv.CodeFix.Tests.CSharpCodeFixVerifier<Motiv.CodeFix.MotivAnalyzer, Motiv.CodeFix.MotivCodeFixProvider>;
+    Motiv.CodeFix.Tests.CSharpCodeFixVerifier<Motiv.Analyzer.MotivAnalyzer, Motiv.CodeFix.MotivCodeFixProvider>;
 
 namespace Motiv.CodeFix.Tests;
 

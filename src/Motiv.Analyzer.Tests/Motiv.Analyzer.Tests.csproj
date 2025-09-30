@@ -1,7 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
@@ -17,8 +19,8 @@
         <PackageReference Include="System.ValueTuple" />
         <PackageReference Include="xunit"/>
         <PackageReference Include="xunit.runner.visualstudio">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
 
@@ -27,8 +29,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" OutputItemType="Analyzer" />
-      <ProjectReference Include="..\Motiv.Analyzer\Motiv.Analyzer.csproj" OutputItemType="Analyzer" />
-      <ProjectReference Include="..\Motiv\Motiv.csproj"  />
+      <ProjectReference Include="..\Motiv.Analyzer\Motiv.Analyzer.csproj" />
+      <ProjectReference Include="..\Motiv\Motiv.csproj" />
     </ItemGroup>
+
 </Project>

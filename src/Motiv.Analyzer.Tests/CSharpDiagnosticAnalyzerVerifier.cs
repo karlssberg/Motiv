@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 
-namespace Motiv.CodeFix.Tests;
+namespace Motiv.Analyzer.Tests;
 
 public static class CSharpDiagnosticAnalyzerVerifier<TAnalyzer>
     where TAnalyzer : DiagnosticAnalyzer, new()
@@ -17,8 +17,6 @@ public static class CSharpDiagnosticAnalyzerVerifier<TAnalyzer>
             ReferenceAssemblies = ReferenceAssemblies.Net.Net90;
             TestState.AdditionalReferences.Add(typeof(MotivAnalyzer).Assembly);
             TestState.AdditionalReferences.Add(typeof(Spec).Assembly);
-
-
 
             // Add the source for required types
             TestState.Sources.Add(
