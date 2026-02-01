@@ -7,12 +7,24 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Motiv.CodeFix;
 
+/// <summary>
+/// Converts a logical expression into a Motiv specification.
+/// </summary>
+/// <param name="propositionName">The name of the proposition.</param>
+/// <param name="defaultModelName">The default name for the model.</param>
+/// <param name="document">The document containing the expression.</param>
 public class LogicalExpressionToSpecConverter(
     string propositionName,
     string defaultModelName,
     Document document)
 {
-
+    /// <summary>
+    /// Converts the specified logical expression into a specification.
+    /// </summary>
+    /// <param name="diagnostic">The diagnostic that triggered the fix.</param>
+    /// <param name="logicalExpressionSyntax">The logical expression to convert.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The updated document.</returns>
     public async Task<Document> Convert(
         Diagnostic diagnostic,
         ExpressionSyntax logicalExpressionSyntax,

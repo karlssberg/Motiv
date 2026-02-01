@@ -1,7 +1,15 @@
 namespace Motiv.CodeFix;
 
+/// <summary>
+/// Provides extension methods for strings.
+/// </summary>
 public static class StringExtensions
 {
+    /// <summary>
+    /// Converts a string to camel case.
+    /// </summary>
+    /// <param name="input">The input string.</param>
+    /// <returns>The camel-cased string.</returns>
     public static string ToCamelCase(this string input) =>
         input switch
         {
@@ -9,6 +17,11 @@ public static class StringExtensions
             _ => $"{char.ToLower(input[0])}{input.Substring(1)}"
         };
 
+    /// <summary>
+    /// Capitalizes the first letter of a string.
+    /// </summary>
+    /// <param name="input">The input string.</param>
+    /// <returns>The capitalized string.</returns>
     public static string Capitalize(this string input) =>
         input switch
         {

@@ -3,8 +3,19 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Motiv.CodeFix.Syntax;
 
+/// <summary>
+/// Provides factory methods for creating custom specification declarations.
+/// </summary>
 public static class CustomSpecDeclarationSyntax
 {
+    /// <summary>
+    /// Creates a type declaration for a custom specification.
+    /// </summary>
+    /// <param name="propositionName">The name of the proposition.</param>
+    /// <param name="modelParameterName">The name of the model parameter.</param>
+    /// <param name="logicalExpression">The logical expression.</param>
+    /// <param name="modelTypeName">The name of the model type.</param>
+    /// <returns>A type declaration syntax node.</returns>
     public static TypeDeclarationSyntax Create(
         IdentifierNameSyntax propositionName,
         IdentifierNameSyntax modelParameterName,
@@ -19,6 +30,15 @@ public static class CustomSpecDeclarationSyntax
             modelTypeName);
     }
 
+    /// <summary>
+    /// Creates a type declaration for a custom specification.
+    /// </summary>
+    /// <param name="propositionName">The name of the proposition.</param>
+    /// <param name="modelParameterName">The name of the model parameter.</param>
+    /// <param name="transformedExpression">The transformed logical expression.</param>
+    /// <param name="originalExpression">The original logical expression.</param>
+    /// <param name="modelTypeName">The name of the model type.</param>
+    /// <returns>A type declaration syntax node.</returns>
     public static TypeDeclarationSyntax Create(
         IdentifierNameSyntax propositionName,
         IdentifierNameSyntax modelParameterName,
@@ -34,6 +54,14 @@ public static class CustomSpecDeclarationSyntax
             modelTypeName);
     }
 
+    /// <summary>
+    /// Creates a type declaration for a custom specification.
+    /// </summary>
+    /// <param name="propositionName">The name of the proposition.</param>
+    /// <param name="modelParameterName">The name of the model parameter.</param>
+    /// <param name="logicalExpression">The logical expression.</param>
+    /// <param name="modelTypeName">The name of the model type.</param>
+    /// <returns>A type declaration syntax node.</returns>
     public static TypeDeclarationSyntax Create(
         GenericNameSyntax propositionName,
         IdentifierNameSyntax modelParameterName,

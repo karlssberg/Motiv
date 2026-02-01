@@ -6,9 +6,15 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Motiv.Analyzer;
 
+/// <summary>
+/// A diagnostic analyzer that identifies boolean expressions that can be converted into Motiv propositions.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class MotivAnalyzer : DiagnosticAnalyzer
 {
+    /// <summary>
+    /// The diagnostic descriptor for the MOTIV0001 diagnostic.
+    /// </summary>
     public static readonly DiagnosticDescriptor Motiv0001 = new(
         "MOTIV0001",
         "Boolean Blindness",
@@ -18,8 +24,15 @@ public class MotivAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true,
         description: "Converts a boolean expression into logical proposition.");
 
+    /// <summary>
+    /// Gets the set of diagnostics that this analyzer can produce.
+    /// </summary>
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [Motiv0001];
 
+    /// <summary>
+    /// Initializes the analyzer.
+    /// </summary>
+    /// <param name="context">The analysis context.</param>
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);

@@ -2,8 +2,16 @@ using Microsoft.CodeAnalysis;
 
 namespace Motiv.CodeFix;
 
+/// <summary>
+/// Provides extension methods for <see cref="ITypeSymbol"/>.
+/// </summary>
 public static class SymbolExtensions
 {
+    /// <summary>
+    /// Gets the C# type name for the specified type symbol.
+    /// </summary>
+    /// <param name="typeSymbol">The type symbol.</param>
+    /// <returns>The C# type name.</returns>
     public static string GetCSharpTypeName(this ITypeSymbol typeSymbol)
     {
         var typeName = typeSymbol.ToDisplayString();

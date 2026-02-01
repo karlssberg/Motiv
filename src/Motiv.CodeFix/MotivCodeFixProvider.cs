@@ -8,14 +8,28 @@ using Motiv.Analyzer;
 
 namespace Motiv.CodeFix;
 
+/// <summary>
+/// A code fix provider that provides a fix for the MOTIV0001 diagnostic.
+/// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(MotivCodeFixProvider)), Shared]
 public class MotivCodeFixProvider : CodeFixProvider
 {
-    // Use literal ID string to avoid any potential type initialization issues during MEF discovery
+    /// <summary>
+    /// Gets the list of diagnostic IDs that this provider can fix.
+    /// </summary>
     public sealed override ImmutableArray<string> FixableDiagnosticIds => [MotivAnalyzer.Motiv0001.Id];
 
+    /// <summary>
+    /// Gets the fix all provider for this provider.
+    /// </summary>
+    /// <returns>The fix all provider.</returns>
     public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
+    /// <summary>
+    /// Registers the code fixes for the given context.
+    /// </summary>
+    /// <param name="context">The code fix context.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);

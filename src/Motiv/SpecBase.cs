@@ -27,6 +27,7 @@ public abstract class SpecBase
     [Obsolete("Use Name property instead")]
     public string Statement => Description.Statement;
 
+    /// <summary>Gets the propositional statement.</summary>
     public string Name => Description.Statement;
 
     /// <summary>Gets the propositional statement.</summary>
