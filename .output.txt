@@ -1,0 +1,258 @@
+
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.0)
+[xUnit.net 00:00:00.09]   Discovering: Motiv.Tests
+[xUnit.net 00:00:00.29]   Discovered:  Motiv.Tests
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 9.0.10)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 9.0.10)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 9.0.10)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 9.0.10)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 9.0.10)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 9.0.10)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 8.0.20)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET Framework 4.8.9323.0)
+[xUnit.net 00:00:00.51]   Starting:    Motiv.Tests
+[xUnit.net 00:00:00.17]   Discovering: Motiv.SmartHome.Tests
+[xUnit.net 00:00:00.18]   Discovering: Motiv.CodeFix.Tests
+[xUnit.net 00:00:00.18]   Discovering: Motiv.Analyzer.Tests
+[xUnit.net 00:00:00.20]   Discovering: Motiv.ECommerce.Tests
+[xUnit.net 00:00:00.21]   Discovered:  Motiv.SmartHome.Tests
+[xUnit.net 00:00:00.21]   Discovered:  Motiv.CodeFix.Tests
+[xUnit.net 00:00:00.21]   Discovered:  Motiv.Analyzer.Tests
+[xUnit.net 00:00:00.22]   Starting:    Motiv.Analyzer.Tests
+[xUnit.net 00:00:00.22]   Starting:    Motiv.CodeFix.Tests
+[xUnit.net 00:00:00.22]   Starting:    Motiv.SmartHome.Tests
+[xUnit.net 00:00:00.27]   Discovering: Motiv.Poker.Tests
+[xUnit.net 00:00:00.27]   Discovering: Motiv.Tests
+[xUnit.net 00:00:00.30]   Discovering: Motiv.Tests
+[xUnit.net 00:00:00.42]   Discovered:  Motiv.Poker.Tests
+[xUnit.net 00:00:00.45]   Starting:    Motiv.Poker.Tests
+[xUnit.net 00:00:00.48]   Finished:    Motiv.SmartHome.Tests
+[xUnit.net 00:00:00.49]   Discovered:  Motiv.ECommerce.Tests
+[xUnit.net 00:00:00.50]   Starting:    Motiv.ECommerce.Tests
+[xUnit.net 00:00:00.55]   Discovered:  Motiv.Tests
+  Motiv.SmartHome.Tests test net9.0 succeeded (1.6s)
+[xUnit.net 00:00:00.62]   Discovered:  Motiv.Tests
+[xUnit.net 00:00:00.84]   Starting:    Motiv.Tests
+[xUnit.net 00:00:00.92]   Starting:    Motiv.Tests
+[xUnit.net 00:00:01.34]     Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(model: "Joe", expectedAssertion: "new string[] { \"Moe\", \"Larry\", \"Curly\" }.Con"···) [FAIL]
+[xUnit.net 00:00:01.34]       Shouldly.ShouldAssertException : act.Assertions
+[xUnit.net 00:00:01.34]           should be
+[xUnit.net 00:00:01.34]       ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false"]
+[xUnit.net 00:00:01.34]           but was (case sensitive comparison)
+[xUnit.net 00:00:01.34]       ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == false"]
+[xUnit.net 00:00:01.34]           difference
+[xUnit.net 00:00:01.34]       [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == false"*]
+[xUnit.net 00:00:01.34]       Stack Trace:
+[xUnit.net 00:00:01.34]         C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403,0): at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(String model, String expectedAssertion)
+[xUnit.net 00:00:01.34]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.34]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.34]     Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(model: "Moe", expectedAssertion: "new string[] { \"Moe\", \"Larry\", \"Curly\" }.Con"···) [FAIL]
+[xUnit.net 00:00:01.34]       Shouldly.ShouldAssertException : act.Assertions
+[xUnit.net 00:00:01.34]           should be
+[xUnit.net 00:00:01.34]       ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true"]
+[xUnit.net 00:00:01.34]           but was (case sensitive comparison)
+[xUnit.net 00:00:01.34]       ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == true"]
+[xUnit.net 00:00:01.34]           difference
+[xUnit.net 00:00:01.34]       [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == true"*]
+[xUnit.net 00:00:01.34]       Stack Trace:
+[xUnit.net 00:00:01.34]         C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403,0): at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(String model, String expectedAssertion)
+[xUnit.net 00:00:01.34]            at InvokeStub_ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(Object, Span`1)
+[xUnit.net 00:00:01.34]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:01.35]   Finished:    Motiv.Tests
+  Motiv.Tests test net10.0 failed with 2 error(s) (1.9s)
+    C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403): error TESTERROR:
+      Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_contain
+      ing_a_new_array_expression(model: "Joe", expectedAssertion: "new string[]
+      { \"Moe\", \"Larry\", \"Curly\" }.Con"···) (38ms): Error Message: Shouldly
+      .ShouldAssertException : act.Assertions
+          should be
+      ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false"]
+          but was (case sensitive comparison)
+      ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
+      }).Contains(name) == false"]
+          difference
+      [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
+       }).Contains(name) == false"*]
+      Stack Trace:
+         at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_c
+      ontaining_a_new_array_expression(String model, String expectedAssertion) i
+      n C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs:line 403
+         at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object
+      obj, IntPtr* args)
+         at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Obj
+      ect obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+    C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403): error TESTERROR:
+      Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_contain
+      ing_a_new_array_expression(model: "Moe", expectedAssertion: "new string[]
+      { \"Moe\", \"Larry\", \"Curly\" }.Con"···) (1ms): Error Message: Shouldly.
+      ShouldAssertException : act.Assertions
+          should be
+      ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true"]
+          but was (case sensitive comparison)
+      ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
+      }).Contains(name) == true"]
+          difference
+      [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
+       }).Contains(name) == true"*]
+      Stack Trace:
+         at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_c
+      ontaining_a_new_array_expression(String model, String expectedAssertion) i
+      n C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs:line 403
+         at InvokeStub_ExpressionTreeAssertionTests.Should_assert_expressions_co
+      ntaining_a_new_array_expression(Object, Span`1)
+         at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, Bi
+      ndingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo cul
+      ture)
+[xUnit.net 00:00:01.10]   Finished:    Motiv.ECommerce.Tests
+  Motiv.ECommerce.Tests test net9.0 succeeded (2.1s)
+[xUnit.net 00:00:01.19]   Finished:    Motiv.Poker.Tests
+  Motiv.Poker.Tests test net9.0 succeeded (2.2s)
+[xUnit.net 00:00:01.66]   Discovering: Motiv.Tests
+[xUnit.net 00:00:01.82]     Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(model: "Joe", expectedAssertion: "new string[] { \"Moe\", \"Larry\", \"Curly\" }.Con"···) [FAIL]
+[xUnit.net 00:00:01.82]       Shouldly.ShouldAssertException : act.Assertions
+[xUnit.net 00:00:01.82]           should be
+[xUnit.net 00:00:01.82]       ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false"]
+[xUnit.net 00:00:01.82]           but was (case sensitive comparison)
+[xUnit.net 00:00:01.82]       ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == false"]
+[xUnit.net 00:00:01.82]           difference
+[xUnit.net 00:00:01.82]       [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == false"*]
+[xUnit.net 00:00:01.82]       Stack Trace:
+[xUnit.net 00:00:01.82]         C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403,0): at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(String model, String expectedAssertion)
+[xUnit.net 00:00:01.82]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:01.82]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.83]     Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(model: "Moe", expectedAssertion: "new string[] { \"Moe\", \"Larry\", \"Curly\" }.Con"···) [FAIL]
+[xUnit.net 00:00:01.83]       Shouldly.ShouldAssertException : act.Assertions
+[xUnit.net 00:00:01.83]           should be
+[xUnit.net 00:00:01.83]       ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true"]
+[xUnit.net 00:00:01.83]           but was (case sensitive comparison)
+[xUnit.net 00:00:01.83]       ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == true"]
+[xUnit.net 00:00:01.83]           difference
+[xUnit.net 00:00:01.83]       [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == true"*]
+[xUnit.net 00:00:01.83]       Stack Trace:
+[xUnit.net 00:00:01.83]         C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403,0): at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(String model, String expectedAssertion)
+[xUnit.net 00:00:01.83]            at InvokeStub_ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(Object, Span`1)
+[xUnit.net 00:00:01.83]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:01.84]   Finished:    Motiv.Tests
+  Motiv.Tests test net9.0 failed with 2 error(s) (2.8s)
+    C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403): error TESTERROR:
+      Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_contain
+      ing_a_new_array_expression(model: "Joe", expectedAssertion: "new string[]
+      { \"Moe\", \"Larry\", \"Curly\" }.Con"···) (80ms): Error Message: Shouldly
+      .ShouldAssertException : act.Assertions
+          should be
+      ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false"]
+          but was (case sensitive comparison)
+      ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
+      }).Contains(name) == false"]
+          difference
+      [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
+       }).Contains(name) == false"*]
+      Stack Trace:
+         at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_c
+      ontaining_a_new_array_expression(String model, String expectedAssertion) i
+      n C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs:line 403
+         at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** argume
+      nts, Signature sig, Boolean isConstructor)
+         at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Obj
+      ect obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+    C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403): error TESTERROR:
+      Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_contain
+      ing_a_new_array_expression(model: "Moe", expectedAssertion: "new string[]
+      { \"Moe\", \"Larry\", \"Curly\" }.Con"···) (1ms): Error Message: Shouldly.
+      ShouldAssertException : act.Assertions
+          should be
+      ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true"]
+          but was (case sensitive comparison)
+      ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
+      }).Contains(name) == true"]
+          difference
+      [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
+       }).Contains(name) == true"*]
+      Stack Trace:
+         at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_c
+      ontaining_a_new_array_expression(String model, String expectedAssertion) i
+      n C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs:line 403
+         at InvokeStub_ExpressionTreeAssertionTests.Should_assert_expressions_co
+      ntaining_a_new_array_expression(Object, Span`1)
+         at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, Bi
+      ndingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo cul
+      ture)
+[xUnit.net 00:00:01.96]     Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(model: "Joe", expectedAssertion: "new string[] { \"Moe\", \"Larry\", \"Curly\" }.Con"···) [FAIL]
+[xUnit.net 00:00:01.96]       Shouldly.ShouldAssertException : act.Assertions
+[xUnit.net 00:00:01.96]           should be
+[xUnit.net 00:00:01.96]       ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false"]
+[xUnit.net 00:00:01.96]           but was (case sensitive comparison)
+[xUnit.net 00:00:01.96]       ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == false"]
+[xUnit.net 00:00:01.96]           difference
+[xUnit.net 00:00:01.96]       [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == false"*]
+[xUnit.net 00:00:01.96]       Stack Trace:
+[xUnit.net 00:00:01.96]         C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403,0): at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(String model, String expectedAssertion)
+[xUnit.net 00:00:01.96]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:01.96]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.96]     Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(model: "Moe", expectedAssertion: "new string[] { \"Moe\", \"Larry\", \"Curly\" }.Con"···) [FAIL]
+[xUnit.net 00:00:01.96]       Shouldly.ShouldAssertException : act.Assertions
+[xUnit.net 00:00:01.96]           should be
+[xUnit.net 00:00:01.96]       ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true"]
+[xUnit.net 00:00:01.96]           but was (case sensitive comparison)
+[xUnit.net 00:00:01.96]       ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == true"]
+[xUnit.net 00:00:01.96]           difference
+[xUnit.net 00:00:01.96]       [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == true"*]
+[xUnit.net 00:00:01.96]       Stack Trace:
+[xUnit.net 00:00:01.96]         C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403,0): at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(String model, String expectedAssertion)
+[xUnit.net 00:00:01.96]            at InvokeStub_ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(Object, Span`1)
+[xUnit.net 00:00:01.96]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:02.02]   Finished:    Motiv.Tests
+  Motiv.Tests test net8.0 failed with 2 error(s) (3.0s)
+    C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403): error TESTERROR:
+      Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_contain
+      ing_a_new_array_expression(model: "Joe", expectedAssertion: "new string[]
+      { \"Moe\", \"Larry\", \"Curly\" }.Con"···) (65ms): Error Message: Shouldly
+      .ShouldAssertException : act.Assertions
+          should be
+      ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false"]
+          but was (case sensitive comparison)
+      ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
+      }).Contains(name) == false"]
+          difference
+      [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
+       }).Contains(name) == false"*]
+      Stack Trace:
+         at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_c
+      ontaining_a_new_array_expression(String model, String expectedAssertion) i
+      n C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs:line 403
+         at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** argume
+      nts, Signature sig, Boolean isConstructor)
+         at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Obj
+      ect obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+    C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403): error TESTERROR:
+      Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_contain
+      ing_a_new_array_expression(model: "Moe", expectedAssertion: "new string[]
+      { \"Moe\", \"Larry\", \"Curly\" }.Con"···) (1ms): Error Message: Shouldly.
+      ShouldAssertException : act.Assertions
+          should be
+      ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true"]
+          but was (case sensitive comparison)
+      ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
+      }).Contains(name) == true"]
+          difference
+      [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
+       }).Contains(name) == true"*]
+      Stack Trace:
+         at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_c
+      ontaining_a_new_array_expression(String model, String expectedAssertion) i
+      n C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs:line 403
+         at InvokeStub_ExpressionTreeAssertionTests.Should_assert_expressions_co
+      ntaining_a_new_array_expression(Object, Span`1)
+         at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, Bi
+      ndingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo cul
+      ture)
+[xUnit.net 00:00:02.55]   Discovered:  Motiv.Tests
+[xUnit.net 00:00:03.00]   Starting:    Motiv.Tests
+[xUnit.net 00:00:03.96]   Finished:    Motiv.Analyzer.Tests
+  Motiv.Analyzer.Tests test net9.0 succeeded (5.0s)
+[xUnit.net 00:00:05.10]   Finished:    Motiv.CodeFix.Tests
+  Motiv.CodeFix.Tests test net9.0 succeeded (6.1s)
+[xUnit.net 00:00:08.78]   Finished:    Motiv.Tests
+  Motiv.Tests test net472 succeeded (9.8s)
+Test summary: total: 12903, failed: 6, succeeded: 12897, skipped: 0, duration: 9.9s
+Build failed with 6 error(s) in 10.1s

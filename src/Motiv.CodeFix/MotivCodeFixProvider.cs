@@ -30,7 +30,9 @@ public class MotivCodeFixProvider : CodeFixProvider
 
             // Ensure we only attempt to fix when the node is an expression
             var node = root.FindNode(diagnostic.Location.SourceSpan);
-            if (node is not ExpressionSyntax expressionSyntax)
+            var expressionSyntax = node as ExpressionSyntax
+                                   ?? node.FirstAncestorOrSelf<ExpressionSyntax>();
+            if (expressionSyntax is null)
                 continue;
 
             var action = CodeAction.Create(

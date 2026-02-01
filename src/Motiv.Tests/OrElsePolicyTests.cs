@@ -159,7 +159,7 @@ public class OrElsePolicyTests
         var spec = left.OrElse(right);
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe("left || right");
@@ -585,3 +585,4 @@ public class OrElsePolicyTests
         result.Justification.ShouldBe(expected);
     }
 }
+

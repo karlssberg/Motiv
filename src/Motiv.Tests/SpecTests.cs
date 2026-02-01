@@ -174,7 +174,7 @@ public class SpecTests
             .Create("is true");
 
         // Act
-        var act = spec.Underlying.First().Statement;
+        var act = spec.Underlying.First().Name;
 
         // Assert
         act.ShouldBe("underlying");
@@ -187,7 +187,7 @@ public class SpecTests
         var spec = new TestFromFactorySpec();
 
         // Act
-        var act = spec.Underlying.First().Statement;
+        var act = spec.Underlying.First().Name;
 
         // Assert
         act.ShouldBe(TestSpec.UnderlyingStatement);
@@ -200,7 +200,7 @@ public class SpecTests
         var spec = new TestSpec();
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe(TestSpec.PrimaryStatement);
@@ -481,7 +481,7 @@ public class SpecTests
         // Compose new proposition
         var sut = specA & !(specB | specC);
 
-        var act = sut.Statement;
+        var act = sut.Name;
 
         act.ShouldBe("a & !(b | c)");
     }
@@ -497,7 +497,7 @@ public class SpecTests
         // Compose new proposition
         var sut = specA & !!!(specB | specC);
 
-        var act = sut.Statement;
+        var act = sut.Name;
 
         act.ShouldBe("a & !(b | c)");
     }
@@ -513,7 +513,7 @@ public class SpecTests
         // Compose new proposition
         var sut = specA & (specB | specC);
 
-        var act = sut.Statement;
+        var act = sut.Name;
 
         act.ShouldBe("a & (b | c)");
     }
@@ -547,3 +547,4 @@ public class SpecTests
         act.Values.ShouldBe(["is true"]);
     }
 }
+

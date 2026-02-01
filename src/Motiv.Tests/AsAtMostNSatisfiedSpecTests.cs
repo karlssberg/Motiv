@@ -955,7 +955,7 @@ public class AsAtMostNSatisfiedSpecTests
             .Create();
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe(expected);
@@ -1154,3 +1154,4 @@ public class AsAtMostNSatisfiedSpecTests
         act.ShouldBe(expectedReason);
     }
 }
+

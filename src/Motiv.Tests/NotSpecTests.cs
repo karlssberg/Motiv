@@ -117,7 +117,7 @@ public class NotSpecTests
         var notSpecDescription = !operand;
 
         // Act
-        var statement = notSpecDescription.Statement;
+        var statement = notSpecDescription.Name;
 
         // Assert
         statement.ShouldBe(expected);
@@ -142,7 +142,7 @@ public class NotSpecTests
         var notSpecDescription = !(left & right);
 
         // Act
-        var statement = notSpecDescription.Statement;
+        var statement = notSpecDescription.Name;
 
         // Assert
         statement.ShouldBe("!(is true & is false)");
@@ -188,3 +188,4 @@ public class NotSpecTests
         act.ShouldBe([expected]);
     }
 }
+

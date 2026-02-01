@@ -151,7 +151,7 @@ public class OrElseSpecTests
         var spec = left.OrElse((SpecBase<bool, string>)right);
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe("left || right");
@@ -554,3 +554,4 @@ public class OrElseSpecTests
         result.Justification.ShouldBe(expected);
     }
 }
+

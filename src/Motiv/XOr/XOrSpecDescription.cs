@@ -24,9 +24,9 @@ internal sealed class XOrSpecDescription<TModel, TMetadata>(
     {
         return operand switch
         {
-            XOrSpec<TModel, TMetadata> xOrSpec => xOrSpec.Statement,
+            XOrSpec<TModel, TMetadata> xOrSpec => xOrSpec.Name,
             IBinaryOperationSpec<TModel> binarySpec => $"({binarySpec.Description.Statement})",
-            _ => operand.Statement
+            _ => operand.Name
         };
     }
 

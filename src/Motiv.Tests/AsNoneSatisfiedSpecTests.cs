@@ -434,7 +434,7 @@ public class AsNoneSatisfiedSpecTests
                 .Create("all booleans are true");
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe(expectedSummary);
@@ -490,7 +490,7 @@ public class AsNoneSatisfiedSpecTests
                 .Create("all booleans are true");
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe(expectedSummary);
@@ -714,3 +714,4 @@ public class AsNoneSatisfiedSpecTests
         act.ShouldBe(expectedReason);
     }
 }
+

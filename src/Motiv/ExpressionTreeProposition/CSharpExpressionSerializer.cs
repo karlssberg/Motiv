@@ -374,6 +374,12 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
+        if (node.Method is { IsSpecialName: true, Name: "op_Implicit" or "op_Explicit" } &&
+            (node.Method.ReturnType.Name.Contains("ReadOnlySpan") || node.Method.ReturnType.Name.Contains("Span")))
+        {
+            return Visit(node.Arguments[0])!;
+        }
+
         switch (node.Method)
         {
             case { IsSpecialName: true, Name: "get_Item" }:

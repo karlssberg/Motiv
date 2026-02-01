@@ -26,14 +26,14 @@ internal sealed class OrSpecDescription<TModel, TMetadata>(
         return operand switch
         {
             OrSpec<TModel, TMetadata> orSpec =>
-                orSpec.Statement,
+                orSpec.Name,
             OrElseSpec<TModel, TMetadata> orElseSpec =>
-                orElseSpec.Statement,
+                orElseSpec.Name,
             OrElsePolicy<TModel, TMetadata> orElsePolicy =>
-                orElsePolicy.Statement,
+                orElsePolicy.Name,
             IBinaryOperationSpec<TModel> binarySpec =>
                 $"({binarySpec.Description.Statement})",
-            _ => operand.Statement
+            _ => operand.Name
         };
     }
 

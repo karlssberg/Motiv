@@ -965,7 +965,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .Create();
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe(expected);
@@ -1169,3 +1169,4 @@ public class AsAtLeastNSatisfiedSpecBaseTests
         act.ShouldBe(expectedReason);
     }
 }
+

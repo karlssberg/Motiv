@@ -28,12 +28,12 @@ internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMe
 
     private string FormatStatement()
     {
-        var firstChar = operand.Statement.FirstOrDefault();
+        var firstChar = operand.Name.FirstOrDefault();
         return firstChar switch
         {
-            '!' => operand.Statement.Substring(1),
-            not '!' when ContainsBinaryOperation(operand) =>  $"!({operand.Statement})",
-            _ =>  $"!{operand.Statement}"
+            '!' => operand.Name.Substring(1),
+            not '!' when ContainsBinaryOperation(operand) =>  $"!({operand.Name})",
+            _ =>  $"!{operand.Name}"
         };
     }
 

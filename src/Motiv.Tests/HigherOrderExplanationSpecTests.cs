@@ -50,7 +50,7 @@ public class HigherOrderExplanationSpecTests
                 .Create();
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe("is a pair of even numbers");

@@ -117,7 +117,7 @@ public class NotPolicyTests
         var notSpecDescription = !operand;
 
         // Act
-        var statement = notSpecDescription.Statement;
+        var statement = notSpecDescription.Name;
 
         // Assert
         statement.ShouldBe(expected);
@@ -142,7 +142,7 @@ public class NotPolicyTests
         var notSpecDescription = !left.OrElse(right);
 
         // Act
-        var statement = notSpecDescription.Statement;
+        var statement = notSpecDescription.Name;
 
         // Assert
         statement.ShouldBe("!(is true || is false)");
@@ -181,3 +181,4 @@ public class NotPolicyTests
         act.ShouldBe([expected]);
     }
 }
+

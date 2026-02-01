@@ -272,12 +272,12 @@ public class XOrSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var expected = $"{left.Statement} ^ {right.Statement}";
+        var expected = $"{left.Name} ^ {right.Name}";
 
         var spec = left ^ right;
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe(expected);
@@ -303,7 +303,7 @@ public class XOrSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var expected = $"{left.Statement} ^ {right.Statement}";
+        var expected = $"{left.Name} ^ {right.Name}";
 
         var spec = left ^ right;
 
@@ -334,12 +334,12 @@ public class XOrSpecTests
             .WhenFalse(false.ToString())
             .Create();
 
-        var expected = $"{left.Statement} ^ {right.Statement}";
+        var expected = $"{left.Name} ^ {right.Name}";
 
         var spec = left ^ right;
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe(expected);
@@ -735,3 +735,4 @@ public class XOrSpecTests
         result.Justification.ShouldBe(expected);
     }
 }
+

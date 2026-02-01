@@ -20,3 +20,5 @@ public class ResultDescriptionBaseCustomization : ICustomization
                 new ResultDescription(statement, reason, justification)));
     }
 }
+
+

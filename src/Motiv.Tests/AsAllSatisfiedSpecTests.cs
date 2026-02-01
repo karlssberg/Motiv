@@ -532,7 +532,7 @@ public class AsAllSatisfiedSpecTests
             .Create("all booleans are true");
 
         // Act
-        var act = sut.Statement;
+        var act = sut.Name;
 
         // Assert
         act.ShouldBe(expectedSummary);
@@ -588,7 +588,7 @@ public class AsAllSatisfiedSpecTests
             .Create("all are true");
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe(expectedSummary);
@@ -956,3 +956,4 @@ public class AsAllSatisfiedSpecTests
         act.ShouldBe(expectedAssertion.ToEnumerable());
     }
 }
+

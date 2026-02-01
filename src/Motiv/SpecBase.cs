@@ -23,8 +23,11 @@ public abstract class SpecBase
     /// <summary>Gets a description of the specification.  This is used for debugging/logging purposes.</summary>
     public abstract ISpecDescription Description { get; }
 
-    /// <summary>Gets the propositional statement.</summary>
+    /// <summary>Gets the propositional statement.</summary>#
+    [Obsolete("Use Name property instead")]
     public string Statement => Description.Statement;
+
+    public string Name => Description.Statement;
 
     /// <summary>Gets the propositional statement.</summary>
     public string Expression => Description.Detailed;
@@ -108,6 +111,10 @@ public abstract class SpecBase<TModel> : SpecBase
     public SpecBase<TModel, string> XOr(SpecBase<TModel> spec) =>
         new XOrSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
+    /// <summary>Negates this specification.</summary>
+    /// <returns>A new specification that represents the logical NOT of this specification.</returns>
+    public SpecBase<TModel, string> Not() =>
+        new NotSpec<TModel, string>(ToExplanationSpec());
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
     /// <returns>A string that represents the logical hierarchy of the specification.</returns>
@@ -139,6 +146,13 @@ public abstract class SpecBase<TModel> : SpecBase
         SpecBase<TModel> left,
         SpecBase<TModel> right) =>
         left.XOr(right);
+
+    /// <summary>Negates a specification.</summary>
+    /// <param name="spec">The specification to negate.</param>
+    /// <returns>A new specification that represents the logical NOT of the specification.</returns>
+    public static SpecBase<TModel> operator !(
+        SpecBase<TModel> spec) =>
+        spec.Not();
 
     /// <summary>
     /// Converts the expression into a predicate function that can be used to evaluate the proposition against a model.
@@ -215,7 +229,7 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
 
     /// <summary>Negates this specification.</summary>
     /// <returns>A new specification that represents the logical NOT of this specification.</returns>
-    public SpecBase<TModel, TMetadata> Not() =>
+    public new SpecBase<TModel, TMetadata> Not() =>
         new NotSpec<TModel, TMetadata>(this);
 
     /// <summary>Changes the <typeparamref name="TModel" /> <see cref="Type" /> of the specification.</summary>

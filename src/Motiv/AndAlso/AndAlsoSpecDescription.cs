@@ -22,10 +22,10 @@ internal sealed class AndAlsoSpecDescription<TModel, TMetadata>(
     {
         return operand switch
         {
-            AndSpec<TModel, TMetadata> andSpec => andSpec.Statement,
-            AndAlsoSpec<TModel, TMetadata> andAlsoSpec => andAlsoSpec.Statement,
+            AndSpec<TModel, TMetadata> andSpec => andSpec.Name,
+            AndAlsoSpec<TModel, TMetadata> andAlsoSpec => andAlsoSpec.Name,
             IBinaryOperationSpec<TModel> binarySpec => $"({binarySpec.Description.Statement})",
-            _ => operand.Statement
+            _ => operand.Name
         };
     }
 

@@ -191,10 +191,10 @@ public class AndSpecTests
             .WhenFalse(false)
             .Create("right");
 
-        var expected = $"{left.Statement} & {right.Statement}";
+        var expected = $"{left.Name} & {right.Name}";
 
         // Act
-        var act = (left & right).Statement;
+        var act = (left & right).Name;
 
         // Assert
         act.ShouldBe(expected);
@@ -219,10 +219,10 @@ public class AndSpecTests
             .WhenFalse(false.ToString())
             .Create();
 
-        var expected = $"{left.Statement} & {right.Statement}";
+        var expected = $"{left.Name} & {right.Name}";
 
         // Act
-        var act = (left & right).Statement;
+        var act = (left & right).Name;
 
         // Assert
         act.ShouldBe(expected);
@@ -247,10 +247,10 @@ public class AndSpecTests
             .WhenFalse(false.ToString())
             .Create();
 
-        var expected = $"{left.Statement} & {right.Statement}";
+        var expected = $"{left.Name} & {right.Name}";
 
         // Act
-        var act = (left & right).Statement;
+        var act = (left & right).Name;
 
         // Assert
         act.ShouldBe(expected);
@@ -709,3 +709,4 @@ public class AndSpecTests
         result.Justification.ShouldBe(expected);
     }
 }
+

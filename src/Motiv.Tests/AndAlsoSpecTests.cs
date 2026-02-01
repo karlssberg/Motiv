@@ -149,7 +149,7 @@ public class AndAlsoSpecTests
         var spec = left.AndAlso(right);
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe("left && right");
@@ -555,3 +555,4 @@ public class AndAlsoSpecTests
         result.Justification.ShouldBe(expected);
     }
 }
+

@@ -668,3 +668,5 @@ public class IncompatibleBooleanResultTests
         act.ShouldBe(satisfied.ToString());
     }
 }
+
+

@@ -173,7 +173,7 @@ public class AsAnySatisfiedSpecTests
                 .Create("high-level description");
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe(expected);
@@ -199,7 +199,7 @@ public class AsAnySatisfiedSpecTests
                 .Create("high-level description");
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe(expected);
@@ -880,3 +880,4 @@ public class AsAnySatisfiedSpecTests
         act.ShouldBe(expectedReason.ToEnumerable());
     }
 }
+

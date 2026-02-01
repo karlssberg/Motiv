@@ -57,7 +57,7 @@ public class HigherOrderMetadataPolicyResultTests
                 .Create("is a pair of even numbers");
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe("is a pair of even numbers");
@@ -438,3 +438,4 @@ public class HigherOrderMetadataPolicyResultTests
         act.ShouldBe([expected]);
     }
 }
+

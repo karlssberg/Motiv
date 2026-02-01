@@ -195,7 +195,7 @@ public class AsNSatisfiedSpecTests
             .Create("a pair of even numbers");
 
         // Act
-        var act = spec.Statement;
+        var act = spec.Name;
 
         // Assert
         act.ShouldBe("a pair of even numbers");
@@ -394,3 +394,4 @@ public class AsNSatisfiedSpecTests
         act.ShouldBe(expectedReason);
     }
 }
+
