@@ -214,7 +214,7 @@ public class LogicalExpressionToSpecConverter(
         var newMethodSource = $$"""
                                 class Temp
                                 {
-                                    private {{propositionName}} {{fieldName}} = new {{propositionName}}();
+                                    private readonly {{propositionName}} {{fieldName}} = new {{propositionName}}();
                                     public {{method.ReturnType}} {{method.Identifier}}{{method.ParameterList}}
                                     {
                                         // {{originalExprText}}

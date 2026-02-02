@@ -86,7 +86,7 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private Proposition _proposition = new Proposition();
+                private readonly Proposition _proposition = new Proposition();
                 public bool IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
@@ -158,7 +158,7 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private Proposition _proposition = new Proposition();
+                private readonly Proposition _proposition = new Proposition();
                 public void IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
