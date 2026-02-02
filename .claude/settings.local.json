@@ -12,7 +12,8 @@
       "Bash(dotnet list:*)",
       "Bash(powershell.exe -NoProfile -Command \"$z = [System.IO.Compression.ZipFile]::OpenRead\\(''C:\\\\Dev\\\\nuget\\\\Motiv.8.0.0.nupkg''\\); $e = $z.Entries | Where-Object { $_FullName -like ''*.nuspec'' }; $sr = [System.IO.StreamReader]::new\\($e[0].Open\\(\\)\\); $sr.ReadToEnd\\(\\); $sr.Close\\(\\); $z.Dispose\\(\\)\")",
       "WebSearch",
-      "WebFetch(domain:youtrack.jetbrains.com)"
+      "WebFetch(domain:youtrack.jetbrains.com)",
+      "Bash(tree:*)"
     ]
   }
 }

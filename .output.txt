@@ -1,258 +1,272 @@
 
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.0)
-[xUnit.net 00:00:00.09]   Discovering: Motiv.Tests
-[xUnit.net 00:00:00.29]   Discovered:  Motiv.Tests
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 9.0.10)
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 9.0.10)
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 9.0.10)
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 9.0.10)
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 9.0.10)
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 9.0.10)
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 8.0.20)
-[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET Framework 4.8.9323.0)
-[xUnit.net 00:00:00.51]   Starting:    Motiv.Tests
-[xUnit.net 00:00:00.17]   Discovering: Motiv.SmartHome.Tests
-[xUnit.net 00:00:00.18]   Discovering: Motiv.CodeFix.Tests
-[xUnit.net 00:00:00.18]   Discovering: Motiv.Analyzer.Tests
-[xUnit.net 00:00:00.20]   Discovering: Motiv.ECommerce.Tests
-[xUnit.net 00:00:00.21]   Discovered:  Motiv.SmartHome.Tests
-[xUnit.net 00:00:00.21]   Discovered:  Motiv.CodeFix.Tests
-[xUnit.net 00:00:00.21]   Discovered:  Motiv.Analyzer.Tests
-[xUnit.net 00:00:00.22]   Starting:    Motiv.Analyzer.Tests
-[xUnit.net 00:00:00.22]   Starting:    Motiv.CodeFix.Tests
-[xUnit.net 00:00:00.22]   Starting:    Motiv.SmartHome.Tests
-[xUnit.net 00:00:00.27]   Discovering: Motiv.Poker.Tests
-[xUnit.net 00:00:00.27]   Discovering: Motiv.Tests
-[xUnit.net 00:00:00.30]   Discovering: Motiv.Tests
-[xUnit.net 00:00:00.42]   Discovered:  Motiv.Poker.Tests
-[xUnit.net 00:00:00.45]   Starting:    Motiv.Poker.Tests
-[xUnit.net 00:00:00.48]   Finished:    Motiv.SmartHome.Tests
-[xUnit.net 00:00:00.49]   Discovered:  Motiv.ECommerce.Tests
-[xUnit.net 00:00:00.50]   Starting:    Motiv.ECommerce.Tests
-[xUnit.net 00:00:00.55]   Discovered:  Motiv.Tests
-  Motiv.SmartHome.Tests test net9.0 succeeded (1.6s)
-[xUnit.net 00:00:00.62]   Discovered:  Motiv.Tests
-[xUnit.net 00:00:00.84]   Starting:    Motiv.Tests
-[xUnit.net 00:00:00.92]   Starting:    Motiv.Tests
-[xUnit.net 00:00:01.34]     Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(model: "Joe", expectedAssertion: "new string[] { \"Moe\", \"Larry\", \"Curly\" }.Con"···) [FAIL]
-[xUnit.net 00:00:01.34]       Shouldly.ShouldAssertException : act.Assertions
-[xUnit.net 00:00:01.34]           should be
-[xUnit.net 00:00:01.34]       ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false"]
-[xUnit.net 00:00:01.34]           but was (case sensitive comparison)
-[xUnit.net 00:00:01.34]       ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == false"]
-[xUnit.net 00:00:01.34]           difference
-[xUnit.net 00:00:01.34]       [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == false"*]
-[xUnit.net 00:00:01.34]       Stack Trace:
-[xUnit.net 00:00:01.34]         C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403,0): at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(String model, String expectedAssertion)
-[xUnit.net 00:00:01.34]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
-[xUnit.net 00:00:01.34]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
-[xUnit.net 00:00:01.34]     Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(model: "Moe", expectedAssertion: "new string[] { \"Moe\", \"Larry\", \"Curly\" }.Con"···) [FAIL]
-[xUnit.net 00:00:01.34]       Shouldly.ShouldAssertException : act.Assertions
-[xUnit.net 00:00:01.34]           should be
-[xUnit.net 00:00:01.34]       ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true"]
-[xUnit.net 00:00:01.34]           but was (case sensitive comparison)
-[xUnit.net 00:00:01.34]       ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == true"]
-[xUnit.net 00:00:01.34]           difference
-[xUnit.net 00:00:01.34]       [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == true"*]
-[xUnit.net 00:00:01.34]       Stack Trace:
-[xUnit.net 00:00:01.34]         C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403,0): at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(String model, String expectedAssertion)
-[xUnit.net 00:00:01.34]            at InvokeStub_ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(Object, Span`1)
-[xUnit.net 00:00:01.34]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
-[xUnit.net 00:00:01.35]   Finished:    Motiv.Tests
-  Motiv.Tests test net10.0 failed with 2 error(s) (1.9s)
-    C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403): error TESTERROR:
-      Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_contain
-      ing_a_new_array_expression(model: "Joe", expectedAssertion: "new string[]
-      { \"Moe\", \"Larry\", \"Curly\" }.Con"···) (38ms): Error Message: Shouldly
-      .ShouldAssertException : act.Assertions
-          should be
-      ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false"]
-          but was (case sensitive comparison)
-      ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
-      }).Contains(name) == false"]
-          difference
-      [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
-       }).Contains(name) == false"*]
+Restore complete (1.6s)
+  Motiv.Analyzer netstandard2.0 succeeded (0.1s) → src\Motiv.Analyzer\bin\Debug\netstandard2.0\Motiv.Analyzer.dll
+  Motiv.CodeFix netstandard2.0 succeeded (0.2s) → src\Motiv.CodeFix\bin\Debug\netstandard2.0\Motiv.CodeFix.dll
+  Motiv net10.0 succeeded (2.4s) → src\Motiv\bin\Debug\net10.0\Motiv.dll
+  Motiv.CodeFix.Tests net10.0 succeeded (2.3s) → src\Motiv.CodeFix.Tests\bin\Debug\net10.0\Motiv.CodeFix.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.0)
+[xUnit.net 00:00:00.07]   Discovering: Motiv.CodeFix.Tests
+[xUnit.net 00:00:00.10]   Discovered:  Motiv.CodeFix.Tests
+[xUnit.net 00:00:00.11]   Starting:    Motiv.CodeFix.Tests
+[xUnit.net 00:00:01.88]     Motiv.CodeFix.Tests.MotivConvertToSpecTests.Should_convert_multiple_variable_boolean_return_expressions_that_can_be_converted_to_spec [FAIL]
+[xUnit.net 00:00:01.88]       System.InvalidOperationException : Context: Iterative code fix application
+[xUnit.net 00:00:01.88]       content of 'Source.cs' did not match. Diff shown with expected as baseline:
+[xUnit.net 00:00:01.88]        using System.Diagnostics;
+[xUnit.net 00:00:01.88]        using Motiv;
+[xUnit.net 00:00:01.88]
+[xUnit.net 00:00:01.88]        namespace MyNamespace;
+[xUnit.net 00:00:01.88]       -
+[xUnit.net 00:00:01.88]        public class MyClass
+[xUnit.net 00:00:01.88]        {
+[xUnit.net 00:00:01.88]            private Proposition _proposition = new Proposition();
+[xUnit.net 00:00:01.88]       -
+[xUnit.net 00:00:01.88]            public bool IsValid(int valueA, int valueB, bool valueC)
+[xUnit.net 00:00:01.88]            {
+[xUnit.net 00:00:01.88]                // valueA > valueB && valueC
+[xUnit.net 00:00:01.88]                var result = _proposition.IsSatisfiedBy(new Proposition.Model(valueA, valueB, valueC));
+[xUnit.net 00:00:01.88]                Debug.WriteLine(result.Reason);
+[xUnit.net 00:00:01.88]       -        return result.Satisfied;
+[xUnit.net 00:00:01.88]       +        var isSatisfied = result.Satisfied;
+[xUnit.net 00:00:01.88]            }
+[xUnit.net 00:00:01.88]        }
+[xUnit.net 00:00:01.88]
+[xUnit.net 00:00:01.88]        public class Proposition() : Spec<Proposition.Model>(
+[xUnit.net 00:00:01.88]            Clause1.AndAlso(Clause2))
+[xUnit.net 00:00:01.88]        {
+[xUnit.net 00:00:01.88]            public record Model(int ValueA, int ValueB, bool ValueC);
+[xUnit.net 00:00:01.88]
+[xUnit.net 00:00:01.88]            private static readonly SpecBase<Model> Clause1 =
+[xUnit.net 00:00:01.88]                Spec.Build((Model m) => m.ValueA > m.ValueB)
+[xUnit.net 00:00:01.88]                    .WhenTrue("valueA > valueB == true")
+[xUnit.net 00:00:01.88]                    .WhenFalse("valueA > valueB == false")
+[xUnit.net 00:00:01.88]                    .Create();
+[xUnit.net 00:00:01.88]
+[xUnit.net 00:00:01.88]            private static readonly SpecBase<Model> Clause2 =
+[xUnit.net 00:00:01.88]                Spec.Build((Model m) => m.ValueC)
+[xUnit.net 00:00:01.88]                    .WhenTrue("valueC == true")
+[xUnit.net 00:00:01.88]                    .WhenFalse("valueC == false")
+[xUnit.net 00:00:01.88]                    .Create();
+[xUnit.net 00:00:01.88]        }
+[xUnit.net 00:00:01.88]
+[xUnit.net 00:00:01.88]
+[xUnit.net 00:00:01.88]       Stack Trace:
+[xUnit.net 00:00:01.88]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/DefaultVerifier.cs(105,0): at Microsoft.CodeAnalysis.Testing.DefaultVerifier.Fail(String message)
+[xUnit.net 00:00:01.88]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/Extensions/IVerifierExtensions.cs(67,0): at Microsoft.CodeAnalysis.Testing.IVerifierExtensions.EqualOrDiff(IVerifier verifier, String expected, String actual, String message)
+[xUnit.net 00:00:01.88]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.CodeFix.Testing/CodeFixTest`1.cs(537,0): at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.VerifyProjectAsync(ProjectState newState, Project project, IVerifier verifier, CancellationToken cancellationToken)
+[xUnit.net 00:00:01.88]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.CodeFix.Testing/CodeFixTest`1.cs(515,0): at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.VerifyFixAsync(String language, ImmutableArray`1 analyzers, ImmutableArray`1 codeFixProviders, SolutionState oldState, SolutionState newState, Int32 numberOfIterations, Func`10 getFixedProject, IVerifier verifier, CancellationToken cancellationToken)
+[xUnit.net 00:00:01.88]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.CodeFix.Testing/CodeFixTest`1.cs(477,0): at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.VerifyFixAsync(SolutionState testState, SolutionState fixedState, SolutionState batchFixedState, IVerifier verifier, CancellationToken cancellationToken)
+[xUnit.net 00:00:01.88]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.CodeFix.Testing/CodeFixTest`1.cs(316,0): at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.RunImplAsync(CancellationToken cancellationToken)
+[xUnit.net 00:00:01.88]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs(174,0): at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunAsync(CancellationToken cancellationToken)
+[xUnit.net 00:00:01.88]         C:\Dev\Motiv\src\Motiv.CodeFix.Tests\MotivConvertToSpecTests.cs(120,0): at Motiv.CodeFix.Tests.MotivConvertToSpecTests.Should_convert_multiple_variable_boolean_return_expressions_that_can_be_converted_to_spec()
+[xUnit.net 00:00:01.88]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:01.93]     Motiv.CodeFix.Tests.MotivConvertToSpecTests.Should_convert_multiple_variable_boolean_expression_statement_that_can_be_converted_to_spec [FAIL]
+[xUnit.net 00:00:01.94]       System.InvalidOperationException : Context: Iterative code fix application
+[xUnit.net 00:00:01.94]       content of 'Source.cs' did not match. Diff shown with expected as baseline:
+[xUnit.net 00:00:01.94]        using System.Diagnostics;
+[xUnit.net 00:00:01.94]        using Motiv;
+[xUnit.net 00:00:01.94]
+[xUnit.net 00:00:01.94]        namespace MyNamespace;
+[xUnit.net 00:00:01.94]       -
+[xUnit.net 00:00:01.94]        public class MyClass
+[xUnit.net 00:00:01.94]        {
+[xUnit.net 00:00:01.94]            private Proposition _proposition = new Proposition();
+[xUnit.net 00:00:01.94]       -
+[xUnit.net 00:00:01.94]            public void IsValid(int valueA, int valueB, bool valueC)
+[xUnit.net 00:00:01.94]            {
+[xUnit.net 00:00:01.94]                // valueA > valueB && valueC
+[xUnit.net 00:00:01.94]                var result = _proposition.IsSatisfiedBy(new Proposition.Model(valueA, valueB, valueC));
+[xUnit.net 00:00:01.94]                Debug.WriteLine(result.Reason);
+[xUnit.net 00:00:01.94]                var isSatisfied = result.Satisfied;
+[xUnit.net 00:00:01.94]            }
+[xUnit.net 00:00:01.94]        }
+[xUnit.net 00:00:01.94]
+[xUnit.net 00:00:01.94]        public class Proposition() : Spec<Proposition.Model>(
+[xUnit.net 00:00:01.94]            Clause1.AndAlso(Clause2))
+[xUnit.net 00:00:01.94]        {
+[xUnit.net 00:00:01.94]            public record Model(int ValueA, int ValueB, bool ValueC);
+[xUnit.net 00:00:01.94]
+[xUnit.net 00:00:01.94]            private static readonly SpecBase<Model> Clause1 =
+[xUnit.net 00:00:01.94]                Spec.Build((Model m) => m.ValueA > m.ValueB)
+[xUnit.net 00:00:01.94]                    .WhenTrue("valueA > valueB == true")
+[xUnit.net 00:00:01.94]                    .WhenFalse("valueA > valueB == false")
+[xUnit.net 00:00:01.94]                    .Create();
+[xUnit.net 00:00:01.94]
+[xUnit.net 00:00:01.94]            private static readonly SpecBase<Model> Clause2 =
+[xUnit.net 00:00:01.94]                Spec.Build((Model m) => m.ValueC)
+[xUnit.net 00:00:01.94]                    .WhenTrue("valueC == true")
+[xUnit.net 00:00:01.94]                    .WhenFalse("valueC == false")
+[xUnit.net 00:00:01.94]                    .Create();
+[xUnit.net 00:00:01.94]        }
+[xUnit.net 00:00:01.94]
+[xUnit.net 00:00:01.94]
+[xUnit.net 00:00:01.94]       Stack Trace:
+[xUnit.net 00:00:01.94]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/DefaultVerifier.cs(105,0): at Microsoft.CodeAnalysis.Testing.DefaultVerifier.Fail(String message)
+[xUnit.net 00:00:01.94]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/Extensions/IVerifierExtensions.cs(67,0): at Microsoft.CodeAnalysis.Testing.IVerifierExtensions.EqualOrDiff(IVerifier verifier, String expected, String actual, String message)
+[xUnit.net 00:00:01.94]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.CodeFix.Testing/CodeFixTest`1.cs(537,0): at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.VerifyProjectAsync(ProjectState newState, Project project, IVerifier verifier, CancellationToken cancellationToken)
+[xUnit.net 00:00:01.94]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.CodeFix.Testing/CodeFixTest`1.cs(515,0): at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.VerifyFixAsync(String language, ImmutableArray`1 analyzers, ImmutableArray`1 codeFixProviders, SolutionState oldState, SolutionState newState, Int32 numberOfIterations, Func`10 getFixedProject, IVerifier verifier, CancellationToken cancellationToken)
+[xUnit.net 00:00:01.94]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.CodeFix.Testing/CodeFixTest`1.cs(477,0): at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.VerifyFixAsync(SolutionState testState, SolutionState fixedState, SolutionState batchFixedState, IVerifier verifier, CancellationToken cancellationToken)
+[xUnit.net 00:00:01.94]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.CodeFix.Testing/CodeFixTest`1.cs(316,0): at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.RunImplAsync(CancellationToken cancellationToken)
+[xUnit.net 00:00:01.94]         /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs(174,0): at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunAsync(CancellationToken cancellationToken)
+[xUnit.net 00:00:01.94]         C:\Dev\Motiv\src\Motiv.CodeFix.Tests\MotivConvertToSpecTests.cs(193,0): at Motiv.CodeFix.Tests.MotivConvertToSpecTests.Should_convert_multiple_variable_boolean_expression_statement_that_can_be_converted_to_spec()
+[xUnit.net 00:00:01.94]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:01.95]   Finished:    Motiv.CodeFix.Tests
+  Motiv.CodeFix.Tests test net10.0 failed with 2 error(s) (2.5s)
+    /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/DefaultVerifier.cs(105): error TESTERROR:
+      Motiv.CodeFix.Tests.MotivConvertToSpecTests.Should_convert_multiple_variab
+      le_boolean_return_expressions_that_can_be_converted_to_spec (128ms): Error
+       Message: System.InvalidOperationException : Context: Iterative code fix a
+      pplication
+      content of 'Source.cs' did not match. Diff shown with expected as baseline
+      :
+       using System.Diagnostics;
+       using Motiv;
+
+       namespace MyNamespace;
+      -
+       public class MyClass
+       {
+           private Proposition _proposition = new Proposition();
+      -
+           public bool IsValid(int valueA, int valueB, bool valueC)
+           {
+               // valueA > valueB && valueC
+               var result = _proposition.IsSatisfiedBy(new Proposition.Model(val
+      ueA, valueB, valueC));
+               Debug.WriteLine(result.Reason);
+      -        return result.Satisfied;
+      +        var isSatisfied = result.Satisfied;
+           }
+       }
+
+       public class Proposition() : Spec<Proposition.Model>(
+           Clause1.AndAlso(Clause2))
+       {
+           public record Model(int ValueA, int ValueB, bool ValueC);
+
+           private static readonly SpecBase<Model> Clause1 =
+               Spec.Build((Model m) => m.ValueA > m.ValueB)
+                   .WhenTrue("valueA > valueB == true")
+                   .WhenFalse("valueA > valueB == false")
+                   .Create();
+
+           private static readonly SpecBase<Model> Clause2 =
+               Spec.Build((Model m) => m.ValueC)
+                   .WhenTrue("valueC == true")
+                   .WhenFalse("valueC == false")
+                   .Create();
+       }
+
+
       Stack Trace:
-         at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_c
-      ontaining_a_new_array_expression(String model, String expectedAssertion) i
-      n C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs:line 403
-         at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object
-      obj, IntPtr* args)
-         at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Obj
-      ect obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
-    C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403): error TESTERROR:
-      Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_contain
-      ing_a_new_array_expression(model: "Moe", expectedAssertion: "new string[]
-      { \"Moe\", \"Larry\", \"Curly\" }.Con"···) (1ms): Error Message: Shouldly.
-      ShouldAssertException : act.Assertions
-          should be
-      ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true"]
-          but was (case sensitive comparison)
-      ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
-      }).Contains(name) == true"]
-          difference
-      [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
-       }).Contains(name) == true"*]
+         at Microsoft.CodeAnalysis.Testing.DefaultVerifier.Fail(String message)
+      in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.T
+      esting/DefaultVerifier.cs:line 105
+         at Microsoft.CodeAnalysis.Testing.IVerifierExtensions.EqualOrDiff(IVeri
+      fier verifier, String expected, String actual, String message) in /_/src/M
+      icrosoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/Exte
+      nsions/IVerifierExtensions.cs:line 67
+         at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.VerifyProjectAsync(Proj
+      ectState newState, Project project, IVerifier verifier, CancellationToken
+      cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.Code
+      Analysis.CodeFix.Testing/CodeFixTest`1.cs:line 537
+         at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.VerifyFixAsync(String l
+      anguage, ImmutableArray`1 analyzers, ImmutableArray`1 codeFixProviders, So
+      lutionState oldState, SolutionState newState, Int32 numberOfIterations, Fu
+      nc`10 getFixedProject, IVerifier verifier, CancellationToken cancellationT
+      oken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Code
+      Fix.Testing/CodeFixTest`1.cs:line 515
+         at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.VerifyFixAsync(Solution
+      State testState, SolutionState fixedState, SolutionState batchFixedState,
+      IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microso
+      ft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.CodeFix.Testing/CodeFixTest
+      `1.cs:line 477
+         at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.RunImplAsync(Cancellati
+      onToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Micros
+      oft.CodeAnalysis.CodeFix.Testing/CodeFixTest`1.cs:line 316
+         at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunAsync(CancellationT
+      oken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft
+      .CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 174
+         at Motiv.CodeFix.Tests.MotivConvertToSpecTests.Should_convert_multiple_
+      variable_boolean_return_expressions_that_can_be_converted_to_spec() in C:\
+      Dev\Motiv\src\Motiv.CodeFix.Tests\MotivConvertToSpecTests.cs:line 120
+      --- End of stack trace from previous location ---
+    /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/DefaultVerifier.cs(105): error TESTERROR:
+      Motiv.CodeFix.Tests.MotivConvertToSpecTests.Should_convert_multiple_variab
+      le_boolean_expression_statement_that_can_be_converted_to_spec (56ms): Erro
+      r Message: System.InvalidOperationException : Context: Iterative code fix
+      application
+      content of 'Source.cs' did not match. Diff shown with expected as baseline
+      :
+       using System.Diagnostics;
+       using Motiv;
+
+       namespace MyNamespace;
+      -
+       public class MyClass
+       {
+           private Proposition _proposition = new Proposition();
+      -
+           public void IsValid(int valueA, int valueB, bool valueC)
+           {
+               // valueA > valueB && valueC
+               var result = _proposition.IsSatisfiedBy(new Proposition.Model(val
+      ueA, valueB, valueC));
+               Debug.WriteLine(result.Reason);
+               var isSatisfied = result.Satisfied;
+           }
+       }
+
+       public class Proposition() : Spec<Proposition.Model>(
+           Clause1.AndAlso(Clause2))
+       {
+           public record Model(int ValueA, int ValueB, bool ValueC);
+
+           private static readonly SpecBase<Model> Clause1 =
+               Spec.Build((Model m) => m.ValueA > m.ValueB)
+                   .WhenTrue("valueA > valueB == true")
+                   .WhenFalse("valueA > valueB == false")
+                   .Create();
+
+           private static readonly SpecBase<Model> Clause2 =
+               Spec.Build((Model m) => m.ValueC)
+                   .WhenTrue("valueC == true")
+                   .WhenFalse("valueC == false")
+                   .Create();
+       }
+
+
       Stack Trace:
-         at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_c
-      ontaining_a_new_array_expression(String model, String expectedAssertion) i
-      n C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs:line 403
-         at InvokeStub_ExpressionTreeAssertionTests.Should_assert_expressions_co
-      ntaining_a_new_array_expression(Object, Span`1)
-         at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, Bi
-      ndingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo cul
-      ture)
-[xUnit.net 00:00:01.10]   Finished:    Motiv.ECommerce.Tests
-  Motiv.ECommerce.Tests test net9.0 succeeded (2.1s)
-[xUnit.net 00:00:01.19]   Finished:    Motiv.Poker.Tests
-  Motiv.Poker.Tests test net9.0 succeeded (2.2s)
-[xUnit.net 00:00:01.66]   Discovering: Motiv.Tests
-[xUnit.net 00:00:01.82]     Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(model: "Joe", expectedAssertion: "new string[] { \"Moe\", \"Larry\", \"Curly\" }.Con"···) [FAIL]
-[xUnit.net 00:00:01.82]       Shouldly.ShouldAssertException : act.Assertions
-[xUnit.net 00:00:01.82]           should be
-[xUnit.net 00:00:01.82]       ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false"]
-[xUnit.net 00:00:01.82]           but was (case sensitive comparison)
-[xUnit.net 00:00:01.82]       ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == false"]
-[xUnit.net 00:00:01.82]           difference
-[xUnit.net 00:00:01.82]       [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == false"*]
-[xUnit.net 00:00:01.82]       Stack Trace:
-[xUnit.net 00:00:01.82]         C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403,0): at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(String model, String expectedAssertion)
-[xUnit.net 00:00:01.82]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
-[xUnit.net 00:00:01.82]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
-[xUnit.net 00:00:01.83]     Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(model: "Moe", expectedAssertion: "new string[] { \"Moe\", \"Larry\", \"Curly\" }.Con"···) [FAIL]
-[xUnit.net 00:00:01.83]       Shouldly.ShouldAssertException : act.Assertions
-[xUnit.net 00:00:01.83]           should be
-[xUnit.net 00:00:01.83]       ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true"]
-[xUnit.net 00:00:01.83]           but was (case sensitive comparison)
-[xUnit.net 00:00:01.83]       ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == true"]
-[xUnit.net 00:00:01.83]           difference
-[xUnit.net 00:00:01.83]       [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == true"*]
-[xUnit.net 00:00:01.83]       Stack Trace:
-[xUnit.net 00:00:01.83]         C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403,0): at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(String model, String expectedAssertion)
-[xUnit.net 00:00:01.83]            at InvokeStub_ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(Object, Span`1)
-[xUnit.net 00:00:01.83]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
-[xUnit.net 00:00:01.84]   Finished:    Motiv.Tests
-  Motiv.Tests test net9.0 failed with 2 error(s) (2.8s)
-    C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403): error TESTERROR:
-      Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_contain
-      ing_a_new_array_expression(model: "Joe", expectedAssertion: "new string[]
-      { \"Moe\", \"Larry\", \"Curly\" }.Con"···) (80ms): Error Message: Shouldly
-      .ShouldAssertException : act.Assertions
-          should be
-      ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false"]
-          but was (case sensitive comparison)
-      ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
-      }).Contains(name) == false"]
-          difference
-      [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
-       }).Contains(name) == false"*]
-      Stack Trace:
-         at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_c
-      ontaining_a_new_array_expression(String model, String expectedAssertion) i
-      n C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs:line 403
-         at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** argume
-      nts, Signature sig, Boolean isConstructor)
-         at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Obj
-      ect obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
-    C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403): error TESTERROR:
-      Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_contain
-      ing_a_new_array_expression(model: "Moe", expectedAssertion: "new string[]
-      { \"Moe\", \"Larry\", \"Curly\" }.Con"···) (1ms): Error Message: Shouldly.
-      ShouldAssertException : act.Assertions
-          should be
-      ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true"]
-          but was (case sensitive comparison)
-      ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
-      }).Contains(name) == true"]
-          difference
-      [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
-       }).Contains(name) == true"*]
-      Stack Trace:
-         at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_c
-      ontaining_a_new_array_expression(String model, String expectedAssertion) i
-      n C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs:line 403
-         at InvokeStub_ExpressionTreeAssertionTests.Should_assert_expressions_co
-      ntaining_a_new_array_expression(Object, Span`1)
-         at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, Bi
-      ndingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo cul
-      ture)
-[xUnit.net 00:00:01.96]     Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(model: "Joe", expectedAssertion: "new string[] { \"Moe\", \"Larry\", \"Curly\" }.Con"···) [FAIL]
-[xUnit.net 00:00:01.96]       Shouldly.ShouldAssertException : act.Assertions
-[xUnit.net 00:00:01.96]           should be
-[xUnit.net 00:00:01.96]       ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false"]
-[xUnit.net 00:00:01.96]           but was (case sensitive comparison)
-[xUnit.net 00:00:01.96]       ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == false"]
-[xUnit.net 00:00:01.96]           difference
-[xUnit.net 00:00:01.96]       [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == false"*]
-[xUnit.net 00:00:01.96]       Stack Trace:
-[xUnit.net 00:00:01.96]         C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403,0): at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(String model, String expectedAssertion)
-[xUnit.net 00:00:01.96]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
-[xUnit.net 00:00:01.96]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
-[xUnit.net 00:00:01.96]     Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(model: "Moe", expectedAssertion: "new string[] { \"Moe\", \"Larry\", \"Curly\" }.Con"···) [FAIL]
-[xUnit.net 00:00:01.96]       Shouldly.ShouldAssertException : act.Assertions
-[xUnit.net 00:00:01.96]           should be
-[xUnit.net 00:00:01.96]       ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true"]
-[xUnit.net 00:00:01.96]           but was (case sensitive comparison)
-[xUnit.net 00:00:01.96]       ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == true"]
-[xUnit.net 00:00:01.96]           difference
-[xUnit.net 00:00:01.96]       [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly" }).Contains(name) == true"*]
-[xUnit.net 00:00:01.96]       Stack Trace:
-[xUnit.net 00:00:01.96]         C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403,0): at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(String model, String expectedAssertion)
-[xUnit.net 00:00:01.96]            at InvokeStub_ExpressionTreeAssertionTests.Should_assert_expressions_containing_a_new_array_expression(Object, Span`1)
-[xUnit.net 00:00:01.96]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
-[xUnit.net 00:00:02.02]   Finished:    Motiv.Tests
-  Motiv.Tests test net8.0 failed with 2 error(s) (3.0s)
-    C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403): error TESTERROR:
-      Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_contain
-      ing_a_new_array_expression(model: "Joe", expectedAssertion: "new string[]
-      { \"Moe\", \"Larry\", \"Curly\" }.Con"···) (65ms): Error Message: Shouldly
-      .ShouldAssertException : act.Assertions
-          should be
-      ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == false"]
-          but was (case sensitive comparison)
-      ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
-      }).Contains(name) == false"]
-          difference
-      [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
-       }).Contains(name) == false"*]
-      Stack Trace:
-         at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_c
-      ontaining_a_new_array_expression(String model, String expectedAssertion) i
-      n C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs:line 403
-         at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** argume
-      nts, Signature sig, Boolean isConstructor)
-         at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Obj
-      ect obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
-    C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs(403): error TESTERROR:
-      Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_contain
-      ing_a_new_array_expression(model: "Moe", expectedAssertion: "new string[]
-      { \"Moe\", \"Larry\", \"Curly\" }.Con"···) (1ms): Error Message: Shouldly.
-      ShouldAssertException : act.Assertions
-          should be
-      ["new string[] { "Moe", "Larry", "Curly" }.Contains(name) == true"]
-          but was (case sensitive comparison)
-      ["ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
-      }).Contains(name) == true"]
-          difference
-      [*"ReadOnlySpan<string>.op_Implicit(new string[] { "Moe", "Larry", "Curly"
-       }).Contains(name) == true"*]
-      Stack Trace:
-         at Motiv.Tests.ExpressionTreeAssertionTests.Should_assert_expressions_c
-      ontaining_a_new_array_expression(String model, String expectedAssertion) i
-      n C:\Dev\Motiv\src\Motiv.Tests\ExpressionTreeAssertionTests.cs:line 403
-         at InvokeStub_ExpressionTreeAssertionTests.Should_assert_expressions_co
-      ntaining_a_new_array_expression(Object, Span`1)
-         at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, Bi
-      ndingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo cul
-      ture)
-[xUnit.net 00:00:02.55]   Discovered:  Motiv.Tests
-[xUnit.net 00:00:03.00]   Starting:    Motiv.Tests
-[xUnit.net 00:00:03.96]   Finished:    Motiv.Analyzer.Tests
-  Motiv.Analyzer.Tests test net9.0 succeeded (5.0s)
-[xUnit.net 00:00:05.10]   Finished:    Motiv.CodeFix.Tests
-  Motiv.CodeFix.Tests test net9.0 succeeded (6.1s)
-[xUnit.net 00:00:08.78]   Finished:    Motiv.Tests
-  Motiv.Tests test net472 succeeded (9.8s)
-Test summary: total: 12903, failed: 6, succeeded: 12897, skipped: 0, duration: 9.9s
-Build failed with 6 error(s) in 10.1s
+         at Microsoft.CodeAnalysis.Testing.DefaultVerifier.Fail(String message)
+      in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.T
+      esting/DefaultVerifier.cs:line 105
+         at Microsoft.CodeAnalysis.Testing.IVerifierExtensions.EqualOrDiff(IVeri
+      fier verifier, String expected, String actual, String message) in /_/src/M
+      icrosoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/Exte
+      nsions/IVerifierExtensions.cs:line 67
+         at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.VerifyProjectAsync(Proj
+      ectState newState, Project project, IVerifier verifier, CancellationToken
+      cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.Code
+      Analysis.CodeFix.Testing/CodeFixTest`1.cs:line 537
+         at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.VerifyFixAsync(String l
+      anguage, ImmutableArray`1 analyzers, ImmutableArray`1 codeFixProviders, So
+      lutionState oldState, SolutionState newState, Int32 numberOfIterations, Fu
+      nc`10 getFixedProject, IVerifier verifier, CancellationToken cancellationT
+      oken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Code
+      Fix.Testing/CodeFixTest`1.cs:line 515
+         at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.VerifyFixAsync(Solution
+      State testState, SolutionState fixedState, SolutionState batchFixedState,
+      IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microso
+      ft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.CodeFix.Testing/CodeFixTest
+      `1.cs:line 477
+         at Microsoft.CodeAnalysis.Testing.CodeFixTest`1.RunImplAsync(Cancellati
+      onToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Micros
+      oft.CodeAnalysis.CodeFix.Testing/CodeFixTest`1.cs:line 316
+         at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunAsync(CancellationT
+      oken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft
+      .CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 174
+         at Motiv.CodeFix.Tests.MotivConvertToSpecTests.Should_convert_multiple_
+      variable_boolean_expression_statement_that_can_be_converted_to_spec() in C
+      :\Dev\Motiv\src\Motiv.CodeFix.Tests\MotivConvertToSpecTests.cs:line 193
+      --- End of stack trace from previous location ---
+Test summary: total: 3, failed: 2, succeeded: 1, skipped: 0, duration: 2.5s
+Build failed with 2 error(s) in 9.5s
