@@ -45,6 +45,8 @@ public class MotivAnalyzer : DiagnosticAnalyzer
         context.RegisterSyntaxNodeAction(AnalyzeBinaryExpression, SyntaxKind.NotEqualsExpression);
         context.RegisterSyntaxNodeAction(AnalyzeBinaryExpression, SyntaxKind.LogicalAndExpression);
         context.RegisterSyntaxNodeAction(AnalyzeBinaryExpression, SyntaxKind.LogicalOrExpression);
+        context.RegisterSyntaxNodeAction(AnalyzeIsPatternExpression, SyntaxKind.IsExpression);
+        context.RegisterSyntaxNodeAction(AnalyzeIsPatternExpression, SyntaxKind.IsPatternExpression);
     }
 
     private static void AnalyzeBinaryExpression(SyntaxNodeAnalysisContext context)
@@ -71,6 +73,18 @@ public class MotivAnalyzer : DiagnosticAnalyzer
         }
 
         return parent is BinaryExpressionSyntax;
+    }
+
+    private static void AnalyzeIsPatternExpression(SyntaxNodeAnalysisContext context)
+    {
+        var node = context.Node;
+
+        if (IsNestedInBinaryExpression(node)) return;
+
+        if (IsInsideSpecBuildLambda(node, context.SemanticModel)) return;
+
+        var diagnostic = Diagnostic.Create(Motiv0001, node.GetLocation());
+        context.ReportDiagnostic(diagnostic);
     }
 
     private static bool IsInsideSpecBuildLambda(SyntaxNode node, SemanticModel semanticModel)
