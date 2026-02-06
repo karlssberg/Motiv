@@ -170,4 +170,221 @@ public class FindBooleanExpressionsTests
             }
         }.RunAsync();
     }
+
+    [Fact]
+    public async Task Should_detect_is_type_check_expression()
+    {
+        const string booleanExpression = "obj is string";
+        const string code =
+            $$"""
+              namespace MyNamespace;
+
+              public class MyClass
+              {
+                  public bool IsValid(object obj)
+                  {
+                      return {{booleanExpression}};
+                  }
+              }
+              """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (Source, code) },
+                ExpectedDiagnostics =
+                {
+                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                        .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_detect_is_type_check_with_declaration_pattern()
+    {
+        const string booleanExpression = "obj is string s";
+        const string code =
+            $$"""
+              namespace MyNamespace;
+
+              public class MyClass
+              {
+                  public bool IsValid(object obj)
+                  {
+                      return {{booleanExpression}};
+                  }
+              }
+              """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (Source, code) },
+                ExpectedDiagnostics =
+                {
+                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                        .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_detect_negated_is_type_check()
+    {
+        const string booleanExpression = "obj is not string";
+        const string code =
+            $$"""
+              namespace MyNamespace;
+
+              public class MyClass
+              {
+                  public bool IsValid(object obj)
+                  {
+                      return {{booleanExpression}};
+                  }
+              }
+              """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (Source, code) },
+                ExpectedDiagnostics =
+                {
+                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                        .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_detect_property_pattern_expression()
+    {
+        const string booleanExpression = "obj is { Length: > 0 }";
+        const string code =
+            $$"""
+              namespace MyNamespace;
+
+              public class MyClass
+              {
+                  public bool IsValid(string obj)
+                  {
+                      return {{booleanExpression}};
+                  }
+              }
+              """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (Source, code) },
+                ExpectedDiagnostics =
+                {
+                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                        .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_detect_relational_pattern_expression()
+    {
+        const string booleanExpression = "value is > 5";
+        const string code =
+            $$"""
+              namespace MyNamespace;
+
+              public class MyClass
+              {
+                  public bool IsValid(int value)
+                  {
+                      return {{booleanExpression}};
+                  }
+              }
+              """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (Source, code) },
+                ExpectedDiagnostics =
+                {
+                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                        .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_detect_logical_and_pattern_expression()
+    {
+        const string booleanExpression = "value is > 5 and < 10";
+        const string code =
+            $$"""
+              namespace MyNamespace;
+
+              public class MyClass
+              {
+                  public bool IsValid(int value)
+                  {
+                      return {{booleanExpression}};
+                  }
+              }
+              """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (Source, code) },
+                ExpectedDiagnostics =
+                {
+                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                        .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_detect_logical_or_pattern_expression()
+    {
+        const string booleanExpression = "value is 1 or 2 or 3";
+        const string code =
+            $$"""
+              namespace MyNamespace;
+
+              public class MyClass
+              {
+                  public bool IsValid(int value)
+                  {
+                      return {{booleanExpression}};
+                  }
+              }
+              """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (Source, code) },
+                ExpectedDiagnostics =
+                {
+                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                        .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
+                }
+            }
+        }.RunAsync();
+    }
 }
