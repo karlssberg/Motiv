@@ -9,10 +9,10 @@ Requirements for release candidate. Each maps to roadmap phases.
 
 ### Analyzer Expansion
 
-- [ ] **ANLZ-01**: Analyzer detects `is` type-check expressions (e.g. `obj is string`)
-- [ ] **ANLZ-02**: Analyzer detects `is` pattern-matching expressions (e.g. `obj is { Length: > 0 }`)
-- [ ] **ANLZ-03**: Analyzer correctly skips `is`/pattern expressions nested inside already-detected binary expressions
-- [ ] **ANLZ-04**: Analyzer correctly skips `is`/pattern expressions inside `Spec.Build()` lambdas
+- [x] **ANLZ-01**: Analyzer detects `is` type-check expressions (e.g. `obj is string`)
+- [x] **ANLZ-02**: Analyzer detects `is` pattern-matching expressions (e.g. `obj is { Length: > 0 }`)
+- [x] **ANLZ-03**: Analyzer correctly skips `is`/pattern expressions nested inside already-detected binary expressions
+- [x] **ANLZ-04**: Analyzer correctly skips `is`/pattern expressions inside `Spec.Build()` lambdas
 
 ### CodeFix — Name Derivation
 
@@ -35,8 +35,8 @@ Requirements for release candidate. Each maps to roadmap phases.
 
 ### Test Coverage
 
-- [ ] **TEST-01**: Analyzer tests cover `is` type-check detection and edge cases
-- [ ] **TEST-02**: Analyzer tests cover `is` pattern-matching detection and edge cases
+- [x] **TEST-01**: Analyzer tests cover `is` type-check detection and edge cases
+- [x] **TEST-02**: Analyzer tests cover `is` pattern-matching detection and edge cases
 - [ ] **TEST-03**: CodeFix tests cover context-derived naming for proposition and model
 - [ ] **TEST-04**: CodeFix tests cover absence of Debug.WriteLine in generated output
 - [ ] **TEST-05**: CodeFix tests cover `if` condition context
@@ -73,12 +73,12 @@ Deferred beyond v1.0-rc1.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ANLZ-01 | Phase 1 | Pending |
-| ANLZ-02 | Phase 1 | Pending |
-| ANLZ-03 | Phase 1 | Pending |
-| ANLZ-04 | Phase 1 | Pending |
-| TEST-01 | Phase 1 | Pending |
-| TEST-02 | Phase 1 | Pending |
+| ANLZ-01 | Phase 1 | Complete |
+| ANLZ-02 | Phase 1 | Complete |
+| ANLZ-03 | Phase 1 | Complete |
+| ANLZ-04 | Phase 1 | Complete |
+| TEST-01 | Phase 1 | Complete |
+| TEST-02 | Phase 1 | Complete |
 | CFNM-01 | Phase 2 | Pending |
 | CFNM-02 | Phase 2 | Pending |
 | CFNM-03 | Phase 2 | Pending |
