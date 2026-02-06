@@ -54,6 +54,7 @@ public class MotivAnalyzer : DiagnosticAnalyzer
         var binaryExpression = (BinaryExpressionSyntax)context.Node;
 
         if (IsNestedInBinaryExpression(binaryExpression)) return;
+        if (IsNestedInPatternExpression(binaryExpression)) return;
 
         // Check if this expression is inside a Spec.Build() lambda - if so, ignore it
         if (IsInsideSpecBuildLambda(binaryExpression, context.SemanticModel)) return;
@@ -75,11 +76,31 @@ public class MotivAnalyzer : DiagnosticAnalyzer
         return parent is BinaryExpressionSyntax;
     }
 
+    private static bool IsNestedInPatternExpression(SyntaxNode node)
+    {
+        // Walk up through parenthesized and prefix unary expressions
+        var parent = node.Parent;
+        while (parent is ParenthesizedExpressionSyntax or PrefixUnaryExpressionSyntax)
+        {
+            parent = parent.Parent;
+        }
+
+        // Direct child of an is-pattern expression
+        if (parent is IsPatternExpressionSyntax)
+            return true;
+
+        // Nested inside a pattern syntax node (e.g., property pattern, relational pattern)
+        // This covers cases like `obj is { Value: > 5 }` where `> 5` is a GreaterThanExpression
+        // inside a SubpatternSyntax inside a PropertyPatternClauseSyntax
+        return node.FirstAncestorOrSelf<PatternSyntax>() != null;
+    }
+
     private static void AnalyzeIsPatternExpression(SyntaxNodeAnalysisContext context)
     {
         var node = context.Node;
 
         if (IsNestedInBinaryExpression(node)) return;
+        if (IsNestedInPatternExpression(node)) return;
 
         if (IsInsideSpecBuildLambda(node, context.SemanticModel)) return;
 
