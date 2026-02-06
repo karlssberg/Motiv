@@ -31,10 +31,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Analyzer skips `is`/pattern expressions already nested inside detected binary expressions (no duplicate diagnostics)
   4. Analyzer skips `is`/pattern expressions inside `Spec.Build()` lambda bodies (no false positives in Motiv usage)
   5. Test suite covers all edge cases for `is` type-check and pattern-matching detection
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-(Plans will be created during `/gsd:plan-phase 1`)
+- [ ] PLAN-01 — TDD: Detect `is` type-check and pattern-matching expressions (ANLZ-01, ANLZ-02)
+- [ ] PLAN-02 — TDD: Bidirectional nesting suppression and Spec.Build pattern suppression (ANLZ-03, ANLZ-04)
 
 ### Phase 2: CodeFix Foundation
 **Goal**: CodeFix generates clean, context-aware proposition code with meaningful names
@@ -120,7 +121,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Analyzer Expansion | 0/TBD | Not started | - |
+| 1. Analyzer Expansion | 0/2 | Planning complete | - |
 | 2. CodeFix Foundation | 0/TBD | Not started | - |
 | 3. CodeFix Simple Statements | 0/TBD | Not started | - |
 | 4. CodeFix Ternary Integration | 0/TBD | Not started | - |
