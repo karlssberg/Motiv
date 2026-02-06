@@ -133,4 +133,41 @@ public class FindBooleanExpressionsTests
             ExpectedDiagnostics = { } // Empty - no diagnostics expected
         }.RunAsync();
     }
+
+    [Fact]
+    public async Task Should_create_a_single_diagnostic_for_the_root_boolean_expression_with_sub_expressions()
+    {
+        const string clause1 = "valueA >= 0";
+        const string clause2 = "valueB >= 0";
+        const string clause3 = "valueC >= 1";
+        const string clause4 = "valueC <= 10";
+        const string booleanExpression = $"{clause1} && ({clause2} || !({clause3}^{clause4}))";
+
+        const string source =
+            $$"""
+              namespace MyNamespace;
+
+              public class MyClass
+              {
+                  public void IsValid(int valueA, int valueB, int valueC)
+                  {
+                      var isSatisfied = {{booleanExpression}};
+                  }
+              }
+              """;
+
+        // Only ONE diagnostic should be reported for the root expression, not for nested sub-expressions
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (Source, source) },
+                ExpectedDiagnostics =
+                {
+                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                        .WithSpan(Source, 7, 27, 7, 27 + booleanExpression.Length)
+                }
+            }
+        }.RunAsync();
+    }
 }

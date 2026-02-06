@@ -90,27 +90,63 @@ public class LogicalExpressionToSpecConverter(
         var counter = 0;
         return Decompose(expression);
 
-        ExpressionDecomposition Decompose(ExpressionSyntax expr)
+        ExpressionDecomposition Decompose(ExpressionSyntax expr) => expr switch
         {
-            if (expr is BinaryExpressionSyntax binary)
+            // Unwrap parentheses - recursively handle inner expression
+            ParenthesizedExpressionSyntax paren => DecomposeParenthesized(paren),
+
+            // Handle NOT (!) prefix unary expression
+            PrefixUnaryExpressionSyntax { OperatorToken.RawKind: (int)SyntaxKind.ExclamationToken } unary
+                => DecomposeNot(unary),
+
+            // Handle binary logical operators (&&, ||, ^)
+            BinaryExpressionSyntax binary when GetLogicalOperator(binary) is { } op
+                => DecomposeBinary(binary, op),
+
+            // Leaf node: create a clause
+            _ => CreateLeafClause(expr)
+        };
+
+        ExpressionDecomposition DecomposeParenthesized(ParenthesizedExpressionSyntax paren)
+        {
+            var inner = Decompose(paren.Expression);
+            return new ExpressionDecomposition(
+                inner.Clauses,
+                $"({inner.CompositionExpression})");
+        }
+
+        ExpressionDecomposition DecomposeNot(PrefixUnaryExpressionSyntax unary)
+        {
+            var inner = Decompose(unary.Operand);
+            return new ExpressionDecomposition(
+                inner.Clauses,
+                $"!{inner.CompositionExpression}");
+        }
+
+        (string Op, bool IsInfix)? GetLogicalOperator(BinaryExpressionSyntax binary) =>
+            binary.OperatorToken.Kind() switch
             {
-                var methodName = binary.OperatorToken.Kind() switch
-                {
-                    SyntaxKind.AmpersandAmpersandToken => "AndAlso",
-                    SyntaxKind.BarBarToken => "OrElse",
-                    _ => null
-                };
+                SyntaxKind.AmpersandAmpersandToken => (".AndAlso", false),
+                SyntaxKind.BarBarToken => (".OrElse", false),
+                SyntaxKind.CaretToken => (" ^ ", true),
+                _ => null
+            };
 
-                if (methodName != null)
-                {
-                    var left = Decompose(binary.Left);
-                    var right = Decompose(binary.Right);
-                    var allClauses = left.Clauses.Concat(right.Clauses).ToList();
-                    return new ExpressionDecomposition(allClauses,
-                        $"{left.CompositionExpression}.{methodName}({right.CompositionExpression})");
-                }
-            }
+        ExpressionDecomposition DecomposeBinary(BinaryExpressionSyntax binary, (string Op, bool IsInfix) op)
+        {
+            var left = Decompose(binary.Left);
+            var right = Decompose(binary.Right);
+            var allClauses = left.Clauses.Concat(right.Clauses).ToList();
 
+            var composition = op.IsInfix
+                ? $"{left.CompositionExpression}{op.Op}{right.CompositionExpression}"
+                : $"{left.CompositionExpression}{op.Op}({right.CompositionExpression})";
+
+            return new ExpressionDecomposition(allClauses, composition);
+        }
+
+        ExpressionDecomposition CreateLeafClause(ExpressionSyntax expr)
+        {
             counter++;
             var clauseName = $"Clause{counter}";
             var transformed = ConvertLogicVariablesToModelMemberAccess(expr, variableSymbols);

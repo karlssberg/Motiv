@@ -51,7 +51,7 @@ public class MotivAnalyzer : DiagnosticAnalyzer
     {
         var binaryExpression = (BinaryExpressionSyntax)context.Node;
 
-        if (binaryExpression.Parent is BinaryExpressionSyntax) return;
+        if (IsNestedInBinaryExpression(binaryExpression)) return;
 
         // Check if this expression is inside a Spec.Build() lambda - if so, ignore it
         if (IsInsideSpecBuildLambda(binaryExpression, context.SemanticModel)) return;
@@ -61,6 +61,18 @@ public class MotivAnalyzer : DiagnosticAnalyzer
         context.ReportDiagnostic(diagnostic);
     }
 
+    private static bool IsNestedInBinaryExpression(SyntaxNode node)
+    {
+        // Walk up through parenthesized expressions to find if we're inside a binary expression
+        var parent = node.Parent;
+        while (parent is ParenthesizedExpressionSyntax or PrefixUnaryExpressionSyntax)
+        {
+            parent = parent.Parent;
+        }
+
+        return parent is BinaryExpressionSyntax;
+    }
+
     private static bool IsInsideSpecBuildLambda(SyntaxNode node, SemanticModel semanticModel)
     {
         // Walk up the syntax tree to find if we're inside a lambda expression
@@ -68,20 +80,19 @@ public class MotivAnalyzer : DiagnosticAnalyzer
 
         // Check if the lambda is an argument to Spec.Build()
         var invocation = lambda?.FirstAncestorOrSelf<InvocationExpressionSyntax>();
-        if (invocation is null) return false;
 
         // Check if this is a call to Spec.Build with strong typing
-        if (invocation.Expression is MemberAccessExpressionSyntax memberAccess &&
-            memberAccess.Name.Identifier.ValueText == "Build")
+        if (invocation?.Expression is
+            not MemberAccessExpressionSyntax { Name.Identifier.ValueText: "Build" } memberAccess)
+            return false;
+
+        // Use semantic model to get the symbol for the expression (should be Spec)
+        var symbolInfo = semanticModel.GetSymbolInfo(memberAccess.Expression);
+        if (symbolInfo.Symbol is INamedTypeSymbol typeSymbol)
         {
-            // Use semantic model to get the symbol for the expression (should be Spec)
-            var symbolInfo = semanticModel.GetSymbolInfo(memberAccess.Expression);
-            if (symbolInfo.Symbol is INamedTypeSymbol typeSymbol)
-            {
-                // Check if the type is Motiv.Spec
-                return typeSymbol.ContainingNamespace.Name == "Motiv" &&
-                       typeSymbol.Name == "Spec";
-            }
+            // Check if the type is Motiv.Spec
+            return typeSymbol.ContainingNamespace.Name == "Motiv" &&
+                   typeSymbol.Name == "Spec";
         }
 
         return false;
