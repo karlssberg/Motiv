@@ -38,21 +38,22 @@ Plans:
 - [ ] PLAN-02 — TDD: Bidirectional nesting suppression and Spec.Build pattern suppression (ANLZ-03, ANLZ-04)
 
 ### Phase 2: CodeFix Foundation
-**Goal**: CodeFix generates clean, context-aware proposition code with meaningful names
+**Goal**: CodeFix generates clean, context-aware proposition code with meaningful names derived from expression content
 **Depends on**: Phase 1
 **Requirements**: CFNM-01, CFNM-02, CFNM-03, CFCL-01, CFCL-02, CFCL-03, TEST-03, TEST-04
 **Success Criteria** (what must be TRUE):
-  1. Generated proposition class name derives from containing method or context (not hard-coded "Proposition")
-  2. Generated model class name derives from parameter type or context (not hard-coded "Model")
+  1. Generated proposition class name derives from expression content (not hard-coded "Proposition")
+  2. Generated model class name derives from expression content (not hard-coded "Model")
   3. Generated code contains no Debug.WriteLine calls
   4. Generated code does not add `using System.Diagnostics` unless already needed by other code
   5. Original expression preserved in clear, well-formatted comment
   6. Test suite verifies context-derived naming for various scenarios (method names, variable types)
   7. Test suite verifies absence of Debug.WriteLine in all generated outputs
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-(Plans will be created during `/gsd:plan-phase 2`)
+- [ ] 02-01-PLAN.md — TDD: Expression name derivation algorithm (CFNM-01, CFNM-02, CFNM-03)
+- [ ] 02-02-PLAN.md — TDD: Integration, Debug.WriteLine removal, end-to-end tests (CFCL-01, CFCL-02, CFCL-03, TEST-03, TEST-04)
 
 ### Phase 3: CodeFix Simple Statements
 **Goal**: CodeFix handles if, while, and do-while condition contexts
@@ -122,7 +123,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Analyzer Expansion | 2/2 | Complete ✓ | 2026-02-06 |
-| 2. CodeFix Foundation | 0/TBD | Not started | - |
+| 2. CodeFix Foundation | 0/2 | Planned | - |
 | 3. CodeFix Simple Statements | 0/TBD | Not started | - |
 | 4. CodeFix Ternary Integration | 0/TBD | Not started | - |
 | 5. CodeFix Edge Cases | 0/TBD | Not started | - |
@@ -130,4 +131,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 ---
 *Roadmap created: 2026-02-06*
-*Last updated: 2026-02-06*
+*Last updated: 2026-02-07*
