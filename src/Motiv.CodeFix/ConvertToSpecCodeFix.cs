@@ -148,10 +148,10 @@ public class LogicalExpressionToSpecConverter(
         ExpressionDecomposition CreateLeafClause(ExpressionSyntax expr)
         {
             counter++;
-            var clauseName = $"Clause{counter}";
             var transformed = ConvertLogicVariablesToModelMemberAccess(expr, variableSymbols);
+            var clauseName = ClauseNameDeriver.DeriveName(transformed, counter);
             return new ExpressionDecomposition(
-                new List<(string, string)> { (expr.ToString().Trim(), transformed.ToString()) },
+                new List<(string, string, ExpressionSyntax)> { (expr.ToString().Trim(), transformed.ToString(), expr) },
                 clauseName);
         }
     }

@@ -37,21 +37,43 @@ public static class CustomSpecDeclarationSyntax
         string propositionName,
         string modelName,
         string recordParameters,
-        IReadOnlyList<(string OriginalText, string TransformedText)> clauses,
+        IReadOnlyList<(string OriginalText, string TransformedText, Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax Expression)> clauses,
         string compositionExpression)
     {
-        var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"public class {propositionName}() : Spec<{propositionName}.{modelName}>(");
-        sb.AppendLine($"    {compositionExpression})");
-        sb.AppendLine("{");
-        sb.AppendLine($"    public record {modelName}({recordParameters});");
+        // Deduplicate clauses based on their transformed text (actual expression)
+        var uniqueClauses = new Dictionary<string, (string OriginalText, string TransformedText, ExpressionSyntax Expression, string DerivedName)>();
+        var clauseNameMapping = new Dictionary<int, string>(); // Maps original clause index to derived name
 
         for (var i = 0; i < clauses.Count; i++)
         {
+            var (original, transformed, expression) = clauses[i];
+
+            if (!uniqueClauses.ContainsKey(transformed))
+            {
+                var derivedName = ClauseNameDeriver.DeriveName(expression, uniqueClauses.Count + 1);
+                uniqueClauses[transformed] = (original, transformed, expression, derivedName);
+                clauseNameMapping[i] = derivedName;
+            }
+            else
+            {
+                // Reuse the existing derived name for this duplicate
+                clauseNameMapping[i] = uniqueClauses[transformed].DerivedName;
+            }
+        }
+
+        // Update composition expression to use deduplicated clause names
+        var updatedComposition = UpdateCompositionWithDeduplicatedNames(compositionExpression, clauses, clauseNameMapping);
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"public class {propositionName}() : Spec<{propositionName}.{modelName}>(");
+        sb.AppendLine($"    {updatedComposition})");
+        sb.AppendLine("{");
+        sb.AppendLine($"    public record {modelName}({recordParameters});");
+
+        foreach (var (original, transformed, expression, derivedName) in uniqueClauses.Values)
+        {
             sb.AppendLine();
-            var (original, transformed) = clauses[i];
-            var clauseName = $"Clause{i + 1}";
-            sb.AppendLine($"    private static readonly SpecBase<{modelName}> {clauseName} =");
+            sb.AppendLine($"    private static readonly SpecBase<{modelName}> {derivedName} =");
             sb.AppendLine($"        Spec.Build(({modelName} m) => {transformed})");
             sb.AppendLine($"            .WhenTrue(\"{original} == true\")");
             sb.AppendLine($"            .WhenFalse(\"{original} == false\")");
@@ -62,6 +84,32 @@ public static class CustomSpecDeclarationSyntax
 
         var compilationUnit = SyntaxFactory.ParseCompilationUnit(sb.ToString());
         return compilationUnit.DescendantNodes().OfType<TypeDeclarationSyntax>().First();
+    }
+
+    /// <summary>
+    /// Updates the composition expression to replace clause references with deduplicated names.
+    /// </summary>
+    private static string UpdateCompositionWithDeduplicatedNames(
+        string compositionExpression,
+        IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> clauses,
+        Dictionary<int, string> clauseNameMapping)
+    {
+        var result = compositionExpression;
+
+        // Build replacement map: Clause{N} -> actual derived name
+        for (var i = 0; i < clauses.Count; i++)
+        {
+            var originalClauseName = $"Clause{i + 1}";
+            var actualName = clauseNameMapping[i];
+
+            // Only replace if the names are different
+            if (originalClauseName != actualName)
+            {
+                result = result.Replace(originalClauseName, actualName);
+            }
+        }
+
+        return result;
     }
 
     private static TypeDeclarationSyntax CreateInternal(

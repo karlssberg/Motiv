@@ -47,15 +47,13 @@ public static class ExpressionNameDeriver
     private static string DeriveBaseNameFromContext(ExpressionSyntax expression, SemanticModel semanticModel)
     {
         // Priority 1: Check if expression is assigned to a variable
-        var assignmentName = TryGetAssignmentTargetName(expression);
-        if (assignmentName != null)
+        if (TryGetAssignmentTargetName(expression, out var assignmentName))
         {
             return assignmentName;
         }
 
         // Priority 2: Check if expression is returned from a method
-        var methodName = TryGetMethodReturnContextName(expression);
-        if (methodName != null)
+        if (TryGetMethodReturnContextName(expression, out var methodName))
         {
             return methodName;
         }
@@ -67,20 +65,33 @@ public static class ExpressionNameDeriver
     /// <summary>
     /// Attempts to get the name of the variable to which the expression is assigned.
     /// </summary>
-    private static string? TryGetAssignmentTargetName(ExpressionSyntax expression)
+    /// <param name="expression">The expression to analyze.</param>
+    /// <param name="name">The assignment target name if found.</param>
+    /// <returns>True if an assignment target name was found; otherwise, false.</returns>
+    private static bool TryGetAssignmentTargetName(ExpressionSyntax expression, out string name)
     {
         // Walk up the tree to find a VariableDeclarator
         var variableDeclarator = expression.Ancestors()
             .OfType<VariableDeclaratorSyntax>()
             .FirstOrDefault();
 
-        return variableDeclarator?.Identifier.ValueText;
+        if (variableDeclarator != null)
+        {
+            name = variableDeclarator.Identifier.ValueText;
+            return true;
+        }
+
+        name = string.Empty;
+        return false;
     }
 
     /// <summary>
     /// Attempts to get the name of the method from which the expression is returned.
     /// </summary>
-    private static string? TryGetMethodReturnContextName(ExpressionSyntax expression)
+    /// <param name="expression">The expression to analyze.</param>
+    /// <param name="name">The method name if found and not generic.</param>
+    /// <returns>True if a meaningful method name was found; otherwise, false.</returns>
+    private static bool TryGetMethodReturnContextName(ExpressionSyntax expression, out string name)
     {
         // Walk up the tree to find a ReturnStatement, then find its containing method
         var returnStatement = expression.Ancestors()
@@ -89,7 +100,8 @@ public static class ExpressionNameDeriver
 
         if (returnStatement == null)
         {
-            return null;
+            name = string.Empty;
+            return false;
         }
 
         var methodDeclaration = returnStatement.Ancestors()
@@ -101,10 +113,12 @@ public static class ExpressionNameDeriver
         // Filter out generic test method names that don't provide meaningful context
         if (methodName == null || IsGenericMethodName(methodName))
         {
-            return null;
+            name = string.Empty;
+            return false;
         }
 
-        return methodName;
+        name = methodName;
+        return true;
     }
 
     /// <summary>
@@ -231,7 +245,7 @@ public static class ExpressionNameDeriver
             return false;
         }
 
-        var symbol = ModelExtensions.GetSymbolInfo(semanticModel, identifierNode).Symbol;
+        var symbol = semanticModel.GetSymbolInfo(identifierNode).Symbol;
         return symbol is IFieldSymbol or IPropertySymbol or ILocalSymbol or IParameterSymbol;
     }
 
