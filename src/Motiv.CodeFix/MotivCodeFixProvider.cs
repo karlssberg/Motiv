@@ -35,7 +35,8 @@ public class MotivCodeFixProvider : CodeFixProvider
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         if (root is null) return;
 
-        var logicalExpressionConverter = new LogicalExpressionToSpecConverter("Proposition", "Model", context.Document);
+        var semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
+        if (semanticModel is null) return;
 
         foreach (var diagnostic in context.Diagnostics)
         {
@@ -48,6 +49,14 @@ public class MotivCodeFixProvider : CodeFixProvider
                                    ?? node.FirstAncestorOrSelf<ExpressionSyntax>();
             if (expressionSyntax is null)
                 continue;
+
+            // Derive context-aware class names from the expression
+            var (propositionName, modelName) = ExpressionNameDeriver.DeriveClassNames(
+                expressionSyntax,
+                semanticModel,
+                expressionSyntax.SpanStart);
+
+            var logicalExpressionConverter = new LogicalExpressionToSpecConverter(propositionName, modelName, context.Document);
 
             var action = CodeAction.Create(
                 title: "Fix Boolean Blindness",

@@ -49,7 +49,7 @@ public class LogicalExpressionToSpecConverter(
         newRoot = baseNamespace is { } namespaceDeclaration
             ? AddToNamespace(newRoot, namespaceDeclaration, rootMembers)
             : AddToCompilationUnit(newRoot, rootMembers);
-        newRoot = AddUsingStatementsIfNeeded(newRoot, variableSymbols.Length > 1);
+        newRoot = AddUsingStatementsIfNeeded(newRoot);
 
         return document.WithSyntaxRoot(newRoot);
     }
@@ -162,9 +162,57 @@ public class LogicalExpressionToSpecConverter(
     {
         var variableNames = variableSymbols.Select(s => s.Name).ToArray();
 
-        return expression.ReplaceNodes(
-            expression.DescendantNodesAndSelf().OfType<IdentifierNameSyntax>()
-                .Where(identifier => variableNames.Contains(identifier.Identifier.ValueText)),
+        // Two-pass approach:
+        // 1. Replace member access expressions that start with a variable (e.g., order.Total -> m.Order.Total)
+        // 2. Replace standalone identifiers (e.g., x -> m.X)
+
+        // First pass: Find member access expressions where the root is a variable
+        var memberAccessToReplace = expression.DescendantNodesAndSelf()
+            .OfType<MemberAccessExpressionSyntax>()
+            .Where(ma =>
+            {
+                // Find the leftmost identifier in the chain
+                var expr = ma.Expression;
+                while (expr is MemberAccessExpressionSyntax innerMa)
+                    expr = innerMa.Expression;
+
+                return expr is IdentifierNameSyntax id && variableNames.Contains(id.Identifier.ValueText);
+            })
+            .ToList();
+
+        var result = expression.ReplaceNodes(
+            memberAccessToReplace,
+            (original, _) =>
+            {
+                // Find the root variable identifier
+                var expr = original.Expression;
+                while (expr is MemberAccessExpressionSyntax innerMa)
+                    expr = innerMa.Expression;
+
+                if (expr is IdentifierNameSyntax rootId)
+                {
+                    var propertyName = rootId.Identifier.ValueText.Capitalize();
+                    var newBase = MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        IdentifierName("m"),
+                        IdentifierName(propertyName));
+
+                    // Rebuild the member access chain: m.Order + .Total -> m.Order.Total
+                    return RebuildMemberAccessChain(original, newBase);
+                }
+
+                return original;
+            });
+
+        // Second pass: Replace standalone identifiers that weren't part of member access
+        var standaloneIdentifiers = result.DescendantNodesAndSelf()
+            .OfType<IdentifierNameSyntax>()
+            .Where(id => variableNames.Contains(id.Identifier.ValueText))
+            .Where(id => id.Parent is not MemberAccessExpressionSyntax)
+            .ToList();
+
+        return result.ReplaceNodes(
+            standaloneIdentifiers,
             (original, _) =>
             {
                 var propertyName = original.Identifier.ValueText.Capitalize();
@@ -174,6 +222,34 @@ public class LogicalExpressionToSpecConverter(
                         IdentifierName(propertyName))
                     .WithTriviaFrom(original);
             });
+    }
+
+    private static ExpressionSyntax RebuildMemberAccessChain(
+        MemberAccessExpressionSyntax original,
+        ExpressionSyntax newBase)
+    {
+        // If the original expression part is just an identifier, we're done
+        if (original.Expression is IdentifierNameSyntax)
+        {
+            return MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    newBase,
+                    original.Name)
+                .WithTriviaFrom(original);
+        }
+
+        // If it's a nested member access, rebuild recursively
+        if (original.Expression is MemberAccessExpressionSyntax innerMa)
+        {
+            var rebuiltInner = RebuildMemberAccessChain(innerMa, newBase);
+            return MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    rebuiltInner,
+                    original.Name)
+                .WithTriviaFrom(original);
+        }
+
+        return original;
     }
 
     private string GetModelVariableName(ImmutableArray<ISymbol> variableSymbols)
@@ -255,7 +331,6 @@ public class LogicalExpressionToSpecConverter(
                                     {
                                         // {{originalExprText}}
                                         var result = {{specInvocation}};
-                                        Debug.WriteLine(result.Reason);
                                         {{assignmentLine}}
                                     }
                                 }
@@ -299,7 +374,6 @@ public class LogicalExpressionToSpecConverter(
                         {
                                 // {{originalExprText}}
                                 var result = {{specInvocation}};
-                                Debug.WriteLine(result.Reason);
                                 {{assignmentLine}}
                             }
                         """;
@@ -326,14 +400,10 @@ public class LogicalExpressionToSpecConverter(
             : containingClass.WithMembers(containingClass.Members.Insert(0, fieldDeclaration));
     }
 
-    private static SyntaxNode AddUsingStatementsIfNeeded(SyntaxNode newRoot, bool includeSystemDiagnostics)
+    private static SyntaxNode AddUsingStatementsIfNeeded(SyntaxNode newRoot)
     {
         var compilationUnit = (CompilationUnitSyntax)newRoot;
         var usingsToAdd = new List<UsingDirectiveSyntax>();
-
-        if (includeSystemDiagnostics && compilationUnit.Usings.All(u => u.Name?.ToString() != "System.Diagnostics"))
-            usingsToAdd.Add(UsingDirective(
-                QualifiedName(IdentifierName("System"), IdentifierName("Diagnostics"))));
 
         if (compilationUnit.Usings.All(u => u.Name?.ToString() != nameof(Motiv)))
             usingsToAdd.Add(UsingDirective(IdentifierName(nameof(Motiv))));
@@ -376,8 +446,19 @@ public class LogicalExpressionToSpecConverter(
         return expression
             .DescendantNodesAndSelf()
             .OfType<IdentifierNameSyntax>()
+            .Where(identifier =>
+            {
+                // Only consider root identifiers (not the right side of member access)
+                // For "order.Total", we only want "order", not "Total"
+                if (identifier.Parent is MemberAccessExpressionSyntax memberAccess &&
+                    memberAccess.Name == identifier)
+                {
+                    return false;
+                }
+                return true;
+            })
             .Select(identifier => ModelExtensions.GetSymbolInfo(semanticModel, identifier).Symbol)
-            .Where(symbol => symbol is IFieldSymbol or IPropertySymbol or ILocalSymbol or IParameterSymbol)
+            .Where(symbol => symbol is IFieldSymbol or ILocalSymbol or IParameterSymbol)
             .Distinct(SymbolEqualityComparer.Default)
             .Cast<ISymbol>();
     }

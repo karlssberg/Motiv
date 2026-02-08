@@ -324,8 +324,8 @@ public class MotivConvertToSpecTests
                 }
             }
 
-            public class OrderProposition() : Spec<Order>(() =>
-                Spec.Build((Order order) => {{booleanExpression}})
+            public class OrderProposition() : Spec<MyNamespace.Order>(() =>
+                Spec.Build((MyNamespace.Order order) => {{booleanExpression}})
                     .WhenTrue("({{booleanExpression}}) == true")
                     .WhenFalse("({{booleanExpression}}) == false")
                     .Create());
@@ -387,8 +387,8 @@ public class MotivConvertToSpecTests
                 }
             }
 
-            public class OrderProposition() : Spec<Order>(() =>
-                Spec.Build((Order order) => {{booleanExpression}})
+            public class OrderProposition() : Spec<MyNamespace.Order>(() =>
+                Spec.Build((MyNamespace.Order order) => {{booleanExpression}})
                     .WhenTrue("({{booleanExpression}}) == true")
                     .WhenFalse("({{booleanExpression}}) == false")
                     .Create());
@@ -518,7 +518,7 @@ public class MotivConvertToSpecTests
             ExpectedDiagnostics =
             {
                 new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
-                    .WithSpan(Source, 5, 47, 5, 47 + booleanExpression.Length)
+                    .WithSpan(Source, 5, 42, 5, 42 + booleanExpression.Length)
             }
         }.RunAsync();
     }
