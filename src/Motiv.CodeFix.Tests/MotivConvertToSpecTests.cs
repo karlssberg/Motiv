@@ -37,11 +37,11 @@ public class MotivConvertToSpecTests
             {
                 public bool IsValid(int value)
                 {
-                    return new Proposition().IsSatisfiedBy(value).Satisfied;
+                    return new ValueProposition().IsSatisfiedBy(value).Satisfied;
                 }
             }
 
-            public class Proposition() : Spec<int>(() =>
+            public class ValueProposition() : Spec<int>(() =>
                 Spec.Build((int value) => {{booleanExpression}})
                     .WhenTrue("({{booleanExpression}}) == true")
                     .WhenFalse("({{booleanExpression}}) == false")
@@ -79,7 +79,6 @@ public class MotivConvertToSpecTests
 
         const string expectedTransformedCode =
           $$"""
-            using System.Diagnostics;
             using Motiv;
 
             namespace MyNamespace;
@@ -91,7 +90,6 @@ public class MotivConvertToSpecTests
                 {
                     // {{booleanExpression}}
                     var result = _proposition.IsSatisfiedBy(new Proposition.Model(valueA, valueB, valueC));
-                    Debug.WriteLine(result.Reason);
                     return result.Satisfied;
                 }
             }
@@ -151,7 +149,6 @@ public class MotivConvertToSpecTests
 
         const string expectedTransformedCode =
           $$"""
-            using System.Diagnostics;
             using Motiv;
 
             namespace MyNamespace;
@@ -163,7 +160,6 @@ public class MotivConvertToSpecTests
                 {
                     // {{booleanExpression}}
                     var result = _proposition.IsSatisfiedBy(new Proposition.Model(valueA, valueB, valueC));
-                    Debug.WriteLine(result.Reason);
                     var isSatisfied = result.Satisfied;
                 }
             }
@@ -227,48 +223,46 @@ public class MotivConvertToSpecTests
 
         const string expectedTransformedCode =
           $$"""
-            using System.Diagnostics;
             using Motiv;
 
             namespace MyNamespace;
 
             public class MyClass
             {
-                private readonly Proposition _proposition = new Proposition();
+                private readonly ValueCProposition _valueCProposition = new ValueCProposition();
                 public void IsValid(int valueA, int valueB, int valueC)
                 {
                     // {{booleanExpression}}
-                    var result = _proposition.IsSatisfiedBy(new Proposition.Model(valueA, valueB, valueC));
-                    Debug.WriteLine(result.Reason);
+                    var result = _valueCProposition.IsSatisfiedBy(new ValueCProposition.ValueCModel(valueA, valueB, valueC));
                     var isSatisfied = result.Satisfied;
                 }
             }
 
-            public class Proposition() : Spec<Proposition.Model>(
+            public class ValueCProposition() : Spec<ValueCProposition.ValueCModel>(
                 Clause1.AndAlso((Clause2.OrElse(!(Clause3 ^ Clause4)))))
             {
-                public record Model(int ValueA, int ValueB, int ValueC);
+                public record ValueCModel(int ValueA, int ValueB, int ValueC);
 
-                private static readonly SpecBase<Model> Clause1 =
-                    Spec.Build((Model m) => m.ValueA >= 0)
+                private static readonly SpecBase<ValueCModel> Clause1 =
+                    Spec.Build((ValueCModel m) => m.ValueA >= 0)
                         .WhenTrue("{{clause1}} == true")
                         .WhenFalse("{{clause1}} == false")
                         .Create();
 
-                private static readonly SpecBase<Model> Clause2 =
-                    Spec.Build((Model m) => m.ValueB >= 0)
+                private static readonly SpecBase<ValueCModel> Clause2 =
+                    Spec.Build((ValueCModel m) => m.ValueB >= 0)
                         .WhenTrue("{{clause2}} == true")
                         .WhenFalse("{{clause2}} == false")
                         .Create();
 
-                private static readonly SpecBase<Model> Clause3 =
-                    Spec.Build((Model m) => m.ValueC >= 1)
+                private static readonly SpecBase<ValueCModel> Clause3 =
+                    Spec.Build((ValueCModel m) => m.ValueC >= 1)
                         .WhenTrue("{{clause3}} == true")
                         .WhenFalse("{{clause3}} == false")
                         .Create();
 
-                private static readonly SpecBase<Model> Clause4 =
-                    Spec.Build((Model m) => m.ValueC <= 10)
+                private static readonly SpecBase<ValueCModel> Clause4 =
+                    Spec.Build((ValueCModel m) => m.ValueC <= 10)
                         .WhenTrue("{{clause4}} == true")
                         .WhenFalse("{{clause4}} == false")
                         .Create();
@@ -284,6 +278,247 @@ public class MotivConvertToSpecTests
             {
                 new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
                     .WithSpan(Source, 7, 27, 7, 27 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_derive_name_from_member_access_root()
+    {
+        const string booleanExpression = "order.Total > 100";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class Order
+            {
+                public int Total { get; set; }
+            }
+
+            public class MyClass
+            {
+                public bool IsValid(Order order)
+                {
+                    return {{booleanExpression}};
+                }
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class Order
+            {
+                public int Total { get; set; }
+            }
+
+            public class MyClass
+            {
+                public bool IsValid(Order order)
+                {
+                    return new OrderProposition().IsSatisfiedBy(order).Satisfied;
+                }
+            }
+
+            public class OrderProposition() : Spec<Order>(() =>
+                Spec.Build((Order order) => {{booleanExpression}})
+                    .WhenTrue("({{booleanExpression}}) == true")
+                    .WhenFalse("({{booleanExpression}}) == false")
+                    .Create());
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) }},
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 12, 16, 12, 16 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_derive_common_root_from_multiple_member_accesses()
+    {
+        const string booleanExpression = "order.Total > 100 && order.IsActive";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class Order
+            {
+                public int Total { get; set; }
+                public bool IsActive { get; set; }
+            }
+
+            public class MyClass
+            {
+                public bool IsValid(Order order)
+                {
+                    return {{booleanExpression}};
+                }
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class Order
+            {
+                public int Total { get; set; }
+                public bool IsActive { get; set; }
+            }
+
+            public class MyClass
+            {
+                public bool IsValid(Order order)
+                {
+                    return new OrderProposition().IsSatisfiedBy(order).Satisfied;
+                }
+            }
+
+            public class OrderProposition() : Spec<Order>(() =>
+                Spec.Build((Order order) => {{booleanExpression}})
+                    .WhenTrue("({{booleanExpression}}) == true")
+                    .WhenFalse("({{booleanExpression}}) == false")
+                    .Create());
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) }},
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 13, 16, 13, 16 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_derive_name_from_is_expression_variable()
+    {
+        const string booleanExpression = "obj is string";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool IsValid(object obj)
+                {
+                    return {{booleanExpression}};
+                }
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool IsValid(object obj)
+                {
+                    return new ObjProposition().IsSatisfiedBy(obj).Satisfied;
+                }
+            }
+
+            public class ObjProposition() : Spec<object>(() =>
+                Spec.Build((object obj) => {{booleanExpression}})
+                    .WhenTrue("({{booleanExpression}}) == true")
+                    .WhenFalse("({{booleanExpression}}) == false")
+                    .Create());
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) }},
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_use_fallback_name_for_unrelated_variables()
+    {
+        const string clause1 = "x > 5";
+        const string clause2 = "y < 10";
+        const string booleanExpression = $"{clause1} && {clause2}";
+
+        const string source =
+            $$"""
+              namespace MyNamespace;
+
+              public class MyClass
+              {
+                  public bool IsValid(int x, int y) => {{booleanExpression}};
+              }
+              """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                private readonly Proposition _proposition = new Proposition();
+                public bool IsValid(int x, int y)
+                {
+                    // {{booleanExpression}}
+                    var result = _proposition.IsSatisfiedBy(new Proposition.Model(x, y));
+                    return result.Satisfied;
+                }
+            }
+
+            public class Proposition() : Spec<Proposition.Model>(
+                Clause1.AndAlso(Clause2))
+            {
+                public record Model(int X, int Y);
+
+                private static readonly SpecBase<Model> Clause1 =
+                    Spec.Build((Model m) => m.X > 5)
+                        .WhenTrue("{{clause1}} == true")
+                        .WhenFalse("{{clause1}} == false")
+                        .Create();
+
+                private static readonly SpecBase<Model> Clause2 =
+                    Spec.Build((Model m) => m.Y < 10)
+                        .WhenTrue("{{clause2}} == true")
+                        .WhenFalse("{{clause2}} == false")
+                        .Create();
+            }
+
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) }},
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 5, 47, 5, 47 + booleanExpression.Length)
             }
         }.RunAsync();
     }
