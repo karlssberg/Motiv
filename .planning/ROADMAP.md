@@ -13,7 +13,7 @@ This roadmap takes the existing analyzer and codefix from functional to release-
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Analyzer Expansion** - Detect `is` type-checks and pattern-matching expressions
-- [ ] **Phase 2: CodeFix Foundation** - Derive names from context and eliminate Debug.WriteLine
+- [x] **Phase 2: CodeFix Foundation** - Derive names from context and eliminate Debug.WriteLine
 - [ ] **Phase 3: CodeFix Simple Statements** - Handle if/while/do-while condition contexts
 - [ ] **Phase 4: CodeFix Ternary Integration** - Map ternary branches to WhenTrue/WhenFalse fluent methods
 - [ ] **Phase 5: CodeFix Edge Cases** - Comprehensive test coverage for complex scenarios
@@ -123,7 +123,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Analyzer Expansion | 2/2 | Complete ✓ | 2026-02-06 |
-| 2. CodeFix Foundation | 0/2 | Planned | - |
+| 2. CodeFix Foundation | 2/2 | Complete ✓ | 2026-02-08 |
 | 3. CodeFix Simple Statements | 0/TBD | Not started | - |
 | 4. CodeFix Ternary Integration | 0/TBD | Not started | - |
 | 5. CodeFix Edge Cases | 0/TBD | Not started | - |
@@ -131,4 +131,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 ---
 *Roadmap created: 2026-02-06*
-*Last updated: 2026-02-07*
+*Last updated: 2026-02-08*

@@ -16,15 +16,15 @@ Requirements for release candidate. Each maps to roadmap phases.
 
 ### CodeFix — Name Derivation
 
-- [ ] **CFNM-01**: CodeFix derives proposition class name from the containing method or enclosing context (not hard-coded "Proposition")
-- [ ] **CFNM-02**: CodeFix derives model class name from parameter type or enclosing context (not hard-coded "Model")
-- [ ] **CFNM-03**: Single-variable path uses actual variable type name for model (already partially works — verify and test)
+- [x] **CFNM-01**: CodeFix derives proposition class name from the containing method or enclosing context (not hard-coded "Proposition")
+- [x] **CFNM-02**: CodeFix derives model class name from parameter type or enclosing context (not hard-coded "Model")
+- [x] **CFNM-03**: Single-variable path uses actual variable type name for model (already partially works — verify and test)
 
 ### CodeFix — Clean Output
 
-- [ ] **CFCL-01**: Generated code does not contain `Debug.WriteLine` calls
-- [ ] **CFCL-02**: Generated code does not add `using System.Diagnostics` when not otherwise needed
-- [ ] **CFCL-03**: Generated comment showing original expression is clear and well-formatted
+- [x] **CFCL-01**: Generated code does not contain `Debug.WriteLine` calls
+- [x] **CFCL-02**: Generated code does not add `using System.Diagnostics` when not otherwise needed
+- [x] **CFCL-03**: Generated comment showing original expression is clear and well-formatted
 
 ### CodeFix — Statement Contexts
 
@@ -37,8 +37,8 @@ Requirements for release candidate. Each maps to roadmap phases.
 
 - [x] **TEST-01**: Analyzer tests cover `is` type-check detection and edge cases
 - [x] **TEST-02**: Analyzer tests cover `is` pattern-matching detection and edge cases
-- [ ] **TEST-03**: CodeFix tests cover context-derived naming for proposition and model
-- [ ] **TEST-04**: CodeFix tests cover absence of Debug.WriteLine in generated output
+- [x] **TEST-03**: CodeFix tests cover context-derived naming for proposition and model
+- [x] **TEST-04**: CodeFix tests cover absence of Debug.WriteLine in generated output
 - [ ] **TEST-05**: CodeFix tests cover `if` condition context
 - [ ] **TEST-06**: CodeFix tests cover `while`/`do-while` condition contexts
 - [ ] **TEST-07**: CodeFix tests cover ternary expression with WhenTrue/WhenFalse integration
@@ -79,14 +79,14 @@ Deferred beyond v1.0-rc1.
 | ANLZ-04 | Phase 1 | Complete |
 | TEST-01 | Phase 1 | Complete |
 | TEST-02 | Phase 1 | Complete |
-| CFNM-01 | Phase 2 | Pending |
-| CFNM-02 | Phase 2 | Pending |
-| CFNM-03 | Phase 2 | Pending |
-| CFCL-01 | Phase 2 | Pending |
-| CFCL-02 | Phase 2 | Pending |
-| CFCL-03 | Phase 2 | Pending |
-| TEST-03 | Phase 2 | Pending |
-| TEST-04 | Phase 2 | Pending |
+| CFNM-01 | Phase 2 | Complete |
+| CFNM-02 | Phase 2 | Complete |
+| CFNM-03 | Phase 2 | Complete |
+| CFCL-01 | Phase 2 | Complete |
+| CFCL-02 | Phase 2 | Complete |
+| CFCL-03 | Phase 2 | Complete |
+| TEST-03 | Phase 2 | Complete |
+| TEST-04 | Phase 2 | Complete |
 | CFSC-01 | Phase 3 | Pending |
 | CFSC-02 | Phase 3 | Pending |
 | CFSC-03 | Phase 3 | Pending |
@@ -108,4 +108,4 @@ Deferred beyond v1.0-rc1.
 
 ---
 *Requirements defined: 2026-02-06*
-*Last updated: 2026-02-06 after roadmap creation*
+*Last updated: 2026-02-08 after Phase 2 completion*
