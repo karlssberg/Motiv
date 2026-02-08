@@ -92,7 +92,7 @@ public class MotivAnalyzer : DiagnosticAnalyzer
         // Nested inside a pattern syntax node (e.g., property pattern, relational pattern)
         // This covers cases like `obj is { Value: > 5 }` where `> 5` is a GreaterThanExpression
         // inside a SubpatternSyntax inside a PropertyPatternClauseSyntax
-        return node.FirstAncestorOrSelf<PatternSyntax>() != null;
+        return node.FirstAncestorOrSelf<PatternSyntax>() is not null;
     }
 
     private static void AnalyzeIsPatternExpression(SyntaxNodeAnalysisContext context)

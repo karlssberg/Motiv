@@ -31,8 +31,8 @@ public static class ExpressionNameDeriver
         var pascalName = baseName.Capitalize();
 
         // Step 3: Append suffixes (unless base name is already the fallback)
-        var propositionName = pascalName == "Proposition" ? "Proposition" : $"{pascalName}Proposition";
-        var modelName = pascalName == "Proposition" ? "Model" : $"{pascalName}Model";
+        var propositionName = pascalName is "Proposition" ? pascalName: $"{pascalName}Proposition";
+        var modelName = pascalName is "Proposition" ? "Model" : $"{pascalName}Model";
 
         // Step 4: Ensure uniqueness
         propositionName = EnsureUniqueName(propositionName, semanticModel, insertionPosition);
@@ -75,7 +75,7 @@ public static class ExpressionNameDeriver
             .OfType<VariableDeclaratorSyntax>()
             .FirstOrDefault();
 
-        if (variableDeclarator != null)
+        if (variableDeclarator is not null)
         {
             name = variableDeclarator.Identifier.ValueText;
             return true;
@@ -98,7 +98,7 @@ public static class ExpressionNameDeriver
             .OfType<ReturnStatementSyntax>()
             .FirstOrDefault();
 
-        if (returnStatement == null)
+        if (returnStatement is null)
         {
             name = string.Empty;
             return false;
@@ -111,7 +111,7 @@ public static class ExpressionNameDeriver
         var methodName = methodDeclaration?.Identifier.ValueText;
 
         // Filter out generic test method names that don't provide meaningful context
-        if (methodName == null || IsGenericMethodName(methodName))
+        if (methodName is null || IsGenericMethodName(methodName))
         {
             name = string.Empty;
             return false;
@@ -240,7 +240,7 @@ public static class ExpressionNameDeriver
             .OfType<IdentifierNameSyntax>()
             .FirstOrDefault(id => id.Identifier.ValueText == name);
 
-        if (identifierNode == null)
+        if (identifierNode is null)
         {
             return false;
         }

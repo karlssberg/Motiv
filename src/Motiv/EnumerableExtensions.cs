@@ -89,7 +89,7 @@ public static class EnumerableExtensions
 
     internal static bool HasAtLeast<T>(this IEnumerable<T> source, int n)
     {
-        if (source == null)
+        if (source is null)
             throw new ArgumentNullException(nameof(source));
 
         using var enumerator = source.GetEnumerator();

@@ -18,7 +18,7 @@ public class VariableExtractorWalker(SemanticModel semanticModel) : CSharpSyntax
     public override void VisitIdentifierName(IdentifierNameSyntax node)
     {
         var symbolInfo = semanticModel.GetSymbolInfo(node);
-        if (symbolInfo.Symbol != null)
+        if (symbolInfo.Symbol is not null)
         {
             switch (symbolInfo.Symbol.Kind)
             {

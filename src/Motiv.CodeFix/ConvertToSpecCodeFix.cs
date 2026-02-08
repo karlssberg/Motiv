@@ -42,9 +42,20 @@ public class LogicalExpressionToSpecConverter(
                             ?? throw new InvalidOperationException("Could not get semantic model for document");
 
         var variableSymbols = GetVariablesInExpression(logicalExpressionSyntax, semanticModel).ToImmutableArray();
-        var newRoot = ReplaceLogicalExpressionWithSpecInvocation(variableSymbols, logicalExpressionSyntax, root);
 
-        var rootMembers = GetRootMembers(variableSymbols, logicalExpressionSyntax).ToArray();
+        // Detect instance method calls
+        var containingClass = logicalExpressionSyntax.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+        var containingTypeSymbol = containingClass is not null ? semanticModel.GetDeclaredSymbol(containingClass) : null;
+        var instanceMethodDetector = new InstanceMethodDetector(semanticModel);
+        var instanceMethods = containingTypeSymbol is not null
+            ? instanceMethodDetector.GetInstanceMethods(logicalExpressionSyntax, containingTypeSymbol)
+            : Array.Empty<(InvocationExpressionSyntax, IMethodSymbol)>();
+
+        var hasInstanceMethods = instanceMethods.Count > 0;
+
+        var newRoot = ReplaceLogicalExpressionWithSpecInvocation(variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods, containingTypeSymbol);
+
+        var rootMembers = GetRootMembers(variableSymbols, logicalExpressionSyntax, instanceMethods, containingTypeSymbol).ToArray();
         var baseNamespace = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
         newRoot = baseNamespace is { } namespaceDeclaration
             ? AddToNamespace(newRoot, namespaceDeclaration, rootMembers)
@@ -56,9 +67,13 @@ public class LogicalExpressionToSpecConverter(
 
     private IEnumerable<MemberDeclarationSyntax> GetRootMembers(
         ImmutableArray<ISymbol> variableSymbols,
-        ExpressionSyntax logicalExpressionSyntax)
+        ExpressionSyntax logicalExpressionSyntax,
+        IReadOnlyList<(InvocationExpressionSyntax Invocation, IMethodSymbol Method)> instanceMethods,
+        INamedTypeSymbol? containingTypeSymbol)
     {
-        if (variableSymbols.Length == 1)
+        var hasInstanceMethods = instanceMethods.Count > 0;
+
+        if (variableSymbols.Length == 1 && !hasInstanceMethods)
         {
             yield return CustomSpecDeclarationSyntax.Create(
                 IdentifierName(propositionName),
@@ -70,7 +85,28 @@ public class LogicalExpressionToSpecConverter(
 
         var decomposition = DecomposeExpression(logicalExpressionSyntax, variableSymbols);
 
-        var recordParams = string.Join(", ", variableSymbols.Select(s =>
+        if (hasInstanceMethods)
+        {
+            // Generate constructor-based spec for instance methods
+            var modelTypeName = variableSymbols.Length == 1 ? GetModelTypeName(variableSymbols) : null;
+            var recordParams = variableSymbols.Length > 1 ? string.Join(", ", variableSymbols.Select(s =>
+            {
+                var typeName = GetSymbolTypeName(s);
+                return $"{typeName} {s.Name.Capitalize()}";
+            })) : null;
+
+            yield return CustomSpecDeclarationSyntax.CreateWithConstructor(
+                propositionName,
+                defaultModelName,
+                modelTypeName,
+                recordParams,
+                decomposition.Clauses,
+                decomposition.CompositionExpression,
+                containingTypeSymbol?.ToDisplayString() ?? "object");
+            yield break;
+        }
+
+        var recordParameters = string.Join(", ", variableSymbols.Select(s =>
         {
             var typeName = GetSymbolTypeName(s);
             return $"{typeName} {s.Name.Capitalize()}";
@@ -79,7 +115,7 @@ public class LogicalExpressionToSpecConverter(
         yield return CustomSpecDeclarationSyntax.CreateComposed(
             propositionName,
             defaultModelName,
-            recordParams,
+            recordParameters,
             decomposition.Clauses,
             decomposition.CompositionExpression);
     }
@@ -287,10 +323,12 @@ public class LogicalExpressionToSpecConverter(
     private SyntaxNode ReplaceLogicalExpressionWithSpecInvocation(
         ImmutableArray<ISymbol> variableSymbols,
         ExpressionSyntax logicalExpressionSyntax,
-        SyntaxNode root)
+        SyntaxNode root,
+        bool hasInstanceMethods,
+        INamedTypeSymbol? containingTypeSymbol)
     {
-        if (variableSymbols.Length != 1)
-            return ReplaceMultiVariableExpression(variableSymbols, logicalExpressionSyntax, root);
+        if (variableSymbols.Length != 1 || hasInstanceMethods)
+            return ReplaceMultiVariableExpression(variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods);
 
         var createSpecInvocation = SpecInvocationExpressionSyntax.Create(
             IdentifierName(propositionName),
@@ -301,16 +339,42 @@ public class LogicalExpressionToSpecConverter(
     private SyntaxNode ReplaceMultiVariableExpression(
         ImmutableArray<ISymbol> variableSymbols,
         ExpressionSyntax logicalExpressionSyntax,
-        SyntaxNode root)
+        SyntaxNode root,
+        bool hasInstanceMethods)
     {
         var method = logicalExpressionSyntax.Ancestors().OfType<MethodDeclarationSyntax>().First();
         var containingClass = method.Ancestors().OfType<ClassDeclarationSyntax>().First();
         var statement = logicalExpressionSyntax.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
 
         var fieldName = $"_{propositionName.ToCamelCase()}";
-        var modelArgs = string.Join(", ", variableSymbols.Select(s => s.Name));
         var originalExprText = logicalExpressionSyntax.ToString();
-        var specInvocation = $"{fieldName}.IsSatisfiedBy(new {propositionName}.{defaultModelName}({modelArgs}))";
+
+        string specInvocation;
+        string fieldDeclaration;
+
+        if (hasInstanceMethods)
+        {
+            // For instance methods with constructor parameter
+            if (variableSymbols.Length == 1)
+            {
+                // Single variable: pass directly
+                var varName = variableSymbols.First().Name;
+                specInvocation = $"{fieldName}.IsSatisfiedBy({varName})";
+            }
+            else
+            {
+                // Multiple variables: create model instance
+                var modelArgs = string.Join(", ", variableSymbols.Select(s => s.Name));
+                specInvocation = $"{fieldName}.IsSatisfiedBy(new {propositionName}.{defaultModelName}({modelArgs}))";
+            }
+            fieldDeclaration = $"private readonly {propositionName} {fieldName};";
+        }
+        else
+        {
+            var modelArgs = string.Join(", ", variableSymbols.Select(s => s.Name));
+            specInvocation = $"{fieldName}.IsSatisfiedBy(new {propositionName}.{defaultModelName}({modelArgs}))";
+            fieldDeclaration = $"private readonly {propositionName} {fieldName} = new {propositionName}();";
+        }
 
         var assignmentLine = statement switch
         {
@@ -319,33 +383,54 @@ public class LogicalExpressionToSpecConverter(
                 $"var {local.Declaration.Variables.First().Identifier.Text} = result.Satisfied;",
             ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax assignment } =>
                 $"{assignment.Left} = result.Satisfied;",
-            null when method.ExpressionBody != null && method.ReturnType.ToString() == "bool" => "return result.Satisfied;",
+            null when method.ExpressionBody is not null && method.ReturnType.ToString() == "bool" => "return result.Satisfied;",
             _ => "var isSatisfied = result.Satisfied;"
         };
 
-        var newMethodSource = $$"""
-                                class Temp
-                                {
-                                    private readonly {{propositionName}} {{fieldName}} = new {{propositionName}}();
-                                    public {{method.ReturnType}} {{method.Identifier}}{{method.ParameterList}}
-                                    {
-                                        // {{originalExprText}}
-                                        var result = {{specInvocation}};
-                                        {{assignmentLine}}
-                                    }
-                                }
-                                """;
+        // Generate method source with optional constructor
+        var newMethodSource = hasInstanceMethods
+            ? $$"""
+                class Temp
+                {
+                    {{fieldDeclaration}}
+                    public {{containingClass.Identifier}}()
+                    {
+                        {{fieldName}} = new {{propositionName}}(this);
+                    }
+                    public {{method.ReturnType}} {{method.Identifier}}{{method.ParameterList}}
+                    {
+                        // {{originalExprText}}
+                        var result = {{specInvocation}};
+                        {{assignmentLine}}
+                    }
+                }
+                """
+            : $$"""
+                class Temp
+                {
+                    {{fieldDeclaration}}
+                    public {{method.ReturnType}} {{method.Identifier}}{{method.ParameterList}}
+                    {
+                        // {{originalExprText}}
+                        var result = {{specInvocation}};
+                        {{assignmentLine}}
+                    }
+                }
+                """;
 
         var tempUnit = ParseCompilationUnit(newMethodSource.Replace("\r\n", "\n").Replace("\n", "\r\n"));
         var tempClass = tempUnit.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
-        var newField = tempClass.Members.OfType<FieldDeclarationSyntax>().First();
-        var newMethod = tempClass.Members.OfType<MethodDeclarationSyntax>().First();
+        var newField = tempClass.Members.OfType<FieldDeclarationSyntax>().First()
+            .WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
+        var newMethod = tempClass.Members.OfType<MethodDeclarationSyntax>().Last(); // Last method is the actual method, not constructor
+        var newConstructor = hasInstanceMethods ? tempClass.Members.OfType<ConstructorDeclarationSyntax>().FirstOrDefault() : null;
 
         var fieldAdded = containingClass.Members.OfType<FieldDeclarationSyntax>()
             .Any(f => f.Declaration.Variables.Any(v => v.Identifier.Text == fieldName));
 
         var newMembers = new List<MemberDeclarationSyntax>();
         if (!fieldAdded) newMembers.Add(newField);
+        if (newConstructor is not null) newMembers.Add(newConstructor);
 
         foreach (var member in containingClass.Members) newMembers.Add(member == method ? newMethod : member);
 

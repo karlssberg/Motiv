@@ -11,7 +11,7 @@ public class InternalConstructorCustomization : ICustomization
 
     public InternalConstructorCustomization(Type openGenericType)
     {
-        if (openGenericType == null || !openGenericType.IsGenericTypeDefinition)
+        if (openGenericType is null || !openGenericType.IsGenericTypeDefinition)
         {
             throw new ArgumentException("Must be an open generic type", nameof(openGenericType));
         }
@@ -28,7 +28,7 @@ public class InternalConstructorQuery : IMethodQuery
 {
     public IEnumerable<IMethod> SelectMethods(Type type)
     {
-        if (type == null) { throw new ArgumentNullException(nameof(type)); }
+        if (type is null) { throw new ArgumentNullException(nameof(type)); }
 
         return from ci in type.GetTypeInfo().GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
                where ci.IsAssembly || ci.IsPublic // This ensures we only get internal or public constructors
@@ -45,14 +45,14 @@ public class InternalSpecimenBuilder(Type openGenericType) : ISpecimenBuilder
 
     public object Create(object request, ISpecimenContext context)
     {
-        if (context == null) throw new ArgumentNullException(nameof(context));
+        if (context is null) throw new ArgumentNullException(nameof(context));
 
         if (request is Type requestedType)
         {
             if (IsAssignableToGenericType(requestedType, _openGenericType))
             {
                 var specimen = _invoker.Create(requestedType, context);
-                if (specimen != null)
+                if (specimen is not null)
                 {
                     return specimen;
                 }
@@ -74,6 +74,6 @@ public class InternalSpecimenBuilder(Type openGenericType) : ISpecimenBuilder
         if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
             return true;
 
-        return givenType.BaseType != null && IsAssignableToGenericType(givenType.BaseType, genericType);
+        return givenType.BaseType is not null && IsAssignableToGenericType(givenType.BaseType, genericType);
     }
 }

@@ -78,7 +78,7 @@ public static class ClauseNameDeriver
         var leftName = ExtractIdentifierChain(binary.Left);
         var rightValue = ExtractLiteralValue(binary.Right);
 
-        if (leftName != null)
+        if (leftName is not null)
         {
             return TryDeriveNameWithLeftVariable(binary, leftName, rightValue, out name);
         }
@@ -87,7 +87,7 @@ public static class ClauseNameDeriver
         var leftValue = ExtractLiteralValue(binary.Left);
         var rightName = ExtractIdentifierChain(binary.Right);
 
-        if (leftValue != null && rightName != null)
+        if (leftValue is not null && rightName is not null)
         {
             return TryDeriveNameWithRightVariable(binary, leftValue, rightName, out name);
         }
@@ -113,7 +113,7 @@ public static class ClauseNameDeriver
     {
         // Get the operator verb
         var operatorVerb = GetOperatorVerb(binary.OperatorToken.Kind());
-        if (operatorVerb == null)
+        if (operatorVerb is null)
         {
             name = string.Empty;
             return false;
@@ -124,7 +124,7 @@ public static class ClauseNameDeriver
         {
             var zeroName = GenerateZeroComparisonName();
 
-            if (zeroName != null)
+            if (zeroName is not null)
             {
                 name = zeroName;
                 return true;
@@ -135,7 +135,7 @@ public static class ClauseNameDeriver
         {
             var nullName = GenerateIsNullOrNotNullName();
 
-            if (nullName != null)
+            if (nullName is not null)
             {
                 name = nullName;
                 return true;
@@ -143,7 +143,7 @@ public static class ClauseNameDeriver
         }
 
         // General pattern: Is{Property}{Operator}{Value}
-        if (rightValue != null)
+        if (rightValue is not null)
         {
             name = $"Is{leftName}{operatorVerb}{rightValue}";
             return true;
@@ -197,7 +197,7 @@ public static class ClauseNameDeriver
     {
         // Get the operator verb (same as in normal case)
         var operatorVerb = GetOperatorVerb(binary.OperatorToken.Kind());
-        if (operatorVerb == null)
+        if (operatorVerb is null)
         {
             name = string.Empty;
             return false;
@@ -210,7 +210,7 @@ public static class ClauseNameDeriver
             {
                 var zeroName = GenerateZeroComparisonName();
 
-                if (zeroName != null)
+                if (zeroName is not null)
                 {
                     name = zeroName;
                     return true;
@@ -222,7 +222,7 @@ public static class ClauseNameDeriver
             {
                 var nullName = GenerateIsNullOrNotNullName();
 
-                if (nullName != null)
+                if (nullName is not null)
                 {
                     name = nullName;
                     return true;
@@ -273,7 +273,7 @@ public static class ClauseNameDeriver
     private static bool TryDeriveNegationName(PrefixUnaryExpressionSyntax unary, out string name)
     {
         var operandName = ExtractIdentifierChain(unary.Operand);
-        if (operandName == null)
+        if (operandName is null)
         {
             name = string.Empty;
             return false;
@@ -307,7 +307,7 @@ public static class ClauseNameDeriver
     private static bool TryDeriveIsPatternName(IsPatternExpressionSyntax isPattern, out string name)
     {
         var expressionName = ExtractIdentifierChain(isPattern.Expression);
-        if (expressionName == null)
+        if (expressionName is null)
         {
             name = string.Empty;
             return false;
@@ -352,7 +352,7 @@ public static class ClauseNameDeriver
     private static bool TryDeriveMemberAccessName(MemberAccessExpressionSyntax memberAccess, out string name)
     {
         var chain = ExtractIdentifierChain(memberAccess);
-        if (chain != null)
+        if (chain is not null)
         {
             name = $"Is{chain}";
             return true;

@@ -483,7 +483,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
 
     private static Type? GetEnumerableItemType(Type? type)
     {
-        if (type == null)
+        if (type is null)
             return null;
 
         // Handle array types
@@ -498,7 +498,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         var enumerableType = type.GetInterfaces()
             .FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>));
 
-        if (enumerableType != null)
+        if (enumerableType is not null)
             return enumerableType.GetGenericArguments()[0];
 
         // Handle non-generic IEnumerable

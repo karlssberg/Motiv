@@ -28,4 +28,12 @@ public static class StringExtensions
             "" => input,
             _ => $"{char.ToUpper(input[0])}{input.Substring(1)}"
         };
+
+    /// <summary>
+    /// Escapes double quotes in a string for use in C# string literals.
+    /// </summary>
+    /// <param name="input">The input string.</param>
+    /// <returns>The string with escaped double quotes.</returns>
+    public static string EscapeDoubleQuotes(this string input) =>
+        input.Replace("\"", "\\\"");
 }

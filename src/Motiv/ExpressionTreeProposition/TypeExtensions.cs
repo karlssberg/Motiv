@@ -34,11 +34,11 @@ internal static class ExpressionTreeExtensions
         var value = constantExpression.Value;
         var valueType = constantExpression.Type;
 
-        if (value == null || !IsClosureObject(value.GetType())) return (value, valueType); // not a closure
+        if (value is null || !IsClosureObject(value.GetType())) return (value, valueType); // not a closure
 
         var capturedField = value.GetClosureObjectField(capturedVariableName);
 
-        return capturedField != null
+        return capturedField is not null
             ? (capturedField.GetValue(value), capturedField.FieldType)
             : (value, valueType); // If no suitable field found, return the closure object itself
     }
@@ -96,7 +96,7 @@ internal static class ExpressionTreeExtensions
     internal static bool InheritsFrom(this Type concreteType, Type superType)
     {
         var type = concreteType;
-        while (type != null && type != typeof(object))
+        while (type is not null && type != typeof(object))
         {
             if (type.IsGenericType && type.GetGenericTypeDefinition() == superType || type == superType)
                 return true;
