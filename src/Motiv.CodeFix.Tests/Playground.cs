@@ -2,10 +2,8 @@
 
 public class Playground
 {
-    [Theory]
-    [InlineData(0, -1, 5)]
-    public void Test(int valueA, int valueB, int valueC)
+    public bool IsFeatureEnabled(int valueA, int valueB, int valueC)
     {
-        var inRange = valueA >= 0 && (valueB >= 0 || valueC >= 1);
+        return valueA >= 0 && (valueB >= 0 || valueC >= 1);
     }
 }

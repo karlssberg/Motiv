@@ -37,11 +37,11 @@ public class MotivConvertToSpecTests
             {
                 public bool IsValid(int value)
                 {
-                    return new ValueProposition().IsSatisfiedBy(value).Satisfied;
+                    return new IsValidProposition().IsSatisfiedBy(value).Satisfied;
                 }
             }
 
-            public class ValueProposition() : Spec<int>(() =>
+            public class IsValidProposition() : Spec<int>(() =>
                 Spec.Build((int value) => {{booleanExpression}})
                     .WhenTrue("({{booleanExpression}}) == true")
                     .WhenFalse("({{booleanExpression}}) == false")
@@ -155,28 +155,28 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly Proposition _proposition = new Proposition();
+                private readonly IsSatisfiedProposition _isSatisfiedProposition = new IsSatisfiedProposition();
                 public void IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
-                    var result = _proposition.IsSatisfiedBy(new Proposition.Model(valueA, valueB, valueC));
+                    var result = _isSatisfiedProposition.IsSatisfiedBy(new IsSatisfiedProposition.IsSatisfiedModel(valueA, valueB, valueC));
                     var isSatisfied = result.Satisfied;
                 }
             }
 
-            public class Proposition() : Spec<Proposition.Model>(
+            public class IsSatisfiedProposition() : Spec<IsSatisfiedProposition.IsSatisfiedModel>(
                 Clause1.AndAlso(Clause2))
             {
-                public record Model(int ValueA, int ValueB, bool ValueC);
+                public record IsSatisfiedModel(int ValueA, int ValueB, bool ValueC);
 
-                private static readonly SpecBase<Model> Clause1 =
-                    Spec.Build((Model m) => m.ValueA > m.ValueB)
+                private static readonly SpecBase<IsSatisfiedModel> Clause1 =
+                    Spec.Build((IsSatisfiedModel m) => m.ValueA > m.ValueB)
                         .WhenTrue("{{clause1}} == true")
                         .WhenFalse("{{clause1}} == false")
                         .Create();
 
-                private static readonly SpecBase<Model> Clause2 =
-                    Spec.Build((Model m) => m.ValueC)
+                private static readonly SpecBase<IsSatisfiedModel> Clause2 =
+                    Spec.Build((IsSatisfiedModel m) => m.ValueC)
                         .WhenTrue("{{clause2}} == true")
                         .WhenFalse("{{clause2}} == false")
                         .Create();
@@ -229,40 +229,40 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly ValueCProposition _valueCProposition = new ValueCProposition();
+                private readonly IsSatisfiedProposition _isSatisfiedProposition = new IsSatisfiedProposition();
                 public void IsValid(int valueA, int valueB, int valueC)
                 {
                     // {{booleanExpression}}
-                    var result = _valueCProposition.IsSatisfiedBy(new ValueCProposition.ValueCModel(valueA, valueB, valueC));
+                    var result = _isSatisfiedProposition.IsSatisfiedBy(new IsSatisfiedProposition.IsSatisfiedModel(valueA, valueB, valueC));
                     var isSatisfied = result.Satisfied;
                 }
             }
 
-            public class ValueCProposition() : Spec<ValueCProposition.ValueCModel>(
+            public class IsSatisfiedProposition() : Spec<IsSatisfiedProposition.IsSatisfiedModel>(
                 Clause1.AndAlso((Clause2.OrElse(!(Clause3 ^ Clause4)))))
             {
-                public record ValueCModel(int ValueA, int ValueB, int ValueC);
+                public record IsSatisfiedModel(int ValueA, int ValueB, int ValueC);
 
-                private static readonly SpecBase<ValueCModel> Clause1 =
-                    Spec.Build((ValueCModel m) => m.ValueA >= 0)
+                private static readonly SpecBase<IsSatisfiedModel> Clause1 =
+                    Spec.Build((IsSatisfiedModel m) => m.ValueA >= 0)
                         .WhenTrue("{{clause1}} == true")
                         .WhenFalse("{{clause1}} == false")
                         .Create();
 
-                private static readonly SpecBase<ValueCModel> Clause2 =
-                    Spec.Build((ValueCModel m) => m.ValueB >= 0)
+                private static readonly SpecBase<IsSatisfiedModel> Clause2 =
+                    Spec.Build((IsSatisfiedModel m) => m.ValueB >= 0)
                         .WhenTrue("{{clause2}} == true")
                         .WhenFalse("{{clause2}} == false")
                         .Create();
 
-                private static readonly SpecBase<ValueCModel> Clause3 =
-                    Spec.Build((ValueCModel m) => m.ValueC >= 1)
+                private static readonly SpecBase<IsSatisfiedModel> Clause3 =
+                    Spec.Build((IsSatisfiedModel m) => m.ValueC >= 1)
                         .WhenTrue("{{clause3}} == true")
                         .WhenFalse("{{clause3}} == false")
                         .Create();
 
-                private static readonly SpecBase<ValueCModel> Clause4 =
-                    Spec.Build((ValueCModel m) => m.ValueC <= 10)
+                private static readonly SpecBase<IsSatisfiedModel> Clause4 =
+                    Spec.Build((IsSatisfiedModel m) => m.ValueC <= 10)
                         .WhenTrue("{{clause4}} == true")
                         .WhenFalse("{{clause4}} == false")
                         .Create();
@@ -320,11 +320,11 @@ public class MotivConvertToSpecTests
             {
                 public bool IsValid(Order order)
                 {
-                    return new OrderProposition().IsSatisfiedBy(order).Satisfied;
+                    return new IsValidProposition().IsSatisfiedBy(order).Satisfied;
                 }
             }
 
-            public class OrderProposition() : Spec<MyNamespace.Order>(() =>
+            public class IsValidProposition() : Spec<MyNamespace.Order>(() =>
                 Spec.Build((MyNamespace.Order order) => {{booleanExpression}})
                     .WhenTrue("({{booleanExpression}}) == true")
                     .WhenFalse("({{booleanExpression}}) == false")
@@ -383,11 +383,11 @@ public class MotivConvertToSpecTests
             {
                 public bool IsValid(Order order)
                 {
-                    return new OrderProposition().IsSatisfiedBy(order).Satisfied;
+                    return new IsValidProposition().IsSatisfiedBy(order).Satisfied;
                 }
             }
 
-            public class OrderProposition() : Spec<MyNamespace.Order>(() =>
+            public class IsValidProposition() : Spec<MyNamespace.Order>(() =>
                 Spec.Build((MyNamespace.Order order) => {{booleanExpression}})
                     .WhenTrue("({{booleanExpression}}) == true")
                     .WhenFalse("({{booleanExpression}}) == false")
@@ -434,11 +434,11 @@ public class MotivConvertToSpecTests
             {
                 public bool IsValid(object obj)
                 {
-                    return new ObjProposition().IsSatisfiedBy(obj).Satisfied;
+                    return new IsValidProposition().IsSatisfiedBy(obj).Satisfied;
                 }
             }
 
-            public class ObjProposition() : Spec<object>(() =>
+            public class IsValidProposition() : Spec<object>(() =>
                 Spec.Build((object obj) => {{booleanExpression}})
                     .WhenTrue("({{booleanExpression}}) == true")
                     .WhenFalse("({{booleanExpression}}) == false")

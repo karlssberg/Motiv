@@ -20,8 +20,12 @@ public static class ExpressionNameDeriver
         SemanticModel semanticModel,
         int insertionPosition)
     {
-        // Step 1: Derive base name from expression
-        var baseName = DeriveBaseName(expression, semanticModel);
+        // Step 1: Derive base name with precedence order:
+        // 1. Assignment target name (highest priority)
+        // 2. Method return context name
+        // 3. Expression-based name
+        // 4. Fallback "Proposition" (lowest priority)
+        var baseName = DeriveBaseNameFromContext(expression, semanticModel);
 
         // Step 2: Convert to PascalCase
         var pascalName = baseName.Capitalize();
@@ -35,6 +39,92 @@ public static class ExpressionNameDeriver
         modelName = EnsureUniqueName(modelName, semanticModel, insertionPosition);
 
         return (propositionName, modelName);
+    }
+
+    /// <summary>
+    /// Derives the base name with context awareness, following precedence order.
+    /// </summary>
+    private static string DeriveBaseNameFromContext(ExpressionSyntax expression, SemanticModel semanticModel)
+    {
+        // Priority 1: Check if expression is assigned to a variable
+        var assignmentName = TryGetAssignmentTargetName(expression);
+        if (assignmentName != null)
+        {
+            return assignmentName;
+        }
+
+        // Priority 2: Check if expression is returned from a method
+        var methodName = TryGetMethodReturnContextName(expression);
+        if (methodName != null)
+        {
+            return methodName;
+        }
+
+        // Priority 3: Derive from expression content
+        return DeriveBaseName(expression, semanticModel);
+    }
+
+    /// <summary>
+    /// Attempts to get the name of the variable to which the expression is assigned.
+    /// </summary>
+    private static string? TryGetAssignmentTargetName(ExpressionSyntax expression)
+    {
+        // Walk up the tree to find a VariableDeclarator
+        var variableDeclarator = expression.Ancestors()
+            .OfType<VariableDeclaratorSyntax>()
+            .FirstOrDefault();
+
+        return variableDeclarator?.Identifier.ValueText;
+    }
+
+    /// <summary>
+    /// Attempts to get the name of the method from which the expression is returned.
+    /// </summary>
+    private static string? TryGetMethodReturnContextName(ExpressionSyntax expression)
+    {
+        // Walk up the tree to find a ReturnStatement, then find its containing method
+        var returnStatement = expression.Ancestors()
+            .OfType<ReturnStatementSyntax>()
+            .FirstOrDefault();
+
+        if (returnStatement == null)
+        {
+            return null;
+        }
+
+        var methodDeclaration = returnStatement.Ancestors()
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault();
+
+        var methodName = methodDeclaration?.Identifier.ValueText;
+
+        // Filter out generic test method names that don't provide meaningful context
+        if (methodName == null || IsGenericMethodName(methodName))
+        {
+            return null;
+        }
+
+        return methodName;
+    }
+
+    /// <summary>
+    /// Checks if a method name is too generic to provide meaningful context.
+    /// </summary>
+    private static bool IsGenericMethodName(string methodName)
+    {
+        // Common generic method names that don't provide semantic meaning
+        string[] genericNames =
+        [
+            "TestMethod",
+            "Test",
+            "Execute",
+            "Run",
+            "Process",
+            "Handle",
+            "Main"
+        ];
+
+        return genericNames.Contains(methodName, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
