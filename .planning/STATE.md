@@ -10,30 +10,30 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 ## Current Position
 
 Phase: 2 of 6 (CodeFix Foundation)
-Plan: 1 of 3 (expression name derivation)
+Plan: 2 of 3 (CodeFix integration with name derivation)
 Status: In progress
-Last activity: 2026-02-08 — Completed 02-01-PLAN.md
+Last activity: 2026-02-08 — Completed 02-02-PLAN.md
 
-Progress: ██░░░░░░░░ 25%
+Progress: ███░░░░░░░ 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 3.3 min
-- Total execution time: 9.9 min
+- Total plans completed: 4
+- Average duration: 4.1 min
+- Total execution time: 17.3 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-analyzer-expansion | 2/2 | 6.9 min | 3.5 min |
-| 02-codefix-foundation | 1/3 | 3.0 min | 3.0 min |
+| 02-codefix-foundation | 2/3 | 10.4 min | 5.2 min |
 
 **Recent Trend:**
-- 01-01: 3.5 min (is type-check and pattern detection)
 - 01-02: 3.4 min (bidirectional nesting suppression)
 - 02-01: 3.0 min (expression name derivation)
+- 02-02: 7.4 min (CodeFix integration with name derivation)
 
 *Updated after each plan completion*
 
@@ -55,6 +55,8 @@ Recent decisions affecting current work:
 - Fallback naming: Use "Proposition"/"Model" when no common root identifier exists (02-01) — ensures algorithm always produces valid names
 - Alphabetical tie-breaking: Deterministic ordering for equal-frequency identifiers (02-01) — predictable behavior across runs
 - Is-pattern variable extraction: Extract from variable side only, not pattern type (02-01) — derive from domain (obj) not framework (string)
+- Member access variable counting: order.Total counted as one variable (order), not two (02-02) — root identifiers only, exclude property access
+- Two-pass member access replacement: Avoid Roslyn InvalidCastException when transforming expressions with member chains (02-02)
 
 ### Pending Todos
 
@@ -66,6 +68,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-08 01:08:03 UTC
-Stopped at: Completed 02-01-PLAN.md (expression name derivation algorithm)
+Last session: 2026-02-08 01:25:39 UTC
+Stopped at: Completed 02-02-PLAN.md (CodeFix integration with name derivation)
 Resume file: None
