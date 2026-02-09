@@ -132,7 +132,8 @@ public static class CustomSpecDeclarationSyntax
     private static TypeDeclarationSyntax CreateWithConstructorInternal(ConstructorSpecParams param)
     {
         // Determine the model type
-        var modelType = param.SingleModelTypeName ?? $"{param.PropositionName}.{param.ModelName}";
+        var modelType = param.SingleModelTypeName ?? param.ModelName;
+        var fullModelType = param.SingleModelTypeName ?? $"{param.PropositionName}.{param.ModelName}";
         var hasRecordModel = param.SingleModelTypeName is null;
 
         // Deduplicate clauses
@@ -147,7 +148,7 @@ public static class CustomSpecDeclarationSyntax
         var sb = new System.Text.StringBuilder();
 
         // Generate class declaration with primary constructor and factory lambda
-        sb.AppendLine($"public class {param.PropositionName}({param.ContainingTypeName} instance) : Spec<{modelType}>(() =>");
+        sb.AppendLine($"public class {param.PropositionName}({param.ContainingTypeName} instance) : Spec<{fullModelType}>(() =>");
         sb.AppendLine("{");
 
         // Generate local variables for each clause inside factory lambda

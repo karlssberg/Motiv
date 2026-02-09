@@ -1,25 +1,14 @@
-# Roadmap: Motiv v1.0-rc1 Polish
+# Roadmap: Motiv
 
-## Overview
+## Milestones
 
-This roadmap takes the existing analyzer and codefix from functional to release-candidate quality. We expand analyzer detection to pattern-matching, improve codefix output quality (context-derived names, clean code), add support for control flow statement contexts (if/while/ternary), and polish public API documentation. Each phase delivers complete, tested capabilities.
+- [x] **v1.0-rc1 Polish** - Phases 1-2 (complete), Phases 3-6 (deferred pending SyntaxFactory refactor)
+- [ ] **CodeFix SyntaxFactory Refactor** - Phases 7-12 (in progress)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
-
-Decimal phases appear between their surrounding integers in numeric order.
-
-- [x] **Phase 1: Analyzer Expansion** - Detect `is` type-checks and pattern-matching expressions
-- [x] **Phase 2: CodeFix Foundation** - Derive names from context and eliminate Debug.WriteLine
-- [ ] **Phase 3: CodeFix Simple Statements** - Handle if/while/do-while condition contexts
-- [ ] **Phase 4: CodeFix Ternary Integration** - Map ternary branches to WhenTrue/WhenFalse fluent methods
-- [ ] **Phase 5: CodeFix Edge Cases** - Comprehensive test coverage for complex scenarios
-- [ ] **Phase 6: XML Documentation Quality** - Review and improve public API documentation
-
-## Phase Details
+<details>
+<summary>v1.0-rc1 Polish (Phases 1-6) - Phases 1-2 complete, Phases 3-6 deferred</summary>
 
 ### Phase 1: Analyzer Expansion
 **Goal**: Analyzer detects all boolean expression forms including `is` type-checks and pattern-matching expressions
@@ -34,8 +23,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] PLAN-01 — TDD: Detect `is` type-check and pattern-matching expressions (ANLZ-01, ANLZ-02)
-- [ ] PLAN-02 — TDD: Bidirectional nesting suppression and Spec.Build pattern suppression (ANLZ-03, ANLZ-04)
+- [x] PLAN-01 -- TDD: Detect `is` type-check and pattern-matching expressions (ANLZ-01, ANLZ-02)
+- [x] PLAN-02 -- TDD: Bidirectional nesting suppression and Spec.Build pattern suppression (ANLZ-03, ANLZ-04)
 
 ### Phase 2: CodeFix Foundation
 **Goal**: CodeFix generates clean, context-aware proposition code with meaningful names derived from expression content
@@ -52,83 +41,132 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — TDD: Expression name derivation algorithm (CFNM-01, CFNM-02, CFNM-03)
-- [ ] 02-02-PLAN.md — TDD: Integration, Debug.WriteLine removal, end-to-end tests (CFCL-01, CFCL-02, CFCL-03, TEST-03, TEST-04)
+- [x] 02-01-PLAN.md -- TDD: Expression name derivation algorithm (CFNM-01, CFNM-02, CFNM-03)
+- [x] 02-02-PLAN.md -- TDD: Integration, Debug.WriteLine removal, end-to-end tests (CFCL-01, CFCL-02, CFCL-03, TEST-03, TEST-04)
 
-### Phase 3: CodeFix Simple Statements
-**Goal**: CodeFix handles if, while, and do-while condition contexts
-**Depends on**: Phase 2
-**Requirements**: CFSC-01, CFSC-02, CFSC-03, TEST-05, TEST-06
+### Phase 3: CodeFix Simple Statements (DEFERRED)
+**Status**: Deferred pending SyntaxFactory refactor (Phases 7-12)
+
+### Phase 4: CodeFix Ternary Integration (DEFERRED)
+**Status**: Deferred pending SyntaxFactory refactor (Phases 7-12)
+
+### Phase 5: CodeFix Edge Cases (DEFERRED)
+**Status**: Deferred pending SyntaxFactory refactor (Phases 7-12)
+
+### Phase 6: XML Documentation Quality (DEFERRED)
+**Status**: Deferred pending SyntaxFactory refactor (Phases 7-12)
+
+</details>
+
+### CodeFix SyntaxFactory Refactor (Phases 7-12)
+
+**Milestone Goal:** Replace all string-based code generation in the CodeFix with pure SyntaxFactory API construction, ensuring generated code integrates properly with target codebases while preserving byte-identical output verified by existing tests.
+
+**Phase Numbering:**
+- Integer phases (7-12): Planned milestone work
+- Decimal phases (e.g., 7.1): Urgent insertions if needed
+
+#### Phase 7: SpecInvocation Migration
+**Goal**: Spec invocation expressions are constructed via SyntaxFactory with a reliable trivia strategy established for all subsequent phases
+**Depends on**: Phase 2 (CodeFix Foundation)
+**Requirements**: SFMI-01, SFMI-02, SFMI-03
 **Success Criteria** (what must be TRUE):
-  1. CodeFix detects boolean expressions in `if` statement conditions and replaces with spec invocation
-  2. CodeFix detects boolean expressions in `while` loop conditions and replaces with spec invocation
-  3. CodeFix detects boolean expressions in `do-while` loop conditions and replaces with spec invocation
-  4. Generated spec invocations work correctly in all statement contexts (compile and run)
-  5. Test suite covers if, while, and do-while condition replacements
+  1. `SpecInvocationSyntax.Create()` produces spec invocation expressions using SyntaxFactory API calls (no `ParseExpression` with interpolated strings)
+  2. A CRLF trivia constant is defined and used consistently across all generated syntax nodes
+  3. All existing spec invocation tests pass with identical output (no test changes)
 **Plans**: TBD
 
 Plans:
-(Plans will be created during `/gsd:plan-phase 3`)
+(Plans will be created during `/gsd:plan-phase 7`)
 
-### Phase 4: CodeFix Ternary Integration
-**Goal**: CodeFix handles ternary/conditional expressions with WhenTrue/WhenFalse fluent methods
-**Depends on**: Phase 3
-**Requirements**: CFSC-04, TEST-07
+#### Phase 8: Simple Spec Declaration Migration
+**Goal**: Simple (single-clause) spec declarations are constructed entirely via SyntaxFactory, proving the primary constructor and fluent chain patterns
+**Depends on**: Phase 7
+**Requirements**: SFMD-01, SFMD-02, SFMD-03, SFMD-04
 **Success Criteria** (what must be TRUE):
-  1. CodeFix detects boolean expressions in ternary/conditional operator conditions
-  2. Generated spec uses `.WhenTrue(...)` with the true-branch expression
-  3. Generated spec uses `.WhenFalse(...)` with the false-branch expression
-  4. Generated spec invocation returns the appropriate branch value based on condition
-  5. Test suite covers ternary expression conversion including nested and complex expressions
+  1. `CustomSpecDeclarationSyntax.CreateInternal()` produces a class with primary constructor and `PrimaryConstructorBaseTypeSyntax` base type using SyntaxFactory (no StringBuilder or string interpolation for source code)
+  2. Expression lambda bodies (e.g., `() => expr`) are constructed via SyntaxFactory (not string interpolation)
+  3. Fluent method chains (`.WhenTrue().WhenFalse().Create()`) are constructed via nested `InvocationExpression`/`MemberAccessExpression`
+  4. All existing simple spec declaration tests pass with identical output (no test changes)
 **Plans**: TBD
 
 Plans:
-(Plans will be created during `/gsd:plan-phase 4`)
+(Plans will be created during `/gsd:plan-phase 8`)
 
-### Phase 5: CodeFix Edge Cases
-**Goal**: CodeFix handles complex, nested, and multi-variable edge cases reliably
-**Depends on**: Phase 4
-**Requirements**: TEST-08
+#### Phase 9: Composed Spec Declaration Migration
+**Goal**: Composed (multi-clause) spec declarations with block lambdas, local variables, and nested record types are constructed via SyntaxFactory
+**Depends on**: Phase 8
+**Requirements**: SFMC-01, SFMC-02, SFMC-03, SFMC-04, SFMC-05
 **Success Criteria** (what must be TRUE):
-  1. CodeFix correctly handles nested control flow statements (if inside while, etc.)
-  2. CodeFix correctly handles complex boolean expressions with multiple variables
-  3. CodeFix correctly handles expressions with mixed operators and parentheses
-  4. CodeFix correctly handles edge cases like null-conditional operators combined with boolean logic
-  5. Test suite exercises all identified edge cases and verifies correct code generation
+  1. `CustomSpecDeclarationSyntax.CreateComposedInternal()` produces complete composed spec classes using SyntaxFactory (no StringBuilder or raw string code generation)
+  2. Block lambdas with local variable declarations and return statements are constructed via SyntaxFactory
+  3. Nested record declarations (e.g., `public record Model(...)`) are constructed via SyntaxFactory
+  4. Clause name substitution in composition expressions uses `ReplaceNodes` on syntax trees (not `string.Replace` on source text)
+  5. All existing composed spec tests pass with identical output (no test changes)
 **Plans**: TBD
 
 Plans:
-(Plans will be created during `/gsd:plan-phase 5`)
+(Plans will be created during `/gsd:plan-phase 9`)
 
-### Phase 6: XML Documentation Quality
-**Goal**: Public API documentation is accurate, complete, and helpful
-**Depends on**: Phase 5
-**Requirements**: XDOC-01, XDOC-02, XDOC-03
+#### Phase 10: Constructor Spec Declaration Migration
+**Goal**: Constructor-based spec declarations with parameter injection and instance method references are constructed via SyntaxFactory
+**Depends on**: Phase 9
+**Requirements**: SFMK-01, SFMK-02, SFMK-03
 **Success Criteria** (what must be TRUE):
-  1. Core library public APIs (SpecBase, Spec, Policy, BooleanResultBase) have clear, accurate XML docs
-  2. Expression tree public APIs (ExpressionTreeExtensions) have clear, accurate XML docs
-  3. All parameter descriptions are present and meaningful
-  4. All return value descriptions are present and meaningful
-  5. Code examples in docs (if present) compile and demonstrate correct usage
+  1. `CustomSpecDeclarationSyntax.CreateWithConstructorInternal()` produces constructor spec classes using SyntaxFactory (no StringBuilder or raw string code generation)
+  2. Constructor parameters and instance method injection are expressed via SyntaxFactory node construction (not string manipulation)
+  3. All existing constructor spec tests pass with identical output (no test changes)
 **Plans**: TBD
 
 Plans:
-(Plans will be created during `/gsd:plan-phase 6`)
+(Plans will be created during `/gsd:plan-phase 10`)
+
+#### Phase 11: Orchestrator Cleanup
+**Goal**: The CodeFix orchestrator constructs fields, methods, and constructors directly via SyntaxFactory, eliminating the temporary-class-parse round-trip
+**Depends on**: Phase 10
+**Requirements**: SFMO-01, SFMO-02, SFMO-03
+**Success Criteria** (what must be TRUE):
+  1. `ConvertToSpecCodeFix.ReplaceMultiVariableExpression` constructs field declarations, method bodies, and constructor members directly via SyntaxFactory (no parsing a temporary class string to extract members)
+  2. Comment trivia preserving original expressions is attached using SyntaxFactory trivia APIs
+  3. All existing multi-variable tests pass with identical output (no test changes)
+**Plans**: TBD
+
+Plans:
+(Plans will be created during `/gsd:plan-phase 11`)
+
+#### Phase 12: Dead Code Removal
+**Goal**: Obsoleted string manipulation utilities are removed, confirming the SyntaxFactory migration is complete and self-contained
+**Depends on**: Phase 11
+**Requirements**: SFMX-01, SFMX-02, SFMX-03
+**Success Criteria** (what must be TRUE):
+  1. Obsoleted string manipulation methods (`ToCamelCase` duplicate, `UpdateCompositionWithCamelCaseNames`, `ReplaceInstanceMethodCalls`) are removed from the codebase
+  2. `EscapeDoubleQuotes()` is removed if `SyntaxFactory.Literal()` handles all string escaping (or retained with justification if still needed)
+  3. The full test suite passes after all dead code removal (no regressions)
+**Plans**: TBD
+
+Plans:
+(Plans will be created during `/gsd:plan-phase 12`)
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 7 -> 8 -> 9 -> 10 -> 11 -> 12
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Analyzer Expansion | 2/2 | Complete ✓ | 2026-02-06 |
-| 2. CodeFix Foundation | 2/2 | Complete ✓ | 2026-02-08 |
-| 3. CodeFix Simple Statements | 0/TBD | Not started | - |
-| 4. CodeFix Ternary Integration | 0/TBD | Not started | - |
-| 5. CodeFix Edge Cases | 0/TBD | Not started | - |
-| 6. XML Documentation Quality | 0/TBD | Not started | - |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Analyzer Expansion | v1.0-rc1 | 2/2 | Complete | 2026-02-06 |
+| 2. CodeFix Foundation | v1.0-rc1 | 2/2 | Complete | 2026-02-08 |
+| 3. CodeFix Simple Statements | v1.0-rc1 | 0/TBD | Deferred | - |
+| 4. CodeFix Ternary Integration | v1.0-rc1 | 0/TBD | Deferred | - |
+| 5. CodeFix Edge Cases | v1.0-rc1 | 0/TBD | Deferred | - |
+| 6. XML Documentation Quality | v1.0-rc1 | 0/TBD | Deferred | - |
+| 7. SpecInvocation Migration | SyntaxFactory | 0/TBD | Not started | - |
+| 8. Simple Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
+| 9. Composed Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
+| 10. Constructor Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
+| 11. Orchestrator Cleanup | SyntaxFactory | 0/TBD | Not started | - |
+| 12. Dead Code Removal | SyntaxFactory | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-02-06*
-*Last updated: 2026-02-08*
+*Last updated: 2026-02-09 -- SyntaxFactory refactor milestone added (Phases 7-12)*

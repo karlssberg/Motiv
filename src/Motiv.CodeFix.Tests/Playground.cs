@@ -24,27 +24,27 @@ public class Playground
 
 public class IsFeatureEnabledProposition(Playground instance) : Spec<IsFeatureEnabledProposition.Model>(() =>
 {
-    var isValueANonNegative = Spec.Build((IsFeatureEnabledProposition.Model m) => m.ValueA >= 0)
+    var isValueANonNegative = Spec.Build((Model m) => m.ValueA >= 0)
         .WhenTrue("valueA >= 0 == true")
         .WhenFalse("valueA >= 0 == false")
         .Create();
 
-    var is1LessThanValueC = Spec.Build((IsFeatureEnabledProposition.Model m) => 1 < m.ValueC)
+    var is1LessThanValueC = Spec.Build((Model m) => 1 < m.ValueC)
         .WhenTrue("1 < valueC == true")
         .WhenFalse("1 < valueC == false")
         .Create();
 
-    var isValueBNonNegative = Spec.Build((IsFeatureEnabledProposition.Model m) => m.ValueB >= 0)
+    var isValueBNonNegative = Spec.Build((Model m) => m.ValueB >= 0)
         .WhenTrue("valueB >= 0 == true")
         .WhenFalse("valueB >= 0 == false")
         .Create();
 
-    var clause4 = Spec.Build((IsFeatureEnabledProposition.Model m) => string.IsNullOrEmpty(m.Text))
+    var clause4 = Spec.Build((Model m) => string.IsNullOrEmpty(m.Text))
         .WhenTrue("string.IsNullOrEmpty(text) == true")
         .WhenFalse("string.IsNullOrEmpty(text) == false")
         .Create();
 
-    var clause5 = Spec.Build((IsFeatureEnabledProposition.Model m) => instance.IsGreen(m.Text))
+    var clause5 = Spec.Build((Model m) => instance.IsGreen(m.Text))
         .WhenTrue("IsGreen(text) == true")
         .WhenFalse("IsGreen(text) == false")
         .Create();
