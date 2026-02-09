@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Boolean expressions must produce meaningful, structured explanations -- not just true/false.
-**Current focus:** Phase 7 - SpecInvocation Migration
+**Current focus:** Phase 8 - Simple Spec Declaration Migration
 
 ## Current Position
 
-Phase: 7 of 12 (SpecInvocation Migration)
-Plan: 1 of TBD in current phase
-Status: In progress
-Last activity: 2026-02-09 -- Completed 07-01-PLAN.md
+Phase: 8 of 12 (Simple Spec Declaration Migration)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-02-09 -- Phase 7 complete (verified)
 
 Progress: [#####-----] 42% (5/~12 plans estimated across all phases)
 
@@ -29,7 +29,7 @@ Progress: [#####-----] 42% (5/~12 plans estimated across all phases)
 |-------|-------|-------|----------|
 | 01-analyzer-expansion | 2/2 | 6.9 min | 3.5 min |
 | 02-codefix-foundation | 2/2 | 10.4 min | 5.2 min |
-| 07-specinvocation-migration | 1/TBD | 1.4 min | 1.4 min |
+| 07-specinvocation-migration | 1/1 | 1.4 min | 1.4 min |
 
 *Updated after each plan completion*
 
@@ -57,6 +57,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-09 01:10
-Stopped at: Completed 07-01-PLAN.md
+Last session: 2026-02-09
+Stopped at: Phase 7 complete, ready for Phase 8
 Resume file: None

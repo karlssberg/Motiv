@@ -77,7 +77,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 07-01-PLAN.md -- Migrate SpecInvocationSyntax from ParseExpression to SyntaxFactory (SFMI-01, SFMI-02, SFMI-03)
+- [x] 07-01-PLAN.md -- Migrate SpecInvocationSyntax from ParseExpression to SyntaxFactory (SFMI-01, SFMI-02, SFMI-03)
 
 #### Phase 8: Simple Spec Declaration Migration
 **Goal**: Simple (single-clause) spec declarations are constructed entirely via SyntaxFactory, proving the primary constructor and fluent chain patterns
@@ -160,7 +160,7 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10 -> 11 -> 12
 | 4. CodeFix Ternary Integration | v1.0-rc1 | 0/TBD | Deferred | - |
 | 5. CodeFix Edge Cases | v1.0-rc1 | 0/TBD | Deferred | - |
 | 6. XML Documentation Quality | v1.0-rc1 | 0/TBD | Deferred | - |
-| 7. SpecInvocation Migration | SyntaxFactory | 0/1 | Planned | - |
+| 7. SpecInvocation Migration | SyntaxFactory | 1/1 | Complete | 2026-02-09 |
 | 8. Simple Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
 | 9. Composed Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
 | 10. Constructor Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
@@ -169,4 +169,4 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10 -> 11 -> 12
 
 ---
 *Roadmap created: 2026-02-06*
-*Last updated: 2026-02-09 -- Phase 7 planned (1 plan)*
+*Last updated: 2026-02-09 -- Phase 7 complete*

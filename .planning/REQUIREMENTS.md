@@ -9,9 +9,9 @@ Requirements for SyntaxFactory migration. Each maps to roadmap phases.
 
 ### SpecInvocation Migration
 
-- [ ] **SFMI-01**: `SpecInvocationSyntax.Create()` uses SyntaxFactory instead of `ParseExpression($$"""...""")`
-- [ ] **SFMI-02**: CRLF trivia constant established and used consistently across all migration targets
-- [ ] **SFMI-03**: All existing spec invocation tests pass unchanged
+- [x] **SFMI-01**: `SpecInvocationSyntax.Create()` uses SyntaxFactory instead of `ParseExpression($$"""...""")`
+- [x] **SFMI-02**: CRLF trivia constant established and used consistently across all migration targets
+- [x] **SFMI-03**: All existing spec invocation tests pass unchanged
 
 ### Simple Spec Declaration Migration
 
@@ -60,9 +60,9 @@ Requirements for SyntaxFactory migration. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SFMI-01 | Phase 7 | Pending |
-| SFMI-02 | Phase 7 | Pending |
-| SFMI-03 | Phase 7 | Pending |
+| SFMI-01 | Phase 7 | Complete |
+| SFMI-02 | Phase 7 | Complete |
+| SFMI-03 | Phase 7 | Complete |
 | SFMD-01 | Phase 8 | Pending |
 | SFMD-02 | Phase 8 | Pending |
 | SFMD-03 | Phase 8 | Pending |
@@ -91,4 +91,4 @@ Requirements for SyntaxFactory migration. Each maps to roadmap phases.
 
 ---
 *Requirements defined: 2026-02-08*
-*Last updated: 2026-02-08 after initial definition*
+*Last updated: 2026-02-09 -- Phase 7 requirements complete*
