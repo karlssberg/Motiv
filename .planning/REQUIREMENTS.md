@@ -1,111 +1,94 @@
-# Requirements: Motiv
+# Requirements: Motiv CodeFix SyntaxFactory Refactor
 
-**Defined:** 2026-02-06
+**Defined:** 2026-02-08
 **Core Value:** Boolean expressions must produce meaningful, structured explanations — not just true/false.
 
-## v1.0-rc1 Requirements
+## Refactor Requirements
 
-Requirements for release candidate. Each maps to roadmap phases.
+Requirements for SyntaxFactory migration. Each maps to roadmap phases.
 
-### Analyzer Expansion
+### SpecInvocation Migration
 
-- [x] **ANLZ-01**: Analyzer detects `is` type-check expressions (e.g. `obj is string`)
-- [x] **ANLZ-02**: Analyzer detects `is` pattern-matching expressions (e.g. `obj is { Length: > 0 }`)
-- [x] **ANLZ-03**: Analyzer correctly skips `is`/pattern expressions nested inside already-detected binary expressions
-- [x] **ANLZ-04**: Analyzer correctly skips `is`/pattern expressions inside `Spec.Build()` lambdas
+- [ ] **SFMI-01**: `SpecInvocationSyntax.Create()` uses SyntaxFactory instead of `ParseExpression($$"""...""")`
+- [ ] **SFMI-02**: CRLF trivia constant established and used consistently across all migration targets
+- [ ] **SFMI-03**: All existing spec invocation tests pass unchanged
 
-### CodeFix — Name Derivation
+### Simple Spec Declaration Migration
 
-- [x] **CFNM-01**: CodeFix derives proposition class name from the containing method or enclosing context (not hard-coded "Proposition")
-- [x] **CFNM-02**: CodeFix derives model class name from parameter type or enclosing context (not hard-coded "Model")
-- [x] **CFNM-03**: Single-variable path uses actual variable type name for model (already partially works — verify and test)
+- [ ] **SFMD-01**: `CustomSpecDeclarationSyntax.CreateInternal()` uses SyntaxFactory with `PrimaryConstructorBaseTypeSyntax`
+- [ ] **SFMD-02**: Expression lambda body constructed via SyntaxFactory (not string interpolation)
+- [ ] **SFMD-03**: Fluent chain (`.WhenTrue().WhenFalse().Create()`) constructed via nested `InvocationExpression`/`MemberAccessExpression`
+- [ ] **SFMD-04**: All existing simple spec declaration tests pass unchanged
 
-### CodeFix — Clean Output
+### Composed Spec Declaration Migration
 
-- [x] **CFCL-01**: Generated code does not contain `Debug.WriteLine` calls
-- [x] **CFCL-02**: Generated code does not add `using System.Diagnostics` when not otherwise needed
-- [x] **CFCL-03**: Generated comment showing original expression is clear and well-formatted
+- [ ] **SFMC-01**: `CustomSpecDeclarationSyntax.CreateComposedInternal()` uses SyntaxFactory
+- [ ] **SFMC-02**: Block lambda with local variable declarations constructed via SyntaxFactory
+- [ ] **SFMC-03**: Nested record declaration constructed via SyntaxFactory
+- [ ] **SFMC-04**: Composition expression uses `ReplaceNodes` instead of `string.Replace` for clause name substitution
+- [ ] **SFMC-05**: All existing composed spec tests pass unchanged
 
-### CodeFix — Statement Contexts
+### Constructor Spec Declaration Migration
 
-- [ ] **CFSC-01**: CodeFix handles `if` statement conditions — replaces condition with spec invocation
-- [ ] **CFSC-02**: CodeFix handles `while` loop conditions — replaces condition with spec invocation
-- [ ] **CFSC-03**: CodeFix handles `do-while` loop conditions — replaces condition with spec invocation
-- [ ] **CFSC-04**: CodeFix handles ternary/conditional expressions — replaces condition, uses true/false branches for `WhenTrue`/`WhenFalse` fluent methods
+- [ ] **SFMK-01**: `CustomSpecDeclarationSyntax.CreateWithConstructorInternal()` uses SyntaxFactory
+- [ ] **SFMK-02**: Constructor parameter and instance method injection via SyntaxFactory
+- [ ] **SFMK-03**: All existing constructor spec tests pass unchanged
 
-### Test Coverage
+### Orchestrator Cleanup
 
-- [x] **TEST-01**: Analyzer tests cover `is` type-check detection and edge cases
-- [x] **TEST-02**: Analyzer tests cover `is` pattern-matching detection and edge cases
-- [x] **TEST-03**: CodeFix tests cover context-derived naming for proposition and model
-- [x] **TEST-04**: CodeFix tests cover absence of Debug.WriteLine in generated output
-- [ ] **TEST-05**: CodeFix tests cover `if` condition context
-- [ ] **TEST-06**: CodeFix tests cover `while`/`do-while` condition contexts
-- [ ] **TEST-07**: CodeFix tests cover ternary expression with WhenTrue/WhenFalse integration
-- [ ] **TEST-08**: CodeFix tests cover edge cases (nested conditions, complex patterns, multiple variables)
+- [ ] **SFMO-01**: `ConvertToSpecCodeFix.ReplaceMultiVariableExpression` constructs field/method/constructor directly (no temp-class parse round-trip)
+- [ ] **SFMO-02**: Comment trivia for original expressions added via SyntaxFactory trivia APIs
+- [ ] **SFMO-03**: All existing multi-variable tests pass unchanged
 
-### XML Documentation Quality
+### Dead Code Removal
 
-- [ ] **XDOC-01**: Review and improve XML doc quality on core library public APIs (SpecBase, Spec, Policy, BooleanResultBase)
-- [ ] **XDOC-02**: Review and improve XML doc quality on expression tree public APIs (ExpressionTreeExtensions)
-- [ ] **XDOC-03**: Ensure parameter descriptions and return value docs are accurate and helpful
-
-## Future Requirements
-
-Deferred beyond v1.0-rc1.
-
-- **ANLZ-F01**: Analyzer detects method calls returning bool (e.g. `list.Contains(x)`, `string.IsNullOrEmpty(s)`)
-- **ANLZ-F02**: Analyzer detects standalone negation of boolean identifiers (e.g. `!isValid`)
-- **CFSC-F01**: CodeFix handles LINQ `.Where()` lambda predicates
-- **CFSC-F02**: CodeFix handles `switch` expression arms with boolean conditions
+- [ ] **SFMX-01**: Obsoleted string manipulation methods removed (`ToCamelCase` duplicate, `UpdateCompositionWithCamelCaseNames`, `ReplaceInstanceMethodCalls`)
+- [ ] **SFMX-02**: `EscapeDoubleQuotes()` removed if `SyntaxFactory.Literal()` handles escaping
+- [ ] **SFMX-03**: Full test suite passes after cleanup
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Full IDE integration beyond Roslyn | Too broad for RC — analyzer/codefix is sufficient |
-| Performance optimization | No evidence of performance issues |
-| NuGet branding/metadata polish | Cosmetic — post-RC |
-| Analyzer severity configuration | Info severity is appropriate for suggestions |
-| CodeFix "undo" or preview refinements | Standard Roslyn preview is adequate |
+| Changing generated output format | Pure refactoring — output must remain identical |
+| `SyntaxGenerator` usage | C#-specific constructs (records, primary constructors) not supported |
+| `Formatter.Format()` workspace dependency | Unnecessary — `NormalizeWhitespace()` is sufficient |
+| Generic "Syntax Builder" abstraction | Over-engineering — direct SyntaxFactory is appropriate |
+| Test output changes | Tests are the verification gate — they must pass as-is |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ANLZ-01 | Phase 1 | Complete |
-| ANLZ-02 | Phase 1 | Complete |
-| ANLZ-03 | Phase 1 | Complete |
-| ANLZ-04 | Phase 1 | Complete |
-| TEST-01 | Phase 1 | Complete |
-| TEST-02 | Phase 1 | Complete |
-| CFNM-01 | Phase 2 | Complete |
-| CFNM-02 | Phase 2 | Complete |
-| CFNM-03 | Phase 2 | Complete |
-| CFCL-01 | Phase 2 | Complete |
-| CFCL-02 | Phase 2 | Complete |
-| CFCL-03 | Phase 2 | Complete |
-| TEST-03 | Phase 2 | Complete |
-| TEST-04 | Phase 2 | Complete |
-| CFSC-01 | Phase 3 | Pending |
-| CFSC-02 | Phase 3 | Pending |
-| CFSC-03 | Phase 3 | Pending |
-| TEST-05 | Phase 3 | Pending |
-| TEST-06 | Phase 3 | Pending |
-| CFSC-04 | Phase 4 | Pending |
-| TEST-07 | Phase 4 | Pending |
-| TEST-08 | Phase 5 | Pending |
-| XDOC-01 | Phase 6 | Pending |
-| XDOC-02 | Phase 6 | Pending |
-| XDOC-03 | Phase 6 | Pending |
+| SFMI-01 | Phase 7 | Pending |
+| SFMI-02 | Phase 7 | Pending |
+| SFMI-03 | Phase 7 | Pending |
+| SFMD-01 | Phase 8 | Pending |
+| SFMD-02 | Phase 8 | Pending |
+| SFMD-03 | Phase 8 | Pending |
+| SFMD-04 | Phase 8 | Pending |
+| SFMC-01 | Phase 9 | Pending |
+| SFMC-02 | Phase 9 | Pending |
+| SFMC-03 | Phase 9 | Pending |
+| SFMC-04 | Phase 9 | Pending |
+| SFMC-05 | Phase 9 | Pending |
+| SFMK-01 | Phase 10 | Pending |
+| SFMK-02 | Phase 10 | Pending |
+| SFMK-03 | Phase 10 | Pending |
+| SFMO-01 | Phase 11 | Pending |
+| SFMO-02 | Phase 11 | Pending |
+| SFMO-03 | Phase 11 | Pending |
+| SFMX-01 | Phase 12 | Pending |
+| SFMX-02 | Phase 12 | Pending |
+| SFMX-03 | Phase 12 | Pending |
 
 **Coverage:**
-- v1.0-rc1 requirements: 25 total
-- Mapped to phases: 25
+- Refactor requirements: 21 total
+- Mapped to phases: 21
 - Unmapped: 0
 
 **Coverage: 100%** — All requirements mapped to phases.
 
 ---
-*Requirements defined: 2026-02-06*
-*Last updated: 2026-02-08 after Phase 2 completion*
+*Requirements defined: 2026-02-08*
+*Last updated: 2026-02-08 after initial definition*
