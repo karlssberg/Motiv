@@ -53,7 +53,7 @@ public class LogicalExpressionToSpecConverter(
 
         var hasInstanceMethods = instanceMethods.Count > 0;
 
-        var newRoot = ReplaceLogicalExpressionWithSpecInvocation(variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods, containingTypeSymbol);
+        var newRoot = ReplaceLogicalExpressionWithSpecInvocation(variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods);
 
         var rootMembers = GetRootMembers(variableSymbols, logicalExpressionSyntax, instanceMethods, containingTypeSymbol).ToArray();
         var baseNamespace = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
@@ -324,8 +324,7 @@ public class LogicalExpressionToSpecConverter(
         ImmutableArray<ISymbol> variableSymbols,
         ExpressionSyntax logicalExpressionSyntax,
         SyntaxNode root,
-        bool hasInstanceMethods,
-        INamedTypeSymbol? containingTypeSymbol)
+        bool hasInstanceMethods)
     {
         if (variableSymbols.Length != 1 || hasInstanceMethods)
             return ReplaceMultiVariableExpression(variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods);
@@ -421,7 +420,7 @@ public class LogicalExpressionToSpecConverter(
         var tempUnit = ParseCompilationUnit(newMethodSource.Replace("\r\n", "\n").Replace("\n", "\r\n"));
         var tempClass = tempUnit.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
         var newField = tempClass.Members.OfType<FieldDeclarationSyntax>().First()
-            .WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
+            .WithTrailingTrivia(CarriageReturnLineFeed);
         var newMethod = tempClass.Members.OfType<MethodDeclarationSyntax>().Last(); // Last method is the actual method, not constructor
         var newConstructor = hasInstanceMethods ? tempClass.Members.OfType<ConstructorDeclarationSyntax>().FirstOrDefault() : null;
 
@@ -437,52 +436,6 @@ public class LogicalExpressionToSpecConverter(
         var newClass = containingClass.WithMembers(List(newMembers));
 
         return root.ReplaceNode(containingClass, newClass);
-    }
-
-    private MethodDeclarationSyntax CreateMethodWithPropositionLogic(
-        MethodDeclarationSyntax method,
-        StatementSyntax? statement,
-        string originalExprText,
-        string specInvocation)
-    {
-        var assignmentLine = statement switch
-        {
-            ReturnStatementSyntax => "return result.Satisfied;",
-            LocalDeclarationStatementSyntax local =>
-                $"var {local.Declaration.Variables.First().Identifier.Text} = result.Satisfied;",
-            ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax assignment } =>
-                $"{assignment.Left} = result.Satisfied;",
-            _ => "var isSatisfied = result.Satisfied;"
-        };
-
-        var newCode = $$"""
-                        {
-                                // {{originalExprText}}
-                                var result = {{specInvocation}};
-                                {{assignmentLine}}
-                            }
-                        """;
-
-        var newBlock = (BlockSyntax)ParseStatement(newCode);
-
-        return method
-            .WithExpressionBody(null)
-            .WithSemicolonToken(default)
-            .WithBody(newBlock);
-    }
-
-    private ClassDeclarationSyntax EnsurePropositionField(
-        ClassDeclarationSyntax containingClass,
-        string fieldName,
-        MemberDeclarationSyntax fieldDeclaration)
-    {
-        var hasField = containingClass.Members
-            .OfType<FieldDeclarationSyntax>()
-            .Any(f => f.Declaration.Variables.Any(v => v.Identifier.Text == fieldName));
-
-        return hasField
-            ? containingClass
-            : containingClass.WithMembers(containingClass.Members.Insert(0, fieldDeclaration));
     }
 
     private static SyntaxNode AddUsingStatementsIfNeeded(SyntaxNode newRoot)

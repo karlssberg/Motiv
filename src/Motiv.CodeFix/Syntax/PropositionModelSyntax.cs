@@ -22,9 +22,9 @@ public static class PropositionModelSyntax
                 })
             .ToImmutableList();
 
-        var autoPropertySyntax = AutoPropertySyntax();
+        AutoPropertySyntax();
 
-        var propertyDeclarationSyntaxes = CreateProperties(variables, autoPropertySyntax);
+        var propertyDeclarationSyntaxes = CreateProperties(variables);
 
         var constructor = CreateConstructor(modelName, variables);
 
@@ -38,7 +38,7 @@ public static class PropositionModelSyntax
             .NormalizeWhitespace();
     }
 
-    private static IEnumerable<PropertyDeclarationSyntax> CreateProperties(ImmutableList<(string Name, ITypeSymbol TypeSymbol)> variables, SyntaxList<AccessorDeclarationSyntax> autoPropertySyntax)
+    private static IEnumerable<PropertyDeclarationSyntax> CreateProperties(ImmutableList<(string Name, ITypeSymbol TypeSymbol)> variables)
     {
         return variables
             .Select(v =>

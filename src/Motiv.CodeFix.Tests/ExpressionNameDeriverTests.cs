@@ -18,7 +18,7 @@ public class ExpressionNameDeriverTests
             0);
 
         Assert.Equal("AgeProposition", propositionName);
-        Assert.Equal("AgeModel", modelName);
+        Assert.Equal("Model", modelName);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class ExpressionNameDeriverTests
             0);
 
         Assert.Equal("OrderProposition", propositionName);
-        Assert.Equal("OrderModel", modelName);
+        Assert.Equal("Model", modelName);
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public class ExpressionNameDeriverTests
             0);
 
         Assert.Equal("OrderProposition", propositionName);
-        Assert.Equal("OrderModel", modelName);
+        Assert.Equal("Model", modelName);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public class ExpressionNameDeriverTests
             0);
 
         Assert.Equal("ObjProposition", propositionName);
-        Assert.Equal("ObjModel", modelName);
+        Assert.Equal("Model", modelName);
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public class ExpressionNameDeriverTests
             0);
 
         Assert.Equal("IsValidProposition", propositionName);
-        Assert.Equal("IsValidModel", modelName);
+        Assert.Equal("Model", modelName);
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public class ExpressionNameDeriverTests
             "int age",
             """
             public class AgeProposition { }
-            public class AgeModel { }
+            public class Model { }
             """);
 
         var (propositionName, modelName) = ExpressionNameDeriver.DeriveClassNames(
@@ -146,7 +146,7 @@ public class ExpressionNameDeriverTests
             0);
 
         Assert.Equal("AgeProposition1", propositionName);
-        Assert.Equal("AgeModel1", modelName);
+        Assert.Equal("Model1", modelName);
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public class ExpressionNameDeriverTests
             0);
 
         Assert.Equal("IsValidProposition", propositionName);
-        Assert.Equal("IsValidModel", modelName);
+        Assert.Equal("Model", modelName);
     }
 
     [Fact]
@@ -180,7 +180,7 @@ public class ExpressionNameDeriverTests
 
         // Should use assignment target "inRange" instead of expression variable "valueA"
         Assert.Equal("InRangeProposition", propositionName);
-        Assert.Equal("InRangeModel", modelName);
+        Assert.Equal("Model", modelName);
     }
 
     [Fact]
@@ -198,7 +198,7 @@ public class ExpressionNameDeriverTests
             0);
 
         Assert.Equal("IsAdultProposition", propositionName);
-        Assert.Equal("IsAdultModel", modelName);
+        Assert.Equal("Model", modelName);
     }
 
     [Fact]
@@ -224,7 +224,7 @@ public class ExpressionNameDeriverTests
 
         // Should use method name "IsEligibleOrder" instead of expression variable "order"
         Assert.Equal("IsEligibleOrderProposition", propositionName);
-        Assert.Equal("IsEligibleOrderModel", modelName);
+        Assert.Equal("Model", modelName);
     }
 
     [Fact]
@@ -244,7 +244,7 @@ public class ExpressionNameDeriverTests
 
         // Assignment should take precedence over method name
         Assert.Equal("IsEligibleProposition", propositionName);
-        Assert.Equal("IsEligibleModel", modelName);
+        Assert.Equal("Model", modelName);
     }
 
     /// <summary>

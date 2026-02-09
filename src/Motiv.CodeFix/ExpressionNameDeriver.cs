@@ -8,6 +8,9 @@ namespace Motiv.CodeFix;
 /// </summary>
 public static class ExpressionNameDeriver
 {
+    private const string ModelName = "Model";
+    private const string PropositionBaseName = "Proposition";
+
     /// <summary>
     /// Derives Proposition and Model class names from an expression's content.
     /// </summary>
@@ -31,12 +34,11 @@ public static class ExpressionNameDeriver
         var pascalName = baseName.Capitalize();
 
         // Step 3: Append suffixes (unless base name is already the fallback)
-        var propositionName = pascalName is "Proposition" ? pascalName: $"{pascalName}Proposition";
-        var modelName = pascalName is "Proposition" ? "Model" : $"{pascalName}Model";
+        var propositionName = pascalName is PropositionBaseName ? pascalName: $"{pascalName}{PropositionBaseName}";
 
         // Step 4: Ensure uniqueness
         propositionName = EnsureUniqueName(propositionName, semanticModel, insertionPosition);
-        modelName = EnsureUniqueName(modelName, semanticModel, insertionPosition);
+        var modelName = EnsureUniqueName(ModelName, semanticModel, insertionPosition);
 
         return (propositionName, modelName);
     }
@@ -150,7 +152,7 @@ public static class ExpressionNameDeriver
 
         if (rootIdentifiers.Count == 0)
         {
-            return "Proposition"; // Fallback if no identifiers found
+            return PropositionBaseName; // Fallback if no identifiers found
         }
 
         // Find most common identifier
@@ -165,7 +167,7 @@ public static class ExpressionNameDeriver
         // If all identifiers are distinct AND there are multiple (no common root), use fallback
         if (rootIdentifiers.Distinct().Count() == rootIdentifiers.Count && rootIdentifiers.Count > 1)
         {
-            return "Proposition";
+            return PropositionBaseName;
         }
 
         return mostCommon.Key;

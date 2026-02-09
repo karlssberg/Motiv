@@ -113,7 +113,7 @@ public static class CustomSpecDeclarationSyntax
         string modelName,
         string? singleModelTypeName,
         string? recordParameters,
-        IReadOnlyList<(string OriginalText, string TransformedText, Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax Expression)> clauses,
+        IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> clauses,
         string compositionExpression,
         string containingTypeName)
     {
@@ -233,14 +233,6 @@ public static class CustomSpecDeclarationSyntax
         return new DeduplicatedClauses(uniqueClauses, clauseNameMapping);
     }
 
-    private static string GetParameterName(string typeName)
-    {
-        // Extract simple name from fully qualified type
-        var parts = typeName.Split('.');
-        var simpleName = parts[parts.Length - 1];
-        return char.ToLower(simpleName[0]) + simpleName.Substring(1);
-    }
-
     private static string GetParameterNameFromExpression(ExpressionSyntax expression)
     {
         // Look for identifiers that are actual parameters/variables, not method or type names
@@ -295,7 +287,7 @@ public static class CustomSpecDeclarationSyntax
         string propositionName,
         string modelName,
         string recordParameters,
-        IReadOnlyList<(string OriginalText, string TransformedText, Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax Expression)> clauses,
+        IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> clauses,
         string compositionExpression)
     {
         var param = new ComposedSpecParams(
@@ -326,7 +318,7 @@ public static class CustomSpecDeclarationSyntax
         sb.AppendLine("{");
 
         // Generate local variables for each clause
-        foreach (var (original, transformed, expression, derivedName) in deduplicated.UniqueClauses.Values)
+        foreach (var (original, transformed, _, derivedName) in deduplicated.UniqueClauses.Values)
         {
             var camelCaseName = ToCamelCase(derivedName);
             sb.AppendLine($"    var {camelCaseName} = Spec.Build(({param.ModelName} m) => {transformed})");
@@ -367,32 +359,6 @@ public static class CustomSpecDeclarationSyntax
             // Replace both "Clause1" and "IsAgePositive" with "isAgePositive"
             result = result.Replace(originalClauseName, camelCaseName);
             result = result.Replace(pascalCaseName, camelCaseName);
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    /// Updates the composition expression to replace clause references with deduplicated names.
-    /// </summary>
-    private static string UpdateCompositionWithDeduplicatedNames(
-        string compositionExpression,
-        IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> clauses,
-        Dictionary<int, string> clauseNameMapping)
-    {
-        var result = compositionExpression;
-
-        // Build replacement map: Clause{N} -> actual derived name
-        for (var i = 0; i < clauses.Count; i++)
-        {
-            var originalClauseName = $"Clause{i + 1}";
-            var actualName = clauseNameMapping[i];
-
-            // Only replace if the names are different
-            if (originalClauseName != actualName)
-            {
-                result = result.Replace(originalClauseName, actualName);
-            }
         }
 
         return result;
