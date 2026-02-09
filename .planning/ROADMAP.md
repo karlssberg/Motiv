@@ -74,10 +74,10 @@ Plans:
   1. `SpecInvocationSyntax.Create()` produces spec invocation expressions using SyntaxFactory API calls (no `ParseExpression` with interpolated strings)
   2. A CRLF trivia constant is defined and used consistently across all generated syntax nodes
   3. All existing spec invocation tests pass with identical output (no test changes)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-(Plans will be created during `/gsd:plan-phase 7`)
+- [ ] 07-01-PLAN.md -- Migrate SpecInvocationSyntax from ParseExpression to SyntaxFactory (SFMI-01, SFMI-02, SFMI-03)
 
 #### Phase 8: Simple Spec Declaration Migration
 **Goal**: Simple (single-clause) spec declarations are constructed entirely via SyntaxFactory, proving the primary constructor and fluent chain patterns
@@ -160,7 +160,7 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10 -> 11 -> 12
 | 4. CodeFix Ternary Integration | v1.0-rc1 | 0/TBD | Deferred | - |
 | 5. CodeFix Edge Cases | v1.0-rc1 | 0/TBD | Deferred | - |
 | 6. XML Documentation Quality | v1.0-rc1 | 0/TBD | Deferred | - |
-| 7. SpecInvocation Migration | SyntaxFactory | 0/TBD | Not started | - |
+| 7. SpecInvocation Migration | SyntaxFactory | 0/1 | Planned | - |
 | 8. Simple Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
 | 9. Composed Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
 | 10. Constructor Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
@@ -169,4 +169,4 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10 -> 11 -> 12
 
 ---
 *Roadmap created: 2026-02-06*
-*Last updated: 2026-02-09 -- SyntaxFactory refactor milestone added (Phases 7-12)*
+*Last updated: 2026-02-09 -- Phase 7 planned (1 plan)*
