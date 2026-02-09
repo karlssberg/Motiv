@@ -88,10 +88,10 @@ Plans:
   2. Expression lambda bodies (e.g., `() => expr`) are constructed via SyntaxFactory (not string interpolation)
   3. Fluent method chains (`.WhenTrue().WhenFalse().Create()`) are constructed via nested `InvocationExpression`/`MemberAccessExpression`
   4. All existing simple spec declaration tests pass with identical output (no test changes)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-(Plans will be created during `/gsd:plan-phase 8`)
+- [ ] 08-01-PLAN.md -- Migrate CreateInternal() from ParseCompilationUnit to SyntaxFactory (SFMD-01, SFMD-02, SFMD-03, SFMD-04)
 
 #### Phase 9: Composed Spec Declaration Migration
 **Goal**: Composed (multi-clause) spec declarations with block lambdas, local variables, and nested record types are constructed via SyntaxFactory
@@ -161,7 +161,7 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10 -> 11 -> 12
 | 5. CodeFix Edge Cases | v1.0-rc1 | 0/TBD | Deferred | - |
 | 6. XML Documentation Quality | v1.0-rc1 | 0/TBD | Deferred | - |
 | 7. SpecInvocation Migration | SyntaxFactory | 1/1 | Complete | 2026-02-09 |
-| 8. Simple Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
+| 8. Simple Spec Declaration | SyntaxFactory | 0/1 | In progress | - |
 | 9. Composed Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
 | 10. Constructor Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
 | 11. Orchestrator Cleanup | SyntaxFactory | 0/TBD | Not started | - |
@@ -169,4 +169,4 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10 -> 11 -> 12
 
 ---
 *Roadmap created: 2026-02-06*
-*Last updated: 2026-02-09 -- Phase 7 complete*
+*Last updated: 2026-02-09 -- Phase 8 planned*
