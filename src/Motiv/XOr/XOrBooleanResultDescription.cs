@@ -17,6 +17,7 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
         ContainsBinaryOperation(result) switch
         {
             true => $"({result.Description.Reason})",
+            false when result.Description.Reason.EndsWithEqualityAssertion() => $"({result.Description.Reason})",
             false => result.Description.Reason
         }));
 

@@ -45,37 +45,37 @@ public class AsNoneSatisfiedSpecTests
                                                  false
                                          """)]
     [InlineAutoData(false, false, true, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
     [InlineAutoData(false, true, true, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
     [InlineAutoData(true, false, false, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
     [InlineAutoData(true, false, true, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
     [InlineAutoData(true, true, false, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
     [InlineAutoData(true, true, true, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
@@ -115,37 +115,37 @@ public class AsNoneSatisfiedSpecTests
                                                 false
                                         """)]
     [InlineAutoData(false, false, true, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
     [InlineAutoData(false, true, true, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
     [InlineAutoData(true, false, false, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
     [InlineAutoData(true, false, true, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
     [InlineAutoData(true, true, false, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
     [InlineAutoData(true, true, true, """
-                                        ¬none are true
+                                        none are true == false
                                             true
                                                 true
                                         """)]
@@ -183,34 +183,34 @@ public class AsNoneSatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                         none are true
-                                            ¬is true
+                                            is true == false
                                         """)]
     [InlineAutoData(false, false, true, """
-                                        ¬none are true
+                                        none are true == false
                                             is true
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        ¬none are true
+                                        none are true == false
                                             is true
                                         """)]
     [InlineAutoData(false, true, true, """
-                                        ¬none are true
+                                        none are true == false
                                             is true
                                         """)]
     [InlineAutoData(true, false, false, """
-                                        ¬none are true
+                                        none are true == false
                                             is true
                                         """)]
     [InlineAutoData(true, false, true, """
-                                       ¬none are true
+                                       none are true == false
                                            is true
                                        """)]
     [InlineAutoData(true, true, false, """
-                                       ¬none are true
+                                       none are true == false
                                            is true
                                        """)]
     [InlineAutoData(true, true, true, """
-                                      ¬none are true
+                                      none are true == false
                                           is true
                                       """)]
     public void Should_serialize_the_result_of_the_all_operation(
@@ -246,47 +246,47 @@ public class AsNoneSatisfiedSpecTests
     [InlineAutoData(false, false, false, """
                                         none are true
                                             AND
-                                                ¬left
-                                                ¬right
+                                                left == false
+                                                right == false
                                         """)]
     [InlineAutoData(false, false, true, """
-                                        ¬none are true
+                                        none are true == false
                                             AND
                                                 left
                                                 right
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        ¬none are true
+                                        none are true == false
                                             AND
                                                 left
                                                 right
                                         """)]
     [InlineAutoData(false, true, true, """
-                                        ¬none are true
+                                        none are true == false
                                             AND
                                                 left
                                                 right
                                         """)]
     [InlineAutoData(true, false, false, """
-                                        ¬none are true
+                                        none are true == false
                                             AND
                                                 left
                                                 right
                                         """)]
     [InlineAutoData(true, false, true, """
-                                        ¬none are true
+                                        none are true == false
                                             AND
                                                 left
                                                 right
                                         """)]
     [InlineAutoData(true, true, false, """
-                                        ¬none are true
+                                        none are true == false
                                             AND
                                                 left
                                                 right
                                         """)]
     [InlineAutoData(true, true, true, """
-                                        ¬none are true
+                                        none are true == false
                                             AND
                                                 left
                                                 right
@@ -328,13 +328,13 @@ public class AsNoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, "none are true")]
-    [InlineAutoData(false, false, true, "¬none are true")]
-    [InlineAutoData(false, true, false, "¬none are true")]
-    [InlineAutoData(false, true, true, "¬none are true")]
-    [InlineAutoData(true, false, false, "¬none are true")]
-    [InlineAutoData(true, false, true, "¬none are true")]
-    [InlineAutoData(true, true, false, "¬none are true")]
-    [InlineAutoData(true, true, true, "¬none are true")]
+    [InlineAutoData(false, false, true, "none are true == false")]
+    [InlineAutoData(false, true, false, "none are true == false")]
+    [InlineAutoData(false, true, true, "none are true == false")]
+    [InlineAutoData(true, false, false, "none are true == false")]
+    [InlineAutoData(true, false, true, "none are true == false")]
+    [InlineAutoData(true, true, false, "none are true == false")]
+    [InlineAutoData(true, true, true, "none are true == false")]
     public void Should_Describe_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,
@@ -372,13 +372,13 @@ public class AsNoneSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, "none are true")]
-    [InlineAutoData(false, false, true, "¬none are true")]
-    [InlineAutoData(false, true, false, "¬none are true")]
-    [InlineAutoData(false, true, true, "¬none are true")]
-    [InlineAutoData(true, false, false, "¬none are true")]
-    [InlineAutoData(true, false, true, "¬none are true")]
-    [InlineAutoData(true, true, false, "¬none are true")]
-    [InlineAutoData(true, true, true, "¬none are true")]
+    [InlineAutoData(false, false, true, "none are true == false")]
+    [InlineAutoData(false, true, false, "none are true == false")]
+    [InlineAutoData(false, true, true, "none are true == false")]
+    [InlineAutoData(true, false, false, "none are true == false")]
+    [InlineAutoData(true, false, true, "none are true == false")]
+    [InlineAutoData(true, true, false, "none are true == false")]
+    [InlineAutoData(true, true, true, "none are true == false")]
     public void Should_serialize_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,
@@ -598,7 +598,7 @@ public class AsNoneSatisfiedSpecTests
             Spec.Build((bool m) => m)
                 .AsNoneSatisfied()
                 .WhenTrue(_ => "none are true")
-                .WhenFalse(_ => "¬none are true")
+                .WhenFalse(_ => "none are true == false")
                 .Create("none true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
@@ -612,13 +612,13 @@ public class AsNoneSatisfiedSpecTests
 
     [Theory]
     [InlineData(false, false, false, "none are true")]
-    [InlineData(false, false, true, "¬none are true")]
-    [InlineData(false, true, false, "¬none are true")]
-    [InlineData(false, true, true, "¬none are true")]
-    [InlineData(true, false, false, "¬none are true")]
-    [InlineData(true, false, true, "¬none are true")]
-    [InlineData(true, true, false, "¬none are true")]
-    [InlineData(true, true, true, "¬none are true")]
+    [InlineData(false, false, true, "none are true == false")]
+    [InlineData(false, true, false, "none are true == false")]
+    [InlineData(false, true, true, "none are true == false")]
+    [InlineData(true, false, false, "none are true == false")]
+    [InlineData(true, false, true, "none are true == false")]
+    [InlineData(true, true, false, "none are true == false")]
+    [InlineData(true, true, true, "none are true == false")]
     public void Should_provide_a_reason_for_a_none_satisfied_operation_when_using_a_boolean_predicate_function(
         bool first,
         bool second,
@@ -630,7 +630,7 @@ public class AsNoneSatisfiedSpecTests
             Spec.Build((bool m) => m)
                 .AsNoneSatisfied()
                 .WhenTrue(_ => "none are true")
-                .WhenFalse(_ => "¬none are true")
+                .WhenFalse(_ => "none are true == false")
                 .Create("none true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
@@ -666,7 +666,7 @@ public class AsNoneSatisfiedSpecTests
             Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
                 .AsNoneSatisfied()
                 .WhenTrue(_ => "none are true")
-                .WhenFalse(_ => "¬none are true")
+                .WhenFalse(_ => "none are true == false")
                 .Create("none true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
@@ -680,13 +680,13 @@ public class AsNoneSatisfiedSpecTests
 
     [Theory]
     [InlineData(false, false, false, "none are true")]
-    [InlineData(false, false, true, "¬none are true")]
-    [InlineData(false, true, false, "¬none are true")]
-    [InlineData(false, true, true, "¬none are true")]
-    [InlineData(true, false, false, "¬none are true")]
-    [InlineData(true, false, true, "¬none are true")]
-    [InlineData(true, true, false, "¬none are true")]
-    [InlineData(true, true, true, "¬none are true")]
+    [InlineData(false, false, true, "none are true == false")]
+    [InlineData(false, true, false, "none are true == false")]
+    [InlineData(false, true, true, "none are true == false")]
+    [InlineData(true, false, false, "none are true == false")]
+    [InlineData(true, false, true, "none are true == false")]
+    [InlineData(true, true, false, "none are true == false")]
+    [InlineData(true, true, true, "none are true == false")]
     public void Should_provide_a_reason_for_a_none_satisfied_operation_when_using_a_boolean_result_predicate_function(
         bool first,
         bool second,
@@ -702,7 +702,7 @@ public class AsNoneSatisfiedSpecTests
             Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
                 .AsNoneSatisfied()
                 .WhenTrue(_ => "none are true")
-                .WhenFalse(_ => "¬none are true")
+                .WhenFalse(_ => "none are true == false")
                 .Create("none true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);

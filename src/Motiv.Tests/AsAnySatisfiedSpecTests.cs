@@ -259,8 +259,8 @@ public class AsAnySatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                            ¬any satisfied
-                                                ¬is true
+                                            any satisfied == false
+                                                is true == false
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             any satisfied
@@ -600,7 +600,7 @@ public class AsAnySatisfiedSpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, "¬any true")]
+    [InlineAutoData(false, false, "any true == false")]
     [InlineAutoData(false, true, "any true")]
     [InlineAutoData(true, false, "any true")]
     [InlineAutoData(true, true, "any true")]

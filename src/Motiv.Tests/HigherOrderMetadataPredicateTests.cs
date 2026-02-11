@@ -10,10 +10,10 @@ public class HigherOrderMetadataPredicateTests
     }
 
     [Theory]
-    [InlineData(1, 3, 5, 7, "¬is a pair of even numbers")]
-    [InlineData(1, 3, 5, 8, "¬is a pair of even numbers")]
+    [InlineData(1, 3, 5, 7, "is a pair of even numbers == false")]
+    [InlineData(1, 3, 5, 8, "is a pair of even numbers == false")]
     [InlineData(1, 3, 6, 8, "is a pair of even numbers")]
-    [InlineData(1, 3, 5, 9, "¬is a pair of even numbers")]
+    [InlineData(1, 3, 5, 9, "is a pair of even numbers == false")]
     public void Should_supplant_metadata_from_a_higher_order_spec(int first, int second, int third, int fourth, string expected)
     {
         // Arrange
@@ -53,13 +53,13 @@ public class HigherOrderMetadataPredicateTests
 
     [Theory]
     [InlineData(true, true, true, "third all true")]
-    [InlineData(true, true, false, "¬third all true")]
-    [InlineData(true, false, true, "¬third all true")]
-    [InlineData(true, false, false, "¬third all true")]
-    [InlineData(false, true, true, "¬third all true")]
-    [InlineData(false, true, false, "¬third all true")]
-    [InlineData(false, false, true, "¬third all true")]
-    [InlineData(false, false, false, "¬third all true")]
+    [InlineData(true, true, false, "third all true == false")]
+    [InlineData(true, false, true, "third all true == false")]
+    [InlineData(true, false, false, "third all true == false")]
+    [InlineData(false, true, true, "third all true == false")]
+    [InlineData(false, true, false, "third all true == false")]
+    [InlineData(false, false, true, "third all true == false")]
+    [InlineData(false, false, false, "third all true == false")]
     public void Should_only_yield_the_most_recent_when_multiple_yields_are_chained(bool first, bool second, bool third, string expected)
     {
         // Arrange
@@ -94,13 +94,13 @@ public class HigherOrderMetadataPredicateTests
 
     [Theory]
     [InlineData(true, true, true, "first true")]
-    [InlineData(true, true, false, "¬first true")]
-    [InlineData(true, false, true, "¬first true")]
-    [InlineData(true, false, false, "¬first true")]
-    [InlineData(false, true, true, "¬first true")]
-    [InlineData(false, true, false, "¬first true")]
-    [InlineData(false, false, true, "¬first true")]
-    [InlineData(false, false, false, "¬first true")]
+    [InlineData(true, true, false, "first true == false")]
+    [InlineData(true, false, true, "first true == false")]
+    [InlineData(true, false, false, "first true == false")]
+    [InlineData(false, true, true, "first true == false")]
+    [InlineData(false, true, false, "first true == false")]
+    [InlineData(false, false, true, "first true == false")]
+    [InlineData(false, false, false, "first true == false")]
     public void Should_yield_the_most_deeply_nested_reason_when_requested(bool first, bool second, bool third, string expected)
     {
         // Arrange
@@ -134,13 +134,13 @@ public class HigherOrderMetadataPredicateTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_harvest_propositionStatement_from_assertion(
         bool model,
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)
@@ -169,13 +169,13 @@ public class HigherOrderMetadataPredicateTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason(
         bool model,
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)
@@ -221,13 +221,13 @@ public class HigherOrderMetadataPredicateTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback(
         bool model,
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)

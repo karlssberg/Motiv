@@ -1,90 +1,18 @@
+using System.Text;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Motiv.CodeFix.Syntax;
 
 /// <summary>
-/// Provides factory methods for creating custom specification declarations.
+///     Provides factory methods for creating custom specification declarations.
 /// </summary>
 public static class CustomSpecDeclarationSyntax
 {
     /// <summary>
-    /// Parameters for creating a composed specification with constructor.
-    /// </summary>
-    private readonly struct ConstructorSpecParams
-    {
-        public ConstructorSpecParams(
-            string propositionName,
-            string modelName,
-            string? singleModelTypeName,
-            string? recordParameters,
-            IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> clauses,
-            string compositionExpression,
-            string containingTypeName)
-        {
-            PropositionName = propositionName;
-            ModelName = modelName;
-            SingleModelTypeName = singleModelTypeName;
-            RecordParameters = recordParameters;
-            Clauses = clauses;
-            CompositionExpression = compositionExpression;
-            ContainingTypeName = containingTypeName;
-        }
-
-        public string PropositionName { get; }
-        public string ModelName { get; }
-        public string? SingleModelTypeName { get; }
-        public string? RecordParameters { get; }
-        public IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> Clauses { get; }
-        public string CompositionExpression { get; }
-        public string ContainingTypeName { get; }
-    }
-
-    /// <summary>
-    /// Parameters for creating a composed specification.
-    /// </summary>
-    private readonly struct ComposedSpecParams
-    {
-        public ComposedSpecParams(
-            string propositionName,
-            string modelName,
-            string recordParameters,
-            IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> clauses,
-            string compositionExpression)
-        {
-            PropositionName = propositionName;
-            ModelName = modelName;
-            RecordParameters = recordParameters;
-            Clauses = clauses;
-            CompositionExpression = compositionExpression;
-        }
-
-        public string PropositionName { get; }
-        public string ModelName { get; }
-        public string RecordParameters { get; }
-        public IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> Clauses { get; }
-        public string CompositionExpression { get; }
-    }
-
-    /// <summary>
-    /// Result of clause deduplication containing unique clauses and name mappings.
-    /// </summary>
-    private readonly struct DeduplicatedClauses
-    {
-        public DeduplicatedClauses(
-            Dictionary<string, (string OriginalText, string TransformedText, ExpressionSyntax Expression, string DerivedName)> uniqueClauses,
-            Dictionary<int, string> clauseNameMapping)
-        {
-            UniqueClauses = uniqueClauses;
-            ClauseNameMapping = clauseNameMapping;
-        }
-
-        public Dictionary<string, (string OriginalText, string TransformedText, ExpressionSyntax Expression, string DerivedName)> UniqueClauses { get; }
-        public Dictionary<int, string> ClauseNameMapping { get; }
-    }
-
-    /// <summary>
-    /// Creates a type declaration for a custom specification.
+    ///     Creates a type declaration for a custom specification.
     /// </summary>
     /// <param name="propositionName">The name of the proposition.</param>
     /// <param name="modelParameterName">The name of the model parameter.</param>
@@ -106,7 +34,7 @@ public static class CustomSpecDeclarationSyntax
     }
 
     /// <summary>
-    /// Creates a constructor-based specification for expressions with instance method calls.
+    ///     Creates a constructor-based specification for expressions with instance method calls.
     /// </summary>
     public static TypeDeclarationSyntax CreateWithConstructor(
         string propositionName,
@@ -145,10 +73,11 @@ public static class CustomSpecDeclarationSyntax
             param.Clauses,
             deduplicated.ClauseNameMapping);
 
-        var sb = new System.Text.StringBuilder();
+        var sb = new StringBuilder();
 
         // Generate class declaration with primary constructor and factory lambda
-        sb.AppendLine($"public class {param.PropositionName}({param.ContainingTypeName} instance) : Spec<{fullModelType}>(() =>");
+        sb.AppendLine(
+            $"public class {param.PropositionName}({param.ContainingTypeName} instance) : Spec<{fullModelType}>(() =>");
         sb.AppendLine("{");
 
         // Generate local variables for each clause inside factory lambda
@@ -164,25 +93,21 @@ public static class CustomSpecDeclarationSyntax
             // Determine lambda body - inject instance reference for instance method calls
             string lambdaBody;
             if (hasRecordModel)
-            {
                 // For record model, use transformed text but also replace instance methods
                 lambdaBody = hasInstanceMethod
                     ? ReplaceInstanceMethodCalls(transformed)
                     : transformed;
-            }
             else
-            {
                 lambdaBody = hasInstanceMethod
                     ? ReplaceInstanceMethodCalls(expression.ToString())
                     : expression.ToString();
-            }
 
             var paramName = hasRecordModel ? "m" : GetParameterNameFromExpression(expression);
 
             sb.AppendLine($"    var {camelCaseName} = Spec.Build(({modelType} {paramName}) => {lambdaBody})");
             sb.AppendLine($"        .WhenTrue(\"{original.EscapeDoubleQuotes()} == true\")");
             sb.AppendLine($"        .WhenFalse(\"{original.EscapeDoubleQuotes()} == false\")");
-            sb.AppendLine($"        .Create();");
+            sb.AppendLine("        .Create();");
             sb.AppendLine();
         }
 
@@ -202,24 +127,26 @@ public static class CustomSpecDeclarationSyntax
             sb.AppendLine("});");
         }
 
-        var compilationUnit = SyntaxFactory.ParseCompilationUnit(sb.ToString());
+        var compilationUnit = ParseCompilationUnit(sb.ToString());
         return compilationUnit.DescendantNodes().OfType<TypeDeclarationSyntax>().First();
     }
 
     /// <summary>
-    /// Deduplicates clauses based on their transformed text, assigning derived names.
+    ///     Deduplicates clauses based on their transformed text, assigning derived names.
     /// </summary>
     private static DeduplicatedClauses DeduplicateClauses(
         IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> clauses)
     {
-        var uniqueClauses = new Dictionary<string, (string OriginalText, string TransformedText, ExpressionSyntax Expression, string DerivedName)>();
+        var uniqueClauses =
+            new Dictionary<string, (string OriginalText, string TransformedText, ExpressionSyntax Expression, string
+                DerivedName)>();
         var clauseNameMapping = new Dictionary<int, string>();
 
         for (var i = 0; i < clauses.Count; i++)
         {
             var (original, transformed, expression) = clauses[i];
 
-            if (!uniqueClauses.ContainsKey(transformed))
+            if (!uniqueClauses.TryGetValue(transformed, out var clause))
             {
                 var derivedName = ClauseNameDeriver.DeriveName(expression, uniqueClauses.Count + 1);
                 uniqueClauses[transformed] = (original, transformed, expression, derivedName);
@@ -227,7 +154,7 @@ public static class CustomSpecDeclarationSyntax
             }
             else
             {
-                clauseNameMapping[i] = uniqueClauses[transformed].DerivedName;
+                clauseNameMapping[i] = clause.DerivedName;
             }
         }
 
@@ -243,19 +170,19 @@ public static class CustomSpecDeclarationSyntax
             .OfType<IdentifierNameSyntax>()
             .Where(id =>
             {
-                // Skip if it's the name part of a member access (right side)
-                if (id.Parent is MemberAccessExpressionSyntax ma && ma.Name == id)
-                    return false;
+                return id.Parent switch
+                {
+                    // Skip if it's the name part of a member access (right side)
+                    MemberAccessExpressionSyntax ma when ma.Name == id => false,
 
-                // Skip if it's the expression part (left side) of a member access to a type
-                if (id.Parent is MemberAccessExpressionSyntax)
-                    return false;
+                    // Skip if it's the expression part (left side) of a member access to a type
+                    MemberAccessExpressionSyntax => false,
 
-                // Skip if it's an invocation expression (method name)
-                if (id.Parent is InvocationExpressionSyntax)
-                    return false;
+                    // Skip if it's an invocation expression (method name)
+                    InvocationExpressionSyntax => false,
 
-                return true;
+                    _ => true
+                };
             })
             .ToList();
 
@@ -273,16 +200,13 @@ public static class CustomSpecDeclarationSyntax
 
         var methodPart = parts[0].Trim();
         // Check if it's a simple identifier (not already qualified)
-        if (!methodPart.Contains('.') && char.IsUpper(methodPart[0]))
-        {
-            return $"instance.{expressionText}";
-        }
+        if (!methodPart.Contains('.') && char.IsUpper(methodPart[0])) return $"instance.{expressionText}";
 
         return expressionText;
     }
 
     /// <summary>
-    /// Creates a composed specification with decomposed clauses and a nested model record.
+    ///     Creates a composed specification with decomposed clauses and a nested model record.
     /// </summary>
     public static TypeDeclarationSyntax CreateComposed(
         string propositionName,
@@ -312,21 +236,37 @@ public static class CustomSpecDeclarationSyntax
             param.Clauses,
             deduplicated.ClauseNameMapping);
 
-        var sb = new System.Text.StringBuilder();
+        var sb = new StringBuilder();
 
         // Generate class declaration with factory lambda
-        sb.AppendLine($"public class {param.PropositionName}() : Spec<{param.PropositionName}.{param.ModelName}>(() =>");
+        sb.AppendLine(
+            $"public class {param.PropositionName}() : Spec<{param.PropositionName}.{param.ModelName}>(() =>");
         sb.AppendLine("{");
 
         // Generate local variables for each clause
         foreach (var (original, transformed, _, derivedName) in deduplicated.UniqueClauses.Values)
         {
-            var camelCaseName = ToCamelCase(derivedName);
-            sb.AppendLine($"    var {camelCaseName} = Spec.Build(({param.ModelName} m) => {transformed})");
-            sb.AppendLine($"        .WhenTrue(\"{original.EscapeDoubleQuotes()} == true\")");
-            sb.AppendLine($"        .WhenFalse(\"{original.EscapeDoubleQuotes()} == false\")");
-            sb.AppendLine($"        .Create();");
-            sb.AppendLine();
+            // Build the fluent chain for this clause
+            var specChain = BuildSpecFluentChain(
+                param.ModelName,
+                "m",
+                ParseExpression(transformed),
+                original);
+
+            // var clause1 = Spec.Build((Model m) => true)
+            var assignment = LocalDeclarationStatement(
+                VariableDeclaration(
+                    IdentifierName("var"))
+                .WithVariables(
+                    SingletonSeparatedList(
+                        VariableDeclarator(
+                            Identifier(ToCamelCase(derivedName)))
+                        .WithInitializer(
+                            EqualsValueClause(specChain)))))
+
+                .WithTrailingTrivia(CarriageReturnLineFeed);
+
+            sb.AppendLine(assignment.ToFullString());
         }
 
         // Return composition expression
@@ -336,12 +276,12 @@ public static class CustomSpecDeclarationSyntax
         sb.AppendLine($"    public record {param.ModelName}({param.RecordParameters});");
         sb.AppendLine("}");
 
-        var compilationUnit = SyntaxFactory.ParseCompilationUnit(sb.ToString());
+        var compilationUnit = ParseCompilationUnit(sb.ToString());
         return compilationUnit.DescendantNodes().OfType<TypeDeclarationSyntax>().First();
     }
 
     /// <summary>
-    /// Updates the composition expression to replace clause references with camelCase names.
+    ///     Updates the composition expression to replace clause references with camelCase names.
     /// </summary>
     private static string UpdateCompositionWithCamelCaseNames(
         string compositionExpression,
@@ -366,7 +306,7 @@ public static class CustomSpecDeclarationSyntax
     }
 
     /// <summary>
-    /// Converts a PascalCase string to camelCase.
+    ///     Converts a PascalCase string to camelCase.
     /// </summary>
     private static string ToCamelCase(string pascalCase)
     {
@@ -374,6 +314,74 @@ public static class CustomSpecDeclarationSyntax
             return pascalCase;
 
         return char.ToLower(pascalCase[0]) + pascalCase.Substring(1);
+    }
+
+    /// <summary>
+    ///     Builds a Spec.Build(...).WhenTrue(...).WhenFalse(...).Create() fluent chain expression.
+    /// </summary>
+    private static ExpressionSyntax BuildSpecFluentChain(
+        string modelTypeName,
+        string parameterName,
+        ExpressionSyntax bodyExpression,
+        string escapedOriginalExpression)
+    {
+        // 1. Build inner lambda: (modelTypeName parameterName) => bodyExpression
+        var innerLambda = ParenthesizedLambdaExpression(
+            ParameterList(
+                SingletonSeparatedList(
+                    Parameter(Identifier(parameterName))
+                        .WithType(IdentifierName(modelTypeName)))),
+            bodyExpression);
+
+        // 2. Build Spec.Build(innerLambda)
+        var specBuildInvocation = InvocationExpression(
+            MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                IdentifierName("Spec"),
+                IdentifierName("Build")),
+            ArgumentList(
+                SingletonSeparatedList(
+                    Argument(innerLambda))))
+            .WithTrailingTrivia(CarriageReturnLineFeed);
+
+        // 3. Chain .WhenTrue("(escapedOriginalExpression) == true")
+        var whenTrueInvocation = InvocationExpression(
+            MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                specBuildInvocation,
+                IdentifierName("WhenTrue")),
+            ArgumentList(
+                SingletonSeparatedList(
+                    Argument(
+                        LiteralExpression(
+                            SyntaxKind.StringLiteralExpression,
+                            Literal($"({escapedOriginalExpression}) == true"))))))
+            .WithTrailingTrivia(CarriageReturnLineFeed);
+
+        // 4. Chain .WhenFalse("(escapedOriginalExpression) == false")
+        var whenFalseInvocation = InvocationExpression(
+            MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                whenTrueInvocation,
+                IdentifierName("WhenFalse")),
+            ArgumentList(
+                SingletonSeparatedList(
+                    Argument(
+                        LiteralExpression(
+                            SyntaxKind.StringLiteralExpression,
+                            Literal($"({escapedOriginalExpression}) == false"))))))
+            .WithTrailingTrivia(CarriageReturnLineFeed);
+
+        // 5. Chain .Create()
+        var createInvocation = InvocationExpression(
+            MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                whenFalseInvocation,
+                IdentifierName("Create")),
+            ArgumentList())
+            .WithTrailingTrivia(CarriageReturnLineFeed);
+
+        return createInvocation;
     }
 
     private static TypeDeclarationSyntax CreateInternal(
@@ -385,17 +393,104 @@ public static class CustomSpecDeclarationSyntax
     {
         var camelCasedModelParameterName = modelParameterName.ToCamelCase();
         var escapedOriginalExpression = originalExpression.ToString().EscapeDoubleQuotes();
-        var propositionSource =
-            $$"""
-              public class {{propositionName}}() : Spec<{{modelTypeName}}>(() =>
-                  Spec.Build(({{modelTypeName}} {{camelCasedModelParameterName}}) => {{transformedExpression}})
-                      .WhenTrue("({{escapedOriginalExpression}}) == true")
-                      .WhenFalse("({{escapedOriginalExpression}}) == false")
-                      .Create());
-              """;
 
-        var compilationUnit = SyntaxFactory.ParseCompilationUnit(propositionSource);
+        // 1. Build the fluent chain: Spec.Build(...).WhenTrue(...).WhenFalse(...).Create()
+        var fluentChain = BuildSpecFluentChain(
+            modelTypeName,
+            camelCasedModelParameterName,
+            transformedExpression,
+            escapedOriginalExpression);
 
-        return compilationUnit.DescendantNodes().OfType<TypeDeclarationSyntax>().First();
+        // 2. Build outer lambda: () => fluentChain
+        var outerLambda = ParenthesizedLambdaExpression(
+            ParameterList(),
+            fluentChain);
+
+        // 3. Build base type: Spec<modelTypeName>(() => fluentChain)
+        var baseType = PrimaryConstructorBaseType(
+            GenericName(
+                Identifier("Spec"),
+                TypeArgumentList(
+                    SingletonSeparatedList<TypeSyntax>(
+                        IdentifierName(modelTypeName)))),
+            ArgumentList(
+                SingletonSeparatedList(
+                    Argument(outerLambda))));
+
+        // 4. Build class declaration: public class propositionName() : baseType;
+        var classDeclaration = ClassDeclaration(propositionName)
+            .WithModifiers(
+                TokenList(
+                    Token(SyntaxKind.PublicKeyword)))
+            .WithParameterList(
+                ParameterList())
+            .WithBaseList(
+                BaseList(
+                    SingletonSeparatedList<BaseTypeSyntax>(baseType)))
+            .WithSemicolonToken(
+                Token(SyntaxKind.SemicolonToken));
+
+        return classDeclaration;
+    }
+
+    /// <summary>
+    ///     Parameters for creating a composed specification with constructor.
+    /// </summary>
+    private readonly struct ConstructorSpecParams(
+        string propositionName,
+        string modelName,
+        string? singleModelTypeName,
+        string? recordParameters,
+        IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> clauses,
+        string compositionExpression,
+        string containingTypeName)
+    {
+        public string PropositionName { get; } = propositionName;
+        public string ModelName { get; } = modelName;
+        public string? SingleModelTypeName { get; } = singleModelTypeName;
+        public string? RecordParameters { get; } = recordParameters;
+
+        public IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> Clauses
+        {
+            get;
+        } = clauses;
+
+        public string CompositionExpression { get; } = compositionExpression;
+        public string ContainingTypeName { get; } = containingTypeName;
+    }
+
+    /// <summary>
+    ///     Parameters for creating a composed specification.
+    /// </summary>
+    private readonly struct ComposedSpecParams(
+        string propositionName,
+        string modelName,
+        string recordParameters,
+        IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> clauses,
+        string compositionExpression)
+    {
+        public string PropositionName { get; } = propositionName;
+        public string ModelName { get; } = modelName;
+        public string RecordParameters { get; } = recordParameters;
+
+        public IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> Clauses
+        {
+            get;
+        } = clauses;
+
+        public string CompositionExpression { get; } = compositionExpression;
+    }
+
+    /// <summary>
+    ///     Result of clause deduplication containing unique clauses and name mappings.
+    /// </summary>
+    private readonly struct DeduplicatedClauses(
+        Dictionary<string, (string OriginalText, string TransformedText, ExpressionSyntax Expression, string DerivedName)> uniqueClauses,
+        Dictionary<int, string> clauseNameMapping)
+    {
+        public Dictionary<string, (string OriginalText, string TransformedText, ExpressionSyntax Expression, string
+            DerivedName)> UniqueClauses { get; } = uniqueClauses;
+
+        public Dictionary<int, string> ClauseNameMapping { get; } = clauseNameMapping;
     }
 }

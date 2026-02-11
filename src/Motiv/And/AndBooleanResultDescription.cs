@@ -33,6 +33,8 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
                 andAlsoResult.Description.Reason,
             IBooleanOperationResult when result.Causes.Count() > 1 =>
                 $"({result.Description.Reason})",
+            _ when result.Description.Reason.EndsWithEqualityAssertion() =>
+                $"({result.Description.Reason})",
             _ => result.Description.Reason
         };
     }

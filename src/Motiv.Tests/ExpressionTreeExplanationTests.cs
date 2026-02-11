@@ -544,7 +544,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Reason.ShouldBe("¬is-positive");
+        act.Reason.ShouldBe("is-positive == false");
     }
 
     [Fact]
@@ -593,7 +593,7 @@ public class ExpressionTreeExplanationTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Reason.ShouldBe("is not positive | is not positive | is not positive | is not positive | ¬is-positive | ¬is positive");
+        act.Reason.ShouldBe("is not positive | is not positive | is not positive | is not positive | (is-positive == false) | (is positive == false)");
     }
 
     [Fact]
@@ -657,10 +657,10 @@ public class ExpressionTreeExplanationTests
                 is not positive
                     (int n) => n > 0 == false
                         n <= 0
-                ¬is-positive
+                is-positive == false
                     (int n) => n > 0 == false
                         n <= 0
-                ¬is positive
+                is positive == false
                     (int n) => n > 0 == false
                         n <= 0
             """);

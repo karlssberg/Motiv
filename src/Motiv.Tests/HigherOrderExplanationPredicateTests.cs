@@ -209,7 +209,7 @@ public class HigherOrderExplanationPredicateTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
 
         var withFalseAsScalar =
@@ -239,7 +239,7 @@ public class HigherOrderExplanationPredicateTests
 
     [Theory]
     [InlineData(true, "true assertion",  "true assertion", "propositional statement")]
-    [InlineData(false, "false assertion", "¬true assertion", "¬propositional statement")]
+    [InlineData(false, "false assertion", "true assertion == false", "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason(
         bool model,
         string expectedAssertion,
@@ -248,10 +248,10 @@ public class HigherOrderExplanationPredicateTests
     {
         // Arrange
         var expectedReason = string.Join(" & ",
-            expectedAssertion,
-            expectedAssertion,
-            expectedReasonStatement,
-            expectedImplicitAssertion);
+            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
+            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
+            expectedReasonStatement.EndsWith(" == false") || expectedReasonStatement.EndsWith(" == true") ? $"({expectedReasonStatement})" : expectedReasonStatement,
+            expectedImplicitAssertion.EndsWith(" == false") || expectedImplicitAssertion.EndsWith(" == true") ? $"({expectedImplicitAssertion})" : expectedImplicitAssertion);
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)
@@ -297,7 +297,7 @@ public class HigherOrderExplanationPredicateTests
 
     [Theory]
     [InlineData(true, "true assertion", "propositional statement")]
-    [InlineData(false, "false assertion", "¬propositional statement")]
+    [InlineData(false, "false assertion", "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback(
         bool model,
         string expectedAssertion,
@@ -305,10 +305,10 @@ public class HigherOrderExplanationPredicateTests
     {
         // Arrange
         var expectedReason = string.Join(" & ",
-            expectedAssertion,
-            expectedAssertion,
-            expectedAssertion,
-            expectedReasonStatement);
+            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
+            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
+            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
+            expectedReasonStatement.EndsWith(" == false") || expectedReasonStatement.EndsWith(" == true") ? $"({expectedReasonStatement})" : expectedReasonStatement);
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)
@@ -354,7 +354,7 @@ public class HigherOrderExplanationPredicateTests
 
     [Theory]
     [InlineData(true, "true assertion", "propositional statement")]
-    [InlineData(false, "false assertion", "¬propositional statement")]
+    [InlineData(false, "false assertion", "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback(
         bool model,
         string expectedAssertion,
@@ -362,10 +362,10 @@ public class HigherOrderExplanationPredicateTests
     {
         // Arrange
         var expectedReason = string.Join(" & ",
-            expectedAssertion,
-            expectedAssertion,
-            expectedAssertion,
-            expectedReasonStatement);
+            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
+            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
+            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
+            expectedReasonStatement.EndsWith(" == false") || expectedReasonStatement.EndsWith(" == true") ? $"({expectedReasonStatement})" : expectedReasonStatement);
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)
@@ -411,13 +411,13 @@ public class HigherOrderExplanationPredicateTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection(
         bool model,
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)

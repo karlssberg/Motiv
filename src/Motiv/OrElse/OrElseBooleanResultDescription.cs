@@ -34,6 +34,8 @@ internal sealed class OrElseBooleanResultDescription<TMetadata>(
                 orElseResult.Description.Reason,
             _ when result.Causes.Count() > 1 =>
                 $"({result.Description.Reason})",
+            _ when result.Description.Reason.EndsWithEqualityAssertion() =>
+                $"({result.Description.Reason})",
             _ => result.Description.Reason
         };
     }

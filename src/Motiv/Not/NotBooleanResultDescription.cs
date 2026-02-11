@@ -30,6 +30,7 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
             NotPolicyResult<TMetadata> notResult => NegateNotOperator(notResult),
             NotBooleanOperationResult<TMetadata> notResult => NegateNotOperator(notResult),
             IBooleanOperationResult =>  $"!({result.Reason})",
+            _ when result.Reason.EndsWithEqualityAssertion() => $"!({result.Reason})",
             _ =>$"!{result.Reason}"
         };
     }
@@ -48,6 +49,7 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
         {
             (true, _) => current.Operand.Reason,
             (false, IBooleanOperationResult) => $"!({current.Operand.Reason})",
+            (false, _) when current.Operand.Reason.EndsWithEqualityAssertion() => $"!({current.Operand.Reason})",
             (false, _) => $"!{current.Operand.Reason}",
         };
     }

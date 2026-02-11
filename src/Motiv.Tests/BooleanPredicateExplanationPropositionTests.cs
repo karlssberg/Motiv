@@ -176,7 +176,7 @@ public class BooleanPredicateExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)
@@ -209,7 +209,7 @@ public class BooleanPredicateExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)
@@ -236,7 +236,7 @@ public class BooleanPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_more_than_one_assertion_possible(
         bool model,
         string expectedReason)
@@ -259,7 +259,7 @@ public class BooleanPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "true assertion")]
-    [InlineData(false, "¬true assertion")]
+    [InlineData(false, "true assertion == false")]
     public void Should_use_the_implicit_propositional_statement_in_the_reason_when_more_than_one_assertion_possible(
         bool model,
         string expectedReason)
@@ -288,7 +288,7 @@ public class BooleanPredicateExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)
@@ -315,7 +315,7 @@ public class BooleanPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_when_multiple_assertion_possible(
         bool model,
         string expectedReason)
@@ -344,7 +344,7 @@ public class BooleanPredicateExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)
@@ -371,7 +371,7 @@ public class BooleanPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_when_multiple_assertion_possible(
         bool model,
         string expectedReason)
@@ -394,13 +394,13 @@ public class BooleanPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection(
         bool model,
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var withFalseAsScalar =
             Spec.Build((bool m) => m)

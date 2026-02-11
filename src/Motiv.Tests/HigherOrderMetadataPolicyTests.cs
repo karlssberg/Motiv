@@ -240,10 +240,10 @@ public class HigherOrderMetadataPolicyTests
 
     [Theory]
     [InlineData(2, 4, 6, 8, "is even")]
-    [InlineData(2, 4, 6, 9, "¬is even")]
-    [InlineData(1, 4, 6, 9, "¬is even")]
-    [InlineData(1, 3, 6, 9, "¬is even")]
-    [InlineData(1, 3, 5, 9, "¬is even")]
+    [InlineData(2, 4, 6, 9, "is even == false")]
+    [InlineData(1, 4, 6, 9, "is even == false")]
+    [InlineData(1, 3, 6, 9, "is even == false")]
+    [InlineData(1, 3, 5, 9, "is even == false")]
     public void Should_identify_the_causes_that_yield_metadata_of_the_same_type(
         int first,
         int second,

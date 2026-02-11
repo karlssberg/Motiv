@@ -300,7 +300,7 @@ public class BooleanResultTests
 
         var act = sut.Reason;
 
-        act.ShouldBe("a & !(¬b | ¬c)");
+        act.ShouldBe("a & !((b == false) | (c == false))");
     }
 
     [Fact]
@@ -319,7 +319,7 @@ public class BooleanResultTests
 
         var act = sut.Reason;
 
-        act.ShouldBe("a && !(¬b | ¬c)");
+        act.ShouldBe("a && !((b == false) | (c == false))");
     }
 
     [Fact]
@@ -338,7 +338,7 @@ public class BooleanResultTests
 
         var act = sut.Reason;
 
-        act.ShouldBe("a | !(¬b & ¬c)");
+        act.ShouldBe("a | !((b == false) & (c == false))");
     }
 
     [Fact]
@@ -357,7 +357,7 @@ public class BooleanResultTests
 
         var act = sut.Reason;
 
-        act.ShouldBe("¬a || !(b & c)");
+        act.ShouldBe("(a == false) || !(b & c)");
     }
 
     [Theory]
@@ -566,7 +566,7 @@ public class BooleanResultTests
 
         var act = sut.UnderlyingReasons;
 
-        act.ShouldBe(["¬a || !(b & c)"]);
+        act.ShouldBe(["(a == false) || !(b & c)"]);
     }
 
     [Fact]
@@ -587,6 +587,6 @@ public class BooleanResultTests
 
         var act = sut.UnderlyingReasons;
 
-        act.ShouldBe(["!¬parent | (!¬a & b & c)", "¬a || !(b & c)"]);
+        act.ShouldBe(["!(parent == false) | (!(a == false) & b & c)", "(a == false) || !(b & c)"]);
     }
 }

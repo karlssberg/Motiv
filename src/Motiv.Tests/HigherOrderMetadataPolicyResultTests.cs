@@ -10,10 +10,10 @@ public class HigherOrderMetadataPolicyResultTests
     }
 
     [Theory]
-    [InlineData(1, 3, 5, 7, "¬is a pair of even numbers")]
-    [InlineData(1, 3, 5, 8, "¬is a pair of even numbers")]
+    [InlineData(1, 3, 5, 7, "is a pair of even numbers == false")]
+    [InlineData(1, 3, 5, 8, "is a pair of even numbers == false")]
     [InlineData(1, 3, 6, 8, "is a pair of even numbers")]
-    [InlineData(1, 3, 5, 9, "¬is a pair of even numbers")]
+    [InlineData(1, 3, 5, 9, "is a pair of even numbers == false")]
     public void Should_supplant_metadata_from_a_higher_order_spec(int first, int second, int third, int fourth, string expected)
     {
         // Arrange
@@ -65,13 +65,13 @@ public class HigherOrderMetadataPolicyResultTests
 
     [Theory]
     [InlineData(true, true, true, "third all true")]
-    [InlineData(true, true, false, "¬third all true")]
-    [InlineData(true, false, true, "¬third all true")]
-    [InlineData(true, false, false, "¬third all true")]
-    [InlineData(false, true, true, "¬third all true")]
-    [InlineData(false, true, false, "¬third all true")]
-    [InlineData(false, false, true, "¬third all true")]
-    [InlineData(false, false, false, "¬third all true")]
+    [InlineData(true, true, false, "third all true == false")]
+    [InlineData(true, false, true, "third all true == false")]
+    [InlineData(true, false, false, "third all true == false")]
+    [InlineData(false, true, true, "third all true == false")]
+    [InlineData(false, true, false, "third all true == false")]
+    [InlineData(false, false, true, "third all true == false")]
+    [InlineData(false, false, false, "third all true == false")]
     public void Should_only_yield_the_most_recent_when_multiple_yields_are_chained(bool first, bool second, bool third, string expected)
     {
         // Arrange

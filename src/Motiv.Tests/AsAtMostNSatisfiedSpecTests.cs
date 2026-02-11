@@ -877,7 +877,7 @@ public class AsAtMostNSatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                             at most one is satisfied
-                                                ¬is true
+                                                is true == false
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied
@@ -1040,7 +1040,7 @@ public class AsAtMostNSatisfiedSpecTests
             Spec.Build((bool m) => m)
                 .AsAtMostNSatisfied(1)
                 .WhenTrue(_ => "at most 1 true")
-                .WhenFalse(_ => "¬at most 1 true")
+                .WhenFalse(_ => "at most 1 true == false")
                 .Create("at most 1 is true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
@@ -1056,11 +1056,11 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineData(false, false, false, "at most 1 true")]
     [InlineData(false, false, true, "at most 1 true")]
     [InlineData(false, true, false, "at most 1 true")]
-    [InlineData(false, true, true, "¬at most 1 true")]
+    [InlineData(false, true, true, "at most 1 true == false")]
     [InlineData(true, false, false, "at most 1 true")]
-    [InlineData(true, false, true, "¬at most 1 true")]
-    [InlineData(true, true, false, "¬at most 1 true")]
-    [InlineData(true, true, true, "¬at most 1 true")]
+    [InlineData(true, false, true, "at most 1 true == false")]
+    [InlineData(true, true, false, "at most 1 true == false")]
+    [InlineData(true, true, true, "at most 1 true == false")]
     public void Should_provide_a_reason_for_an_at_most_n_satisfied_operation_when_using_a_boolean_predicate_function(
         bool first,
         bool second,
@@ -1072,7 +1072,7 @@ public class AsAtMostNSatisfiedSpecTests
             Spec.Build((bool m) => m)
                 .AsAtMostNSatisfied(1)
                 .WhenTrue(_ => "at most 1 true")
-                .WhenFalse(_ => "¬at most 1 true")
+                .WhenFalse(_ => "at most 1 true == false")
                 .Create("at most 1 is true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
@@ -1108,7 +1108,7 @@ public class AsAtMostNSatisfiedSpecTests
             Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
                 .AsAtMostNSatisfied(1)
                 .WhenTrue(_ => "at most 1 true")
-                .WhenFalse(_ => "¬at most 1 true")
+                .WhenFalse(_ => "at most 1 true == false")
                 .Create("at most 1 is true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
@@ -1124,11 +1124,11 @@ public class AsAtMostNSatisfiedSpecTests
     [InlineData(false, false, false, "at most 1 true")]
     [InlineData(false, false, true, "at most 1 true")]
     [InlineData(false, true, false, "at most 1 true")]
-    [InlineData(false, true, true, "¬at most 1 true")]
+    [InlineData(false, true, true, "at most 1 true == false")]
     [InlineData(true, false, false, "at most 1 true")]
-    [InlineData(true, false, true, "¬at most 1 true")]
-    [InlineData(true, true, false, "¬at most 1 true")]
-    [InlineData(true, true, true, "¬at most 1 true")]
+    [InlineData(true, false, true, "at most 1 true == false")]
+    [InlineData(true, true, false, "at most 1 true == false")]
+    [InlineData(true, true, true, "at most 1 true == false")]
     public void Should_provide_a_reason_for_an_at_most_n_satisfied_operation_when_using_a_boolean_result_predicate_function(
         bool first,
         bool second,
@@ -1144,7 +1144,7 @@ public class AsAtMostNSatisfiedSpecTests
             Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
                 .AsAtMostNSatisfied(1)
                 .WhenTrue(_ => "at most 1 true")
-                .WhenFalse(_ => "¬at most 1 true")
+                .WhenFalse(_ => "at most 1 true == false")
                 .Create("at most 1 is true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);

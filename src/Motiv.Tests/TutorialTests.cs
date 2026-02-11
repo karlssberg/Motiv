@@ -14,8 +14,8 @@ public class TutorialTests
         isEven.IsSatisfiedBy(2).Assertions.ShouldBe(["is even"]);
 
         isEven.IsSatisfiedBy(3).Satisfied.ShouldBeFalse();
-        isEven.IsSatisfiedBy(3).Reason.ShouldBe("¬is even");
-        isEven.IsSatisfiedBy(3).Assertions.ShouldBe(["¬is even"]);
+        isEven.IsSatisfiedBy(3).Reason.ShouldBe("is even == false");
+        isEven.IsSatisfiedBy(3).Assertions.ShouldBe(["is even == false"]);
     }
 
     [Fact]
@@ -403,7 +403,7 @@ public class TutorialTests
 
         act.Justification.ShouldBe(
             """
-            ¬customer is eligible for a loan
+            customer is eligible for a loan == false
                 AND
                     customer has an inadequate credit score
                         (Customer customer) => customer.CreditScore > 600 == false
@@ -538,15 +538,15 @@ public class TutorialTests
         var result = isPartiallyFull.IsSatisfiedBy(5);
 
         result.Satisfied.ShouldBeTrue();
-        result.Assertions.ShouldBe(["valid", "¬empty", "¬full"]);
-        result.Reason.ShouldBe("valid & !(¬empty | ¬full)");
+        result.Assertions.ShouldBe(["valid", "empty == false", "full == false"]);
+        result.Reason.ShouldBe("valid & !((empty == false) | (full == false))");
         result.Justification.ShouldBe(
             """
             AND
                 valid
                 NOR
-                    ¬empty
-                    ¬full
+                    empty == false
+                    full == false
             """);
     }
 
@@ -561,7 +561,7 @@ public class TutorialTests
         var result = isInRangeAndEven.IsSatisfiedBy(11);
 
         result.Satisfied.ShouldBeFalse();
-        result.Reason.ShouldBe("¬in range and even");
+        result.Reason.ShouldBe("in range and even == false");
         result.Assertions.ShouldBe(["n > 10", "n % 2 != 0"], true);
     }
 
@@ -593,8 +593,8 @@ public class TutorialTests
                 .WhenFalse("none")
                 .Create("xor");
 
-        spec.IsSatisfiedBy(true).Assertions.ShouldBe(["¬right"]);
-        spec.IsSatisfiedBy(false).Assertions.ShouldBe(["¬left"]);
+        spec.IsSatisfiedBy(true).Assertions.ShouldBe(["right == false"]);
+        spec.IsSatisfiedBy(false).Assertions.ShouldBe(["left == false"]);
     }
 
     [Fact]
@@ -610,7 +610,7 @@ public class TutorialTests
         BooleanResultBase<string> result = allNegative.IsSatisfiedBy([-1, 2, 3]);
 
         result.Satisfied.ShouldBeFalse();
-        result.Reason.ShouldBe("¬all are negative");
+        result.Reason.ShouldBe("all are negative == false");
         result.Assertions.ShouldBe(["2 is not negative", "3 is not negative"]);
     }
 
@@ -628,7 +628,7 @@ public class TutorialTests
         result.Assertions.ShouldBe(["n <= 0"]);
         result.Justification.ShouldBe(
             """
-            ¬all positive numbers amd some are even
+            all positive numbers amd some are even == false
                 (ICollection<int> numbers) => (numbers.Any((int n) => n % 2 == 0) & numbers.All((int n) => n > 0)) == false
                     AND
                         numbers.All((int n) => n > 0) == false

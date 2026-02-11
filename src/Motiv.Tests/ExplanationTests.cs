@@ -384,7 +384,7 @@ public class ExplanationTests
     }
 
     [Theory]
-    [InlineData(1, "¬is even wrapper 2")]
+    [InlineData(1, "is even wrapper 2 == false")]
     [InlineData(2, "is even wrapper 2")]
     public void Should_use_propositional_statement_as_assertions_when_using_basic_metadata_propositions(
         int model,

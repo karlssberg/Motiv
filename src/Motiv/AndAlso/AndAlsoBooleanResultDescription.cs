@@ -32,6 +32,8 @@ internal sealed class AndAlsoBooleanResultDescription<TMetadata>(
                 andAlsoSpec.Description.Reason,
             _ when result.Causes.Count() > 1 =>
                 $"({result.Description.Reason})",
+            _ when result.Description.Reason.EndsWithEqualityAssertion() =>
+                $"({result.Description.Reason})",
             _ => result.Description.Reason
         };
     }

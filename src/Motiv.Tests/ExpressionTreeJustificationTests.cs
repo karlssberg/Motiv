@@ -5,13 +5,13 @@ public class ExpressionTreeJustificationTests
     [Theory]
     [InlineData(-1,
         """
-        ¬is-positive
+        is-positive == false
             (int n) => n > 0 == false
                 n <= 0
         """)]
     [InlineData(0,
         """
-        ¬is-positive
+        is-positive == false
             (int n) => n > 0 == false
                 n <= 0
         """)]
@@ -74,14 +74,14 @@ public class ExpressionTreeJustificationTests
     [Theory]
     [InlineData(-1,
         """
-        ¬any-positive
+        any-positive == false
             n is not positive
                 (int n) => n > 0 == false
                     n <= 0
         """)]
     [InlineData(0,
         """
-        ¬any-positive
+        any-positive == false
             n is not positive
                 (int n) => n > 0 == false
                     n <= 0
@@ -281,8 +281,8 @@ public class ExpressionTreeJustificationTests
     [Theory]
     [InlineData(
         """
-        ¬should create guid
-            ¬any positive
+        should create guid == false
+            any positive == false
                 none positive
                     (decimal n) => n > 0 == false
                         n <= 0
@@ -340,7 +340,7 @@ public class ExpressionTreeJustificationTests
                                 role == "admin"
                 """, "admin")]
     [InlineData("""
-                ¬any admins
+                any admins == false
                     (IEnumerable<string> roles) => roles.Any((string role) => role == "admin") == false
                         roles.Any((string role) => role == "admin") == false
                             (string role) => role == "admin" == false
@@ -369,7 +369,7 @@ public class ExpressionTreeJustificationTests
                                 is admin
                 """, "admin")]
     [InlineData("""
-                ¬any admins
+                any admins == false
                     (IEnumerable<string> roles) => roles.Any((string role) => isAdminResult) == false
                         roles.Any((string role) => isAdminResult) == false
                             (string role) => isAdminResult == false
@@ -418,7 +418,7 @@ public class ExpressionTreeJustificationTests
         "superuser")]
     [InlineData(
         """
-        ¬any admins or super users
+        any admins or super users == false
             (IEnumerable<string> roles) => roles.Any((string role) => isSuperUser || isAdminResult) == false
                 roles.Any((string role) => isSuperUser || isAdminResult) == false
                     (string role) => (isSuperUser || isAdminResult) == false
@@ -476,7 +476,7 @@ public class ExpressionTreeJustificationTests
         "superuser")]
     [InlineData(
         """
-        ¬any admins or super users
+        any admins or super users == false
             (IEnumerable<string> roles) => roles.Any(isSuperUser | isAdminResult) == false
                 roles.Any(isSuperUser | isAdminResult) == false
                     OR
@@ -522,7 +522,7 @@ public class ExpressionTreeJustificationTests
         "admin")]
     [InlineData(
         """
-        ¬all admins
+        all admins == false
             (IEnumerable<string> roles) => roles.All((string role) => isAdminResult) == false
                 roles.All((string role) => isAdminResult) == false
                     (string role) => isAdminResult == false
@@ -572,7 +572,7 @@ public class ExpressionTreeJustificationTests
         "superuser")]
     [InlineData(
         """
-        ¬all admins or super users
+        all admins or super users == false
             (IEnumerable<string> roles) => roles.All((string role) => isSuperUser || isAdminResult) == false
                 roles.All((string role) => isSuperUser || isAdminResult) == false
                     (string role) => (isSuperUser || isAdminResult) == false
@@ -630,7 +630,7 @@ public class ExpressionTreeJustificationTests
         "superuser")]
     [InlineData(
         """
-        ¬all admins or super users
+        all admins or super users == false
             (IEnumerable<string> roles) => roles.All(isSuperUser | isAdminResult) == false
                 roles.All(isSuperUser | isAdminResult) == false
                     OR
@@ -675,7 +675,7 @@ public class ExpressionTreeJustificationTests
 
         result.Justification.ShouldBe(
             """
-            ¬all positive
+            all positive == false
                 (ICollection<int> numbers) => numbers.All((int n) => n > 0) == false
                     numbers.All((int n) => n > 0) == false
                         (int n) => n > 0 == false
@@ -713,7 +713,7 @@ public class ExpressionTreeJustificationTests
 
         result.Justification.ShouldBe(
             """
-            ¬all positive
+            all positive == false
                 (int[] numbers) => numbers.All((int n) => n > 0) == false
                     numbers.All((int n) => n > 0) == false
                         (int n) => n > 0 == false
@@ -756,7 +756,7 @@ public class ExpressionTreeJustificationTests
                             users.Count == 1
                 """, "user")]
     [InlineData("""
-                ¬is admin
+                is admin == false
                     (ICollection<string> users) => (users.Any((string user) => user == "root") || users.Count == 1) == false
                         OR
                             users.Any((string user) => user == "root") == false

@@ -419,7 +419,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Reason.ShouldBe("¬is-positive");
+        act.Reason.ShouldBe("is-positive == false");
     }
 
 
@@ -436,7 +436,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy([-1]);
 
         // Assert
-        act.Reason.ShouldBe("¬is-positive");
+        act.Reason.ShouldBe("is-positive == false");
     }
 
     [Fact]
@@ -473,7 +473,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(-1);
 
         // Assert
-        act.Reason.ShouldBe("¬is-positive | ¬is-positive | ¬is-positive | ¬is-positive");
+        act.Reason.ShouldBe("(is-positive == false) | (is-positive == false) | (is-positive == false) | (is-positive == false)");
     }
 
     [Fact]
@@ -514,7 +514,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy([-1]);
 
         // Assert
-        act.Reason.ShouldBe("¬is-positive | ¬is-positive | ¬is-positive | ¬is-positive");
+        act.Reason.ShouldBe("(is-positive == false) | (is-positive == false) | (is-positive == false) | (is-positive == false)");
     }
 
     [Fact]
@@ -554,16 +554,16 @@ public class ExpressionTreeMetadataTests
         act.Justification.ShouldBe(
             """
             OR
-                ¬is-positive
+                is-positive == false
                     (int n) => n > 0 == false
                         n <= 0
-                ¬is-positive
+                is-positive == false
                     (int n) => n > 0 == false
                         n <= 0
-                ¬is-positive
+                is-positive == false
                     (int n) => n > 0 == false
                         n <= 0
-                ¬is-positive
+                is-positive == false
                     (int n) => n > 0 == false
                         n <= 0
             """);
@@ -610,16 +610,16 @@ public class ExpressionTreeMetadataTests
         act.Justification.ShouldBe(
             """
             OR
-                ¬is-positive
+                is-positive == false
                     (int n) => n > 0 == false
                         n <= 0
-                ¬is-positive
+                is-positive == false
                     (int n) => n > 0 == false
                         n <= 0
-                ¬is-positive
+                is-positive == false
                     (int n) => n > 0 == false
                         n <= 0
-                ¬is-positive
+                is-positive == false
                     (int n) => n > 0 == false
                         n <= 0
             """);

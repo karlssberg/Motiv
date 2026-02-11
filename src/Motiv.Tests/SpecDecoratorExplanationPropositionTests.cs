@@ -756,7 +756,7 @@ public class SpecDecoratorExplanationPropositionTests
 
     [Theory]
     [InlineAutoData(true, "is true")]
-    [InlineAutoData(false, "¬is true")]
+    [InlineAutoData(false, "is true == false")]
     public void Should_provide_a_reason_for_minimally_defined_spec(bool model, string expectedReason)
     {
         // Arrange
@@ -1224,7 +1224,7 @@ public class SpecDecoratorExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         PolicyBase<bool,string> underlying =
             Spec.Build((bool m) => m)
@@ -1270,7 +1270,7 @@ public class SpecDecoratorExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         SpecBase<bool,string> underlying =
             Spec.Build((bool m) => m)
@@ -1315,7 +1315,7 @@ public class SpecDecoratorExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         PolicyBase<bool,string> underlying =
             Spec.Build((bool m) => m)
@@ -1360,7 +1360,7 @@ public class SpecDecoratorExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         SpecBase<bool,string> underlying =
             Spec.Build((bool m) => m)
@@ -1399,7 +1399,7 @@ public class SpecDecoratorExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_using_multiple_assertions_for_policies(
             bool model,
             string expectedReason)
@@ -1425,7 +1425,7 @@ public class SpecDecoratorExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_using_multiple_assertions_for_specs(
         bool model,
         string expectedReason)
@@ -1457,7 +1457,7 @@ public class SpecDecoratorExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         PolicyBase<bool,string> underlying =
             Spec.Build((bool m) => m)
@@ -1502,7 +1502,7 @@ public class SpecDecoratorExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         SpecBase<bool,string> underlying =
             Spec.Build((bool m) => m)
@@ -1541,7 +1541,7 @@ public class SpecDecoratorExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void
         Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_when_using_multiple_assertions_for_policies(
             bool model,
@@ -1568,7 +1568,7 @@ public class SpecDecoratorExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void
         Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_when_using_multiple_assertions_for_specs(
             bool model,
@@ -1601,7 +1601,7 @@ public class SpecDecoratorExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         PolicyBase<bool,string> underlying =
             Spec.Build((bool m) => m)
@@ -1646,7 +1646,7 @@ public class SpecDecoratorExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         SpecBase<bool,string> underlying =
             Spec.Build((bool m) => m)
@@ -1685,7 +1685,7 @@ public class SpecDecoratorExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void
         Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_when_using_multiple_assertions_for_policies(
             bool model,
@@ -1712,7 +1712,7 @@ public class SpecDecoratorExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void
         Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_when_using_multiple_assertions_for_specs(
             bool model,
@@ -1739,13 +1739,13 @@ public class SpecDecoratorExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection_for_polcies(
         bool model,
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         PolicyBase<bool,string> underlying =
             Spec.Build((bool m) => m)
@@ -1791,13 +1791,13 @@ public class SpecDecoratorExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection_for_specs(
         bool model,
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         SpecBase<bool,string> underlying =
             Spec.Build((bool m) => m)

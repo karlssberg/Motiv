@@ -501,7 +501,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -547,7 +547,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -592,7 +592,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -637,7 +637,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -676,7 +676,7 @@ public class BooleanResultPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_more_than_one_assertion_possible_for_policy_results(
         bool model,
         string expectedReason)
@@ -704,7 +704,7 @@ public class BooleanResultPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_more_than_one_assertion_possible_for_boolean_results(
         bool model,
         string expectedReason)
@@ -731,7 +731,7 @@ public class BooleanResultPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "true assertion")]
-    [InlineData(false, "¬true assertion")]
+    [InlineData(false, "true assertion == false")]
     public void Should_use_the_implicit_propositional_statement_in_the_reason_when_more_than_one_assertion_possible_for_policy_results(
         bool model,
         string expectedReason)
@@ -758,7 +758,7 @@ public class BooleanResultPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "true assertion")]
-    [InlineData(false, "¬true assertion")]
+    [InlineData(false, "true assertion == false")]
     public void Should_use_the_implicit_propositional_statement_in_the_reason_when_more_than_one_assertion_possible_for_boolean_results(
         bool model,
         string expectedReason)
@@ -791,7 +791,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -838,7 +838,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -877,7 +877,7 @@ public class BooleanResultPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_when_multiple_assertion_possible_for_policy_results(
         bool model,
         string expectedReason)
@@ -904,7 +904,7 @@ public class BooleanResultPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_when_multiple_assertion_possible_for_boolean_results(
         bool model,
         string expectedReason)
@@ -937,7 +937,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -982,7 +982,7 @@ public class BooleanResultPredicateExplanationPropositionTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -1021,7 +1021,7 @@ public class BooleanResultPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_when_multiple_assertion_possible_for_boolean_results(
         bool model,
         string expectedReason)
@@ -1048,13 +1048,13 @@ public class BooleanResultPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection_for_policy_results(
         bool model,
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -1100,13 +1100,13 @@ public class BooleanResultPredicateExplanationPropositionTests
 
     [Theory]
     [InlineData(true, "propositional statement")]
-    [InlineData(false, "¬propositional statement")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection_for_boolean_results(
         bool model,
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 4).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var underlying =
             Spec.Build((bool m) => m)
