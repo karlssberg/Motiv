@@ -84,4 +84,5 @@ public static class StringExtensions
         text.EndsWith(" == false") || text.EndsWith(" == true");
 
     internal static string AsUnsatisfied(this string text) => $"{text} == false";
+    internal static string AsSatisfied(this string text) => $"{text} == true";
 }

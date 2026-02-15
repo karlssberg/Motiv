@@ -71,7 +71,7 @@ public class AndSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, true, "left & right")]
+    [InlineAutoData(true, true, "(left == true) & (right == true)")]
     [InlineAutoData(true, false, "right == false")]
     [InlineAutoData(false, true, "left == false")]
     [InlineAutoData(false, false, "(left == false) & (right == false)")]
@@ -471,7 +471,7 @@ public class AndSpecTests
     [InlineData(false, false, "left == false", "right == false")]
     [InlineData(false, true, "left == false")]
     [InlineData(true, false, "right == false")]
-    [InlineData(true, true, "left", "right")]
+    [InlineData(true, true, "left == true", "right == true")]
     public void Should_perform_And_on_specs_with_different_metadata_and_preserve_assertions(
         bool leftValue,
         bool rightValue,
@@ -502,7 +502,7 @@ public class AndSpecTests
     [InlineData(false, false, "left == false", "right == false")]
     [InlineData(false, true, "left == false")]
     [InlineData(true, false, "right == false")]
-    [InlineData(true, true, "left", "right")]
+    [InlineData(true, true, "left == true", "right == true")]
     public void Should_perform_And_on_specs_with_different_metadata_and_preserve_metadata(
         bool leftValue,
         bool rightValue,
@@ -608,8 +608,8 @@ public class AndSpecTests
     [InlineData(true, true,
         """
         NAND
-            left
-            right
+            left == true
+            right == true
         """)]
     [InlineData(true, false,
         """
@@ -643,8 +643,8 @@ public class AndSpecTests
     [InlineData(true, true,
         """
         AND
-            left
-            right
+            left == true
+            right == true
         """)]
     [InlineData(true, false,
         """
@@ -678,8 +678,8 @@ public class AndSpecTests
     [InlineData(true, true,
         """
         NAND
-            left
-            right
+            left == true
+            right == true
         """)]
     [InlineData(true, false,
         """

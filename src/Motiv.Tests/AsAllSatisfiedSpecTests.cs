@@ -176,7 +176,7 @@ public class AsAllSatisfiedSpecTests
                                                 false
                                             """)]
     [InlineAutoData(true, true, true, """
-                                            all are true
+                                            all are true == true
                                                 true
                                             """)]
     public void Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string(
@@ -210,42 +210,42 @@ public class AsAllSatisfiedSpecTests
     [InlineAutoData(false, false, false, """
                                         all are true == false
                                             false
-                                                false
+                                                false == false
                                         """)]
     [InlineAutoData(false, false, true, """
                                         all are true == false
                                             false
-                                                false
+                                                false == false
                                         """)]
     [InlineAutoData(false, true, false, """
                                         all are true == false
                                             false
-                                                false
+                                                false == false
                                         """)]
     [InlineAutoData(false, true, true, """
                                         all are true == false
                                             false
-                                                false
+                                                false == false
                                         """)]
     [InlineAutoData(true, false, false, """
                                         all are true == false
                                             false
-                                                false
+                                                false == false
                                         """)]
     [InlineAutoData(true, false, true, """
                                         all are true == false
                                             false
-                                                false
+                                                false == false
                                         """)]
     [InlineAutoData(true, true, false, """
                                         all are true == false
                                             false
-                                                false
+                                                false == false
                                         """)]
     [InlineAutoData(true, true, true, """
-                                        all are true
+                                        all are true == true
                                             true
-                                                true
+                                                true == true
                                         """)]
     public void
         Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
@@ -307,8 +307,8 @@ public class AsAllSatisfiedSpecTests
                                            is true == false
                                        """)]
     [InlineAutoData(true, true, true, """
-                                      all are true
-                                          is true
+                                      all are true == true
+                                          is true == true
                                       """)]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
@@ -383,10 +383,10 @@ public class AsAllSatisfiedSpecTests
                                                     right == false
                                             """)]
     [InlineAutoData(true, true, true, """
-                                            all are true
+                                            all are true == true
                                                 AND
-                                                    left
-                                                    right
+                                                    left == true
+                                                    right == true
                                             """)]
     public void Should_serialize_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
@@ -431,7 +431,7 @@ public class AsAllSatisfiedSpecTests
     [InlineAutoData(true, false, false, "all are true == false")]
     [InlineAutoData(true, false, true, "all are true == false")]
     [InlineAutoData(true, true, false, "all are true == false")]
-    [InlineAutoData(true, true, true, "all are true")]
+    [InlineAutoData(true, true, true, "all are true == true")]
     public void Should_Describe_the_result_of_the_all_operation_and_show_multiple_underlying_causes(
         bool first,
         bool second,
@@ -475,7 +475,7 @@ public class AsAllSatisfiedSpecTests
     [InlineAutoData(true, false, false, "all are true == false")]
     [InlineAutoData(true, false, true, "all are true == false")]
     [InlineAutoData(true, true, false, "all are true == false")]
-    [InlineAutoData(true, true, true, "all are true")]
+    [InlineAutoData(true, true, true, "all are true == true")]
     public void Should_serialize_the_result_of_the_all_operation_and_show_underlying_causes(
         bool first,
         bool second,
@@ -685,7 +685,7 @@ public class AsAllSatisfiedSpecTests
     [InlineAutoData(false, false, "all are true == false")]
     [InlineAutoData(false, true, "all are true == false")]
     [InlineAutoData(true, false, "all are true == false")]
-    [InlineAutoData(true, true, "all are true")]
+    [InlineAutoData(true, true, "all are true == true")]
     public void Should_surface_reasons_from_underlyingResult(bool modelA, bool modelB, string expectedAssertion)
     {
         // Arrange

@@ -39,10 +39,10 @@ public class AndAlsoSpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, "not left")]
-    [InlineAutoData(false, true, "not left")]
-    [InlineAutoData(true, false, "not right")]
-    [InlineAutoData(true, true, "left && right")]
+    [InlineAutoData(false, false, "not left == false")]
+    [InlineAutoData(false, true, "not left == false")]
+    [InlineAutoData(true, false, "not right == false")]
+    [InlineAutoData(true, true, "(left == true) && (right == true)")]
     public void Should_evaluate_reasons(
         bool leftValue,
         bool rightValue,
@@ -188,8 +188,8 @@ public class AndAlsoSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, "not right")]
-    [InlineAutoData(false, "not left")]
+    [InlineAutoData(true, "not right == false")]
+    [InlineAutoData(false, "not left == false")]
     public void Should_describe_the_result(bool model, string expected)
     {
         // Arrange
@@ -217,11 +217,11 @@ public class AndAlsoSpecTests
     [Theory]
     [InlineAutoData(true, """
                                     AND
-                                        not right
+                                        not right == false
                                     """)]
     [InlineAutoData(false, """
                                     AND
-                                        not left
+                                        not left == false
                                     """)]
     public void Should_describe_the_result_in_detail_over_a_single_line_because_operands_are_short(bool model, string expected)
     {
@@ -320,7 +320,7 @@ public class AndAlsoSpecTests
     [InlineData(false, false, "left == false")]
     [InlineData(false, true, "left == false")]
     [InlineData(true, false, "right == false")]
-    [InlineData(true, true, "left", "right")]
+    [InlineData(true, true, "left == true", "right == true")]
     public void Should_perform_AndAlso_on_specs_with_different_metadata_and_preserve_assertions(
         bool leftValue,
         bool rightValue,
@@ -352,7 +352,7 @@ public class AndAlsoSpecTests
     [InlineData(false, false, "left == false")]
     [InlineData(false, true, "left == false")]
     [InlineData(true, false, "right == false")]
-    [InlineData(true, true, "left", "right")]
+    [InlineData(true, true, "left == true", "right == true")]
     public void Should_perform_AndAlso_on_specs_with_different_metadata_and_preserve_metadata(
         bool leftValue,
         bool rightValue,
@@ -456,23 +456,23 @@ public class AndAlsoSpecTests
     [Theory]
     [InlineData(true, true,
         """
-        NAND
-            left
-            right
+        NAND ALSO
+            left == true
+            right == true
         """)]
     [InlineData(true, false,
         """
-        NAND
+        NAND ALSO
             right == false
         """)]
     [InlineData(false, true,
         """
-        NAND
+        NAND ALSO
             left == false
         """)]
     [InlineData(false, false,
         """
-        NAND
+        NAND ALSO
             left == false
         """)]
     public void Should_justify_a_nand_creation(bool leftBool, bool rightBool, string expected)
@@ -490,23 +490,23 @@ public class AndAlsoSpecTests
     [Theory]
     [InlineData(true, true,
         """
-        AND
-            left
-            right
+        AND ALSO
+            left == true
+            right == true
         """)]
     [InlineData(true, false,
         """
-        AND
+        AND ALSO
             right == false
         """)]
     [InlineData(false, true,
         """
-        AND
+        AND ALSO
             left == false
         """)]
     [InlineData(false, false,
         """
-        AND
+        AND ALSO
             left == false
         """)]
     public void Should_justify_a_nand_negation(bool leftBool, bool rightBool, string expected)
@@ -524,23 +524,23 @@ public class AndAlsoSpecTests
     [Theory]
     [InlineData(true, true,
         """
-        NAND
-            left
-            right
+        NAND ALSO
+            left == true
+            right == true
         """)]
     [InlineData(true, false,
         """
-        NAND
+        NAND ALSO
             right == false
         """)]
     [InlineData(false, true,
         """
-        NAND
+        NAND ALSO
             left == false
         """)]
     [InlineData(false, false,
         """
-        NAND
+        NAND ALSO
             left == false
         """)]
     public void Should_justify_a_nand_double_negation(bool leftBool, bool rightBool, string expected)

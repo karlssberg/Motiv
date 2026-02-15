@@ -8,7 +8,7 @@ internal static class PropositionExtensions
     {
         return isSatisfied switch
         {
-            true => propositionStatement,
+            true => propositionStatement.AsSatisfied(),
             false => propositionStatement.AsUnsatisfied()
         };
 

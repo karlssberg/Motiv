@@ -28,7 +28,7 @@ public readonly partial struct MinimalHigherOrderFromBooleanPredicateProposition
         return new HigherOrderFromBooleanPredicateProposition<TModel, string>(
             predicate,
             higherOrderOperation.HigherOrderPredicate,
-            _ => statement,
+            _ => statement.AsSatisfied(),
             _ => statement.AsUnsatisfied(),
             new SpecDescription(statement),
             higherOrderOperation.CauseSelector);

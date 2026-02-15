@@ -202,8 +202,7 @@ public static class BooleanResultExtensions
             {
                 IBinaryBooleanOperationResult binaryOperationResults
                     when binaryOperationResults.Operation == operation
-                         && binaryOperationResults.IsCollapsable =>
-                    IdentifyCollapsible(binaryOperationResults, operation),
+                         && binaryOperationResults.IsCollapsable => binaryOperationResults.IdentifyCollapsible(operation),
                 _ =>
                     (otherResults: OperationGroup.Other, result).ToEnumerable()
             });

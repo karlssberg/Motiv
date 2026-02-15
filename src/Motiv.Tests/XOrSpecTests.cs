@@ -76,9 +76,9 @@ public class XOrSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, true, "left ^ right")]
-    [InlineAutoData(true, false, "left ^ (right == false)")]
-    [InlineAutoData(false, true, "(left == false) ^ right")]
+    [InlineAutoData(true, true, "(left == true) ^ (right == true)")]
+    [InlineAutoData(true, false, "(left == true) ^ (right == false)")]
+    [InlineAutoData(false, true, "(left == false) ^ (right == true)")]
     [InlineAutoData(false, false, "(left == false) ^ (right == false)")]
     public void Should_serialize_the_result_of_the_xor_operation(
         bool leftResult,
@@ -145,8 +145,8 @@ public class XOrSpecTests
 
     [Theory]
     [InlineAutoData(true, true, "none")]
-    [InlineAutoData(true, false, "left")]
-    [InlineAutoData(false, true, "right")]
+    [InlineAutoData(true, false, "left == true")]
+    [InlineAutoData(false, true, "right == true")]
     [InlineAutoData(false, false, "none")]
     public void Should_be_able_to_override_the_assertions_to_only_the_true_operand_has_its_output(
         bool leftResult,
@@ -413,9 +413,9 @@ public class XOrSpecTests
 
     [Theory]
     [InlineData(false, false, "left == false", "right == false")]
-    [InlineData(false, true, "left == false", "right")]
-    [InlineData(true, false, "left", "right == false")]
-    [InlineData(true, true, "left", "right")]
+    [InlineData(false, true, "left == false", "right == true")]
+    [InlineData(true, false, "left == true", "right == false")]
+    [InlineData(true, true, "left == true", "right == true")]
     public void Should_perform_OrElse_on_specs_with_different_metadata_and_preserve_assertions(
         bool leftValue,
         bool rightValue,
@@ -447,9 +447,9 @@ public class XOrSpecTests
 
     [Theory]
     [InlineData(false, false, "left == false", "right == false")]
-    [InlineData(false, true, "left == false", "right")]
-    [InlineData(true, false, "left", "right == false")]
-    [InlineData(true, true, "left", "right")]
+    [InlineData(false, true, "left == false", "right == true")]
+    [InlineData(true, false, "left == true", "right == false")]
+    [InlineData(true, true, "left == true", "right == true")]
     public void Should_yield_metadata_as_a_string_when_specs_containing_different_metadata_types_are_composed(
         bool leftValue,
         bool rightValue,
@@ -511,10 +511,10 @@ public class XOrSpecTests
             XOR
                 XOR
                     XOR
-                        first
-                        second
-                    third
-                fourth
+                        first == true
+                        second == true
+                    third == true
+                fourth == true
             """);
     }
 
@@ -551,11 +551,11 @@ public class XOrSpecTests
             """
             XOR
                 XOR
-                    first
-                    second
+                    first == true
+                    second == true
                 XOR
-                    third
-                    fourth
+                    third == true
+                    fourth == true
             """);
     }
 
@@ -590,12 +590,12 @@ public class XOrSpecTests
         act.ShouldBe(
             """
             XOR
-                first
+                first == true
                 XOR
-                    second
+                    second == true
                     XOR
-                        third
-                        fourth
+                        third == true
+                        fourth == true
             """);
     }
 
@@ -627,20 +627,20 @@ public class XOrSpecTests
     [InlineData(true, true,
         """
         XNOR
-            left
-            right
+            left == true
+            right == true
         """)]
     [InlineData(true, false,
         """
         XNOR
-            left
+            left == true
             right == false
         """)]
     [InlineData(false, true,
         """
         XNOR
             left == false
-            right
+            right == true
         """)]
     [InlineData(false, false,
         """
@@ -665,20 +665,20 @@ public class XOrSpecTests
     [InlineData(true, true,
         """
         XOR
-            left
-            right
+            left == true
+            right == true
         """)]
     [InlineData(true, false,
         """
         XOR
-            left
+            left == true
             right == false
         """)]
     [InlineData(false, true,
         """
         XOR
             left == false
-            right
+            right == true
         """)]
     [InlineData(false, false,
         """
@@ -702,20 +702,20 @@ public class XOrSpecTests
     [InlineData(true, true,
         """
         XNOR
-            left
-            right
+            left == true
+            right == true
         """)]
     [InlineData(true, false,
         """
         XNOR
-            left
+            left == true
             right == false
         """)]
     [InlineData(false, true,
         """
         XNOR
             left == false
-            right
+            right == true
         """)]
     [InlineData(false, false,
         """

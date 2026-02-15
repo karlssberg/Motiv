@@ -26,10 +26,10 @@ internal sealed class AndAlsoBooleanResultDescription<TMetadata>(
     {
         return result switch
         {
-            AndBooleanResult<TMetadata> andSpec =>
-                andSpec.Description.Reason,
-            AndAlsoBooleanResult<TMetadata> andAlsoSpec =>
-                andAlsoSpec.Description.Reason,
+            AndBooleanResult<TMetadata> andResult =>
+                andResult.Description.Reason,
+            AndAlsoBooleanResult<TMetadata> andAlsoResult =>
+                andAlsoResult.Description.Reason,
             _ when result.Causes.Count() > 1 =>
                 $"({result.Description.Reason})",
             _ when result.Description.Reason.EndsWithEqualityAssertion() =>

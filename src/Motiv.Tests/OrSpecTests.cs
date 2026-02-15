@@ -76,9 +76,9 @@ public class OrSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, true, "left | right")]
-    [InlineAutoData(true, false, "left")]
-    [InlineAutoData(false, true, "right")]
+    [InlineAutoData(true, true, "(left == true) | (right == true)")]
+    [InlineAutoData(true, false, "left == true")]
+    [InlineAutoData(false, true, "right == true")]
     [InlineAutoData(false, false, "(left == false) | (right == false)")]
     public void Should_serialize_the_result_of_the_or_operation(
         bool leftResult,
@@ -144,9 +144,9 @@ public class OrSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, true, "left | right")]
-    [InlineAutoData(true, false, "left")]
-    [InlineAutoData(false, true, "right")]
+    [InlineAutoData(true, true, "(left == true) | (right == true)")]
+    [InlineAutoData(true, false, "left == true")]
+    [InlineAutoData(false, true, "right == true")]
     [InlineAutoData(false, false, "(left == false) | (right == false)")]
     public void Should_serialize_the_result_of_the_or_operation_when_metadata_is_a_string(
         bool leftResult,
@@ -176,10 +176,10 @@ public class OrSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, true, "True | True")]
-    [InlineAutoData(true, false, "True")]
-    [InlineAutoData(false, true, "True")]
-    [InlineAutoData(false, false, "False | False")]
+    [InlineAutoData(true, true, "(True == true) | (True == true)")]
+    [InlineAutoData(true, false, "True == true")]
+    [InlineAutoData(false, true, "True == true")]
+    [InlineAutoData(false, false, "(False == false) | (False == false)")]
     public void Should_serialize_the_result_of_the_or_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool leftResult,
         bool rightResult,
@@ -402,9 +402,9 @@ public class OrSpecTests
 
     [Theory]
     [InlineData(false, false, "left == false", "right == false")]
-    [InlineData(false, true, "right")]
-    [InlineData(true, false, "left")]
-    [InlineData(true, true, "left", "right")]
+    [InlineData(false, true, "right == true")]
+    [InlineData(true, false, "left == true")]
+    [InlineData(true, true, "left == true", "right == true")]
     public void Should_yield_assertions_for_different_metadata_types(
         bool leftValue,
         bool rightValue,
@@ -436,9 +436,9 @@ public class OrSpecTests
 
     [Theory]
     [InlineData(false, false, "left == false", "right == false")]
-    [InlineData(false, true, "right")]
-    [InlineData(true, false, "left")]
-    [InlineData(true, true, "left", "right")]
+    [InlineData(false, true, "right == true")]
+    [InlineData(true, false, "left == true")]
+    [InlineData(true, true, "left == true", "right == true")]
     public void Should_yield_metadata_for_different_metadata_types(
         bool leftValue,
         bool rightValue,
@@ -549,18 +549,18 @@ public class OrSpecTests
     [InlineData(true, true,
         """
         NOR
-            left
-            right
+            left == true
+            right == true
         """)]
     [InlineData(true, false,
         """
         NOR
-            left
+            left == true
         """)]
     [InlineData(false, true,
         """
         NOR
-            right
+            right == true
         """)]
     [InlineData(false, false,
         """
@@ -584,18 +584,18 @@ public class OrSpecTests
     [InlineData(true, true,
         """
         OR
-            left
-            right
+            left == true
+            right == true
         """)]
     [InlineData(true, false,
         """
         OR
-            left
+            left == true
         """)]
     [InlineData(false, true,
         """
         OR
-            right
+            right == true
         """)]
     [InlineData(false, false,
         """
@@ -619,18 +619,18 @@ public class OrSpecTests
     [InlineData(true, true,
         """
         NOR
-            left
-            right
+            left == true
+            right == true
         """)]
     [InlineData(true, false,
         """
         NOR
-            left
+            left == true
         """)]
     [InlineData(false, true,
         """
         NOR
-            right
+            right == true
         """)]
     [InlineData(false, false,
         """

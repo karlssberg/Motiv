@@ -41,12 +41,19 @@ internal sealed class Proposition<TModel, TMetadata>(
                 _ => Description.ToReason(isSatisfied)
             });
 
+        var reason = new Lazy<string> (() =>
+            metadata.Value switch
+            {
+                string because => because.ToReason(isSatisfied),
+                _ => Description.ToReason(isSatisfied)
+            });
+
         return new PropositionPolicyResult<TMetadata>(
             isSatisfied,
             metadata,
             new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata.Value, [])),
             new Lazy<Explanation>(() => new Explanation(assertion.Value)),
             new Lazy<ResultDescriptionBase>(() =>
-                new PropositionResultDescription(assertion.Value, Description.Statement)));
+                new PropositionResultDescription(reason.Value, Description.Statement)));
     }
 }
