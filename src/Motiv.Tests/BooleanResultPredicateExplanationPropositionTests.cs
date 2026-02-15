@@ -630,8 +630,8 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion")]
-    [InlineData(false, "false assertion")]
+    [InlineData(true, "propositional statement == true")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_for_boolean_results(
         bool model,
         string expectedReasonStatement)
@@ -675,7 +675,7 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_more_than_one_assertion_possible_for_policy_results(
         bool model,
@@ -703,7 +703,7 @@ public class BooleanResultPredicateExplanationPropositionTests
 
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_more_than_one_assertion_possible_for_boolean_results(
         bool model,
@@ -730,7 +730,7 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion")]
+    [InlineData(true, "true assertion == true")]
     [InlineData(false, "true assertion == false")]
     public void Should_use_the_implicit_propositional_statement_in_the_reason_when_more_than_one_assertion_possible_for_policy_results(
         bool model,
@@ -757,7 +757,7 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion")]
+    [InlineData(true, "true assertion == true")]
     [InlineData(false, "true assertion == false")]
     public void Should_use_the_implicit_propositional_statement_in_the_reason_when_more_than_one_assertion_possible_for_boolean_results(
         bool model,
@@ -784,8 +784,8 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion")]
-    [InlineData(false, "false assertion")]
+    [InlineData(true, "true assertion == true")]
+    [InlineData(false, "false assertion == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_for_policy_results(
         bool model,
         string expectedReasonStatement)
@@ -831,8 +831,8 @@ public class BooleanResultPredicateExplanationPropositionTests
 
 
     [Theory]
-    [InlineData(true, "true assertion")]
-    [InlineData(false, "false assertion")]
+    [InlineData(true, "true assertion == true")]
+    [InlineData(false, "false assertion == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_for_boolean_results(
         bool model,
         string expectedReasonStatement)
@@ -876,7 +876,7 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_when_multiple_assertion_possible_for_policy_results(
         bool model,
@@ -903,7 +903,7 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_when_multiple_assertion_possible_for_boolean_results(
         bool model,
@@ -930,8 +930,8 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion")]
-    [InlineData(false, "false assertion")]
+    [InlineData(true, "propositional statement == true")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback(
         bool model,
         string expectedReasonStatement)
@@ -975,8 +975,8 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion")]
-    [InlineData(false, "false assertion")]
+    [InlineData(true, "propositional statement == true")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_for_policy_results(
         bool model,
         string expectedReasonStatement)
@@ -1020,7 +1020,7 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_when_multiple_assertion_possible_for_boolean_results(
         bool model,
@@ -1047,7 +1047,7 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection_for_policy_results(
         bool model,
@@ -1099,7 +1099,7 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection_for_boolean_results(
         bool model,

@@ -244,7 +244,7 @@ public class HigherOrderExplanationPolicyResultTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 2).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -286,10 +286,10 @@ public class HigherOrderExplanationPolicyResultTests
     {
         // Arrange
         var expectedReason = string.Join(" & ",
-            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
-            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
-            expectedReasonStatement.EndsWith(" == false") || expectedReasonStatement.EndsWith(" == true") ? $"({expectedReasonStatement})" : expectedReasonStatement,
-            expectedImplicitAssertion.EndsWith(" == false") || expectedImplicitAssertion.EndsWith(" == true") ? $"({expectedImplicitAssertion})" : expectedImplicitAssertion);
+            expectedAssertion,
+            expectedAssertion,
+            expectedReasonStatement,
+            expectedImplicitAssertion);
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -347,10 +347,9 @@ public class HigherOrderExplanationPolicyResultTests
     {
         // Arrange
         var expectedReason = string.Join(" & ",
-            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
-            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
-            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
-            expectedReasonStatement.EndsWith(" == false") || expectedReasonStatement.EndsWith(" == true") ? $"({expectedReasonStatement})" : expectedReasonStatement);
+            expectedAssertion,
+            expectedAssertion,
+            expectedReasonStatement);
 
         PolicyBase<bool, string> underlying =
             Spec.Build((bool m) => m)
@@ -408,10 +407,9 @@ public class HigherOrderExplanationPolicyResultTests
     {
         // Arrange
         var expectedReason = string.Join(" & ",
-            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
-            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
-            expectedAssertion.EndsWith(" == false") || expectedAssertion.EndsWith(" == true") ? $"({expectedAssertion})" : expectedAssertion,
-            expectedReasonStatement.EndsWith(" == false") || expectedReasonStatement.EndsWith(" == true") ? $"({expectedReasonStatement})" : expectedReasonStatement);
+            expectedAssertion,
+            expectedAssertion,
+            expectedReasonStatement);
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -467,7 +465,7 @@ public class HigherOrderExplanationPolicyResultTests
         string expectedReasonStatement)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
+        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
 
         var underlying =
             Spec.Build((bool m) => m)

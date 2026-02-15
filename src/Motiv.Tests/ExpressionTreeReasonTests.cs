@@ -28,7 +28,7 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.ShouldBe("is-positive | is-positive | is-positive | is-positive");
+        act.Reason.ShouldBe("is-positive == true | is-positive == true | is-positive == true | is-positive == true");
     }
 
 
@@ -62,7 +62,7 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Reason.ShouldBe("is-positive | is-positive | is-positive | is-positive");
+        act.Reason.ShouldBe("is-positive == true | is-positive == true | is-positive == true | is-positive == true");
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.ShouldBe("is positive | is positive | is positive | is positive");
+        act.Reason.ShouldBe("is positive == true | is positive == true | is positive == true | is positive == true");
     }
 
     [Fact]
@@ -140,6 +140,6 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Reason.ShouldBe("is positive | is positive | is positive | is positive");
+        act.Reason.ShouldBe("is positive == true | is positive == true | is positive == true | is positive == true");
     }
 }

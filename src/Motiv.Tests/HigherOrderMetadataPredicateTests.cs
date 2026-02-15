@@ -12,7 +12,7 @@ public class HigherOrderMetadataPredicateTests
     [Theory]
     [InlineData(1, 3, 5, 7, "is a pair of even numbers == false")]
     [InlineData(1, 3, 5, 8, "is a pair of even numbers == false")]
-    [InlineData(1, 3, 6, 8, "is a pair of even numbers")]
+    [InlineData(1, 3, 6, 8, "is a pair of even numbers == true")]
     [InlineData(1, 3, 5, 9, "is a pair of even numbers == false")]
     public void Should_supplant_metadata_from_a_higher_order_spec(int first, int second, int third, int fourth, string expected)
     {
@@ -52,7 +52,7 @@ public class HigherOrderMetadataPredicateTests
     }
 
     [Theory]
-    [InlineData(true, true, true, "third all true")]
+    [InlineData(true, true, true, "third all true == true")]
     [InlineData(true, true, false, "third all true == false")]
     [InlineData(true, false, true, "third all true == false")]
     [InlineData(true, false, false, "third all true == false")]
@@ -93,7 +93,7 @@ public class HigherOrderMetadataPredicateTests
     }
 
     [Theory]
-    [InlineData(true, true, true, "first true")]
+    [InlineData(true, true, true, "first true == true")]
     [InlineData(true, true, false, "first true == false")]
     [InlineData(true, false, true, "first true == false")]
     [InlineData(true, false, false, "first true == false")]
@@ -133,7 +133,7 @@ public class HigherOrderMetadataPredicateTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_harvest_propositionStatement_from_assertion(
         bool model,
@@ -168,7 +168,7 @@ public class HigherOrderMetadataPredicateTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason(
         bool model,
@@ -220,7 +220,7 @@ public class HigherOrderMetadataPredicateTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback(
         bool model,

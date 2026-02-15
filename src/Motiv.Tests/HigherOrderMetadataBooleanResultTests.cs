@@ -12,7 +12,7 @@ public class HigherOrderMetadataBooleanResultTests
     [Theory]
     [InlineData(1, 3, 5, 7, "is a pair of even numbers == false")]
     [InlineData(1, 3, 5, 8, "is a pair of even numbers == false")]
-    [InlineData(1, 3, 6, 8, "is a pair of even numbers")]
+    [InlineData(1, 3, 6, 8, "is a pair of even numbers == true")]
     [InlineData(1, 3, 5, 9, "is a pair of even numbers == false")]
     public void Should_supplant_metadata_from_a_higher_order_spec(int first, int second, int third, int fourth, string expected)
     {
@@ -64,7 +64,7 @@ public class HigherOrderMetadataBooleanResultTests
     }
 
     [Theory]
-    [InlineData(true, true, true, "third all true")]
+    [InlineData(true, true, true, "third all true == true")]
     [InlineData(true, true, false, "third all true == false")]
     [InlineData(true, false, true, "third all true == false")]
     [InlineData(true, false, false, "third all true == false")]

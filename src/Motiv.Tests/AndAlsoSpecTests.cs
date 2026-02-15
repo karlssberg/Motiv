@@ -39,10 +39,10 @@ public class AndAlsoSpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, "not left == false")]
-    [InlineAutoData(false, true, "not left == false")]
-    [InlineAutoData(true, false, "not right == false")]
-    [InlineAutoData(true, true, "(left == true) && (right == true)")]
+    [InlineAutoData(false, false, "not left")]
+    [InlineAutoData(false, true, "not left")]
+    [InlineAutoData(true, false, "not right")]
+    [InlineAutoData(true, true, "(left) && (right)")]
     public void Should_evaluate_reasons(
         bool leftValue,
         bool rightValue,
@@ -188,8 +188,8 @@ public class AndAlsoSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, "not right == false")]
-    [InlineAutoData(false, "not left == false")]
+    [InlineAutoData(true, "not right")]
+    [InlineAutoData(false, "not left")]
     public void Should_describe_the_result(bool model, string expected)
     {
         // Arrange
@@ -217,11 +217,11 @@ public class AndAlsoSpecTests
     [Theory]
     [InlineAutoData(true, """
                                     AND
-                                        not right == false
+                                        not right
                                     """)]
     [InlineAutoData(false, """
                                     AND
-                                        not left == false
+                                        not left
                                     """)]
     public void Should_describe_the_result_in_detail_over_a_single_line_because_operands_are_short(bool model, string expected)
     {

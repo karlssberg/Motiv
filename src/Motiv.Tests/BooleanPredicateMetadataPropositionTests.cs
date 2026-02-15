@@ -55,10 +55,10 @@ public class BooleanPredicateMetadataPropositionTests
     }
 
     [Theory]
-    [InlineData(false, false, "is first true", "is second true", "is third true", "is fourth true")]
+    [InlineData(false, false, "is first true == true", "is second true == true", "is third true == true", "is fourth true == true")]
     [InlineData(false, true, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false")]
     [InlineData(true, false, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false")]
-    [InlineData(true, true, "is first true", "is second true", "is third true", "is fourth true")]
+    [InlineData(true, true, "is first true  == true", "is second true == true", "is third true == true", "is fourth true == true")]
     public void Should_use_proposition_statement_when_generating_assertions_for_metadata_propositions(
         bool model,
         bool other,
@@ -101,7 +101,7 @@ public class BooleanPredicateMetadataPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_false_metadata_is_callback(
         bool model,
@@ -134,7 +134,7 @@ public class BooleanPredicateMetadataPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback(
         bool model,
@@ -167,7 +167,7 @@ public class BooleanPredicateMetadataPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback(
         bool model,
@@ -200,7 +200,7 @@ public class BooleanPredicateMetadataPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection(
         bool model,
@@ -527,6 +527,6 @@ public class BooleanPredicateMetadataPropositionTests
         var act = result.MetadataTier.Metadata;
 
         // Assert
-        act.ShouldBe((Metadata[])[expectedMetadata]);
+        act.ShouldBe([expectedMetadata]);
     }
 }

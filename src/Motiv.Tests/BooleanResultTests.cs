@@ -407,7 +407,7 @@ public class BooleanResultTests
     [InlineData(true, false, true, true)]
     [InlineData(true, true, false, true)]
     [InlineData(true, true, true, true)]
-    public void Should_orelse_together_multiple_boolean_results(bool right, bool middle, bool left, bool expected)
+    public void Should_or_else_together_multiple_boolean_results(bool right, bool middle, bool left, bool expected)
     {
         // Arrange
         BooleanResultBase<string>[] results =
@@ -445,7 +445,7 @@ public class BooleanResultTests
     [InlineData(true, false, true, true)]
     [InlineData(true, true, false, true)]
     [InlineData(true, true, true, true)]
-    public void Should_orelse_together_multiple_policy_results(bool right, bool middle, bool left, bool expected)
+    public void Should_or_else_together_multiple_policy_results(bool right, bool middle, bool left, bool expected)
     {
         // Arrange
         PolicyResultBase<string>[] results =
@@ -521,7 +521,7 @@ public class BooleanResultTests
     [InlineData(true, false, true, false)]
     [InlineData(true, true, false, false)]
     [InlineData(true, true, true, true)]
-    public void Should_andalso_together_multiple_boolean_results(bool right, bool middle, bool left, bool expected)
+    public void Should_and_also_together_multiple_boolean_results(bool right, bool middle, bool left, bool expected)
     {
         // Arrange
         BooleanResultBase<string>[] results =

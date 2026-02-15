@@ -220,11 +220,11 @@ public class OrElseSpecTests
 
     [Theory]
     [InlineAutoData(true, """
-                        OR
+                        OR ELSE
                             left
                         """)]
     [InlineAutoData(false, """
-                        OR
+                        OR ELSE
                             right
                         """)]
     public void Should_describe_the_result_in_detail_over_a_single_line_because_operands_are_short(bool model, string expected)
@@ -255,12 +255,12 @@ public class OrElseSpecTests
 
     [Theory]
     [InlineAutoData(true, """
-                                OR
+                                OR ELSE
                                     left assertion statement
                                 """)]
     [InlineAutoData(false,
                                 """
-                                OR
+                                OR ELSE
                                     right assertion statement
                                 """)]
     public void Should_describe_the_result_in_detail_over_multiple_lines_because_operands_are_long(bool model, string expected)
@@ -455,22 +455,22 @@ public class OrElseSpecTests
     [Theory]
     [InlineData(true, true,
         """
-        NOR
+        NOR ELSE
             left == true
         """)]
     [InlineData(true, false,
         """
-        NOR
+        NOR ELSE
             left == true
         """)]
     [InlineData(false, true,
         """
-        NOR
+        NOR ELSE
             right == true
         """)]
     [InlineData(false, false,
         """
-        NOR
+        NOR ELSE
             left == false
             right == false
         """)]
@@ -489,22 +489,22 @@ public class OrElseSpecTests
     [Theory]
     [InlineData(true, true,
         """
-        OR
+        OR ELSE
             left == true
         """)]
     [InlineData(true, false,
         """
-        OR
+        OR ELSE
             left == true
         """)]
     [InlineData(false, true,
         """
-        OR
+        OR ELSE
             right == true
         """)]
     [InlineData(false, false,
         """
-        OR
+        OR ELSE
             left == false
             right == false
         """)]
@@ -523,22 +523,22 @@ public class OrElseSpecTests
     [Theory]
     [InlineData(true, true,
         """
-        NOR
+        NOR ELSE
             left == true
         """)]
     [InlineData(true, false,
         """
-        NOR
+        NOR ELSE
             left == true
         """)]
     [InlineData(false, true,
         """
-        NOR
+        NOR ELSE
             right == true
         """)]
     [InlineData(false, false,
         """
-        NOR
+        NOR ELSE
             left == false
             right == false
         """)]

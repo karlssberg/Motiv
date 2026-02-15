@@ -238,7 +238,7 @@ public class HigherOrderMetadataSpecTests
     }
 
     [Theory]
-    [InlineData(2, 4, 6, 8, "is even")]
+    [InlineData(2, 4, 6, 8, "is even == true")]
     [InlineData(2, 4, 6, 9, "is even == false")]
     [InlineData(1, 4, 6, 9, "is even == false")]
     [InlineData(1, 3, 6, 9, "is even == false")]

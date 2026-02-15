@@ -149,10 +149,10 @@ public class BooleanResultPredicateMultiValuePropositionTests
     }
 
     [Theory]
-    [InlineData(false, false, "is first true", "is second true", "is third true", "is fourth true", "is fifth true", "is sixth true", "is seventh true")]
+    [InlineData(false, false, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false", "is fifth true == false", "is sixth true == false", "is seventh true == false")]
     [InlineData(false, true, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false", "is fifth true == false", "is sixth true == false", "is seventh true == false")]
     [InlineData(true, false, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false", "is fifth true == false", "is sixth true == false", "is seventh true == false")]
-    [InlineData(true, true, "is first true", "is second true", "is third true", "is fourth true", "is fifth true", "is sixth true", "is seventh true")]
+    [InlineData(true, true, "is first true == true", "is second true == true", "is third true == true", "is fourth true == true", "is fifth true == true", "is sixth true == true", "is seventh true == true")]
     public void Should_use_proposition_statement_when_generating_assertions_for_metadata_propositions_for_policy_results(
         bool model,
         bool other,
@@ -219,10 +219,10 @@ public class BooleanResultPredicateMultiValuePropositionTests
     }
 
     [Theory]
-    [InlineData(false, false, "is first true", "is second true", "is third true", "is fourth true", "is fifth true", "is sixth true", "is seventh true")]
+    [InlineData(false, false, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false", "is fifth true == false", "is sixth true == false", "is seventh true == false")]
     [InlineData(false, true, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false", "is fifth true == false", "is sixth true == false", "is seventh true == false")]
     [InlineData(true, false, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false", "is fifth true == false", "is sixth true == false", "is seventh true == false")]
-    [InlineData(true, true, "is first true", "is second true", "is third true", "is fourth true", "is fifth true", "is sixth true", "is seventh true")]
+    [InlineData(true, true, "is first true == true", "is second true == true", "is third true == true", "is fourth true == true", "is fifth true == true", "is sixth true == true", "is seventh true == true")]
     public void Should_use_proposition_statement_when_generating_assertions_for_metadata_propositions_for_boolean_results(
         bool model,
         bool other,
@@ -289,7 +289,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_false_metadata_is_callback_for_policy_results(
         bool model,
@@ -341,7 +341,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_false_metadata_is_callback_for_boolean_results(
         bool model,
@@ -393,7 +393,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback(
         bool model,
@@ -445,7 +445,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_for_policy_results(
         bool model,
@@ -497,7 +497,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_for_boolean_results(
         bool model,
@@ -549,7 +549,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection_for_policy_results(
         bool model,
@@ -600,10 +600,8 @@ public class BooleanResultPredicateMultiValuePropositionTests
         act.ShouldBe(expectedReason);
     }
 
-
-
     [Theory]
-    [InlineData(true, "propositional statement")]
+    [InlineData(true, "propositional statement == true")]
     [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection_for_boolean_results(
         bool model,

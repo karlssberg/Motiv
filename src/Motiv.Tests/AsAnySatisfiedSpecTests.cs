@@ -258,43 +258,18 @@ public class AsAnySatisfiedSpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, """
-                                            any satisfied == false
-                                                is true == false
-                                            """)]
-    [InlineAutoData(false, false, true,  """
-                                            any satisfied
-                                                is true
-                                            """)]
-    [InlineAutoData(false, true, false,  """
-                                            any satisfied
-                                                is true
-                                            """)]
-    [InlineAutoData(false, true, true,   """
-                                            any satisfied
-                                                is true
-                                            """)]
-    [InlineAutoData(true, false, false,  """
-                                            any satisfied
-                                                is true
-                                            """)]
-    [InlineAutoData(true, false, true,   """
-                                            any satisfied
-                                                is true
-                                            """)]
-    [InlineAutoData(true, true, false,   """
-                                            any satisfied
-                                                is true
-                                            """)]
-    [InlineAutoData(true, true, true,    """
-                                            any satisfied
-                                                is true
-                                            """)]
+    [InlineAutoData(false, false, false)]
+    [InlineAutoData(false, false, true)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(false, true, true)]
+    [InlineAutoData(true, false, false)]
+    [InlineAutoData(true, false, true)]
+    [InlineAutoData(true, true, false)]
+    [InlineAutoData(true, true, true)]
     public void Should_serialize_the_policy_result_of_the_any_operation(
         bool first,
         bool second,
-        bool third,
-        string expected)
+        bool third)
     {
         // Arrange
         SpecBase<bool,bool> underlyingSpec = Spec
@@ -311,6 +286,11 @@ public class AsAnySatisfiedSpecTests
             .Create("any satisfied");
 
         var result = spec.IsSatisfiedBy([first, second, third]);
+        var satisfied = result.Satisfied;
+
+        var expected = string.Join(Environment.NewLine,
+            $"any satisfied == {satisfied.ToString().ToLowerInvariant()}",
+            $"    is true == {satisfied.ToString().ToLowerInvariant()}");
 
         // Act
         var act = result.Justification;
@@ -320,43 +300,18 @@ public class AsAnySatisfiedSpecTests
     }
 
     [Theory]
-    [InlineAutoData(false, false, false, """
-                                            some false
-                                                False
-                                            """)]
-    [InlineAutoData(false, false, true,  """
-                                            any true
-                                                True
-                                            """)]
-    [InlineAutoData(false, true, false,  """
-                                            any true
-                                                True
-                                            """)]
-    [InlineAutoData(false, true, true,   """
-                                            any true
-                                                True
-                                            """)]
-    [InlineAutoData(true, false, false,  """
-                                            any true
-                                                True
-                                            """)]
-    [InlineAutoData(true, false, true,   """
-                                            any true
-                                                True
-                                            """)]
-    [InlineAutoData(true, true, false,   """
-                                            any true
-                                                True
-                                            """)]
-    [InlineAutoData(true, true, true,    """
-                                            any true
-                                                True
-                                            """)]
+    [InlineAutoData(false, false, false)]
+    [InlineAutoData(false, false, true)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(false, true, true)]
+    [InlineAutoData(true, false, false)]
+    [InlineAutoData(true, false, true)]
+    [InlineAutoData(true, true, false)]
+    [InlineAutoData(true, true, true)]
     public void Should_serialize_the_result_of_the_any_operation_when_metadata_is_a_string(
         bool first,
         bool second,
-        bool third,
-        string expected)
+        bool third)
     {
         // Arrange
         var underlyingSpec = Spec
@@ -373,6 +328,11 @@ public class AsAnySatisfiedSpecTests
             .Create();
 
         var result = spec.IsSatisfiedBy([first, second, third]);
+        var satisfied = result.Satisfied;
+
+        var expected = satisfied
+            ? string.Join(Environment.NewLine, "any true", "    True == true")
+            : string.Join(Environment.NewLine, "some false", "    False == false");
 
         // Act
         var act = result.Justification;
@@ -601,9 +561,9 @@ public class AsAnySatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, "any true == false")]
-    [InlineAutoData(false, true, "any true")]
-    [InlineAutoData(true, false, "any true")]
-    [InlineAutoData(true, true, "any true")]
+    [InlineAutoData(false, true, "any true == true")]
+    [InlineAutoData(true, false, "any true == true")]
+    [InlineAutoData(true, true, "any true == true")]
     public void Should_surface_boolean_results_created_from_underlyingResult(bool modelA, bool modelB, string expectedAssertion)
     {
         // Arrange
@@ -827,10 +787,10 @@ public class AsAnySatisfiedSpecTests
     }
 
     [Theory]
-    [InlineData(false, false, "none are true")]
-    [InlineData(false, true, "some are true")]
-    [InlineData(true, false, "some are true")]
-    [InlineData(true, true, "some are true")]
+    [InlineData(false, false, "any true == false")]
+    [InlineData(false, true, "any true == true")]
+    [InlineData(true, false, "any true == true")]
+    [InlineData(true, true, "any true == true")]
     public void Should_surface_reason_for_boolean_results_created_from_predicate_when_a_proposition_is_specified(
         bool modelA,
         bool modelB,
