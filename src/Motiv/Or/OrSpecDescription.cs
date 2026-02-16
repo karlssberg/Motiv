@@ -37,7 +37,7 @@ internal sealed class OrSpecDescription<TModel, TMetadata>(
         };
     }
 
-    public string ToAssertion(bool satisfied) => Statement.ToReason(satisfied);
+    public bool HasExplicitStatement => false;
 
     public override string ToString() => Statement;
 }

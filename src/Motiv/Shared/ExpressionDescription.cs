@@ -23,5 +23,7 @@ internal sealed class ExpressionDescription(Expression statement, ISpecDescripti
     public string ToReason(bool satisfied) =>
         statement.ToExpressionAssertion(satisfied).Serialize();
 
+    public bool HasExplicitStatement { get; set; }
+
     public override string ToString() => Statement;
 }

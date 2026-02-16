@@ -38,7 +38,7 @@ public readonly struct MultiAssertionFromSpecWithNameHigherOrderPropositionFacto
                 .ToEnumerable()
                 .ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(statement, spec.Description),
+            new SpecDescription(statement, spec.Description) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);
     }
 

@@ -24,4 +24,6 @@ internal class ExpressionTreeDescription<TModel, TPredicateResult>(
 
     public string ToReason(bool satisfied)=>
         Statement.ToReason(satisfied);
+
+    public bool HasExplicitStatement { get; set; }
 }

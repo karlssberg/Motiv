@@ -9,9 +9,9 @@ internal sealed class HigherOrderResultDescription<TUnderlyingMetadata>(
     string propositionStatement)
     : ResultDescriptionBase
 {
-    private readonly ICollection<BooleanResultBase<TUnderlyingMetadata>> _causes = causes.ToArray();
+    private readonly BooleanResultBase<TUnderlyingMetadata>[] _causes = causes.ToArray();
 
-    internal override int CausalOperandCount => _causes.Count;
+    internal override int CausalOperandCount => _causes.Length;
 
     internal override string Statement => propositionStatement;
 

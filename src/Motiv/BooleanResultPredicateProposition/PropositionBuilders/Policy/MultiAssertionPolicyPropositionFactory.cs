@@ -47,7 +47,7 @@ public readonly struct MultiAssertionPolicyPropositionFactory<TModel, TMetadata>
             _predicate,
             _trueBecause,
             _falseBecause,
-            new SpecDescription(statement)
+            new SpecDescription(statement) { HasExplicitStatement = true }
         );
     }
 }

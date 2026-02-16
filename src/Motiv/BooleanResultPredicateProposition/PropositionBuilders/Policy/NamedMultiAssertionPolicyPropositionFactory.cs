@@ -48,5 +48,5 @@ public readonly struct NamedMultiAssertionPolicyPropositionFactory<TModel, TMeta
                 .ToEnumerable()
                 .ToFunc<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(trueBecause));
+            new SpecDescription(trueBecause) { HasExplicitStatement = true });
 }

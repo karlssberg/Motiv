@@ -66,5 +66,5 @@ public readonly struct MultiAssertionExplanationExpressionTreePropositionFactory
             _expression,
             _trueBecause,
             _falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
 }

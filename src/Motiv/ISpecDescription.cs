@@ -22,4 +22,6 @@ public interface ISpecDescription
     internal IEnumerable<string> GetDetailsAsLines();
 
     internal string ToReason(bool satisfied);
+
+    internal bool HasExplicitStatement { get; }
 }

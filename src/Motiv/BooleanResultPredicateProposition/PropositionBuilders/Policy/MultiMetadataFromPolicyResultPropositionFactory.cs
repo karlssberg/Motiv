@@ -61,6 +61,6 @@ public readonly struct MultiMetadataFromPolicyResultPropositionFactory<TModel, T
             _spec,
             _whenTrue,
             _whenFalse,
-            new SpecDescription(statement));
+            new SpecDescription(statement) { HasExplicitStatement = true });
     }
 }

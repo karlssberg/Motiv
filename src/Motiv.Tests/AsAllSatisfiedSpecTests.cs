@@ -208,44 +208,36 @@ public class AsAllSatisfiedSpecTests
 
     [Theory]
     [InlineAutoData(false, false, false, """
-                                        all are true
+                                        all are true == false
                                             false
-                                                false
                                         """)]
     [InlineAutoData(false, false, true, """
-                                        all are true
+                                        all are true == false
                                             false
-                                                false
                                         """)]
     [InlineAutoData(false, true, false, """
-                                        all are true
+                                        all are true == false
                                             false
-                                                false
                                         """)]
     [InlineAutoData(false, true, true, """
-                                        all are true
+                                        all are true == false
                                             false
-                                                false
                                         """)]
     [InlineAutoData(true, false, false, """
-                                        all are true
+                                        all are true == false
                                             false
-                                                false
                                         """)]
     [InlineAutoData(true, false, true, """
-                                        all are true
+                                        all are true == false
                                             false
-                                                false
                                         """)]
     [InlineAutoData(true, true, false, """
-                                        all are true
+                                        all are true == false
                                             false
-                                                false
                                         """)]
     [InlineAutoData(true, true, true, """
-                                        all are true
+                                        all are true == true
                                             true
-                                                true
                                         """)]
     public void
         Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
@@ -910,7 +902,8 @@ public class AsAllSatisfiedSpecTests
     [InlineData(true, true, "all true == true")]
     public void Should_surface_reason_for_boolean_results_created_from_predicate_when_a_proposition_is_specified(
         bool modelA,
-        bool modelB,       string expectedReason)
+        bool modelB,
+        string expectedReason)
     {
         // Arrange
         var spec = Spec

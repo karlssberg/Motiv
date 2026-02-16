@@ -76,7 +76,7 @@ public readonly struct MultiMetadataFromSpecHigherOrderExpressionTreeProposition
             _higherOrderOperation.HigherOrderPredicate,
             _whenTrue,
             _whenFalse,
-            new SpecDescription(statement),
+            new SpecDescription(statement) { HasExplicitStatement = true },
             _higherOrderOperation.CauseSelector);
     }
 }

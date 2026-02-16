@@ -52,7 +52,7 @@ public readonly struct ExplanationWithNameHigherOrderExpressionTreePropositionFa
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, string>, string>(),
             falseBecause,
-            new SpecDescription(statement),
+            new SpecDescription(statement) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);
     }
 }

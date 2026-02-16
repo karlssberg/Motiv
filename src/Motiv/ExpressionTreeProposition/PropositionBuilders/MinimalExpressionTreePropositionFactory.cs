@@ -22,5 +22,5 @@ public readonly partial struct MinimalExpressionTreePropositionFactory<TModel, T
             expression,
             (_, result) => result.Values,
             (_, result) => result.Values,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
 }

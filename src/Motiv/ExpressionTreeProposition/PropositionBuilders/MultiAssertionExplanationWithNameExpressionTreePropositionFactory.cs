@@ -30,7 +30,7 @@ public readonly struct MultiAssertionExplanationWithNameExpressionTreePropositio
                 .ToEnumerable()
                 .ToFunc<TModel, BooleanResultBase<string>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
 
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement

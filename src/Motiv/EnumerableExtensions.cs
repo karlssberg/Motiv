@@ -39,20 +39,6 @@ public static class EnumerableExtensions
         return new BooleanResultsCollection<TModel, TMetadata>(results);
     }
 
-    /// <summary>
-    /// Projects each element of a sequence into a <see cref="BooleanResultBase{TMetadata}"/> based on the supplied
-    /// <see cref="SpecBase{TModel, TMetadata}"/>.
-    /// </summary>
-    /// <param name="source">The sequence of values to project.</param>
-    /// <param name="spec">The specification to use for projection.</param>
-    /// <typeparam name="TModel">The type of the values in the sequence.</typeparam>
-    /// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
-    /// <returns>>An <see cref="IEnumerable{BooleanResultBase}"/> containing the projection of each element.</returns>
-    public static IEnumerable<BooleanResultBase<TMetadata>> Select<TModel, TMetadata>(
-        this IEnumerable<TModel> source,
-        SpecBase<TModel, TMetadata> spec) =>
-        source.Select(spec.IsSatisfiedBy);
-
     internal static IEnumerable<T> ReplaceFirstLine<T>(this IEnumerable<T> lines, Func<T, T> prefixFn)
     {
         using var enumerator = lines.GetEnumerator();

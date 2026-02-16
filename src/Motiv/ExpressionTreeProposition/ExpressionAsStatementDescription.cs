@@ -38,5 +38,5 @@ internal class ExpressionAsStatementDescription : ISpecDescription
             ? _trueBecause
             : _falseBecause;
 
-
+    public bool HasExplicitStatement { get; set; }
 }

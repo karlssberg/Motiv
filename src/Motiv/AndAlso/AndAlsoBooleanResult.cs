@@ -25,7 +25,7 @@ internal sealed class AndAlsoBooleanResult<TMetadata>(
 
     BooleanResultBase? IBinaryBooleanOperationResult.Right => Right;
 
-    public string Operation => Operator.And;
+    public string Operation => Operator.AndAlso;
 
     public bool IsCollapsable => true;
 

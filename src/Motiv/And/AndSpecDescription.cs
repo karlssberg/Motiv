@@ -35,5 +35,7 @@ internal sealed class AndSpecDescription<TModel, TMetadata>(
     public string ToReason(bool satisfied)=>
         Statement.ToReason(satisfied);
 
+    public bool HasExplicitStatement => false;
+
     public override string ToString() => Statement;
 }

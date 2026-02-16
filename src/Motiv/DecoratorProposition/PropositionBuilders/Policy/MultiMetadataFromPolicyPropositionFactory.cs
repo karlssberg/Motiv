@@ -59,5 +59,5 @@ public readonly struct MultiMetadataFromPolicyPropositionFactory<TModel, TReplac
             _spec,
             _whenTrue,
             _whenFalse,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), _spec.Description));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), _spec.Description) { HasExplicitStatement = true });
 }

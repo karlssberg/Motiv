@@ -6,10 +6,14 @@ internal class JustificationNegationMappings() : ReadOnlyDictionary<string, stri
     new Dictionary<string, string>
     {
         ["NAND"] = "AND",
+        ["NAND ALSO"] = "NAND ALSO",
         ["NOR"] = "OR",
+        ["NOR ELSE"] = "OR ELSE",
         ["XNOR"] = "XOR",
         ["AND"] = "NAND",
+        ["AND ALSO"] = "NAND ALSO",
         ["OR"] = "NOR",
+        ["OR ELSE"] = "NOR ELSE",
         ["XOR"] = "XNOR"
     })
 {

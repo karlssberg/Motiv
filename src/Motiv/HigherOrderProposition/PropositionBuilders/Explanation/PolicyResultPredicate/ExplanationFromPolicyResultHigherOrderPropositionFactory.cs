@@ -34,7 +34,7 @@ public readonly struct ExplanationFromPolicyResultHigherOrderPropositionFactory<
             higherOrderOperation.HigherOrderPredicate,
             trueBecause,
             falseBecause,
-            new SpecDescription(statement),
+            new SpecDescription(statement) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);
     }
 }

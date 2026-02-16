@@ -44,7 +44,7 @@ public readonly struct NamedPropositionFactory<TModel, TMetadata>(
             predicate,
             trueBecause.ToFunc<TModel, BooleanResultBase<TMetadata>, string>(),
             falseBecause,
-            new SpecDescription(statement)
+            new SpecDescription(statement) { HasExplicitStatement = true }
         );
     }
 }

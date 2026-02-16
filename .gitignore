@@ -20,3 +20,4 @@ BenchmarkDotNet.Artifacts/
 
 .fake
 .vs/
+.worktrees/

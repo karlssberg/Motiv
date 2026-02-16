@@ -20,6 +20,7 @@ internal sealed class OrElseSpecDescription<TModel, TMetadata>(
 
     public string ToReason(bool satisfied)=>
         Statement.ToReason(satisfied);
+    public bool HasExplicitStatement => false;
 
     private static string Summarize(SpecBase<TModel> operand)
     {

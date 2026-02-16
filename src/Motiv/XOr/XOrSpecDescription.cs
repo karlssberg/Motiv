@@ -30,5 +30,7 @@ internal sealed class XOrSpecDescription<TModel, TMetadata>(
         };
     }
 
+    public bool HasExplicitStatement => false;
+
     public override string ToString() => Statement;
 }

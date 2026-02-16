@@ -37,7 +37,7 @@ public readonly struct ExplanationFromSpecWithNameHigherOrderPropositionFactory<
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string>(),
             falseBecause,
-            new SpecDescription(statement, spec.Description),
+            new SpecDescription(statement, spec.Description) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);
     }
 

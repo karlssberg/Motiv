@@ -41,7 +41,7 @@ internal sealed class HigherOrderFromBooleanPredicateProposition<TModel, TMetada
             });
 
         var resultDescription = new Lazy<BooleanResultDescription>(() =>
-            new BooleanResultDescription(assertion.Value, Description.Statement));
+            new BooleanResultDescription(specDescription.ToReason(isSatisfied), Description.Statement));
 
         return new HigherOrderFromBooleanPredicatePolicyResult<TMetadata>(
             isSatisfied,

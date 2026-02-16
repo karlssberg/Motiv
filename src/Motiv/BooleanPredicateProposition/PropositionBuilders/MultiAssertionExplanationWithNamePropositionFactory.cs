@@ -46,6 +46,6 @@ public readonly struct MultiAssertionExplanationWithNamePropositionFactory<TMode
             predicate,
             trueBecause.ToEnumerable().ToFunc<TModel, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(statement));
+            new SpecDescription(statement) { HasExplicitStatement = true });
     }
 }

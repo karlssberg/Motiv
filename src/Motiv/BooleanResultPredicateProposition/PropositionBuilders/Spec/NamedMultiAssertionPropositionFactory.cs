@@ -32,7 +32,7 @@ public readonly struct NamedMultiAssertionPropositionFactory<TModel, TMetadata>(
                 .ToEnumerable()
                 .ToFunc<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(statement)
+            new SpecDescription(statement) { HasExplicitStatement = true }
         );
     }
 

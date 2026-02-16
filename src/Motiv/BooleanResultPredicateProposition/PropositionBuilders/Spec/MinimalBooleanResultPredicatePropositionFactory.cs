@@ -25,6 +25,6 @@ public readonly partial struct MinimalBooleanResultPredicatePropositionFactory<T
             predicate,
             (_, result) => result.Values,
             (_, result) => result.Values,
-            new SpecDescription(statement));
+            new SpecDescription(statement) { HasExplicitStatement = true });
     }
 }

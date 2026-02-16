@@ -76,7 +76,7 @@ public readonly struct MultiMetadataFromSpecHigherOrderPropositionFactory<TModel
             _higherOrderOperation.HigherOrderPredicate,
             _whenTrue,
             _whenFalse,
-            new SpecDescription(statement, _spec.Description),
+            new SpecDescription(statement, _spec.Description) { HasExplicitStatement = true },
             _higherOrderOperation.CauseSelector);
     }
 }

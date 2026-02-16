@@ -59,5 +59,5 @@ public readonly struct MultiMetadataPropositionExpressionTreeFactory<TModel, TMe
             _expression,
             _whenTrue,
             _whenFalse,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
 }

@@ -30,7 +30,7 @@ public readonly partial struct MinimalHigherOrderFromBooleanPredicateProposition
             higherOrderOperation.HigherOrderPredicate,
             _ => statement.AsSatisfied(),
             _ => statement.AsUnsatisfied(),
-            new SpecDescription(statement),
+            new SpecDescription(statement) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);
     }
 }

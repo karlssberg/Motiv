@@ -1,0 +1,29 @@
+{
+  "workingDirectory": ".forge",
+  "worktrees": {
+    "directory": ".worktrees",
+    "retainOnEscalation": true
+  },
+  "branching": {
+    "projectBranchPattern": "project/{projectName}/main",
+    "groupBranchPattern": "project/{projectName}/group-{groupId}-{shortName}",
+    "targetBranch": "main",
+    "groupMergeStrategy": "no-ff",
+    "projectMergeStrategy": "squash"
+  },
+  "execution": {
+    "teamMode": false,
+    "commitConvention": "conventional-commits",
+    "parallelMode": "parallel",
+    "codeReviewMaxRetries": 3,
+    "qaMaxRetries": 3,
+    "claimTimeoutHours": 2,
+    "createPROnShip": false,
+    "autoCreatePRs": true,
+    "autoShipFeatures": false
+  },
+  "conventions": {
+    "stack": "auto-detect",
+    "overrides": {}
+  }
+}

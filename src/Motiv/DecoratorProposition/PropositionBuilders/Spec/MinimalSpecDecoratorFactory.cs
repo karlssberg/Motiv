@@ -24,5 +24,5 @@ public readonly partial struct MinimalSpecDecoratorFactory<TModel, TMetadata>(
         new MinimalSpecDecoratorProposition<TModel, TMetadata>(
             spec,
             new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)),
-                spec.Description));
+                spec.Description) { HasExplicitStatement = true });
 }

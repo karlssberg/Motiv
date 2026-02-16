@@ -42,7 +42,7 @@ public class AndAlsoSpecTests
     [InlineAutoData(false, false, "not left")]
     [InlineAutoData(false, true, "not left")]
     [InlineAutoData(true, false, "not right")]
-    [InlineAutoData(true, true, "(left) && (right)")]
+    [InlineAutoData(true, true, "left && right")]
     public void Should_evaluate_reasons(
         bool leftValue,
         bool rightValue,
@@ -216,11 +216,11 @@ public class AndAlsoSpecTests
 
     [Theory]
     [InlineAutoData(true, """
-                                    AND
+                                    AND ALSO
                                         not right
                                     """)]
     [InlineAutoData(false, """
-                                    AND
+                                    AND ALSO
                                         not left
                                     """)]
     public void Should_describe_the_result_in_detail_over_a_single_line_because_operands_are_short(bool model, string expected)
@@ -249,11 +249,11 @@ public class AndAlsoSpecTests
 
     [Theory]
     [InlineAutoData(true, """
-                            AND
+                            AND ALSO
                                 not right assertion statement
                             """)]
     [InlineAutoData(false, """
-                            AND
+                            AND ALSO
                                 not left assertion statement
                             """)]
     public void Should_describe_the_result_in_detail_over_multiple_lines_because_operands_are_long(bool model, string expected)
@@ -480,7 +480,7 @@ public class AndAlsoSpecTests
         var left = Spec.Build((bool _) => leftBool).Create("left");
         var right = Spec.Build((bool _) => rightBool).Create("right");
 
-        var spec = !(left.AndAlso(right));
+        var spec = !left.AndAlso(right);
 
         var result = spec.IsSatisfiedBy(false);
 
@@ -514,7 +514,7 @@ public class AndAlsoSpecTests
         var left = Spec.Build((bool _) => leftBool).Create("left");
         var right = Spec.Build((bool _) => rightBool).Create("right");
 
-        var spec = !!(left.AndAlso(right));
+        var spec = !!left.AndAlso(right);
 
         var result = spec.IsSatisfiedBy(false);
 

@@ -38,7 +38,7 @@ public readonly struct MultiAssertionFromPolicyWithNameHigherOrderPropositionFac
                 .ToEnumerable()
                 .ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(statement, policy.Description),
+            new SpecDescription(statement, policy.Description) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);
     }
 

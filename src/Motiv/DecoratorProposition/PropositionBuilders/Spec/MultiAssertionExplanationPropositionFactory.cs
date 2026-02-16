@@ -31,5 +31,5 @@ public readonly struct MultiAssertionExplanationPropositionFactory<TModel, TMeta
             spec,
             trueBecause,
             falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description) { HasExplicitStatement = true });
 }

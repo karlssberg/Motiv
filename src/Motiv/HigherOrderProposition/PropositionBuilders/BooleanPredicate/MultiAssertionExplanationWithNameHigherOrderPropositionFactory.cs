@@ -36,7 +36,7 @@ public readonly struct MultiAssertionExplanationWithNameHigherOrderPropositionFa
                 .ToEnumerable()
                 .ToFunc<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(statement),
+            new SpecDescription(statement) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);
     }
 
@@ -54,7 +54,7 @@ public readonly struct MultiAssertionExplanationWithNameHigherOrderPropositionFa
                 .ToEnumerable()
                 .ToFunc<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(trueBecause),
+            new SpecDescription(trueBecause) { HasExplicitStatement = false },
             higherOrderOperation.CauseSelector);
     }
 }

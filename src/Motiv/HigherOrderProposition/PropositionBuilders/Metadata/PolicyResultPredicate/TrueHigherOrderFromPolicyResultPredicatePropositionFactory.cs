@@ -30,7 +30,7 @@ public readonly partial struct TrueHigherOrderFromPolicyResultPredicatePropositi
             higherOrderOperation.HigherOrderPredicate,
             eval => eval.Values,
             eval => eval.Values,
-            new SpecDescription(statement),
+            new SpecDescription(statement) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);
     }
 }

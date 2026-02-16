@@ -44,7 +44,7 @@ internal sealed class Proposition<TModel, TMetadata>(
         var reason = new Lazy<string> (() =>
             metadata.Value switch
             {
-                string because => because.ToReason(isSatisfied),
+                string because => because,
                 _ => Description.ToReason(isSatisfied)
             });
 

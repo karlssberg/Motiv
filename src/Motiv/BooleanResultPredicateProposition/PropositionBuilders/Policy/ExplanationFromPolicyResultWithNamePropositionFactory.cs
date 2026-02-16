@@ -45,7 +45,7 @@ public readonly struct ExplanationFromPolicyResultWithNamePropositionFactory<TMo
             predicate,
             trueBecause.ToFunc<TModel, PolicyResultBase<TMetadata>, string>(),
             falseBecause,
-            new SpecDescription(statement)
+            new SpecDescription(statement) { HasExplicitStatement = true }
         );
     }
 }
