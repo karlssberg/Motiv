@@ -40,8 +40,15 @@ internal sealed class HigherOrderFromBooleanPredicateProposition<TModel, TMetada
                 _ => specDescription.ToReason(isSatisfied)
             });
 
+        var reason = new Lazy<string>(() =>
+            metadata.Value switch
+            {
+                string because when !Description.HasExplicitStatement => because,
+                _ => specDescription.ToReason(isSatisfied)
+            });
+
         var resultDescription = new Lazy<BooleanResultDescription>(() =>
-            new BooleanResultDescription(specDescription.ToReason(isSatisfied), Description.Statement));
+            new BooleanResultDescription(reason.Value, Description.Statement));
 
         return new HigherOrderFromBooleanPredicatePolicyResult<TMetadata>(
             isSatisfied,

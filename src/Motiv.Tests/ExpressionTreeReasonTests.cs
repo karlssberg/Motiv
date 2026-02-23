@@ -28,7 +28,7 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.ShouldBe("is-positive == true | is-positive == true | is-positive == true | is-positive == true");
+        act.Reason.ShouldBe("(is-positive == true) | (is-positive == true) | (is-positive == true) | (is-positive == true)");
     }
 
 
@@ -62,7 +62,7 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Reason.ShouldBe("is-positive == true | is-positive == true | is-positive == true | is-positive == true");
+        act.Reason.ShouldBe("(is-positive == true) | (is-positive == true) | (is-positive == true) | (is-positive == true)");
     }
 
     [Fact]
@@ -71,21 +71,21 @@ public class ExpressionTreeReasonests
         // Assemble
         var literal = Spec
             .From((int n) => n > 0)
-            .WhenTrue("is positive")
+            .WhenTrue("invalid")
             .WhenFalse("invalid")
-            .Create("invalid");
+            .Create("is positive");
 
         var modelCallback = Spec
             .From((int n) => n > 0)
-            .WhenTrue(_ => "is positive")
+            .WhenTrue(_ => "invalid")
             .WhenFalse("invalid")
-            .Create("invalid");
+            .Create("is positive");
 
         var resultCallback = Spec
             .From((int n) => n > 0)
-            .WhenTrue((_, _) => "is positive")
+            .WhenTrue((_, _) => "invalid")
             .WhenFalse("invalid")
-            .Create("invalid");
+            .Create("is positive");
 
         var multipleCallback = Spec
             .From((int n) => n > 0)
@@ -99,7 +99,7 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.ShouldBe("is positive == true | is positive == true | is positive == true | is positive == true");
+        act.Reason.ShouldBe("(is positive == true) | (is positive == true) | (is positive == true) | (is positive == true)");
     }
 
     [Fact]
@@ -109,23 +109,23 @@ public class ExpressionTreeReasonests
         var literal = Spec
             .From((int n) => n > 0)
             .AsAnySatisfied()
-            .WhenTrue("is positive")
+            .WhenTrue("invalid")
             .WhenFalse("invalid")
-            .Create("invalid");
+            .Create("is positive");
 
         var modelCallback = Spec
             .From((int n) => n > 0)
             .AsAllSatisfied()
-            .WhenTrue(_ => "is positive")
+            .WhenTrue(_ => "invalid")
             .WhenFalse("invalid")
-            .Create("invalid");
+            .Create("is positive");
 
         var resultCallback = Spec
             .From((int n) => n > 0)
             .AsNSatisfied(1)
             .WhenTrue(_ => "is positive")
             .WhenFalse("invalid")
-            .Create("invalid");
+            .Create("is positive");
 
         var multipleCallback = Spec
             .From((int n) => n > 0)
@@ -140,6 +140,6 @@ public class ExpressionTreeReasonests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Reason.ShouldBe("is positive == true | is positive == true | is positive == true | is positive == true");
+        act.Reason.ShouldBe("(is positive == true) | (is positive == true) | (is positive == true) | (is positive == true)");
     }
 }

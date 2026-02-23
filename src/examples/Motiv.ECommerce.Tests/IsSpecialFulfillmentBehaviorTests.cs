@@ -39,13 +39,13 @@ public class IsSpecialFulfillmentBehaviorTests
         // Assert
         act.ShouldBe(
             """
-            should ship from store
-                should ship some products from store
+            should ship from store == true
+                should ship some products from store == true
                     AND
-                        Brand Model is out of stock at warehouse
+                        is out of stock == true
                             (InventoryPricedProduct product) => product.WarehouseStockLevel == 0 == true
                                 product.WarehouseStockLevel == 0
-                        Brand Model is available in store
+                        is available in store == true
                             (InventoryPricedProduct product) => product.InStoreStockLevel > 0 == true
                                 product.InStoreStockLevel > 0
             """);
@@ -67,8 +67,8 @@ public class IsSpecialFulfillmentBehaviorTests
         // Assert
         act.ShouldBe(
             """
-            should deliver same day
-                is same day delivery
+            should deliver same day == true
+                is same day delivery == true
                     (FulfillmentContext context) => context.DistanceFromStore < 10 == true
                         context.DistanceFromStore < 10
             """);
@@ -90,8 +90,8 @@ public class IsSpecialFulfillmentBehaviorTests
         // Assert
         act.ShouldBe(
             """
-            should split order
-                is expensive
+            should split order == true
+                is expensive == true
                     (FulfillmentContext context) => context.Order.Products.Sum((InventoryPricedProduct product) => product.Price) > 1000 == true
                         context.Order.Products.Sum((InventoryPricedProduct product) => product.Price) > 1000
             """);
@@ -113,11 +113,10 @@ public class IsSpecialFulfillmentBehaviorTests
         // Assert
         act.ShouldBe(
             """
-            should locally fulfill
-                any perishable
-                    Brand Model is perishable
-                        (InventoryPricedProduct product) => product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30) == true
-                            product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30)
+            should locally fulfill == true
+                any perishable == true
+                    (InventoryPricedProduct product) => product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30) == true
+                        product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30)
             """);
     }
 

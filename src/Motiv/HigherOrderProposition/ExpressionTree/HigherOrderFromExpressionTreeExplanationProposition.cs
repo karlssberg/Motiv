@@ -42,11 +42,15 @@ internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel
                     : falseBecause(booleanCollectionResults);
             });
 
+        var reason = new Lazy<string>(() =>
+            description.HasExplicitStatement
+                ? description.ToReason(isSatisfied)
+                : assertion.Value);
+
         var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderExpressionTreeResultDescription<string>(
                 isSatisfied,
-                assertion.Value,
-                [],
+                reason.Value,
                 expression,
                 causes.Value,
                 Description.Statement));

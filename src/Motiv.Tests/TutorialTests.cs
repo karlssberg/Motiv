@@ -10,8 +10,8 @@ public class TutorialTests
             .Create("is even");
 
         isEven.IsSatisfiedBy(2).Satisfied.ShouldBeTrue();
-        isEven.IsSatisfiedBy(2).Reason.ShouldBe("is even");
-        isEven.IsSatisfiedBy(2).Assertions.ShouldBe(["is even"]);
+        isEven.IsSatisfiedBy(2).Reason.ShouldBe("is even == true");
+        isEven.IsSatisfiedBy(2).Assertions.ShouldBe(["is even == true"]);
 
         isEven.IsSatisfiedBy(3).Satisfied.ShouldBeFalse();
         isEven.IsSatisfiedBy(3).Reason.ShouldBe("is even == false");
@@ -60,7 +60,7 @@ public class TutorialTests
             .Create("is even number");
 
         isEven.IsSatisfiedBy(2).Satisfied.ShouldBeTrue();
-        isEven.IsSatisfiedBy(2).Reason.ShouldBe("is even number");
+        isEven.IsSatisfiedBy(2).Reason.ShouldBe("is even number == true");
         isEven.IsSatisfiedBy(2).Values.Select(m => m.English).ShouldBe(["the number is even"]);
         isEven.IsSatisfiedBy(2).Values.Select(m => m.Spanish).ShouldBe(["el número es par"]);
     }
@@ -505,10 +505,14 @@ public class TutorialTests
     {
         var isFizz =
             Spec.Build((int n) => n % 3 == 0)
+                .WhenTrue("fizz")
+                .WhenFalse("")
                 .Create("fizz");
 
         var isBuzz =
             Spec.Build((int n) => n % 5 == 0)
+                .WhenTrue("buzz")
+                .WhenFalse("")
                 .Create("buzz");
 
         var isSubstitution =
@@ -538,12 +542,12 @@ public class TutorialTests
         var result = isPartiallyFull.IsSatisfiedBy(5);
 
         result.Satisfied.ShouldBeTrue();
-        result.Assertions.ShouldBe(["valid", "empty == false", "full == false"]);
-        result.Reason.ShouldBe("valid & !((empty == false) | (full == false))");
+        result.Assertions.ShouldBe(["valid == true", "empty == false", "full == false"]);
+        result.Reason.ShouldBe("(valid == true) & !((empty == false) | (full == false))");
         result.Justification.ShouldBe(
             """
             AND
-                valid
+                valid == true
                 NOR
                     empty == false
                     full == false
@@ -577,8 +581,8 @@ public class TutorialTests
                 .WhenFalse("none")
                 .Create("xor");
 
-        spec.IsSatisfiedBy(true).Assertions.ShouldBe(["left"]);
-        spec.IsSatisfiedBy(false).Assertions.ShouldBe(["right"]);
+        spec.IsSatisfiedBy(true).Assertions.ShouldBe(["left == true"]);
+        spec.IsSatisfiedBy(false).Assertions.ShouldBe(["right == true"]);
     }
 
     [Fact]

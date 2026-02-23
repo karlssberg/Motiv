@@ -42,10 +42,16 @@ internal sealed class HigherOrderFromPolicyResultMetadataProposition<TModel, TMe
                 _ => specDescription.ToReason(isSatisfied)
             });
 
+        var reason = new Lazy<string>(() =>
+            metadata.Value switch
+            {
+                string reasons when !Description.HasExplicitStatement => reasons,
+                _ => specDescription.ToReason(isSatisfied)
+            });
+
         var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderResultDescription<TUnderlyingMetadata>(
-                assertion.Value,
-                [],
+                reason.Value,
                 causes.Value,
                 Description.Statement));
 

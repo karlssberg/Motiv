@@ -50,7 +50,7 @@ public class NotPolicyTests
     }
 
     [Theory]
-    [InlineAutoData(true, "!is true")]
+    [InlineAutoData(true, "!(is true == true)")]
     [InlineAutoData(false, "!(is true == false)")]
     public void Should_serialize_the_result_of_the_not_operation(
         bool predicateResult,

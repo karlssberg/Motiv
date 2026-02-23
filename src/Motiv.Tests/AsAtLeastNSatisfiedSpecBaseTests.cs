@@ -890,31 +890,31 @@ public class AsAtLeastNSatisfiedSpecBaseTests
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at least one satisfied
-                                                is true
+                                                is true == true
                                             """)]
     [InlineAutoData(false, true, false,  """
                                             at least one satisfied
-                                                is true
+                                                is true == true
                                             """)]
     [InlineAutoData(false, true, true,   """
                                             at least one satisfied
-                                                is true
+                                                is true == true
                                             """)]
     [InlineAutoData(true, false, false,  """
                                             at least one satisfied
-                                                is true
+                                                is true == true
                                             """)]
     [InlineAutoData(true, false, true,   """
                                             at least one satisfied
-                                                is true
+                                                is true == true
                                             """)]
     [InlineAutoData(true, true, false,   """
                                             at least one satisfied
-                                                is true
+                                                is true == true
                                             """)]
     [InlineAutoData(true, true, true,    """
                                             at least one satisfied
-                                                is true
+                                                is true == true
                                             """)]
     public void Should_serialize_the_result_of_the_at_least_n_satisified_operation(
         bool first,
@@ -1065,14 +1065,14 @@ public class AsAtLeastNSatisfiedSpecBaseTests
 
 
     [Theory]
-    [InlineData(false, false, false, "at least 2 true == false")]
-    [InlineData(false, false, true, "at least 2 true == false")]
-    [InlineData(false, true, false, "at least 2 true == false")]
-    [InlineData(false, true, true, "at least 2 true")]
-    [InlineData(true, false, false, "at least 2 true == false")]
-    [InlineData(true, false, true, "at least 2 true")]
-    [InlineData(true, true, false, "at least 2 true")]
-    [InlineData(true, true, true, "at least 2 true")]
+    [InlineData(false, false, false, "at least 2 are true == false")]
+    [InlineData(false, false, true, "at least 2 are true == false")]
+    [InlineData(false, true, false, "at least 2 are true == false")]
+    [InlineData(false, true, true, "at least 2 are true == true")]
+    [InlineData(true, false, false, "at least 2 are true == false")]
+    [InlineData(true, false, true, "at least 2 are true == true")]
+    [InlineData(true, true, false, "at least 2 are true == true")]
+    [InlineData(true, true, true, "at least 2 are true == true")]
     public void Should_supply_a_reason_when_using_a_boolean_predicate_function(
         bool first,
         bool second,
@@ -1133,14 +1133,14 @@ public class AsAtLeastNSatisfiedSpecBaseTests
     }
 
     [Theory]
-    [InlineData(false, false, false, "at least 2 true == false")]
-    [InlineData(false, false, true, "at least 2 true == false")]
-    [InlineData(false, true, false, "at least 2 true == false")]
-    [InlineData(false, true, true, "at least 2 true")]
-    [InlineData(true, false, false, "at least 2 true == false")]
-    [InlineData(true, false, true, "at least 2 true")]
-    [InlineData(true, true, false, "at least 2 true")]
-    [InlineData(true, true, true, "at least 2 true")]
+    [InlineData(false, false, false, "at least 2 are true == false")]
+    [InlineData(false, false, true, "at least 2 are true == false")]
+    [InlineData(false, true, false, "at least 2 are true == false")]
+    [InlineData(false, true, true, "at least 2 are true == true")]
+    [InlineData(true, false, false, "at least 2 are true == false")]
+    [InlineData(true, false, true, "at least 2 are true == true")]
+    [InlineData(true, true, false, "at least 2 are true == true")]
+    [InlineData(true, true, true, "at least 2 are true == true" )]
     public void Should_supply_a_reason_when_using_a_boolean_result_predicate_function(
         bool first,
         bool second,

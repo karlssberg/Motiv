@@ -31,6 +31,11 @@ internal sealed class ExpressionTreeWithSingleTrueAssertionProposition<TModel, T
                 false => whenFalse(model, result)
             });
 
+        var reason = new Lazy<string>(() =>
+            description.HasExplicitStatement
+            ? description.ToReason(result.Satisfied)
+            : assertion.Value);
+
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(
                 assertion.Value,
@@ -44,7 +49,7 @@ internal sealed class ExpressionTreeWithSingleTrueAssertionProposition<TModel, T
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new ExpressionTreeBooleanResultDescription(
                 result,
-                assertion.Value,
+                reason.Value,
                 expression,
                 Description.Statement));
 

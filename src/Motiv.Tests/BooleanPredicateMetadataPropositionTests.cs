@@ -58,7 +58,7 @@ public class BooleanPredicateMetadataPropositionTests
     [InlineData(false, false, "is first true == true", "is second true == true", "is third true == true", "is fourth true == true")]
     [InlineData(false, true, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false")]
     [InlineData(true, false, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false")]
-    [InlineData(true, true, "is first true  == true", "is second true == true", "is third true == true", "is fourth true == true")]
+    [InlineData(true, true, "is first true == true", "is second true == true", "is third true == true", "is fourth true == true")]
     public void Should_use_proposition_statement_when_generating_assertions_for_metadata_propositions(
         bool model,
         bool other,

@@ -33,6 +33,11 @@ internal sealed class ExpressionTreeExplanationProposition<TModel, TPredicateRes
                 result.ToEnumerable(),
                 result.ToEnumerable()));
 
+        var reason = new Lazy<string>(() =>
+            description.HasExplicitStatement
+                ? description.ToReason(result.Satisfied)
+                : assertion.Value);
+
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(assertion.Value.ToEnumerable(),
                 result.ToEnumerable()));
@@ -40,7 +45,7 @@ internal sealed class ExpressionTreeExplanationProposition<TModel, TPredicateRes
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new ExpressionTreeBooleanResultDescription(
                 result,
-                assertion.Value,
+                reason.Value,
                 expression,
                 Description.Statement));
 

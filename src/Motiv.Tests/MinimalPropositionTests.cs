@@ -22,7 +22,7 @@ public class MinimalPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "is true")]
+    [InlineData(true, "is true == true")]
     [InlineData(false, "is true == false")]
     public void Should_evaluate_reason_of_a_minimal_proposition(bool model, string expectedReason)
     {
@@ -41,11 +41,11 @@ public class MinimalPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "is true", "is true")]
+    [InlineData(true, "is true", "is true == true")]
     [InlineData(false, "is true", "is true == false")]
-    [InlineData(true, "is true (with brackets)", "(is true (with brackets))")]
+    [InlineData(true, "is true (with brackets)", "(is true (with brackets)) == true")]
     [InlineData(false, "is true (with brackets)", "(is true (with brackets)) == false")]
-    [InlineData(true, "is true!", "(is true!)")]
+    [InlineData(true, "is true!", "(is true!) == true")]
     [InlineData(false, "is true!", "(is true!) == false")]
     public void Should_escape_propositional_statement_when_evaluated(bool model, string propositionalStatement, string expectedReason)
     {

@@ -372,9 +372,9 @@ public class OrElsePolicyTests
 
     [Theory]
     [InlineData(false, false, "left == false", "right == false")]
-    [InlineData(false, true, "right")]
-    [InlineData(true, false, "left")]
-    [InlineData(true, true, "left")]
+    [InlineData(false, true, "right == true")]
+    [InlineData(true, false, "left == true")]
+    [InlineData(true, true, "left == true")]
     public void Should_yield_metadata_for_OrElse_operation_between_different_metadata_types(
         bool leftValue,
         bool rightValue,
@@ -487,17 +487,17 @@ public class OrElsePolicyTests
     [InlineData(true, true,
         """
         NOR ELSE
-            left
+            left == true
         """)]
     [InlineData(true, false,
         """
         NOR ELSE
-            left
+            left == true
         """)]
     [InlineData(false, true,
         """
         NOR ELSE
-            right
+            right == true
         """)]
     [InlineData(false, false,
         """
@@ -521,17 +521,17 @@ public class OrElsePolicyTests
     [InlineData(true, true,
         """
         OR ELSE
-            left
+            left == true
         """)]
     [InlineData(true, false,
         """
         OR ELSE
-            left
+            left == true
         """)]
     [InlineData(false, true,
         """
         OR ELSE
-            right
+            right == true
         """)]
     [InlineData(false, false,
         """
@@ -555,17 +555,17 @@ public class OrElsePolicyTests
     [InlineData(true, true,
         """
         NOR ELSE
-            left
+            left == true
         """)]
     [InlineData(true, false,
         """
         NOR ELSE
-            left
+            left == true
         """)]
     [InlineData(false, true,
         """
         NOR ELSE
-            right
+            right == true
         """)]
     [InlineData(false, false,
         """

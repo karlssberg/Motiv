@@ -50,7 +50,6 @@ internal sealed class HigherOrderFromExpressionTreeMetadataProposition<TModel, T
             new HigherOrderExpressionTreeResultDescription<string>(
                 isSatisfied,
                 Description.ToReason(isSatisfied),
-                [],
                 expression,
                 causes.Value,
                 Description.Statement));

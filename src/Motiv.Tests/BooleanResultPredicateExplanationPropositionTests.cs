@@ -585,14 +585,13 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion")]
-    [InlineData(false, "false assertion")]
+    [InlineData(true, "(propositional statement == true) & (propositional statement == true) & (propositional statement == true)")]
+    [InlineData(false, "(propositional statement == false) & (propositional statement == false) & (propositional statement == false)")]
     public void Should_use_the_propositional_statement_in_the_reason_for_policy_results(
         bool model,
-        string expectedReasonStatement)
+        string expectedReason)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -784,8 +783,8 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion == true")]
-    [InlineData(false, "false assertion == false")]
+    [InlineData(true, "propositional statement == true")]
+    [InlineData(false, "propositional statement == false")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_for_policy_results(
         bool model,
         string expectedReasonStatement)
@@ -828,17 +827,14 @@ public class BooleanResultPredicateExplanationPropositionTests
         act.ShouldBe(expectedReason);
     }
 
-
-
     [Theory]
-    [InlineData(true, "true assertion == true")]
-    [InlineData(false, "false assertion == false")]
+    [InlineData(true, "(propositional statement == true) & (propositional statement == true) & (propositional statement == true)")]
+    [InlineData(false, "(propositional statement == false) & (propositional statement == false) & (propositional statement == false)")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_for_boolean_results(
         bool model,
-        string expectedReasonStatement)
+        string expectedReason)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3).Select(s => s.EndsWith(" == false") || s.EndsWith(" == true") ? $"({s})" : s));
 
         var underlying =
             Spec.Build((bool m) => m)

@@ -17,7 +17,7 @@ public class ExpressionTreeJustificationTests
         """)]
     [InlineData(1,
         """
-        is-positive
+        is-positive == true
             (int n) => n > 0 == true
                 n > 0
         """)]
@@ -38,19 +38,19 @@ public class ExpressionTreeJustificationTests
     [Theory]
     [InlineData(-1,
         """
-        n is not positive
+        is-positive == false
             (int n) => n > 0 == false
                 n <= 0
         """)]
     [InlineData(0,
         """
-        n is not positive
+        is-positive == false
             (int n) => n > 0 == false
                 n <= 0
         """)]
     [InlineData(1,
         """
-        n is positive
+        is-positive == true
             (int n) => n > 0 == true
                 n > 0
         """)]
@@ -75,21 +75,21 @@ public class ExpressionTreeJustificationTests
     [InlineData(-1,
         """
         any-positive == false
-            n is not positive
+            is-positive == false
                 (int n) => n > 0 == false
                     n <= 0
         """)]
     [InlineData(0,
         """
         any-positive == false
-            n is not positive
+            is-positive == false
                 (int n) => n > 0 == false
                     n <= 0
         """)]
     [InlineData(1,
         """
-        any-positive
-            n is positive
+        any-positive == true
+            is-positive == true
                 (int n) => n > 0 == true
                     n > 0
         """)]
@@ -117,37 +117,22 @@ public class ExpressionTreeJustificationTests
     [Theory]
     [InlineData(
         """
-        none positive
-            -1 is not positive
-                (int n) => n > 0 == false
-                    n <= 0
-            -2 is not positive
-                (int n) => n > 0 == false
-                    n <= 0
-            -3 is not positive
+        any-positive == false
+            is-positive == false
                 (int n) => n > 0 == false
                     n <= 0
         """, -1, -2, -3)]
     [InlineData(
         """
-        none positive
-            0 is not positive
-                (int n) => n > 0 == false
-                    n <= 0
-            -1 is not positive
-                (int n) => n > 0 == false
-                    n <= 0
-            -2 is not positive
+        any-positive == false
+            is-positive == false
                 (int n) => n > 0 == false
                     n <= 0
         """, 0, -1, -2)]
     [InlineData(
         """
-        some positive
-            1 is positive
-                (int n) => n > 0 == true
-                    n > 0
-            2 is positive
+        any-positive == true
+            is-positive == true
                 (int n) => n > 0 == true
                     n > 0
         """, 0, 1, 2)]
@@ -176,12 +161,10 @@ public class ExpressionTreeJustificationTests
         act.Justification.ShouldBe(expectedResult);
     }
 
-
-
     [Theory]
     [InlineData(
         """
-        none positive
+        any-positive == false
             -1 is not positive
                 (int n) => n > 0 == false
                     n <= 0
@@ -194,7 +177,7 @@ public class ExpressionTreeJustificationTests
         """, -1, -2, -3)]
     [InlineData(
         """
-        none positive
+        any-positive == false
             0 is not positive
                 (int n) => n > 0 == false
                     n <= 0
@@ -207,7 +190,7 @@ public class ExpressionTreeJustificationTests
         """, 0, -1, -2)]
     [InlineData(
         """
-        some positive
+        any-positive == true
             1 is positive
                 (int n) => n > 0 == true
                     n > 0
@@ -243,19 +226,19 @@ public class ExpressionTreeJustificationTests
     [Theory]
     [InlineData(
         """
-        3x not positive
+        any positive == false
             (int n) => n > 0 == false
                 n <= 0
         """, -1, -2, -3)]
     [InlineData(
         """
-        3x not positive
+        any positive == false
             (int n) => n > 0 == false
                 n <= 0
         """, 0, -1, -2)]
     [InlineData(
         """
-        2x positive
+        any positive == true
             (int n) => n > 0 == true
                 n > 0
         """, 0, 1, 2)]
@@ -283,27 +266,22 @@ public class ExpressionTreeJustificationTests
         """
         should create guid == false
             any positive == false
-                none positive
-                    (decimal n) => n > 0 == false
-                        n <= 0
+                (decimal n) => n > 0 == false
+                    n <= 0
         """, -1, -2, -3)]
     [InlineData(
         """
-        should create guid
-            any positive
-                1 is positive
-                    (decimal n) => n > 0 == true
-                        n > 0
+        should create guid == true
+            any positive == true
+                (decimal n) => n > 0 == true
+                    n > 0
         """, 1, 0, -1)]
     [InlineData(
         """
-        should create guid
-            any positive
-                1 is positive
-                2 is positive
-                3 is positive
-                    (decimal n) => n > 0 == true
-                        n > 0
+        should create guid == true
+            any positive == true
+                (decimal n) => n > 0 == true
+                    n > 0
         """, 1, 2, 3)]
     public void Should_insert_yielded_assertions_of_encapsulated_higher_order(
         string expectedResult,
@@ -333,7 +311,7 @@ public class ExpressionTreeJustificationTests
 
     [Theory]
     [InlineData("""
-                any admins
+                any admins == true
                     (IEnumerable<string> roles) => roles.Any((string role) => role == "admin") == true
                         roles.Any((string role) => role == "admin") == true
                             (string role) => role == "admin" == true
@@ -362,7 +340,7 @@ public class ExpressionTreeJustificationTests
 
     [Theory]
     [InlineData("""
-                any admins
+                any admins == true
                     (IEnumerable<string> roles) => roles.Any((string role) => isAdminResult) == true
                         roles.Any((string role) => isAdminResult) == true
                             (string role) => isAdminResult == true
@@ -399,7 +377,7 @@ public class ExpressionTreeJustificationTests
     [Theory]
     [InlineData(
         """
-        any admins or super users
+        any admins or super users == true
             (IEnumerable<string> roles) => roles.Any((string role) => isSuperUser || isAdminResult) == true
                 roles.Any((string role) => isSuperUser || isAdminResult) == true
                     (string role) => (isSuperUser || isAdminResult) == true
@@ -409,7 +387,7 @@ public class ExpressionTreeJustificationTests
         "admin")]
     [InlineData(
         """
-        any admins or super users
+        any admins or super users == true
             (IEnumerable<string> roles) => roles.Any((string role) => isSuperUser || isAdminResult) == true
                 roles.Any((string role) => isSuperUser || isAdminResult) == true
                     (string role) => (isSuperUser || isAdminResult) == true
@@ -458,7 +436,7 @@ public class ExpressionTreeJustificationTests
     [Theory]
     [InlineData(
         """
-        any admins or super users
+        any admins or super users == true
             (IEnumerable<string> roles) => roles.Any(isSuperUser | isAdminResult) == true
                 roles.Any(isSuperUser | isAdminResult) == true
                     OR
@@ -467,7 +445,7 @@ public class ExpressionTreeJustificationTests
         "admin")]
     [InlineData(
         """
-        any admins or super users
+        any admins or super users == true
             (IEnumerable<string> roles) => roles.Any(isSuperUser | isAdminResult) == true
                 roles.Any(isSuperUser | isAdminResult) == true
                     OR
@@ -513,7 +491,7 @@ public class ExpressionTreeJustificationTests
     [Theory]
     [InlineData(
         """
-        all admins
+        all admins == true
             (IEnumerable<string> roles) => roles.All((string role) => isAdminResult) == true
                 roles.All((string role) => isAdminResult) == true
                     (string role) => isAdminResult == true
@@ -553,7 +531,7 @@ public class ExpressionTreeJustificationTests
     [Theory]
     [InlineData(
         """
-        all admins or super users
+        all admins or super users == true
             (IEnumerable<string> roles) => roles.All((string role) => isSuperUser || isAdminResult) == true
                 roles.All((string role) => isSuperUser || isAdminResult) == true
                     (string role) => (isSuperUser || isAdminResult) == true
@@ -563,7 +541,7 @@ public class ExpressionTreeJustificationTests
         "admin")]
     [InlineData(
         """
-        all admins or super users
+        all admins or super users == true
             (IEnumerable<string> roles) => roles.All((string role) => isSuperUser || isAdminResult) == true
                 roles.All((string role) => isSuperUser || isAdminResult) == true
                     (string role) => (isSuperUser || isAdminResult) == true
@@ -612,7 +590,7 @@ public class ExpressionTreeJustificationTests
     [Theory]
     [InlineData(
         """
-        all admins or super users
+        all admins or super users == true
             (IEnumerable<string> roles) => roles.All(isSuperUser | isAdminResult) == true
                 roles.All(isSuperUser | isAdminResult) == true
                     OR
@@ -621,7 +599,7 @@ public class ExpressionTreeJustificationTests
         "admin")]
     [InlineData(
         """
-        all admins or super users
+        all admins or super users == true
             (IEnumerable<string> roles) => roles.All(isSuperUser | isAdminResult) == true
                 roles.All(isSuperUser | isAdminResult) == true
                     OR
@@ -694,7 +672,7 @@ public class ExpressionTreeJustificationTests
 
         result.Justification.ShouldBe(
             """
-            any positive
+            any positive == true
                 (ICollection<int> numbers) => numbers.Any((int n) => n > 0) == true
                     numbers.Any((int n) => n > 0) == true
                         (int n) => n > 0 == true
@@ -732,7 +710,7 @@ public class ExpressionTreeJustificationTests
 
         result.Justification.ShouldBe(
             """
-            any positive
+            any positive == true
                 (int[] numbers) => numbers.Any((int n) => n > 0) == true
                     numbers.Any((int n) => n > 0) == true
                         (int n) => n > 0 == true
@@ -742,23 +720,23 @@ public class ExpressionTreeJustificationTests
 
     [Theory]
     [InlineData("""
-                is admin
+                is admin == true
                     (ICollection<string> users) => (users.Any((string user) => user == "root") || users.Count == 1) == true
-                        OR
+                        OR ELSE
                             users.Any((string user) => user == "root") == true
                                 (string user) => user == "root" == true
                                     user == "root"
                 """, "root")]
     [InlineData("""
-                is admin
+                is admin == true
                     (ICollection<string> users) => (users.Any((string user) => user == "root") || users.Count == 1) == true
-                        OR
+                        OR ELSE
                             users.Count == 1
                 """, "user")]
     [InlineData("""
                 is admin == false
                     (ICollection<string> users) => (users.Any((string user) => user == "root") || users.Count == 1) == false
-                        OR
+                        OR ELSE
                             users.Any((string user) => user == "root") == false
                                 (string user) => user == "root" == false
                                     user != "root"

@@ -7,7 +7,6 @@ namespace Motiv.HigherOrderProposition;
 internal sealed class HigherOrderExpressionTreeResultDescription<TUnderlyingMetadata>(
     bool satisfied,
     string reason,
-    IEnumerable<string> additionalAssertions,
     LambdaExpression expression,
     IEnumerable<BooleanResultBase<TUnderlyingMetadata>> causes,
     string propositionStatement)
@@ -25,16 +24,16 @@ internal sealed class HigherOrderExpressionTreeResultDescription<TUnderlyingMeta
     {
         yield return Reason;
 
-        var distinctAssertions = additionalAssertions.DistinctWithOrderPreserved().ToArray();
-        var assertionIndent = distinctAssertions.Length > 0 ? 1 : 0;
-        foreach (var assertion in distinctAssertions)
-            yield return assertion.Indent(assertionIndent);
+        // var distinctAssertions = additionalAssertions.DistinctWithOrderPreserved().ToArray();
+        // var assertionIndent = distinctAssertions.Length > 0 ? 1 : 0;
+        // foreach (var assertion in distinctAssertions)
+        //     yield return assertion.Indent(assertionIndent);
 
-        yield return expression.ToAssertion(satisfied).Indent(assertionIndent + 1);
+        yield return expression.ToAssertion(satisfied).Indent();
 
         foreach (var line in GetUnderlyingJustificationsAsLines())
         {
-            yield return line.Indent(assertionIndent + 2);
+            yield return line.Indent(2);
         }
     }
 

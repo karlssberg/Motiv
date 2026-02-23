@@ -45,7 +45,6 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderResultDescription<TUnderlyingMetadata>(
                 specDescription.ToReason(isSatisfied),
-                typeof(TMetadata) == typeof(string) ? assertions.Value : [],
                 causes.Value,
                 Description.Statement));
 

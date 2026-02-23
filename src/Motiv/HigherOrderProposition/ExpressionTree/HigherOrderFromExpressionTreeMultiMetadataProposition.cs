@@ -51,7 +51,6 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
             new HigherOrderExpressionTreeResultDescription<string>(
                 isSatisfied,
                 Description.ToReason(isSatisfied),
-                typeof(TMetadata) == typeof(string) ? assertions.Value : [],
                 expression,
                 causes.Value,
                 Description.Statement));

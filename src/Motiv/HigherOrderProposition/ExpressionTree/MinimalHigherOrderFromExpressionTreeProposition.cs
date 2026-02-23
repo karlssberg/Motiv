@@ -34,7 +34,6 @@ internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TP
             new HigherOrderExpressionTreeResultDescription<string>(
                 isSatisfied,
                 Description.ToReason(isSatisfied),
-                [],
                 expression,
                 causes.Value,
                 Description.Statement));

@@ -236,15 +236,13 @@ public class HigherOrderExplanationPolicyTests
 
 
     [Theory]
-    [InlineData(true, "true assertion")]
-    [InlineData(false, "false assertion")]
+    [InlineData(true, "true assertion & true assertion")]
+    [InlineData(false, "false assertion & false assertion")]
     public void Should_harvest_propositionStatement_from_assertion(
         bool model,
-        string expectedReasonStatement)
+        string expectedReason)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
-
         var underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
@@ -275,20 +273,13 @@ public class HigherOrderExplanationPolicyTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion",  "true assertion", "propositional statement")]
-    [InlineData(false, "false assertion", "true assertion == false", "propositional statement == false")]
+    [InlineData(true, "(propositional statement == true) & (propositional statement == true) & (propositional statement == true) & (true assertion == true)")]
+    [InlineData(false, "(propositional statement == false) & (propositional statement == false) & (propositional statement == false) & (true assertion == false)")]
     public void Should_use_the_propositional_statement_in_the_reason(
         bool model,
-        string expectedAssertion,
-        string expectedImplicitAssertion,
-        string expectedReasonStatement)
+        string expectedReason)
     {
         // Arrange
-        var expectedReason = string.Join(" & ",
-            expectedAssertion,
-            expectedAssertion,
-            expectedReasonStatement,
-            expectedImplicitAssertion);
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -337,18 +328,13 @@ public class HigherOrderExplanationPolicyTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion", "propositional statement")]
-    [InlineData(false, "false assertion", "propositional statement == false")]
+    [InlineData(true, "(propositional statement == true) & (propositional statement == true) & (propositional statement == true) & (propositional statement == true)")]
+    [InlineData(false, "(propositional statement == false) & (propositional statement == false) & (propositional statement == false) & (propositional statement == false)")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback(
         bool model,
-        string expectedAssertion,
-        string expectedReasonStatement)
+        string expectedReason)
     {
         // Arrange
-        var expectedReason = string.Join(" & ",
-            expectedAssertion,
-            expectedAssertion,
-            expectedReasonStatement);
 
         var underlying =
             Spec.Build((bool m) => m)
@@ -397,19 +383,13 @@ public class HigherOrderExplanationPolicyTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion", "propositional statement")]
-    [InlineData(false, "false assertion", "propositional statement == false")]
+    [InlineData(true, "(propositional statement == true) & (propositional statement == true) & (propositional statement == true) & (propositional statement == true)")]
+    [InlineData(false, "(propositional statement == false) & (propositional statement == false) & (propositional statement == false) & (propositional statement == false)")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback(
         bool model,
-        string expectedAssertion,
-        string expectedReasonStatement)
+        string expectedReason)
     {
         // Arrange
-        var expectedReason = string.Join(" & ",
-            expectedAssertion,
-            expectedAssertion,
-            expectedReasonStatement);
-
         var underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");
@@ -457,15 +437,13 @@ public class HigherOrderExplanationPolicyTests
     }
 
     [Theory]
-    [InlineData(true, "propositional statement")]
-    [InlineData(false, "propositional statement == false")]
+    [InlineData(true, "(propositional statement == true) & (propositional statement == true) & (propositional statement == true)")]
+    [InlineData(false, "(propositional statement == false) & (propositional statement == false) & (propositional statement == false)")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_that_returns_a_collection(
         bool model,
-        string expectedReasonStatement)
+        string expectedReason)
     {
         // Arrange
-        var expectedReason = string.Join(" & ", Enumerable.Repeat(expectedReasonStatement, 3));
-
         var underlying =
             Spec.Build((bool m) => m)
                 .Create("is underlying true");

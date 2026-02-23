@@ -234,10 +234,10 @@ public class AsNSatisfiedSpecTests
     [Theory]   [InlineData(false, false, false, "2 are true == false")]
     [InlineData(false, false, true, "2 are true == false")]
     [InlineData(false, true, false, "2 are true == false")]
-    [InlineData(false, true, true, "2 are true")]
+    [InlineData(false, true, true, "2 are true == true")]
     [InlineData(true, false, false, "2 are true == false")]
-    [InlineData(true, false, true, "2 are true")]
-    [InlineData(true, true, false, "2 are true")]
+    [InlineData(true, false, true, "2 are true == true")]
+    [InlineData(true, true, false, "2 are true == true")]
     [InlineData(true, true, true, "2 are true == false")]
     public void Should_perform_a_none_satisfied_operation_when_using_a_boolean_predicate_function(
         bool first,
@@ -293,14 +293,14 @@ public class AsNSatisfiedSpecTests
     }
 
     [Theory]
-    [InlineData(false, false, false, "2 are true == false")]
-    [InlineData(false, false, true, "2 are true == false")]
-    [InlineData(false, true, false, "2 are true == false")]
-    [InlineData(false, true, true, "2 are true")]
-    [InlineData(true, false, false, "2 are true == false")]
-    [InlineData(true, false, true, "2 are true")]
-    [InlineData(true, true, false, "2 are true")]
-    [InlineData(true, true, true, "2 are true == false")]
+    [InlineData(false, false, false, "none true == false")]
+    [InlineData(false, false, true, "none true == false")]
+    [InlineData(false, true, false, "none true == false")]
+    [InlineData(false, true, true, "none true == true")]
+    [InlineData(true, false, false, "none true == false")]
+    [InlineData(true, false, true, "none true == true")]
+    [InlineData(true, true, false, "none true == true")]
+    [InlineData(true, true, true, "none true == false")]
     public void Should_provide_a_reason_for_an_n_satisfied_operation_when_using_a_boolean_result_predicate_function_with_metadata(
         bool first,
         bool second,
@@ -359,14 +359,14 @@ public class AsNSatisfiedSpecTests
     }
 
     [Theory]
-    [InlineData(false, false, false, "2 are true == false")]
-    [InlineData(false, false, true, "2 are true == false")]
-    [InlineData(false, true, false, "2 are true == false")]
-    [InlineData(false, true, true, "2 are true")]
-    [InlineData(true, false, false, "2 are true == false")]
-    [InlineData(true, false, true, "2 are true")]
-    [InlineData(true, true, false, "2 are true")]
-    [InlineData(true, true, true, "2 are true == false")]
+    [InlineData(false, false, false, "2 true == false")]
+    [InlineData(false, false, true, "2 true == false")]
+    [InlineData(false, true, false, "2 true == false")]
+    [InlineData(false, true, true, "2 true == true")]
+    [InlineData(true, false, false, "2 true == false")]
+    [InlineData(true, false, true, "2 true == true")]
+    [InlineData(true, true, false, "2 true == true")]
+    [InlineData(true, true, true, "2 true == false")]
     public void Should_provide_a_reason_an_n_satisfied_operation_when_using_a_boolean_result_predicate_function(
         bool first,
         bool second,
@@ -382,7 +382,7 @@ public class AsNSatisfiedSpecTests
             Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
                 .AsNSatisfied(2)
                 .WhenTrue(_ => "2 are true")
-                .WhenFalse(_ => "2 are true == false")
+                .WhenFalse(_ => "2 are true")
                 .Create("2 true");
 
         var result = spec.IsSatisfiedBy([first, second, third]);

@@ -528,7 +528,7 @@ public class SpecTests
         var act = sut.IsSatisfiedBy(false);
 
         // Assert
-        act.Values.ShouldBe(["is true"]);
+        act.Values.ShouldBe(["is true == true"]);
     }
 
     [Fact]
@@ -544,7 +544,7 @@ public class SpecTests
         var act = sut.IsSatisfiedBy(false);
 
         // Assert
-        act.Values.ShouldBe(["is true"]);
+        act.Values.ShouldBe(["is true == true"]);
     }
 }
 

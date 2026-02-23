@@ -4,7 +4,6 @@ namespace Motiv.HigherOrderProposition;
 
 internal sealed class HigherOrderResultDescription<TUnderlyingMetadata>(
     string reason,
-    IEnumerable<string> additionalAssertions,
     IEnumerable<BooleanResultBase<TUnderlyingMetadata>> causes,
     string propositionStatement)
     : ResultDescriptionBase
@@ -20,14 +19,14 @@ internal sealed class HigherOrderResultDescription<TUnderlyingMetadata>(
     public override IEnumerable<string> GetJustificationAsLines()
     {
         yield return Reason;
-        var distinctAssertions = additionalAssertions.DistinctWithOrderPreserved().ToArray();
-        var assertionIndent = distinctAssertions.Length > 0 ? 1 : 0;
-        foreach (var line in distinctAssertions)
-            yield return line.Indent(assertionIndent);
+        // var distinctAssertions = additionalAssertions.DistinctWithOrderPreserved().ToArray();
+        // var assertionIndent = distinctAssertions.Length > 0 ? 1 : 0;
+        // foreach (var line in distinctAssertions)
+        //     yield return line.Indent(assertionIndent);
 
         foreach (var line in GetUnderlyingJustificationsAsLines())
         {
-            yield return line.Indent(assertionIndent + 1);
+            yield return line.Indent();
         }
     }
 

@@ -45,7 +45,7 @@ public class PropositionResultDescriptionTests
     }
 
     [Theory]
-    [InlineAutoData(true, "is true")]
+    [InlineAutoData(true, "is true == true")]
     [InlineAutoData(false, "is true == false")]
     public void Should_generate_a_simple_description_using_proposition_when_metadata_is_not_a_string(
         bool isTrue,
@@ -70,9 +70,9 @@ public class PropositionResultDescriptionTests
 
     [Theory]
     [InlineAutoData(false, false, "(left == false) | (right == false)")]
-    [InlineAutoData(false, true, "!(left == false) & right")]
-    [InlineAutoData(true, false, "left & !(right == false)")]
-    [InlineAutoData(true, true, "!right | !left")]
+    [InlineAutoData(false, true, "!(left == false) & (right == true)")]
+    [InlineAutoData(true, false, "(left == true) & !(right == false)")]
+    [InlineAutoData(true, true, "!(right == true) | !(left == true)")]
     public void Should_generate_a_description_from_a_composition(
         bool leftResult,
         bool rightResult,
@@ -105,17 +105,17 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(false, false, true, false,  "(first == false) | (second == false)")]
     [InlineAutoData(false, false, true, true,   "(first == false) | (second == false)")]
     [InlineAutoData(false, true, false, false,  "(third == false) | (fourth == false)")]
-    [InlineAutoData(false, true, false, true,   "second & fourth")]
-    [InlineAutoData(false, true, true, false,   "second & third")]
-    [InlineAutoData(false, true, true, true,    "second & (third | fourth)")]
+    [InlineAutoData(false, true, false, true,   "(second == true) & (fourth == true)")]
+    [InlineAutoData(false, true, true, false,   "(second == true) & (third == true)")]
+    [InlineAutoData(false, true, true, true,    "(second == true) & ((third == true) | (fourth == true))")]
     [InlineAutoData(true, false, false, false,  "(third == false) | (fourth == false)")]
-    [InlineAutoData(true, false, false, true,   "first & fourth")]
-    [InlineAutoData(true, false, true, false,   "first & third")]
-    [InlineAutoData(true, false, true, true,    "first & (third | fourth)")]
+    [InlineAutoData(true, false, false, true,   "(first == true) & (fourth == true)")]
+    [InlineAutoData(true, false, true, false,   "(first == true) & (third == true)")]
+    [InlineAutoData(true, false, true, true,    "(first == true) & ((third == true) | (fourth == true))")]
     [InlineAutoData(true, true, false, false,   "(third == false) | (fourth == false)")]
-    [InlineAutoData(true, true, false, true,    "(first | second) & fourth")]
-    [InlineAutoData(true, true, true, false,    "(first | second) & third")]
-    [InlineAutoData(true, true, true, true,     "(first | second) & (third | fourth)")]
+    [InlineAutoData(true, true, false, true,    "((first == true) | (second == true)) & (fourth == true)")]
+    [InlineAutoData(true, true, true, false,    "((first == true) | (second == true)) & (third == true)")]
+    [InlineAutoData(true, true, true, true,     "((first == true) | (second == true)) & ((third == true) | (fourth == true))")]
     public void Should_generate_a_description_from_a_complicated_composition_using_propositions(
         bool firstValue,
         bool secondValue,
@@ -323,28 +323,28 @@ public class PropositionResultDescriptionTests
         all are true
             AND
                 OR
-                    second
+                    second == true
                 OR
-                    fourth
+                    fourth == true
         """)]
     [InlineAutoData(false, true, true, false,
         """
         all are true
             AND
                 OR
-                    second
+                    second == true
                 OR
-                    third
+                    third == true
         """)]
     [InlineAutoData(false, true, true, true,
         """
         all are true
             AND
                 OR
-                    second
+                    second == true
                 OR
-                    third
-                    fourth
+                    third == true
+                    fourth == true
         """)]
     [InlineAutoData(true, false, false, false,
         """
@@ -359,28 +359,28 @@ public class PropositionResultDescriptionTests
         all are true
             AND
                 OR
-                    first
+                    first == true
                 OR
-                    fourth
+                    fourth == true
         """)]
     [InlineAutoData(true, false, true, false,
         """
         all are true
             AND
                 OR
-                    first
+                    first == true
                 OR
-                    third
+                    third == true
         """)]
     [InlineAutoData(true, false, true, true,
         """
         all are true
             AND
                 OR
-                    first
+                    first == true
                 OR
-                    third
-                    fourth
+                    third == true
+                    fourth == true
         """)]
     [InlineAutoData(true, true, false, false,
         """
@@ -395,31 +395,31 @@ public class PropositionResultDescriptionTests
         all are true
             AND
                 OR
-                    first
-                    second
+                    first == true
+                    second == true
                 OR
-                    fourth
+                    fourth == true
         """)]
     [InlineAutoData(true, true, true, false,
         """
         all are true
             AND
                 OR
-                    first
-                    second
+                    first == true
+                    second == true
                 OR
-                    third
+                    third == true
         """)]
     [InlineAutoData(true, true, true, true,
         """
         all are true
             AND
                 OR
-                    first
-                    second
+                    first == true
+                    second == true
                 OR
-                    third
-                    fourth
+                    third == true
+                    fourth == true
         """)]
     public void Should_generate_a_description_from_a_complicated_composition_of_higher_order_spec(
         bool firstValue,
@@ -476,27 +476,27 @@ public class PropositionResultDescriptionTests
                 second == false
             NOR
                 third == false
-                fourth
+                fourth == true
         """)]
     [InlineAutoData(false, false, true, false,
         """
         AND
             NOR
-                third
+                third == true
                 fourth == false
         """)]
     [InlineAutoData(false, false, true, true,
         """
         AND
             NOR
-                third
+                third == true
         """)]
     [InlineAutoData(false, true, false, false,
         """
         AND
             OR
                 first == false
-                second
+                second == true
             NOR
                 fourth == false
         """)]
@@ -505,16 +505,16 @@ public class PropositionResultDescriptionTests
         AND
             OR
                 first == false
-                second
+                second == true
         """)]
     [InlineAutoData(false, true, true, false,
         """
         AND
             OR
                 first == false
-                second
+                second == true
             NOR
-                third
+                third == true
                 fourth == false
         """)]
     [InlineAutoData(false, true, true, true,
@@ -522,9 +522,9 @@ public class PropositionResultDescriptionTests
         AND
             OR
                 first == false
-                second
+                second == true
             NOR
-                third
+                third == true
         """)]
     [InlineAutoData(true, false, false, false,
         """
@@ -536,24 +536,24 @@ public class PropositionResultDescriptionTests
         """
         AND
             OR
-                first
+                first == true
                 second == false
             NOR
                 third == false
-                fourth
+                fourth == true
         """)]
     [InlineAutoData(true, false, true, false,
         """
         AND
             NOR
-                third
+                third == true
                 fourth == false
         """)]
     [InlineAutoData(true, false, true, true,
         """
         AND
             NOR
-                third
+                third == true
         """)]
     [InlineAutoData(true, true, false, false,
         """
@@ -565,23 +565,23 @@ public class PropositionResultDescriptionTests
         """
         AND
             OR
-                first
+                first == true
             NOR
                 third == false
-                fourth
+                fourth == true
         """)]
     [InlineAutoData(true, true, true, false,
         """
         AND
             NOR
-                third
+                third == true
                 fourth == false
         """)]
     [InlineAutoData(true, true, true, true,
         """
         AND
             NOR
-                third
+                third == true
         """)]
     public void Should_generate_a_detailed_description_from_a_complicated_composition_of_a_first_order_expression(
         bool firstValue,
@@ -845,16 +845,18 @@ public class PropositionResultDescriptionTests
         // Assert
         act.ShouldBe(
             """
-            AND
-                first
-                second
-                OR
-                    third
-                    fourth
-                OR
-                    fifth
-                    sixth
-                seventh
+            AND ALSO
+                AND
+                    first == true
+                    second == true
+                AND
+                    OR
+                        third == true
+                        fourth == true
+                    OR
+                        fifth == true
+                        sixth == true
+                    seventh == true
             """);
     }
 
@@ -888,11 +890,12 @@ public class PropositionResultDescriptionTests
         // Assert
         act.ShouldBe(
             """
-            AND
-                first
-                second
-                third
-                fourth
+            AND ALSO
+                first == true
+                AND
+                    second == true
+                    third == true
+                    fourth == true
             """);
     }
 
@@ -926,16 +929,16 @@ public class PropositionResultDescriptionTests
         act.ShouldBe(
             """
             OR
-                first
-                second
-                third
-                fourth
+                first == true
+                second == true
+                third == true
+                fourth == true
             """);
     }
 
     [Theory]
     [InlineData(true, true,"!((b == false) | (c == false))", "b == false", "c == false")]
-    [InlineData(false, false,"!(b | c)", "b", "c")]
+    [InlineData(false, false,"!((b == true) | (c == true))", "b == true", "c == true")]
     public void Should_negate_a_binary_operation_results_that_contains_negated_proposition_statements(
         bool model,
         bool expectedSatisfied,
@@ -956,7 +959,7 @@ public class PropositionResultDescriptionTests
 
     [Theory]
     [InlineData(true, false, "!(!(b == false) | !(c == false))", "b == false", "c == false")]
-    [InlineData(false, true, "!(!b | !c)", "b", "c")]
+    [InlineData(false, true, "!(!(b == true) | !(c == true))", "b == true", "c == true")]
     public void Should_negate_a_binary_operation_results_that_contains_single_negated_proposition_statements(
         bool model,
         bool expectedSatisfied,
@@ -978,7 +981,7 @@ public class PropositionResultDescriptionTests
 
     [Theory]
     [InlineData(true, true,"!((b == false) | (c == false))", "b == false", "c == false")]
-    [InlineData(false,  false,"!(b | c)", "b", "c")]
+    [InlineData(false,  false,"!((b == true) | (c == true))", "b == true", "c == true")]
     public void Should_negate_a_binary_operation_results_that_contains_double_negated_proposition_statements(
         bool model,
         bool expectedSatisfied,

@@ -149,7 +149,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
     }
 
     [Theory]
-    [InlineData(false, false, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false", "is fifth true == false", "is sixth true == false", "is seventh true == false")]
+    [InlineData(false, false, "is first true == true", "is second true == true", "is third true == true", "is fourth true == true", "is fifth true == true", "is sixth true == true", "is seventh true == true")]
     [InlineData(false, true, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false", "is fifth true == false", "is sixth true == false", "is seventh true == false")]
     [InlineData(true, false, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false", "is fifth true == false", "is sixth true == false", "is seventh true == false")]
     [InlineData(true, true, "is first true == true", "is second true == true", "is third true == true", "is fourth true == true", "is fifth true == true", "is sixth true == true", "is seventh true == true")]
@@ -219,7 +219,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
     }
 
     [Theory]
-    [InlineData(false, false, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false", "is fifth true == false", "is sixth true == false", "is seventh true == false")]
+    [InlineData(false, false, "is first true == true", "is second true == true", "is third true == true", "is fourth true == true", "is fifth true == true", "is sixth true == true", "is seventh true == true")]
     [InlineData(false, true, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false", "is fifth true == false", "is sixth true == false", "is seventh true == false")]
     [InlineData(true, false, "is first true == false", "is second true == false", "is third true == false", "is fourth true == false", "is fifth true == false", "is sixth true == false", "is seventh true == false")]
     [InlineData(true, true, "is first true == true", "is second true == true", "is third true == true", "is fourth true == true", "is fifth true == true", "is sixth true == true", "is seventh true == true")]

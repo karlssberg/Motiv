@@ -41,7 +41,6 @@ internal sealed class MinimalHigherOrderFromBooleanResultProposition<TModel, TMe
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderResultDescription<TMetadata>(
                 specDescription.ToReason(isSatisfied),
-                [],
                 causes.Value,
                 Description.Statement));
 

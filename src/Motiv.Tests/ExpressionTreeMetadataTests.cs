@@ -93,7 +93,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.ShouldBe("is-positive");
+        act.Reason.ShouldBe("is-positive == true");
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Reason.ShouldBe("is-positive");
+        act.Reason.ShouldBe("is-positive == true");
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy(1);
 
         // Assert
-        act.Reason.ShouldBe("is-positive | is-positive | is-positive | is-positive");
+        act.Reason.ShouldBe("(is-positive == true) | (is-positive == true) | (is-positive == true) | (is-positive == true)");
     }
 
 
@@ -188,7 +188,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.IsSatisfiedBy([1]);
 
         // Assert
-        act.Reason.ShouldBe("is-positive | is-positive | is-positive | is-positive");
+        act.Reason.ShouldBe("(is-positive == true) | (is-positive == true) | (is-positive == true) | (is-positive == true)");
     }
 
     [Fact]
@@ -228,16 +228,16 @@ public class ExpressionTreeMetadataTests
         act.Justification.ShouldBe(
             """
             OR
-                is-positive
+                is-positive == true
                     (int n) => n > 0 == true
                         n > 0
-                is-positive
+                is-positive == true
                     (int n) => n > 0 == true
                         n > 0
-                is-positive
+                is-positive == true
                     (int n) => n > 0 == true
                         n > 0
-                is-positive
+                is-positive == true
                     (int n) => n > 0 == true
                         n > 0
             """);
@@ -284,16 +284,16 @@ public class ExpressionTreeMetadataTests
         act.Justification.ShouldBe(
             """
             OR
-                is-positive
+                is-positive == true
                     (int n) => n > 0 == true
                         n > 0
-                is-positive
+                is-positive == true
                     (int n) => n > 0 == true
                         n > 0
-                is-positive
+                is-positive == true
                     (int n) => n > 0 == true
                         n > 0
-                is-positive
+                is-positive == true
                     (int n) => n > 0 == true
                         n > 0
             """);

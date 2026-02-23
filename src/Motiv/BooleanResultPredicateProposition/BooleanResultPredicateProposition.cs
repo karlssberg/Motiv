@@ -46,6 +46,13 @@ internal sealed class BooleanResultPredicateProposition<TModel, TMetadata, TUnde
                 _ => Description.ToReason(booleanResult.Satisfied)
             });
 
+        var reason = new Lazy<string>(() =>
+            metadata.Value switch
+            {
+                string reason when !Description.HasExplicitStatement => reason,
+                _ => Description.ToReason(booleanResult.Satisfied)
+            });
+
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(
                 assertion.Value,
@@ -59,7 +66,7 @@ internal sealed class BooleanResultPredicateProposition<TModel, TMetadata, TUnde
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
-                assertion.Value,
+                reason.Value,
                 Description.Statement));
 
         return new PolicyResultWithUnderlying<TMetadata,TUnderlyingMetadata>(

@@ -176,10 +176,10 @@ public class OrSpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, true, "(True == true) | (True == true)")]
-    [InlineAutoData(true, false, "True == true")]
-    [InlineAutoData(false, true, "True == true")]
-    [InlineAutoData(false, false, "(False == false) | (False == false)")]
+    [InlineAutoData(true, true, "True | True")]
+    [InlineAutoData(true, false, "True")]
+    [InlineAutoData(false, true, "True")]
+    [InlineAutoData(false, false, "False | False")]
     public void Should_serialize_the_result_of_the_or_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool leftResult,
         bool rightResult,

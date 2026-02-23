@@ -181,16 +181,16 @@ public class HandTests
     }
 
     [Theory]
-    [InlineData("AH, KH, QH, JH, 10H", true, HandRank.RoyalFlush, "is a royal flush hand")]
-    [InlineData("KH, QH, JH, 10H, 9H", true, HandRank.StraightFlush, "is a straight flush hand")]
-    [InlineData("AH, AD, AC, AS, 3C", true, HandRank.FourOfAKind, "is a four of a kind hand")]
-    [InlineData("AH, AD, AC, JH, JS", true, HandRank.FullHouse, "is a full house hand")]
-    [InlineData("10H, 8H, 6H, 4H, 2H", true, HandRank.Flush, "is a flush hand")]
-    [InlineData("10H, 9C, 8S, 7D, 6H", true, HandRank.Straight, "is a straight hand")]
-    [InlineData("AH, AD, AS, 10H, 9D", true, HandRank.ThreeOfAKind, "is a three of a kind hand")]
-    [InlineData("AH, AD, QS, 10D, 10H", true, HandRank.TwoPair, "is a two pair hand")]
-    [InlineData("AH, AD, 10S, 5C, 2H", true, HandRank.Pair, "is a pair hand")]
-    [InlineData("AH, 10D, 8S, 5C, 3D", true, HandRank.HighCard, "is a high card hand")]
+    [InlineData("AH, KH, QH, JH, 10H", true, HandRank.RoyalFlush, "is a royal flush hand == true")]
+    [InlineData("KH, QH, JH, 10H, 9H", true, HandRank.StraightFlush, "is a straight flush hand == true")]
+    [InlineData("AH, AD, AC, AS, 3C", true, HandRank.FourOfAKind, "is a four of a kind hand == true")]
+    [InlineData("AH, AD, AC, JH, JS", true, HandRank.FullHouse, "is a full house hand == true")]
+    [InlineData("10H, 8H, 6H, 4H, 2H", true, HandRank.Flush, "is a flush hand == true")]
+    [InlineData("10H, 9C, 8S, 7D, 6H", true, HandRank.Straight, "is a straight hand == true")]
+    [InlineData("AH, AD, AS, 10H, 9D", true, HandRank.ThreeOfAKind, "is a three of a kind hand == true")]
+    [InlineData("AH, AD, QS, 10D, 10H", true, HandRank.TwoPair, "is a two pair hand == true")]
+    [InlineData("AH, AD, 10S, 5C, 2H", true, HandRank.Pair, "is a pair hand == true")]
+    [InlineData("AH, 10D, 8S, 5C, 3D", true, HandRank.HighCard, "is a high card hand == true")]
     public void Should_evaluate_a_playable_hand(string handRanks, bool expected, HandRank expectedRank, params string[] expectedAssertion)
     {
         var cards = handRanks
@@ -219,29 +219,17 @@ public class HandTests
 
         act.Justification.ShouldBe(
             """
-            OR
-                is a straight flush hand
+            OR ELSE
+                is a straight flush hand == true
                     AND
-                        is a straight hand
+                        is a straight hand == true
                             OR
                                 is King High Straight
                                     all cards are King, Queen, Jack, Ten, and Nine
-                        is a flush hand
+                        is a flush hand == true
                             OR
-                                a flush of Hearts
-                                    KH is Hearts
-                                        (Card card) => card.Suit == Hearts == true
-                                            card.Suit == Suit.Hearts
-                                    QH is Hearts
-                                        (Card card) => card.Suit == Hearts == true
-                                            card.Suit == Suit.Hearts
-                                    JH is Hearts
-                                        (Card card) => card.Suit == Hearts == true
-                                            card.Suit == Suit.Hearts
-                                    10H is Hearts
-                                        (Card card) => card.Suit == Hearts == true
-                                            card.Suit == Suit.Hearts
-                                    9H is Hearts
+                                has 5 Hearts cards == true
+                                    is Hearts == true
                                         (Card card) => card.Suit == Hearts == true
                                             card.Suit == Suit.Hearts
             """);

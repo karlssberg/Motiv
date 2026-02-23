@@ -881,31 +881,31 @@ public class AsAtMostNSatisfiedSpecTests
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied
-                                                is true
+                                                is true == true
                                             """)]
     [InlineAutoData(false, true,  false, """
                                             at most one is satisfied
-                                                is true
+                                                is true == true
                                             """)]
     [InlineAutoData(false, true,  true,  """
                                             more than one is satisfied
-                                                is true
+                                                is true == true
                                             """)]
     [InlineAutoData(true,  false, false, """
                                             at most one is satisfied
-                                                is true
+                                                is true == true
                                             """)]
     [InlineAutoData(true,  false, true,  """
                                             more than one is satisfied
-                                                is true
+                                                is true == true
                                             """)]
     [InlineAutoData(true,  true,  false, """
                                             more than one is satisfied
-                                                is true
+                                                is true == true
                                             """)]
     [InlineAutoData(true,  true,  true,  """
                                             more than one is satisfied
-                                                is true
+                                                is true == true
                                             """)]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
@@ -1053,14 +1053,14 @@ public class AsAtMostNSatisfiedSpecTests
     }
 
     [Theory]
-    [InlineData(false, false, false, "at most 1 true")]
-    [InlineData(false, false, true, "at most 1 true")]
-    [InlineData(false, true, false, "at most 1 true")]
-    [InlineData(false, true, true, "at most 1 true == false")]
-    [InlineData(true, false, false, "at most 1 true")]
-    [InlineData(true, false, true, "at most 1 true == false")]
-    [InlineData(true, true, false, "at most 1 true == false")]
-    [InlineData(true, true, true, "at most 1 true == false")]
+    [InlineData(false, false, false, "at most 1 is true == true")]
+    [InlineData(false, false, true, "at most 1 is true == true")]
+    [InlineData(false, true, false, "at most 1 is true == true")]
+    [InlineData(false, true, true, "at most 1 is true == false")]
+    [InlineData(true, false, false, "at most 1 is true == true")]
+    [InlineData(true, false, true, "at most 1 is true == false")]
+    [InlineData(true, true, false, "at most 1 is true == false")]
+    [InlineData(true, true, true, "at most 1 is true == false")]
     public void Should_provide_a_reason_for_an_at_most_n_satisfied_operation_when_using_a_boolean_predicate_function(
         bool first,
         bool second,
@@ -1121,14 +1121,14 @@ public class AsAtMostNSatisfiedSpecTests
     }
 
     [Theory]
-    [InlineData(false, false, false, "at most 1 true")]
-    [InlineData(false, false, true, "at most 1 true")]
-    [InlineData(false, true, false, "at most 1 true")]
-    [InlineData(false, true, true, "at most 1 true == false")]
-    [InlineData(true, false, false, "at most 1 true")]
-    [InlineData(true, false, true, "at most 1 true == false")]
-    [InlineData(true, true, false, "at most 1 true == false")]
-    [InlineData(true, true, true, "at most 1 true == false")]
+    [InlineData(false, false, false, "at most 1 is true == true")]
+    [InlineData(false, false, true, "at most 1 is true == true")]
+    [InlineData(false, true, false, "at most 1 is true == true")]
+    [InlineData(false, true, true, "at most 1 is true == false")]
+    [InlineData(true, false, false, "at most 1 is true == true")]
+    [InlineData(true, false, true, "at most 1 is true == false")]
+    [InlineData(true, true, false, "at most 1 is true == false")]
+    [InlineData(true, true, true, "at most 1 is true == false")]
     public void Should_provide_a_reason_for_an_at_most_n_satisfied_operation_when_using_a_boolean_result_predicate_function(
         bool first,
         bool second,
