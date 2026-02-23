@@ -105,9 +105,7 @@ public static class CustomSpecDeclarationSyntax
             var paramName = hasRecordModel ? "m" : GetParameterNameFromExpression(expression);
 
             sb.AppendLine($"    var {camelCaseName} = Spec.Build(({modelType} {paramName}) => {lambdaBody})");
-            sb.AppendLine($"        .WhenTrue(\"{original.EscapeDoubleQuotes()} == true\")");
-            sb.AppendLine($"        .WhenFalse(\"{original.EscapeDoubleQuotes()} == false\")");
-            sb.AppendLine("        .Create();");
+            sb.AppendLine($"        .Create((\"{original.EscapeDoubleQuotes()}\");");
             sb.AppendLine();
         }
 
@@ -317,7 +315,7 @@ public static class CustomSpecDeclarationSyntax
     }
 
     /// <summary>
-    ///     Builds a Spec.Build(...).WhenTrue(...).WhenFalse(...).Create() fluent chain expression.
+    ///     Builds a Spec.Build(...).Create(...) fluent chain expression.
     /// </summary>
     private static ExpressionSyntax BuildSpecFluentChain(
         string modelTypeName,
@@ -344,41 +342,18 @@ public static class CustomSpecDeclarationSyntax
                     Argument(innerLambda))))
             .WithTrailingTrivia(CarriageReturnLineFeed);
 
-        // 3. Chain .WhenTrue("(escapedOriginalExpression) == true")
-        var whenTrueInvocation = InvocationExpression(
-            MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                specBuildInvocation,
-                IdentifierName("WhenTrue")),
-            ArgumentList(
-                SingletonSeparatedList(
-                    Argument(
-                        LiteralExpression(
-                            SyntaxKind.StringLiteralExpression,
-                            Literal($"({escapedOriginalExpression}) == true"))))))
-            .WithTrailingTrivia(CarriageReturnLineFeed);
-
-        // 4. Chain .WhenFalse("(escapedOriginalExpression) == false")
-        var whenFalseInvocation = InvocationExpression(
-            MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                whenTrueInvocation,
-                IdentifierName("WhenFalse")),
-            ArgumentList(
-                SingletonSeparatedList(
-                    Argument(
-                        LiteralExpression(
-                            SyntaxKind.StringLiteralExpression,
-                            Literal($"({escapedOriginalExpression}) == false"))))))
-            .WithTrailingTrivia(CarriageReturnLineFeed);
-
-        // 5. Chain .Create()
+        // 3. Chain .Create(...)
         var createInvocation = InvocationExpression(
             MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
-                whenFalseInvocation,
+                specBuildInvocation,
                 IdentifierName("Create")),
-            ArgumentList())
+            ArgumentList(
+                SingletonSeparatedList(
+                    Argument(
+                        LiteralExpression(
+                            SyntaxKind.StringLiteralExpression,
+                            Literal($"{escapedOriginalExpression}"))))))
             .WithTrailingTrivia(CarriageReturnLineFeed);
 
         return createInvocation;

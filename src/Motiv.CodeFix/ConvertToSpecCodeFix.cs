@@ -49,7 +49,7 @@ public class LogicalExpressionToSpecConverter(
         var instanceMethodDetector = new InstanceMethodDetector(semanticModel);
         var instanceMethods = containingTypeSymbol is not null
             ? instanceMethodDetector.GetInstanceMethods(logicalExpressionSyntax, containingTypeSymbol)
-            : Array.Empty<(InvocationExpressionSyntax, IMethodSymbol)>();
+            : [];
 
         var hasInstanceMethods = instanceMethods.Count > 0;
 
