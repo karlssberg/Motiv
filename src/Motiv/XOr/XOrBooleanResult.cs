@@ -17,7 +17,7 @@ internal sealed class XOrBooleanResult<TMetadata>(
 
     /// <summary>Gets the description of the XOR operation.</summary>
     public override ResultDescriptionBase Description =>
-        new XOrBooleanResultDescription<TMetadata>(Operation, Left, Right);
+        new XOrBooleanResultDescription<TMetadata>(Left, Right);
 
     public BooleanResultBase<TMetadata> Left { get; } = left;
 

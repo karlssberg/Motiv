@@ -11,7 +11,7 @@ internal sealed class AndAlsoBooleanResult<TMetadata>(
     public override bool Satisfied { get; } = left.Satisfied && (right?.Satisfied ?? false);
 
     public override ResultDescriptionBase Description =>
-        new AndAlsoBooleanResultDescription<TMetadata>(Operation, GetCauses());
+        new AndAlsoBooleanResultDescription<TMetadata>(GetCauses());
 
     public override Explanation Explanation => new(GetCauses(), Underlying);
 

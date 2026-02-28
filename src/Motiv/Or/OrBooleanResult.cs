@@ -35,7 +35,7 @@ internal sealed class OrBooleanResult<TMetadata>(
 
     public override bool Satisfied { get; } = left.Satisfied || right.Satisfied;
 
-    public override ResultDescriptionBase Description => new OrBooleanResultDescription<TMetadata>(Operation, GetCausalResults());
+    public override ResultDescriptionBase Description => new OrBooleanResultDescription<TMetadata>(GetCausalResults());
 
     private IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {

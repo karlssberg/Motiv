@@ -4,16 +4,17 @@ using Motiv.Traversal;
 namespace Motiv.XOr;
 
 internal sealed class XOrBooleanResultDescription<TMetadata>(
-    string operationName,
     BooleanResultBase<TMetadata> left,
     BooleanResultBase<TMetadata> right)
     : ResultDescriptionBase
 {
-    internal override int CausalOperandCount => Results.Count();
+    private readonly BooleanResultBase<TMetadata>[] _results = [left, right];
+
+    internal override int CausalOperandCount => _results.Length;
 
     internal override string Statement => Operator.XOr;
 
-    public override string Reason => string.Join(" ^ ", Results.Select(result =>
+    public override string Reason => string.Join(" ^ ", _results.Select(result =>
         ContainsBinaryOperation(result) switch
         {
             true => $"({result.Description.Reason})",
@@ -21,17 +22,8 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
             false => result.Description.Reason
         }));
 
-    public override IEnumerable<string> GetJustificationAsLines()
-    {
-        var reversedResults = left.ToEnumerable().Append(right); // reverse order for easier reading
-        return reversedResults.GetBinaryJustificationAsLines(operationName);
-    }
-
-    public override string ToString() => Reason;
-
-    private IEnumerable<BooleanResultBase<TMetadata>> Results =>
-        left.ToEnumerable()
-            .Append(right);
+    public override IEnumerable<string> GetJustificationAsLines() =>
+        _results.GetBinaryJustificationAsLines(Statement);
 
     private static bool ContainsBinaryOperation(BooleanResultBase result) =>
         result switch

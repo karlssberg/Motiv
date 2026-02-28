@@ -8,32 +8,22 @@ internal sealed class ExpressionTreeBooleanResultDescription(
     string reason,
     LambdaExpression expression,
     string propositionalStatement)
-    : ResultDescriptionBase
+    : ResultDescriptionWithUnderlying(booleanResult, reason, propositionalStatement)
 {
-    internal override int CausalOperandCount => 1;
-
-    internal override string Statement => propositionalStatement;
-
-    public override string Reason => reason;
-
-
     public override IEnumerable<string> GetJustificationAsLines()
     {
         if (IsReasonTheSameAsUnderlying())
         {
-            yield return expression.ToAssertion(booleanResult.Satisfied);
-            foreach (var line in booleanResult.Description.GetJustificationAsLines())
+            yield return expression.ToAssertion(BooleanResult.Satisfied);
+            foreach (var line in BooleanResult.Description.GetJustificationAsLines())
                 yield return line.Indent();
 
             yield break;
         }
 
-        yield return reason;
-        yield return expression.ToAssertion(booleanResult.Satisfied).Indent();
-        foreach (var line in booleanResult.Description.GetJustificationAsLines())
+        yield return Reason;
+        yield return expression.ToAssertion(BooleanResult.Satisfied).Indent();
+        foreach (var line in BooleanResult.Description.GetJustificationAsLines())
             yield return line.Indent().Indent();
     }
-
-    private bool IsReasonTheSameAsUnderlying() => reason == booleanResult.Description.Reason;
 }
-

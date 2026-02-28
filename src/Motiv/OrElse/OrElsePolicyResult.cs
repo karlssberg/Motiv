@@ -13,7 +13,7 @@ internal sealed class OrElsePolicyResult<TMetadata>(
     public override bool Satisfied { get; } = left.Satisfied || (right?.Satisfied ?? false);
 
     public override ResultDescriptionBase Description =>
-        new OrElseBooleanResultDescription<TMetadata>(Operation, GetCauses());
+        new OrElseBooleanResultDescription<TMetadata>(GetCauses());
 
     public override Explanation Explanation => new(GetCauses(), Underlying);
 
