@@ -94,10 +94,12 @@ public class MotivConvertToSpecTests
 
             public class Proposition() : Spec<Proposition.Model>(() =>
             {
-                var clause1 = Spec.Build((Model m) => m.ValueA > m.ValueB)
+                var clause1 = Spec
+                    .Build((Model m) => m.ValueA > m.ValueB)
                     .Create("{{clause1}}");
 
-                var isValueC = Spec.Build((Model m) => m.ValueC)
+                var isValueC = Spec
+                    .Build((Model m) => m.ValueC)
                     .Create("{{clause2}}");
 
                 return clause1.AndAlso(isValueC);
@@ -105,7 +107,6 @@ public class MotivConvertToSpecTests
             {
                 public record Model(int ValueA, int ValueB, bool ValueC);
             }
-
             """;
 
         await new VerifyCS.Test
@@ -160,10 +161,12 @@ public class MotivConvertToSpecTests
 
             public class IsSatisfiedProposition() : Spec<IsSatisfiedProposition.Model>(() =>
             {
-                var clause1 = Spec.Build((Model m) => m.ValueA > m.ValueB)
+                var clause1 = Spec
+                    .Build((Model m) => m.ValueA > m.ValueB)
                     .Create("{{clause1}}");
 
-                var isValueC = Spec.Build((Model m) => m.ValueC)
+                var isValueC = Spec
+                    .Build((Model m) => m.ValueC)
                     .Create("{{clause2}}");
 
                 return clause1.AndAlso(isValueC);
@@ -171,7 +174,6 @@ public class MotivConvertToSpecTests
             {
                 public record Model(int ValueA, int ValueB, bool ValueC);
             }
-
             """;
 
         await new VerifyCS.Test
@@ -228,16 +230,20 @@ public class MotivConvertToSpecTests
 
             public class IsSatisfiedProposition() : Spec<IsSatisfiedProposition.Model>(() =>
             {
-                var isValueANonNegative = Spec.Build((Model m) => m.ValueA >= 0)
+                var isValueANonNegative = Spec
+                    .Build((Model m) => m.ValueA >= 0)
                     .Create("{{clause1}}");
 
-                var isValueBNonNegative = Spec.Build((Model m) => m.ValueB >= 0)
+                var isValueBNonNegative = Spec
+                    .Build((Model m) => m.ValueB >= 0)
                     .Create("{{clause2}}");
 
-                var isValueCAtLeast1 = Spec.Build((Model m) => m.ValueC >= 1)
+                var isValueCAtLeast1 = Spec
+                    .Build((Model m) => m.ValueC >= 1)
                     .Create("{{clause3}}");
 
-                var isValueCAtMost10 = Spec.Build((Model m) => m.ValueC <= 10)
+                var isValueCAtMost10 = Spec
+                    .Build((Model m) => m.ValueC <= 10)
                     .Create("{{clause4}}");
 
                 return isValueANonNegative.AndAlso((isValueBNonNegative.OrElse(!(isValueCAtLeast1 ^ isValueCAtMost10))));
@@ -245,7 +251,6 @@ public class MotivConvertToSpecTests
             {
                 public record Model(int ValueA, int ValueB, int ValueC);
             }
-
             """;
 
         await new VerifyCS.Test
@@ -447,37 +452,38 @@ public class MotivConvertToSpecTests
               """;
 
         const string expectedTransformedCode =
-          $$$"""
-             using Motiv;
+            $$"""
+              using Motiv;
 
-             namespace MyNamespace;
+              namespace MyNamespace;
 
-             public class MyClass
-             {
-                 private readonly Proposition _proposition = new Proposition();
-                 public bool IsValid(int x, int y)
-                 {
-                     // {{{booleanExpression}}}
-                     var result = _proposition.IsSatisfiedBy(new Proposition.Model(x, y));
-                     return result.Satisfied;
-                 }
-             }
+              public class MyClass
+              {
+                  private readonly Proposition _proposition = new Proposition();
+                  public bool IsValid(int x, int y)
+                  {
+                      // {{booleanExpression}}
+                      var result = _proposition.IsSatisfiedBy(new Proposition.Model(x, y));
+                      return result.Satisfied;
+                  }
+              }
 
-             public class Proposition() : Spec<Proposition.Model>(() =>
-             {
-                 var isXGreaterThan5 = Spec.Build((Model m) => m.X > 5)
-                     .Create("{{{clause1}}}");
+              public class Proposition() : Spec<Proposition.Model>(() =>
+              {
+                  var isXGreaterThan5 = Spec
+                      .Build((Model m) => m.X > 5)
+                      .Create("{{clause1}}");
 
-                 var isYLessThan10 = Spec.Build((Model m) => m.Y < 10)
-                     .Create("{{{clause2}}}");
+                  var isYLessThan10 = Spec
+                      .Build((Model m) => m.Y < 10)
+                      .Create("{{clause2}}");
 
-                 return isXGreaterThan5.AndAlso(isYLessThan10);
-             })
-             {
-                 public record Model(int X, int Y);
-             }
-
-             """;
+                  return isXGreaterThan5.AndAlso(isYLessThan10);
+              })
+              {
+                  public record Model(int X, int Y);
+              }
+              """;
 
         await new VerifyCS.Test
         {
@@ -530,18 +536,20 @@ public class MotivConvertToSpecTests
 
             public class IsSatisfiedProposition() : Spec<IsSatisfiedProposition.Model>(() =>
             {
-                var isAgePositive = Spec.Build((Model m) => m.Age > 0)
+                var isAgePositive = Spec
+                    .Build((Model m) => m.Age > 0)
                     .Create("{{clause1}}");
 
-                var isName = Spec.Build((Model m) => m.Name)
+                var isName = Spec
+                    .Build((Model m) => m.Name)
                     .Create("{{clause2}}");
 
-                return isAgePositive.AndAlso(isName).AndAlso(isAgePositive);
+                return isAgePositive.AndAlso(isName)
+                    .AndAlso(isAgePositive);
             })
             {
                 public record Model(int Age, bool Name);
             }
-
             """;
 
         await new VerifyCS.Test
@@ -596,13 +604,16 @@ public class MotivConvertToSpecTests
 
             public class IsSatisfiedProposition() : Spec<IsSatisfiedProposition.Model>(() =>
             {
-                var isValueANonNegative = Spec.Build((Model m) => m.ValueA >= 0)
+                var isValueANonNegative = Spec
+                    .Build((Model m) => m.ValueA >= 0)
                     .Create("{{clause1}}");
 
-                var isValueCAtLeast1 = Spec.Build((Model m) => m.ValueC >= 1)
+                var isValueCAtLeast1 = Spec
+                    .Build((Model m) => m.ValueC >= 1)
                     .Create("{{clause2}}");
 
-                var isValueBNonNegative = Spec.Build((Model m) => m.ValueB >= 0)
+                var isValueBNonNegative = Spec
+                    .Build((Model m) => m.ValueB >= 0)
                     .Create("{{clause3}}");
 
                 return (isValueANonNegative.AndAlso(isValueCAtLeast1)).OrElse((isValueBNonNegative.AndAlso(isValueCAtLeast1)));
@@ -610,7 +621,6 @@ public class MotivConvertToSpecTests
             {
                 public record Model(int ValueA, int ValueC, int ValueB);
             }
-
             """;
 
         await new VerifyCS.Test
@@ -665,13 +675,16 @@ public class MotivConvertToSpecTests
 
             public class IsFeatureEnabledProposition() : Spec<IsFeatureEnabledProposition.Model>(() =>
             {
-                var isValueANonNegative = Spec.Build((Model m) => m.ValueA >= 0)
+                var isValueANonNegative = Spec
+                    .Build((Model m) => m.ValueA >= 0)
                     .Create("{{clause1}}");
 
-                var is1LessThanValueC = Spec.Build((Model m) => 1 < m.ValueC)
+                var is1LessThanValueC = Spec
+                    .Build((Model m) => 1 < m.ValueC)
                     .Create("{{clause2}}");
 
-                var isValueBNonNegative = Spec.Build((Model m) => m.ValueB >= 0)
+                var isValueBNonNegative = Spec
+                    .Build((Model m) => m.ValueB >= 0)
                     .Create("{{clause3}}");
 
                 return (isValueANonNegative.AndAlso(is1LessThanValueC)).OrElse((isValueBNonNegative.AndAlso(is1LessThanValueC)));
@@ -679,7 +692,6 @@ public class MotivConvertToSpecTests
             {
                 public record Model(int ValueA, int ValueC, int ValueB);
             }
-
             """;
 
           await new VerifyCS.Test
@@ -770,49 +782,48 @@ public class MotivConvertToSpecTests
               """;
 
         var expectedTransformedCode =
-            $$"""
-              using Motiv;
+              $$"""
+                using Motiv;
 
-              namespace MyNamespace;
+                namespace MyNamespace;
 
-              public class Playground
-              {
-                  private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition;
-                  public Playground()
-                  {
-                      _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
-                  }
-                  public bool IsFeatureEnabled(string text)
-                  {
-                      // {{booleanExpression}}
-                      var result = _isFeatureEnabledProposition.IsSatisfiedBy(text);
-                      return result.Satisfied;
-                  }
+                public class Playground
+                {
+                    private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition;
+                    public Playground()
+                    {
+                        _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
+                    }
+                    public bool IsFeatureEnabled(string text)
+                    {
+                        // {{booleanExpression}}
+                        var result = _isFeatureEnabledProposition.IsSatisfiedBy(text);
+                        return result.Satisfied;
+                    }
 
-                  public bool IsGreen(string text)
-                  {
-                      return new IsGreenProposition().IsSatisfiedBy(text).Satisfied;
-                  }
-              }
+                    public bool IsGreen(string text)
+                    {
+                        return new IsGreenProposition().IsSatisfiedBy(text).Satisfied;
+                    }
+                }
 
-              public class IsFeatureEnabledProposition(MyNamespace.Playground instance) : Spec<string>(() =>
-              {
-                  var clause1 = Spec.Build((string text) => {{clause1}})
-                      .Create("{{clause1}}");
+                public class IsFeatureEnabledProposition(MyNamespace.Playground instance) : Spec<string>(() =>
+                {
+                    var clause1 = Spec
+                        .Build((string text) => {{clause1}})
+                        .Create("{{clause1}}");
 
-                  var clause2 = Spec.Build((string text) => instance.IsGreen(text))
-                      .Create("{{clause2}}");
+                    var clause2 = Spec
+                        .Build((string text) => instance.IsGreen(text))
+                        .Create("{{clause2}}");
 
-                  return clause1.AndAlso(clause2);
-              });
+                    return clause1.AndAlso(clause2);
+                });
 
-
-              public class IsGreenProposition() : Spec<string>(() =>
-                  Spec.Build((string text) => text == "green")
-                      .WhenTrue("(text == \"green\") == true")
-                      .WhenFalse("(text == \"green\") == false")
-                      .Create());
-              """;
+                public class IsGreenProposition() : Spec<string>(() =>
+                    Spec.Build((string text) => text == "green")
+                        .Create("text == \"green\""));
+                """;
 
         await new VerifyCS.Test
         {
@@ -886,17 +897,21 @@ public class MotivConvertToSpecTests
 
             public class IsFeatureEnabledProposition(MyNamespace.Playground instance) : Spec<IsFeatureEnabledProposition.Model>(() =>
             {
-                var isValueANonNegative = Spec.Build((IsFeatureEnabledProposition.Model m) => m.ValueA >= 0)
+                var isValueANonNegative = Spec
+                    .Build((Model m) => m.ValueA >= 0)
                     .Create("{{clause1}}");
 
-                var is1LessThanValueC = Spec.Build((IsFeatureEnabledProposition.Model m) => 1 < m.ValueC)
+                var is1LessThanValueC = Spec
+                    .Build((Model m) => 1 < m.ValueC)
                     .Create("{{clause2}}");
 
-                var clause3 = Spec.Build((IsFeatureEnabledProposition.Model m) => string.IsNullOrEmpty(m.Text))
+                var clause3 = Spec
+                    .Build((Model m) => string.IsNullOrEmpty(m.Text))
                     .Create("{{clause3}}");
 
-                var clause4 = Spec.Build((IsFeatureEnabledProposition.Model m) => instance.IsGreen(m.Text))
-                    .Create("{{clause4}}"");
+                var clause4 = Spec
+                    .Build((Model m) => instance.IsGreen(m.Text))
+                    .Create("{{clause4}}");
 
                 return (isValueANonNegative.AndAlso(is1LessThanValueC)).AndAlso((clause3.AndAlso(clause4)));
             })
@@ -904,12 +919,9 @@ public class MotivConvertToSpecTests
                 public record Model(int ValueA, int ValueC, string Text);
             }
 
-
             public class IsGreenProposition() : Spec<string>(() =>
                 Spec.Build((string text) => text == "green")
-                    .WhenTrue("(text == \"green\") == true")
-                    .WhenFalse("(text == \"green\") == false")
-                    .Create());
+                    .Create("text == \"green\""));
             """;
 
         await new VerifyCS.Test

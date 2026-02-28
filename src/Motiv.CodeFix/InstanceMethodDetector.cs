@@ -9,7 +9,7 @@ namespace Motiv.CodeFix;
 /// </summary>
 public class InstanceMethodDetector(SemanticModel semanticModel) : CSharpSyntaxWalker
 {
-    private List<(InvocationExpressionSyntax Invocation, IMethodSymbol Method)> InstanceMethods { get; } = new();
+    private List<(InvocationExpressionSyntax Invocation, IMethodSymbol Method)> InstanceMethods { get; } = [];
 
     /// <summary>
     /// Gets all instance method invocations in the expression that belong to the containing class.
@@ -33,21 +33,12 @@ public class InstanceMethodDetector(SemanticModel semanticModel) : CSharpSyntaxW
     {
         var symbolInfo = semanticModel.GetSymbolInfo(node);
 
-        if (symbolInfo.Symbol is IMethodSymbol methodSymbol)
+        if (symbolInfo.Symbol is IMethodSymbol { IsStatic: false } methodSymbol
+            && SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingType, ContainingType)
+            && node.Expression is IdentifierNameSyntax)
         {
-            // Check if it's an instance method (not static)
-            if (!methodSymbol.IsStatic)
-            {
-                // Check if the method belongs to the containing type
-                if (SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingType, ContainingType))
-                {
-                    // Check if it's a simple invocation (not qualified with 'this')
-                    if (node.Expression is IdentifierNameSyntax)
-                    {
-                        InstanceMethods.Add((node, methodSymbol));
-                    }
-                }
-            }
+            // Check if it's a simple invocation (not qualified with 'this')
+            InstanceMethods.Add((node, methodSymbol));
         }
 
         base.VisitInvocationExpression(node);

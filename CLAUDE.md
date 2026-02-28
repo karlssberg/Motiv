@@ -169,3 +169,24 @@ Follow TDD strictly when developing features or fixing bugs:
 5. **Refactor if needed** — clean up while keeping tests green
 
 Never write implementation code without a corresponding test. If fixing a bug, first write a test that reproduces it. Run the full test suite before considering work complete.
+
+## Post-Implementation Code Review
+
+After applying changes and confirming tests pass, **always** spawn a `code-simplifier` agent to review the changed code. The agent should focus on:
+
+- **Code duplication** — identify semantically identical code that should be consolidated
+- **Convoluted design** — simplify overly complex class hierarchies, unnecessary indirection, or tangled dependencies
+- **Procedural code** — refactor imperative step-by-step logic into more declarative, composable patterns where appropriate
+- **Long methods** — break down methods that do too much into smaller, well-named, single-responsibility methods
+- **Other anti-patterns** — god classes, feature envy, primitive obsession, deep nesting, poor naming, etc.
+
+This step is mandatory — do not skip it. If the agent identifies improvements, apply them and re-run the affected tests before considering the task complete.
+
+## Roslyn CodeFix Conventions (Motiv.CodeFix)
+
+- Use `ParseTypeName(typeName)` instead of `IdentifierName(typeName)` when constructing type syntax nodes — `IdentifierName("int")` creates an `IdentifierNameSyntax`, but the test framework expects `PredefinedTypeSyntax` for C# keyword types like `int`, `string`, `bool`
+- When creating semicolon-terminated class declarations (no body), explicitly suppress braces with `.WithOpenBraceToken(Token(SyntaxKind.None)).WithCloseBraceToken(Token(SyntaxKind.None))`
+- Do not rely on `node.Ancestors()` inside `CSharpSyntaxRewriter` overrides — ancestor context is unreliable during tree rewriting. Instead, create separate rewriter classes for structurally different cases (e.g., block-lambda vs expression-lambda)
+- When targeting specific lambda expressions in a `CSharpSyntaxRewriter`, use structural properties (e.g., parameter count, body type) rather than parent-type checks, since multiple lambdas in a chain can share the same parent type
+- In C# primary constructor inheritance, access forwarded parameters via the base class's properties (not the subclass constructor parameter) to avoid CS9107 dual-capture warnings
+- `NormalizeWhitespace()` strips all custom trivia — do not add formatting trivia during syntax construction if a `NormalizeWhitespace` + rewriter pass will follow. Apply formatting exclusively in the rewriter to avoid duplicate or dead formatting logic.

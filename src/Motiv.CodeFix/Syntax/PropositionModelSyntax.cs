@@ -12,14 +12,8 @@ public static class PropositionModelSyntax
     {
         var variables = variableSymbols
             .Select((string Name, ITypeSymbol TypeSymbol) (symbol) =>
-                symbol switch
-                {
-                    IParameterSymbol parameterSymbol => (parameterSymbol.Name, parameterSymbol.Type),
-                    ILocalSymbol localSymbol => (localSymbol.Name, localSymbol.Type),
-                    IFieldSymbol fieldSymbol => (fieldSymbol.Name, fieldSymbol.Type),
-                    IPropertySymbol propertySymbol => (propertySymbol.Name, propertySymbol.Type),
-                    _ => throw new InvalidOperationException("Unknown symbol type")
-                })
+                (symbol.Name, symbol.GetTypeSymbol()
+                              ?? throw new InvalidOperationException("Unknown symbol type")))
             .ToImmutableList();
 
         AutoPropertySyntax();

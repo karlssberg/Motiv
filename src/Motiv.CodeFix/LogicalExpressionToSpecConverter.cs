@@ -30,81 +30,83 @@ public class LogicalExpressionToSpecConverter(
         ExpressionSyntax logicalExpressionSyntax,
         CancellationToken cancellationToken = default)
     {
-        var root = await document
-            .GetSyntaxRootAsync(cancellationToken)
-            .ConfigureAwait(false);
+        var syntaxContext = new SyntaxContext(document, logicalExpressionSyntax);
 
+        var root = await syntaxContext.RootNode(cancellationToken).ConfigureAwait(false);
         if (root is null) return document;
 
-        var semanticModel = await document
-                                .GetSemanticModelAsync(cancellationToken)
-                                .ConfigureAwait(false)
-                            ?? throw new InvalidOperationException("Could not get semantic model for document");
-
+        var semanticModel = await syntaxContext.SemanticModel(cancellationToken).ConfigureAwait(false);
         var variableSymbols = GetVariablesInExpression(logicalExpressionSyntax, semanticModel).ToImmutableArray();
 
         // Detect instance method calls
-        var containingClass = logicalExpressionSyntax.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        var containingTypeSymbol = containingClass is not null ? semanticModel.GetDeclaredSymbol(containingClass) : null;
+        var containingTypeSymbol = await syntaxContext.ContainingTypeSymbol(cancellationToken).ConfigureAwait(false);
         var instanceMethodDetector = new InstanceMethodDetector(semanticModel);
         var instanceMethods = containingTypeSymbol is not null
             ? instanceMethodDetector.GetInstanceMethods(logicalExpressionSyntax, containingTypeSymbol)
             : [];
 
         var hasInstanceMethods = instanceMethods.Count > 0;
+        var instanceMethodNames = new HashSet<string>(instanceMethods.Select(m => m.Method.Name));
 
-        var newRoot = ReplaceLogicalExpressionWithSpecInvocation(variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods);
+        var newRoot = ReplaceLogicalExpressionWithSpecInvocation(syntaxContext, variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods);
 
-        var rootMembers = GetRootMembers(variableSymbols, logicalExpressionSyntax, instanceMethods, containingTypeSymbol).ToArray();
+        var rootMembers = GetRootMembers(syntaxContext, variableSymbols, logicalExpressionSyntax, instanceMethodNames, containingTypeSymbol).ToArray();
         var baseNamespace = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
-        newRoot = baseNamespace is { } namespaceDeclaration
-            ? AddToNamespace(newRoot, namespaceDeclaration, rootMembers)
-            : AddToCompilationUnit(newRoot, rootMembers);
+        newRoot = baseNamespace != null
+            ? AddToNamespace(syntaxContext, newRoot, baseNamespace, rootMembers)
+            : AddToCompilationUnit(syntaxContext, newRoot, rootMembers);
         newRoot = AddUsingStatementsIfNeeded(newRoot);
 
         return document.WithSyntaxRoot(newRoot);
     }
 
     private IEnumerable<MemberDeclarationSyntax> GetRootMembers(
+        SyntaxContext syntaxContext,
         ImmutableArray<ISymbol> variableSymbols,
         ExpressionSyntax logicalExpressionSyntax,
-        IReadOnlyList<(InvocationExpressionSyntax Invocation, IMethodSymbol Method)> instanceMethods,
+        HashSet<string> instanceMethodNames,
         INamedTypeSymbol? containingTypeSymbol)
     {
-        var hasInstanceMethods = instanceMethods.Count > 0;
+        var hasInstanceMethods = instanceMethodNames.Count > 0;
 
         if (variableSymbols.Length == 1 && !hasInstanceMethods)
         {
-            yield return CustomSpecDeclarationSyntax.Create(
-                IdentifierName(propositionName),
-                IdentifierName(GetModelVariableName(variableSymbols)),
+            var variable = variableSymbols.First();
+            var variableTypeName = GetSymbolTypeName(variable);
+            var originalExpressionText = logicalExpressionSyntax.ToString().Trim();
+
+            var specChain = SpecFluentChainBuilder.Build(
+                variableTypeName,
+                variable.Name,
                 logicalExpressionSyntax,
-                GetModelTypeName(variableSymbols));
+                originalExpressionText);
+
+            yield return new SimpleSpecClassDeclaration(
+                syntaxContext, propositionName, variableTypeName, specChain).Build();
             yield break;
         }
 
-        var decomposition = DecomposeExpression(logicalExpressionSyntax, variableSymbols);
-
-        if (hasInstanceMethods)
+        if (variableSymbols.Length == 1 && hasInstanceMethods)
         {
-            // Generate constructor-based spec for instance methods
-            var modelTypeName = variableSymbols.Length == 1 ? GetModelTypeName(variableSymbols) : null;
-            var recordParams = variableSymbols.Length > 1 ? string.Join(", ", variableSymbols.Select(s =>
-            {
-                var typeName = GetSymbolTypeName(s);
-                return $"{typeName} {s.Name.Capitalize()}";
-            })) : null;
+            var variable = variableSymbols.First();
+            var variableTypeName = GetSymbolTypeName(variable);
+            var decomposition = DecomposeExpression(
+                logicalExpressionSyntax,
+                expr => PrefixInstanceMethods(expr, instanceMethodNames));
 
-            yield return CustomSpecDeclarationSyntax.CreateWithConstructor(
+            yield return new ComposedSpecClassDeclaration(
+                syntaxContext,
                 propositionName,
-                defaultModelName,
-                modelTypeName,
-                recordParams,
-                decomposition.Clauses,
-                decomposition.CompositionExpression,
-                containingTypeSymbol?.ToDisplayString() ?? "object");
+                innerLambdaModelType: variableTypeName,
+                innerLambdaParameterName: variable.Name,
+                decomposition,
+                containingTypeName: containingTypeSymbol?.ToDisplayString()).Build();
             yield break;
         }
+
+        var multiVarDecomposition = DecomposeExpression(
+            logicalExpressionSyntax,
+            expr => ConvertLogicVariablesToModelMemberAccess(expr, variableSymbols, instanceMethodNames));
 
         var recordParameters = string.Join(", ", variableSymbols.Select(s =>
         {
@@ -112,16 +114,22 @@ public class LogicalExpressionToSpecConverter(
             return $"{typeName} {s.Name.Capitalize()}";
         }));
 
-        yield return CustomSpecDeclarationSyntax.CreateComposed(
+        var containingTypeName = hasInstanceMethods ? containingTypeSymbol?.ToDisplayString() : null;
+
+        yield return new ComposedSpecClassDeclaration(
+            syntaxContext,
             propositionName,
-            defaultModelName,
-            recordParameters,
-            decomposition.Clauses,
-            decomposition.CompositionExpression);
+            innerLambdaModelType: defaultModelName,
+            innerLambdaParameterName: "m",
+            multiVarDecomposition,
+            containingTypeName,
+            nestedRecordName: defaultModelName,
+            nestedRecordParameters: recordParameters).Build();
     }
 
-    private static ExpressionDecomposition DecomposeExpression(ExpressionSyntax expression,
-        ImmutableArray<ISymbol> variableSymbols)
+    private static ExpressionDecomposition DecomposeExpression(
+        ExpressionSyntax expression,
+        Func<ExpressionSyntax, ExpressionSyntax> transformClause)
     {
         var counter = 0;
         return Decompose(expression);
@@ -184,23 +192,52 @@ public class LogicalExpressionToSpecConverter(
         ExpressionDecomposition CreateLeafClause(ExpressionSyntax expr)
         {
             counter++;
-            var transformed = ConvertLogicVariablesToModelMemberAccess(expr, variableSymbols);
+            var transformed = transformClause(expr);
             var clauseName = ClauseNameDeriver.DeriveName(transformed, counter);
             return new ExpressionDecomposition(
-                new List<(string, string, ExpressionSyntax)> { (expr.ToString().Trim(), transformed.ToString(), expr) },
+                [(expr.ToString().Trim(), transformed.ToString(), expr)],
                 clauseName);
         }
     }
 
+    private static ExpressionSyntax PrefixInstanceMethods(
+        ExpressionSyntax expression,
+        HashSet<string> instanceMethodNames)
+    {
+        if (instanceMethodNames.Count == 0) return expression;
+
+        var instanceInvocations = expression.DescendantNodesAndSelf()
+            .OfType<InvocationExpressionSyntax>()
+            .Where(inv => inv.Expression is IdentifierNameSyntax id
+                          && instanceMethodNames.Contains(id.Identifier.ValueText))
+            .ToList();
+
+        if (instanceInvocations.Count == 0) return expression;
+
+        return expression.ReplaceNodes(
+            instanceInvocations,
+            (original, _) =>
+            {
+                var methodName = (IdentifierNameSyntax)original.Expression;
+                var qualifiedAccess = MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    IdentifierName("instance"),
+                    methodName);
+                return original.WithExpression(qualifiedAccess);
+            });
+    }
+
     private static ExpressionSyntax ConvertLogicVariablesToModelMemberAccess(
         ExpressionSyntax expression,
-        ImmutableArray<ISymbol> variableSymbols)
+        ImmutableArray<ISymbol> variableSymbols,
+        HashSet<string> instanceMethodNames)
     {
         var variableNames = variableSymbols.Select(s => s.Name).ToArray();
 
-        // Two-pass approach:
+        // Three-pass approach:
         // 1. Replace member access expressions that start with a variable (e.g., order.Total -> m.Order.Total)
         // 2. Replace standalone identifiers (e.g., x -> m.X)
+        // 3. Prefix instance method invocations with "instance." (e.g., IsGreen(x) -> instance.IsGreen(x))
 
         // First pass: Find member access expressions where the root is a variable
         var memberAccessToReplace = expression.DescendantNodesAndSelf()
@@ -209,8 +246,8 @@ public class LogicalExpressionToSpecConverter(
             {
                 // Find the leftmost identifier in the chain
                 var expr = ma.Expression;
-                while (expr is MemberAccessExpressionSyntax innerMa)
-                    expr = innerMa.Expression;
+                while (expr is MemberAccessExpressionSyntax innerMemberAccess)
+                    expr = innerMemberAccess.Expression;
 
                 return expr is IdentifierNameSyntax id && variableNames.Contains(id.Identifier.ValueText);
             })
@@ -225,19 +262,18 @@ public class LogicalExpressionToSpecConverter(
                 while (expr is MemberAccessExpressionSyntax innerMa)
                     expr = innerMa.Expression;
 
-                if (expr is IdentifierNameSyntax rootId)
-                {
-                    var propertyName = rootId.Identifier.ValueText.Capitalize();
-                    var newBase = MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        IdentifierName("m"),
-                        IdentifierName(propertyName));
+                if (expr is not IdentifierNameSyntax rootId)
+                    return original;
 
-                    // Rebuild the member access chain: m.Order + .Total -> m.Order.Total
-                    return RebuildMemberAccessChain(original, newBase);
-                }
+                var propertyName = rootId.Identifier.ValueText.Capitalize();
+                var newBase = MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    IdentifierName("m"),
+                    IdentifierName(propertyName));
 
-                return original;
+                // Rebuild the member access chain: m.Order + .Total -> m.Order.Total
+                return RebuildMemberAccessChain(original, newBase);
+
             });
 
         // Second pass: Replace standalone identifiers that weren't part of member access
@@ -247,7 +283,7 @@ public class LogicalExpressionToSpecConverter(
             .Where(id => id.Parent is not MemberAccessExpressionSyntax)
             .ToList();
 
-        return result.ReplaceNodes(
+        result = result.ReplaceNodes(
             standaloneIdentifiers,
             (original, _) =>
             {
@@ -258,6 +294,9 @@ public class LogicalExpressionToSpecConverter(
                         IdentifierName(propertyName))
                     .WithTriviaFrom(original);
             });
+
+        // Third pass: Prefix instance method invocations with "instance."
+        return PrefixInstanceMethods(result, instanceMethodNames);
     }
 
     private static ExpressionSyntax RebuildMemberAccessChain(
@@ -288,46 +327,18 @@ public class LogicalExpressionToSpecConverter(
         return original;
     }
 
-    private string GetModelVariableName(ImmutableArray<ISymbol> variableSymbols)
-    {
-        return variableSymbols.Length == 1
-            ? variableSymbols.First().Name
-            : defaultModelName;
-    }
-
-    private string GetModelTypeName(ImmutableArray<ISymbol> variableSymbols)
-    {
-        return variableSymbols.Length == 1
-            ? GetSymbolTypeName(variableSymbols.First())
-            : defaultModelName;
-    }
-
-    private static string GetSymbolTypeName(ISymbol symbol)
-    {
-        var typeSymbol = symbol switch
-        {
-            IParameterSymbol parameter => parameter.Type,
-            ILocalSymbol local => local.Type,
-            IFieldSymbol field => field.Type,
-            IPropertySymbol property => property.Type,
-            _ => null
-        };
-
-        return typeSymbol switch
-        {
-            null => "object",
-            _ => typeSymbol.ToDisplayString()
-        };
-    }
+    private static string GetSymbolTypeName(ISymbol symbol) =>
+        symbol.GetTypeSymbol()?.GetCSharpTypeName() ?? "object";
 
     private SyntaxNode ReplaceLogicalExpressionWithSpecInvocation(
+        SyntaxContext syntaxContext,
         ImmutableArray<ISymbol> variableSymbols,
         ExpressionSyntax logicalExpressionSyntax,
         SyntaxNode root,
         bool hasInstanceMethods)
     {
         if (variableSymbols.Length != 1 || hasInstanceMethods)
-            return ReplaceMultiVariableExpression(variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods);
+            return ReplaceMultiVariableExpression(syntaxContext, variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods);
 
         var createSpecInvocation = SpecInvocationExpressionSyntax.Create(
             IdentifierName(propositionName),
@@ -336,6 +347,7 @@ public class LogicalExpressionToSpecConverter(
     }
 
     private SyntaxNode ReplaceMultiVariableExpression(
+        SyntaxContext syntaxContext,
         ImmutableArray<ISymbol> variableSymbols,
         ExpressionSyntax logicalExpressionSyntax,
         SyntaxNode root,
@@ -417,10 +429,10 @@ public class LogicalExpressionToSpecConverter(
                 }
                 """;
 
-        var tempUnit = ParseCompilationUnit(newMethodSource.Replace("\r\n", "\n").Replace("\n", "\r\n"));
+        var tempUnit = ParseCompilationUnit(newMethodSource);
         var tempClass = tempUnit.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
         var newField = tempClass.Members.OfType<FieldDeclarationSyntax>().First()
-            .WithTrailingTrivia(CarriageReturnLineFeed);
+            .WithTrailingTrivia(syntaxContext.LineFeed);
         var newMethod = tempClass.Members.OfType<MethodDeclarationSyntax>().Last(); // Last method is the actual method, not constructor
         var newConstructor = hasInstanceMethods ? tempClass.Members.OfType<ConstructorDeclarationSyntax>().FirstOrDefault() : null;
 
@@ -431,7 +443,11 @@ public class LogicalExpressionToSpecConverter(
         if (!fieldAdded) newMembers.Add(newField);
         if (newConstructor is not null) newMembers.Add(newConstructor);
 
-        foreach (var member in containingClass.Members) newMembers.Add(member == method ? newMethod : member);
+        newMembers.AddRange(containingClass.Members
+            .Select(member =>
+                member == method
+                    ? newMethod
+                    : member));
 
         var newClass = containingClass.WithMembers(List(newMembers));
 
@@ -452,24 +468,26 @@ public class LogicalExpressionToSpecConverter(
     }
 
     private static SyntaxNode AddToCompilationUnit(
+        SyntaxContext syntaxContext,
         SyntaxNode newRoot,
         params MemberDeclarationSyntax[] customSpecClassDeclaration)
     {
         var compilationUnit = (CompilationUnitSyntax)newRoot;
         var membersWithTrivia = customSpecClassDeclaration.Select(member =>
-            member.WithLeadingTrivia(CarriageReturnLineFeed, CarriageReturnLineFeed));
+            member.WithLeadingTrivia(syntaxContext.LineFeed, syntaxContext.LineFeed));
 
         newRoot = compilationUnit.AddMembers(membersWithTrivia.ToArray());
         return newRoot;
     }
 
     private static SyntaxNode AddToNamespace(
+        SyntaxContext syntaxContext,
         SyntaxNode newRoot,
         BaseNamespaceDeclarationSyntax namespaceDeclaration,
         params MemberDeclarationSyntax[] customSpecClassDeclaration)
     {
         var membersWithTrivia = customSpecClassDeclaration.Select(member =>
-            member.WithLeadingTrivia(CarriageReturnLineFeed, CarriageReturnLineFeed));
+            member.WithLeadingTrivia(syntaxContext.LineFeed, syntaxContext.LineFeed));
 
         var updatedNamespace = namespaceDeclaration
             .AddMembers(membersWithTrivia.ToArray());
