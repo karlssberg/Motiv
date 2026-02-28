@@ -15,9 +15,6 @@ namespace Motiv;
 public abstract class BooleanResultBase
     : IEquatable<BooleanResultBase>, IEquatable<bool>
 {
-    private const string True = "true";
-    private const string False = "false";
-
     private IEnumerable<string>? _assertions;
 
     /// <summary>Prevent inheritance from outside of this project/assembly.</summary>
@@ -53,7 +50,7 @@ public abstract class BooleanResultBase
     /// </summary>
     public IEnumerable<string> UnderlyingReasons => UnderlyingExpressionResults.Select(result => result.Reason);
 
-    /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that .</summary>
+    /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that represent the expression results.</summary>
     public IEnumerable<BooleanResultBase> UnderlyingExpressionResults =>
         Causes
             .SelectMany(booleanResult =>
@@ -101,7 +98,7 @@ public abstract class BooleanResultBase
     /// </summary>
     public abstract Explanation Explanation { get; }
 
-    /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that caused this .</summary>
+    /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that caused this result.</summary>
     public abstract IEnumerable<BooleanResultBase> Causes { get; }
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Assertions" />.</summary>
@@ -294,9 +291,6 @@ public abstract class BooleanResultBase
     public override int GetHashCode() => Satisfied.GetHashCode();
 
     internal BooleanResultBase<string> ToExplanationResult() => new ExplanationBooleanResult(this);
-
-    /// <summary>Gets the lowercase display text for true or false states.</summary>
-    protected string GetSatisfiedText() => Satisfied ? True : False;
 }
 
 /// <summary>Represents a base class for boolean results with metadata.</summary>

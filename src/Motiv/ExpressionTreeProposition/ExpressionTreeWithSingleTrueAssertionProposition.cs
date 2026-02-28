@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Motiv.BooleanPredicateProposition;
 using Motiv.Shared;
 
 namespace Motiv.ExpressionTreeProposition;
@@ -53,7 +54,7 @@ internal sealed class ExpressionTreeWithSingleTrueAssertionProposition<TModel, T
                 expression,
                 Description.Statement));
 
-        return new ExpressionTreePolicyResult<string>(
+        return new PropositionPolicyResult<string>(
             result.Satisfied,
             assertion,
             metadataTier,
