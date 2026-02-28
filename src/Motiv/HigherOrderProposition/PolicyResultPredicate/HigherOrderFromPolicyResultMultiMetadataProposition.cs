@@ -16,7 +16,7 @@ internal sealed class HigherOrderFromPolicyResultMultiMetadataProposition<TModel
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
-            .Select(model => new PolicyResult<TModel, TUnderlyingMetadata>(model,  resultResolver(model)))
+            .Select(model => new PolicyResult<TModel, TUnderlyingMetadata>(model, resultResolver(model)))
             .ToArray();
 
         var isSatisfied = higherOrderPredicate(underlyingResults);
@@ -38,7 +38,7 @@ internal sealed class HigherOrderFromPolicyResultMultiMetadataProposition<TModel
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch
             {
-                IEnumerable<string>  reasons => reasons,
+                IEnumerable<string> reasons => reasons,
                 _ => specDescription.ToReason(isSatisfied).ToEnumerable()
             });
 

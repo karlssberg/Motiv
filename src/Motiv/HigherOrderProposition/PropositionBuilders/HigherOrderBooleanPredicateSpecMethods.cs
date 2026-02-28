@@ -73,9 +73,9 @@ internal static class HigherOrderBooleanPredicateSpecMethods
         bool HigherOrderPredicate(IEnumerable<ModelResult<TModel>> modelResults) =>
             modelResults.CountTrue() >= n;
 
-        IEnumerable<ModelResult<TModel>> CauseSelector(bool _, IEnumerable<ModelResult<TModel>> booleanResults)
+        IEnumerable<ModelResult<TModel>> CauseSelector(bool _, IEnumerable<ModelResult<TModel>> modelResults)
         {
-            var modelResultsArray = booleanResults.ToArray();
+            var modelResultsArray = modelResults.ToArray();
             return modelResultsArray
                 .WhereTrue()
                 .ElseIfEmpty(modelResultsArray);
@@ -97,8 +97,8 @@ internal static class HigherOrderBooleanPredicateSpecMethods
             HigherOrderPredicate,
             CauseSelector);
 
-        bool HigherOrderPredicate(IEnumerable<ModelResult<TModel>> booleanResults) =>
-            booleanResults.CountTrue() <= n;
+        bool HigherOrderPredicate(IEnumerable<ModelResult<TModel>> modelResults) =>
+            modelResults.CountTrue() <= n;
 
         IEnumerable<ModelResult<TModel>> CauseSelector(bool _, IEnumerable<ModelResult<TModel>> modelResults)
         {
@@ -140,10 +140,10 @@ internal static class HigherOrderBooleanPredicateSpecMethods
             HigherOrderPredicate,
             CauseSelector);
 
-        bool HigherOrderPredicate(IEnumerable<ModelResult<TModel>> booleanResults) =>
-            booleanResults.CountTrue() == n;
+        bool HigherOrderPredicate(IEnumerable<ModelResult<TModel>> modelResults) =>
+            modelResults.CountTrue() == n;
 
-        IEnumerable<ModelResult<TModel>> CauseSelector(bool _,  IEnumerable<ModelResult<TModel>> modelResults)
+        IEnumerable<ModelResult<TModel>> CauseSelector(bool _, IEnumerable<ModelResult<TModel>> modelResults)
         {
             var modelResultsArray = modelResults.ToArray();
             return modelResultsArray

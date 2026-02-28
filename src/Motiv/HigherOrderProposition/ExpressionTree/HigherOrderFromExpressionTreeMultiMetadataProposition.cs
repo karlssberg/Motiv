@@ -21,7 +21,7 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
-            .Select(model => new BooleanResult<TModel, string>(model,  _predicate.Execute(model)))
+            .Select(model => new BooleanResult<TModel, string>(model, _predicate.Execute(model)))
             .ToArray();
 
         var isSatisfied = higherOrderPredicate(underlyingResults);
@@ -43,7 +43,7 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch
             {
-                IEnumerable<string>  reasons => reasons,
+                IEnumerable<string> reasons => reasons,
                 _ => underlyingResults.GetAssertions()
             });
 

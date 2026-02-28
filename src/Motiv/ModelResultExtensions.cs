@@ -25,7 +25,7 @@ public static class ModelResultExtensions
     /// <returns>A collection of model-results where the result is false.</returns>
     public static IEnumerable<ModelResult<TModel>> WhereFalse<TModel>(
         this IEnumerable<ModelResult<TModel>> results) =>
-        results.Where(result => result.Satisfied);
+        results.Where(result => !result.Satisfied);
     
     /// <summary>
     /// Counts the number of model-results in a collection where the result is true.

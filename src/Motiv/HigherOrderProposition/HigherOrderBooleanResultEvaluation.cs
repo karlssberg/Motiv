@@ -106,7 +106,7 @@ public class HigherOrderBooleanResultEvaluation<TModel, TMetadata>
     /// <summary>
     /// Gets the list of all results.
     /// </summary>
-    public IEnumerable<BooleanResult<TModel, TMetadata>> Results=>  _results;
+    public IEnumerable<BooleanResult<TModel, TMetadata>> Results => _results;
 
     /// <summary>
     /// Gets the list of results where the result is true.

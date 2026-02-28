@@ -16,7 +16,7 @@ internal sealed class HigherOrderFromPolicyResultMetadataProposition<TModel, TMe
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
-            .Select(model => new PolicyResult<TModel, TUnderlyingMetadata>(model,  resultResolver(model)))
+            .Select(model => new PolicyResult<TModel, TUnderlyingMetadata>(model, resultResolver(model)))
             .ToArray();
         var isSatisfied = higherOrderPredicate(underlyingResults);
         var metadataResolver = isSatisfied

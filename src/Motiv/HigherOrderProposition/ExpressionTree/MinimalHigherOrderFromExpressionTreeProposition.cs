@@ -19,7 +19,7 @@ internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TP
     protected override BooleanResultBase<string> IsSpecSatisfiedBy(IEnumerable<TModel> models)
     {
         var underlyingResults = models
-            .Select(model => new BooleanResult<TModel, string>(model,  _predicate.Execute(model)))
+            .Select(model => new BooleanResult<TModel, string>(model, _predicate.Execute(model)))
             .ToArray();
 
         var isSatisfied = higherOrderPredicate(underlyingResults);

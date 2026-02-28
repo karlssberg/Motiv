@@ -9,7 +9,6 @@ public sealed class HigherOrderBooleanEvaluation<TModel>
     private readonly IReadOnlyList<ModelResult<TModel>> _allResults;
     private readonly IReadOnlyList<ModelResult<TModel>> _causalResults;
 
-    // Lazy loaded properties for performance optimization
     private readonly Lazy<bool> _lazyAllSatisfied;
     private readonly Lazy<bool> _lazyAnySatisfied;
     private readonly Lazy<bool> _lazyNoneSatisfied;
@@ -28,42 +27,30 @@ public sealed class HigherOrderBooleanEvaluation<TModel>
         IReadOnlyList<ModelResult<TModel>> causalResults)
     {
         _allResults = allResults;
-        
         _causalResults = causalResults;
-        
+
         _lazyAllModels = new Lazy<IReadOnlyList<TModel>>(() =>
             allResults.Select(result => result.Model).ToArray());
-
         _lazyAllSatisfied = new Lazy<bool>(() =>
             allResults.All(result => result.Satisfied));
-        
         _lazyAnySatisfied = new Lazy<bool>(() =>
             allResults.Any(result => result.Satisfied));
-
         _lazyNoneSatisfied = new Lazy<bool>(() =>
             allResults.All(result => !result.Satisfied));
 
         _lazyCausalModels = new Lazy<IReadOnlyList<TModel>>(() =>
             causalResults.Select(result => result.Model).ToArray());
-
         _lazyTrueModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            allResults
-                .Where(r => r.Satisfied)
-                .Select(result => result.Model)
-                .ToArray());
-
+            allResults.WhereTrue().Select(result => result.Model).ToArray());
         _lazyFalseModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            allResults
-                .Where(r => !r.Satisfied)
-                .Select(result => result.Model)
-                .ToArray());
+            allResults.WhereFalse().Select(result => result.Model).ToArray());
     }
 
     /// <summary>
     /// Gets a value indicating whether all results are satisfied.
     /// </summary>
     public bool AllSatisfied => _lazyAllSatisfied.Value;
-    
+
     /// <summary>
     /// Gets a value indicating whether any of the results are satisfied.
     /// </summary>
