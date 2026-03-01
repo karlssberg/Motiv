@@ -43,7 +43,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
         VisitSpreadOfExpressions(node.Arguments.ToArray());
 
-        OutputText.Append(")");
+        OutputText.Append(')');
 
         return node;
     }
@@ -171,9 +171,9 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
                 VisitAndMaybeApplyParentheses(binaryExpression, binaryExpression.Right, false);
                 OutputText.Append(']');
                 return binaryExpression;
-            case { NodeType: ExpressionType.MultiplyChecked }:
-            case { NodeType: ExpressionType.AddChecked }:
-            case { NodeType: ExpressionType.SubtractChecked }:
+            case { NodeType: ExpressionType.MultiplyChecked
+                or ExpressionType.AddChecked
+                or ExpressionType.SubtractChecked }:
                 OutputText.Append("checked(");
                 VisitAndMaybeApplyParentheses(binaryExpression, binaryExpression.Left);
                 OutputText.Append($" {GetBinaryOperatorSymbol(binaryExpression.NodeType)} ");
@@ -209,18 +209,16 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
     private void VisitNotExpression(UnaryExpression node)
     {
-        switch (node)
+        if (node.Operand is TypeBinaryExpression { NodeType: ExpressionType.TypeIs } typeExpression)
         {
-            case { Operand: TypeBinaryExpression typeExpression, Operand.NodeType: ExpressionType.TypeIs }:
-                VisitAndMaybeApplyParentheses(typeExpression, typeExpression.Expression);
-                OutputText.Append(" is not ");
-                OutputText.Append(typeExpression.TypeOperand.ToCSharpName());
-                return;
-            default:
-                OutputText.Append('!');
-                VisitAndMaybeApplyParentheses(node, node.Operand);
-                return;
+            VisitAndMaybeApplyParentheses(typeExpression, typeExpression.Expression);
+            OutputText.Append(" is not ");
+            OutputText.Append(typeExpression.TypeOperand.ToCSharpName());
+            return;
         }
+
+        OutputText.Append('!');
+        VisitAndMaybeApplyParentheses(node, node.Operand);
     }
 
     protected override Expression VisitMember(MemberExpression node)
@@ -244,7 +242,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
     protected override Expression VisitMemberInit(MemberInitExpression node)
     {
         VisitNewWithInitialization(node.NewExpression);
-        OutputText.Append(" ");
+        OutputText.Append(' ');
         VisitMemberBindings(node.Bindings);
 
         return node;
@@ -256,7 +254,9 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         var isFirst = true;
         foreach (var binding in bindings)
         {
-            OutputText.Append(isFirst ? "" : ", ");
+            if (!isFirst)
+                OutputText.Append(", ");
+
             isFirst = false;
 
             switch (binding)
@@ -408,9 +408,9 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
         OutputText.Append('.');
         OutputText.Append(node.ToCSharpName());
-        OutputText.Append("(");
+        OutputText.Append('(');
         VisitSpreadOfExpressions(arguments.ToArray());
-        OutputText.Append(")");
+        OutputText.Append(')');
 
         return node;
     }
@@ -510,14 +510,10 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         var isFirst = true;
         foreach (var arg in arguments)
         {
-            if (isFirst)
-            {
-                isFirst = false;
-                Visit(arg);
-                continue;
-            }
+            if (!isFirst)
+                OutputText.Append(", ");
 
-            OutputText.Append(", ");
+            isFirst = false;
             Visit(arg);
         }
     }
@@ -527,7 +523,9 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         var isFirst = true;
         foreach (var parameterExpression in parameterExpressions)
         {
-            OutputText.Append(isFirst ? "" : ", ");
+            if (!isFirst)
+                OutputText.Append(", ");
+
             isFirst = false;
             OutputText.Append(parameterExpression.Type.ToCSharpName());
             OutputText.Append(' ');
@@ -595,9 +593,8 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         return !isLeft;
     }
 
-    private static int GetOperatorPrecedence(ExpressionType nodeType)
-    {
-        return nodeType switch
+    private static int GetOperatorPrecedence(ExpressionType nodeType) =>
+        nodeType switch
         {
             // Primary expressions (the highest precedence)
             ExpressionType.Call
@@ -682,11 +679,9 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
                 or ExpressionType.RightShiftAssign => 1,
             _ => 0
         };
-    }
 
-    private static bool IsRightAssociative(ExpressionType nodeType)
-    {
-        return nodeType switch
+    private static bool IsRightAssociative(ExpressionType nodeType) =>
+        nodeType switch
         {
             // Assignment operators
             ExpressionType.Assign
@@ -707,25 +702,23 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
             ExpressionType.Lambda => true,
             _ => false
         };
-    }
 
     private static bool IsSupported<T>(T value) =>
         value is null
             or bool
             or char
             or string
-            or float
-            or double
-            or decimal
-            or long
-            or ulong
-            or int
             or byte
             or sbyte
             or short
             or ushort
+            or int
             or uint
+            or long
             or ulong
+            or float
+            or double
+            or decimal
             or Guid
             or TimeSpan
             or DateTime
@@ -756,25 +749,22 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
     }
 
     private static bool IsIgnoredNode(Expression node) =>
-        node.NodeType switch
-        {
-            ExpressionType.IsTrue => true,
-            ExpressionType.IsFalse => true,
-            _ => false
-        };
+        node.NodeType is ExpressionType.IsTrue or ExpressionType.IsFalse;
 
     private static Expression ResolveVisibleNode(Expression node) =>
         node switch
         {
-            // Ignored nodes
-            UnaryExpression { NodeType: ExpressionType.Quote } unary => unary.Operand,
-            UnaryExpression { NodeType: ExpressionType.TypeAs } unary => unary.Operand,
-            UnaryExpression { NodeType: ExpressionType.Coalesce } unary => unary.Operand,
-            UnaryExpression { NodeType: ExpressionType.IsTrue } unary => unary.Operand,
-            UnaryExpression { NodeType: ExpressionType.IsFalse } unary => unary.Operand,
-            UnaryExpression { NodeType: ExpressionType.ArrayLength } unary => unary.Operand,
-            UnaryExpression { NodeType: ExpressionType.ConvertChecked } unary => unary.Operand,
-            UnaryExpression { NodeType: ExpressionType.Convert } unary => unary.Operand,
+            UnaryExpression
+            {
+                NodeType: ExpressionType.Quote
+                    or ExpressionType.TypeAs
+                    or ExpressionType.Coalesce
+                    or ExpressionType.IsTrue
+                    or ExpressionType.IsFalse
+                    or ExpressionType.ArrayLength
+                    or ExpressionType.ConvertChecked
+                    or ExpressionType.Convert
+            } unary => unary.Operand,
             _ => node
         };
 
