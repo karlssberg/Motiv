@@ -74,13 +74,13 @@ public class Spec<TModel> : SpecBase<TModel, string>
     /// <summary>Gets the description of the proposition.</summary>
     public override ISpecDescription Description { get; }
 
-    /// <summary>Gets the underlying specifications that makes up this composite proposition.</summary>
-    public override IEnumerable<SpecBase> Underlying => Enumerable.Empty<SpecBase<TModel>>();
+    /// <summary>Gets the underlying specifications that make up this composite proposition.</summary>
+    public override IEnumerable<SpecBase> Underlying => _spec.Underlying;
 
     /// <summary>Determines whether the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be checked against the proposition.</param>
     /// <returns>
-    /// A BooleanResultBase containing the result of the proposition being applied to a moel and the associated
+    /// A BooleanResultBase containing the result of the proposition being applied to a model and the associated
     /// metadata.
     /// </returns>
     protected override BooleanResultBase<string> IsSpecSatisfiedBy(TModel model) => _spec.IsSatisfiedBy(model);

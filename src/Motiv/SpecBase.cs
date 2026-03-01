@@ -23,10 +23,6 @@ public abstract class SpecBase
     /// <summary>Gets a description of the specification.  This is used for debugging/logging purposes.</summary>
     public abstract ISpecDescription Description { get; }
 
-    /// <summary>Gets the propositional statement.</summary>#
-    [Obsolete("Use Name property instead")]
-    public string Statement => Description.Statement;
-
     /// <summary>Gets the propositional statement.</summary>
     public string Name => Description.Statement;
 
@@ -81,8 +77,8 @@ public abstract class SpecBase<TModel> : SpecBase
         new AndSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
     /// <summary>
-    /// Combines this specification with another specification using the conditional AND operator. The left operand
-    /// will only be evaluated only if the right operand evaluates to <c>true</c>. This is commonly referred to as
+    /// Combines this specification with another specification using the conditional AND operator. The right operand
+    /// is only evaluated if the left operand evaluates to <c>true</c>. This is commonly referred to as
     /// "short-circuiting".
     /// </summary>
     /// <param name="spec">The specification to combine with this specification.</param>
@@ -97,8 +93,8 @@ public abstract class SpecBase<TModel> : SpecBase
         new OrSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec());
 
     /// <summary>
-    /// Combines this specification with another specification using the conditional OR operator. The left operand
-    /// will only be evaluated only if the right operand evaluates to <c>false</c>. This is commonly referred to as
+    /// Combines this specification with another specification using the conditional OR operator. The right operand
+    /// is only evaluated if the left operand evaluates to <c>false</c>. This is commonly referred to as
     /// "short-circuiting".
     /// </summary>
     /// <param name="spec">The specification to combine with this specification.</param>
@@ -174,6 +170,8 @@ public abstract class SpecBase<TModel> : SpecBase
 /// <typeparam name="TMetadata">The type of the metadata to associate with the predicate</typeparam>
 public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
 {
+    private SpecBase<TModel, string>? _explanationSpec;
+
     /// <summary>Prevents the external instantiation of the <see cref="SpecBase{TModel,TMetadata}" /> class.</summary>
     internal SpecBase()
     {
@@ -197,12 +195,12 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
         new AndSpec<TModel, TMetadata>(this, spec);
 
     /// <summary>
-    /// Combines this specification with another specification using the logical AND operator. The operands are
-    /// short-circuted, meaning that if the left operand resolves to <c>false</c> then it is not possible for the AND operation
-    /// to return <c>true</c>.  Therefore, the compiler does not bother evaluating the right operand.
+    /// Combines this specification with another specification using the conditional AND operator. The right operand
+    /// is only evaluated if the left operand resolves to <c>true</c>, since a <c>false</c> left operand means the
+    /// AND operation cannot return <c>true</c>. This is commonly referred to as "short-circuiting".
     /// </summary>
     /// <param name="spec">The specification to combine with this specification.</param>
-    /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
+    /// <returns>A new specification that represents the conditional AND of this specification and the other specification.</returns>
     public SpecBase<TModel, TMetadata> AndAlso(SpecBase<TModel, TMetadata> spec) =>
         new AndAlsoSpec<TModel, TMetadata>(this, spec);
 
@@ -213,12 +211,12 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
         new OrSpec<TModel, TMetadata>(this, spec);
 
     /// <summary>
-    /// Combines this specification with another specification using the logical OR operator. The operands are
-    /// short-circuted, meaning that if the left operand resolves to <c>false</c> then it is not possible for the OR operation
-    /// to return <c>true</c>.  Therefore the compiler does not bother evaluating the right operand.
+    /// Combines this specification with another specification using the conditional OR operator. The right operand
+    /// is only evaluated if the left operand resolves to <c>false</c>, since a <c>true</c> left operand means the
+    /// OR operation is already satisfied. This is commonly referred to as "short-circuiting".
     /// </summary>
     /// <param name="spec">The right operand.</param>
-    /// <returns>A new specification that represents the logical PR of this specification and the other specification.</returns>
+    /// <returns>A new specification that represents the conditional OR of this specification and the other specification.</returns>
     public SpecBase<TModel, TMetadata> OrElse(SpecBase<TModel, TMetadata> spec) =>
         new OrElseSpec<TModel, TMetadata>(this, spec);
 
@@ -272,7 +270,7 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
         this switch
         {
             SpecBase<TModel, string> explanationSpec => explanationSpec,
-            _ => new MetadataToExplanationAdapterSpec<TModel, TMetadata>(this)
+            _ => _explanationSpec ??= new MetadataToExplanationAdapterSpec<TModel, TMetadata>(this)
         };
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>

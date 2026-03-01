@@ -157,6 +157,7 @@ Policy is a subtype of Spec, so policies can be used anywhere a spec is expected
 - **Avoid over-DRYing**: The codebase intentionally has some duplication between proposition types. Each builder path has nuanced differences. Explicit code is preferred over complex abstractions with branching logic.
 - **Results are composable**: `BooleanResultBase<TMetadata>` instances from different model types can be combined with operators, enabling cross-domain reasoning.
 - **De-noising**: Results only surface assertions that influenced the final outcome, filtering out irrelevant branches.
+- **Batch refactoring verification**: When refactoring multiple files with the same pattern, verify all files are modified before moving to the next phase — use `git status` or `git diff --stat` to confirm the expected set of changed files matches the plan.
 
 ## Test-Driven Development
 
