@@ -1,3 +1,4 @@
+using Motiv.Shared;
 using Motiv.Traversal;
 
 namespace Motiv.XOr;
@@ -13,7 +14,8 @@ internal sealed class XOrSpec<TModel, TMetadata>(
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
 
     public override ISpecDescription Description =>
-        new XOrSpecDescription<TModel, TMetadata>(left, right);
+        new BinarySpecDescription<TModel, TMetadata>(left, right, "^", Operator.XOr,
+            operand => operand is XOrSpec<TModel, TMetadata>);
 
     public string Operation => Operator.XOr;
     public bool IsCollapsable => false;

@@ -1,3 +1,5 @@
+using Motiv.And;
+using Motiv.Shared;
 using Motiv.Traversal;
 
 namespace Motiv.AndAlso;
@@ -13,7 +15,8 @@ internal sealed class AndAlsoSpec<TModel, TMetadata>(
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
 
     public override ISpecDescription Description =>
-        new AndAlsoSpecDescription<TModel, TMetadata>(left, right);
+        new BinarySpecDescription<TModel, TMetadata>(left, right, "&&", Operator.AndAlso,
+            operand => operand is AndSpec<TModel, TMetadata> or AndAlsoSpec<TModel, TMetadata>);
 
     public string Operation => Operator.AndAlso;
 

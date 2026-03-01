@@ -1,3 +1,5 @@
+using Motiv.Or;
+using Motiv.Shared;
 using Motiv.Traversal;
 
 namespace Motiv.OrElse;
@@ -10,11 +12,11 @@ internal sealed class OrElsePolicy<TModel, TMetadata>(
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
 {
-
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
 
     public override ISpecDescription Description =>
-        new OrElseSpecDescription<TModel, TMetadata>(left, right);
+        new BinarySpecDescription<TModel, TMetadata>(left, right, "||", Operator.OrElse,
+            operand => operand is OrSpec<TModel, TMetadata> or OrElsePolicy<TModel, TMetadata> or OrElseSpec<TModel, TMetadata>);
 
     public string Operation => Operator.OrElse;
 

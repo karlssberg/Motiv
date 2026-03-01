@@ -1,3 +1,5 @@
+using Motiv.OrElse;
+using Motiv.Shared;
 using Motiv.Traversal;
 
 namespace Motiv.Or;
@@ -10,23 +12,15 @@ internal sealed class OrSpec<TModel, TMetadata>(
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
 {
-
     public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
 
     public override ISpecDescription Description =>
-        new OrSpecDescription<TModel, TMetadata>(left, right);
+        new BinarySpecDescription<TModel, TMetadata>(left, right, "|", Operator.Or,
+            operand => operand is OrSpec<TModel, TMetadata> or OrElseSpec<TModel, TMetadata> or OrElsePolicy<TModel, TMetadata>);
 
     public string Operation => Operator.Or;
 
     public bool IsCollapsable => true;
-
-    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
-    {
-        var leftResult =  left.IsSatisfiedBy(model);
-        var rightResult = right.IsSatisfiedBy(model);
-
-        return leftResult.Or(rightResult);
-    }
 
     public SpecBase<TModel, TMetadata> Left => left;
 
@@ -39,4 +33,12 @@ internal sealed class OrSpec<TModel, TMetadata>(
     SpecBase IBinaryOperationSpec.Right => Right;
 
     SpecBase IBinaryOperationSpec.Left => Left;
+
+    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
+    {
+        var leftResult = left.IsSatisfiedBy(model);
+        var rightResult = right.IsSatisfiedBy(model);
+
+        return leftResult.Or(rightResult);
+    }
 }
