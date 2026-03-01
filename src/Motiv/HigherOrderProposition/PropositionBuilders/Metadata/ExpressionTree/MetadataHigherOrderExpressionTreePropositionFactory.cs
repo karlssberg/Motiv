@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using Motiv.ExpressionTreeProposition;
 using Motiv.FluentFactory.Attributes;
 using Motiv.HigherOrderProposition.ExpressionTree;
-using SpecDescription = Motiv.ExpressionTreeProposition.SpecDescription;
+using Motiv.Shared;
 
 namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTree;
 

@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Motiv.ExpressionTreeProposition.PropositionBuilders.Overloads;
 using Motiv.FluentFactory.Attributes;
+using Motiv.Shared;
 
 namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 
@@ -14,7 +15,7 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
 /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
 [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
-public readonly struct  MetadataExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult>(
+public readonly struct MetadataExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
     [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, TMetadata> whenTrue,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, BooleanResultBase<string>, TMetadata> whenFalse)

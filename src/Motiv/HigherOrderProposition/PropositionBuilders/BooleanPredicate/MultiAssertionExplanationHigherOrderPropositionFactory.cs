@@ -1,6 +1,6 @@
-using Motiv.ExpressionTreeProposition;
 using Motiv.FluentFactory.Attributes;
 using Motiv.HigherOrderProposition.BooleanPredicate;
+using Motiv.Shared;
 
 namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanPredicate;
 
@@ -44,7 +44,7 @@ public readonly struct MultiAssertionExplanationHigherOrderPropositionFactory<TM
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
-    public SpecBase<IEnumerable<TModel>, string>  Create(string statement)
+    public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel,string>(
@@ -56,4 +56,3 @@ public readonly struct MultiAssertionExplanationHigherOrderPropositionFactory<TM
             _higherOrderOperation.CauseSelector);
     }
 }
-

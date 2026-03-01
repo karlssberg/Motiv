@@ -54,5 +54,5 @@ public readonly struct PropositionFactory<TModel, TReplacementMetadata>(
             spec,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description) { HasExplicitStatement = true });
 }

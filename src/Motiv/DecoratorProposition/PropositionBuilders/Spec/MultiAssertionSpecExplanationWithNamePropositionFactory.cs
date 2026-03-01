@@ -44,5 +44,5 @@ public readonly struct MultiAssertionSpecExplanationWithNamePropositionFactory<T
                 .ToEnumerable()
                 .ToFunc<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(trueBecause, spec.Description) );
+            new SpecDescription(trueBecause, spec.Description));
 }
