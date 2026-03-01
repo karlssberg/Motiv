@@ -22,7 +22,7 @@ internal class ExpressionTreeDescription<TModel, TPredicateResult>(
             yield return line.Indent();
     }
 
-    public string ToReason(bool satisfied)=>
+    public string ToReason(bool satisfied) =>
         Statement.ToReason(satisfied);
 
     public bool HasExplicitStatement { get; set; }

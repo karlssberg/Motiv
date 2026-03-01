@@ -19,6 +19,11 @@ public readonly struct MultiAssertionExplanationWithNameHigherOrderPropositionFa
     [FluentMethod("WhenTrue")]string trueBecause,
     [FluentMethod("WhenFalseYield")]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> falseBecause)
 {
+    private Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> TrueBecauseFunc =>
+        trueBecause
+            .ToEnumerable()
+            .ToFunc<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>>();
+
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.
     /// </summary>
@@ -32,9 +37,7 @@ public readonly struct MultiAssertionExplanationWithNameHigherOrderPropositionFa
         return new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel, string>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
-            trueBecause
-                .ToEnumerable()
-                .ToFunc<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>>(),
+            TrueBecauseFunc,
             falseBecause,
             new SpecDescription(statement) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);
@@ -45,16 +48,12 @@ public readonly struct MultiAssertionExplanationWithNameHigherOrderPropositionFa
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create()
-    {
-        return new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel, string>(
+    public SpecBase<IEnumerable<TModel>, string> Create() =>
+        new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel, string>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
-            trueBecause
-                .ToEnumerable()
-                .ToFunc<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>>(),
+            TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause),
             higherOrderOperation.CauseSelector);
-    }
 }

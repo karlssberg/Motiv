@@ -21,6 +21,11 @@ public readonly struct MultiAssertionExplanationFromBooleanResultWithNameHigherO
     [FluentMethod("WhenTrue")]string trueBecause,
     [FluentMethod("WhenFalseYield")]Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>> falseBecause)
 {
+    private Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>> TrueBecauseFunc =>
+        trueBecause
+            .ToEnumerable()
+            .ToFunc<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>>();
+
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.
     /// </summary>
@@ -33,9 +38,7 @@ public readonly struct MultiAssertionExplanationFromBooleanResultWithNameHigherO
         return new HigherOrderFromExpressionTreeMultiMetadataProposition<TModel, string, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
-            trueBecause
-                .ToEnumerable()
-                .ToFunc<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>>(),
+            TrueBecauseFunc,
             falseBecause,
             new SpecDescription(statement) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);
@@ -50,9 +53,7 @@ public readonly struct MultiAssertionExplanationFromBooleanResultWithNameHigherO
         new HigherOrderFromExpressionTreeMultiMetadataProposition<TModel, string, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
-            trueBecause
-                .ToEnumerable()
-                .ToFunc<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>>(),
+            TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause),
             higherOrderOperation.CauseSelector);

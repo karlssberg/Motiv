@@ -18,6 +18,11 @@ public readonly struct MultiAssertionExplanationWithNameExpressionTreePropositio
     [FluentMethod("WhenTrue")]string trueBecause,
     [FluentMethod("WhenFalseYield")]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> falseBecause)
 {
+    private Func<TModel, BooleanResultBase<string>, IEnumerable<string>> TrueBecauseFunc =>
+        trueBecause
+            .ToEnumerable()
+            .ToFunc<TModel, BooleanResultBase<string>, IEnumerable<string>>();
+
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>
@@ -27,9 +32,7 @@ public readonly struct MultiAssertionExplanationWithNameExpressionTreePropositio
     public SpecBase<TModel, string> Create(string statement) =>
         new ExpressionTreeMultiMetadataProposition<TModel, string, TPredicateResult>(
             expression,
-            trueBecause
-                .ToEnumerable()
-                .ToFunc<TModel, BooleanResultBase<string>, IEnumerable<string>>(),
+            TrueBecauseFunc,
             falseBecause,
             new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
 
@@ -41,9 +44,7 @@ public readonly struct MultiAssertionExplanationWithNameExpressionTreePropositio
     public SpecBase<TModel, string> Create() =>
         new ExpressionTreeMultiMetadataProposition<TModel, string, TPredicateResult>(
             expression,
-            trueBecause
-                .ToEnumerable()
-                .ToFunc<TModel, BooleanResultBase<string>, IEnumerable<string>>(),
+            TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause));
 }

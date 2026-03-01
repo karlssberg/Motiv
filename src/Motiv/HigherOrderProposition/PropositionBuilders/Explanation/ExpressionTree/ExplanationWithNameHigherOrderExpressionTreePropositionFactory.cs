@@ -23,6 +23,9 @@ public readonly struct ExplanationWithNameHigherOrderExpressionTreePropositionFa
     [FluentMethod("WhenTrue")]string trueBecause,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> falseBecause)
 {
+    private Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> TrueBecauseFunc =>
+        trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, string>, string>();
+
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false. The propositional statement
     /// will be obtained from the .WhenTrue() assertion.
@@ -32,7 +35,7 @@ public readonly struct ExplanationWithNameHigherOrderExpressionTreePropositionFa
         new HigherOrderFromExpressionTreeExplanationProposition<TModel, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
-            trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, string>, string>(),
+            TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause),
             higherOrderOperation.CauseSelector);
@@ -50,7 +53,7 @@ public readonly struct ExplanationWithNameHigherOrderExpressionTreePropositionFa
         return new HigherOrderFromExpressionTreeExplanationProposition<TModel, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
-            trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, string>, string>(),
+            TrueBecauseFunc,
             falseBecause,
             new SpecDescription(statement) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);

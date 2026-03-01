@@ -17,6 +17,11 @@ public readonly struct MultiAssertionSpecExplanationWithNamePropositionFactory<T
     [FluentMethod("WhenTrue")]string trueBecause,
     [FluentMethod("WhenFalseYield")]Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> falseBecause)
 {
+    private Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> TrueBecauseFunc =>
+        trueBecause
+            .ToEnumerable()
+            .ToFunc<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>();
+
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>
@@ -26,9 +31,7 @@ public readonly struct MultiAssertionSpecExplanationWithNamePropositionFactory<T
     public SpecBase<TModel, string> Create(string statement) =>
         new SpecDecoratorMultiMetadataProposition<TModel, string, TMetadata>(
             spec,
-            trueBecause
-                .ToEnumerable()
-                .ToFunc<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>(),
+            TrueBecauseFunc,
             falseBecause,
             new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description) { HasExplicitStatement = true });
 
@@ -40,9 +43,7 @@ public readonly struct MultiAssertionSpecExplanationWithNamePropositionFactory<T
     public SpecBase<TModel, string> Create() =>
         new SpecDecoratorMultiMetadataProposition<TModel, string, TMetadata>(
             spec,
-            trueBecause
-                .ToEnumerable()
-                .ToFunc<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>(),
+            TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause, spec.Description));
 }

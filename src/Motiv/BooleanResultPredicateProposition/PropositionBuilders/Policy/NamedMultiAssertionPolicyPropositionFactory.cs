@@ -17,6 +17,11 @@ public readonly struct NamedMultiAssertionPolicyPropositionFactory<TModel, TMeta
     [FluentMethod("WhenTrue")]string trueBecause,
     [FluentMethod("WhenFalseYield")]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> falseBecause)
 {
+    private Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> TrueBecauseFunc =>
+        trueBecause
+            .ToEnumerable()
+            .ToFunc<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>>();
+
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>
@@ -28,9 +33,7 @@ public readonly struct NamedMultiAssertionPolicyPropositionFactory<TModel, TMeta
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new PolicyResultPredicateMultiValueProposition<TModel, string, TMetadata>(
             predicate,
-            trueBecause
-                .ToEnumerable()
-                .ToFunc<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>>(),
+            TrueBecauseFunc,
             falseBecause,
             new SpecDescription(statement) { HasExplicitStatement = true });
     }
@@ -43,9 +46,7 @@ public readonly struct NamedMultiAssertionPolicyPropositionFactory<TModel, TMeta
     public SpecBase<TModel, string> Create() =>
         new PolicyResultPredicateMultiValueProposition<TModel, string, TMetadata>(
             predicate,
-            trueBecause
-                .ToEnumerable()
-                .ToFunc<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>>(),
+            TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause));
 }
