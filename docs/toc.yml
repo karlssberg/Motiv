@@ -8,6 +8,8 @@ items:
     href: builder/toc.yml
   - name: Operators
     href: operators/toc.yml
+  - name: Tap
+    href: tap/toc.yml
   - name: Collections
     href: collections/toc.yml
 

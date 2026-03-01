@@ -36,6 +36,16 @@ Propositions can be combined using logical operators to form new, more complex p
 | [XOr()](./operators/XOr.md)         | `left.XOr(right)`|`left ^ right`                                                                              | Performs a logical XOR (exclusive OR) operation on two propositions or their results.                                                 |
 | [Not()](./operators/Not.md)         | `proposition.Not()`|`!proposition`                                                                            | Performs a logical NOT (negation) operation on a proposition or its result.                                                             |
 
+## Tap
+
+Tap extension methods attach side-effects (e.g., logging, metrics) to [propositions](xref:Motiv.SpecBase`2) without altering their logical behavior. The tapped proposition is fully transparent — its result, description, and assertions are identical to the original.
+
+| Method                                  | Description                                                                                                |
+|-----------------------------------------|------------------------------------------------------------------------------------------------------------|
+| [Tap()](./tap/Tap.md)                   | Fires a callback on every evaluation, regardless of the outcome.                                          |
+| [TapWhenTrue()](./tap/TapWhenTrue.md)   | Fires a callback only when the proposition is satisfied.                                                   |
+| [TapWhenFalse()](./tap/TapWhenFalse.md) | Fires a callback only when the proposition is not satisfied.                                               |
+
 ## Collections
 
 Motiv offers extension methods to enhance code readability when working with collections of propositions or their results.

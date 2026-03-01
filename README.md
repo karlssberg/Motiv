@@ -93,6 +93,21 @@ result.Satisfied;  // true
 result.Assertions; // ["has good credit score"]
 ```
 
+### Side-Effect Observers
+
+Attach logging, metrics, or other side-effects without altering a proposition's behavior:
+
+```csharp
+var observed = isEligible
+    .TapWhenTrue((customer, result) =>
+        logger.LogInformation("Approved: {Id}", customer.Id))
+    .TapWhenFalse((customer, result) =>
+        logger.LogWarning("Denied: {Reason}", result.Reason));
+
+// Use exactly like the original — result, assertions, reason are all unchanged
+var result = observed.IsSatisfiedBy(customer);
+```
+
 ### Collection Logic
 
 Make assertions about collections of items (also known as higher-order logic):
