@@ -8,16 +8,20 @@ internal sealed class OrElsePolicyResult<TMetadata>(
     PolicyResultBase<TMetadata>? right = null)
     : PolicyResultBase<TMetadata>, IBinaryBooleanOperationResult<TMetadata>
 {
+    private ResultDescriptionBase? _description;
+    private Explanation? _explanation;
+    private MetadataNode<TMetadata>? _metadataTier;
+
     public override TMetadata Value => (Right ?? Left).Value;
 
     public override bool Satisfied { get; } = left.Satisfied || (right?.Satisfied ?? false);
 
     public override ResultDescriptionBase Description =>
-        new OrElseBooleanResultDescription<TMetadata>(GetCauses());
+        _description ??= new OrElseBooleanResultDescription<TMetadata>(GetCauses());
 
-    public override Explanation Explanation => new(GetCauses(), Underlying);
+    public override Explanation Explanation => _explanation ??= new Explanation(GetCauses(), Underlying);
 
-    public override MetadataNode<TMetadata> MetadataTier => CreateMetadataTier();
+    public override MetadataNode<TMetadata> MetadataTier => _metadataTier ??= CreateMetadataTier();
 
     public PolicyResultBase<TMetadata> Left { get; } = left;
     public PolicyResultBase<TMetadata>? Right { get; } = right;

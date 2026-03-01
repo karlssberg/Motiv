@@ -16,8 +16,13 @@ public sealed class Explanation
     /// <param name="causes">The causes.</param>
     /// <param name="results">The results that took part in the evaluation.</param>
     internal Explanation(string assertion, IEnumerable<BooleanResultBase>? causes = null, IEnumerable<BooleanResultBase>? results = null)
-        : this(assertion.ToEnumerable(), causes, results)
     {
+        string[] assertions = [assertion];
+
+        Causes = causes ?? [];
+        Results = results ?? [];
+        Assertions = assertions;
+        AllAssertions = assertions;
     }
 
     /// <summary>

@@ -53,7 +53,7 @@ internal sealed class HigherOrderFromBooleanPredicateProposition<TModel, TMetada
         return new HigherOrderFromBooleanPredicatePolicyResult<TMetadata>(
             isSatisfied,
             metadata,
-            new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata.Value, [])),
+            new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata.Value)),
             new Lazy<Explanation>(() => new Explanation(assertion.Value)),
             resultDescription);
     }

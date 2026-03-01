@@ -14,13 +14,16 @@ internal sealed class MinimalPropositionPolicyResult(
     ResultDescriptionBase description)
     : PolicyResultBase<string>
 {
+    private MetadataNode<string>? _metadataTier;
+    private Explanation? _explanation;
+
     /// <inheritdoc />
     public override string Value => assertion;
 
     /// <summary>
     ///     Gets the metadata tier of the result.
     /// </summary>
-    public override MetadataNode<string> MetadataTier => new(assertion, []);
+    public override MetadataNode<string> MetadataTier => _metadataTier ??= new MetadataNode<string>(assertion);
 
     /// <summary>
     ///     Gets the underlying results of the result.
@@ -43,7 +46,7 @@ internal sealed class MinimalPropositionPolicyResult(
     public override IEnumerable<BooleanResultBase<string>> CausesWithValues => [];
 
     /// <summary>Gets the reasons for the result.</summary>
-    public override Explanation Explanation => new(assertion);
+    public override Explanation Explanation => _explanation ??= new Explanation(assertion);
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
     public override bool Satisfied { get; } = satisfied;

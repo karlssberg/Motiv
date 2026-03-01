@@ -8,13 +8,15 @@ namespace Motiv.Not;
 internal sealed class NotBooleanOperationResult<TMetadata>(BooleanResultBase<TMetadata> operandResult)
     : BooleanResultBase<TMetadata>, IBooleanOperationResult<TMetadata>, IUnaryOperationResult<TMetadata>
 {
+    private ResultDescriptionBase? _description;
+
     public BooleanResultBase<TMetadata> Operand => operandResult;
 
     /// <summary>Gets a value indicating whether the negation is satisfied.</summary>
     public override bool Satisfied { get; } = !operandResult.Satisfied;
 
     /// <summary>Gets the description of the negation result.</summary>
-    public override ResultDescriptionBase Description => new NotBooleanResultDescription<TMetadata>(Operand);
+    public override ResultDescriptionBase Description => _description ??= new NotBooleanResultDescription<TMetadata>(Operand);
 
     /// <summary>Gets the reasons associated with the operand result.</summary>
     public override Explanation Explanation => Operand.Explanation;

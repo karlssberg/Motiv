@@ -12,10 +12,7 @@ public static class EnumerableExtensions
     /// <param name="item">The item to enumerate.</param>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <returns>An <See cref="IEnumerable{T}" /> containing only the item provided.</returns>
-    public static IEnumerable<T> ToEnumerable<T>(this T item)
-    {
-        yield return item;
-    }
+    public static IEnumerable<T> ToEnumerable<T>(this T item) => [item];
 
     /// <summary>Filters a sequence of values based on the supplied <see cref="SpecBase{TModel, TMetadata}" />.</summary>
     /// <param name="source">The sequence of values to filter.</param>

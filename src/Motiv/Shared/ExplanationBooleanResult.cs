@@ -2,6 +2,8 @@ namespace Motiv.Shared;
 
 internal sealed class ExplanationBooleanResult(BooleanResultBase booleanResult) : BooleanResultBase<string>
 {
+    private MetadataNode<string>? _metadataTier;
+
     public override bool Satisfied => booleanResult.Satisfied;
 
     public override ResultDescriptionBase Description => booleanResult.Description;
@@ -13,7 +15,7 @@ internal sealed class ExplanationBooleanResult(BooleanResultBase booleanResult) 
     public override IEnumerable<BooleanResultBase> Causes => booleanResult.Causes;
 
     public override MetadataNode<string> MetadataTier =>
-        new(booleanResult.Explanation.Assertions, []);
+        _metadataTier ??= new MetadataNode<string>(booleanResult.Explanation.Assertions, []);
 
     public override IEnumerable<BooleanResultBase<string>> CausesWithValues =>
         booleanResult switch
