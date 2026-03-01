@@ -19,11 +19,11 @@ public class HigherOrderBooleanResultTests
         // Act
         var result = new HigherOrderBooleanResult<TestMetadata, TestMetadata>(
                                       isSatisfied,
-                                      () => metadata,
-                                      () => assertions,
-                                      () => description,
+                                      new Lazy<IEnumerable<TestMetadata>>(() => metadata),
+                                      new Lazy<IEnumerable<string>>(() => assertions),
+                                      new Lazy<ResultDescriptionBase>(() => description),
                                       underlyingResults,
-                                      () => causes);
+                                      new Lazy<IEnumerable<BooleanResultBase<TestMetadata>>>(() => causes));
 
         // Assert
         result.Satisfied.ShouldBe(isSatisfied);
@@ -49,11 +49,11 @@ public class HigherOrderBooleanResultTests
 
         var result = new HigherOrderBooleanResult<TestMetadata, TestMetadata>(
                                       isSatisfied,
-                                      GetMetadata,
-                                      () => assertions,
-                                      () => description,
+                                      new Lazy<IEnumerable<TestMetadata>>(GetMetadata),
+                                      new Lazy<IEnumerable<string>>(() => assertions),
+                                      new Lazy<ResultDescriptionBase>(() => description),
                                       underlyingResults,
-                                      () => causes);
+                                      new Lazy<IEnumerable<BooleanResultBase<TestMetadata>>>(() => causes));
 
         // Act & Assert
         callCount.ShouldBe(0);
@@ -86,11 +86,11 @@ public class HigherOrderBooleanResultTests
         // Act
         var result = new HigherOrderBooleanResult<TestMetadata, TestMetadata>(
             isSatisfied,
-            () => metadata,
-            GetAssertions,
-            () => description,
+            new Lazy<IEnumerable<TestMetadata>>(() => metadata),
+            new Lazy<IEnumerable<string>>(GetAssertions),
+            new Lazy<ResultDescriptionBase>(() => description),
             underlyingResults,
-            () => causes);
+            new Lazy<IEnumerable<BooleanResultBase<TestMetadata>>>(() => causes));
 
         // Act & Assert
         callCount.ShouldBe(0);
@@ -114,11 +114,11 @@ public class HigherOrderBooleanResultTests
         var underlying = fixture.CreateMany<BooleanResultBase<TestMetadata>>().ToList();
         var result = new HigherOrderBooleanResult<TestMetadata, TestMetadata>(
             fixture.Create<bool>(),
-            fixture.CreateMany<TestMetadata>,
-            fixture.CreateMany<string>,
-            fixture.Create<ResultDescriptionBase>,
+            new Lazy<IEnumerable<TestMetadata>>(fixture.CreateMany<TestMetadata>),
+            new Lazy<IEnumerable<string>>(fixture.CreateMany<string>),
+            new Lazy<ResultDescriptionBase>(fixture.Create<ResultDescriptionBase>),
             underlying,
-            fixture.CreateMany<BooleanResultBase<TestMetadata>>
+            new Lazy<IEnumerable<BooleanResultBase<TestMetadata>>>(fixture.CreateMany<BooleanResultBase<TestMetadata>>)
         );
 
         // Act
@@ -135,11 +135,11 @@ public class HigherOrderBooleanResultTests
         var causes = fixture.CreateMany<BooleanResultBase<TestMetadata>>().ToList();
         var result = new HigherOrderBooleanResult<TestMetadata, TestMetadata>(
             fixture.Create<bool>(),
-            fixture.CreateMany<TestMetadata>,
-            fixture.CreateMany<string>,
-            fixture.Create<ResultDescriptionBase>,
+            new Lazy<IEnumerable<TestMetadata>>(fixture.CreateMany<TestMetadata>),
+            new Lazy<IEnumerable<string>>(fixture.CreateMany<string>),
+            new Lazy<ResultDescriptionBase>(fixture.Create<ResultDescriptionBase>),
             fixture.CreateMany<BooleanResultBase<TestMetadata>>(),
-            () => causes
+            new Lazy<IEnumerable<BooleanResultBase<TestMetadata>>>(() => causes)
         );
 
         // Act

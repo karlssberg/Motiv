@@ -46,9 +46,9 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
 
         return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
             predicateResult,
-            () => assertion.Value,
-            () => metadataTier.Value,
-            () => explanation.Value,
-            () => resultDescription.Value);
+            assertion,
+            metadataTier,
+            explanation,
+            resultDescription);
     }
 }

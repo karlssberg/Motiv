@@ -30,8 +30,8 @@ internal sealed class MinimalSpecDecoratorProposition<TModel, TMetadata>(
 
         return new BooleanResultWithUnderlying<TMetadata, TMetadata>(
             predicateResult,
-            () => lazyMetadataTier.Value,
-            () => predicateResult.Explanation,
-            () => lazyResultDescription.Value);
+            lazyMetadataTier,
+            new Lazy<Explanation>(() => predicateResult.Explanation),
+            lazyResultDescription);
     }
 }

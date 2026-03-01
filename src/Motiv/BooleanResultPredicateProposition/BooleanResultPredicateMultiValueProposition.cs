@@ -72,8 +72,8 @@ internal sealed class BooleanResultPredicateMultiValueProposition<TModel, TMetad
 
         return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,
-            () => metadataTier.Value,
-            () => explanation.Value,
-            () => description.Value);
+            metadataTier,
+            explanation,
+            description);
     }
 }

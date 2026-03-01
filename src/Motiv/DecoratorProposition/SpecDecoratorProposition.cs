@@ -53,9 +53,9 @@ internal sealed class SpecDecoratorProposition<TModel, TMetadata, TUnderlyingMet
 
         return new PolicyResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,
-            () => lazyMetadata.Value,
-            () => metadataTier.Value,
-            () => explanation.Value,
-            () => resultDescription.Value);
+            lazyMetadata,
+            metadataTier,
+            explanation,
+            resultDescription);
     }
 }

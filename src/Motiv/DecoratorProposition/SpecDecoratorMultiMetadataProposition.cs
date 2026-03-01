@@ -51,8 +51,8 @@ internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, T
 
         return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,
-            () => metadataTier.Value,
-            () => explanation.Value,
-            () => resultDescription.Value);
+            metadataTier,
+            explanation,
+            resultDescription);
     }
 }

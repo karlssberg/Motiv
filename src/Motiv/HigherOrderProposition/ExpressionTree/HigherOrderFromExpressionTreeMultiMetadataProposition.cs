@@ -55,12 +55,14 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
                 causes.Value,
                 Description.Statement));
 
+        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<string>>>(() => causes.Value);
+
         return new HigherOrderBooleanResult<TMetadata, string>(
             isSatisfied,
-            () => metadata.Value,
-            () => assertions.Value,
-            () => resultDescription.Value,
+            metadata,
+            assertions,
+            resultDescription,
             underlyingResults,
-            () => causes.Value);
+            causesAsUnderlying);
     }
 }

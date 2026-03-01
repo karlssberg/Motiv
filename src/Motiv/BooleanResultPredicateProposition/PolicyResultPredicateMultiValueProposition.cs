@@ -73,8 +73,8 @@ internal sealed class PolicyResultPredicateMultiValueProposition<TModel, TMetada
 
         return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             policyResult,
-            () => metadataTier.Value,
-            () => explanation.Value,
-            () => description.Value);
+            metadataTier,
+            explanation,
+            description);
     }
 }

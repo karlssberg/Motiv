@@ -47,9 +47,9 @@ internal sealed class PolicyDecoratorWithSingleTrueAssertionProposition<TModel, 
 
         return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
             underlyingResult,
-            () => assertion.Value,
-            () => metadataTier.Value,
-            () => explanation.Value,
-            () => description.Value);
+            assertion,
+            metadataTier,
+            explanation,
+            description);
     }
 }

@@ -73,9 +73,9 @@ internal sealed class PolicyResultPredicateProposition<TModel, TMetadata, TUnder
 
         return new PolicyResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,
-            () => metadata.Value,
-            () => metadataTier.Value,
-            () => explanation.Value,
-            () => resultDescription.Value);
+            metadata,
+            metadataTier,
+            explanation,
+            resultDescription);
     }
 }

@@ -55,13 +55,16 @@ internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel
                 causes.Value,
                 Description.Statement));
 
+        var assertionAsEnumerable = new Lazy<IEnumerable<string>>(() => assertion.Value.ToEnumerable());
+        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<string>>>(() => causes.Value);
+
         return new HigherOrderPolicyResult<string, string>(
             isSatisfied,
-            () => assertion.Value,
-            () => assertion.Value.ToEnumerable(),
-            () => assertion.Value.ToEnumerable(),
-            () => lazyDescription.Value,
+            assertion,
+            assertionAsEnumerable,
+            assertionAsEnumerable,
+            lazyDescription,
             underlyingResults,
-            () => causes.Value);
+            causesAsUnderlying);
     }
 }

@@ -28,9 +28,9 @@ internal sealed class MinimalPolicyDecoratorProposition<TModel, TMetadata>(
 
         return new PolicyResultWithUnderlying<TMetadata, TMetadata>(
             predicateResult,
-            () => predicateResult.Value,
-            () => metadataTier.Value,
-            () => predicateResult.Explanation,
-            () => resultDescription.Value);
+            new Lazy<TMetadata>(() => predicateResult.Value),
+            metadataTier,
+            new Lazy<Explanation>(() => predicateResult.Explanation),
+            resultDescription);
     }
 }

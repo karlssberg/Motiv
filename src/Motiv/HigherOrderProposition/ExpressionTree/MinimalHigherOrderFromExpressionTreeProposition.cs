@@ -38,12 +38,14 @@ internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TP
                 causes.Value,
                 Description.Statement));
 
+        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<string>>>(() => causes.Value);
+
         return new HigherOrderBooleanResult<string, string>(
             isSatisfied,
-            () => metadata.Value,
-            () => metadata.Value,
-            () => resultDescription.Value,
+            metadata,
+            metadata,
+            resultDescription,
             underlyingResults,
-            () => causes.Value);
+            causesAsUnderlying);
     }
 }

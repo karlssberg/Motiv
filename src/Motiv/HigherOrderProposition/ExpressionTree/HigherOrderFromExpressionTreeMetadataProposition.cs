@@ -54,13 +54,16 @@ internal sealed class HigherOrderFromExpressionTreeMetadataProposition<TModel, T
                 causes.Value,
                 Description.Statement));
 
+        var metadataAsEnumerable = new Lazy<IEnumerable<TMetadata>>(() => metadata.Value.ToEnumerable());
+        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<string>>>(() => causes.Value);
+
         return new HigherOrderPolicyResult<TMetadata, string>(
             isSatisfied,
-            () => metadata.Value,
-            () => metadata.Value.ToEnumerable(),
-            () => assertions.Value,
-            () => lazyDescription.Value,
+            metadata,
+            metadataAsEnumerable,
+            assertions,
+            lazyDescription,
             underlyingResults,
-            () => causes.Value);
+            causesAsUnderlying);
     }
 }

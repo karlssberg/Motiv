@@ -29,12 +29,8 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingMetada
 
         return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
             result,
-            MetadataTier,
-            Explanation,
-            ResultDescription);
-
-        MetadataNode<string> MetadataTier() => metadataTier.Value;
-        Explanation Explanation() => result.Explanation;
-        ResultDescriptionBase ResultDescription() => description.Value;
+            metadataTier,
+            new Lazy<Explanation>(() => result.Explanation),
+            description);
     }
 }

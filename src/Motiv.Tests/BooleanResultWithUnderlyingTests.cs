@@ -163,9 +163,9 @@ public class BooleanResultWithUnderlyingTests
         Func<Explanation>? explanationFunc = null,
         Func<ResultDescriptionBase>? descriptionFunc = null)
     {
-        var metadataTier = metadataTierFunc ?? CreateMetadataNode<TMetadata>;
-        var explanation = explanationFunc ?? CreateExplanation;
-        var description = descriptionFunc ?? CreateResultDescriptionBase;
+        var metadataTier = new Lazy<MetadataNode<TMetadata>>(metadataTierFunc ?? CreateMetadataNode<TMetadata>);
+        var explanation = new Lazy<Explanation>(explanationFunc ?? CreateExplanation);
+        var description = new Lazy<ResultDescriptionBase>(descriptionFunc ?? CreateResultDescriptionBase);
 
         return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             underlyingResult,

@@ -5,22 +5,22 @@ namespace Motiv.Shared;
 /// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
 internal sealed class PolicyResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    Func<TMetadata> value,
-    Func<MetadataNode<TMetadata>> metadataTier,
-    Func<Explanation> explanation,
-    Func<ResultDescriptionBase> description)
+    Lazy<TMetadata> value,
+    Lazy<MetadataNode<TMetadata>> metadataTier,
+    Lazy<Explanation> explanation,
+    Lazy<ResultDescriptionBase> description)
     : PolicyResultBase<TMetadata>
 {
-    public override TMetadata Value => value();
+    public override TMetadata Value => value.Value;
 
     public override bool Satisfied { get; } = booleanResult.Satisfied;
 
 
-    public override ResultDescriptionBase Description => description();
+    public override ResultDescriptionBase Description => description.Value;
 
-    public override Explanation Explanation => explanation();
+    public override Explanation Explanation => explanation.Value;
 
-    public override MetadataNode<TMetadata> MetadataTier => metadataTier();
+    public override MetadataNode<TMetadata> MetadataTier => metadataTier.Value;
 
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
 

@@ -37,12 +37,14 @@ internal sealed class MinimalHigherOrderFromPolicyResultProposition<TModel, TMet
                 causes.Value,
                 Description.Statement));
 
+        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<TMetadata>>>(() => causes.Value);
+
         return new HigherOrderBooleanResult<TMetadata, TMetadata>(
             isSatisfied,
-            () => metadata.Value,
-            () => assertions.Value,
-            () => resultDescription.Value,
+            metadata,
+            assertions,
+            resultDescription,
             underlyingResults,
-            () => causes.Value);
+            causesAsUnderlying);
     }
 }

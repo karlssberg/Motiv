@@ -51,8 +51,8 @@ internal sealed class PolicyDecoratorMultiMetadataProposition<TModel, TMetadata,
 
         return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,
-            () => metadataTier.Value,
-            () => explanation.Value,
-            () => resultDescription.Value);
+            metadataTier,
+            explanation,
+            resultDescription);
     }
 }

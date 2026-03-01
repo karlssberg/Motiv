@@ -158,6 +158,7 @@ Policy is a subtype of Spec, so policies can be used anywhere a spec is expected
 - **Results are composable**: `BooleanResultBase<TMetadata>` instances from different model types can be combined with operators, enabling cross-domain reasoning.
 - **De-noising**: Results only surface assertions that influenced the final outcome, filtering out irrelevant branches.
 - **Batch refactoring verification**: When refactoring multiple files with the same pattern, verify all files are modified before moving to the next phase — use `git status` or `git diff --stat` to confirm the expected set of changed files matches the plan.
+- **Constructor signature changes**: When changing the signature of an `internal` type's constructor, search for all call sites across both production and test code before editing — test files often construct internal types directly via `[InternalsVisibleTo]` and will break if missed.
 
 ## Test-Driven Development
 
