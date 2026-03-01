@@ -21,6 +21,8 @@ internal sealed class MultiValueProposition<TModel, TMetadata>(
     /// <summary>Gets or sets the description of the proposition.</summary>
     public override ISpecDescription Description => specDescription;
 
+    public override bool Matches(TModel model) => predicate(model);
+
     /// <summary>Determines if the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be evaluated.</param>
     /// <returns>A BooleanResultBase object containing the result of the evaluation.</returns>

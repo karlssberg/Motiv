@@ -16,6 +16,8 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
             propositionalStatement ?? trueBecause,
             underlyingSpec.Description);
 
+    public override bool Matches(TModel model) => underlyingSpec.Matches(model);
+
     protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
     {
         var underlyingResult = underlyingSpec.IsSatisfiedBy(model);

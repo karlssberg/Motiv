@@ -9,8 +9,9 @@ internal sealed class OrElseBooleanResult<TMetadata>(
 {
     public override bool Satisfied { get; } = left.Satisfied || (right?.Satisfied ?? false);
 
+    private ResultDescriptionBase? _description;
     public override ResultDescriptionBase Description =>
-        new OrElseBooleanResultDescription<TMetadata>(GetCausalResults());
+        _description ??= new OrElseBooleanResultDescription<TMetadata>(GetCausalResults());
 
     public override string Operation => Operator.OrElse;
 

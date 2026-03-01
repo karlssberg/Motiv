@@ -18,6 +18,8 @@ internal sealed class NotSpec<TModel, TMetadata>(
 
     public bool IsCollapsable => false;
 
+    public override bool Matches(TModel model) => !operand.Matches(model);
+
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model) =>
         operand.IsSatisfiedBy(model).Not();
 

@@ -27,6 +27,8 @@ internal sealed class BooleanResultPredicateProposition<TModel, TMetadata, TUnde
     /// <summary>Gets the name of the proposition.</summary>
     public override ISpecDescription Description => specDescription;
 
+    public override bool Matches(TModel model) => underlyingBooleanResultPredicate(model).Satisfied;
+
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var booleanResult = underlyingBooleanResultPredicate(model);

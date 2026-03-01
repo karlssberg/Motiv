@@ -27,6 +27,8 @@ internal sealed class PolicyResultPredicateMultiValueProposition<TModel, TMetada
     /// <summary>Gets the name of the proposition.</summary>
     public override ISpecDescription Description => specDescription;
 
+    public override bool Matches(TModel model) => underlyingPolicyResultPredicate(model).Satisfied;
+
     /// <summary>Determines if the proposition is satisfied by the given model.</summary>
     /// <param name="model">The model to be evaluated.</param>
     /// <returns>

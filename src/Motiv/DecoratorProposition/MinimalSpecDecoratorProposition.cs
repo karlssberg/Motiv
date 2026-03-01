@@ -11,6 +11,8 @@ internal sealed class MinimalSpecDecoratorProposition<TModel, TMetadata>(
 
     public override ISpecDescription Description => description;
 
+    public override bool Matches(TModel model) => underlyingSpec.Matches(model);
+
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var predicateResult = underlyingSpec.IsSatisfiedBy(model);

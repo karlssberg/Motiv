@@ -22,6 +22,8 @@ internal sealed class AndAlsoSpec<TModel, TMetadata>(
 
     public bool IsCollapsable => true;
 
+    public override bool Matches(TModel model) => left.Matches(model) && right.Matches(model);
+
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var leftResult = left.IsSatisfiedBy(model);

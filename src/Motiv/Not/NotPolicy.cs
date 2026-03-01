@@ -18,6 +18,8 @@ internal sealed class NotPolicy<TModel, TMetadata>(
 
     bool IBooleanOperationSpec.IsCollapsable => false;
 
+    public override bool Matches(TModel model) => !operand.Matches(model);
+
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model) =>
         operand.IsSatisfiedBy(model).Not();
 

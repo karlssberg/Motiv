@@ -21,6 +21,8 @@ internal sealed class Proposition<TModel, TMetadata>(
     /// <summary>Gets or sets the description of the proposition.</summary>
     public override ISpecDescription Description => specDescription;
 
+    public override bool Matches(TModel model) => predicate(model);
+
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var isSatisfied = predicate(model);

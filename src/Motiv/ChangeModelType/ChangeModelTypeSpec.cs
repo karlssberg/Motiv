@@ -9,6 +9,8 @@ internal sealed class ChangeModelTypeSpec<TParentModel, TModel, TMetadata>(
 
     public override ISpecDescription Description => spec.Description;
 
+    public override bool Matches(TParentModel model) => spec.Matches(modelSelector(model));
+
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TParentModel model) =>
         spec.IsSatisfiedBy(modelSelector(model));
 

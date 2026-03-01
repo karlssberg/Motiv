@@ -23,10 +23,12 @@ internal abstract class BinaryBooleanResult<TMetadata>(
 
     public abstract bool IsCollapsable { get; }
 
-    public override Explanation Explanation => new(GetCausalResults(), Underlying);
+    private Explanation? _explanation;
+    public override Explanation Explanation => _explanation ??= new(GetCausalResults(), Underlying);
 
+    private MetadataNode<TMetadata>? _metadataTier;
     public override MetadataNode<TMetadata> MetadataTier =>
-        new(CausesWithValues.GetValues(), CausesWithValues);
+        _metadataTier ??= new(CausesWithValues.GetValues(), CausesWithValues);
 
     public override IEnumerable<BooleanResultBase> Underlying => GetAllResults();
 

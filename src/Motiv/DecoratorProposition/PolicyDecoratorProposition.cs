@@ -14,6 +14,8 @@ internal sealed class PolicyDecoratorProposition<TModel, TMetadata, TUnderlyingM
 
     public override ISpecDescription Description => description;
 
+    public override bool Matches(TModel model) => underlyingSpec.Matches(model);
+
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var policyResult = underlyingSpec.IsSatisfiedBy(model);

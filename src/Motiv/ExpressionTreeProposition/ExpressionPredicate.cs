@@ -6,21 +6,30 @@ internal class ExpressionPredicate<TModel, TPredicateResult>
 {
     internal ExpressionPredicate(Expression<Func<TModel, TPredicateResult>> predicate)
     {
-        Execute = predicate switch
+        switch (predicate)
         {
-            Expression<Func<TModel, bool>> expr => CreatePredicate(expr),
-            Expression<Func<TModel, BooleanResultBase<string>>> expr => expr.Compile(),
-            Expression<Func<TModel, PolicyResultBase<string>>> expr => expr.Compile(),
-            _ => throw new NotSupportedException(
-                $"Unsupported predicate type: Expression<Func<TModel, {typeof(TPredicateResult).Name}>>")
-        };
-    }
-
-    private Func<TModel, BooleanResultBase<string>> CreatePredicate(Expression<Func<TModel, bool>> expr)
-    {
-        var spec = expr.ToSpec();
-        return spec.IsSatisfiedBy;
+            case Expression<Func<TModel, bool>> expr:
+                var spec = expr.ToSpec();
+                Execute = spec.IsSatisfiedBy;
+                Match = spec.Matches;
+                break;
+            case Expression<Func<TModel, BooleanResultBase<string>>> expr:
+                var compiled = expr.Compile();
+                Execute = compiled;
+                Match = model => compiled(model).Satisfied;
+                break;
+            case Expression<Func<TModel, PolicyResultBase<string>>> expr:
+                var compiledPolicy = expr.Compile();
+                Execute = compiledPolicy;
+                Match = model => compiledPolicy(model).Satisfied;
+                break;
+            default:
+                throw new NotSupportedException(
+                    $"Unsupported predicate type: Expression<Func<TModel, {typeof(TPredicateResult).Name}>>");
+        }
     }
 
     internal Func<TModel, BooleanResultBase<string>> Execute { get; }
+
+    internal Func<TModel, bool> Match { get; }
 }

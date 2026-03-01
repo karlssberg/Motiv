@@ -50,6 +50,14 @@ public abstract class SpecBase<TModel> : SpecBase
     }
 
     /// <summary>
+    /// Evaluates the proposition against the model and returns a boolean indicating whether it is satisfied,
+    /// without allocating result objects.
+    /// </summary>
+    /// <param name="model">The model to evaluate the specification against.</param>
+    /// <returns><c>true</c> if the model satisfies the proposition; otherwise, <c>false</c>.</returns>
+    public virtual bool Matches(TModel model) => IsSatisfiedBy(model).Satisfied;
+
+    /// <summary>
     /// Evaluates the proposition against the model and returns a result that contains the Boolean result of the
     /// predicate and an explanation of the result.
     /// </summary>
@@ -157,7 +165,7 @@ public abstract class SpecBase<TModel> : SpecBase
     /// <param name="spec">The specification to be converted into predicate</param>
     /// <returns>A predicate function</returns>
     public static implicit operator Func<TModel, bool>(SpecBase<TModel> spec) =>
-        model => spec.IsSatisfiedBy(model).Satisfied;
+        spec.Matches;
 }
 
 /// <summary>
@@ -176,6 +184,9 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     internal SpecBase()
     {
     }
+
+    /// <inheritdoc />
+    public override bool Matches(TModel model) => IsSpecSatisfiedBy(model).Satisfied;
 
     /// <summary>
     /// Evaluates the proposition against the model and returns a result that contains the Boolean result of the

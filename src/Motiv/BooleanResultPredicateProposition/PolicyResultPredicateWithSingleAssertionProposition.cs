@@ -13,6 +13,8 @@ internal sealed class PolicyResultPredicateWithSingleAssertionProposition<TModel
 
     public override ISpecDescription Description => specDescription;
 
+    public override bool Matches(TModel model) => predicate(model).Satisfied;
+
     protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
     {
         var predicateResult = predicate(model);

@@ -11,6 +11,8 @@ internal sealed class MinimalPolicyDecoratorProposition<TModel, TMetadata>(
 
     public override ISpecDescription Description => description;
 
+    public override bool Matches(TModel model) => underlyingPolicy.Matches(model);
+
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var predicateResult = underlyingPolicy.IsSatisfiedBy(model);

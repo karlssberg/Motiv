@@ -9,6 +9,8 @@ internal sealed class ChangeModelTypePolicy<TParentModel, TModel, TMetadata>(
 
     public override ISpecDescription Description => policy.Description;
 
+    public override bool Matches(TParentModel model) => policy.Matches(modelSelector(model));
+
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TParentModel model) =>
         IsPolicySatisfiedBy(model);
 

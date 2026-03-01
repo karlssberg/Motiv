@@ -17,6 +17,8 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
 
     public override ISpecDescription Description => description;
 
+    public override bool Matches(TModel model) => _predicate.Match(model);
+
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var result = _predicate.Execute(model);

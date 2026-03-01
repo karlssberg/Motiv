@@ -35,6 +35,9 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     /// <summary>Gets the description of the proposition.</summary>
     public override ISpecDescription Description { get; }
 
+    /// <inheritdoc />
+    public override bool Matches(TModel model) => _spec.Matches(model);
+
     /// <summary>Determines whether the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be checked against the proposition.</param>
     /// <returns>A BooleanResultBase containing the result of the proposition check and the associated metadata.</returns>
@@ -76,6 +79,9 @@ public class Spec<TModel> : SpecBase<TModel, string>
 
     /// <summary>Gets the underlying specifications that make up this composite proposition.</summary>
     public override IEnumerable<SpecBase> Underlying => _spec.Underlying;
+
+    /// <inheritdoc />
+    public override bool Matches(TModel model) => _spec.Matches(model);
 
     /// <summary>Determines whether the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be checked against the proposition.</param>

@@ -34,6 +34,8 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
 
     SpecBase IBinaryOperationSpec.Left => Left;
 
+    public override bool Matches(TModel model) => left.Matches(model) || right.Matches(model);
+
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var leftResult = left.IsSatisfiedBy(model);

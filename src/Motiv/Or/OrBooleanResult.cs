@@ -11,8 +11,9 @@ internal sealed class OrBooleanResult<TMetadata>(
 {
     public override bool Satisfied { get; } = left.Satisfied || right.Satisfied;
 
+    private ResultDescriptionBase? _description;
     public override ResultDescriptionBase Description =>
-        new OrBooleanResultDescription<TMetadata>(GetCausalResults());
+        _description ??= new OrBooleanResultDescription<TMetadata>(GetCausalResults());
 
     public override string Operation => Operator.Or;
 

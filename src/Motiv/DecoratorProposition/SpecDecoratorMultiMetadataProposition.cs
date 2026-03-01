@@ -13,6 +13,8 @@ internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, T
 
     public override ISpecDescription Description => description;
 
+    public override bool Matches(TModel model) => underlyingSpec.Matches(model);
+
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var booleanResult = underlyingSpec.IsSatisfiedBy(model);

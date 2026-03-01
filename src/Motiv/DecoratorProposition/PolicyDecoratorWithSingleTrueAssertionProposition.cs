@@ -16,6 +16,8 @@ internal sealed class PolicyDecoratorWithSingleTrueAssertionProposition<TModel, 
             propositionalStatement ?? trueBecause,
             underlyingPolicy.Description);
 
+    public override bool Matches(TModel model) => underlyingPolicy.Matches(model);
+
     protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
     {
         var underlyingResult = underlyingPolicy.IsSatisfiedBy(model);
