@@ -12,6 +12,16 @@ internal sealed class HigherOrderResultDescription<TUnderlyingMetadata>(
     {
         yield return Reason;
 
+        foreach (var line in GetUnderlyingJustificationsWithCountsAsLines())
+        {
+            yield return line.Indent();
+        }
+    }
+
+    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount()
+    {
+        yield return Reason;
+
         foreach (var line in GetUnderlyingJustificationsAsLines())
         {
             yield return line.Indent();

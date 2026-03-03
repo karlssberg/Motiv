@@ -285,16 +285,16 @@ public class ExpressionTreeMetadataTests
             """
             OR
                 is-positive == true
-                    (int n) => n > 0 == true
+                    (int n) => n > 0 == true (1)
                         n > 0
                 is-positive == true
-                    (int n) => n > 0 == true
+                    (int n) => n > 0 == true (1)
                         n > 0
                 is-positive == true
-                    (int n) => n > 0 == true
+                    (int n) => n > 0 == true (1)
                         n > 0
                 is-positive == true
-                    (int n) => n > 0 == true
+                    (int n) => n > 0 == true (1)
                         n > 0
             """);
     }
@@ -611,16 +611,16 @@ public class ExpressionTreeMetadataTests
             """
             OR
                 is-positive == false
-                    (int n) => n > 0 == false
+                    (int n) => n > 0 == false (1)
                         n <= 0
                 is-positive == false
-                    (int n) => n > 0 == false
+                    (int n) => n > 0 == false (1)
                         n <= 0
                 is-positive == false
-                    (int n) => n > 0 == false
+                    (int n) => n > 0 == false (1)
                         n <= 0
                 is-positive == false
-                    (int n) => n > 0 == false
+                    (int n) => n > 0 == false (1)
                         n <= 0
             """);
     }

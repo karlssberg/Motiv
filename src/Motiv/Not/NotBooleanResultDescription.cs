@@ -10,18 +10,17 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
 
     public override string Reason => FormatReason(operand);
 
-    public override IEnumerable<string> GetJustificationAsLines()
-    {
-        var lines = operand.Description
-            .GetJustificationAsLines()
-            .ReplaceFirstLine(firstLine =>
-                JustificationNegationMappings.Instance.TryGetValue(firstLine, out var negated)
-                    ? negated
-                    : firstLine);
+    public override IEnumerable<string> GetJustificationAsLines() =>
+        NegateFirstLine(operand.Description.GetJustificationAsLines());
 
-        foreach (var line in lines)
-            yield return line;
-    }
+    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
+        NegateFirstLine(operand.Description.GetJustificationAsLinesWithoutCausalCount());
+
+    private static IEnumerable<string> NegateFirstLine(IEnumerable<string> lines) =>
+        lines.ReplaceFirstLine(firstLine =>
+            JustificationNegationMappings.Instance.TryGetValue(firstLine, out var negated)
+                ? negated
+                : firstLine);
 
     private static string FormatReason(BooleanResultBase result)
     {

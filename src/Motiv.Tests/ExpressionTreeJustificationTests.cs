@@ -75,21 +75,21 @@ public class ExpressionTreeJustificationTests
     [InlineData(-1,
         """
         any-positive == false
-            is-positive == false
+            is-positive == false (1)
                 (int n) => n > 0 == false
                     n <= 0
         """)]
     [InlineData(0,
         """
         any-positive == false
-            is-positive == false
+            is-positive == false (1)
                 (int n) => n > 0 == false
                     n <= 0
         """)]
     [InlineData(1,
         """
         any-positive == true
-            is-positive == true
+            is-positive == true (1)
                 (int n) => n > 0 == true
                     n > 0
         """)]
@@ -118,21 +118,21 @@ public class ExpressionTreeJustificationTests
     [InlineData(
         """
         any-positive == false
-            is-positive == false
+            is-positive == false (3)
                 (int n) => n > 0 == false
                     n <= 0
         """, -1, -2, -3)]
     [InlineData(
         """
         any-positive == false
-            is-positive == false
+            is-positive == false (3)
                 (int n) => n > 0 == false
                     n <= 0
         """, 0, -1, -2)]
     [InlineData(
         """
         any-positive == true
-            is-positive == true
+            is-positive == true (2)
                 (int n) => n > 0 == true
                     n > 0
         """, 0, 1, 2)]
@@ -227,19 +227,19 @@ public class ExpressionTreeJustificationTests
     [InlineData(
         """
         any positive == false
-            (int n) => n > 0 == false
+            (int n) => n > 0 == false (3)
                 n <= 0
         """, -1, -2, -3)]
     [InlineData(
         """
         any positive == false
-            (int n) => n > 0 == false
+            (int n) => n > 0 == false (3)
                 n <= 0
         """, 0, -1, -2)]
     [InlineData(
         """
         any positive == true
-            (int n) => n > 0 == true
+            (int n) => n > 0 == true (2)
                 n > 0
         """, 0, 1, 2)]
     public void Should_justify_higher_order_expression_tree_spec(
@@ -266,21 +266,21 @@ public class ExpressionTreeJustificationTests
         """
         should create guid == false
             any positive == false
-                (decimal n) => n > 0 == false
+                (decimal n) => n > 0 == false (3)
                     n <= 0
         """, -1, -2, -3)]
     [InlineData(
         """
         should create guid == true
             any positive == true
-                (decimal n) => n > 0 == true
+                (decimal n) => n > 0 == true (1)
                     n > 0
         """, 1, 0, -1)]
     [InlineData(
         """
         should create guid == true
             any positive == true
-                (decimal n) => n > 0 == true
+                (decimal n) => n > 0 == true (3)
                     n > 0
         """, 1, 2, 3)]
     public void Should_insert_yielded_assertions_of_encapsulated_higher_order(

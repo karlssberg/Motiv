@@ -229,7 +229,7 @@ public class HandTests
                         is a flush hand == true
                             OR
                                 has 5 Hearts cards == true
-                                    is Hearts == true
+                                    is Hearts == true (5)
                                         (Card card) => card.Suit == Hearts == true
                                             card.Suit == Suit.Hearts
             """);

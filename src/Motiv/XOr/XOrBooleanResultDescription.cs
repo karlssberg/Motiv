@@ -25,6 +25,9 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
     public override IEnumerable<string> GetJustificationAsLines() =>
         _results.GetBinaryJustificationAsLines(Statement);
 
+    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
+        _results.GetBinaryJustificationAsLines(Statement, withoutCausalCount: true);
+
     private static bool ContainsBinaryOperation(BooleanResultBase result) =>
         result switch
         {

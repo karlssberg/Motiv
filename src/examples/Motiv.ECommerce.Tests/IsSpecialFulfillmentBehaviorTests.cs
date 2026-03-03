@@ -41,7 +41,7 @@ public class IsSpecialFulfillmentBehaviorTests
             """
             should ship from store == true
                 should ship some products from store == true
-                    AND
+                    AND (1)
                         is out of stock == true
                             (InventoryPricedProduct product) => product.WarehouseStockLevel == 0 == true
                                 product.WarehouseStockLevel == 0
@@ -115,7 +115,7 @@ public class IsSpecialFulfillmentBehaviorTests
             """
             should locally fulfill == true
                 any perishable == true
-                    (InventoryPricedProduct product) => product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30) == true
+                    (InventoryPricedProduct product) => product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30) == true (1)
                         product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30)
             """);
     }

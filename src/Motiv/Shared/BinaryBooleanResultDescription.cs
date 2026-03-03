@@ -19,6 +19,9 @@ internal abstract class BinaryBooleanResultDescription<TMetadata>(
     public override IEnumerable<string> GetJustificationAsLines() =>
         _causalResults.GetBinaryJustificationAsLines(Statement);
 
+    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
+        _causalResults.GetBinaryJustificationAsLines(Statement, withoutCausalCount: true);
+
     protected abstract string Separator { get; }
 
     protected abstract bool IsSameFamily(BooleanResultBase<TMetadata> result);

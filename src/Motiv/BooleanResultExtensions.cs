@@ -133,7 +133,8 @@ public static class BooleanResultExtensions
     internal static IEnumerable<string> GetBinaryJustificationAsLines(
         this IEnumerable<BooleanResultBase> causalResults,
         string conjunction,
-        int level = 0)
+        int level = 0,
+        bool withoutCausalCount = false)
     {
         var adjacentLineGroups = causalResults
             .IdentifyCollapsible(conjunction)
@@ -169,7 +170,9 @@ public static class BooleanResultExtensions
                 IBinaryBooleanOperationResult binaryOperationResult
                     when binaryOperationResult.Operation == conjunction
                          && binaryOperationResult.IsCollapsable =>
-                    result.ToEnumerable().GetBinaryJustificationAsLines(conjunction, level + 1),
+                    result.ToEnumerable().GetBinaryJustificationAsLines(conjunction, level + 1, withoutCausalCount),
+                _ when withoutCausalCount =>
+                    result.Description.GetJustificationAsLinesWithoutCausalCount(),
                 _ =>
                     result.Description.GetJustificationAsLines()
             };

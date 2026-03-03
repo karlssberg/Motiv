@@ -16,6 +16,18 @@ internal sealed class HigherOrderExpressionTreeResultDescription<TUnderlyingMeta
     {
         yield return Reason;
 
+        yield return $"{expression.ToAssertion(satisfied)} ({CausalOperandCount})".Indent();
+
+        foreach (var line in GetUnderlyingJustificationsAsLines())
+        {
+            yield return line.Indent(2);
+        }
+    }
+
+    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount()
+    {
+        yield return Reason;
+
         yield return expression.ToAssertion(satisfied).Indent();
 
         foreach (var line in GetUnderlyingJustificationsAsLines())

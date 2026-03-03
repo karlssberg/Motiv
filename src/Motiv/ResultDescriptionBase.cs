@@ -30,4 +30,6 @@ public abstract class ResultDescriptionBase
     /// </summary>
     /// <returns>An enumerable collection of strings, each representing a line of detail.</returns>
     public abstract IEnumerable<string> GetJustificationAsLines();
+
+    internal virtual IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() => GetJustificationAsLines();
 }

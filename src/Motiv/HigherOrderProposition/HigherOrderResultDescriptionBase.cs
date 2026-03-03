@@ -20,4 +20,20 @@ internal abstract class HigherOrderResultDescriptionBase<TUnderlyingMetadata>(
         _causes
             .DistinctWithOrderPreserved(result => result.Justification)
             .SelectMany(cause => cause.Description.GetJustificationAsLines());
+
+    protected IEnumerable<string> GetUnderlyingJustificationsWithCountsAsLines()
+    {
+        var distinctCauses = _causes
+            .DistinctWithOrderPreserved(result => result.Justification)
+            .ToArray();
+
+        if (distinctCauses.Length > 1)
+            return distinctCauses
+                .SelectMany(cause => cause.Description.GetJustificationAsLines());
+
+        return distinctCauses
+            .SelectMany(cause => cause.Description
+                .GetJustificationAsLines()
+                .ReplaceFirstLine(line => $"{line} ({_causes.Length})"));
+    }
 }

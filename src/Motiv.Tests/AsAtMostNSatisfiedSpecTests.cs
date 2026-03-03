@@ -753,35 +753,35 @@ public class AsAtMostNSatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                             at most one is satisfied
-                                                is not satisfied
+                                                is not satisfied (3)
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied
-                                                is satisfied
+                                                is satisfied (1)
                                             """)]
     [InlineAutoData(false, true,  false, """
                                             at most one is satisfied
-                                                is satisfied
+                                                is satisfied (1)
                                             """)]
     [InlineAutoData(false, true,  true,  """
                                             more than one is satisfied
-                                                is satisfied
+                                                is satisfied (2)
                                             """)]
     [InlineAutoData(true,  false, false, """
                                             at most one is satisfied
-                                                is satisfied
+                                                is satisfied (1)
                                             """)]
     [InlineAutoData(true,  false, true,  """
                                             more than one is satisfied
-                                                is satisfied
+                                                is satisfied (2)
                                             """)]
     [InlineAutoData(true,  true,  false, """
                                             more than one is satisfied
-                                                is satisfied
+                                                is satisfied (2)
                                             """)]
     [InlineAutoData(true,  true,  true,  """
                                             more than one is satisfied
-                                                is satisfied
+                                                is satisfied (3)
                                             """)]
     public void Should_serialize_the_result_of_the_at_most_of_1_operation_when_metadata_is_a_string(
         bool first,
@@ -815,35 +815,35 @@ public class AsAtMostNSatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                             at most one is satisfied
-                                                False
+                                                False (3)
                                             """)]
     [InlineAutoData(false, false, true, """
                                             at most one is satisfied
-                                                True
+                                                True (1)
                                             """)]
     [InlineAutoData(false, true,  false, """
                                             at most one is satisfied
-                                                True
+                                                True (1)
                                             """)]
     [InlineAutoData(false, true,  true, """
                                             more than one is satisfied
-                                                True
+                                                True (2)
                                             """)]
     [InlineAutoData(true,  false, false, """
                                             at most one is satisfied
-                                                True
+                                                True (1)
                                             """)]
     [InlineAutoData(true,  false, true, """
                                             more than one is satisfied
-                                                True
+                                                True (2)
                                             """)]
     [InlineAutoData(true,  true,  false, """
                                             more than one is satisfied
-                                                True
+                                                True (2)
                                             """)]
     [InlineAutoData(true,  true,  true, """
                                             more than one is satisfied
-                                                True
+                                                True (3)
                                             """)]
     public void Should_serialize_the_result_of_the_at_most_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
@@ -877,35 +877,35 @@ public class AsAtMostNSatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                             at most one is satisfied
-                                                is true == false
+                                                is true == false (3)
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             at most one is satisfied
-                                                is true == true
+                                                is true == true (1)
                                             """)]
     [InlineAutoData(false, true,  false, """
                                             at most one is satisfied
-                                                is true == true
+                                                is true == true (1)
                                             """)]
     [InlineAutoData(false, true,  true,  """
                                             more than one is satisfied
-                                                is true == true
+                                                is true == true (2)
                                             """)]
     [InlineAutoData(true,  false, false, """
                                             at most one is satisfied
-                                                is true == true
+                                                is true == true (1)
                                             """)]
     [InlineAutoData(true,  false, true,  """
                                             more than one is satisfied
-                                                is true == true
+                                                is true == true (2)
                                             """)]
     [InlineAutoData(true,  true,  false, """
                                             more than one is satisfied
-                                                is true == true
+                                                is true == true (2)
                                             """)]
     [InlineAutoData(true,  true,  true,  """
                                             more than one is satisfied
-                                                is true == true
+                                                is true == true (3)
                                             """)]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,

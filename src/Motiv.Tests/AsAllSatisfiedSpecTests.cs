@@ -149,35 +149,35 @@ public class AsAllSatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                             all are true == false
-                                                false
+                                                false (3)
                                             """)]
     [InlineAutoData(false, false, true, """
                                             all are true == false
-                                                false
+                                                false (2)
                                             """)]
     [InlineAutoData(false, true, false, """
                                             all are true == false
-                                                false
+                                                false (2)
                                             """)]
     [InlineAutoData(false, true, true, """
                                             all are true == false
-                                                false
+                                                false (1)
                                             """)]
     [InlineAutoData(true, false, false, """
                                             all are true == false
-                                                false
+                                                false (2)
                                             """)]
     [InlineAutoData(true, false, true, """
                                             all are true == false
-                                                false
+                                                false (1)
                                             """)]
     [InlineAutoData(true, true, false, """
                                             all are true == false
-                                                false
+                                                false (1)
                                             """)]
     [InlineAutoData(true, true, true, """
                                             all are true == true
-                                                true
+                                                true (3)
                                             """)]
     public void Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string(
         bool first,
@@ -209,35 +209,35 @@ public class AsAllSatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                         all are true == false
-                                            false
+                                            false (3)
                                         """)]
     [InlineAutoData(false, false, true, """
                                         all are true == false
-                                            false
+                                            false (2)
                                         """)]
     [InlineAutoData(false, true, false, """
                                         all are true == false
-                                            false
+                                            false (2)
                                         """)]
     [InlineAutoData(false, true, true, """
                                         all are true == false
-                                            false
+                                            false (1)
                                         """)]
     [InlineAutoData(true, false, false, """
                                         all are true == false
-                                            false
+                                            false (2)
                                         """)]
     [InlineAutoData(true, false, true, """
                                         all are true == false
-                                            false
+                                            false (1)
                                         """)]
     [InlineAutoData(true, true, false, """
                                         all are true == false
-                                            false
+                                            false (1)
                                         """)]
     [InlineAutoData(true, true, true, """
                                         all are true == true
-                                            true
+                                            true (3)
                                         """)]
     public void
         Should_serialize_the_result_of_the_all_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
@@ -272,36 +272,36 @@ public class AsAllSatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                         all are true == false
-                                            is true == false
+                                            is true == false (3)
                                         """)]
     [InlineAutoData(false, false, true, """
                                         all are true == false
-                                            is true == false
+                                            is true == false (2)
                                         """)]
     [InlineAutoData(false, true, false, """
                                         all are true == false
-                                            is true == false
+                                            is true == false (2)
                                         """)]
     [InlineAutoData(false, true, true, """
                                         all are true == false
-                                            is true == false
+                                            is true == false (1)
                                         """)]
     [InlineAutoData(true, false, false, """
                                         all are true == false
-                                            is true == false
+                                            is true == false (2)
                                         """)]
     [InlineAutoData(true, false, true, """
-                                       all are true == false
-                                           is true == false
-                                       """)]
+                                        all are true == false
+                                            is true == false (1)
+                                        """)]
     [InlineAutoData(true, true, false, """
-                                       all are true == false
-                                           is true == false
-                                       """)]
+                                        all are true == false
+                                            is true == false (1)
+                                        """)]
     [InlineAutoData(true, true, true, """
-                                      all are true == true
-                                          is true == true
-                                      """)]
+                                        all are true == true
+                                            is true == true (3)
+                                        """)]
     public void Should_serialize_the_result_of_the_all_operation(
         bool first,
         bool second,
@@ -334,49 +334,49 @@ public class AsAllSatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                             all are true == false
-                                                AND
+                                                AND (3)
                                                     left == false
                                                     right == false
                                             """)]
     [InlineAutoData(false, false, true, """
                                             all are true == false
-                                                AND
+                                                AND (2)
                                                     left == false
                                                     right == false
                                             """)]
     [InlineAutoData(false, true, false, """
                                             all are true == false
-                                                AND
+                                                AND (2)
                                                     left == false
                                                     right == false
                                             """)]
     [InlineAutoData(false, true, true, """
                                             all are true == false
-                                                AND
+                                                AND (1)
                                                     left == false
                                                     right == false
                                             """)]
     [InlineAutoData(true, false, false, """
                                             all are true == false
-                                                AND
+                                                AND (2)
                                                     left == false
                                                     right == false
                                             """)]
     [InlineAutoData(true, false, true, """
                                             all are true == false
-                                                AND
+                                                AND (1)
                                                     left == false
                                                     right == false
                                             """)]
     [InlineAutoData(true, true, false, """
                                             all are true == false
-                                                AND
+                                                AND (1)
                                                     left == false
                                                     right == false
                                             """)]
     [InlineAutoData(true, true, true, """
                                             all are true == true
-                                                AND
+                                                AND (3)
                                                     left == true
                                                     right == true
                                             """)]

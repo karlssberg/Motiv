@@ -15,7 +15,7 @@ internal sealed class ExpressionTreeBooleanResultDescription(
         if (IsReasonTheSameAsUnderlying())
         {
             yield return expression.ToAssertion(BooleanResult.Satisfied);
-            foreach (var line in BooleanResult.Description.GetJustificationAsLines())
+            foreach (var line in BooleanResult.Description.GetJustificationAsLinesWithoutCausalCount())
                 yield return line.Indent();
 
             yield break;
@@ -23,7 +23,7 @@ internal sealed class ExpressionTreeBooleanResultDescription(
 
         yield return Reason;
         yield return expression.ToAssertion(BooleanResult.Satisfied).Indent();
-        foreach (var line in BooleanResult.Description.GetJustificationAsLines())
-            yield return line.Indent().Indent();
+        foreach (var line in BooleanResult.Description.GetJustificationAsLinesWithoutCausalCount())
+            yield return line.Indent(2);
     }
 }

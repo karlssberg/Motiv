@@ -334,16 +334,16 @@ public class ExpressionTreeExplanationTests
             """
             OR
                 is-positive == true
-                    (int n) => n > 0 == true
+                    (int n) => n > 0 == true (1)
                         n > 0
                 is-positive == true
-                    (int n) => n > 0 == true
+                    (int n) => n > 0 == true (1)
                         n > 0
                 is-positive == true
-                    (int n) => n > 0 == true
+                    (int n) => n > 0 == true (1)
                         n > 0
                 is-positive == true
-                    (int n) => n > 0 == true
+                    (int n) => n > 0 == true (1)
                         n > 0
             """);
     }

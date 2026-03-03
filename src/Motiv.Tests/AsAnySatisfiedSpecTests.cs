@@ -287,10 +287,11 @@ public class AsAnySatisfiedSpecTests
 
         var result = spec.IsSatisfiedBy([first, second, third]);
         var satisfied = result.Satisfied;
+        var causalCount = new[] { first, second, third }.Count(b => b == satisfied);
 
         var expected = string.Join(Environment.NewLine,
             $"any satisfied == {satisfied.ToString().ToLowerInvariant()}",
-            $"    is true == {satisfied.ToString().ToLowerInvariant()}");
+            $"    is true == {satisfied.ToString().ToLowerInvariant()} ({causalCount})");
 
         // Act
         var act = result.Justification;
@@ -302,35 +303,35 @@ public class AsAnySatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                             some false
-                                                False
+                                                False (3)
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             any true
-                                                True
+                                                True (1)
                                             """)]
     [InlineAutoData(false, true, false,  """
                                             any true
-                                                True
+                                                True (1)
                                             """)]
     [InlineAutoData(false, true, true,   """
                                             any true
-                                                True
+                                                True (2)
                                             """)]
     [InlineAutoData(true, false, false,  """
                                             any true
-                                                True
+                                                True (1)
                                             """)]
     [InlineAutoData(true, false, true,   """
                                             any true
-                                                True
+                                                True (2)
                                             """)]
     [InlineAutoData(true, true, false,   """
                                             any true
-                                                True
+                                                True (2)
                                             """)]
     [InlineAutoData(true, true, true,    """
                                             any true
-                                                True
+                                                True (3)
                                             """)]
     public void Should_serialize_the_result_of_the_any_operation_when_metadata_is_a_string(
         bool first,
@@ -364,35 +365,35 @@ public class AsAnySatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                             any true == false
-                                                is false
+                                                is false (3)
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             any true == true
-                                                is true
+                                                is true (1)
                                             """)]
     [InlineAutoData(false, true, false,  """
                                             any true == true
-                                                is true
+                                                is true (1)
                                             """)]
     [InlineAutoData(false, true, true,   """
                                             any true == true
-                                                is true
+                                                is true (2)
                                             """)]
     [InlineAutoData(true, false, false,  """
                                             any true == true
-                                                is true
+                                                is true (1)
                                             """)]
     [InlineAutoData(true, false, true,   """
                                             any true == true
-                                                is true
+                                                is true (2)
                                             """)]
     [InlineAutoData(true, true, false,   """
                                             any true == true
-                                                is true
+                                                is true (2)
                                             """)]
     [InlineAutoData(true, true, true,    """
                                             any true == true
-                                                is true
+                                                is true (3)
                                             """)]
     public void Should_serialize_the_result_of_the_any_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,
@@ -426,35 +427,35 @@ public class AsAnySatisfiedSpecTests
     [Theory]
     [InlineAutoData(false, false, false, """
                                             any true == false
-                                                is false
+                                                is false (3)
                                             """)]
     [InlineAutoData(false, false, true,  """
                                             any true == true
-                                                is true
+                                                is true (1)
                                             """)]
     [InlineAutoData(false, true, false,  """
                                             any true == true
-                                                is true
+                                                is true (1)
                                             """)]
     [InlineAutoData(false, true, true,   """
                                             any true == true
-                                                is true
+                                                is true (2)
                                             """)]
     [InlineAutoData(true, false, false,  """
                                             any true == true
-                                                is true
+                                                is true (1)
                                             """)]
     [InlineAutoData(true, false, true,   """
                                             any true == true
-                                                is true
+                                                is true (2)
                                             """)]
     [InlineAutoData(true, true, false,   """
                                             any true == true
-                                                is true
+                                                is true (2)
                                             """)]
     [InlineAutoData(true, true, true,    """
                                             any true == true
-                                                is true
+                                                is true (3)
                                             """)]
     public void Should_serialize_the_boolean_result_of_the_any_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
         bool first,

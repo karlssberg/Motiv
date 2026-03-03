@@ -278,7 +278,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(false, false, false, false,
         """
         some are false
-            AND
+            AND (1)
                 OR
                     first == false
                     second == false
@@ -289,7 +289,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(false, false, false, true,
         """
         some are false
-            AND
+            AND (1)
                 OR
                     first == false
                     second == false
@@ -297,7 +297,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(false, false, true, false,
         """
         some are false
-            AND
+            AND (1)
                 OR
                     first == false
                     second == false
@@ -305,7 +305,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(false, false, true, true,
         """
         some are false
-            AND
+            AND (1)
                 OR
                     first == false
                     second == false
@@ -313,7 +313,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(false, true, false, false,
         """
         some are false
-            AND
+            AND (1)
                 OR
                     third == false
                     fourth == false
@@ -321,7 +321,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(false, true, false, true,
         """
         all are true
-            AND
+            AND (1)
                 OR
                     second == true
                 OR
@@ -330,7 +330,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(false, true, true, false,
         """
         all are true
-            AND
+            AND (1)
                 OR
                     second == true
                 OR
@@ -339,7 +339,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(false, true, true, true,
         """
         all are true
-            AND
+            AND (1)
                 OR
                     second == true
                 OR
@@ -349,7 +349,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(true, false, false, false,
         """
         some are false
-            AND
+            AND (1)
                 OR
                     third == false
                     fourth == false
@@ -357,7 +357,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(true, false, false, true,
         """
         all are true
-            AND
+            AND (1)
                 OR
                     first == true
                 OR
@@ -366,7 +366,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(true, false, true, false,
         """
         all are true
-            AND
+            AND (1)
                 OR
                     first == true
                 OR
@@ -375,7 +375,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(true, false, true, true,
         """
         all are true
-            AND
+            AND (1)
                 OR
                     first == true
                 OR
@@ -385,7 +385,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(true, true, false, false,
         """
         some are false
-            AND
+            AND (1)
                 OR
                     third == false
                     fourth == false
@@ -393,7 +393,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(true, true, false, true,
         """
         all are true
-            AND
+            AND (1)
                 OR
                     first == true
                     second == true
@@ -403,7 +403,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(true, true, true, false,
         """
         all are true
-            AND
+            AND (1)
                 OR
                     first == true
                     second == true
@@ -413,7 +413,7 @@ public class PropositionResultDescriptionTests
     [InlineAutoData(true, true, true, true,
         """
         all are true
-            AND
+            AND (1)
                 OR
                     first == true
                     second == true
