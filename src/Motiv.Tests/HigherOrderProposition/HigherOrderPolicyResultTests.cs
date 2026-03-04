@@ -19,12 +19,12 @@ namespace Motiv.Tests.HigherOrderProposition;
         {
             return new HigherOrderPolicyResult<TestMetadata, TestUnderlyingMetadata>(
                 isSatisfied,
-                new Lazy<TestMetadata>(() => value ?? new TestMetadata()),
-                new Lazy<IEnumerable<TestMetadata>>(() => metadata ?? new List<TestMetadata>()),
-                new Lazy<IEnumerable<string>>(() => assertions ?? new List<string>()),
-                new Lazy<ResultDescriptionBase>(() => new HigherOrderResultDescription<TestUnderlyingMetadata>(reason ?? "", causes ?? [], "")),
+                () => value ?? new TestMetadata(),
+                () => metadata ?? new List<TestMetadata>(),
+                () => assertions ?? new List<string>(),
+                () => new HigherOrderResultDescription<TestUnderlyingMetadata>(reason ?? "", causes ?? [], ""),
                 underlyingResults ?? new List<BooleanResultBase<TestUnderlyingMetadata>>(),
-                new Lazy<IEnumerable<BooleanResultBase<TestUnderlyingMetadata>>>(() => causes ?? new List<BooleanResultBase<TestUnderlyingMetadata>>()));
+                () => causes ?? new List<BooleanResultBase<TestUnderlyingMetadata>>());
         }
 
         [Theory, AutoData]

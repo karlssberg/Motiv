@@ -10,16 +10,16 @@ public class PropositionBooleanResultTests
     [Theory, AutoData]
     public void Constructor_WithAllParameters_SetsPropertiesCorrectly(
         bool satisfied,
-        Lazy<MetadataNode<string>> metadataTier,
-        Lazy<Explanation> explanation,
-        Lazy<ResultDescriptionBase> description)
+        MetadataNode<string> metadataTier,
+        Explanation explanation,
+        ResultDescriptionBase description)
     {
-        var result = new PropositionBooleanResult<string>(satisfied, metadataTier, explanation, description);
+        var result = new PropositionBooleanResult<string>(satisfied, () => metadataTier, () => explanation, () => description);
 
         result.Satisfied.ShouldBe(satisfied);
-        result.MetadataTier.ShouldBe(metadataTier.Value);
-        result.Explanation.ShouldBe(explanation.Value);
-        result.Description.ShouldBe(description.Value);
+        result.MetadataTier.ShouldBe(metadataTier);
+        result.Explanation.ShouldBe(explanation);
+        result.Description.ShouldBe(description);
     }
 
     [Theory, AutoData]

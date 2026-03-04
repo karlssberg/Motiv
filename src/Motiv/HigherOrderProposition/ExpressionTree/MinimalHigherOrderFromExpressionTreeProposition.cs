@@ -30,23 +30,18 @@ internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TP
         var metadata = new Lazy<IEnumerable<string>>(() =>
             causes.Value.SelectMany(result => result.MetadataTier.Metadata), LazyThreadSafetyMode.None);
 
-        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-            new HigherOrderExpressionTreeResultDescription<string>(
+        return new HigherOrderBooleanResult<string, string>(
+            isSatisfied,
+            () => metadata.Value,
+            () => metadata.Value,
+            () => new HigherOrderExpressionTreeResultDescription<string>(
                 isSatisfied,
                 Description.ToReason(isSatisfied),
                 expression,
                 causes.Value,
-                Description.Statement), LazyThreadSafetyMode.None);
-
-        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<string>>>(() => causes.Value, LazyThreadSafetyMode.None);
-
-        return new HigherOrderBooleanResult<string, string>(
-            isSatisfied,
-            metadata,
-            metadata,
-            resultDescription,
+                Description.Statement),
             underlyingResults,
-            causesAsUnderlying);
+            () => causes.Value);
     }
 
     private (BooleanResult<TModel, string>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

@@ -9,18 +9,18 @@ public class PropositionPolicyResultTests
     [Theory, AutoData]
     public void Constructor_WithAllParameters_SetsPropertiesCorrectly(
         bool satisfied,
-        Lazy<string> lazyValue,
-        Lazy<MetadataNode<string>> metadataTier,
-        Lazy<Explanation> explanation,
-        Lazy<ResultDescriptionBase> description)
+        string value,
+        MetadataNode<string> metadataTier,
+        Explanation explanation,
+        ResultDescriptionBase description)
     {
-        var result = new PropositionPolicyResult<string>(satisfied, lazyValue, metadataTier, explanation, description);
+        var result = new PropositionPolicyResult<string>(satisfied, () => value, () => metadataTier, () => explanation, () => description);
 
         result.Satisfied.ShouldBe(satisfied);
-        result.Value.ShouldBe(lazyValue.Value);
-        result.MetadataTier.ShouldBe(metadataTier.Value);
-        result.Explanation.ShouldBe(explanation.Value);
-        result.Description.ShouldBe(description.Value);
+        result.Value.ShouldBe(value);
+        result.MetadataTier.ShouldBe(metadataTier);
+        result.Explanation.ShouldBe(explanation);
+        result.Description.ShouldBe(description);
     }
 
     [Theory, AutoData]

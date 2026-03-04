@@ -40,17 +40,14 @@ internal sealed class HigherOrderFromBooleanPredicateMultiMetadataProposition<TM
                 _ => specDescription.ToReason(isSatisfied).ToEnumerable()
             }, LazyThreadSafetyMode.None);
 
-        var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
-            new BooleanResultDescription(
-                specDescription.ToReason(isSatisfied),
-                Description.Statement,
-                lazyAssertion.Value), LazyThreadSafetyMode.None);
-
         return new HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
             isSatisfied,
-            new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(lazyMetadata.Value, []), LazyThreadSafetyMode.None),
-            new Lazy<Explanation>(() => new Explanation(lazyAssertion.Value), LazyThreadSafetyMode.None),
-            lazyDescription);
+            () => new MetadataNode<TMetadata>(lazyMetadata.Value, []),
+            () => new Explanation(lazyAssertion.Value),
+            () => new BooleanResultDescription(
+                specDescription.ToReason(isSatisfied),
+                Description.Statement,
+                lazyAssertion.Value));
     }
 
     private (ModelResult<TModel>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

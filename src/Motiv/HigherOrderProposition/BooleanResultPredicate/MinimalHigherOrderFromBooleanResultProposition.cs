@@ -30,28 +30,20 @@ internal sealed class MinimalHigherOrderFromBooleanResultProposition<TModel, TMe
                 return evaluation.Values;
             }, LazyThreadSafetyMode.None);
 
-        var assertions = new Lazy<IEnumerable<string>>(() =>
-            metadata.Value switch
+        return new HigherOrderBooleanResult<TMetadata, TMetadata>(
+            isSatisfied,
+            () => metadata.Value,
+            () => metadata.Value switch
             {
                 IEnumerable<string> reasons => reasons,
                 _ => specDescription.ToReason(isSatisfied).ToEnumerable()
-            }, LazyThreadSafetyMode.None);
-
-        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-            new HigherOrderResultDescription<TMetadata>(
+            },
+            () => new HigherOrderResultDescription<TMetadata>(
                 specDescription.ToReason(isSatisfied),
                 causes.Value,
-                Description.Statement), LazyThreadSafetyMode.None);
-
-        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<TMetadata>>>(() => causes.Value, LazyThreadSafetyMode.None);
-
-        return new HigherOrderBooleanResult<TMetadata, TMetadata>(
-            isSatisfied,
-            metadata,
-            assertions,
-            resultDescription,
+                Description.Statement),
             underlyingResults,
-            causesAsUnderlying);
+            () => causes.Value);
     }
 
     private (BooleanResult<TModel, TMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

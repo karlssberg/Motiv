@@ -29,9 +29,9 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var result = new PropositionBooleanResult<string>(
             isSatisfied,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(because, [])),
-            new Lazy<Explanation>(() => new Explanation(because)),
-            new Lazy<ResultDescriptionBase>(() => resultDescription));
+            () => new MetadataNode<string>(because, []),
+            () => new Explanation(because),
+            () => resultDescription);
 
         // Act
         var act = (bool)result;
@@ -50,17 +50,15 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
             left,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(left.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(left.ToString(), left.ToString())));
+            () => new MetadataNode<string>(left.ToString(), []),
+            () => new Explanation(left.ToString()),
+            () => new BooleanResultDescription(left.ToString(), left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(right.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(right.ToString(), right.ToString())));
+            () => new MetadataNode<string>(right.ToString(), []),
+            () => new Explanation(right.ToString()),
+            () => new BooleanResultDescription(right.ToString(), right.ToString()));
 
         var result = leftResult & rightResult;
 
@@ -81,17 +79,15 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
             left,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(left.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(left.ToString(), left.ToString())));
+            () => new MetadataNode<string>(left.ToString(), []),
+            () => new Explanation(left.ToString()),
+            () => new BooleanResultDescription(left.ToString(), left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(right.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(right.ToString(), right.ToString())));
+            () => new MetadataNode<string>(right.ToString(), []),
+            () => new Explanation(right.ToString()),
+            () => new BooleanResultDescription(right.ToString(), right.ToString()));
 
         var result = leftResult & rightResult;
 
@@ -116,16 +112,14 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<bool>(
             left,
-            new Lazy<MetadataNode<bool>>(() => new MetadataNode<bool>(left, [])),
-            new Lazy<Explanation>(() => new Explanation(left.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(left.ToString(), left.ToString())));
+            () => new MetadataNode<bool>(left, []),
+            () => new Explanation(left.ToString()),
+            () => new BooleanResultDescription(left.ToString(), left.ToString()));
         var rightResult = new  PropositionBooleanResult<MyMetadata>(
             right,
-            new Lazy<MetadataNode<MyMetadata>>(() => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, [])),
-            new Lazy<Explanation>(() => new Explanation(right.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(right.ToString(), right.ToString())));
+            () => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
+            () => new Explanation(right.ToString()),
+            () => new BooleanResultDescription(right.ToString(), right.ToString()));
 
         var result = leftResult & rightResult;
 
@@ -146,16 +140,14 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<bool>(
             left,
-            new Lazy<MetadataNode<bool>>(() => new MetadataNode<bool>(left, [])),
-            new Lazy<Explanation>(() => new Explanation(left.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(left.ToString(), left.ToString())));
+            () => new MetadataNode<bool>(left, []),
+            () => new Explanation(left.ToString()),
+            () => new BooleanResultDescription(left.ToString(), left.ToString()));
         var rightResult = new  PropositionBooleanResult<MyMetadata>(
             right,
-            new Lazy<MetadataNode<MyMetadata>>(() => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, [])),
-            new Lazy<Explanation>(() => new Explanation(right.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(right.ToString(), right.ToString())));
+            () => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
+            () => new Explanation(right.ToString()),
+            () => new BooleanResultDescription(right.ToString(), right.ToString()));
 
         var result = leftResult & rightResult;
 
@@ -176,17 +168,15 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
             left,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(left.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(left.ToString(), left.ToString())));
+            () => new MetadataNode<string>(left.ToString(), []),
+            () => new Explanation(left.ToString()),
+            () => new BooleanResultDescription(left.ToString(), left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(right.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(right.ToString(), right.ToString())));
+            () => new MetadataNode<string>(right.ToString(), []),
+            () => new Explanation(right.ToString()),
+            () => new BooleanResultDescription(right.ToString(), right.ToString()));
 
         var result = leftResult | rightResult;
 
@@ -207,17 +197,15 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
             left,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(left.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(left.ToString(), left.ToString())));
+            () => new MetadataNode<string>(left.ToString(), []),
+            () => new Explanation(left.ToString()),
+            () => new BooleanResultDescription(left.ToString(), left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(right.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(right.ToString(), right.ToString())));
+            () => new MetadataNode<string>(right.ToString(), []),
+            () => new Explanation(right.ToString()),
+            () => new BooleanResultDescription(right.ToString(), right.ToString()));
 
         var result = leftResult | rightResult;
 
@@ -242,16 +230,14 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<bool>(
             left,
-            new Lazy<MetadataNode<bool>>(() => new MetadataNode<bool>(left, [])),
-            new Lazy<Explanation>(() => new Explanation(left.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(left.ToString(), left.ToString())));
+            () => new MetadataNode<bool>(left, []),
+            () => new Explanation(left.ToString()),
+            () => new BooleanResultDescription(left.ToString(), left.ToString()));
         var rightResult = new  PropositionBooleanResult<MyMetadata>(
             right,
-            new Lazy<MetadataNode<MyMetadata>>(() => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, [])),
-            new Lazy<Explanation>(() => new Explanation(right.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(right.ToString(), right.ToString())));
+            () => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
+            () => new Explanation(right.ToString()),
+            () => new BooleanResultDescription(right.ToString(), right.ToString()));
 
         var result = leftResult | rightResult;
 
@@ -272,17 +258,15 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
             left,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(left.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(left.ToString(), left.ToString())));
+            () => new MetadataNode<string>(left.ToString(), []),
+            () => new Explanation(left.ToString()),
+            () => new BooleanResultDescription(left.ToString(), left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(right.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(right.ToString(), right.ToString())));
+            () => new MetadataNode<string>(right.ToString(), []),
+            () => new Explanation(right.ToString()),
+            () => new BooleanResultDescription(right.ToString(), right.ToString()));
 
         var result = leftResult ^ rightResult;
 
@@ -303,17 +287,15 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<string>(
             left,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(left.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(left.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(left.ToString(), left.ToString())));
+            () => new MetadataNode<string>(left.ToString(), []),
+            () => new Explanation(left.ToString()),
+            () => new BooleanResultDescription(left.ToString(), left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<string>(
             right,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(right.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(right.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(right.ToString(), right.ToString())));
+            () => new MetadataNode<string>(right.ToString(), []),
+            () => new Explanation(right.ToString()),
+            () => new BooleanResultDescription(right.ToString(), right.ToString()));
 
         var result = leftResult ^ rightResult;
 
@@ -336,17 +318,15 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var leftResult = new PropositionBooleanResult<bool>(
             left,
-            new Lazy<MetadataNode<bool>>(() => new MetadataNode<bool>(left, [])),
-            new Lazy<Explanation>(() => new Explanation(left.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(left.ToString(), left.ToString())));
+            () => new MetadataNode<bool>(left, []),
+            () => new Explanation(left.ToString()),
+            () => new BooleanResultDescription(left.ToString(), left.ToString()));
 
         var rightResult = new  PropositionBooleanResult<MyMetadata>(
             right,
-            new Lazy<MetadataNode<MyMetadata>>(() => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, [])),
-            new Lazy<Explanation>(() => new Explanation(right.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(right.ToString(), right.ToString())));
+            () => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
+            () => new Explanation(right.ToString()),
+            () => new BooleanResultDescription(right.ToString(), right.ToString()));
 
         var result = leftResult ^ rightResult;
 
@@ -365,10 +345,9 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var operandResult = new  PropositionBooleanResult<string>(
             operand,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(operand.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(operand.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(operand.ToString(), operand.ToString())));
+            () => new MetadataNode<string>(operand.ToString(), []),
+            () => new Explanation(operand.ToString()),
+            () => new BooleanResultDescription(operand.ToString(), operand.ToString()));
 
         var result = !operandResult;
 
@@ -387,10 +366,9 @@ public class IncompatibleBooleanResultTests
         // Arrange
         var operandResult = new  PropositionBooleanResult<string>(
             operand,
-            new Lazy<MetadataNode<string>>(() => new MetadataNode<string>(operand.ToString(), [])),
-            new Lazy<Explanation>(() => new Explanation(operand.ToString())),
-            new Lazy<ResultDescriptionBase>(() =>
-                new BooleanResultDescription(operand.ToString(), operand.ToString())));
+            () => new MetadataNode<string>(operand.ToString(), []),
+            () => new Explanation(operand.ToString()),
+            () => new BooleanResultDescription(operand.ToString(), operand.ToString()));
 
         var result = !operandResult;
 

@@ -47,25 +47,19 @@ internal sealed class HigherOrderFromExpressionTreeMetadataProposition<TModel, T
                 _ => underlyingResults.GetAssertions()
             }, LazyThreadSafetyMode.None);
 
-        var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
-            new HigherOrderExpressionTreeResultDescription<string>(
+        return new HigherOrderPolicyResult<TMetadata, string>(
+            isSatisfied,
+            () => metadata.Value,
+            () => metadata.Value.ToEnumerable(),
+            () => assertions.Value,
+            () => new HigherOrderExpressionTreeResultDescription<string>(
                 isSatisfied,
                 Description.ToReason(isSatisfied),
                 expression,
                 causes.Value,
-                Description.Statement), LazyThreadSafetyMode.None);
-
-        var metadataAsEnumerable = new Lazy<IEnumerable<TMetadata>>(() => metadata.Value.ToEnumerable(), LazyThreadSafetyMode.None);
-        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<string>>>(() => causes.Value, LazyThreadSafetyMode.None);
-
-        return new HigherOrderPolicyResult<TMetadata, string>(
-            isSatisfied,
-            metadata,
-            metadataAsEnumerable,
-            assertions,
-            lazyDescription,
+                Description.Statement),
             underlyingResults,
-            causesAsUnderlying);
+            () => causes.Value);
     }
 
     private (BooleanResult<TModel, string>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

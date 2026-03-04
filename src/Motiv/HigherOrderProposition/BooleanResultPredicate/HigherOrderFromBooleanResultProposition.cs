@@ -48,24 +48,17 @@ internal sealed class HigherOrderFromBooleanResultProposition<TModel, TMetadata,
                 ? specDescription.ToReason(isSatisfied)
                 : assertion.Value, LazyThreadSafetyMode.None);
 
-        var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
-            new HigherOrderResultDescription<TUnderlyingMetadata>(
-                reason.Value,
-                causes.Value,
-                Description.Statement), LazyThreadSafetyMode.None);
-
-        var metadataAsEnumerable = new Lazy<IEnumerable<TMetadata>>(() => metadata.Value.ToEnumerable(), LazyThreadSafetyMode.None);
-        var assertionAsEnumerable = new Lazy<IEnumerable<string>>(() => assertion.Value.ToEnumerable(), LazyThreadSafetyMode.None);
-        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<TUnderlyingMetadata>>>(() => causes.Value, LazyThreadSafetyMode.None);
-
         return new HigherOrderPolicyResult<TMetadata, TUnderlyingMetadata>(
             isSatisfied,
-            metadata,
-            metadataAsEnumerable,
-            assertionAsEnumerable,
-            lazyDescription,
+            () => metadata.Value,
+            () => metadata.Value.ToEnumerable(),
+            () => assertion.Value.ToEnumerable(),
+            () => new HigherOrderResultDescription<TUnderlyingMetadata>(
+                reason.Value,
+                causes.Value,
+                Description.Statement),
             underlyingResults,
-            causesAsUnderlying);
+            () => causes.Value);
     }
 
     private (BooleanResult<TModel, TUnderlyingMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
