@@ -32,7 +32,7 @@ internal abstract class BinaryBooleanResultDescription<TMetadata>(
         {
             _ when IsSameFamily(result) =>
                 result.Description.Reason,
-            _ when result.Causes.Count() > 1 =>
+            _ when result.Causes.HasAtLeast(2) =>
                 $"({result.Description.Reason})",
             _ when result.Description.Reason.EndsWithEqualityAssertion() =>
                 $"({result.Description.Reason})",

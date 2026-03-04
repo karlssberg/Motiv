@@ -4,7 +4,7 @@ namespace Motiv.HigherOrderProposition;
 /// Represents the result of a model evaluation.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-public record ModelResult<TModel>(TModel Model, bool Satisfied)
+public readonly record struct  ModelResult<TModel>(TModel Model, bool Satisfied)
 {
     /// <summary>
     /// Gets the model.

@@ -13,13 +13,12 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
 
     public override ISpecDescription Description => specDescription;
 
+    public override bool Matches(IEnumerable<TModel> models) =>
+        EvaluateModels(models).IsSatisfied;
+
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(IEnumerable<TModel> models)
     {
-        var underlyingResults = models
-            .Select(model => new BooleanResult<TModel, TUnderlyingMetadata>(model, resultResolver(model)))
-            .ToArray();
-
-        var isSatisfied = higherOrderPredicate(underlyingResults);
+        var (underlyingResults, isSatisfied) = EvaluateModels(models);
         var causes = new Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
                 .ToArray());
@@ -57,5 +56,11 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
             resultDescription,
             underlyingResults,
             causesAsUnderlying);
+    }
+
+    private (BooleanResult<TModel, TUnderlyingMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
+    {
+        var results = models.Select(model => new BooleanResult<TModel, TUnderlyingMetadata>(model, resultResolver(model))).ToArray();
+        return (results, higherOrderPredicate(results));
     }
 }

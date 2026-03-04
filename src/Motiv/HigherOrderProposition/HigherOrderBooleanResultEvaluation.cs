@@ -49,9 +49,9 @@ public class HigherOrderBooleanResultEvaluation<TModel, TMetadata>
         _lazyFalseResults = new Lazy<IReadOnlyList<BooleanResult<TModel, TMetadata>>>(() =>
             results.WhereFalse().ToArray());
         _lazyTrueModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            results.WhereTrue().Select(result => result.Model).ToArray());
+            _lazyTrueResults.Value.Select(result => result.Model).ToArray());
         _lazyFalseModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            results.WhereFalse().Select(result => result.Model).ToArray());
+            _lazyFalseResults.Value.Select(result => result.Model).ToArray());
         _lazyAssertions = new Lazy<IReadOnlyList<string>>(() =>
             causalResults.SelectMany(result => result.Explanation.Assertions).DistinctWithOrderPreserved().ToArray());
         _lazyMetadata = new Lazy<IReadOnlyList<TMetadata>>(() =>

@@ -27,13 +27,13 @@ internal static class Causes
         Func<T, bool> satisfiedSelector)
     {
         var operandResultArray = operandResults.ToArray();
-        var trueAndFalseOperands = operandResultArray
-            .GroupBy(satisfiedSelector)
-            .Select(grouping => grouping.ToArray())
-            .ToArray();
+        var trueList = new List<T>();
+        var falseList = new List<T>();
+        foreach (var operand in operandResultArray)
+            (satisfiedSelector(operand) ? trueList : falseList).Add(operand);
 
-        var trueOperands = trueAndFalseOperands.ElementAtOrDefault(0) ?? [];
-        var falseOperands = trueAndFalseOperands.ElementAtOrDefault(1) ?? [];
+        var trueOperands = trueList.ToArray();
+        var falseOperands = falseList.ToArray();
 
         var candidateCauses = isSatisfied switch
         {

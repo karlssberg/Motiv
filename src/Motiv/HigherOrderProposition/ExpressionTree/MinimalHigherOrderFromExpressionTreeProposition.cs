@@ -16,13 +16,12 @@ internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TP
 
     public override ISpecDescription Description => description;
 
+    public override bool Matches(IEnumerable<TModel> models) =>
+        EvaluateModels(models).IsSatisfied;
+
     protected override BooleanResultBase<string> IsSpecSatisfiedBy(IEnumerable<TModel> models)
     {
-        var underlyingResults = models
-            .Select(model => new BooleanResult<TModel, string>(model, _predicate.Execute(model)))
-            .ToArray();
-
-        var isSatisfied = higherOrderPredicate(underlyingResults);
+        var (underlyingResults, isSatisfied) = EvaluateModels(models);
         var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
                 .ToArray());
@@ -47,5 +46,11 @@ internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TP
             resultDescription,
             underlyingResults,
             causesAsUnderlying);
+    }
+
+    private (BooleanResult<TModel, string>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
+    {
+        var results = models.Select(model => new BooleanResult<TModel, string>(model, _predicate.Execute(model))).ToArray();
+        return (results, higherOrderPredicate(results));
     }
 }

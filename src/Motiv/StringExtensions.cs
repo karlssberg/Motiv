@@ -78,7 +78,14 @@ public static class StringExtensions
         }
     }
 
-    internal static bool ContainsReservedCharacters(this string text) => text.Any(c => Characters.Contains(c));
+    internal static bool ContainsReservedCharacters(this string text)
+    {
+        foreach (var c in text)
+            if (Characters.Contains(c))
+                return true;
+
+        return false;
+    }
 
     internal static bool EndsWithEqualityAssertion(this string text) =>
         text.EndsWith(" == false") || text.EndsWith(" == true");

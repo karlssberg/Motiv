@@ -11,13 +11,12 @@ internal sealed class MinimalHigherOrderFromPolicyResultProposition<TModel, TMet
 
     public override ISpecDescription Description => specDescription;
 
+    public override bool Matches(IEnumerable<TModel> models) =>
+        EvaluateModels(models).IsSatisfied;
+
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(IEnumerable<TModel> models)
     {
-        var underlyingResults = models
-            .Select(model => new PolicyResult<TModel, TMetadata>(model, resultResolver(model)))
-            .ToArray();
-
-        var isSatisfied = higherOrderPredicate(underlyingResults);
+        var (underlyingResults, isSatisfied) = EvaluateModels(models);
         var causes = new Lazy<PolicyResult<TModel, TMetadata>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
                 .ToArray());
@@ -46,5 +45,11 @@ internal sealed class MinimalHigherOrderFromPolicyResultProposition<TModel, TMet
             resultDescription,
             underlyingResults,
             causesAsUnderlying);
+    }
+
+    private (PolicyResult<TModel, TMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
+    {
+        var results = models.Select(model => new PolicyResult<TModel, TMetadata>(model, resultResolver(model))).ToArray();
+        return (results, higherOrderPredicate(results));
     }
 }
