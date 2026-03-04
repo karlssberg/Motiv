@@ -4,12 +4,16 @@ namespace Motiv.HigherOrderProposition;
 
 internal sealed class HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
     bool isSatisfied,
-    Lazy<MetadataNode<TMetadata>> metadata,
-    Lazy<Explanation> explanation,
-    Lazy<ResultDescriptionBase> description)
+    Func<MetadataNode<TMetadata>> metadataFactory,
+    Func<Explanation> explanationFactory,
+    Func<ResultDescriptionBase> descriptionFactory)
     : BooleanResultBase<TMetadata>
 {
-    public override MetadataNode<TMetadata> MetadataTier => metadata.Value;
+    private MetadataNode<TMetadata>? _metadataTier;
+    private Explanation? _explanation;
+    private ResultDescriptionBase? _description;
+
+    public override MetadataNode<TMetadata> MetadataTier => _metadataTier ??= metadataFactory();
 
     public override IEnumerable<BooleanResultBase> Underlying => [];
 
@@ -22,7 +26,7 @@ internal sealed class HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
 
     public override bool Satisfied { get; } = isSatisfied;
 
-    public override ResultDescriptionBase Description => description.Value;
+    public override ResultDescriptionBase Description => _description ??= descriptionFactory();
 
-    public override Explanation Explanation => explanation.Value;
+    public override Explanation Explanation => _explanation ??= explanationFactory();
 }

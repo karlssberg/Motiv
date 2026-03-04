@@ -6,26 +6,39 @@ namespace Motiv.BooleanPredicateProposition;
 ///     Represents a proposition that yields custom metadata based on the result of a boolean predicate.
 /// </summary>
 /// <param name="satisfied">The value of the proposition.</param>
-/// <param name="lazyValue">The value of the policy result.</param>
-/// <param name="metadataTier">The metadata to yield when the predicate is true.</param>
-/// <param name="explanation">The explanation of the proposition.</param>
-/// <param name="description">The description of the proposition result.</param>
+/// <param name="valueFactory">The factory for the policy result value.</param>
+/// <param name="metadataTierFactory">The factory for the metadata tier.</param>
+/// <param name="explanationFactory">The factory for the explanation of the proposition.</param>
+/// <param name="descriptionFactory">The factory for the description of the proposition result.</param>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 internal sealed class PropositionPolicyResult<TMetadata>(
     bool satisfied,
-    Lazy<TMetadata> lazyValue,
-    Lazy<MetadataNode<TMetadata>> metadataTier,
-    Lazy<Explanation> explanation,
-    Lazy<ResultDescriptionBase> description)
+    Func<TMetadata> valueFactory,
+    Func<MetadataNode<TMetadata>> metadataTierFactory,
+    Func<Explanation> explanationFactory,
+    Func<ResultDescriptionBase> descriptionFactory)
     : PolicyResultBase<TMetadata>
 {
+    private bool _hasValue;
+    private TMetadata _value = default!;
+    private MetadataNode<TMetadata>? _metadataTier;
+    private Explanation? _explanation;
+    private ResultDescriptionBase? _description;
+
     /// <inheritdoc />
-    public override TMetadata Value => lazyValue.Value;
+    public override TMetadata Value
+    {
+        get
+        {
+            if (!_hasValue) { _value = valueFactory(); _hasValue = true; }
+            return _value;
+        }
+    }
 
     /// <summary>
     ///     Gets the metadata tier of the result.
     /// </summary>
-    public override MetadataNode<TMetadata> MetadataTier => metadataTier.Value;
+    public override MetadataNode<TMetadata> MetadataTier => _metadataTier ??= metadataTierFactory();
 
     /// <summary>
     ///     Gets the underlying results of the result.
@@ -48,11 +61,11 @@ internal sealed class PropositionPolicyResult<TMetadata>(
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => [];
 
     /// <summary>Gets the reasons for the result.</summary>
-    public override Explanation Explanation => explanation.Value;
+    public override Explanation Explanation => _explanation ??= explanationFactory();
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
     public override bool Satisfied { get; } = satisfied;
 
     /// <summary>Gets the description of the result.</summary>
-    public override ResultDescriptionBase Description => description.Value;
+    public override ResultDescriptionBase Description => _description ??= descriptionFactory();
 }

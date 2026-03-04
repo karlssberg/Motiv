@@ -9,13 +9,13 @@ public sealed class HigherOrderBooleanEvaluation<TModel>
     private readonly IReadOnlyList<ModelResult<TModel>> _allResults;
     private readonly IReadOnlyList<ModelResult<TModel>> _causalResults;
 
-    private readonly Lazy<bool> _lazyAllSatisfied;
-    private readonly Lazy<bool> _lazyAnySatisfied;
-    private readonly Lazy<bool> _lazyNoneSatisfied;
-    private readonly Lazy<IReadOnlyList<TModel>> _lazyAllModels;
-    private readonly Lazy<IReadOnlyList<TModel>> _lazyCausalModels;
-    private readonly Lazy<IReadOnlyList<TModel>> _lazyTrueModels;
-    private readonly Lazy<IReadOnlyList<TModel>> _lazyFalseModels;
+    private bool? _allSatisfied;
+    private bool? _anySatisfied;
+    private bool? _noneSatisfied;
+    private IReadOnlyList<TModel>? _allModels;
+    private IReadOnlyList<TModel>? _causalModels;
+    private IReadOnlyList<TModel>? _trueModels;
+    private IReadOnlyList<TModel>? _falseModels;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="HigherOrderBooleanEvaluation{TModel}"/> class.
@@ -28,58 +28,42 @@ public sealed class HigherOrderBooleanEvaluation<TModel>
     {
         _allResults = allResults;
         _causalResults = causalResults;
-
-        _lazyAllModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            allResults.Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
-        _lazyAllSatisfied = new Lazy<bool>(() =>
-            allResults.All(result => result.Satisfied), LazyThreadSafetyMode.None);
-        _lazyAnySatisfied = new Lazy<bool>(() =>
-            allResults.Any(result => result.Satisfied), LazyThreadSafetyMode.None);
-        _lazyNoneSatisfied = new Lazy<bool>(() =>
-            allResults.All(result => !result.Satisfied), LazyThreadSafetyMode.None);
-
-        _lazyCausalModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            causalResults.Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
-        _lazyTrueModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            allResults.WhereTrue().Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
-        _lazyFalseModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            allResults.WhereFalse().Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
     }
 
     /// <summary>
     /// Gets a value indicating whether all results are satisfied.
     /// </summary>
-    public bool AllSatisfied => _lazyAllSatisfied.Value;
+    public bool AllSatisfied => _allSatisfied ??= _allResults.All(result => result.Satisfied);
 
     /// <summary>
     /// Gets a value indicating whether any of the results are satisfied.
     /// </summary>
-    public bool AnySatisfied => _lazyAnySatisfied.Value;
+    public bool AnySatisfied => _anySatisfied ??= _allResults.Any(result => result.Satisfied);
 
     /// <summary>
     /// Gets a value indicating whether none of the results are satisfied.
     /// </summary>
-    public bool NoneSatisfied => _lazyNoneSatisfied.Value;
+    public bool NoneSatisfied => _noneSatisfied ??= _allResults.All(result => !result.Satisfied);
 
     /// <summary>
     /// Gets all models.
     /// </summary>
-    public IReadOnlyList<TModel> Models => _lazyAllModels.Value;
+    public IReadOnlyList<TModel> Models => _allModels ??= _allResults.Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets all models that are true.
     /// </summary>
-    public IReadOnlyList<TModel> TrueModels => _lazyTrueModels.Value;
+    public IReadOnlyList<TModel> TrueModels => _trueModels ??= _allResults.WhereTrue().Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets all models that are false.
     /// </summary>
-    public IReadOnlyList<TModel> FalseModels => _lazyFalseModels.Value;
+    public IReadOnlyList<TModel> FalseModels => _falseModels ??= _allResults.WhereFalse().Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets all causal models.
     /// </summary>
-    public IReadOnlyList<TModel> CausalModels => _lazyCausalModels.Value;
+    public IReadOnlyList<TModel> CausalModels => _causalModels ??= _causalResults.Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets the total count of all results.
@@ -89,12 +73,12 @@ public sealed class HigherOrderBooleanEvaluation<TModel>
     /// <summary>
     /// Gets the count of true models.
     /// </summary>
-    public int TrueCount => _lazyTrueModels.Value.Count;
+    public int TrueCount => TrueModels.Count;
 
     /// <summary>
     /// Gets the count of false models.
     /// </summary>
-    public int FalseCount => _lazyFalseModels.Value.Count;
+    public int FalseCount => FalseModels.Count;
 
     /// <summary>
     /// Gets the count of causal results.

@@ -5,22 +5,34 @@ namespace Motiv.Shared;
 /// <typeparam name="TUnderlyingMetadata">The type of the original metadata.</typeparam>
 internal sealed class PolicyResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
     BooleanResultBase<TUnderlyingMetadata> booleanResult,
-    Lazy<TMetadata> value,
-    Lazy<MetadataNode<TMetadata>> metadataTier,
-    Lazy<Explanation> explanation,
-    Lazy<ResultDescriptionBase> description)
+    Func<TMetadata> valueFactory,
+    Func<MetadataNode<TMetadata>> metadataTierFactory,
+    Func<Explanation> explanationFactory,
+    Func<ResultDescriptionBase> descriptionFactory)
     : PolicyResultBase<TMetadata>
 {
-    public override TMetadata Value => value.Value;
+    private bool _hasValue;
+    private TMetadata _value = default!;
+    private MetadataNode<TMetadata>? _metadataTier;
+    private Explanation? _explanation;
+    private ResultDescriptionBase? _description;
+
+    public override TMetadata Value
+    {
+        get
+        {
+            if (!_hasValue) { _value = valueFactory(); _hasValue = true; }
+            return _value;
+        }
+    }
 
     public override bool Satisfied { get; } = booleanResult.Satisfied;
 
+    public override ResultDescriptionBase Description => _description ??= descriptionFactory();
 
-    public override ResultDescriptionBase Description => description.Value;
+    public override Explanation Explanation => _explanation ??= explanationFactory();
 
-    public override Explanation Explanation => explanation.Value;
-
-    public override MetadataNode<TMetadata> MetadataTier => metadataTier.Value;
+    public override MetadataNode<TMetadata> MetadataTier => _metadataTier ??= metadataTierFactory();
 
     public override IEnumerable<BooleanResultBase> Underlying => booleanResult.ToEnumerable();
 

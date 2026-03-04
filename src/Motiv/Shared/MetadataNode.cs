@@ -1,4 +1,3 @@
-using System.Threading;
 using Motiv.Traversal;
 
 namespace Motiv.Shared;
@@ -7,12 +6,13 @@ namespace Motiv.Shared;
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 public class MetadataNode<TMetadata>
 {
-    private static readonly Lazy<IEnumerable<MetadataNode<TMetadata>>> EmptyUnderlying =
-        new(Array.Empty<MetadataNode<TMetadata>>);
+    private static readonly IEnumerable<MetadataNode<TMetadata>> EmptyUnderlying =
+        Array.Empty<MetadataNode<TMetadata>>();
 
-    private readonly Lazy<ISet<TMetadata>> _lazyMetadataSet;
-
-    private readonly Lazy<IEnumerable<MetadataNode<TMetadata>>> _lazyUnderlying;
+    private readonly IEnumerable<TMetadata>? _metadataSource;
+    private readonly IEnumerable<BooleanResultBase<TMetadata>>? _causes;
+    private IEnumerable<MetadataNode<TMetadata>>? _underlying;
+    private ISet<TMetadata>? _metadataSet;
 
     /// <summary>Initializes a new instance of the MetadataNode class.</summary>
     /// <param name="metadata">The metadata to associate with this node.</param>
@@ -21,16 +21,8 @@ public class MetadataNode<TMetadata>
         IEnumerable<TMetadata> metadata,
         IEnumerable<BooleanResultBase<TMetadata>> causes)
     {
-        _lazyUnderlying = new Lazy<IEnumerable<MetadataNode<TMetadata>>>(() =>
-            ResolveUnderlying(metadata, causes), LazyThreadSafetyMode.None);
-
-        _lazyMetadataSet = new Lazy<ISet<TMetadata>>(() =>
-            metadata switch
-            {
-                ISet<TMetadata> metadataTier => metadataTier,
-                IEnumerable<IComparable<TMetadata>> => new SortedSet<TMetadata>(metadata),
-                _ => new HashSet<TMetadata>(metadata)
-            }, LazyThreadSafetyMode.None);
+        _metadataSource = metadata;
+        _causes = causes;
     }
 
     /// <summary>Initializes a new instance of the MetadataNode class with a single metadata item.</summary>
@@ -45,21 +37,24 @@ public class MetadataNode<TMetadata>
     /// <param name="metadata">The metadata to associate with this node.</param>
     internal MetadataNode(TMetadata metadata)
     {
-        _lazyUnderlying = EmptyUnderlying;
-
-        _lazyMetadataSet = new Lazy<ISet<TMetadata>>(() =>
-            metadata switch
-            {
-                IComparable<TMetadata> => new SortedSet<TMetadata> { metadata },
-                _ => new HashSet<TMetadata> { metadata }
-            }, LazyThreadSafetyMode.None);
+        _underlying = EmptyUnderlying;
+        _metadataSet = metadata switch
+        {
+            IComparable<TMetadata> => new SortedSet<TMetadata> { metadata },
+            _ => new HashSet<TMetadata> { metadata }
+        };
     }
 
     /// <summary>Gets the underlying metadata nodes.</summary>
-    public IEnumerable<MetadataNode<TMetadata>> Underlying => _lazyUnderlying.Value;
+    public IEnumerable<MetadataNode<TMetadata>> Underlying => _underlying ??= ResolveUnderlying(_metadataSource!, _causes!);
 
     /// <summary>Gets the metadata associated with this node.</summary>
-    public IEnumerable<TMetadata> Metadata => _lazyMetadataSet.Value;
+    public IEnumerable<TMetadata> Metadata => _metadataSet ??= _metadataSource switch
+    {
+        ISet<TMetadata> metadataTier => metadataTier,
+        IEnumerable<IComparable<TMetadata>> => new SortedSet<TMetadata>(_metadataSource),
+        _ => new HashSet<TMetadata>(_metadataSource!)
+    };
 
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -95,7 +90,8 @@ public class MetadataNode<TMetadata>
 
     private string GetDebugDisplay()
     {
-        return _lazyMetadataSet.Value switch
+        var metadataSet = Metadata;
+        return metadataSet switch
         {
             IEnumerable<string> assertions => assertions.Serialize(),
             IEnumerable<byte> numerics => numerics.Serialize(),
@@ -113,7 +109,7 @@ public class MetadataNode<TMetadata>
             IEnumerable<bool> booleans => booleans.Serialize(),
             IEnumerable<DateTime> dateTimes => dateTimes.Serialize(),
             IEnumerable<TimeSpan> timeSpans => timeSpans.Serialize(),
-            _ when typeof(TMetadata).IsEnum => _lazyMetadataSet.Value.Serialize(),
+            _ when typeof(TMetadata).IsEnum => metadataSet.Serialize(),
             _ => base.ToString() ?? ""
         };
     }

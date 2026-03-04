@@ -7,105 +7,83 @@ namespace Motiv.HigherOrderProposition;
 /// <typeparam name="TMetadata"></typeparam>
 public class HigherOrderPolicyResultEvaluation<TModel, TMetadata>
 {
-    private readonly Lazy<IReadOnlyList<TModel>> _lazyAllModels;
-
-    private readonly Lazy<bool> _lazyAllSatisfied;
-    private readonly Lazy<bool> _lazyAnySatisfied;
-    private readonly Lazy<bool> _lazyNoneSatisfied;
-    private readonly Lazy<IReadOnlyList<TModel>> _lazyCausalModels;
-    private readonly Lazy<IReadOnlyList<PolicyResult<TModel, TMetadata>>> _lazyTrueResults;
-    private readonly Lazy<IReadOnlyList<PolicyResult<TModel, TMetadata>>> _lazyFalseResults;
-    private readonly Lazy<IReadOnlyList<TModel>> _lazyTrueModels;
-    private readonly Lazy<IReadOnlyList<TModel>> _lazyFalseModels;
-    private readonly Lazy<IReadOnlyList<string>> _lazyAssertions;
-    private readonly Lazy<IReadOnlyList<TMetadata>> _lazyMetadata;
-    private readonly Lazy<IReadOnlyList<TMetadata>> _lazyValues;
-
     private readonly IReadOnlyList<PolicyResult<TModel, TMetadata>> _results;
     private readonly IReadOnlyList<PolicyResult<TModel, TMetadata>> _causalResults;
+
+    private bool? _allSatisfied;
+    private bool? _anySatisfied;
+    private bool? _noneSatisfied;
+    private IReadOnlyList<TModel>? _allModels;
+    private IReadOnlyList<TModel>? _causalModels;
+    private IReadOnlyList<PolicyResult<TModel, TMetadata>>? _trueResults;
+    private IReadOnlyList<PolicyResult<TModel, TMetadata>>? _falseResults;
+    private IReadOnlyList<TModel>? _trueModels;
+    private IReadOnlyList<TModel>? _falseModels;
+    private IReadOnlyList<string>? _assertions;
+    private IReadOnlyList<TMetadata>? _metadata;
+    private IReadOnlyList<TMetadata>? _values;
 
     internal HigherOrderPolicyResultEvaluation(IReadOnlyList<PolicyResult<TModel, TMetadata>> results,
         IReadOnlyList<PolicyResult<TModel, TMetadata>> causalResults)
     {
         _results = results;
         _causalResults = causalResults;
-
-        _lazyAllModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            results.Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
-        _lazyAllSatisfied = new Lazy<bool>(() =>
-            results.All(result => result.Satisfied), LazyThreadSafetyMode.None);
-        _lazyAnySatisfied = new Lazy<bool>(() =>
-            results.Any(result => result.Satisfied), LazyThreadSafetyMode.None);
-        _lazyNoneSatisfied = new Lazy<bool>(() =>
-            results.All(result => !result.Satisfied), LazyThreadSafetyMode.None);
-
-        _lazyCausalModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            causalResults.Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
-        _lazyTrueResults = new Lazy<IReadOnlyList<PolicyResult<TModel, TMetadata>>>(() =>
-            results.WhereTrue().ToArray(), LazyThreadSafetyMode.None);
-        _lazyFalseResults = new Lazy<IReadOnlyList<PolicyResult<TModel, TMetadata>>>(() =>
-            results.WhereFalse().ToArray(), LazyThreadSafetyMode.None);
-        _lazyTrueModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            _lazyTrueResults.Value.Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
-        _lazyFalseModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            _lazyFalseResults.Value.Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
-        _lazyAssertions = new Lazy<IReadOnlyList<string>>(() =>
-            causalResults.SelectMany(result => result.Explanation.Assertions).DistinctWithOrderPreserved().ToArray(), LazyThreadSafetyMode.None);
-        _lazyMetadata = new Lazy<IReadOnlyList<TMetadata>>(() =>
-            causalResults.SelectMany(result => result.MetadataTier.Metadata).DistinctWithOrderPreserved().ToArray(), LazyThreadSafetyMode.None);
-        _lazyValues = new Lazy<IReadOnlyList<TMetadata>>(() =>
-            causalResults.Select(result => result.Value).ToArray(), LazyThreadSafetyMode.None);
     }
 
     /// <summary>
     /// Gets the underlying <see cref="PolicyResult{TModel,TMetadata}.Value" /> from each models' evaluation.
     /// </summary>
-    public IEnumerable<TMetadata> Metadata => _lazyMetadata.Value;
+    public IEnumerable<TMetadata> Metadata => _metadata ??=
+        _causalResults.SelectMany(result => result.MetadataTier.Metadata).DistinctWithOrderPreserved().ToArray();
 
     /// <summary>
     /// Gets a value indicating whether all results are satisfied.
     /// </summary>
-    public bool AllSatisfied => _lazyAllSatisfied.Value;
+    public bool AllSatisfied => _allSatisfied ??= _results.All(result => result.Satisfied);
 
     /// <summary>
     /// Gets a value indicating whether any results are satisfied.
     /// </summary>
-    public bool AnySatisfied => _lazyAnySatisfied.Value;
+    public bool AnySatisfied => _anySatisfied ??= _results.Any(result => result.Satisfied);
 
     /// <summary>
     /// Gets a value indicating whether none of the results are satisfied.
     /// </summary>
-    public bool NoneSatisfied => _lazyNoneSatisfied.Value;
+    public bool NoneSatisfied => _noneSatisfied ??= _results.All(result => !result.Satisfied);
 
     /// <summary>
     /// Gets the list of all models.
     /// </summary>
-    public IReadOnlyList<TModel> Models => _lazyAllModels.Value;
+    public IReadOnlyList<TModel> Models => _allModels ??= _results.Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets the list of models where the result is true.
     /// </summary>
-    public IReadOnlyList<TModel> TrueModels => _lazyTrueModels.Value;
+    public IReadOnlyList<TModel> TrueModels => _trueModels ??=
+        (_trueResults ??= _results.WhereTrue().ToArray()).Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets the list of models where the result is false.
     /// </summary>
-    public IReadOnlyList<TModel> FalseModels => _lazyFalseModels.Value;
+    public IReadOnlyList<TModel> FalseModels => _falseModels ??=
+        (_falseResults ??= _results.WhereFalse().ToArray()).Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets the list of causal models.
     /// </summary>
-    public IReadOnlyList<TModel> CausalModels => _lazyCausalModels.Value;
+    public IReadOnlyList<TModel> CausalModels => _causalModels ??= _causalResults.Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets the metadata associated with the evaluation.
     /// </summary>
-    public IEnumerable<TMetadata> Values => _lazyValues.Value;
+    public IEnumerable<TMetadata> Values => _values ??=
+        _causalResults.Select(result => result.Value).ToArray();
 
     /// <summary>
     /// Gets the assertions made during the evaluation.
     /// </summary>
-    public IEnumerable<string> Assertions => _lazyAssertions.Value;
+    public IEnumerable<string> Assertions => _assertions ??=
+        _causalResults.SelectMany(result => result.Explanation.Assertions).DistinctWithOrderPreserved().ToArray();
 
     /// <summary>
     /// Gets the list of all results.
@@ -115,12 +93,14 @@ public class HigherOrderPolicyResultEvaluation<TModel, TMetadata>
     /// <summary>
     /// Gets the list of results where the result is true.
     /// </summary>
-    public IEnumerable<PolicyResult<TModel, TMetadata>> TrueResults => _lazyTrueResults.Value;
+    public IEnumerable<PolicyResult<TModel, TMetadata>> TrueResults =>
+        _trueResults ??= _results.WhereTrue().ToArray();
 
     /// <summary>
     /// Gets the list of results where the result is false.
     /// </summary>
-    public IEnumerable<PolicyResult<TModel, TMetadata>> FalseResults => _lazyFalseResults.Value;
+    public IEnumerable<PolicyResult<TModel, TMetadata>> FalseResults =>
+        _falseResults ??= _results.WhereFalse().ToArray();
 
     /// <summary>
     /// Gets the list of causal results.
@@ -135,12 +115,12 @@ public class HigherOrderPolicyResultEvaluation<TModel, TMetadata>
     /// <summary>
     /// Gets the count of true results.
     /// </summary>
-    public int TrueCount => _lazyTrueResults.Value.Count;
+    public int TrueCount => (_trueResults ??= _results.WhereTrue().ToArray()).Count;
 
     /// <summary>
     /// Gets the count of false results.
     /// </summary>
-    public int FalseCount => _lazyFalseResults.Value.Count;
+    public int FalseCount => (_falseResults ??= _results.WhereFalse().ToArray()).Count;
 
     /// <summary>
     /// Gets the count of causal results.
