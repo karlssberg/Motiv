@@ -56,26 +56,17 @@ internal sealed class PolicyResultPredicateMultiValueProposition<TModel, TMetada
                 _ => [Description.ToReason(policyResult.Satisfied)]
             }, LazyThreadSafetyMode.None);
 
-        var explanation = new Lazy<Explanation>(() =>
-            new Explanation(
-                assertions.Value,
-                policyResult.ToEnumerable(),
-                policyResult.ToEnumerable()), LazyThreadSafetyMode.None);
-
-        var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
-            new MetadataNode<TMetadata>(metadata.Value,
-                policyResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []), LazyThreadSafetyMode.None);
-
-        var description = new Lazy<ResultDescriptionBase>(() =>
-            new BooleanResultDescriptionWithUnderlying(
-                policyResult,
-                Description.ToReason(policyResult.Satisfied),
-                Description.Statement), LazyThreadSafetyMode.None);
-
         return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             policyResult,
-            metadataTier,
-            explanation,
-            description);
+            () => new MetadataNode<TMetadata>(metadata.Value,
+                policyResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
+            () => new Explanation(
+                assertions.Value,
+                policyResult.ToEnumerable(),
+                policyResult.ToEnumerable()),
+            () => new BooleanResultDescriptionWithUnderlying(
+                policyResult,
+                Description.ToReason(policyResult.Satisfied),
+                Description.Statement));
     }
 }

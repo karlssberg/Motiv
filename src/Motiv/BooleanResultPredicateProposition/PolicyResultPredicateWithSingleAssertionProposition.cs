@@ -27,28 +27,19 @@ internal sealed class PolicyResultPredicateWithSingleAssertionProposition<TModel
                 false => whenFalse(model, predicateResult)
             }, LazyThreadSafetyMode.None);
 
-        var explanation = new Lazy<Explanation>(() =>
-            new Explanation(
-                assertion.Value,
-                predicateResult.ToEnumerable(),
-                predicateResult.ToEnumerable()), LazyThreadSafetyMode.None);
-
-        var metadataTier = new Lazy<MetadataNode<string>>(() =>
-            new MetadataNode<string>(
-                assertion.Value.ToEnumerable(),
-                predicateResult.ToEnumerable() as IEnumerable<PolicyResultBase<string>> ?? []), LazyThreadSafetyMode.None);
-
-        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-            new BooleanResultDescriptionWithUnderlying(
-                predicateResult,
-                assertion.Value,
-                Description.Statement), LazyThreadSafetyMode.None);
-
         return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
             predicateResult,
-            assertion,
-            metadataTier,
-            explanation,
-            resultDescription);
+            () => assertion.Value,
+            () => new MetadataNode<string>(
+                assertion.Value.ToEnumerable(),
+                predicateResult.ToEnumerable() as IEnumerable<PolicyResultBase<string>> ?? []),
+            () => new Explanation(
+                assertion.Value,
+                predicateResult.ToEnumerable(),
+                predicateResult.ToEnumerable()),
+            () => new BooleanResultDescriptionWithUnderlying(
+                predicateResult,
+                assertion.Value,
+                Description.Statement));
     }
 }
