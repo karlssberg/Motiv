@@ -36,27 +36,18 @@ internal sealed class SpecDecoratorProposition<TModel, TMetadata, TUnderlyingMet
                 _ => Description.ToReason(booleanResult.Satisfied)
             }, LazyThreadSafetyMode.None);
 
-        var explanation = new Lazy<Explanation>(() =>
-            new Explanation(
-                assertion.Value,
-                booleanResult.ToEnumerable(),
-                booleanResult.ToEnumerable()), LazyThreadSafetyMode.None);
-
-        var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
-            new MetadataNode<TMetadata>(lazyMetadata.Value,
-                booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []), LazyThreadSafetyMode.None);
-
-        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-            new BooleanResultDescriptionWithUnderlying(
-                booleanResult,
-                assertion.Value,
-                Description.Statement), LazyThreadSafetyMode.None);
-
         return new PolicyResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,
-            lazyMetadata,
-            metadataTier,
-            explanation,
-            resultDescription);
+            () => lazyMetadata.Value,
+            () => new MetadataNode<TMetadata>(lazyMetadata.Value,
+                booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
+            () => new Explanation(
+                assertion.Value,
+                booleanResult.ToEnumerable(),
+                booleanResult.ToEnumerable()),
+            () => new BooleanResultDescriptionWithUnderlying(
+                booleanResult,
+                assertion.Value,
+                Description.Statement));
     }
 }

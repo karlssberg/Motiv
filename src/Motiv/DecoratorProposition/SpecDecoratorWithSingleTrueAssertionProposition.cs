@@ -30,27 +30,18 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
                 false => whenFalse(model, underlyingResult)
             }, LazyThreadSafetyMode.None);
 
-        var explanation = new Lazy<Explanation>(() =>
-            new Explanation(
-                assertion.Value,
-                underlyingResult.ToEnumerable(),
-                underlyingResult.ToEnumerable()), LazyThreadSafetyMode.None);
-
-        var metadataTier = new Lazy<MetadataNode<string>>(() =>
-            new MetadataNode<string>(assertion.Value,
-                underlyingResult.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []), LazyThreadSafetyMode.None);
-
-        var description = new Lazy<ResultDescriptionBase>(() =>
-            new BooleanResultDescriptionWithUnderlying(
-                underlyingResult,
-                assertion.Value,
-                Description.Statement), LazyThreadSafetyMode.None);
-
         return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
             underlyingResult,
-            assertion,
-            metadataTier,
-            explanation,
-            description);
+            () => assertion.Value,
+            () => new MetadataNode<string>(assertion.Value,
+                underlyingResult.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []),
+            () => new Explanation(
+                assertion.Value,
+                underlyingResult.ToEnumerable(),
+                underlyingResult.ToEnumerable()),
+            () => new BooleanResultDescriptionWithUnderlying(
+                underlyingResult,
+                assertion.Value,
+                Description.Statement));
     }
 }
