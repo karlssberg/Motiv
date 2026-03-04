@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Threading;
 using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
@@ -26,7 +27,7 @@ internal sealed class HigherOrderFromExpressionTreeMetadataProposition<TModel, T
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
         var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
-                .ToArray());
+                .ToArray(), LazyThreadSafetyMode.None);
 
         var metadata = new Lazy<TMetadata>(() =>
             {
@@ -37,14 +38,14 @@ internal sealed class HigherOrderFromExpressionTreeMetadataProposition<TModel, T
                 return isSatisfied
                     ? whenTrue(evaluation)
                     : whenFalse(evaluation);
-            });
+            }, LazyThreadSafetyMode.None);
 
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch
             {
                 IEnumerable<string> reasons => reasons,
                 _ => underlyingResults.GetAssertions()
-            });
+            }, LazyThreadSafetyMode.None);
 
         var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderExpressionTreeResultDescription<string>(
@@ -52,10 +53,10 @@ internal sealed class HigherOrderFromExpressionTreeMetadataProposition<TModel, T
                 Description.ToReason(isSatisfied),
                 expression,
                 causes.Value,
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
-        var metadataAsEnumerable = new Lazy<IEnumerable<TMetadata>>(() => metadata.Value.ToEnumerable());
-        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<string>>>(() => causes.Value);
+        var metadataAsEnumerable = new Lazy<IEnumerable<TMetadata>>(() => metadata.Value.ToEnumerable(), LazyThreadSafetyMode.None);
+        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<string>>>(() => causes.Value, LazyThreadSafetyMode.None);
 
         return new HigherOrderPolicyResult<TMetadata, string>(
             isSatisfied,

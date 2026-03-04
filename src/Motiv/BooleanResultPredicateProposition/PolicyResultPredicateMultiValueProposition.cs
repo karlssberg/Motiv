@@ -1,3 +1,4 @@
+using System.Threading;
 using Motiv.Shared;
 
 namespace Motiv.BooleanResultPredicateProposition;
@@ -45,7 +46,7 @@ internal sealed class PolicyResultPredicateMultiValueProposition<TModel, TMetada
                 false => whenFalse
             };
 
-        var metadata = new Lazy<TMetadata[]>(() => metadataResolver(model, policyResult).ToArray());
+        var metadata = new Lazy<TMetadata[]>(() => metadataResolver(model, policyResult).ToArray(), LazyThreadSafetyMode.None);
 
         var assertions = new Lazy<ICollection<string>>(() =>
             metadata.Value switch
@@ -53,23 +54,23 @@ internal sealed class PolicyResultPredicateMultiValueProposition<TModel, TMetada
                 ICollection<string> assertion => assertion,
                 IEnumerable<string> assertion => assertion.ToArray(),
                 _ => [Description.ToReason(policyResult.Satisfied)]
-            });
+            }, LazyThreadSafetyMode.None);
 
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(
                 assertions.Value,
                 policyResult.ToEnumerable(),
-                policyResult.ToEnumerable()));
+                policyResult.ToEnumerable()), LazyThreadSafetyMode.None);
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(metadata.Value,
-                policyResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []));
+                policyResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []), LazyThreadSafetyMode.None);
 
         var description = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 policyResult,
                 Description.ToReason(policyResult.Satisfied),
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
         return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             policyResult,

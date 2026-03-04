@@ -1,3 +1,4 @@
+using System.Threading;
 using Motiv.Shared;
 
 namespace Motiv.DecoratorProposition;
@@ -21,17 +22,17 @@ internal sealed class MinimalSpecDecoratorProposition<TModel, TMetadata>(
             new BooleanResultDescriptionWithUnderlying(
                 predicateResult,
                 description.ToReason(predicateResult.Satisfied),
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
         var lazyMetadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(
                 predicateResult.Values,
-                predicateResult.ToEnumerable()));
+                predicateResult.ToEnumerable()), LazyThreadSafetyMode.None);
 
         return new BooleanResultWithUnderlying<TMetadata, TMetadata>(
             predicateResult,
             lazyMetadataTier,
-            new Lazy<Explanation>(() => predicateResult.Explanation),
+            new Lazy<Explanation>(() => predicateResult.Explanation, LazyThreadSafetyMode.None),
             lazyResultDescription);
     }
 }

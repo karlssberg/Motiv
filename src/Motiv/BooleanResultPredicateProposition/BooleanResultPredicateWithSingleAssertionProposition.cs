@@ -1,3 +1,4 @@
+using System.Threading;
 using Motiv.Shared;
 
 namespace Motiv.BooleanResultPredicateProposition;
@@ -25,24 +26,24 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
             {
                 true => trueBecause,
                 false => whenFalse(model, predicateResult)
-            });
+            }, LazyThreadSafetyMode.None);
 
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(
                 assertion.Value,
                 predicateResult.ToEnumerable(),
-                predicateResult.ToEnumerable()));
+                predicateResult.ToEnumerable()), LazyThreadSafetyMode.None);
 
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(
                 assertion.Value.ToEnumerable(),
-                predicateResult.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []));
+                predicateResult.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []), LazyThreadSafetyMode.None);
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 predicateResult,
                 assertion.Value,
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
         return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
             predicateResult,

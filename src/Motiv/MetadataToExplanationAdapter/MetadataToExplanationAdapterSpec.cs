@@ -1,3 +1,4 @@
+using System.Threading;
 using Motiv.Shared;
 
 namespace Motiv.MetadataToExplanationAdapter;
@@ -19,18 +20,18 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingMetada
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(
                 result.Assertions,
-                result.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []));
+                result.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []), LazyThreadSafetyMode.None);
 
         var description = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 result,
                 Description.ToReason(result.Satisfied),
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
         return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
             result,
             metadataTier,
-            new Lazy<Explanation>(() => result.Explanation),
+            new Lazy<Explanation>(() => result.Explanation, LazyThreadSafetyMode.None),
             description);
     }
 }

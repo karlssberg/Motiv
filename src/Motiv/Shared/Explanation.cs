@@ -9,6 +9,9 @@ namespace Motiv.Shared;
 [DebuggerDisplay("{Debug}")]
 public sealed class Explanation
 {
+    private IEnumerable<Explanation>? _underlying;
+    private IEnumerable<Explanation>? _allUnderlying;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="Explanation"/> class that redefines assertions.
     /// </summary>
@@ -98,12 +101,12 @@ public sealed class Explanation
     /// <summary>
     /// Gets the underlying explanations of the causes.
     /// </summary>
-    public IEnumerable<Explanation> Underlying => ResolveUnderlying(Assertions, Causes);
+    public IEnumerable<Explanation> Underlying => _underlying ??= ResolveUnderlying(Assertions, Causes);
 
     /// <summary>
     /// Gets the all underlying explanations, regardless of whether they determined the outcome.
     /// </summary>
-    public IEnumerable<Explanation> AllUnderlying => ResolveAllUnderlying(Assertions, Results);
+    public IEnumerable<Explanation> AllUnderlying => _allUnderlying ??= ResolveAllUnderlying(Assertions, Results);
 
     /// <summary>
     /// Returns a string that represents the current object.
@@ -127,12 +130,13 @@ public sealed class Explanation
 
         var underlyingAssertions = underlying
             .SelectMany(explanation => explanation.Assertions)
-            .DistinctWithOrderPreserved();
+            .DistinctWithOrderPreserved()
+            .ToArray();
 
         var doesParentEqualChildAssertion = underlyingAssertions.SequenceEqual(assertions);
 
         return doesParentEqualChildAssertion
-            ? underlying.SelectMany(result => result.Underlying)
+            ? underlying.SelectMany(result => result.Underlying).ToArray()
             : underlying;
     }
 
@@ -152,12 +156,13 @@ public sealed class Explanation
 
         var allUnderlyingAssertions = allUnderlying
             .SelectMany(explanation => explanation.AllAssertions)
-            .DistinctWithOrderPreserved();
+            .DistinctWithOrderPreserved()
+            .ToArray();
 
         var doesParentEqualChildAssertion = allUnderlyingAssertions.SequenceEqual(assertions);
 
         return doesParentEqualChildAssertion
-            ? allUnderlying.SelectMany(result => result.AllUnderlying)
+            ? allUnderlying.SelectMany(result => result.AllUnderlying).ToArray()
             : allUnderlying;
     }
 

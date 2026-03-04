@@ -30,20 +30,20 @@ public sealed class HigherOrderBooleanEvaluation<TModel>
         _causalResults = causalResults;
 
         _lazyAllModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            allResults.Select(result => result.Model).ToArray());
+            allResults.Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
         _lazyAllSatisfied = new Lazy<bool>(() =>
-            allResults.All(result => result.Satisfied));
+            allResults.All(result => result.Satisfied), LazyThreadSafetyMode.None);
         _lazyAnySatisfied = new Lazy<bool>(() =>
-            allResults.Any(result => result.Satisfied));
+            allResults.Any(result => result.Satisfied), LazyThreadSafetyMode.None);
         _lazyNoneSatisfied = new Lazy<bool>(() =>
-            allResults.All(result => !result.Satisfied));
+            allResults.All(result => !result.Satisfied), LazyThreadSafetyMode.None);
 
         _lazyCausalModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            causalResults.Select(result => result.Model).ToArray());
+            causalResults.Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
         _lazyTrueModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            allResults.WhereTrue().Select(result => result.Model).ToArray());
+            allResults.WhereTrue().Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
         _lazyFalseModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            allResults.WhereFalse().Select(result => result.Model).ToArray());
+            allResults.WhereFalse().Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
     }
 
     /// <summary>

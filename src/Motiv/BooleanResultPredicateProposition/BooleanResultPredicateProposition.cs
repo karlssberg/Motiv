@@ -1,3 +1,4 @@
+using System.Threading;
 using Motiv.Shared;
 
 namespace Motiv.BooleanResultPredicateProposition;
@@ -39,37 +40,37 @@ internal sealed class BooleanResultPredicateProposition<TModel, TMetadata, TUnde
                 false => whenFalse
             };
 
-        var metadata = new Lazy<TMetadata>(() => metadataResolver(model, booleanResult));
+        var metadata = new Lazy<TMetadata>(() => metadataResolver(model, booleanResult), LazyThreadSafetyMode.None);
 
         var assertion = new Lazy<string>(() =>
             metadata.Value switch
             {
                 string assertion => assertion,
                 _ => Description.ToReason(booleanResult.Satisfied)
-            });
+            }, LazyThreadSafetyMode.None);
 
         var reason = new Lazy<string>(() =>
             metadata.Value switch
             {
                 string reason when !Description.HasExplicitStatement => reason,
                 _ => Description.ToReason(booleanResult.Satisfied)
-            });
+            }, LazyThreadSafetyMode.None);
 
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(
                 assertion.Value,
                 booleanResult.ToEnumerable(),
-                booleanResult.ToEnumerable()));
+                booleanResult.ToEnumerable()), LazyThreadSafetyMode.None);
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(metadata.Value,
-                booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []));
+                booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []), LazyThreadSafetyMode.None);
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
                 reason.Value,
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
         return new PolicyResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,

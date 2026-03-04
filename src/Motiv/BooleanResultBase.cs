@@ -16,6 +16,10 @@ public abstract class BooleanResultBase
     : IEquatable<BooleanResultBase>, IEquatable<bool>
 {
     private IEnumerable<string>? _assertions;
+    private IEnumerable<string>? _allAssertions;
+    private IEnumerable<string>? _subAssertions;
+    private IEnumerable<string>? _allSubAssertions;
+    private IEnumerable<BooleanResultBase>? _underlyingExpressionResults;
 
     /// <summary>Prevent inheritance from outside of this project/assembly.</summary>
     internal BooleanResultBase()
@@ -52,14 +56,15 @@ public abstract class BooleanResultBase
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that represent the expression results.</summary>
     public IEnumerable<BooleanResultBase> UnderlyingExpressionResults =>
-        Causes
+        _underlyingExpressionResults ??= Causes
             .SelectMany(booleanResult =>
                 (this, booleanResult) switch
                 {
                     (not IBooleanOperationResult, IBooleanOperationResult) =>
                         booleanResult.ToEnumerable().Concat(booleanResult.UnderlyingExpressionResults),
                     _ => booleanResult.UnderlyingExpressionResults,
-                });
+                })
+            .ToArray();
 
     /// <summary>Gets a full hierarchical breakdown of the reasons for the result.</summary>
     public string Justification => Description.Justification;
@@ -70,17 +75,17 @@ public abstract class BooleanResultBase
     /// <summary>Gets all the assertions yielded by the current result, including those that are non-determinative.</summary>
     /// <remarks>This will yield assertions from both satisfied and unsatisfied operands. </remarks>
     public IEnumerable<string> AllAssertions =>
-        this switch
+        _allAssertions ??= this switch
         {
-            IBinaryBooleanOperationResult result => result.Underlying.SelectMany(r => r.AllAssertions),
+            IBinaryBooleanOperationResult result => result.Underlying.SelectMany(r => r.AllAssertions).ToArray(),
             _ => Assertions
         };
 
     /// <summary>Gets all the determinative assertions from the underlying results.</summary>
-    public IEnumerable<string> SubAssertions => Explanation.Underlying.GetAssertions();
+    public IEnumerable<string> SubAssertions => _subAssertions ??= Explanation.Underlying.GetAssertions().ToArray();
 
     /// <summary>Gets all the assertions from the underlying results.</summary>
-    public IEnumerable<string> AllSubAssertions => Explanation.AllUnderlying.GetAllAssertions();
+    public IEnumerable<string> AllSubAssertions => _allSubAssertions ??= Explanation.AllUnderlying.GetAllAssertions().ToArray();
 
     /// <summary>Gets all the assertions returned from atomic propositions.</summary>
     public IEnumerable<string> RootAssertions => this.GetRootAssertions();

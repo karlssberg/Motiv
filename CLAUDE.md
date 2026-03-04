@@ -161,6 +161,7 @@ Policy is a subtype of Spec, so policies can be used anywhere a spec is expected
 - **Constructor signature changes**: When changing the signature of an `internal` type's constructor, search for all call sites across both production and test code before editing — test files often construct internal types directly via `[InternalsVisibleTo]` and will break if missed.
 - **Example project tests**: When changing behavior that affects justification output, assertion text, or result formatting, run the full solution test suite — not just `Motiv.Tests`. The example projects (`src/examples/Motiv.Poker.Tests`, `src/examples/Motiv.ECommerce.Tests`, `src/examples/Motiv.SmartHome.Tests`) also contain integration-level assertions on justification strings and will break if not updated.
 - **Documentation**: CLAUDE.md is for AI guidance and project conventions — not user-facing feature documentation. When asked to document a feature, add it to `README.md` (brief example under Core Features) and `docs/` (detailed pages following the existing structure: `docs/{feature}/index.md`, individual method pages, `toc.yml`, plus entries in `docs/toc.yml` and `docs/Overview.md`).
+- **Performance refactoring**: When replacing LINQ with manual loops or caching computed values, verify that short-circuiting and lazy evaluation semantics are preserved. Moving a call from a `when` guard or lazy context to eager evaluation is a common regression — the original code may have intentionally deferred work that is only needed in some branches.
 
 ## Test-Driven Development
 

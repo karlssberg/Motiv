@@ -21,7 +21,7 @@ internal sealed class HigherOrderFromPolicyResultMultiMetadataProposition<TModel
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
         var causes = new Lazy<PolicyResult<TModel, TUnderlyingMetadata>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
-                .ToArray());
+                .ToArray(), LazyThreadSafetyMode.None);
 
         var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
             {
@@ -32,22 +32,22 @@ internal sealed class HigherOrderFromPolicyResultMultiMetadataProposition<TModel
                 return isSatisfied
                     ? whenTrue(evaluation)
                     : whenFalse(evaluation);
-            });
+            }, LazyThreadSafetyMode.None);
 
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch
             {
                 IEnumerable<string> reasons => reasons,
                 _ => specDescription.ToReason(isSatisfied).ToEnumerable()
-            });
+            }, LazyThreadSafetyMode.None);
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderResultDescription<TUnderlyingMetadata>(
                 specDescription.ToReason(isSatisfied),
                 causes.Value,
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
-        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<TUnderlyingMetadata>>>(() => causes.Value);
+        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<TUnderlyingMetadata>>>(() => causes.Value, LazyThreadSafetyMode.None);
 
         return new HigherOrderBooleanResult<TMetadata, TUnderlyingMetadata>(
             isSatisfied,

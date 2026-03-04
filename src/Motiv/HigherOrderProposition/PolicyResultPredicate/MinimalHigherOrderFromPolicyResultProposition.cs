@@ -19,24 +19,24 @@ internal sealed class MinimalHigherOrderFromPolicyResultProposition<TModel, TMet
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
         var causes = new Lazy<PolicyResult<TModel, TMetadata>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
-                .ToArray());
+                .ToArray(), LazyThreadSafetyMode.None);
 
-        var metadata = new Lazy<IEnumerable<TMetadata>>(() => causes.Value.Select(result => result.Value).ToArray());
+        var metadata = new Lazy<IEnumerable<TMetadata>>(() => causes.Value.Select(result => result.Value).ToArray(), LazyThreadSafetyMode.None);
 
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch
             {
                 IEnumerable<string> reasons => reasons,
                 _ => specDescription.ToReason(isSatisfied).ToEnumerable()
-            });
+            }, LazyThreadSafetyMode.None);
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderResultDescription<TMetadata>(
                 specDescription.ToReason(isSatisfied),
                 causes.Value,
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
-        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<TMetadata>>>(() => causes.Value);
+        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<TMetadata>>>(() => causes.Value, LazyThreadSafetyMode.None);
 
         return new HigherOrderBooleanResult<TMetadata, TMetadata>(
             isSatisfied,

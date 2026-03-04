@@ -1,3 +1,4 @@
+using System.Threading;
 using Motiv.Traversal;
 
 namespace Motiv.Shared;
@@ -21,7 +22,7 @@ public class MetadataNode<TMetadata>
         IEnumerable<BooleanResultBase<TMetadata>> causes)
     {
         _lazyUnderlying = new Lazy<IEnumerable<MetadataNode<TMetadata>>>(() =>
-            ResolveUnderlying(metadata, causes));
+            ResolveUnderlying(metadata, causes), LazyThreadSafetyMode.None);
 
         _lazyMetadataSet = new Lazy<ISet<TMetadata>>(() =>
             metadata switch
@@ -29,7 +30,7 @@ public class MetadataNode<TMetadata>
                 ISet<TMetadata> metadataTier => metadataTier,
                 IEnumerable<IComparable<TMetadata>> => new SortedSet<TMetadata>(metadata),
                 _ => new HashSet<TMetadata>(metadata)
-            });
+            }, LazyThreadSafetyMode.None);
     }
 
     /// <summary>Initializes a new instance of the MetadataNode class with a single metadata item.</summary>
@@ -51,7 +52,7 @@ public class MetadataNode<TMetadata>
             {
                 IComparable<TMetadata> => new SortedSet<TMetadata> { metadata },
                 _ => new HashSet<TMetadata> { metadata }
-            });
+            }, LazyThreadSafetyMode.None);
     }
 
     /// <summary>Gets the underlying metadata nodes.</summary>
@@ -82,7 +83,8 @@ public class MetadataNode<TMetadata>
 
         var underlyingMetadata = underlying
             .SelectMany(metadataNode => metadataNode.Metadata)
-            .DistinctWithOrderPreserved();
+            .DistinctWithOrderPreserved()
+            .ToArray();
 
         var doesParentEqualChildAssertion = underlyingMetadata.SequenceEqual(metadata);
 

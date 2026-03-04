@@ -5,6 +5,8 @@ namespace Motiv;
 /// </summary>
 public abstract class ResultDescriptionBase
 {
+    private string? _justification;
+
     internal abstract int CausalOperandCount { get; }
 
     internal abstract string Statement { get; }
@@ -17,7 +19,7 @@ public abstract class ResultDescriptionBase
     /// <summary>
     /// Gets the multi-line detailed breakdown of the causes as a human-readable string.
     /// </summary>
-    public virtual string Justification => string.Join(Environment.NewLine, GetJustificationAsLines());
+    public virtual string Justification => _justification ??= string.Join(Environment.NewLine, GetJustificationAsLines());
 
     /// <summary>
     /// Returns a string that represents the current object.

@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Threading;
 using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
@@ -26,7 +27,7 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
         var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
-                .ToArray());
+                .ToArray(), LazyThreadSafetyMode.None);
 
         var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
             {
@@ -37,14 +38,14 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
                 return isSatisfied
                     ? whenTrue(evaluation)
                     : whenFalse(evaluation);
-            });
+            }, LazyThreadSafetyMode.None);
 
         var assertions = new Lazy<IEnumerable<string>>(() =>
             metadata.Value switch
             {
                 IEnumerable<string> reasons => reasons,
                 _ => underlyingResults.GetAssertions()
-            });
+            }, LazyThreadSafetyMode.None);
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderExpressionTreeResultDescription<string>(
@@ -52,9 +53,9 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
                 Description.ToReason(isSatisfied),
                 expression,
                 causes.Value,
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
-        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<string>>>(() => causes.Value);
+        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<string>>>(() => causes.Value, LazyThreadSafetyMode.None);
 
         return new HigherOrderBooleanResult<TMetadata, string>(
             isSatisfied,

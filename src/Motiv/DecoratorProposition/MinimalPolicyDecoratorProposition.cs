@@ -1,3 +1,4 @@
+using System.Threading;
 using Motiv.Shared;
 
 namespace Motiv.DecoratorProposition;
@@ -18,19 +19,19 @@ internal sealed class MinimalPolicyDecoratorProposition<TModel, TMetadata>(
         var predicateResult = underlyingPolicy.IsSatisfiedBy(model);
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(predicateResult.Value,
-                predicateResult.ToEnumerable()));
+                predicateResult.ToEnumerable()), LazyThreadSafetyMode.None);
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 predicateResult,
                 description.ToReason(predicateResult.Satisfied),
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
         return new PolicyResultWithUnderlying<TMetadata, TMetadata>(
             predicateResult,
-            new Lazy<TMetadata>(() => predicateResult.Value),
+            new Lazy<TMetadata>(() => predicateResult.Value, LazyThreadSafetyMode.None),
             metadataTier,
-            new Lazy<Explanation>(() => predicateResult.Explanation),
+            new Lazy<Explanation>(() => predicateResult.Explanation, LazyThreadSafetyMode.None),
             resultDescription);
     }
 }

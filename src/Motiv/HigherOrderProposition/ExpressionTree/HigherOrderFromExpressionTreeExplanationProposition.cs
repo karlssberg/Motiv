@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Threading;
 using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
@@ -28,7 +29,7 @@ internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel
 
         var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
-                .ToArray());
+                .ToArray(), LazyThreadSafetyMode.None);
 
         var assertion = new Lazy<string>(() =>
             {
@@ -39,12 +40,12 @@ internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel
                 return isSatisfied
                     ? trueBecause(booleanCollectionResults)
                     : falseBecause(booleanCollectionResults);
-            });
+            }, LazyThreadSafetyMode.None);
 
         var reason = new Lazy<string>(() =>
             description.HasExplicitStatement
                 ? description.ToReason(isSatisfied)
-                : assertion.Value);
+                : assertion.Value, LazyThreadSafetyMode.None);
 
         var lazyDescription = new Lazy<ResultDescriptionBase>(() =>
             new HigherOrderExpressionTreeResultDescription<string>(
@@ -52,10 +53,10 @@ internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel
                 reason.Value,
                 expression,
                 causes.Value,
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
-        var assertionAsEnumerable = new Lazy<IEnumerable<string>>(() => assertion.Value.ToEnumerable());
-        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<string>>>(() => causes.Value);
+        var assertionAsEnumerable = new Lazy<IEnumerable<string>>(() => assertion.Value.ToEnumerable(), LazyThreadSafetyMode.None);
+        var causesAsUnderlying = new Lazy<IEnumerable<BooleanResultBase<string>>>(() => causes.Value, LazyThreadSafetyMode.None);
 
         return new HigherOrderPolicyResult<string, string>(
             isSatisfied,

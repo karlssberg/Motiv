@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Threading;
 using Motiv.BooleanPredicateProposition;
 using Motiv.Shared;
 
@@ -28,11 +29,11 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
             {
                 true => whenTrue(model, result),
                 false => whenFalse(model, result)
-            });
+            }, LazyThreadSafetyMode.None);
 
         var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
             new MetadataNode<TMetadata>(lazyMetadata.Value,
-                result.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []));
+                result.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []), LazyThreadSafetyMode.None);
 
         var explanation = new Lazy<Explanation>(() =>
             {
@@ -44,14 +45,14 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
 
                 return new Explanation(assertions, result.ToEnumerable(),
                     result.ToEnumerable());
-            });
+            }, LazyThreadSafetyMode.None);
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new ExpressionTreeBooleanResultDescription(
                 result,
                 description.ToReason(result.Satisfied),
                 expression,
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
         return new PropositionPolicyResult<TMetadata>(
             result.Satisfied,

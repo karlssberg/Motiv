@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Threading;
 using Motiv.BooleanPredicateProposition;
 using Motiv.Shared;
 
@@ -28,29 +29,29 @@ internal sealed class ExpressionTreeExplanationProposition<TModel, TPredicateRes
             {
                 true => trueBecause(model, result),
                 false => falseBecause(model, result)
-            });
+            }, LazyThreadSafetyMode.None);
 
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(
                 assertion.Value,
                 result.ToEnumerable(),
-                result.ToEnumerable()));
+                result.ToEnumerable()), LazyThreadSafetyMode.None);
 
         var reason = new Lazy<string>(() =>
             description.HasExplicitStatement
                 ? description.ToReason(result.Satisfied)
-                : assertion.Value);
+                : assertion.Value, LazyThreadSafetyMode.None);
 
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(assertion.Value.ToEnumerable(),
-                result.ToEnumerable()));
+                result.ToEnumerable()), LazyThreadSafetyMode.None);
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
             new ExpressionTreeBooleanResultDescription(
                 result,
                 reason.Value,
                 expression,
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
         return new PropositionPolicyResult<string>(
             result.Satisfied,

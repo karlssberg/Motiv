@@ -19,6 +19,7 @@ public class HigherOrderPolicyResultEvaluation<TModel, TMetadata>
     private readonly Lazy<IReadOnlyList<TModel>> _lazyFalseModels;
     private readonly Lazy<IReadOnlyList<string>> _lazyAssertions;
     private readonly Lazy<IReadOnlyList<TMetadata>> _lazyMetadata;
+    private readonly Lazy<IReadOnlyList<TMetadata>> _lazyValues;
 
     private readonly IReadOnlyList<PolicyResult<TModel, TMetadata>> _results;
     private readonly IReadOnlyList<PolicyResult<TModel, TMetadata>> _causalResults;
@@ -30,28 +31,30 @@ public class HigherOrderPolicyResultEvaluation<TModel, TMetadata>
         _causalResults = causalResults;
 
         _lazyAllModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            results.Select(result => result.Model).ToArray());
+            results.Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
         _lazyAllSatisfied = new Lazy<bool>(() =>
-            results.All(result => result.Satisfied));
+            results.All(result => result.Satisfied), LazyThreadSafetyMode.None);
         _lazyAnySatisfied = new Lazy<bool>(() =>
-            results.Any(result => result.Satisfied));
+            results.Any(result => result.Satisfied), LazyThreadSafetyMode.None);
         _lazyNoneSatisfied = new Lazy<bool>(() =>
-            results.All(result => !result.Satisfied));
+            results.All(result => !result.Satisfied), LazyThreadSafetyMode.None);
 
         _lazyCausalModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            causalResults.Select(result => result.Model).ToArray());
+            causalResults.Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
         _lazyTrueResults = new Lazy<IReadOnlyList<PolicyResult<TModel, TMetadata>>>(() =>
-            results.WhereTrue().ToArray());
+            results.WhereTrue().ToArray(), LazyThreadSafetyMode.None);
         _lazyFalseResults = new Lazy<IReadOnlyList<PolicyResult<TModel, TMetadata>>>(() =>
-            results.WhereFalse().ToArray());
+            results.WhereFalse().ToArray(), LazyThreadSafetyMode.None);
         _lazyTrueModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            _lazyTrueResults.Value.Select(result => result.Model).ToArray());
+            _lazyTrueResults.Value.Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
         _lazyFalseModels = new Lazy<IReadOnlyList<TModel>>(() =>
-            _lazyFalseResults.Value.Select(result => result.Model).ToArray());
+            _lazyFalseResults.Value.Select(result => result.Model).ToArray(), LazyThreadSafetyMode.None);
         _lazyAssertions = new Lazy<IReadOnlyList<string>>(() =>
-            causalResults.SelectMany(result => result.Explanation.Assertions).DistinctWithOrderPreserved().ToArray());
+            causalResults.SelectMany(result => result.Explanation.Assertions).DistinctWithOrderPreserved().ToArray(), LazyThreadSafetyMode.None);
         _lazyMetadata = new Lazy<IReadOnlyList<TMetadata>>(() =>
-            causalResults.SelectMany(result => result.MetadataTier.Metadata).DistinctWithOrderPreserved().ToArray());
+            causalResults.SelectMany(result => result.MetadataTier.Metadata).DistinctWithOrderPreserved().ToArray(), LazyThreadSafetyMode.None);
+        _lazyValues = new Lazy<IReadOnlyList<TMetadata>>(() =>
+            causalResults.Select(result => result.Value).ToArray(), LazyThreadSafetyMode.None);
     }
 
     /// <summary>
@@ -97,7 +100,7 @@ public class HigherOrderPolicyResultEvaluation<TModel, TMetadata>
     /// <summary>
     /// Gets the metadata associated with the evaluation.
     /// </summary>
-    public IEnumerable<TMetadata> Values => _causalResults.Select(result => result.Value);
+    public IEnumerable<TMetadata> Values => _lazyValues.Value;
 
     /// <summary>
     /// Gets the assertions made during the evaluation.

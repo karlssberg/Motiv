@@ -1,3 +1,4 @@
+using System.Threading;
 using Motiv.Shared;
 
 namespace Motiv.BooleanPredicateProposition;
@@ -34,21 +35,21 @@ internal sealed class Proposition<TModel, TMetadata>(
                 false => whenFalse
             };
 
-        var metadata = new Lazy<TMetadata>(() => metadataResolver(model));
+        var metadata = new Lazy<TMetadata>(() => metadataResolver(model), LazyThreadSafetyMode.None);
 
         var assertion = new Lazy<string> (() =>
             metadata.Value switch
             {
                 string because => because,
                 _ => Description.ToReason(isSatisfied)
-            });
+            }, LazyThreadSafetyMode.None);
 
         return new PropositionPolicyResult<TMetadata>(
             isSatisfied,
             metadata,
-            new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata.Value)),
-            new Lazy<Explanation>(() => new Explanation(assertion.Value)),
+            new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata.Value), LazyThreadSafetyMode.None),
+            new Lazy<Explanation>(() => new Explanation(assertion.Value), LazyThreadSafetyMode.None),
             new Lazy<ResultDescriptionBase>(() =>
-                new PropositionResultDescription(assertion.Value, Description.Statement)));
+                new PropositionResultDescription(assertion.Value, Description.Statement), LazyThreadSafetyMode.None));
     }
 }

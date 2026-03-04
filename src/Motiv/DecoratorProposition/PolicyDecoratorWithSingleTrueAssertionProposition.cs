@@ -1,3 +1,4 @@
+using System.Threading;
 using Motiv.Shared;
 
 namespace Motiv.DecoratorProposition;
@@ -27,23 +28,23 @@ internal sealed class PolicyDecoratorWithSingleTrueAssertionProposition<TModel, 
             {
                 true => trueBecause,
                 false => whenFalse(model, underlyingResult)
-            });
+            }, LazyThreadSafetyMode.None);
 
         var explanation = new Lazy<Explanation>(() =>
             new Explanation(
                 assertion.Value,
                 underlyingResult.ToEnumerable(),
-                underlyingResult.ToEnumerable()));
+                underlyingResult.ToEnumerable()), LazyThreadSafetyMode.None);
 
         var metadataTier = new Lazy<MetadataNode<string>>(() =>
             new MetadataNode<string>(assertion.Value,
-                underlyingResult.ToEnumerable() as IEnumerable<PolicyResultBase<string>> ?? []));
+                underlyingResult.ToEnumerable() as IEnumerable<PolicyResultBase<string>> ?? []), LazyThreadSafetyMode.None);
 
         var description = new Lazy<ResultDescriptionBase>(() =>
             new BooleanResultDescriptionWithUnderlying(
                 underlyingResult,
                 assertion.Value,
-                Description.Statement));
+                Description.Statement), LazyThreadSafetyMode.None);
 
         return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
             underlyingResult,

@@ -1,3 +1,4 @@
+using System.Threading;
 using Motiv.Shared;
 
 namespace Motiv.HigherOrderProposition.BooleanPredicate;
@@ -31,30 +32,30 @@ internal sealed class HigherOrderFromBooleanPredicateProposition<TModel, TMetada
                 var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
 
                 return metadataResolver(evaluation);
-            });
+            }, LazyThreadSafetyMode.None);
 
         var assertion = new Lazy<string>(() =>
             metadata.Value switch
             {
                 string because => because,
                 _ => specDescription.ToReason(isSatisfied)
-            });
+            }, LazyThreadSafetyMode.None);
 
         var reason = new Lazy<string>(() =>
             metadata.Value switch
             {
                 string because when !Description.HasExplicitStatement => because,
                 _ => specDescription.ToReason(isSatisfied)
-            });
+            }, LazyThreadSafetyMode.None);
 
         var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-            new BooleanResultDescription(reason.Value, Description.Statement));
+            new BooleanResultDescription(reason.Value, Description.Statement), LazyThreadSafetyMode.None);
 
         return new HigherOrderFromBooleanPredicatePolicyResult<TMetadata>(
             isSatisfied,
             metadata,
-            new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata.Value)),
-            new Lazy<Explanation>(() => new Explanation(assertion.Value)),
+            new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata.Value), LazyThreadSafetyMode.None),
+            new Lazy<Explanation>(() => new Explanation(assertion.Value), LazyThreadSafetyMode.None),
             resultDescription);
     }
 
