@@ -46,10 +46,9 @@ internal sealed class Proposition<TModel, TMetadata>(
 
         return new PropositionPolicyResult<TMetadata>(
             isSatisfied,
-            metadata,
-            new Lazy<MetadataNode<TMetadata>>(() => new MetadataNode<TMetadata>(metadata.Value), LazyThreadSafetyMode.None),
-            new Lazy<Explanation>(() => new Explanation(assertion.Value), LazyThreadSafetyMode.None),
-            new Lazy<ResultDescriptionBase>(() =>
-                new PropositionResultDescription(assertion.Value, Description.Statement), LazyThreadSafetyMode.None));
+            () => metadata.Value,
+            () => new MetadataNode<TMetadata>(metadata.Value),
+            () => new Explanation(assertion.Value),
+            () => new PropositionResultDescription(assertion.Value, Description.Statement));
     }
 }
