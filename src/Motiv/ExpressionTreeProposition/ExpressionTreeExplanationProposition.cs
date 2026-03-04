@@ -31,33 +31,24 @@ internal sealed class ExpressionTreeExplanationProposition<TModel, TPredicateRes
                 false => falseBecause(model, result)
             }, LazyThreadSafetyMode.None);
 
-        var explanation = new Lazy<Explanation>(() =>
-            new Explanation(
-                assertion.Value,
-                result.ToEnumerable(),
-                result.ToEnumerable()), LazyThreadSafetyMode.None);
-
         var reason = new Lazy<string>(() =>
             description.HasExplicitStatement
                 ? description.ToReason(result.Satisfied)
                 : assertion.Value, LazyThreadSafetyMode.None);
 
-        var metadataTier = new Lazy<MetadataNode<string>>(() =>
-            new MetadataNode<string>(assertion.Value.ToEnumerable(),
-                result.ToEnumerable()), LazyThreadSafetyMode.None);
-
-        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-            new ExpressionTreeBooleanResultDescription(
+        return new PropositionPolicyResult<string>(
+            result.Satisfied,
+            () => assertion.Value,
+            () => new MetadataNode<string>(assertion.Value.ToEnumerable(),
+                result.ToEnumerable()),
+            () => new Explanation(
+                assertion.Value,
+                result.ToEnumerable(),
+                result.ToEnumerable()),
+            () => new ExpressionTreeBooleanResultDescription(
                 result,
                 reason.Value,
                 expression,
-                Description.Statement), LazyThreadSafetyMode.None);
-
-        return new PropositionPolicyResult<string>(
-            result.Satisfied,
-            assertion,
-            metadataTier,
-            explanation,
-            resultDescription);
+                Description.Statement));
     }
 }

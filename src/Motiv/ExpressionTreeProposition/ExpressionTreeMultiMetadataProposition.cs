@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using System.Threading;
 using Motiv.BooleanPredicateProposition;
 using Motiv.Shared;
 
@@ -33,37 +32,30 @@ internal sealed class ExpressionTreeMultiMetadataProposition<TModel, TMetadata, 
 
         IEnumerable<TMetadata>? metadataResults = null;
 
-        var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
-        {
-            metadataResults ??= metadataResolver(model, result);
-            return new MetadataNode<TMetadata>(metadataResolver(model, result),
-                result.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []);
-        }, LazyThreadSafetyMode.None);
-
-        var explanation = new Lazy<Explanation>(() =>
-        {
-            metadataResults ??= metadataResolver(model, result);
-            var assertions = metadataResults switch
+        return new PropositionBooleanResult<TMetadata>(
+            result.Satisfied,
+            () =>
             {
-                IEnumerable<string> because => because,
-                _ => result.Assertions
-            };
-            return new Explanation(
-                assertions,
-                result);
-        }, LazyThreadSafetyMode.None);
-
-        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-            new ExpressionTreeBooleanResultDescription(
+                metadataResults ??= metadataResolver(model, result);
+                return new MetadataNode<TMetadata>(metadataResults,
+                    result.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []);
+            },
+            () =>
+            {
+                metadataResults ??= metadataResolver(model, result);
+                var assertions = metadataResults switch
+                {
+                    IEnumerable<string> because => because,
+                    _ => result.Assertions
+                };
+                return new Explanation(
+                    assertions,
+                    result);
+            },
+            () => new ExpressionTreeBooleanResultDescription(
                 result,
                 description.ToReason(result.Satisfied),
                 expression,
-                Description.Statement), LazyThreadSafetyMode.None);
-
-        return new PropositionBooleanResult<TMetadata>(
-            result.Satisfied,
-            metadataTier,
-            explanation,
-            resultDescription);
+                Description.Statement));
     }
 }

@@ -40,28 +40,19 @@ internal sealed class ExpressionTreeWithSingleTrueAssertionProposition<TModel, T
             ? description.ToReason(result.Satisfied)
             : assertion.Value, LazyThreadSafetyMode.None);
 
-        var explanation = new Lazy<Explanation>(() =>
-            new Explanation(
+        return new PropositionPolicyResult<string>(
+            result.Satisfied,
+            () => assertion.Value,
+            () => new MetadataNode<string>(assertion.Value,
+                resultAsCollection),
+            () => new Explanation(
                 assertion.Value,
                 resultAsCollection,
-                resultAsCollection), LazyThreadSafetyMode.None);
-
-        var metadataTier = new Lazy<MetadataNode<string>>(() =>
-            new MetadataNode<string>(assertion.Value,
-                resultAsCollection), LazyThreadSafetyMode.None);
-
-        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-            new ExpressionTreeBooleanResultDescription(
+                resultAsCollection),
+            () => new ExpressionTreeBooleanResultDescription(
                 result,
                 reason.Value,
                 expression,
-                Description.Statement), LazyThreadSafetyMode.None);
-
-        return new PropositionPolicyResult<string>(
-            result.Satisfied,
-            assertion,
-            metadataTier,
-            explanation,
-            resultDescription);
+                Description.Statement));
     }
 }

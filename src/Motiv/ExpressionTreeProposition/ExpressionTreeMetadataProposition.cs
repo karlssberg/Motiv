@@ -31,11 +31,12 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
                 false => whenFalse(model, result)
             }, LazyThreadSafetyMode.None);
 
-        var metadataTier = new Lazy<MetadataNode<TMetadata>>(() =>
-            new MetadataNode<TMetadata>(lazyMetadata.Value,
-                result.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []), LazyThreadSafetyMode.None);
-
-        var explanation = new Lazy<Explanation>(() =>
+        return new PropositionPolicyResult<TMetadata>(
+            result.Satisfied,
+            () => lazyMetadata.Value,
+            () => new MetadataNode<TMetadata>(lazyMetadata.Value,
+                result.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
+            () =>
             {
                 var assertions = lazyMetadata.Value switch
                 {
@@ -45,20 +46,11 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
 
                 return new Explanation(assertions, result.ToEnumerable(),
                     result.ToEnumerable());
-            }, LazyThreadSafetyMode.None);
-
-        var resultDescription = new Lazy<ResultDescriptionBase>(() =>
-            new ExpressionTreeBooleanResultDescription(
+            },
+            () => new ExpressionTreeBooleanResultDescription(
                 result,
                 description.ToReason(result.Satisfied),
                 expression,
-                Description.Statement), LazyThreadSafetyMode.None);
-
-        return new PropositionPolicyResult<TMetadata>(
-            result.Satisfied,
-            lazyMetadata,
-            metadataTier,
-            explanation,
-            resultDescription);
+                Description.Statement));
     }
 }
