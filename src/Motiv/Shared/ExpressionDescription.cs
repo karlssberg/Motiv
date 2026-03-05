@@ -5,8 +5,10 @@ namespace Motiv.Shared;
 
 internal sealed class ExpressionDescription(Expression statement, ISpecDescription? underlyingDescription = null) : ISpecDescription
 {
+    private string? _reasonWhenTrue;
+    private string? _reasonWhenFalse;
 
-    public string Statement => statement.Serialize();
+    public string Statement { get; } = statement.Serialize();
 
     public string Detailed => string.Join(Environment.NewLine, GetDetailsAsLines());
 
@@ -20,8 +22,9 @@ internal sealed class ExpressionDescription(Expression statement, ISpecDescripti
             yield return line.Indent();
     }
 
-    public string ToReason(bool satisfied) =>
-        statement.ToExpressionAssertion(satisfied).Serialize();
+    public string ToReason(bool satisfied) => satisfied
+        ? _reasonWhenTrue ??= statement.ToExpressionAssertion(true).Serialize()
+        : _reasonWhenFalse ??= statement.ToExpressionAssertion(false).Serialize();
 
     public bool HasExplicitStatement { get; set; }
 
