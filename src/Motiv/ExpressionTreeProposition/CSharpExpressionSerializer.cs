@@ -774,6 +774,8 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
 internal class CSharpExpressionSerializer<T>(T model, ParameterExpression modelParameter) : CSharpExpressionSerializer
 {
+    private static readonly ConditionalWeakTable<Expression, Func<T, object>> CompiledDelegateCache = new();
+
     protected override Expression VisitSerializeAsValue(Expression node)
     {
         switch (node)
@@ -783,8 +785,11 @@ internal class CSharpExpressionSerializer<T>(T model, ParameterExpression modelP
                 OutputText.Append(serialization);
                 return node;
             default:
-                var body = Expression.Convert(node, typeof(object));
-                var valueGetter = Expression.Lambda<Func<T, object>>(body, modelParameter).Compile();
+                var valueGetter = CompiledDelegateCache.GetValue(node, n =>
+                {
+                    var body = Expression.Convert(n, typeof(object));
+                    return Expression.Lambda<Func<T, object>>(body, modelParameter).Compile();
+                });
                 var value = valueGetter(model);
                 OutputText.Append(SerializeSupported(value, node.Type) ?? value);
                 return node;

@@ -325,4 +325,27 @@ public class ExpressionTreeTests
         // Assert
         act.Assertions.ShouldBe(["(1 + n) * (20 - n) / ((n + 1) * 2) / 2 > 0"]);
     }
+
+    [Theory]
+    [InlineData(4, true, "s.Length == 4")]
+    [InlineData(5, false, "s.Length != 5")]
+    public void Should_produce_correct_assertions_when_same_spec_is_evaluated_multiple_times(
+        int expected,
+        bool expectedResult,
+        params string[] expectedAssertion)
+    {
+        // Arrange
+        var sut = Spec
+            .From((string s) => s.Length == Display.AsValue(expected))
+            .Create("repeated-evaluation");
+
+        // Act - evaluate same spec with different models to exercise cached delegate path
+        _ = sut.IsSatisfiedBy("test");
+        _ = sut.IsSatisfiedBy("hello");
+        var act = sut.IsSatisfiedBy("test");
+
+        // Assert - the final evaluation should still produce correct model-specific assertions
+        act.Satisfied.ShouldBe(expectedResult);
+        act.Assertions.ShouldBe(expectedAssertion);
+    }
 }
