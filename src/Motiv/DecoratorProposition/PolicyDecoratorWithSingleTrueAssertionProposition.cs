@@ -10,7 +10,9 @@ internal sealed class PolicyDecoratorWithSingleTrueAssertionProposition<TModel, 
     string? propositionalStatement = null)
     : PolicyBase<TModel, string>
 {
-    public override IEnumerable<SpecBase> Underlying => underlyingPolicy.ToEnumerable();
+    private readonly SpecBase[] _underlying = [underlyingPolicy];
+
+    public override IEnumerable<SpecBase> Underlying => _underlying;
 
     public override ISpecDescription Description =>
         new SpecDescription(
@@ -22,6 +24,7 @@ internal sealed class PolicyDecoratorWithSingleTrueAssertionProposition<TModel, 
     protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
     {
         var underlyingResult = underlyingPolicy.IsSatisfiedBy(model);
+        PolicyResultBase<TUnderlyingMetadata>[] underlyingResults = [underlyingResult];
 
         var assertion = new Lazy<string>(() =>
             underlyingResult.Satisfied switch
@@ -34,11 +37,11 @@ internal sealed class PolicyDecoratorWithSingleTrueAssertionProposition<TModel, 
             underlyingResult,
             () => assertion.Value,
             () => new MetadataNode<string>(assertion.Value,
-                underlyingResult.ToEnumerable() as IEnumerable<PolicyResultBase<string>> ?? []),
+                underlyingResults as IEnumerable<PolicyResultBase<string>> ?? []),
             () => new Explanation(
                 assertion.Value,
-                underlyingResult.ToEnumerable(),
-                underlyingResult.ToEnumerable()),
+                underlyingResults,
+                underlyingResults),
             () => new BooleanResultDescriptionWithUnderlying(
                 underlyingResult,
                 assertion.Value,

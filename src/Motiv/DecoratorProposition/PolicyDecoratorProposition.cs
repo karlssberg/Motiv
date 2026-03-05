@@ -10,8 +10,9 @@ internal sealed class PolicyDecoratorProposition<TModel, TMetadata, TUnderlyingM
     ISpecDescription description)
     : PolicyBase<TModel, TMetadata>
 {
-    public override IEnumerable<SpecBase> Underlying => underlyingSpec.ToEnumerable();
+    private readonly SpecBase[] _underlying = [underlyingSpec];
 
+    public override IEnumerable<SpecBase> Underlying => _underlying;
 
     public override ISpecDescription Description => description;
 
@@ -20,6 +21,7 @@ internal sealed class PolicyDecoratorProposition<TModel, TMetadata, TUnderlyingM
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var policyResult = underlyingSpec.IsSatisfiedBy(model);
+        PolicyResultBase<TUnderlyingMetadata>[] policyResults = [policyResult];
 
         var valueResolver =
             policyResult.Satisfied switch
@@ -41,11 +43,11 @@ internal sealed class PolicyDecoratorProposition<TModel, TMetadata, TUnderlyingM
             policyResult,
             () => lazyMetadata.Value,
             () => new MetadataNode<TMetadata>(lazyMetadata.Value,
-                policyResult.ToEnumerable() as IEnumerable<PolicyResultBase<TMetadata>> ?? []),
+                policyResults as IEnumerable<PolicyResultBase<TMetadata>> ?? []),
             () => new Explanation(
                 assertion.Value,
-                policyResult.ToEnumerable(),
-                policyResult.ToEnumerable()),
+                policyResults,
+                policyResults),
             () => new BooleanResultDescriptionWithUnderlying(
                 policyResult,
                 assertion.Value,

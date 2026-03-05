@@ -10,7 +10,9 @@ internal sealed class PolicyDecoratorMultiMetadataProposition<TModel, TMetadata,
     ISpecDescription description)
     : SpecBase<TModel, TMetadata>
 {
-    public override IEnumerable<SpecBase> Underlying => underlyingSpec.ToEnumerable();
+    private readonly SpecBase[] _underlying = [underlyingSpec];
+
+    public override IEnumerable<SpecBase> Underlying => _underlying;
 
     public override ISpecDescription Description => description;
 
@@ -19,6 +21,7 @@ internal sealed class PolicyDecoratorMultiMetadataProposition<TModel, TMetadata,
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var booleanResult = underlyingSpec.IsSatisfiedBy(model);
+        PolicyResultBase<TUnderlyingMetadata>[] booleanResults = [booleanResult];
 
         var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
             booleanResult.Satisfied switch
@@ -37,11 +40,11 @@ internal sealed class PolicyDecoratorMultiMetadataProposition<TModel, TMetadata,
         return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,
             () => new MetadataNode<TMetadata>(metadata.Value,
-                booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
+                booleanResults as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
             () => new Explanation(
                 assertions.Value,
-                booleanResult.ToEnumerable(),
-                booleanResult.ToEnumerable()),
+                booleanResults,
+                booleanResults),
             () => new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
                 Description.ToReason(booleanResult.Satisfied),

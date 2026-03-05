@@ -10,6 +10,8 @@ public sealed class PolicyResult<TModel, TMetadata> : PolicyResultBase<TMetadata
     /// <summary>Gets the underlying boolean result.</summary>
     private readonly PolicyResultBase<TMetadata> _underlyingResult;
 
+    private readonly PolicyResultBase<TMetadata>[] _underlyingResults;
+
     /// <summary>Initializes a new instance of the BooleanResultWithModel class.</summary>
     /// <param name="model">The associated model.</param>
     /// <param name="underlyingResult">The underlying boolean result.</param>
@@ -19,6 +21,7 @@ public sealed class PolicyResult<TModel, TMetadata> : PolicyResultBase<TMetadata
     {
         Model = model ?? throw new ArgumentNullException(nameof(model));
         _underlyingResult = underlyingResult ?? throw new ArgumentNullException(nameof(underlyingResult));
+        _underlyingResults = [underlyingResult];
         Satisfied = underlyingResult.Satisfied;
     }
 
@@ -43,24 +46,23 @@ public sealed class PolicyResult<TModel, TMetadata> : PolicyResultBase<TMetadata
     public override MetadataNode<TMetadata> MetadataTier => _underlyingResult.MetadataTier;
 
     /// <summary>Gets the underlying boolean result that this result encapsulates.</summary>
-    public override IEnumerable<BooleanResultBase> Underlying => _underlyingResult.ToEnumerable();
+    public override IEnumerable<BooleanResultBase> Underlying => _underlyingResults;
 
     /// <summary>
     /// Gets the underlying boolean result that led to this result, that also shares the same metadata type.
     /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues =>
-        _underlyingResult.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => _underlyingResults;
 
     /// <summary>
     /// Gets the causes of the result.  These are the underlying results that determined the final result.
     /// </summary>
-    public override IEnumerable<BooleanResultBase> Causes => _underlyingResult.ToEnumerable();
+    public override IEnumerable<BooleanResultBase> Causes => _underlyingResults;
 
     /// <summary>
     /// Gets the causes of the result, with metadata.  These are the underlying results that determined the final
     /// result.
     /// </summary>
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => _underlyingResult.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => _underlyingResults;
 
     /// <summary>
     /// Gets the metadata associated with the result.  This is the scalar metadata yielded by the proposition.

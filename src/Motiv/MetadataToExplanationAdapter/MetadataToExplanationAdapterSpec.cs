@@ -6,7 +6,9 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingMetada
     SpecBase<TModel, TUnderlyingMetadata> spec)
     : SpecBase<TModel, string>
 {
-    public override IEnumerable<SpecBase> Underlying => spec.ToEnumerable();
+    private readonly SpecBase[] _underlying = [spec];
+
+    public override IEnumerable<SpecBase> Underlying => _underlying;
 
     public override ISpecDescription Description => spec.Description;
 
@@ -15,12 +17,13 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingMetada
     protected override BooleanResultBase<string> IsSpecSatisfiedBy(TModel model)
     {
         var result = spec.IsSatisfiedBy(model);
+        BooleanResultBase<TUnderlyingMetadata>[] results = [result];
 
         return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
             result,
             () => new MetadataNode<string>(
                 result.Assertions,
-                result.ToEnumerable() as IEnumerable<BooleanResultBase<string>> ?? []),
+                results as IEnumerable<BooleanResultBase<string>> ?? []),
             () => result.Explanation,
             () => new BooleanResultDescriptionWithUnderlying(
                 result,

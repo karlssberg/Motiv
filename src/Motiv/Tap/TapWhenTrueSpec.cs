@@ -5,7 +5,9 @@ internal sealed class TapWhenTrueSpec<TModel, TMetadata>(
     Action<TModel, BooleanResultBase<TMetadata>> callback)
     : SpecBase<TModel, TMetadata>
 {
-    public override IEnumerable<SpecBase> Underlying => operand.ToEnumerable();
+    private readonly SpecBase[] _underlying = [operand];
+
+    public override IEnumerable<SpecBase> Underlying => _underlying;
 
     public override ISpecDescription Description => operand.Description;
 

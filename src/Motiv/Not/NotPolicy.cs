@@ -9,7 +9,9 @@ internal sealed class NotPolicy<TModel, TMetadata>(
         IUnaryOperationSpec<TModel>,
         IUnaryOperationSpec
 {
-    public override IEnumerable<SpecBase> Underlying => operand.ToEnumerable();
+    private readonly SpecBase[] _underlying = [operand];
+
+    public override IEnumerable<SpecBase> Underlying => _underlying;
 
     public override ISpecDescription Description =>
         new NotSpecDescription<TModel, TMetadata>(operand);

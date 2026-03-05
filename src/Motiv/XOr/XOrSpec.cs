@@ -11,7 +11,9 @@ internal sealed class XOrSpec<TModel, TMetadata>(
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
 {
-    public override IEnumerable<SpecBase> Underlying => left.ToEnumerable().Append(right);
+    private readonly SpecBase[] _underlying = [left, right];
+
+    public override IEnumerable<SpecBase> Underlying => _underlying;
 
     public override ISpecDescription Description =>
         new BinarySpecDescription<TModel, TMetadata>(left, right, "^", Operator.XOr,

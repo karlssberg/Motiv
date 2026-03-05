@@ -8,6 +8,7 @@ namespace Motiv.Not;
 internal sealed class NotPolicyResult<TMetadata>(PolicyResultBase<TMetadata> operandResult)
     : PolicyResultBase<TMetadata>, IBooleanOperationResult<TMetadata>, IUnaryOperationResult<TMetadata>
 {
+    private readonly PolicyResultBase<TMetadata>[] _operandResults = [operandResult];
     private ResultDescriptionBase? _description;
 
     public override TMetadata Value => operandResult.Value;
@@ -25,11 +26,11 @@ internal sealed class NotPolicyResult<TMetadata>(PolicyResultBase<TMetadata> ope
 
     public override MetadataNode<TMetadata> MetadataTier => Operand.MetadataTier;
 
-    public override IEnumerable<BooleanResultBase> Underlying => Operand.ToEnumerable();
+    public override IEnumerable<BooleanResultBase> Underlying => _operandResults;
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => Operand.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => _operandResults;
 
-    public override IEnumerable<BooleanResultBase> Causes => Operand.ToEnumerable();
+    public override IEnumerable<BooleanResultBase> Causes => _operandResults;
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => Operand.ToEnumerable();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => _operandResults;
 }

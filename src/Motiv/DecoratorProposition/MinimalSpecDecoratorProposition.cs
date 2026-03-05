@@ -7,7 +7,9 @@ internal sealed class MinimalSpecDecoratorProposition<TModel, TMetadata>(
     ISpecDescription description)
     : SpecBase<TModel, TMetadata>
 {
-    public override IEnumerable<SpecBase> Underlying => underlyingSpec.ToEnumerable();
+    private readonly SpecBase[] _underlying = [underlyingSpec];
+
+    public override IEnumerable<SpecBase> Underlying => _underlying;
 
     public override ISpecDescription Description => description;
 
@@ -16,12 +18,13 @@ internal sealed class MinimalSpecDecoratorProposition<TModel, TMetadata>(
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var predicateResult = underlyingSpec.IsSatisfiedBy(model);
+        BooleanResultBase<TMetadata>[] predicateResults = [predicateResult];
 
         return new BooleanResultWithUnderlying<TMetadata, TMetadata>(
             predicateResult,
             () => new MetadataNode<TMetadata>(
                 predicateResult.Values,
-                predicateResult.ToEnumerable()),
+                predicateResults),
             () => predicateResult.Explanation,
             () => new BooleanResultDescriptionWithUnderlying(
                 predicateResult,

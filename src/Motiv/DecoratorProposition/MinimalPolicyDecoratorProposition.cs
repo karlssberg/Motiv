@@ -7,7 +7,9 @@ internal sealed class MinimalPolicyDecoratorProposition<TModel, TMetadata>(
     ISpecDescription description)
     : PolicyBase<TModel, TMetadata>
 {
-    public override IEnumerable<SpecBase> Underlying => underlyingPolicy.ToEnumerable();
+    private readonly SpecBase[] _underlying = [underlyingPolicy];
+
+    public override IEnumerable<SpecBase> Underlying => _underlying;
 
     public override ISpecDescription Description => description;
 
@@ -16,12 +18,13 @@ internal sealed class MinimalPolicyDecoratorProposition<TModel, TMetadata>(
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var predicateResult = underlyingPolicy.IsSatisfiedBy(model);
+        PolicyResultBase<TMetadata>[] predicateResults = [predicateResult];
 
         return new PolicyResultWithUnderlying<TMetadata, TMetadata>(
             predicateResult,
             () => predicateResult.Value,
             () => new MetadataNode<TMetadata>(predicateResult.Value,
-                predicateResult.ToEnumerable()),
+                predicateResults),
             () => predicateResult.Explanation,
             () => new BooleanResultDescriptionWithUnderlying(
                 predicateResult,
