@@ -19,6 +19,7 @@ internal sealed class PolicyResultPredicateWithSingleAssertionProposition<TModel
     protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
     {
         var predicateResult = predicate(model);
+        PolicyResultBase<TUnderlyingMetadata>[] predicateResults = [predicateResult];
 
         var assertion = new Lazy<string>(() =>
             predicateResult.Satisfied switch
@@ -32,11 +33,11 @@ internal sealed class PolicyResultPredicateWithSingleAssertionProposition<TModel
             () => assertion.Value,
             () => new MetadataNode<string>(
                 assertion.Value.ToEnumerable(),
-                predicateResult.ToEnumerable() as IEnumerable<PolicyResultBase<string>> ?? []),
+                predicateResults as IEnumerable<PolicyResultBase<string>> ?? []),
             () => new Explanation(
                 assertion.Value,
-                predicateResult.ToEnumerable(),
-                predicateResult.ToEnumerable()),
+                predicateResults,
+                predicateResults),
             () => new BooleanResultDescriptionWithUnderlying(
                 predicateResult,
                 assertion.Value,

@@ -22,6 +22,7 @@ internal sealed class ExpressionTreeMultiMetadataProposition<TModel, TMetadata, 
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var result = _predicate.Execute(model);
+        BooleanResultBase<string>[] resultArray = [result];
 
         var metadataResolver =
             result.Satisfied switch
@@ -38,7 +39,7 @@ internal sealed class ExpressionTreeMultiMetadataProposition<TModel, TMetadata, 
             {
                 metadataResults ??= metadataResolver(model, result);
                 return new MetadataNode<TMetadata>(metadataResults,
-                    result.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []);
+                    resultArray as IEnumerable<BooleanResultBase<TMetadata>> ?? []);
             },
             () =>
             {

@@ -39,6 +39,8 @@ internal sealed class BooleanResultPredicateMultiValueProposition<TModel, TMetad
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
+        BooleanResultBase<TUnderlyingMetadata>[] booleanResults = [booleanResult];
+
         var metadataResolver =
             booleanResult.Satisfied switch
             {
@@ -58,11 +60,11 @@ internal sealed class BooleanResultPredicateMultiValueProposition<TModel, TMetad
         return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,
             () => new MetadataNode<TMetadata>(metadata.Value,
-                booleanResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
+                booleanResults as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
             () => new Explanation(
                 assertions.Value,
-                booleanResult.ToEnumerable(),
-                booleanResult.ToEnumerable()),
+                booleanResults,
+                booleanResults),
             () => new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
                 Description.ToReason(booleanResult.Satisfied),

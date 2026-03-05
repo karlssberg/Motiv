@@ -39,6 +39,8 @@ internal sealed class PolicyResultPredicateMultiValueProposition<TModel, TMetada
     protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
     {
         var policyResult = underlyingPolicyResultPredicate(model);
+        PolicyResultBase<TUnderlyingMetadata>[] policyResults = [policyResult];
+
         var metadataResolver =
             policyResult.Satisfied switch
             {
@@ -59,11 +61,11 @@ internal sealed class PolicyResultPredicateMultiValueProposition<TModel, TMetada
         return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             policyResult,
             () => new MetadataNode<TMetadata>(metadata.Value,
-                policyResult.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
+                policyResults as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
             () => new Explanation(
                 assertions.Value,
-                policyResult.ToEnumerable(),
-                policyResult.ToEnumerable()),
+                policyResults,
+                policyResults),
             () => new BooleanResultDescriptionWithUnderlying(
                 policyResult,
                 Description.ToReason(policyResult.Satisfied),

@@ -23,6 +23,7 @@ internal sealed class ExpressionTreeExplanationProposition<TModel, TPredicateRes
     protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
     {
         var result = _predicate.Execute(model);
+        BooleanResultBase<string>[] resultArray = [result];
 
         var assertion = new Lazy<string>(() =>
             result.Satisfied switch
@@ -40,11 +41,11 @@ internal sealed class ExpressionTreeExplanationProposition<TModel, TPredicateRes
             result.Satisfied,
             () => assertion.Value,
             () => new MetadataNode<string>(assertion.Value.ToEnumerable(),
-                result.ToEnumerable()),
+                resultArray),
             () => new Explanation(
                 assertion.Value,
-                result.ToEnumerable(),
-                result.ToEnumerable()),
+                resultArray,
+                resultArray),
             () => new ExpressionTreeBooleanResultDescription(
                 result,
                 reason.Value,

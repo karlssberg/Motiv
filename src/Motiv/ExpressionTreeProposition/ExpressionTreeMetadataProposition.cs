@@ -23,6 +23,7 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var result = _predicate.Execute(model);
+        BooleanResultBase<string>[] resultArray = [result];
 
         var lazyMetadata = new Lazy<TMetadata>(() =>
             result.Satisfied switch
@@ -35,7 +36,7 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
             result.Satisfied,
             () => lazyMetadata.Value,
             () => new MetadataNode<TMetadata>(lazyMetadata.Value,
-                result.ToEnumerable() as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
+                resultArray as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
             () =>
             {
                 var assertions = lazyMetadata.Value switch
@@ -44,8 +45,8 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
                     _ => result.Assertions
                 };
 
-                return new Explanation(assertions, result.ToEnumerable(),
-                    result.ToEnumerable());
+                return new Explanation(assertions, resultArray,
+                    resultArray);
             },
             () => new ExpressionTreeBooleanResultDescription(
                 result,

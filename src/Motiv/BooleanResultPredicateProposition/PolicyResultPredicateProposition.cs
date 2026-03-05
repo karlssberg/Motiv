@@ -33,6 +33,8 @@ internal sealed class PolicyResultPredicateProposition<TModel, TMetadata, TUnder
     protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
     {
         var booleanResult = underlyingPolicyResultPredicate(model);
+        PolicyResultBase<TUnderlyingMetadata>[] booleanResults = [booleanResult];
+
         var metadataResolver =
             booleanResult.Satisfied switch
             {
@@ -60,11 +62,11 @@ internal sealed class PolicyResultPredicateProposition<TModel, TMetadata, TUnder
             booleanResult,
             () => metadata.Value,
             () => new MetadataNode<TMetadata>(metadata.Value,
-                booleanResult.ToEnumerable() as IEnumerable<PolicyResultBase<TMetadata>> ?? []),
+                booleanResults as IEnumerable<PolicyResultBase<TMetadata>> ?? []),
             () => new Explanation(
                 assertions.Value,
-                booleanResult.ToEnumerable(),
-                booleanResult.ToEnumerable()),
+                booleanResults,
+                booleanResults),
             () => new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
                 reason.Value,
