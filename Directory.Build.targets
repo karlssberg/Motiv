@@ -1,0 +1,6 @@
+<Project>
+    <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+        <Compile Include="$(MSBuildThisFileDirectory)src/testing/ShouldlyLineEndingExtensions.cs"
+                 Link="ShouldlyLineEndingExtensions.cs" />
+    </ItemGroup>
+</Project>

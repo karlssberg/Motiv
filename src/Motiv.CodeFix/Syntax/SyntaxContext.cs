@@ -26,7 +26,6 @@ public class SyntaxContext(Document document, ExpressionSyntax logicalExpression
         node.WithOperatorToken(
             node.OperatorToken.WithLeadingTrivia(
                 LineFeed,
-                BaselineIndent,
                 GetIndent(depth)));
 
     public async ValueTask<INamedTypeSymbol?> ContainingTypeSymbol(CancellationToken cancellationToken)

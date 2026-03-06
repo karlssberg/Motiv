@@ -41,23 +41,40 @@ public class LogicalExpressionToSpecConverter(
         // Detect instance method calls
         var containingTypeSymbol = await syntaxContext.ContainingTypeSymbol(cancellationToken).ConfigureAwait(false);
         var instanceMethodDetector = new InstanceMethodDetector(semanticModel);
-        var instanceMethods = containingTypeSymbol is not null
-            ? instanceMethodDetector.GetInstanceMethods(logicalExpressionSyntax, containingTypeSymbol)
-            : [];
+        var detectionResult = containingTypeSymbol is not null
+            ? instanceMethodDetector.Detect(logicalExpressionSyntax, containingTypeSymbol)
+            : new InstanceMethodResult([], []);
 
-        var hasInstanceMethods = instanceMethods.Count > 0;
-        var instanceMethodNames = new HashSet<string>(instanceMethods.Select(m => m.Method.Name));
+        var hasInstanceMethods = detectionResult.HasInstanceMethods;
+        var instanceMethodNames = detectionResult.AllMethodNames;
 
-        var newRoot = ReplaceLogicalExpressionWithSpecInvocation(syntaxContext, variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods);
+        // Group instance-method-containing clauses in && chains
+        var groupedExpression = hasInstanceMethods
+            ? GroupInstanceMethodClauses(logicalExpressionSyntax)
+            : logicalExpressionSyntax;
 
-        var rootMembers = GetRootMembers(syntaxContext, variableSymbols, logicalExpressionSyntax, instanceMethodNames, containingTypeSymbol).ToArray();
+        var newRoot = ReplaceLogicalExpressionWithSpecInvocation(syntaxContext, variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods, groupedExpression);
+
+        // Use simple type name when proposition will be placed inside the same namespace
         var baseNamespace = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
+        var isBlockNamespace = baseNamespace is NamespaceDeclarationSyntax;
+        var containingTypeName = containingTypeSymbol is not null
+            ? (isBlockNamespace ? containingTypeSymbol.Name : containingTypeSymbol.ToDisplayString())
+            : null;
+
+        var rootMembers = GetRootMembers(syntaxContext, variableSymbols, groupedExpression, instanceMethodNames, containingTypeName).ToArray();
         newRoot = baseNamespace != null
             ? AddToNamespace(syntaxContext, newRoot, baseNamespace, rootMembers)
             : AddToCompilationUnit(syntaxContext, newRoot, rootMembers);
         newRoot = AddUsingStatementsIfNeeded(newRoot);
 
-        return document.WithSyntaxRoot(newRoot);
+        var resultDoc = document.WithSyntaxRoot(newRoot);
+
+        // Convert block namespace to file-scoped format by inserting ";" after namespace name
+        if (isBlockNamespace)
+            resultDoc = await InsertSemicolonAfterNamespaceName(resultDoc, cancellationToken).ConfigureAwait(false);
+
+        return resultDoc;
     }
 
     private IEnumerable<MemberDeclarationSyntax> GetRootMembers(
@@ -65,7 +82,7 @@ public class LogicalExpressionToSpecConverter(
         ImmutableArray<ISymbol> variableSymbols,
         ExpressionSyntax logicalExpressionSyntax,
         HashSet<string> instanceMethodNames,
-        INamedTypeSymbol? containingTypeSymbol)
+        string? containingTypeName)
     {
         var hasInstanceMethods = instanceMethodNames.Count > 0;
 
@@ -100,7 +117,7 @@ public class LogicalExpressionToSpecConverter(
                 innerLambdaModelType: variableTypeName,
                 innerLambdaParameterName: variable.Name,
                 decomposition,
-                containingTypeName: containingTypeSymbol?.ToDisplayString()).Build();
+                containingTypeName: containingTypeName).Build();
             yield break;
         }
 
@@ -114,7 +131,7 @@ public class LogicalExpressionToSpecConverter(
             return $"{typeName} {s.Name.Capitalize()}";
         }));
 
-        var containingTypeName = hasInstanceMethods ? containingTypeSymbol?.ToDisplayString() : null;
+        var resolvedContainingTypeName = hasInstanceMethods ? containingTypeName : null;
 
         yield return new ComposedSpecClassDeclaration(
             syntaxContext,
@@ -122,7 +139,7 @@ public class LogicalExpressionToSpecConverter(
             innerLambdaModelType: defaultModelName,
             innerLambdaParameterName: "m",
             multiVarDecomposition,
-            containingTypeName,
+            resolvedContainingTypeName,
             nestedRecordName: defaultModelName,
             nestedRecordParameters: recordParameters).Build();
     }
@@ -221,7 +238,7 @@ public class LogicalExpressionToSpecConverter(
                 var methodName = (IdentifierNameSyntax)original.Expression;
                 var qualifiedAccess = MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
-                    IdentifierName("instance"),
+                    IdentifierName(InstanceParameterName),
                     methodName);
                 return original.WithExpression(qualifiedAccess);
             });
@@ -335,10 +352,11 @@ public class LogicalExpressionToSpecConverter(
         ImmutableArray<ISymbol> variableSymbols,
         ExpressionSyntax logicalExpressionSyntax,
         SyntaxNode root,
-        bool hasInstanceMethods)
+        bool hasInstanceMethods,
+        ExpressionSyntax groupedExpression)
     {
         if (variableSymbols.Length != 1 || hasInstanceMethods)
-            return ReplaceMultiVariableExpression(syntaxContext, variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods);
+            return ReplaceMultiVariableExpression(syntaxContext, variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods, groupedExpression);
 
         var createSpecInvocation = SpecInvocationExpressionSyntax.Create(
             IdentifierName(propositionName),
@@ -351,14 +369,15 @@ public class LogicalExpressionToSpecConverter(
         ImmutableArray<ISymbol> variableSymbols,
         ExpressionSyntax logicalExpressionSyntax,
         SyntaxNode root,
-        bool hasInstanceMethods)
+        bool hasInstanceMethods,
+        ExpressionSyntax groupedExpression)
     {
         var method = logicalExpressionSyntax.Ancestors().OfType<MethodDeclarationSyntax>().First();
         var containingClass = method.Ancestors().OfType<ClassDeclarationSyntax>().First();
         var statement = logicalExpressionSyntax.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
 
         var fieldName = $"_{propositionName.ToCamelCase()}";
-        var originalExprText = logicalExpressionSyntax.ToString();
+        var originalExprText = FormatAsComment(groupedExpression);
 
         string specInvocation;
         string fieldDeclaration;
@@ -387,16 +406,7 @@ public class LogicalExpressionToSpecConverter(
             fieldDeclaration = $"private readonly {propositionName} {fieldName} = new {propositionName}();";
         }
 
-        var assignmentLine = statement switch
-        {
-            ReturnStatementSyntax => "return result.Satisfied;",
-            LocalDeclarationStatementSyntax local =>
-                $"var {local.Declaration.Variables.First().Identifier.Text} = result.Satisfied;",
-            ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax assignment } =>
-                $"{assignment.Left} = result.Satisfied;",
-            null when method.ExpressionBody is not null && method.ReturnType.ToString() == "bool" => "return result.Satisfied;",
-            _ => "var isSatisfied = result.Satisfied;"
-        };
+        var assignmentLine = DeriveAssignmentLine(statement, method);
 
         // Generate method source with optional constructor
         var newMethodSource = hasInstanceMethods
@@ -408,6 +418,7 @@ public class LogicalExpressionToSpecConverter(
                     {
                         {{fieldName}} = new {{propositionName}}(this);
                     }
+
                     public {{method.ReturnType}} {{method.Identifier}}{{method.ParameterList}}
                     {
                         // {{originalExprText}}
@@ -431,10 +442,20 @@ public class LogicalExpressionToSpecConverter(
 
         var tempUnit = ParseCompilationUnit(newMethodSource);
         var tempClass = tempUnit.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
-        var newField = tempClass.Members.OfType<FieldDeclarationSyntax>().First()
+        MemberDeclarationSyntax newField = tempClass.Members.OfType<FieldDeclarationSyntax>().First()
             .WithTrailingTrivia(syntaxContext.LineFeed);
-        var newMethod = tempClass.Members.OfType<MethodDeclarationSyntax>().Last(); // Last method is the actual method, not constructor
-        var newConstructor = hasInstanceMethods ? tempClass.Members.OfType<ConstructorDeclarationSyntax>().FirstOrDefault() : null;
+        MemberDeclarationSyntax newMethod = tempClass.Members.OfType<MethodDeclarationSyntax>().Last(); // Last method is the actual method, not constructor
+        MemberDeclarationSyntax? newConstructor = hasInstanceMethods ? tempClass.Members.OfType<ConstructorDeclarationSyntax>().FirstOrDefault() : null;
+
+        // Re-indent members if inside a block namespace (temp class has 4-space member indent)
+        var extraIndent = GetExtraIndentForBlockNamespace(containingClass);
+        if (extraIndent.Length > 0)
+        {
+            newField = ReindentMember(newField, extraIndent);
+            newMethod = ReindentMember(newMethod, extraIndent);
+            if (newConstructor is not null)
+                newConstructor = ReindentMember(newConstructor, extraIndent);
+        }
 
         var fieldAdded = containingClass.Members.OfType<FieldDeclarationSyntax>()
             .Any(f => f.Declaration.Variables.Any(v => v.Identifier.Text == fieldName));
@@ -450,8 +471,38 @@ public class LogicalExpressionToSpecConverter(
                     : member));
 
         var newClass = containingClass.WithMembers(List(newMembers));
+        newClass = RemovePrimaryConstructorIfNeeded(newClass, newConstructor);
 
         return root.ReplaceNode(containingClass, newClass);
+    }
+
+    private static string DeriveAssignmentLine(StatementSyntax? statement, MethodDeclarationSyntax method) =>
+        statement switch
+        {
+            ReturnStatementSyntax => "return result.Satisfied;",
+            LocalDeclarationStatementSyntax local =>
+                $"var {local.Declaration.Variables.First().Identifier.Text} = result.Satisfied;",
+            ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax assignment } =>
+                $"{assignment.Left} = result.Satisfied;",
+            null when method.ExpressionBody is not null && method.ReturnType.ToString() == "bool" => "return result.Satisfied;",
+            _ => "var isSatisfied = result.Satisfied;"
+        };
+
+    private static ClassDeclarationSyntax RemovePrimaryConstructorIfNeeded(
+        ClassDeclarationSyntax classDeclaration,
+        MemberDeclarationSyntax? newConstructor)
+    {
+        if (newConstructor is null || classDeclaration.ParameterList is null)
+            return classDeclaration;
+
+        // Preserve proper formatting: newline + indent before the open brace
+        var classLeadingWhitespace = classDeclaration.GetLeadingTrivia()
+            .Where(t => t.IsKind(SyntaxKind.WhitespaceTrivia))
+            .LastOrDefault();
+        return classDeclaration
+            .WithParameterList(null)
+            .WithOpenBraceToken(classDeclaration.OpenBraceToken.WithLeadingTrivia(
+                EndOfLine("\n"), classLeadingWhitespace));
     }
 
     private static SyntaxNode AddUsingStatementsIfNeeded(SyntaxNode newRoot)
@@ -460,7 +511,9 @@ public class LogicalExpressionToSpecConverter(
         var usingsToAdd = new List<UsingDirectiveSyntax>();
 
         if (compilationUnit.Usings.All(u => u.Name?.ToString() != nameof(Motiv)))
-            usingsToAdd.Add(UsingDirective(IdentifierName(nameof(Motiv))));
+            usingsToAdd.Add(UsingDirective(IdentifierName(nameof(Motiv)))
+                .NormalizeWhitespace()
+                .WithTrailingTrivia(EndOfLine("\n"), EndOfLine("\n")));
 
         return usingsToAdd.Count == 0
             ? newRoot
@@ -486,13 +539,153 @@ public class LogicalExpressionToSpecConverter(
         BaseNamespaceDeclarationSyntax namespaceDeclaration,
         params MemberDeclarationSyntax[] customSpecClassDeclaration)
     {
+        // Compute the indentation for members inside this namespace
+        var isBlockNamespace = namespaceDeclaration is NamespaceDeclarationSyntax;
+        var indent = isBlockNamespace ? syntaxContext.BaselineIndent.ToString() : "";
         var membersWithTrivia = customSpecClassDeclaration.Select(member =>
-            member.WithLeadingTrivia(syntaxContext.LineFeed, syntaxContext.LineFeed));
+        {
+            // Block namespace: one LF (previous member already ends with newline)
+            // File-scoped namespace: two LFs (need blank line separator)
+            member = isBlockNamespace
+                ? member.WithLeadingTrivia(syntaxContext.LineFeed)
+                : member.WithLeadingTrivia(syntaxContext.LineFeed, syntaxContext.LineFeed);
+            if (indent.Length > 0)
+                member = ReindentMember(member, indent);
+            return member;
+        });
 
         var updatedNamespace = namespaceDeclaration
             .AddMembers(membersWithTrivia.ToArray());
+
+        // Ensure the namespace close brace starts on its own line
+        if (isBlockNamespace && updatedNamespace is NamespaceDeclarationSyntax blockNs)
+        {
+            updatedNamespace = blockNs.WithCloseBraceToken(
+                blockNs.CloseBraceToken.WithLeadingTrivia(syntaxContext.LineFeed));
+        }
+
         newRoot = newRoot.ReplaceNode(namespaceDeclaration, updatedNamespace);
         return newRoot;
+    }
+
+    internal const string InstanceParameterName = "instance";
+
+    // Matches the method body indent (8 spaces) inside the raw string template in ReplaceMultiVariableExpression
+    private const string TemplateBodyIndent = "        ";
+    private const string CommentContinuationPrefix = TemplateBodyIndent + "//     ";
+
+    private static string FormatAsComment(ExpressionSyntax expression)
+    {
+        var normalized = expression.NormalizeWhitespace().ToFullString();
+
+        // Split at " || " to create multiline comment at || boundaries
+        var parts = normalized.Split(new[] { " || " }, 2, StringSplitOptions.None);
+        if (parts.Length <= 1) return normalized;
+
+        // ReindentMember will add any extra namespace indent later
+        return parts[0] + " ||\n" + CommentContinuationPrefix + parts[1];
+    }
+
+    private static string GetExtraIndentForBlockNamespace(ClassDeclarationSyntax containingClass)
+    {
+        // Detect if inside a block namespace and compute extra indentation
+        var nsDecl = containingClass.Ancestors().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+        if (nsDecl is null) return "";
+
+        var nsIndent = nsDecl
+            .GetLeadingTrivia()
+            .LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia))
+            .ToString();
+        // Members inside a block namespace are indented by the namespace indent + 4 spaces
+        return nsIndent + "    ";
+    }
+
+    private static MemberDeclarationSyntax ReindentMember(MemberDeclarationSyntax member, string extraIndent)
+    {
+        var text = member.ToFullString();
+        var lines = text.Split('\n');
+        var reindented = string.Join("\n", lines.Select(line =>
+        {
+            var trimmedEnd = line.TrimEnd('\r');
+            if (string.IsNullOrWhiteSpace(trimmedEnd)) return trimmedEnd;
+            return extraIndent + trimmedEnd;
+        }));
+        return ParseMemberDeclaration(reindented) ?? member;
+    }
+
+    private static ExpressionSyntax GroupInstanceMethodClauses(ExpressionSyntax expression)
+    {
+        return expression switch
+        {
+            BinaryExpressionSyntax binary when binary.IsKind(SyntaxKind.LogicalOrExpression) =>
+                BinaryExpression(
+                    SyntaxKind.LogicalOrExpression,
+                    GroupInstanceMethodClauses(binary.Left),
+                    GroupInstanceMethodClauses(binary.Right)),
+
+            ParenthesizedExpressionSyntax paren =>
+                ParenthesizedExpression(GroupInstanceMethodClauses(paren.Expression)),
+
+            BinaryExpressionSyntax binary when binary.IsKind(SyntaxKind.LogicalAndExpression) =>
+                TryRegroupAndChain(binary),
+
+            _ => expression
+        };
+    }
+
+    private static ExpressionSyntax TryRegroupAndChain(BinaryExpressionSyntax andChain)
+    {
+        var leaves = new List<ExpressionSyntax>();
+        FlattenAndChain(andChain, leaves);
+
+        var splitIndex = leaves.FindIndex(ContainsInvocation);
+        if (splitIndex <= 0 || leaves.Count - splitIndex < 2)
+            return andChain; // No regrouping needed
+
+        var left = BuildAndChain(leaves.GetRange(0, splitIndex));
+        var right = ParenthesizedExpression(
+            BuildAndChain(leaves.GetRange(splitIndex, leaves.Count - splitIndex)));
+        return BinaryExpression(SyntaxKind.LogicalAndExpression, left, right);
+    }
+
+    private static bool ContainsInvocation(ExpressionSyntax expr) =>
+        expr.DescendantNodesAndSelf().OfType<InvocationExpressionSyntax>().Any();
+
+    private static void FlattenAndChain(BinaryExpressionSyntax binary, List<ExpressionSyntax> leaves)
+    {
+        if (binary.Left is BinaryExpressionSyntax left && left.IsKind(SyntaxKind.LogicalAndExpression))
+            FlattenAndChain(left, leaves);
+        else
+            leaves.Add(binary.Left);
+
+        if (binary.Right is BinaryExpressionSyntax right && right.IsKind(SyntaxKind.LogicalAndExpression))
+            FlattenAndChain(right, leaves);
+        else
+            leaves.Add(binary.Right);
+    }
+
+    private static ExpressionSyntax BuildAndChain(List<ExpressionSyntax> leaves)
+    {
+        var result = leaves[0];
+        for (var i = 1; i < leaves.Count; i++)
+            result = BinaryExpression(SyntaxKind.LogicalAndExpression, result, leaves[i]);
+        return result;
+    }
+
+    private static async Task<Document> InsertSemicolonAfterNamespaceName(
+        Document doc,
+        CancellationToken cancellationToken)
+    {
+        var root = await doc.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+        var blockNs = root?.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+        if (root is null || blockNs is null) return doc;
+
+        var text = await doc.GetTextAsync(cancellationToken).ConfigureAwait(false);
+        var insertPosition = blockNs.Name.Span.End;
+        var newText = text.WithChanges(
+            new Microsoft.CodeAnalysis.Text.TextChange(
+                new Microsoft.CodeAnalysis.Text.TextSpan(insertPosition, 0), ";"));
+        return doc.WithText(newText);
     }
 
     private static IEnumerable<ISymbol> GetVariablesInExpression(

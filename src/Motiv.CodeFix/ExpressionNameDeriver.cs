@@ -100,27 +100,38 @@ public static class ExpressionNameDeriver
             .OfType<ReturnStatementSyntax>()
             .FirstOrDefault();
 
-        if (returnStatement is null)
+        if (returnStatement is not null)
         {
-            name = string.Empty;
-            return false;
+            var method = returnStatement.Ancestors()
+                .OfType<MethodDeclarationSyntax>()
+                .FirstOrDefault();
+
+            var returnMethodName = method?.Identifier.ValueText;
+
+            if (returnMethodName is not null && !IsGenericMethodName(returnMethodName))
+            {
+                name = returnMethodName;
+                return true;
+            }
         }
 
-        var methodDeclaration = returnStatement.Ancestors()
-            .OfType<MethodDeclarationSyntax>()
+        // Check for expression-bodied method (=>)
+        var arrowClause = expression.Ancestors()
+            .OfType<ArrowExpressionClauseSyntax>()
             .FirstOrDefault();
 
-        var methodName = methodDeclaration?.Identifier.ValueText;
-
-        // Filter out generic test method names that don't provide meaningful context
-        if (methodName is null || IsGenericMethodName(methodName))
+        if (arrowClause?.Parent is MethodDeclarationSyntax arrowMethod)
         {
-            name = string.Empty;
-            return false;
+            var arrowMethodName = arrowMethod.Identifier.ValueText;
+            if (!IsGenericMethodName(arrowMethodName))
+            {
+                name = arrowMethodName;
+                return true;
+            }
         }
 
-        name = methodName;
-        return true;
+        name = string.Empty;
+        return false;
     }
 
     /// <summary>

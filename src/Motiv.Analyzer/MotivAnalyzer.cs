@@ -121,7 +121,12 @@ public class MotivAnalyzer : DiagnosticAnalyzer
             not MemberAccessExpressionSyntax { Name.Identifier.ValueText: "Build" } memberAccess)
             return false;
 
-        // Use semantic model to get the symbol for the expression (should be Spec)
+        // Syntactic check: is the expression literally `Spec` or `Spec<T>` before `.Build`?
+        if (memberAccess.Expression is IdentifierNameSyntax { Identifier.ValueText: "Spec" }
+            or GenericNameSyntax { Identifier.ValueText: "Spec" })
+            return true;
+
+        // Semantic check for more complex cases (e.g., fully-qualified Motiv.Spec)
         var symbolInfo = semanticModel.GetSymbolInfo(memberAccess.Expression);
         if (symbolInfo.Symbol is INamedTypeSymbol typeSymbol)
         {
