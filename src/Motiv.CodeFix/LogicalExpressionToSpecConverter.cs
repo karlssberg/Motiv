@@ -499,10 +499,14 @@ public class LogicalExpressionToSpecConverter(
         var classLeadingWhitespace = classDeclaration.GetLeadingTrivia()
             .Where(t => t.IsKind(SyntaxKind.WhitespaceTrivia))
             .LastOrDefault();
+
+        var openBraceTrivia = classLeadingWhitespace.RawKind != 0
+            ? new[] { EndOfLine("\n"), classLeadingWhitespace }
+            : new[] { EndOfLine("\n") };
+
         return classDeclaration
             .WithParameterList(null)
-            .WithOpenBraceToken(classDeclaration.OpenBraceToken.WithLeadingTrivia(
-                EndOfLine("\n"), classLeadingWhitespace));
+            .WithOpenBraceToken(classDeclaration.OpenBraceToken.WithLeadingTrivia(openBraceTrivia));
     }
 
     private static SyntaxNode AddUsingStatementsIfNeeded(SyntaxNode newRoot)
