@@ -13,9 +13,11 @@ internal sealed class BinarySpecDescription<TModel, TMetadata>(
     Func<SpecBase<TModel>, bool> isSameFamily)
     : ISpecDescription
 {
+    private string? _detailed;
+
     public string Statement => $"{Summarize(left)} {operatorSymbol} {Summarize(right)}";
 
-    public string Detailed => string.Join(Environment.NewLine, GetDetailsAsLines());
+    public string Detailed => _detailed ??= string.Join(Environment.NewLine, GetDetailsAsLines());
 
     public IEnumerable<string> GetDetailsAsLines()
     {

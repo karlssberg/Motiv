@@ -7,10 +7,11 @@ internal sealed class ExpressionDescription(Expression statement, ISpecDescripti
 {
     private string? _reasonWhenTrue;
     private string? _reasonWhenFalse;
+    private string? _detailed;
 
     public string Statement { get; } = statement.Serialize();
 
-    public string Detailed => string.Join(Environment.NewLine, GetDetailsAsLines());
+    public string Detailed => _detailed ??= string.Join(Environment.NewLine, GetDetailsAsLines());
 
     public IEnumerable<string> GetDetailsAsLines()
     {
