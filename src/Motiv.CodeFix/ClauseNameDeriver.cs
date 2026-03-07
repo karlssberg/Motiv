@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -10,6 +11,13 @@ public static class ClauseNameDeriver
 {
     private const int MaxNameLength = 50;
 
+    private static readonly HashSet<string> CSharpKeywordTypes = new(StringComparer.Ordinal)
+    {
+        "string", "int", "long", "short", "byte", "sbyte",
+        "uint", "ulong", "ushort", "float", "double", "decimal",
+        "bool", "char", "object", "nint", "nuint"
+    };
+
     /// <summary>
     /// Derives a semantic name for a clause from its expression.
     /// </summary>
@@ -18,298 +26,377 @@ public static class ClauseNameDeriver
     /// <returns>A derived name or "Clause{N}" as fallback.</returns>
     public static string DeriveName(ExpressionSyntax expression, int clauseNumber)
     {
-        // Try to derive a semantic name
-        return TryDeriveName(expression, out var derivedName) && derivedName.Length <= MaxNameLength
-            ? derivedName
+        if (!TryExtractNamePart(expression, out var part) || part.Length == 0)
+            return $"Clause{clauseNumber}";
+
+        var name = part.StartsWith("Is", StringComparison.Ordinal) ||
+                   part.StartsWith("Has", StringComparison.Ordinal) ||
+                   part.StartsWith("DoesNotHave", StringComparison.Ordinal)
+            ? part
+            : $"Is{part}";
+
+        return name.Length <= MaxNameLength
+            ? name
             : $"Clause{clauseNumber}";
     }
 
     /// <summary>
-    /// Attempts to derive a semantic name from the expression.
+    /// Recursively extracts a name fragment from any expression.
     /// </summary>
     /// <param name="expression">The expression to analyze.</param>
-    /// <param name="name">The derived name if successful.</param>
-    /// <returns>True if a name was derived with confidence; otherwise, false.</returns>
-    private static bool TryDeriveName(ExpressionSyntax expression, out string name)
+    /// <param name="part">The extracted name fragment.</param>
+    /// <returns>True if a name part was extracted; otherwise, false.</returns>
+    private static bool TryExtractNamePart(ExpressionSyntax expression, out string part)
     {
-        switch (expression)
+        while (true)
         {
-            // Handle binary expressions (comparisons)
-            case BinaryExpressionSyntax binary:
-                return TryDeriveBinaryName(binary, out name);
+            switch (expression)
+            {
+                case ParenthesizedExpressionSyntax paren:
+                    expression = paren.Expression;
+                    continue;
 
-            // Handle unary expressions (negation)
-            case PrefixUnaryExpressionSyntax { OperatorToken.RawKind: (int)SyntaxKind.ExclamationToken } unary:
-                return TryDeriveNegationName(unary, out name);
+                case IdentifierNameSyntax identifier:
+                    return TryExtractIdentifierPart(identifier, out part);
 
-            // Handle is-pattern expressions
-            case IsPatternExpressionSyntax isPattern:
-                return TryDeriveIsPatternName(isPattern, out name);
+                case MemberAccessExpressionSyntax memberAccess:
+                    return TryExtractMemberAccessPart(memberAccess, out part);
 
-            // Handle simple identifier (boolean property)
-            case IdentifierNameSyntax identifier:
-                name = TryDeriveIdentifierName(identifier);
+                case LiteralExpressionSyntax literal:
+                    return TryExtractLiteralPart(literal, out part);
+
+                case BinaryExpressionSyntax binary:
+                    return TryExtractBinaryPart(binary, out part);
+
+                case PrefixUnaryExpressionSyntax { OperatorToken.RawKind: (int)SyntaxKind.ExclamationToken } unary:
+                    return TryExtractNegationPart(unary, out part);
+
+                case IsPatternExpressionSyntax isPattern:
+                    return TryExtractIsPatternPart(isPattern, out part);
+
+                case InvocationExpressionSyntax invocation:
+                    return TryExtractInvocationPart(invocation, out part);
+
+                case ConditionalAccessExpressionSyntax conditionalAccess:
+                    return TryExtractConditionalAccessPart(conditionalAccess, out part);
+
+                default:
+                    part = string.Empty;
+                    return false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Extracts a name part from an identifier, filtering lambda parameter names.
+    /// </summary>
+    private static bool TryExtractIdentifierPart(IdentifierNameSyntax identifier, out string part)
+    {
+        var name = identifier.Identifier.ValueText;
+
+        if (IsLambdaParameterName(name))
+        {
+            part = string.Empty;
+            return false;
+        }
+
+        part = name.Capitalize();
+        return true;
+    }
+
+    /// <summary>
+    /// Extracts a name part from a member access chain, filtering lambda parameter prefixes.
+    /// </summary>
+    private static bool TryExtractMemberAccessPart(MemberAccessExpressionSyntax memberAccess, out string part)
+    {
+        part = ExtractIdentifierChain(memberAccess) ?? string.Empty;
+        return part.Length > 0;
+    }
+
+    /// <summary>
+    /// Extracts a name part from a literal expression.
+    /// </summary>
+    private static bool TryExtractLiteralPart(LiteralExpressionSyntax literal, out string part)
+    {
+        var value = literal.Token.ValueText;
+
+        if (literal.IsKind(SyntaxKind.StringLiteralExpression))
+            value = CleanForIdentifier(value);
+
+        if (value.Length == 0)
+        {
+            part = string.Empty;
+            return false;
+        }
+
+        part = value.Capitalize();
+        return true;
+    }
+
+    /// <summary>
+    /// Extracts a name part from a binary expression, composing left and right parts.
+    /// </summary>
+    private static bool TryExtractBinaryPart(BinaryExpressionSyntax binary, out string part)
+    {
+        // Handle coalesce operator (??) — use only the left side
+        if (binary.IsKind(SyntaxKind.CoalesceExpression))
+        {
+            return TryExtractNamePart(binary.Left, out part);
+        }
+
+        var operatorVerb = GetOperatorVerb(binary.OperatorToken.Kind());
+        if (operatorVerb is null
+            || !TryExtractNamePart(binary.Left, out var leftPart)
+            || !TryExtractNamePart(binary.Right, out var rightPart))
+        {
+            part = string.Empty;
+            return false;
+        }
+
+        // Special cases for zero comparisons
+        if (rightPart == "0")
+        {
+            var zeroName = GenerateZeroComparisonName(binary, leftPart);
+            if (zeroName is not null)
+            {
+                part = zeroName;
+                return true;
+            }
+        }
+
+        if (leftPart == "0")
+        {
+            var zeroName = GenerateReversedZeroComparisonName(binary, rightPart);
+            if (zeroName is not null)
+            {
+                part = zeroName;
+                return true;
+            }
+        }
+
+        // Special cases for null comparisons
+        if (rightPart.Equals("null", StringComparison.OrdinalIgnoreCase))
+        {
+            var nullName = GenerateNullComparisonName(binary, leftPart);
+            if (nullName is not null)
+            {
+                part = nullName;
+                return true;
+            }
+        }
+
+        if (leftPart.Equals("null", StringComparison.OrdinalIgnoreCase))
+        {
+            var nullName = GenerateNullComparisonName(binary, rightPart);
+            if (nullName is not null)
+            {
+                part = nullName;
+                return true;
+            }
+        }
+
+        // General pattern: {Left}{Verb}{Right}
+        part = $"{leftPart}{operatorVerb}{rightPart}";
+        return true;
+    }
+
+    /// <summary>
+    /// Extracts a name part from a negation expression.
+    /// </summary>
+    private static bool TryExtractNegationPart(PrefixUnaryExpressionSyntax unary, out string part)
+    {
+        if (!TryExtractNamePart(unary.Operand, out var operandPart))
+        {
+            part = string.Empty;
+            return false;
+        }
+
+        part = NegateNamePart(operandPart);
+        return true;
+    }
+
+    /// <summary>
+    /// Negates a name part by toggling known prefixes (Is/IsNot, Has/DoesNotHave, Not).
+    /// </summary>
+    private static string NegateNamePart(string operandPart)
+    {
+        // Handle double negation: "IsNot{X}" → "Is{X}"
+        if (HasPrefixFollowedByUpperCase(operandPart, "IsNot"))
+            return $"Is{operandPart.Substring(5)}";
+
+        // Handle "IsXxx" → "IsNotXxx"
+        if (HasPrefixFollowedByUpperCase(operandPart, "Is"))
+            return $"IsNot{operandPart.Substring(2)}";
+
+        // Handle double negation: "DoesNotHave{X}" → "Has{X}"
+        if (HasPrefixFollowedByUpperCase(operandPart, "DoesNotHave"))
+            return $"Has{operandPart.Substring(11)}";
+
+        // Handle "HasXxx" → "DoesNotHaveXxx"
+        if (HasPrefixFollowedByUpperCase(operandPart, "Has"))
+            return $"DoesNotHave{operandPart.Substring(3)}";
+
+        // Handle double negation: "Not{X}" → just return X
+        if (HasPrefixFollowedByUpperCase(operandPart, "Not"))
+            return operandPart.Substring(3);
+
+        // Default negation
+        return $"Not{operandPart}";
+    }
+
+    /// <summary>
+    /// Checks if a name starts with the given prefix followed by an uppercase letter.
+    /// </summary>
+    private static bool HasPrefixFollowedByUpperCase(string name, string prefix) =>
+        name.StartsWith(prefix, StringComparison.Ordinal) &&
+        name.Length > prefix.Length &&
+        char.IsUpper(name[prefix.Length]);
+
+    /// <summary>
+    /// Extracts a name part from an is-pattern expression.
+    /// </summary>
+    private static bool TryExtractIsPatternPart(IsPatternExpressionSyntax isPattern, out string part)
+    {
+        if (!TryExtractNamePart(isPattern.Expression, out var exprPart))
+        {
+            part = string.Empty;
+            return false;
+        }
+
+        if (TryExtractPatternPart(isPattern.Pattern, out var patternPart))
+        {
+            part = $"{exprPart}{patternPart}";
+            return true;
+        }
+
+        part = string.Empty;
+        return false;
+    }
+
+    /// <summary>
+    /// Extracts a name part from a pattern syntax node.
+    /// </summary>
+    private static bool TryExtractPatternPart(PatternSyntax pattern, out string part)
+    {
+        switch (pattern)
+        {
+            case TypePatternSyntax typePattern:
+                part = typePattern.Type.ToString().Replace(".", "").Capitalize();
                 return true;
 
-            // Handle member access (e.g., obj.Property)
-            case MemberAccessExpressionSyntax memberAccess:
-                return TryDeriveMemberAccessName(memberAccess, out name);
+            case ConstantPatternSyntax constant:
+                if (constant.Expression is LiteralExpressionSyntax literal)
+                {
+                    part = literal.Token.ValueText.Capitalize();
+                    return true;
+                }
+                part = string.Empty;
+                return false;
 
-            // Handle parenthesized expressions - unwrap and try again
-            case ParenthesizedExpressionSyntax paren:
-                return TryDeriveName(paren.Expression, out name);
+            case UnaryPatternSyntax { OperatorToken.RawKind: (int)SyntaxKind.NotKeyword } unaryPattern:
+                if (TryExtractPatternPart(unaryPattern.Pattern, out var innerPart))
+                {
+                    part = $"Not{innerPart}";
+                    return true;
+                }
+                part = string.Empty;
+                return false;
 
-            // Complex expression - return false to trigger fallback
             default:
-                name = string.Empty;
+                part = string.Empty;
                 return false;
         }
     }
 
     /// <summary>
-    /// Tries to derive a name from a binary expression (e.g., comparisons).
+    /// Extracts a name part from an invocation expression.
     /// </summary>
-    /// <param name="binary">The binary expression to analyze.</param>
-    /// <param name="name">The derived name if successful.</param>
-    /// <returns>True if a name was derived; otherwise, false.</returns>
-    private static bool TryDeriveBinaryName(BinaryExpressionSyntax binary, out string name)
+    private static bool TryExtractInvocationPart(InvocationExpressionSyntax invocation, out string part)
     {
-        // Try normal pattern: variable on left, literal on right
-        var leftName = ExtractIdentifierChain(binary.Left);
-        var rightValue = ExtractLiteralValue(binary.Right);
-
-        if (leftName is not null)
+        switch (invocation.Expression)
         {
-            return TryDeriveNameWithLeftVariable(binary, leftName, rightValue, out name);
+            case MemberAccessExpressionSyntax memberAccess:
+            {
+                var methodName = memberAccess.Name.Identifier.ValueText.Capitalize();
+
+                // For static calls on C# keyword types (e.g., string.IsNullOrEmpty), skip the receiver
+                if (memberAccess.Expression is IdentifierNameSyntax receiverIdentifier &&
+                    CSharpKeywordTypes.Contains(receiverIdentifier.Identifier.ValueText))
+                {
+                    part = methodName;
+                    return true;
+                }
+
+                // For instance calls, compose receiver + method name
+                if (TryExtractNamePart(memberAccess.Expression, out var receiverPart))
+                {
+                    part = $"{receiverPart}{methodName}";
+                    return true;
+                }
+
+                part = methodName;
+                return true;
+            }
+
+            case IdentifierNameSyntax identifier:
+            {
+                part = identifier.Identifier.ValueText.Capitalize();
+                return true;
+            }
+
+            default:
+                part = string.Empty;
+                return false;
         }
-
-        // Try reversed pattern: literal on left, variable on right
-        var leftValue = ExtractLiteralValue(binary.Left);
-        var rightName = ExtractIdentifierChain(binary.Right);
-
-        if (leftValue is not null && rightName is not null)
-        {
-            return TryDeriveNameWithRightVariable(binary, leftValue, rightName, out name);
-        }
-
-        // If neither pattern matches, fall back
-        name = string.Empty;
-        return false;
     }
 
     /// <summary>
-    /// Derives a name when the variable is on the left side of the comparison.
+    /// Extracts a name part from a conditional access expression (e.g., item?.IsValid).
     /// </summary>
-    /// <param name="binary">The binary expression.</param>
-    /// <param name="leftName">The left variable name.</param>
-    /// <param name="rightValue">The right literal value.</param>
-    /// <param name="name">The derived name if successful.</param>
-    /// <returns>True if a name was derived; otherwise, false.</returns>
-    private static bool TryDeriveNameWithLeftVariable(
-        BinaryExpressionSyntax binary,
-        string leftName,
-        string? rightValue,
-        out string name)
+    private static bool TryExtractConditionalAccessPart(ConditionalAccessExpressionSyntax conditionalAccess,
+        out string part)
     {
-        // Get the operator verb
-        var operatorVerb = GetOperatorVerb(binary.OperatorToken.Kind());
-        if (operatorVerb is null)
+        if (!TryExtractNamePart(conditionalAccess.Expression, out var receiverPart))
         {
-            name = string.Empty;
+            part = string.Empty;
             return false;
         }
 
-        // Special cases for common patterns
-        var specialName = rightValue switch
+        var binding = conditionalAccess.WhenNotNull switch
         {
-            "0" => GenerateZeroComparisonName(binary, leftName),
-            "null" => GenerateNullComparisonName(binary, leftName),
+            MemberBindingExpressionSyntax member => member,
+            InvocationExpressionSyntax { Expression: MemberBindingExpressionSyntax method } => method,
             _ => null
         };
 
-        if (specialName is not null)
+        if (binding is not null)
         {
-            name = specialName;
+            var memberName = binding.Name.Identifier.ValueText.Capitalize();
+            part = $"{receiverPart}{memberName}";
             return true;
         }
 
-        // General pattern: Is{Property}{Operator}{Value}
-        if (rightValue is not null)
-        {
-            name = $"Is{leftName}{operatorVerb}{rightValue}";
-            return true;
-        }
-
-        // If right side isn't a simple literal, fall back
-        name = string.Empty;
-        return false;
-    }
-
-    /// <summary>
-    /// Derives a name when the variable is on the right side of the comparison.
-    /// Pattern: Is{Literal}{Operator}{Variable}
-    /// </summary>
-    /// <param name="binary">The binary expression.</param>
-    /// <param name="leftValue">The left literal value.</param>
-    /// <param name="rightName">The right variable name.</param>
-    /// <param name="name">The derived name if successful.</param>
-    /// <returns>True if a name was derived; otherwise, false.</returns>
-    private static bool TryDeriveNameWithRightVariable(
-        BinaryExpressionSyntax binary,
-        string leftValue,
-        string rightName,
-        out string name)
-    {
-        // Get the operator verb (same as in normal case)
-        var operatorVerb = GetOperatorVerb(binary.OperatorToken.Kind());
-        if (operatorVerb is null)
-        {
-            name = string.Empty;
-            return false;
-        }
-
-        // Special cases for zero/null comparisons with reversed operands
-        var specialName = leftValue switch
-        {
-            "0" => GenerateReversedZeroComparisonName(binary, rightName),
-            "null" => GenerateNullComparisonName(binary, rightName),
-            _ => null
-        };
-
-        if (specialName is not null)
-        {
-            name = specialName;
-            return true;
-        }
-
-        // General pattern: Is{Value}{Operator}{Property}
-        // Example: "1 < valueC" becomes "Is1LessThanValueC"
-        name = $"Is{leftValue}{operatorVerb}{rightName}";
+        part = receiverPart;
         return true;
     }
 
     /// <summary>
-    /// Tries to derive a name from a negation expression.
-    /// </summary>
-    /// <param name="unary">The unary expression.</param>
-    /// <param name="name">The derived name if successful.</param>
-    /// <returns>True if a name was derived; otherwise, false.</returns>
-    private static bool TryDeriveNegationName(PrefixUnaryExpressionSyntax unary, out string name)
-    {
-        var operandName = ExtractIdentifierChain(unary.Operand);
-        if (operandName is null)
-        {
-            name = string.Empty;
-            return false;
-        }
-
-        // Handle "IsXxx" → "IsNotXxx"
-        if (operandName.StartsWith("Is", StringComparison.Ordinal))
-        {
-            name = $"IsNot{operandName.Substring(2)}";
-            return true;
-        }
-
-        // Handle "HasXxx" → "DoesNotHaveXxx"
-        if (operandName.StartsWith("Has", StringComparison.Ordinal))
-        {
-            name = $"DoesNotHave{operandName.Substring(3)}";
-            return true;
-        }
-
-        // Default negation
-        name = $"IsNot{operandName}";
-        return true;
-    }
-
-    /// <summary>
-    /// Tries to derive a name from an is-pattern expression.
-    /// </summary>
-    /// <param name="isPattern">The is-pattern expression.</param>
-    /// <param name="name">The derived name if successful.</param>
-    /// <returns>True if a name was derived; otherwise, false.</returns>
-    private static bool TryDeriveIsPatternName(IsPatternExpressionSyntax isPattern, out string name)
-    {
-        var expressionName = ExtractIdentifierChain(isPattern.Expression);
-        if (expressionName is null)
-        {
-            name = string.Empty;
-            return false;
-        }
-
-        // Extract type name from pattern
-        if (isPattern.Pattern is TypePatternSyntax typePattern)
-        {
-            var typeName = typePattern.Type.ToString().Replace(".", "");
-            name = $"Is{expressionName}{typeName}";
-            return true;
-        }
-
-        name = string.Empty;
-        return false;
-    }
-
-    /// <summary>
-    /// Tries to derive a name from a simple identifier (boolean property).
-    /// </summary>
-    private static string TryDeriveIdentifierName(IdentifierNameSyntax identifier)
-    {
-        var name = identifier.Identifier.ValueText;
-
-        // Already has "Is" prefix
-        if (name.StartsWith("is", StringComparison.OrdinalIgnoreCase) ||
-            name.StartsWith("has", StringComparison.OrdinalIgnoreCase))
-        {
-            return name.Capitalize();
-        }
-
-        // Add "Is" prefix
-        return $"Is{name.Capitalize()}";
-    }
-
-    /// <summary>
-    /// Tries to derive a name from member access (e.g., obj.Property).
-    /// </summary>
-    /// <param name="memberAccess">The member access expression.</param>
-    /// <param name="name">The derived name if successful.</param>
-    /// <returns>True if a name was derived; otherwise, false.</returns>
-    private static bool TryDeriveMemberAccessName(MemberAccessExpressionSyntax memberAccess, out string name)
-    {
-        var chain = ExtractIdentifierChain(memberAccess);
-        if (chain is not null)
-        {
-            name = $"Is{chain}";
-            return true;
-        }
-
-        name = string.Empty;
-        return false;
-    }
-
-    /// <summary>
-    /// Extracts a concatenated identifier chain from an expression.
-    /// E.g., "m.Order.Total" → "OrderTotal", "age" → "Age"
+    /// Extracts a concatenated identifier chain from a member access expression.
+    /// Filters out lambda parameter names like "m" and "model".
     /// </summary>
     private static string? ExtractIdentifierChain(ExpressionSyntax expression)
     {
         var parts = new List<string>();
-
         ExtractIdentifiersRecursive(expression, parts);
 
         if (parts.Count == 0)
-        {
             return null;
-        }
 
-        // Skip "m" or "model" prefixes (common in lambda parameters)
-        var filtered = parts
-            .Where(p => !string.Equals(p, "m", StringComparison.OrdinalIgnoreCase) &&
-                       !string.Equals(p, "model", StringComparison.OrdinalIgnoreCase))
-            .ToList();
+        var result = string.Join("", parts
+            .Where(p => !IsLambdaParameterName(p))
+            .Select(p => p.Capitalize()));
 
-        return filtered.Count > 0
-            ? string.Join("", filtered.Select(p => p.Capitalize()))
-            : null;
+        return result.Length > 0 ? result : null;
     }
 
     /// <summary>
@@ -331,73 +418,75 @@ public static class ClauseNameDeriver
     }
 
     /// <summary>
-    /// Extracts a literal value as a string (for use in names).
+    /// Checks if a name is a common lambda parameter name that should be filtered out.
     /// </summary>
-    private static string? ExtractLiteralValue(ExpressionSyntax expression)
-    {
-        return expression switch
-        {
-            LiteralExpressionSyntax literal => literal.Token.ValueText,
-            _ => null
-        };
-    }
+    private static bool IsLambdaParameterName(string name) =>
+        string.Equals(name, "m", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(name, "model", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(name, "instance", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Strips non-alphanumeric characters from a string for use in identifiers.
+    /// </summary>
+    private static string CleanForIdentifier(string text) =>
+        new string(text.Where(char.IsLetterOrDigit).ToArray());
 
     /// <summary>
     /// Maps operator tokens to verb forms for naming.
     /// </summary>
-    private static string? GetOperatorVerb(SyntaxKind operatorKind)
-    {
-        return operatorKind switch
+    private static string? GetOperatorVerb(SyntaxKind operatorKind) =>
+        operatorKind switch
         {
             SyntaxKind.GreaterThanToken => "GreaterThan",
             SyntaxKind.LessThanToken => "LessThan",
             SyntaxKind.GreaterThanEqualsToken => "AtLeast",
             SyntaxKind.LessThanEqualsToken => "AtMost",
-            SyntaxKind.EqualsEqualsToken => "",  // For "Is{Property}5" instead of "Is{Property}Equals5"
+            SyntaxKind.EqualsEqualsToken => "",
             SyntaxKind.ExclamationEqualsToken => "Not",
             _ => null
         };
-    }
 
     /// <summary>
     /// Generates a name for a zero comparison where the variable is on the left (e.g., x > 0).
+    /// Returns raw name part without "Is" prefix.
     /// </summary>
     private static string? GenerateZeroComparisonName(BinaryExpressionSyntax binary, string variableName) =>
         binary.OperatorToken.Kind() switch
         {
-            SyntaxKind.GreaterThanEqualsToken => $"Is{variableName}NonNegative",
-            SyntaxKind.LessThanToken => $"Is{variableName}Negative",
-            SyntaxKind.EqualsEqualsToken => $"Is{variableName}Zero",
-            SyntaxKind.ExclamationEqualsToken => $"Is{variableName}NotZero",
-            SyntaxKind.GreaterThanToken => $"Is{variableName}Positive",
-            SyntaxKind.LessThanEqualsToken => $"Is{variableName}NonPositive",
+            SyntaxKind.GreaterThanEqualsToken => $"{variableName}NonNegative",
+            SyntaxKind.LessThanToken => $"{variableName}Negative",
+            SyntaxKind.EqualsEqualsToken => $"{variableName}Zero",
+            SyntaxKind.ExclamationEqualsToken => $"{variableName}NotZero",
+            SyntaxKind.GreaterThanToken => $"{variableName}Positive",
+            SyntaxKind.LessThanEqualsToken => $"{variableName}NonPositive",
             _ => null
         };
 
     /// <summary>
     /// Generates a name for a zero comparison where the variable is on the right (e.g., 0 &lt; x).
-    /// The operator semantics are reversed relative to the variable.
+    /// Returns raw name part without "Is" prefix.
     /// </summary>
     private static string? GenerateReversedZeroComparisonName(BinaryExpressionSyntax binary, string variableName) =>
         binary.OperatorToken.Kind() switch
         {
-            SyntaxKind.LessThanEqualsToken => $"Is{variableName}NonNegative",  // 0 <= x means x >= 0
-            SyntaxKind.GreaterThanToken => $"Is{variableName}Negative",         // 0 > x means x < 0
-            SyntaxKind.EqualsEqualsToken => $"Is{variableName}Zero",            // 0 == x means x == 0
-            SyntaxKind.ExclamationEqualsToken => $"Is{variableName}NotZero",    // 0 != x means x != 0
-            SyntaxKind.LessThanToken => $"Is{variableName}Positive",            // 0 < x means x > 0
-            SyntaxKind.GreaterThanEqualsToken => $"Is{variableName}NonPositive", // 0 >= x means x <= 0
+            SyntaxKind.LessThanEqualsToken => $"{variableName}NonNegative",
+            SyntaxKind.GreaterThanToken => $"{variableName}Negative",
+            SyntaxKind.EqualsEqualsToken => $"{variableName}Zero",
+            SyntaxKind.ExclamationEqualsToken => $"{variableName}NotZero",
+            SyntaxKind.LessThanToken => $"{variableName}Positive",
+            SyntaxKind.GreaterThanEqualsToken => $"{variableName}NonPositive",
             _ => null
         };
 
     /// <summary>
     /// Generates a name for a null comparison (e.g., x == null or null == x).
+    /// Returns raw name part without "Is" prefix.
     /// </summary>
     private static string? GenerateNullComparisonName(BinaryExpressionSyntax binary, string variableName) =>
         binary.OperatorToken.Kind() switch
         {
-            SyntaxKind.EqualsEqualsToken => $"Is{variableName}Null",
-            SyntaxKind.ExclamationEqualsToken => $"Is{variableName}NotNull",
+            SyntaxKind.EqualsEqualsToken => $"{variableName}Null",
+            SyntaxKind.ExclamationEqualsToken => $"{variableName}NotNull",
             _ => null
         };
 }

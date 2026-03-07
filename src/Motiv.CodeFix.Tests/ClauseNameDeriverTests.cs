@@ -86,8 +86,8 @@ public class ClauseNameDeriverTests
     [Fact]
     public void DeriveName_IsPattern_FallsBackToClauseNumber()
     {
-        // obj is string
-        // Note: 'is' expressions are complex and fall back to generic names
+        // obj is string — parses as BinaryExpressionSyntax (old C# 'is' syntax),
+        // not IsPatternExpressionSyntax, so falls back to clause number
         var expression = ParseExpression("obj is string");
 
         var name = ClauseNameDeriver.DeriveName(expression, 1);
@@ -226,6 +226,204 @@ public class ClauseNameDeriverTests
         var name = ClauseNameDeriver.DeriveName(expression, 1);
 
         Assert.Equal("Is5AtMostOrderTotal", name);
+    }
+
+    // --- Phase 2: Invocation Expressions ---
+
+    [Fact]
+    public void DeriveName_ParameterlessMethodCall_ReturnsMethodName()
+    {
+        var expression = ParseExpression("list.Any()");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsListAny", name);
+    }
+
+    [Fact]
+    public void DeriveName_MethodCallWithArgument_ReturnsMethodName()
+    {
+        var expression = ParseExpression("list.Contains(x)");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsListContains", name);
+    }
+
+    [Fact]
+    public void DeriveName_StaticMethodCall_ReturnsMethodName()
+    {
+        var expression = ParseExpression("string.IsNullOrEmpty(name)");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsNullOrEmpty", name);
+    }
+
+    [Fact]
+    public void DeriveName_PlainFunctionCall_ReturnsFunctionName()
+    {
+        var expression = ParseExpression("IsGreen(text)");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsGreen", name);
+    }
+
+    [Fact]
+    public void DeriveName_PlainFunctionCallNoPrefix_AddsIsPrefix()
+    {
+        var expression = ParseExpression("Equals(a, b)");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsEquals", name);
+    }
+
+    [Fact]
+    public void DeriveName_NestedMemberMethodCall_ReturnsChainedName()
+    {
+        var expression = ParseExpression("m.Order.Items.Any()");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsOrderItemsAny", name);
+    }
+
+    // --- Phase 2: Compositional behavior (free from design) ---
+
+    [Fact]
+    public void DeriveName_InvocationVsLiteral_ReturnsName()
+    {
+        var expression = ParseExpression("GetCount() > 5");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsGetCountGreaterThan5", name);
+    }
+
+    [Fact]
+    public void DeriveName_NegatedMethodCall_ReturnsNegatedName()
+    {
+        var expression = ParseExpression("!list.Any()");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsNotListAny", name);
+    }
+
+    [Fact]
+    public void DeriveName_NegatedStaticCall_ReturnsNegatedName()
+    {
+        var expression = ParseExpression("!string.IsNullOrEmpty(name)");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsNotNullOrEmpty", name);
+    }
+
+    // --- Phase 3: Binary with two identifier/expression operands ---
+
+    [Fact]
+    public void DeriveName_TwoIdentifiers_ReturnsComparisonName()
+    {
+        var expression = ParseExpression("valueA > valueB");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsValueAGreaterThanValueB", name);
+    }
+
+    [Fact]
+    public void DeriveName_MemberAccessBothSides_ReturnsComparisonName()
+    {
+        var expression = ParseExpression("m.Age >= m.MinAge");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsAgeAtLeastMinAge", name);
+    }
+
+    [Fact]
+    public void DeriveName_EqualityTwoIdentifiers_ReturnsComparisonName()
+    {
+        var expression = ParseExpression("count == expected");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsCountExpected", name);
+    }
+
+    [Fact]
+    public void DeriveName_EnumComparison_ReturnsComparisonName()
+    {
+        var expression = ParseExpression("status == Status.Active");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsStatusStatusActive", name);
+    }
+
+    // --- Phase 4: Is-Pattern with null/not-null ---
+
+    [Fact]
+    public void DeriveName_IsNull_ReturnsNullCheckName()
+    {
+        var expression = ParseExpression("x is null");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsXNull", name);
+    }
+
+    [Fact]
+    public void DeriveName_IsNotNull_ReturnsNotNullCheckName()
+    {
+        var expression = ParseExpression("x is not null");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsXNotNull", name);
+    }
+
+    [Fact]
+    public void DeriveName_MemberAccessIsNotNull_ReturnsChainedName()
+    {
+        var expression = ParseExpression("m.Order is not null");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsOrderNotNull", name);
+    }
+
+    // --- Phase 5: String literal comparisons ---
+
+    [Fact]
+    public void DeriveName_StringLiteralComparison_ReturnsCapitalizedName()
+    {
+        var expression = ParseExpression("status == \"active\"");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsStatusActive", name);
+    }
+
+    [Fact]
+    public void DeriveName_StringLiteralNotEquals_ReturnsNegatedName()
+    {
+        var expression = ParseExpression("name != \"admin\"");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsNameNotAdmin", name);
+    }
+
+    [Fact]
+    public void DeriveName_EmptyStringLiteral_FallsBack()
+    {
+        var expression = ParseExpression("type == \"\"");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("Clause1", name);
+    }
+
+    // --- Phase 6: Conditional access ---
+
+    [Fact]
+    public void DeriveName_ConditionalAccessWithCoalesce_ReturnsName()
+    {
+        var expression = ParseExpression("item?.IsValid ?? false");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsItemIsValid", name);
+    }
+
+    [Fact]
+    public void DeriveName_MemberConditionalAccess_ReturnsChainedName()
+    {
+        var expression = ParseExpression("m.Order?.IsActive ?? false");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsOrderIsActive", name);
+    }
+
+    // --- Phase 7: Negation edge cases ---
+
+    [Fact]
+    public void DeriveName_NegatedIsPattern_ReturnsNegatedName()
+    {
+        var expression = ParseExpression("!(x is null)");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsNotXNull", name);
+    }
+
+    [Fact]
+    public void DeriveName_DoubleNegation_ReturnsOriginalName()
+    {
+        var expression = ParseExpression("!!isValid");
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+        Assert.Equal("IsValid", name);
     }
 
     /// <summary>

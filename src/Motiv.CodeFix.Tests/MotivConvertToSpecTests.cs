@@ -97,7 +97,7 @@ public class MotivConvertToSpecTests
 
             public class IsValidProposition() : Spec<IsValidProposition.Model>(() =>
             {
-                var clause1 = Spec
+                var isValueAGreaterThanValueB = Spec
                     .Build((Model m) => m.ValueA > m.ValueB)
                     .Create("{{clause1}}");
 
@@ -105,7 +105,7 @@ public class MotivConvertToSpecTests
                     .Build((Model m) => m.ValueC)
                     .Create("{{clause2}}");
 
-                return clause1.AndAlso(isValueC);
+                return isValueAGreaterThanValueB.AndAlso(isValueC);
             })
             {
                 public record Model(int ValueA, int ValueB, bool ValueC);
@@ -164,7 +164,7 @@ public class MotivConvertToSpecTests
 
             public class IsSatisfiedProposition() : Spec<IsSatisfiedProposition.Model>(() =>
             {
-                var clause1 = Spec
+                var isValueAGreaterThanValueB = Spec
                     .Build((Model m) => m.ValueA > m.ValueB)
                     .Create("{{clause1}}");
 
@@ -172,7 +172,7 @@ public class MotivConvertToSpecTests
                     .Build((Model m) => m.ValueC)
                     .Create("{{clause2}}");
 
-                return clause1.AndAlso(isValueC);
+                return isValueAGreaterThanValueB.AndAlso(isValueC);
             })
             {
                 public record Model(int ValueA, int ValueB, bool ValueC);
@@ -828,15 +828,15 @@ public class MotivConvertToSpecTests
 
                 public class IsFeatureEnabledProposition(MyNamespace.Playground instance) : Spec<string>(() =>
                 {
-                    var clause1 = Spec
+                    var isNullOrEmpty = Spec
                         .Build((string text) => {{clause1}})
                         .Create("{{clause1}}");
 
-                    var clause2 = Spec
+                    var isGreen = Spec
                         .Build((string text) => instance.IsGreen(text))
                         .Create("{{clause2}}");
 
-                    return clause1.AndAlso(clause2);
+                    return isNullOrEmpty.AndAlso(isGreen);
                 });
 
                 public class IsGreenProposition() : Spec<string>(() =>
@@ -928,15 +928,15 @@ public class MotivConvertToSpecTests
                     .Build((Model m) => 1 < m.ValueC)
                     .Create("{{clause2}}");
 
-                var clause3 = Spec
+                var isNullOrEmpty = Spec
                     .Build((Model m) => string.IsNullOrEmpty(m.Text))
                     .Create("{{clause3}}");
 
-                var clause4 = Spec
+                var isGreen = Spec
                     .Build((Model m) => instance.IsGreen(m.Text))
                     .Create("{{clause4}}");
 
-                return (isValueANonNegative.AndAlso(is1LessThanValueC)).AndAlso((clause3.AndAlso(clause4)));
+                return (isValueANonNegative.AndAlso(is1LessThanValueC)).AndAlso((isNullOrEmpty.AndAlso(isGreen)));
             })
             {
                 public record Model(int ValueA, int ValueC, string Text);
@@ -1028,16 +1028,16 @@ public class MotivConvertToSpecTests
                         .Build((Model m) => m.ValueB >= 0)
                         .Create("valueB >= 0");
 
-                    var clause4 = Spec
+                    var isNullOrEmpty = Spec
                         .Build((Model m) => string.IsNullOrEmpty(m.Text))
                         .Create("string.IsNullOrEmpty(text)");
 
-                    var clause5 = Spec
+                    var isGreen = Spec
                         .Build((Model m) => instance.IsGreen(m.Text))
                         .Create("IsGreen(text)");
 
                     return (isValueANonNegative.AndAlso(is1LessThanValueC)).OrElse(isValueBNonNegative.AndAlso(is1LessThanValueC)
-                        .AndAlso((clause4.AndAlso(clause5))));
+                        .AndAlso((isNullOrEmpty.AndAlso(isGreen))));
                 })
                 {
                     public record Model(int ValueA, int ValueC, int ValueB, string Text);
