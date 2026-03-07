@@ -9,6 +9,8 @@ namespace Motiv.ExpressionTreeProposition;
 
 internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerializer
 {
+    private static readonly Regex StringInterpolationTokenRegex = new(@"(?<=[{])(\s*?\d+\s*?)(?=[:}])", RegexOptions.Compiled);
+
     protected readonly StringBuilder OutputText = new();
 
     public string Serialize(Expression expression)
@@ -459,7 +461,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
         var format = (string) patternExpression.Value!;
         var shouldSubstituteToken = false;
-        var splitFormat = Regex.Split(format, @"(?<=[{])(\s*?\d+\s*?)(?=[:}])");
+        var splitFormat = StringInterpolationTokenRegex.Split(format);
 
         OutputText.Append("$\"");
         foreach(var part in splitFormat)
