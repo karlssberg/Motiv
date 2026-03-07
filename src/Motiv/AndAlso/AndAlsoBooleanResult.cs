@@ -11,7 +11,7 @@ internal sealed class AndAlsoBooleanResult<TMetadata>(
 
     private ResultDescriptionBase? _description;
     public override ResultDescriptionBase Description =>
-        _description ??= new AndAlsoBooleanResultDescription<TMetadata>(GetCausalResults());
+        _description ??= new AndAlsoBooleanResultDescription<TMetadata>(CausalResults);
 
     public override string Operation => Operator.AndAlso;
 

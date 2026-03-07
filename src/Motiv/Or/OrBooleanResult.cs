@@ -13,7 +13,7 @@ internal sealed class OrBooleanResult<TMetadata>(
 
     private ResultDescriptionBase? _description;
     public override ResultDescriptionBase Description =>
-        _description ??= new OrBooleanResultDescription<TMetadata>(GetCausalResults());
+        _description ??= new OrBooleanResultDescription<TMetadata>(CausalResults);
 
     public override string Operation => Operator.Or;
 

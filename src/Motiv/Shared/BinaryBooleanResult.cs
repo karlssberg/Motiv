@@ -23,20 +23,26 @@ internal abstract class BinaryBooleanResult<TMetadata>(
 
     public abstract bool IsCollapsable { get; }
 
+    private BooleanResultBase<TMetadata>[]? _causalResults;
+    protected BooleanResultBase<TMetadata>[] CausalResults => _causalResults ??= GetCausalResults().ToArray();
+
+    private BooleanResultBase<TMetadata>[]? _allResults;
+    private BooleanResultBase<TMetadata>[] AllResults => _allResults ??= GetAllResults().ToArray();
+
     private Explanation? _explanation;
-    public override Explanation Explanation => _explanation ??= new(GetCausalResults(), Underlying);
+    public override Explanation Explanation => _explanation ??= new(CausalResults, AllResults);
 
     private MetadataNode<TMetadata>? _metadataTier;
     public override MetadataNode<TMetadata> MetadataTier =>
-        _metadataTier ??= new(CausesWithValues.GetValues(), CausesWithValues);
+        _metadataTier ??= new(CausalResults.GetValues(), CausalResults);
 
-    public override IEnumerable<BooleanResultBase> Underlying => GetAllResults();
+    public override IEnumerable<BooleanResultBase> Underlying => AllResults;
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => GetAllResults();
+    public override IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues => AllResults;
 
-    public override IEnumerable<BooleanResultBase> Causes => GetCausalResults();
+    public override IEnumerable<BooleanResultBase> Causes => CausalResults;
 
-    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => GetCausalResults();
+    public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => CausalResults;
 
     protected virtual IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
     {

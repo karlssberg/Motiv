@@ -11,7 +11,7 @@ internal sealed class OrElseBooleanResult<TMetadata>(
 
     private ResultDescriptionBase? _description;
     public override ResultDescriptionBase Description =>
-        _description ??= new OrElseBooleanResultDescription<TMetadata>(GetCausalResults());
+        _description ??= new OrElseBooleanResultDescription<TMetadata>(CausalResults);
 
     public override string Operation => Operator.OrElse;
 
