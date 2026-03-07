@@ -23,7 +23,7 @@ public class MotivCodeFixProvider : CodeFixProvider
     /// Gets the fix all provider for this provider.
     /// </summary>
     /// <returns>The fix all provider.</returns>
-    public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
+    public sealed override FixAllProvider GetFixAllProvider() => SequentialFixAllProvider.Instance;
 
     /// <summary>
     /// Registers the code fixes for the given context.

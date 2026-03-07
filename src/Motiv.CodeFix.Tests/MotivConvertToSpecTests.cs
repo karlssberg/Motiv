@@ -35,9 +35,12 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
+                private readonly IsValidProposition _isValidProposition = new();
                 public bool IsValid(int value)
                 {
-                    return new IsValidProposition().IsSatisfiedBy(value).Satisfied;
+                    // {{booleanExpression}}
+                    var isValidResult = _isValidProposition.IsSatisfiedBy(value);
+                    return isValidResult.Satisfied;
                 }
             }
 
@@ -83,7 +86,7 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly IsValidProposition _isValidProposition = new IsValidProposition();
+                private readonly IsValidProposition _isValidProposition = new();
                 public bool IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
@@ -150,7 +153,7 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly IsSatisfiedProposition _isSatisfiedProposition = new IsSatisfiedProposition();
+                private readonly IsSatisfiedProposition _isSatisfiedProposition = new();
                 public void IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
@@ -218,7 +221,7 @@ public class MotivConvertToSpecTests
 
               public class MyClass
               {
-                  private readonly IsSatisfiedProposition _isSatisfiedProposition = new IsSatisfiedProposition();
+                  private readonly IsSatisfiedProposition _isSatisfiedProposition = new();
                   public void IsValid(int valueA, int valueB, int valueC)
                   {
                       // {{clause1}} && ({{clause2}} ||
@@ -301,9 +304,12 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
+                private readonly IsValidProposition _isValidProposition = new();
                 public bool IsValid(Order order)
                 {
-                    return new IsValidProposition().IsSatisfiedBy(order).Satisfied;
+                    // order.Total > 100
+                    var isValidResult = _isValidProposition.IsSatisfiedBy(order);
+                    return isValidResult.Satisfied;
                 }
             }
 
@@ -362,9 +368,12 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
+                private readonly IsValidProposition _isValidProposition = new();
                 public bool IsValid(Order order)
                 {
-                    return new IsValidProposition().IsSatisfiedBy(order).Satisfied;
+                    // {{booleanExpression}}
+                    var isValidResult = _isValidProposition.IsSatisfiedBy(order);
+                    return isValidResult.Satisfied;
                 }
             }
 
@@ -411,9 +420,12 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
+                private readonly IsValidProposition _isValidProposition = new();
                 public bool IsValid(object obj)
                 {
-                    return new IsValidProposition().IsSatisfiedBy(obj).Satisfied;
+                    // {{booleanExpression}}
+                    var isValidResult = _isValidProposition.IsSatisfiedBy(obj);
+                    return isValidResult.Satisfied;
                 }
             }
 
@@ -459,7 +471,7 @@ public class MotivConvertToSpecTests
 
               public class MyClass
               {
-                  private readonly IsValidProposition _isValidProposition = new IsValidProposition();
+                  private readonly IsValidProposition _isValidProposition = new();
                   public bool IsValid(int x, int y)
                   {
                       // {{booleanExpression}}
@@ -525,7 +537,7 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly IsSatisfiedProposition _isSatisfiedProposition = new IsSatisfiedProposition();
+                private readonly IsSatisfiedProposition _isSatisfiedProposition = new();
                 public void IsValid(int age, bool name)
                 {
                     // {{booleanExpression}}
@@ -592,7 +604,7 @@ public class MotivConvertToSpecTests
 
               public class MyClass
               {
-                  private readonly IsSatisfiedProposition _isSatisfiedProposition = new IsSatisfiedProposition();
+                  private readonly IsSatisfiedProposition _isSatisfiedProposition = new();
                   public void IsValid(int valueA, int valueB, int valueC)
                   {
                       // ({{clause1}} && {{clause2}}) ||
@@ -663,7 +675,7 @@ public class MotivConvertToSpecTests
 
               public class MyClass
               {
-                  private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition = new IsFeatureEnabledProposition();
+                  private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition = new();
                   public bool IsFeatureEnabled(int valueA, int valueB, int valueC)
                   {
                       // ({{clause1}} && {{clause2}}) ||
@@ -733,9 +745,12 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
+                private readonly IsGreenProposition _isGreenProposition = new();
                 public bool IsGreen(string text)
                 {
-                    return new IsGreenProposition().IsSatisfiedBy(text).Satisfied;
+                    // text == "green"
+                    var isGreenResult = _isGreenProposition.IsSatisfiedBy(text);
+                    return isGreenResult.Satisfied;
                 }
             }
 
@@ -790,6 +805,7 @@ public class MotivConvertToSpecTests
                 public class Playground
                 {
                     private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition;
+                    private readonly IsGreenProposition _isGreenProposition = new();
                     public Playground()
                     {
                         _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
@@ -798,13 +814,15 @@ public class MotivConvertToSpecTests
                     public bool IsFeatureEnabled(string text)
                     {
                         // {{booleanExpression}}
-                        var result = _isFeatureEnabledProposition.IsSatisfiedBy(text);
-                        return result.Satisfied;
+                        var isFeatureEnabledResult = _isFeatureEnabledProposition.IsSatisfiedBy(text);
+                        return isFeatureEnabledResult.Satisfied;
                     }
 
                     public bool IsGreen(string text)
                     {
-                        return new IsGreenProposition().IsSatisfiedBy(text).Satisfied;
+                        // text == "green"
+                        var isGreenResult = _isGreenProposition.IsSatisfiedBy(text);
+                        return isGreenResult.Satisfied;
                     }
                 }
 
@@ -879,6 +897,7 @@ public class MotivConvertToSpecTests
             public class Playground
             {
                 private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition;
+                private readonly IsGreenProposition _isGreenProposition = new();
                 public Playground()
                 {
                     _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
@@ -893,7 +912,9 @@ public class MotivConvertToSpecTests
 
                 public bool IsGreen(string text)
                 {
-                    return new IsGreenProposition().IsSatisfiedBy(text).Satisfied;
+                    // text == "green"
+                    var isGreenResult = _isGreenProposition.IsSatisfiedBy(text);
+                    return isGreenResult.Satisfied;
                 }
             }
 
@@ -953,6 +974,11 @@ public class MotivConvertToSpecTests
                     public bool IsFeatureEnabled(int valueA, int valueB, int valueC, string text) =>
                         (valueA >= 0 && 1 < valueC) ||
                                valueB >= 0 && 1 < valueC && string.IsNullOrEmpty(text) && IsGreen(text);
+
+                    public bool IsGreen(string text)
+                    {
+                        return text == "green";
+                    }
                 }
             }
             """;
@@ -961,11 +987,12 @@ public class MotivConvertToSpecTests
           $$"""
             using Motiv;
 
-            namespace MyNamespace;
+            namespace MyNamespace
             {
                 public class Playground
                 {
                     private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition;
+                    private readonly IsGreenProposition _isGreenProposition = new();
                     public Playground()
                     {
                         _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
@@ -975,8 +1002,15 @@ public class MotivConvertToSpecTests
                     {
                         // (valueA >= 0 && 1 < valueC) ||
                         //     valueB >= 0 && 1 < valueC && (string.IsNullOrEmpty(text) && IsGreen(text))
-                        var result = _isFeatureEnabledProposition.IsSatisfiedBy(new IsFeatureEnabledProposition.Model(valueA, valueC, valueB, text));
-                        return result.Satisfied;
+                        var isFeatureEnabledResult = _isFeatureEnabledProposition.IsSatisfiedBy(new IsFeatureEnabledProposition.Model(valueA, valueC, valueB, text));
+                        return isFeatureEnabledResult.Satisfied;
+                    }
+
+                    public bool IsGreen(string text)
+                    {
+                        // text == "green"
+                        var isGreenResult = _isGreenProposition.IsSatisfiedBy(text);
+                        return isGreenResult.Satisfied;
                     }
                 }
 
@@ -1008,27 +1042,23 @@ public class MotivConvertToSpecTests
                 {
                     public record Model(int ValueA, int ValueC, int ValueB, string Text);
                 }
+
+                public class IsGreenProposition() : Spec<string>(() =>
+                        Spec.Build((string text) => text == "green")
+                        .Create("text == \"green\""));
             }
             """;
 
         await new VerifyCS.Test
         {
             TestState = { Sources = { (Source, source) } },
-            FixedState =
-            {
-                Sources = { (Source, expectedTransformedCode) },
-                ExpectedDiagnostics =
-                {
-                    DiagnosticResult.CompilerError("CS1022").WithSpan(Source, 4, 1, 4, 2),
-                    DiagnosticResult.CompilerError("CS1061").WithSpan(Source, 41, 42, 41, 49).WithArguments("MyNamespace.Playground", "IsGreen"),
-                    DiagnosticResult.CompilerError("CS1022").WithSpan(Source, 50, 1, 50, 2),
-                }
-            },
+            FixedState = { Sources = { (Source, expectedTransformedCode) } },
             ExpectedDiagnostics =
             {
                 new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
                     .WithSpan(Source, 6, 13, 7, 92),
-                DiagnosticResult.CompilerError("CS0103").WithSpan(Source, 7, 79, 7, 86).WithArguments("IsGreen")
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 11, 20, 11, 35),
             },
             NumberOfFixAllIterations = 1
         }.RunAsync();

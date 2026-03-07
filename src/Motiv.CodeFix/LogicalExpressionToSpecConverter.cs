@@ -63,16 +63,15 @@ public class LogicalExpressionToSpecConverter(
             : null;
 
         var rootMembers = GetRootMembers(syntaxContext, variableSymbols, groupedExpression, instanceMethodNames, containingTypeName).ToArray();
-        newRoot = baseNamespace != null
-            ? AddToNamespace(syntaxContext, newRoot, baseNamespace, rootMembers)
-            : AddToCompilationUnit(syntaxContext, newRoot, rootMembers);
+        newRoot = AddSpecClassesNearContainingClass(syntaxContext, newRoot, baseNamespace, isBlockNamespace, rootMembers);
         newRoot = AddUsingStatementsIfNeeded(newRoot);
 
         var resultDoc = document.WithSyntaxRoot(newRoot);
 
-        // Convert block namespace to file-scoped format by inserting ";" after namespace name
-        if (isBlockNamespace)
-            resultDoc = await InsertSemicolonAfterNamespaceName(resultDoc, cancellationToken).ConfigureAwait(false);
+        // For file-scoped namespaces with orphan }, move spec classes before the brace.
+        // Only needed for non-block namespaces (block namespaces add members inside, so order is correct)
+        if (!isBlockNamespace)
+            resultDoc = await MoveSpecClassesBeforeOrphanBrace(resultDoc, cancellationToken).ConfigureAwait(false);
 
         return resultDoc;
     }
@@ -355,23 +354,6 @@ public class LogicalExpressionToSpecConverter(
         bool hasInstanceMethods,
         ExpressionSyntax groupedExpression)
     {
-        if (variableSymbols.Length != 1 || hasInstanceMethods)
-            return ReplaceMultiVariableExpression(syntaxContext, variableSymbols, logicalExpressionSyntax, root, hasInstanceMethods, groupedExpression);
-
-        var createSpecInvocation = SpecInvocationExpressionSyntax.Create(
-            IdentifierName(propositionName),
-            IdentifierName(variableSymbols.First().Name));
-        return root.ReplaceNode(logicalExpressionSyntax, createSpecInvocation);
-    }
-
-    private SyntaxNode ReplaceMultiVariableExpression(
-        SyntaxContext syntaxContext,
-        ImmutableArray<ISymbol> variableSymbols,
-        ExpressionSyntax logicalExpressionSyntax,
-        SyntaxNode root,
-        bool hasInstanceMethods,
-        ExpressionSyntax groupedExpression)
-    {
         var method = logicalExpressionSyntax.Ancestors().OfType<MethodDeclarationSyntax>().First();
         var containingClass = method.Ancestors().OfType<ClassDeclarationSyntax>().First();
         var statement = logicalExpressionSyntax.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
@@ -379,36 +361,30 @@ public class LogicalExpressionToSpecConverter(
         var fieldName = $"_{propositionName.ToCamelCase()}";
         var originalExprText = FormatAsComment(groupedExpression);
 
+        // Spec invocation depends on variable count
         string specInvocation;
-        string fieldDeclaration;
-
-        if (hasInstanceMethods)
+        if (variableSymbols.Length == 1)
         {
-            // For instance methods with constructor parameter
-            if (variableSymbols.Length == 1)
-            {
-                // Single variable: pass directly
-                var varName = variableSymbols.First().Name;
-                specInvocation = $"{fieldName}.IsSatisfiedBy({varName})";
-            }
-            else
-            {
-                // Multiple variables: create model instance
-                var modelArgs = string.Join(", ", variableSymbols.Select(s => s.Name));
-                specInvocation = $"{fieldName}.IsSatisfiedBy(new {propositionName}.{defaultModelName}({modelArgs}))";
-            }
-            fieldDeclaration = $"private readonly {propositionName} {fieldName};";
+            specInvocation = $"{fieldName}.IsSatisfiedBy({variableSymbols.First().Name})";
         }
         else
         {
             var modelArgs = string.Join(", ", variableSymbols.Select(s => s.Name));
             specInvocation = $"{fieldName}.IsSatisfiedBy(new {propositionName}.{defaultModelName}({modelArgs}))";
-            fieldDeclaration = $"private readonly {propositionName} {fieldName} = new {propositionName}();";
         }
 
-        var assignmentLine = DeriveAssignmentLine(statement, method);
+        // Field initialization depends on instance method presence
+        var fieldDeclaration = hasInstanceMethods
+            ? $"private readonly {propositionName} {fieldName};"
+            : $"private readonly {propositionName} {fieldName} = new();";
 
-        // Generate method source with optional constructor
+        // Result variable naming
+        var useMethodDerivedName = variableSymbols.Length == 1
+            || (hasInstanceMethods && statement is null && method.ExpressionBody is not null);
+        var resultVarName = useMethodDerivedName ? DeriveResultVarName(method) : "result";
+        var assignmentLine = DeriveAssignmentLine(statement, method, resultVarName);
+
+        // Build temp class with optional constructor
         var newMethodSource = hasInstanceMethods
             ? $$"""
                 class Temp
@@ -422,7 +398,7 @@ public class LogicalExpressionToSpecConverter(
                     public {{method.ReturnType}} {{method.Identifier}}{{method.ParameterList}}
                     {
                         // {{originalExprText}}
-                        var result = {{specInvocation}};
+                        var {{resultVarName}} = {{specInvocation}};
                         {{assignmentLine}}
                     }
                 }
@@ -434,7 +410,7 @@ public class LogicalExpressionToSpecConverter(
                     public {{method.ReturnType}} {{method.Identifier}}{{method.ParameterList}}
                     {
                         // {{originalExprText}}
-                        var result = {{specInvocation}};
+                        var {{resultVarName}} = {{specInvocation}};
                         {{assignmentLine}}
                     }
                 }
@@ -444,11 +420,12 @@ public class LogicalExpressionToSpecConverter(
         var tempClass = tempUnit.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
         MemberDeclarationSyntax newField = tempClass.Members.OfType<FieldDeclarationSyntax>().First()
             .WithTrailingTrivia(syntaxContext.LineFeed);
-        MemberDeclarationSyntax newMethod = tempClass.Members.OfType<MethodDeclarationSyntax>().Last(); // Last method is the actual method, not constructor
-        MemberDeclarationSyntax? newConstructor = hasInstanceMethods ? tempClass.Members.OfType<ConstructorDeclarationSyntax>().FirstOrDefault() : null;
+        MemberDeclarationSyntax newMethod = tempClass.Members.OfType<MethodDeclarationSyntax>().Last();
+        MemberDeclarationSyntax? newConstructor = hasInstanceMethods
+            ? tempClass.Members.OfType<ConstructorDeclarationSyntax>().FirstOrDefault()
+            : null;
 
-        // Re-indent members if inside a block namespace (temp class has 4-space member indent)
-        var extraIndent = GetExtraIndentForBlockNamespace(containingClass);
+        var extraIndent = GetExtraIndentFromOriginalMethod(method);
         if (extraIndent.Length > 0)
         {
             newField = ReindentMember(newField, extraIndent);
@@ -457,36 +434,83 @@ public class LogicalExpressionToSpecConverter(
                 newConstructor = ReindentMember(newConstructor, extraIndent);
         }
 
+        // Preserve original method's leading trivia for simple single-variable case
+        if (!hasInstanceMethods && variableSymbols.Length == 1)
+            newMethod = newMethod.WithLeadingTrivia(method.GetLeadingTrivia());
+
+        return ApplyMemberChanges(root, containingClass, method, newField, newMethod, newConstructor, fieldName);
+    }
+
+    private static string DeriveResultVarName(MethodDeclarationSyntax method)
+    {
+        var methodName = method.Identifier.ValueText;
+        return $"{methodName.ToCamelCase()}Result";
+    }
+
+    private static string DeriveAssignmentLine(StatementSyntax? statement, MethodDeclarationSyntax method, string resultVarName = "result") =>
+        statement switch
+        {
+            ReturnStatementSyntax => $"return {resultVarName}.Satisfied;",
+            LocalDeclarationStatementSyntax local =>
+                $"var {local.Declaration.Variables.First().Identifier.Text} = {resultVarName}.Satisfied;",
+            ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax assignment } =>
+                $"{assignment.Left} = {resultVarName}.Satisfied;",
+            null when method.ExpressionBody is not null && method.ReturnType.ToString() == "bool" => $"return {resultVarName}.Satisfied;",
+            _ => $"var isSatisfied = {resultVarName}.Satisfied;"
+        };
+
+    private static string GetExtraIndentFromOriginalMethod(MethodDeclarationSyntax method)
+    {
+        // The template generates members at 4-space indent.
+        // If the original method is at more than 4 spaces, the difference is the extra indent needed.
+        const string templateBaseIndent = "    "; // 4 spaces from template
+        var originalIndent = method
+            .GetLeadingTrivia()
+            .LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia))
+            .ToString();
+
+        return originalIndent.Length > templateBaseIndent.Length
+            ? originalIndent.Substring(templateBaseIndent.Length)
+            : "";
+    }
+
+    private static SyntaxNode ApplyMemberChanges(
+        SyntaxNode root,
+        ClassDeclarationSyntax containingClass,
+        MethodDeclarationSyntax method,
+        MemberDeclarationSyntax newField,
+        MemberDeclarationSyntax newMethod,
+        MemberDeclarationSyntax? newConstructor,
+        string fieldName)
+    {
         var fieldAdded = containingClass.Members.OfType<FieldDeclarationSyntax>()
             .Any(f => f.Declaration.Variables.Any(v => v.Identifier.Text == fieldName));
 
-        var newMembers = new List<MemberDeclarationSyntax>();
-        if (!fieldAdded) newMembers.Add(newField);
-        if (newConstructor is not null) newMembers.Add(newConstructor);
+        var existingMembers = containingClass.Members
+            .Select(m => m == method ? newMethod : m).ToList();
 
-        newMembers.AddRange(containingClass.Members
-            .Select(member =>
-                member == method
-                    ? newMethod
-                    : member));
+        if (!fieldAdded)
+            InsertAfterLastField(existingMembers, newField);
+        if (newConstructor is not null)
+            InsertAfterLastField(existingMembers, newConstructor);
 
-        var newClass = containingClass.WithMembers(List(newMembers));
+        var newClass = containingClass.WithMembers(List(existingMembers));
         newClass = RemovePrimaryConstructorIfNeeded(newClass, newConstructor);
 
         return root.ReplaceNode(containingClass, newClass);
     }
 
-    private static string DeriveAssignmentLine(StatementSyntax? statement, MethodDeclarationSyntax method) =>
-        statement switch
+    private static void InsertAfterLastField(List<MemberDeclarationSyntax> members, MemberDeclarationSyntax member)
+    {
+        var lastFieldIndex = -1;
+        for (var i = 0; i < members.Count; i++)
         {
-            ReturnStatementSyntax => "return result.Satisfied;",
-            LocalDeclarationStatementSyntax local =>
-                $"var {local.Declaration.Variables.First().Identifier.Text} = result.Satisfied;",
-            ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax assignment } =>
-                $"{assignment.Left} = result.Satisfied;",
-            null when method.ExpressionBody is not null && method.ReturnType.ToString() == "bool" => "return result.Satisfied;",
-            _ => "var isSatisfied = result.Satisfied;"
-        };
+            if (members[i] is FieldDeclarationSyntax)
+                lastFieldIndex = i;
+        }
+
+        members.Insert(lastFieldIndex + 1, member);
+    }
 
     private static ClassDeclarationSyntax RemovePrimaryConstructorIfNeeded(
         ClassDeclarationSyntax classDeclaration,
@@ -496,9 +520,9 @@ public class LogicalExpressionToSpecConverter(
             return classDeclaration;
 
         // Preserve proper formatting: newline + indent before the open brace
-        var classLeadingWhitespace = classDeclaration.GetLeadingTrivia()
-            .Where(t => t.IsKind(SyntaxKind.WhitespaceTrivia))
-            .LastOrDefault();
+        var classLeadingWhitespace = classDeclaration
+            .GetLeadingTrivia()
+            .LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia));
 
         var openBraceTrivia = classLeadingWhitespace.RawKind != 0
             ? new[] { EndOfLine("\n"), classLeadingWhitespace }
@@ -524,6 +548,148 @@ public class LogicalExpressionToSpecConverter(
             : compilationUnit.AddUsings(usingsToAdd.ToArray());
     }
 
+    private SyntaxNode AddSpecClassesNearContainingClass(
+        SyntaxContext syntaxContext,
+        SyntaxNode newRoot,
+        BaseNamespaceDeclarationSyntax? baseNamespace,
+        bool isBlockNamespace,
+        MemberDeclarationSyntax[] specClasses)
+    {
+        if (specClasses.Length == 0) return newRoot;
+
+        // For block namespaces, add inside the namespace
+        if (isBlockNamespace && baseNamespace is not null)
+            return AddToNamespace(syntaxContext, newRoot, baseNamespace, specClasses);
+
+        // Add to namespace or compilation unit
+        return baseNamespace is not null
+            ? AddToNamespace(syntaxContext, newRoot, baseNamespace, specClasses)
+            : AddToCompilationUnit(syntaxContext, newRoot, specClasses);
+    }
+
+    /// <summary>
+    /// Moves spec classes that appear after an orphan closing brace to before it.
+    /// After a block namespace is converted to file-scoped, the orphan } from the original
+    /// block namespace becomes trailing trivia of a member. Spec classes added via AddMembers
+    /// appear after the } in the text. This method uses incremental text changes to reorder them.
+    /// </summary>
+    private static async Task<Document> MoveSpecClassesBeforeOrphanBrace(
+        Document doc,
+        CancellationToken cancellationToken)
+    {
+        var root = await doc.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+        var fileNs = root?.DescendantNodes()
+            .OfType<FileScopedNamespaceDeclarationSyntax>()
+            .FirstOrDefault();
+        if (fileNs is null) return doc;
+
+        // Find the member that has the orphan } in trailing trivia
+        // It won't be the LAST member (spec classes were added after it)
+        MemberDeclarationSyntax? memberWithBrace = null;
+        var memberIndex = -1;
+        for (var i = 0; i < fileNs.Members.Count; i++)
+        {
+            if (fileNs.Members[i].GetTrailingTrivia().ToString().Contains("}"))
+            {
+                memberWithBrace = fileNs.Members[i];
+                memberIndex = i;
+                break;
+            }
+        }
+
+        // No orphan brace, or it's the last member (no content to move)
+        if (memberWithBrace is null || memberIndex >= fileNs.Members.Count - 1)
+            return doc;
+
+        var text = await doc.GetTextAsync(cancellationToken).ConfigureAwait(false);
+        var textStr = text.ToString();
+
+        // Find the position of the orphan } in the text
+        var trailingTrivia = memberWithBrace.GetTrailingTrivia();
+        var braceTrivia = trailingTrivia.FirstOrDefault(t => t.ToString().Contains("}"));
+        if (braceTrivia == default) return doc;
+
+        var braceStart = braceTrivia.SpanStart;
+
+        // The content after the orphan brace's line that needs to move
+        // Find the end of the brace line (including newline)
+        var braceLineEnd = textStr.IndexOf('\n', braceStart);
+        if (braceLineEnd < 0) braceLineEnd = textStr.Length;
+        else braceLineEnd++; // include the \n
+
+        // Content to move: everything from after the brace line to the end of document
+        var contentToMoveStart = braceLineEnd;
+        var contentToMove = textStr.Substring(contentToMoveStart);
+
+        // Trim trailing whitespace/newlines from the content
+        contentToMove = contentToMove.TrimEnd();
+        if (string.IsNullOrWhiteSpace(contentToMove)) return doc;
+
+        // Determine the line ending used in the file
+        var lineEnding = textStr.Contains("\r\n") ? "\r\n" : "\n";
+
+        // Determine the indentation of members inside the namespace
+        var memberIndent = memberWithBrace
+            .GetLeadingTrivia()
+            .LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia))
+            .ToString();
+
+        // Re-indent the content to match the member indentation
+        var contentLines = contentToMove.Split('\n');
+        var reindented = new List<string>();
+        string? contentBaseIndent = null;
+        foreach (var line in contentLines)
+        {
+            var raw = line.TrimEnd('\r');
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                reindented.Add("");
+                continue;
+            }
+            if (contentBaseIndent is null)
+            {
+                var trimmedLeft = raw.TrimStart();
+                contentBaseIndent = raw.Substring(0, raw.Length - trimmedLeft.Length);
+            }
+            var stripped = raw.StartsWith(contentBaseIndent)
+                ? raw.Substring(contentBaseIndent.Length)
+                : raw;
+            reindented.Add(memberIndent + stripped);
+        }
+
+        // Strip leading and trailing empty lines from reindented content
+        while (reindented.Count > 0 && string.IsNullOrWhiteSpace(reindented[0]))
+            reindented.RemoveAt(0);
+        while (reindented.Count > 0 && string.IsNullOrWhiteSpace(reindented[reindented.Count - 1]))
+            reindented.RemoveAt(reindented.Count - 1);
+
+        if (reindented.Count == 0) return doc;
+
+        var reindentedText = string.Join(lineEnding, reindented);
+
+        // Position to insert: right before the orphan brace line
+        var insertPos = braceStart;
+        while (insertPos > 0 && textStr[insertPos - 1] != '\n')
+            insertPos--;
+
+        // Delete everything after the orphan brace character (its trailing newline + moved content)
+        // to avoid a trailing blank line. Keep only the `}` itself.
+        var deleteStart = braceStart + 1; // position right after `}`
+        var changes = new[]
+        {
+            // Insert the moved content before the orphan brace
+            new Microsoft.CodeAnalysis.Text.TextChange(
+                new Microsoft.CodeAnalysis.Text.TextSpan(insertPos, 0),
+                reindentedText + lineEnding),
+            // Delete the trailing newline and moved content after the brace
+            new Microsoft.CodeAnalysis.Text.TextChange(
+                new Microsoft.CodeAnalysis.Text.TextSpan(deleteStart, textStr.Length - deleteStart),
+                "")
+        };
+
+        return doc.WithText(text.WithChanges(changes));
+    }
+
     private static SyntaxNode AddToCompilationUnit(
         SyntaxContext syntaxContext,
         SyntaxNode newRoot,
@@ -546,11 +712,15 @@ public class LogicalExpressionToSpecConverter(
         // Compute the indentation for members inside this namespace
         var isBlockNamespace = namespaceDeclaration is NamespaceDeclarationSyntax;
         var indent = isBlockNamespace ? syntaxContext.BaselineIndent.ToString() : "";
+        var lastMember = namespaceDeclaration.Members.LastOrDefault();
+        var lastMemberHasTrailingNewline = lastMember?.GetTrailingTrivia()
+            .Any(t => t.IsKind(SyntaxKind.EndOfLineTrivia)) ?? false;
+
         var membersWithTrivia = customSpecClassDeclaration.Select(member =>
         {
-            // Block namespace: one LF (previous member already ends with newline)
-            // File-scoped namespace: two LFs (need blank line separator)
-            member = isBlockNamespace
+            // Use one LF when the previous member already ends with a newline (e.g., original class),
+            // two LFs when it doesn't (e.g., a spec class added by a previous FixAll iteration)
+            member = isBlockNamespace && lastMemberHasTrailingNewline
                 ? member.WithLeadingTrivia(syntaxContext.LineFeed)
                 : member.WithLeadingTrivia(syntaxContext.LineFeed, syntaxContext.LineFeed);
             if (indent.Length > 0)
@@ -588,20 +758,6 @@ public class LogicalExpressionToSpecConverter(
 
         // ReindentMember will add any extra namespace indent later
         return parts[0] + " ||\n" + CommentContinuationPrefix + parts[1];
-    }
-
-    private static string GetExtraIndentForBlockNamespace(ClassDeclarationSyntax containingClass)
-    {
-        // Detect if inside a block namespace and compute extra indentation
-        var nsDecl = containingClass.Ancestors().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
-        if (nsDecl is null) return "";
-
-        var nsIndent = nsDecl
-            .GetLeadingTrivia()
-            .LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia))
-            .ToString();
-        // Members inside a block namespace are indented by the namespace indent + 4 spaces
-        return nsIndent + "    ";
     }
 
     private static MemberDeclarationSyntax ReindentMember(MemberDeclarationSyntax member, string extraIndent)
@@ -686,6 +842,11 @@ public class LogicalExpressionToSpecConverter(
 
         var text = await doc.GetTextAsync(cancellationToken).ConfigureAwait(false);
         var insertPosition = blockNs.Name.Span.End;
+
+        // Don't insert if semicolon already exists (e.g., from a previous fix iteration)
+        if (insertPosition < text.Length && text[insertPosition] == ';')
+            return doc;
+
         var newText = text.WithChanges(
             new Microsoft.CodeAnalysis.Text.TextChange(
                 new Microsoft.CodeAnalysis.Text.TextSpan(insertPosition, 0), ";"));
