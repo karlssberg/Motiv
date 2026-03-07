@@ -29,8 +29,8 @@ public class InstanceMethodResult(
     /// <summary>
     /// All instance method names (both resolved and unresolved) as a set.
     /// </summary>
-    public HashSet<string> AllMethodNames =>
-        new HashSet<string>(ResolvedMethods.Select(m => m.Method.Name).Concat(UnresolvedMethodNames));
+    public HashSet<string> AllMethodNames { get; } =
+        new(resolvedMethods.Select(m => m.Method.Name).Concat(unresolvedMethodNames));
 }
 
 /// <summary>

@@ -120,26 +120,17 @@ public static class ClauseNameDeriver
         }
 
         // Special cases for common patterns
-        if (rightValue == "0")
+        var specialName = rightValue switch
         {
-            var zeroName = GenerateZeroComparisonName();
+            "0" => GenerateZeroComparisonName(binary, leftName),
+            "null" => GenerateNullComparisonName(binary, leftName),
+            _ => null
+        };
 
-            if (zeroName is not null)
-            {
-                name = zeroName;
-                return true;
-            }
-        }
-
-        if (rightValue == "null")
+        if (specialName is not null)
         {
-            var nullName = GenerateIsNullOrNotNullName();
-
-            if (nullName is not null)
-            {
-                name = nullName;
-                return true;
-            }
+            name = specialName;
+            return true;
         }
 
         // General pattern: Is{Property}{Operator}{Value}
@@ -152,32 +143,6 @@ public static class ClauseNameDeriver
         // If right side isn't a simple literal, fall back
         name = string.Empty;
         return false;
-
-        string? GenerateZeroComparisonName()
-        {
-            var zeroName = binary.OperatorToken.Kind() switch
-            {
-                SyntaxKind.GreaterThanEqualsToken => $"Is{leftName}NonNegative",
-                SyntaxKind.LessThanToken => $"Is{leftName}Negative",
-                SyntaxKind.EqualsEqualsToken => $"Is{leftName}Zero",
-                SyntaxKind.ExclamationEqualsToken => $"Is{leftName}NotZero",
-                SyntaxKind.GreaterThanToken => $"Is{leftName}Positive",
-                SyntaxKind.LessThanEqualsToken => $"Is{leftName}NonPositive",
-                _ => null
-            };
-            return zeroName;
-        }
-
-        string? GenerateIsNullOrNotNullName()
-        {
-            var nullName = binary.OperatorToken.Kind() switch
-            {
-                SyntaxKind.EqualsEqualsToken => $"Is{leftName}Null",
-                SyntaxKind.ExclamationEqualsToken => $"Is{leftName}NotNull",
-                _ => null
-            };
-            return nullName;
-        }
     }
 
     /// <summary>
@@ -203,65 +168,24 @@ public static class ClauseNameDeriver
             return false;
         }
 
-        switch (leftValue)
+        // Special cases for zero/null comparisons with reversed operands
+        var specialName = leftValue switch
         {
-            // Special cases for zero comparisons with reversed operands
-            case "0":
-            {
-                var zeroName = GenerateZeroComparisonName();
+            "0" => GenerateReversedZeroComparisonName(binary, rightName),
+            "null" => GenerateNullComparisonName(binary, rightName),
+            _ => null
+        };
 
-                if (zeroName is not null)
-                {
-                    name = zeroName;
-                    return true;
-                }
-
-                break;
-            }
-            case "null":
-            {
-                var nullName = GenerateIsNullOrNotNullName();
-
-                if (nullName is not null)
-                {
-                    name = nullName;
-                    return true;
-                }
-
-                break;
-            }
+        if (specialName is not null)
+        {
+            name = specialName;
+            return true;
         }
 
         // General pattern: Is{Value}{Operator}{Property}
         // Example: "1 < valueC" becomes "Is1LessThanValueC"
         name = $"Is{leftValue}{operatorVerb}{rightName}";
         return true;
-
-        string? GenerateZeroComparisonName()
-        {
-            var zeroName = binary.OperatorToken.Kind() switch
-            {
-                SyntaxKind.LessThanEqualsToken => $"Is{rightName}NonNegative",  // 0 <= x means x >= 0
-                SyntaxKind.GreaterThanToken => $"Is{rightName}Negative",         // 0 > x means x < 0
-                SyntaxKind.EqualsEqualsToken => $"Is{rightName}Zero",            // 0 == x means x == 0
-                SyntaxKind.ExclamationEqualsToken => $"Is{rightName}NotZero",    // 0 != x means x != 0
-                SyntaxKind.LessThanToken => $"Is{rightName}Positive",            // 0 < x means x > 0
-                SyntaxKind.GreaterThanEqualsToken => $"Is{rightName}NonPositive", // 0 >= x means x <= 0
-                _ => null
-            };
-            return zeroName;
-        }
-
-        string? GenerateIsNullOrNotNullName()
-        {
-            var nullName = binary.OperatorToken.Kind() switch
-            {
-                SyntaxKind.EqualsEqualsToken => $"Is{rightName}Null",
-                SyntaxKind.ExclamationEqualsToken => $"Is{rightName}NotNull",
-                _ => null
-            };
-            return nullName;
-        }
     }
 
     /// <summary>
@@ -434,4 +358,46 @@ public static class ClauseNameDeriver
             _ => null
         };
     }
+
+    /// <summary>
+    /// Generates a name for a zero comparison where the variable is on the left (e.g., x > 0).
+    /// </summary>
+    private static string? GenerateZeroComparisonName(BinaryExpressionSyntax binary, string variableName) =>
+        binary.OperatorToken.Kind() switch
+        {
+            SyntaxKind.GreaterThanEqualsToken => $"Is{variableName}NonNegative",
+            SyntaxKind.LessThanToken => $"Is{variableName}Negative",
+            SyntaxKind.EqualsEqualsToken => $"Is{variableName}Zero",
+            SyntaxKind.ExclamationEqualsToken => $"Is{variableName}NotZero",
+            SyntaxKind.GreaterThanToken => $"Is{variableName}Positive",
+            SyntaxKind.LessThanEqualsToken => $"Is{variableName}NonPositive",
+            _ => null
+        };
+
+    /// <summary>
+    /// Generates a name for a zero comparison where the variable is on the right (e.g., 0 &lt; x).
+    /// The operator semantics are reversed relative to the variable.
+    /// </summary>
+    private static string? GenerateReversedZeroComparisonName(BinaryExpressionSyntax binary, string variableName) =>
+        binary.OperatorToken.Kind() switch
+        {
+            SyntaxKind.LessThanEqualsToken => $"Is{variableName}NonNegative",  // 0 <= x means x >= 0
+            SyntaxKind.GreaterThanToken => $"Is{variableName}Negative",         // 0 > x means x < 0
+            SyntaxKind.EqualsEqualsToken => $"Is{variableName}Zero",            // 0 == x means x == 0
+            SyntaxKind.ExclamationEqualsToken => $"Is{variableName}NotZero",    // 0 != x means x != 0
+            SyntaxKind.LessThanToken => $"Is{variableName}Positive",            // 0 < x means x > 0
+            SyntaxKind.GreaterThanEqualsToken => $"Is{variableName}NonPositive", // 0 >= x means x <= 0
+            _ => null
+        };
+
+    /// <summary>
+    /// Generates a name for a null comparison (e.g., x == null or null == x).
+    /// </summary>
+    private static string? GenerateNullComparisonName(BinaryExpressionSyntax binary, string variableName) =>
+        binary.OperatorToken.Kind() switch
+        {
+            SyntaxKind.EqualsEqualsToken => $"Is{variableName}Null",
+            SyntaxKind.ExclamationEqualsToken => $"Is{variableName}NotNull",
+            _ => null
+        };
 }
