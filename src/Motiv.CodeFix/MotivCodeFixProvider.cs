@@ -59,7 +59,7 @@ public class MotivCodeFixProvider : CodeFixProvider
             var logicalExpressionConverter = new LogicalExpressionToSpecConverter(propositionName, modelName, context.Document);
 
             var action = CodeAction.Create(
-                title: "Fix Boolean Blindness",
+                title: "Convert to Motiv specification",
                 createChangedDocument: cancellationToken => logicalExpressionConverter.Convert(diagnostic, expressionSyntax, cancellationToken),
                 equivalenceKey: "ConvertToSpec");
 
