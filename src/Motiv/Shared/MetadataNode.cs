@@ -38,11 +38,7 @@ public class MetadataNode<TMetadata>
     internal MetadataNode(TMetadata metadata)
     {
         _underlying = EmptyUnderlying;
-        _metadataSet = metadata switch
-        {
-            IComparable<TMetadata> => new SortedSet<TMetadata> { metadata },
-            _ => new HashSet<TMetadata> { metadata }
-        };
+        _metadataSet = new HashSet<TMetadata> { metadata };
     }
 
     /// <summary>Gets the underlying metadata nodes.</summary>
@@ -52,7 +48,6 @@ public class MetadataNode<TMetadata>
     public IEnumerable<TMetadata> Metadata => _metadataSet ??= _metadataSource switch
     {
         ISet<TMetadata> metadataTier => metadataTier,
-        IEnumerable<IComparable<TMetadata>> => new SortedSet<TMetadata>(_metadataSource),
         _ => new HashSet<TMetadata>(_metadataSource!)
     };
 

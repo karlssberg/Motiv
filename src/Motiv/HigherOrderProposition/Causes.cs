@@ -26,25 +26,24 @@ internal static class Causes
         Func<IEnumerable<T>, bool> higherOrderPredicate,
         Func<T, bool> satisfiedSelector)
     {
-        var operandResultArray = operandResults.ToArray();
+        var operandResultArray = operandResults as T[] ?? operandResults.ToArray();
         var trueList = new List<T>();
         var falseList = new List<T>();
         foreach (var operand in operandResultArray)
             (satisfiedSelector(operand) ? trueList : falseList).Add(operand);
 
-        var trueOperands = trueList.ToArray();
-        var falseOperands = falseList.ToArray();
-
-        var candidateCauses = isSatisfied switch
+        List<T>? candidateCauses = isSatisfied switch
         {
-            true when higherOrderPredicate(trueOperands) => trueOperands,
-            true when higherOrderPredicate(falseOperands) => falseOperands,
-            false when !higherOrderPredicate(trueOperands) && trueOperands.Length > 0 => trueOperands,
-            false when !higherOrderPredicate(falseOperands) && falseOperands.Length > 0 => falseOperands,
-            _ => operandResultArray
+            true when higherOrderPredicate(trueList) => trueList,
+            true when higherOrderPredicate(falseList) => falseList,
+            false when !higherOrderPredicate(trueList) && trueList.Count > 0 => trueList,
+            false when !higherOrderPredicate(falseList) && falseList.Count > 0 => falseList,
+            _ => null
         };
 
-        return candidateCauses
-            .ElseIfEmpty(operandResultArray);
+        if (candidateCauses is null or { Count: 0 })
+            return operandResultArray;
+
+        return candidateCauses;
     }
 }

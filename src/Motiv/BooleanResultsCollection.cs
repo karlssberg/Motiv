@@ -15,47 +15,59 @@ namespace Motiv;
 /// <typeparam name="TMetadata">
 /// The metdata values type in the boolean results.
 /// </typeparam>
-public class BooleanResultsCollection<TModel, TMetadata>(
-    IEnumerable<BooleanResult<TModel, TMetadata>> results)
+public class BooleanResultsCollection<TModel, TMetadata>
     : IEnumerable<TModel>
 {
-    private readonly IEnumerable<BooleanResult<TModel, TMetadata>> _satisfied =
-        results.Where(r => r.Satisfied);
+    private readonly BooleanResult<TModel, TMetadata>[] _results;
+    private readonly BooleanResult<TModel, TMetadata>[] _satisfied;
 
-    private IEnumerable<TModel>? _models;
-    private IEnumerable<TMetadata>? _values;
-    private IEnumerable<string>? _assertions;
+    private TModel[]? _models;
+    private TMetadata[]? _values;
+    private string[]? _assertions;
+    private TModel[]? _satisfiedModels;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BooleanResultsCollection{TModel, TMetadata}"/> class.
+    /// </summary>
+    /// <param name="results">The boolean results for the models.</param>
+    public BooleanResultsCollection(IEnumerable<BooleanResult<TModel, TMetadata>> results)
+    {
+        _results = results as BooleanResult<TModel, TMetadata>[] ?? results.ToArray();
+        _satisfied = _results.Where(r => r.Satisfied).ToArray();
+    }
 
     /// <summary>
     /// The raw boolean results.
     /// </summary>
-    public IEnumerable<BooleanResultBase<TMetadata>> Results => results;
+    public IEnumerable<BooleanResultBase<TMetadata>> Results => _results;
 
     /// <summary>
     /// The models that were evaluated.
     /// </summary>
     public IEnumerable<TModel> Models =>
-        _models ??= results.Select(r => r.Model);
+        _models ??= _results.Select(r => r.Model).ToArray();
 
     /// <summary>
     /// The collection of metadata values from the boolean results.
     /// </summary>
     public IEnumerable<TMetadata> Values =>
-        _values ??= results.SelectMany(b => b.Values);
+        _values ??= _results.SelectMany(b => b.Values).ToArray();
 
     /// <summary>
     /// The aggregated boolean outcome.
     /// </summary>
     public IEnumerable<string> Assertions =>
-        _assertions ??= results
+        _assertions ??= _results
             .SelectMany(b => b.Assertions)
-            .Distinct();
+            .Distinct()
+            .ToArray();
 
 
     /// <inheritdoc cref="IEnumerable{T}.GetEnumerator" />
     public IEnumerator<TModel> GetEnumerator()
     {
-        return _satisfied.Select(r => r.Model).GetEnumerator();
+        var models = _satisfiedModels ??= _satisfied.Select(r => r.Model).ToArray();
+        return ((IEnumerable<TModel>)models).GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
