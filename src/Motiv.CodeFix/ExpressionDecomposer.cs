@@ -68,7 +68,7 @@ internal static class ExpressionDecomposer
         {
             counter++;
             var transformed = transformClause(expr);
-            var clauseName = ClauseNameDeriver.DeriveName(transformed, counter);
+            var clauseName = ClauseNameDeriver.DeriveName(expr, counter);
             return new ExpressionDecomposition(
                 [(expr.ToString().Trim(), transformed.ToString(), expr)],
                 clauseName);

@@ -96,8 +96,8 @@ public class MotivConvertToSpecWithDebugOutputTests
                 public bool IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
-                    var result = _isValidProposition.Evaluate(new IsValidProposition.Model(valueA, valueB, valueC));
-                    return result.Satisfied;
+                    var isValidResult = _isValidProposition.Evaluate(new IsValidProposition.Model(valueA, valueB, valueC));
+                    return isValidResult.Satisfied;
                 }
             }
 

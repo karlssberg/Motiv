@@ -90,8 +90,8 @@ public class MotivConvertToSpecTests
                 public bool IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
-                    var result = _isValidProposition.Evaluate(new IsValidProposition.Model(valueA, valueB, valueC));
-                    return result.Satisfied;
+                    var isValidResult = _isValidProposition.Evaluate(new IsValidProposition.Model(valueA, valueB, valueC));
+                    return isValidResult.Satisfied;
                 }
             }
 
@@ -157,8 +157,8 @@ public class MotivConvertToSpecTests
                 public void IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
-                    var result = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
-                    var isSatisfied = result.Satisfied;
+                    var isSatisfiedResult = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
+                    var isSatisfied = isSatisfiedResult.Satisfied;
                 }
             }
 
@@ -226,8 +226,8 @@ public class MotivConvertToSpecTests
                   {
                       // {{clause1}} && ({{clause2}} ||
                       //     !({{clause3}} ^ {{clause4}}))
-                      var result = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
-                      var isSatisfied = result.Satisfied;
+                      var isSatisfiedResult = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
+                      var isSatisfied = isSatisfiedResult.Satisfied;
                   }
               }
 
@@ -475,8 +475,8 @@ public class MotivConvertToSpecTests
                   public bool IsValid(int x, int y)
                   {
                       // {{booleanExpression}}
-                      var result = _isValidProposition.Evaluate(new IsValidProposition.Model(x, y));
-                      return result.Satisfied;
+                      var isValidResult = _isValidProposition.Evaluate(new IsValidProposition.Model(x, y));
+                      return isValidResult.Satisfied;
                   }
               }
 
@@ -541,8 +541,8 @@ public class MotivConvertToSpecTests
                 public void IsValid(int age, bool name)
                 {
                     // {{booleanExpression}}
-                    var result = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(age, name));
-                    var isSatisfied = result.Satisfied;
+                    var isSatisfiedResult = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(age, name));
+                    var isSatisfied = isSatisfiedResult.Satisfied;
                 }
             }
 
@@ -609,8 +609,8 @@ public class MotivConvertToSpecTests
                   {
                       // ({{clause1}} && {{clause2}}) ||
                       //     ({{clause3}} && {{clause2}})
-                      var result = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueC, valueB));
-                      var isSatisfied = result.Satisfied;
+                      var isSatisfiedResult = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueC, valueB));
+                      var isSatisfied = isSatisfiedResult.Satisfied;
                   }
               }
 
@@ -680,8 +680,8 @@ public class MotivConvertToSpecTests
                   {
                       // ({{clause1}} && {{clause2}}) ||
                       //     ({{clause3}} && {{clause2}})
-                      var result = _isFeatureEnabledProposition.Evaluate(new IsFeatureEnabledProposition.Model(valueA, valueC, valueB));
-                      return result.Satisfied;
+                      var isFeatureEnabledResult = _isFeatureEnabledProposition.Evaluate(new IsFeatureEnabledProposition.Model(valueA, valueC, valueB));
+                      return isFeatureEnabledResult.Satisfied;
                   }
               }
 
@@ -906,8 +906,8 @@ public class MotivConvertToSpecTests
                 public bool IsFeatureEnabled(int valueA, int valueC, string text)
                 {
                     // {{booleanExpression}}
-                    var result = _isFeatureEnabledProposition.Evaluate(new IsFeatureEnabledProposition.Model(valueA, valueC, text));
-                    return result.Satisfied;
+                    var isFeatureEnabledResult = _isFeatureEnabledProposition.Evaluate(new IsFeatureEnabledProposition.Model(valueA, valueC, text));
+                    return isFeatureEnabledResult.Satisfied;
                 }
 
                 public bool IsGreen(string text)
@@ -1059,6 +1059,93 @@ public class MotivConvertToSpecTests
                     .WithSpan(Source, 6, 13, 7, 92),
                 new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
                     .WithSpan(Source, 11, 20, 11, 35),
+            },
+            NumberOfFixAllIterations = 1
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_convert_complex_inside_a_namespace_block_and_handle_static_method_call_within_clause()
+    {
+        const string source =
+          $$"""
+            namespace MyNamespace
+            {
+                public class Playground()
+                {
+                    public bool IsFeatureEnabled(int valueA, int valueB, int valueC, string text) =>
+                        (valueA >= 0 && 1 < valueC) || IsGreen(text);
+
+                    public static bool IsGreen(string text)
+                    {
+                        return text == "green";
+                    }
+                }
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace
+            {
+                public class Playground()
+                {
+                    private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition = new();
+                    private static readonly IsGreenProposition IsGreenProposition = new();
+                    public bool IsFeatureEnabled(int valueA, int valueB, int valueC, string text)
+                    {
+                        // (valueA >= 0 && 1 < valueC) ||
+                        //     IsGreen(text)
+                        var isFeatureEnabledResult = _isFeatureEnabledProposition.Evaluate(new IsFeatureEnabledProposition.Model(valueA, valueC, text));
+                        return isFeatureEnabledResult.Satisfied;
+                    }
+
+                    public static bool IsGreen(string text)
+                    {
+                        // text == "green"
+                        var isGreenResult = IsGreenProposition.Evaluate(text);
+                        return isGreenResult.Satisfied;
+                    }
+                }
+
+                public class IsFeatureEnabledProposition() : Spec<IsFeatureEnabledProposition.Model>(() =>
+                {
+                    var isValueANonNegative = Spec
+                        .Build((Model m) => m.ValueA >= 0)
+                        .Create("valueA >= 0");
+
+                    var is1LessThanValueC = Spec
+                        .Build((Model m) => 1 < m.ValueC)
+                        .Create("1 < valueC");
+
+                    var isGreen = Spec
+                        .Build((Model m) => Playground.IsGreen(m.Text))
+                        .Create("IsGreen(text)");
+
+                    return (isValueANonNegative.AndAlso(is1LessThanValueC)).OrElse(isGreen);
+                })
+                {
+                    public record Model(int ValueA, int ValueC, string Text);
+                }
+
+                public class IsGreenProposition() : Spec<string>(() =>
+                        Spec.Build((string text) => text == "green")
+                        .Create("text == \"green\""));
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 6, 13, 6, 57),
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 10, 20, 10, 35),
             },
             NumberOfFixAllIterations = 1
         }.RunAsync();

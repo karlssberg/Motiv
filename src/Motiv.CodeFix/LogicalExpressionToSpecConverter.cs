@@ -45,6 +45,7 @@ internal class LogicalExpressionToSpecConverter(
 
         var hasInstanceMethods = detectionResult.HasInstanceMethods;
         var instanceMethodNames = detectionResult.AllMethodNames;
+        var staticMethodNames = detectionResult.StaticMethodNames;
 
         var groupedExpression = hasInstanceMethods
             ? LogicalChainGrouper.Group(logicalExpressionSyntax)
@@ -64,7 +65,7 @@ internal class LogicalExpressionToSpecConverter(
 
         var rootMembers = BuildSpecClassMembers(
             syntaxContext, variableSymbols, groupedExpression,
-            instanceMethodNames, containingTypeName).ToArray();
+            instanceMethodNames, staticMethodNames, containingTypeName).ToArray();
 
         newRoot = SpecClassPlacer.AddNearContainingClass(syntaxContext, newRoot, baseNamespace, rootMembers);
         newRoot = SpecClassPlacer.AddUsingStatementsIfNeeded(newRoot, fieldCustomizer);
@@ -85,7 +86,7 @@ internal class LogicalExpressionToSpecConverter(
         var detector = new InstanceMethodDetector(semanticModel);
         return containingTypeSymbol is not null
             ? detector.Detect(expression, containingTypeSymbol)
-            : new InstanceMethodResult([], []);
+            : new InstanceMethodResult([], [], []);
     }
 
     private static string? ResolveContainingTypeName(
@@ -100,17 +101,19 @@ internal class LogicalExpressionToSpecConverter(
         ImmutableArray<ISymbol> variableSymbols,
         ExpressionSyntax logicalExpressionSyntax,
         HashSet<string> instanceMethodNames,
+        HashSet<string> staticMethodNames,
         string? containingTypeName)
     {
         var hasInstanceMethods = instanceMethodNames.Count > 0;
+        var hasStaticMethods = staticMethodNames.Count > 0;
 
-        if (variableSymbols.Length == 1 && !hasInstanceMethods)
+        if (variableSymbols.Length == 1 && !hasInstanceMethods && !hasStaticMethods)
             return BuildSimpleSpec(syntaxContext, variableSymbols.First(), logicalExpressionSyntax);
 
         if (variableSymbols.Length == 1 && hasInstanceMethods)
-            return BuildSingleVarComposedSpec(syntaxContext, variableSymbols.First(), logicalExpressionSyntax, instanceMethodNames, containingTypeName);
+            return BuildSingleVarComposedSpec(syntaxContext, variableSymbols.First(), logicalExpressionSyntax, instanceMethodNames, staticMethodNames, containingTypeName);
 
-        return BuildMultiVarComposedSpec(syntaxContext, variableSymbols, logicalExpressionSyntax, instanceMethodNames, containingTypeName);
+        return BuildMultiVarComposedSpec(syntaxContext, variableSymbols, logicalExpressionSyntax, instanceMethodNames, staticMethodNames, containingTypeName);
     }
 
     private IEnumerable<MemberDeclarationSyntax> BuildSimpleSpec(
@@ -133,12 +136,19 @@ internal class LogicalExpressionToSpecConverter(
         ISymbol variable,
         ExpressionSyntax logicalExpressionSyntax,
         HashSet<string> instanceMethodNames,
+        HashSet<string> staticMethodNames,
         string? containingTypeName)
     {
         var variableTypeName = GetSymbolTypeName(variable);
         var decomposition = ExpressionDecomposer.Decompose(
             logicalExpressionSyntax,
-            expr => ExpressionTransformer.PrefixInstanceMethods(expr, instanceMethodNames));
+            expr =>
+            {
+                var result = ExpressionTransformer.PrefixInstanceMethods(expr, instanceMethodNames);
+                if (staticMethodNames.Count > 0 && containingTypeName != null)
+                    result = ExpressionTransformer.PrefixStaticMethods(result, staticMethodNames, containingTypeName);
+                return result;
+            });
 
         yield return new ComposedSpecClassDeclaration(
             syntaxContext, propositionName,
@@ -153,12 +163,13 @@ internal class LogicalExpressionToSpecConverter(
         ImmutableArray<ISymbol> variableSymbols,
         ExpressionSyntax logicalExpressionSyntax,
         HashSet<string> instanceMethodNames,
+        HashSet<string> staticMethodNames,
         string? containingTypeName)
     {
         var hasInstanceMethods = instanceMethodNames.Count > 0;
         var decomposition = ExpressionDecomposer.Decompose(
             logicalExpressionSyntax,
-            expr => ExpressionTransformer.ConvertVariablesToModelMemberAccess(expr, variableSymbols, instanceMethodNames));
+            expr => ExpressionTransformer.ConvertVariablesToModelMemberAccess(expr, variableSymbols, instanceMethodNames, staticMethodNames, containingTypeName));
 
         var recordParameters = string.Join(", ", variableSymbols.Select(s =>
         {

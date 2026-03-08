@@ -9,7 +9,8 @@ namespace Motiv.CodeFix;
 /// </summary>
 public class InstanceMethodResult(
     IReadOnlyList<(InvocationExpressionSyntax Invocation, IMethodSymbol Method)> resolvedMethods,
-    IReadOnlyList<string> unresolvedMethodNames)
+    IReadOnlyList<string> unresolvedMethodNames,
+    IReadOnlyList<(InvocationExpressionSyntax Invocation, IMethodSymbol Method)> staticMethods)
 {
     /// <summary>
     /// Instance method invocations that were successfully resolved by the semantic model.
@@ -22,6 +23,11 @@ public class InstanceMethodResult(
     public IReadOnlyList<string> UnresolvedMethodNames { get; } = unresolvedMethodNames;
 
     /// <summary>
+    /// Static method invocations from the containing class.
+    /// </summary>
+    public IReadOnlyList<(InvocationExpressionSyntax Invocation, IMethodSymbol Method)> StaticMethods { get; } = staticMethods;
+
+    /// <summary>
     /// Whether any instance methods (resolved or unresolved) were detected.
     /// </summary>
     public bool HasInstanceMethods => ResolvedMethods.Count > 0 || UnresolvedMethodNames.Count > 0;
@@ -30,7 +36,13 @@ public class InstanceMethodResult(
     /// All instance method names (both resolved and unresolved) as a set.
     /// </summary>
     public HashSet<string> AllMethodNames { get; } =
-        new(resolvedMethods.Select(m => m.Method.Name).Concat(unresolvedMethodNames));
+        [..resolvedMethods.Select(m => m.Method.Name).Concat(unresolvedMethodNames)];
+
+    /// <summary>
+    /// All static method names from the containing class as a set.
+    /// </summary>
+    public HashSet<string> StaticMethodNames { get; } =
+        [..staticMethods.Select(m => m.Method.Name)];
 }
 
 /// <summary>
@@ -39,6 +51,7 @@ public class InstanceMethodResult(
 public class InstanceMethodDetector(SemanticModel semanticModel) : CSharpSyntaxWalker
 {
     private List<(InvocationExpressionSyntax Invocation, IMethodSymbol Method)> InstanceMethods { get; } = [];
+    private List<(InvocationExpressionSyntax Invocation, IMethodSymbol Method)> StaticMethodsList { get; } = [];
     private List<string> UnresolvedNames { get; } = [];
 
     /// <summary>
@@ -52,12 +65,14 @@ public class InstanceMethodDetector(SemanticModel semanticModel) : CSharpSyntaxW
         INamedTypeSymbol containingType)
     {
         InstanceMethods.Clear();
+        StaticMethodsList.Clear();
         UnresolvedNames.Clear();
         ContainingType = containingType;
         Visit(node);
         return new InstanceMethodResult(
             InstanceMethods.ToList(),
-            UnresolvedNames.ToList());
+            UnresolvedNames.ToList(),
+            StaticMethodsList.ToList());
     }
 
     private INamedTypeSymbol? ContainingType { get; set; }
@@ -66,19 +81,27 @@ public class InstanceMethodDetector(SemanticModel semanticModel) : CSharpSyntaxW
     {
         var symbolInfo = semanticModel.GetSymbolInfo(node);
 
-        if (symbolInfo.Symbol is IMethodSymbol { IsStatic: false } methodSymbol
-            && SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingType, ContainingType)
-            && node.Expression is IdentifierNameSyntax)
+        switch (symbolInfo.Symbol)
         {
-            // Check if it's a simple invocation (not qualified with 'this')
-            InstanceMethods.Add((node, methodSymbol));
-        }
-        else if (symbolInfo.Symbol is null
-                 && symbolInfo.CandidateSymbols.IsEmpty
-                 && node.Expression is IdentifierNameSyntax unresolvedId)
-        {
-            // Unresolved simple identifier invocations are likely instance methods
-            UnresolvedNames.Add(unresolvedId.Identifier.ValueText);
+            case IMethodSymbol { IsStatic: false } methodSymbol
+                when SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingType, ContainingType)
+                     && node.Expression is IdentifierNameSyntax:
+                // Check if it's a simple invocation (not qualified with 'this')
+                InstanceMethods.Add((node, methodSymbol));
+                break;
+
+            case IMethodSymbol { IsStatic: true } staticMethodSymbol
+                when SymbolEqualityComparer.Default.Equals(staticMethodSymbol.ContainingType, ContainingType)
+                     && node.Expression is IdentifierNameSyntax:
+                StaticMethodsList.Add((node, staticMethodSymbol));
+                break;
+
+            case null
+                when symbolInfo.CandidateSymbols.IsEmpty
+                     && node.Expression is IdentifierNameSyntax unresolvedId:
+                // Unresolved simple identifier invocations are likely instance methods
+                UnresolvedNames.Add(unresolvedId.Identifier.ValueText);
+                break;
         }
 
         base.VisitInvocationExpression(node);

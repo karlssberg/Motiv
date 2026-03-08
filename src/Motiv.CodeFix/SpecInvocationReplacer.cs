@@ -16,7 +16,9 @@ internal class SpecInvocationReplacer(
     string defaultModelName,
     ISpecFieldCustomizer fieldCustomizer)
 {
-    private string FieldName => $"_{propositionName.ToCamelCase()}";
+    private bool _isMethodStatic;
+
+    private string FieldName => _isMethodStatic ? propositionName : $"_{propositionName.ToCamelCase()}";
 
     /// <summary>
     ///     Replaces the logical expression in the containing class with a spec field and invocation.
@@ -39,15 +41,14 @@ internal class SpecInvocationReplacer(
         string? modelTypeName = null)
     {
         var method = logicalExpressionSyntax.Ancestors().OfType<MethodDeclarationSyntax>().First();
+        _isMethodStatic = method.Modifiers.Any(SyntaxKind.StaticKeyword);
         var containingClass = method.Ancestors().OfType<ClassDeclarationSyntax>().First();
         var statement = logicalExpressionSyntax.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
 
         var commentTrivia = BuildCommentTrivia(groupedExpression);
         var specInvocation = BuildSpecInvocationExpression(variableSymbols);
 
-        var useMethodDerivedName = variableSymbols.Length == 1
-            || (hasInstanceMethods && statement is null && method.ExpressionBody is not null);
-        var resultVarName = useMethodDerivedName ? DeriveResultVarName(method) : "result";
+        var resultVarName = DeriveResultVarName();
 
         var field = BuildFieldDeclaration(hasInstanceMethods, modelTypeName);
         var replacementMethod = BuildReplacementMethod(method, statement, resultVarName, specInvocation, commentTrivia);
@@ -101,12 +102,19 @@ internal class SpecInvocationReplacer(
             declarator = declarator.WithInitializer(EqualsValueClause(initializer));
         }
 
+        var modifiers = _isMethodStatic
+            ? TokenList(
+                Token(SyntaxKind.PrivateKeyword),
+                Token(SyntaxKind.StaticKeyword),
+                Token(SyntaxKind.ReadOnlyKeyword))
+            : TokenList(
+                Token(SyntaxKind.PrivateKeyword),
+                Token(SyntaxKind.ReadOnlyKeyword));
+
         return FieldDeclaration(
                 VariableDeclaration(fieldType)
                     .WithVariables(SingletonSeparatedList(declarator)))
-            .WithModifiers(TokenList(
-                Token(SyntaxKind.PrivateKeyword),
-                Token(SyntaxKind.ReadOnlyKeyword)));
+            .WithModifiers(modifiers);
     }
 
     private MethodDeclarationSyntax BuildReplacementMethod(
@@ -232,8 +240,13 @@ internal class SpecInvocationReplacer(
         return TriviaList(trivia);
     }
 
-    private static string DeriveResultVarName(MethodDeclarationSyntax method) =>
-        $"{method.Identifier.ValueText.ToCamelCase()}Result";
+    private string DeriveResultVarName()
+    {
+        var baseName = propositionName.EndsWith("Proposition")
+            ? propositionName.Substring(0, propositionName.Length - "Proposition".Length)
+            : propositionName;
+        return $"{baseName.ToCamelCase()}Result";
+    }
 
     private static string GetIndentFromOriginalMethod(MethodDeclarationSyntax method) =>
         method
@@ -290,9 +303,9 @@ internal class SpecInvocationReplacer(
             .GetLeadingTrivia()
             .LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia));
 
-        var openBraceTrivia = classLeadingWhitespace.RawKind != 0
-            ? new[] { EndOfLine("\n"), classLeadingWhitespace }
-            : new[] { EndOfLine("\n") };
+        SyntaxTrivia[] openBraceTrivia = classLeadingWhitespace.RawKind == 0
+            ? [EndOfLine("\n")]
+            : [EndOfLine("\n"), classLeadingWhitespace];
 
         return classDeclaration
             .WithParameterList(null)
