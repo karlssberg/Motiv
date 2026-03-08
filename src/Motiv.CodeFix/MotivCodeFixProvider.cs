@@ -56,14 +56,23 @@ public class MotivCodeFixProvider : CodeFixProvider
                 semanticModel,
                 expressionSyntax.SpanStart);
 
-            var logicalExpressionConverter = new LogicalExpressionToSpecConverter(propositionName, modelName, context.Document);
+            var defaultConverter = new LogicalExpressionToSpecConverter(
+                propositionName, modelName, context.Document, new DefaultSpecFieldCustomizer());
+            var debugConverter = new LogicalExpressionToSpecConverter(
+                propositionName, modelName, context.Document, new DebugTapSpecFieldCustomizer());
 
             var action = CodeAction.Create(
                 title: "Convert to Motiv specification",
-                createChangedDocument: cancellationToken => logicalExpressionConverter.Convert(diagnostic, expressionSyntax, cancellationToken),
+                createChangedDocument: ct => defaultConverter.Convert(diagnostic, expressionSyntax, ct),
                 equivalenceKey: "ConvertToSpec");
 
+            var debugAction = CodeAction.Create(
+                title: "Convert to Motiv specification (with debug output)",
+                createChangedDocument: ct => debugConverter.Convert(diagnostic, expressionSyntax, ct),
+                equivalenceKey: "ConvertToSpecWithDebugOutput");
+
             context.RegisterCodeFix(action, diagnostic);
+            context.RegisterCodeFix(debugAction, diagnostic);
         }
     }
 }

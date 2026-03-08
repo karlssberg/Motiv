@@ -11,12 +11,14 @@ namespace Motiv.CodeFix;
 /// <param name="propositionName">The name of the proposition.</param>
 /// <param name="defaultModelName">The default name for the model.</param>
 /// <param name="document">The document containing the expression.</param>
-public class LogicalExpressionToSpecConverter(
+/// <param name="fieldCustomizer">The customizer controlling field declaration and initialization.</param>
+internal class LogicalExpressionToSpecConverter(
     string propositionName,
     string defaultModelName,
-    Document document)
+    Document document,
+    ISpecFieldCustomizer fieldCustomizer)
 {
-    private readonly SpecInvocationReplacer _invocationReplacer = new(propositionName, defaultModelName);
+    private readonly SpecInvocationReplacer _invocationReplacer = new(propositionName, defaultModelName, fieldCustomizer);
 
     /// <summary>
     ///     Converts the specified logical expression into a specification.
@@ -48,9 +50,13 @@ public class LogicalExpressionToSpecConverter(
             ? LogicalChainGrouper.Group(logicalExpressionSyntax)
             : logicalExpressionSyntax;
 
+        var modelTypeName = variableSymbols.Length == 1
+            ? GetSymbolTypeName(variableSymbols.First())
+            : $"{propositionName}.{defaultModelName}";
+
         var newRoot = _invocationReplacer.Replace(
             syntaxContext, variableSymbols, logicalExpressionSyntax,
-            root, hasInstanceMethods, groupedExpression);
+            root, hasInstanceMethods, groupedExpression, modelTypeName);
 
         var baseNamespace = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
         var isBlockNamespace = baseNamespace is NamespaceDeclarationSyntax;
@@ -61,7 +67,7 @@ public class LogicalExpressionToSpecConverter(
             instanceMethodNames, containingTypeName).ToArray();
 
         newRoot = SpecClassPlacer.AddNearContainingClass(syntaxContext, newRoot, baseNamespace, rootMembers);
-        newRoot = SpecClassPlacer.AddUsingStatementsIfNeeded(newRoot);
+        newRoot = SpecClassPlacer.AddUsingStatementsIfNeeded(newRoot, fieldCustomizer);
 
         var resultDoc = document.WithSyntaxRoot(newRoot);
 

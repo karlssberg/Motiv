@@ -11,8 +11,13 @@ namespace Motiv.CodeFix;
 ///     Replaces a logical expression in a method with a spec invocation,
 ///     adding a field declaration (and optionally a constructor) to the containing class.
 /// </summary>
-internal class SpecInvocationReplacer(string propositionName, string defaultModelName)
+internal class SpecInvocationReplacer(
+    string propositionName,
+    string defaultModelName,
+    ISpecFieldCustomizer fieldCustomizer)
 {
+    private string FieldName => $"_{propositionName.ToCamelCase()}";
+
     /// <summary>
     ///     Replaces the logical expression in the containing class with a spec field and invocation.
     /// </summary>
@@ -22,6 +27,7 @@ internal class SpecInvocationReplacer(string propositionName, string defaultMode
     /// <param name="root">The syntax root to transform.</param>
     /// <param name="hasInstanceMethods">Whether the expression contains instance method calls.</param>
     /// <param name="groupedExpression">The expression after and-chain grouping.</param>
+    /// <param name="modelTypeName">The model type name for the field type.</param>
     /// <returns>The updated syntax root.</returns>
     public SyntaxNode Replace(
         SyntaxContext syntaxContext,
@@ -29,136 +35,211 @@ internal class SpecInvocationReplacer(string propositionName, string defaultMode
         ExpressionSyntax logicalExpressionSyntax,
         SyntaxNode root,
         bool hasInstanceMethods,
-        ExpressionSyntax groupedExpression)
+        ExpressionSyntax groupedExpression,
+        string? modelTypeName = null)
     {
         var method = logicalExpressionSyntax.Ancestors().OfType<MethodDeclarationSyntax>().First();
         var containingClass = method.Ancestors().OfType<ClassDeclarationSyntax>().First();
         var statement = logicalExpressionSyntax.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
 
-        var fieldName = $"_{propositionName.ToCamelCase()}";
-        var originalExprText = SyntaxIndentHelper.FormatAsComment(groupedExpression);
-
-        var specInvocation = BuildSpecInvocation(variableSymbols, fieldName);
-        var fieldDeclaration = BuildFieldDeclaration(hasInstanceMethods, fieldName);
+        var commentTrivia = BuildCommentTrivia(groupedExpression);
+        var specInvocation = BuildSpecInvocationExpression(variableSymbols);
 
         var useMethodDerivedName = variableSymbols.Length == 1
             || (hasInstanceMethods && statement is null && method.ExpressionBody is not null);
         var resultVarName = useMethodDerivedName ? DeriveResultVarName(method) : "result";
-        var assignmentLine = DeriveAssignmentLine(statement, method, resultVarName);
 
-        var newMethodSource = BuildTempClassSource(
-            hasInstanceMethods, fieldDeclaration, containingClass, method,
-            originalExprText, resultVarName, specInvocation, assignmentLine);
-
-        var tempUnit = ParseCompilationUnit(newMethodSource);
-        var tempClass = tempUnit.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
-        MemberDeclarationSyntax newField = tempClass.Members.OfType<FieldDeclarationSyntax>().First()
-            .WithTrailingTrivia(syntaxContext.LineFeed);
-        MemberDeclarationSyntax newMethod = tempClass.Members.OfType<MethodDeclarationSyntax>().Last();
-        MemberDeclarationSyntax? newConstructor = hasInstanceMethods
-            ? tempClass.Members.OfType<ConstructorDeclarationSyntax>().FirstOrDefault()
+        var field = BuildFieldDeclaration(hasInstanceMethods, modelTypeName);
+        var replacementMethod = BuildReplacementMethod(method, statement, resultVarName, specInvocation, commentTrivia);
+        ConstructorDeclarationSyntax? constructor = hasInstanceMethods
+            ? BuildConstructor(containingClass)
             : null;
 
-        var extraIndent = GetExtraIndentFromOriginalMethod(method);
-        if (extraIndent.Length > 0)
+        var lineFeed = syntaxContext.LineFeed;
+        var eol = lineFeed.ToString();
+
+        var newField = FormatMember(field, eol, lineFeed);
+        var newMethod = (MemberDeclarationSyntax)replacementMethod.NormalizeWhitespace(eol: eol);
+        var newConstructor = constructor is not null
+            ? FormatMember(constructor, eol, lineFeed)
+            : null;
+
+        var indent = GetIndentFromOriginalMethod(method);
+        if (indent.Length > 0)
         {
-            newField = SyntaxIndentHelper.ReindentMember(newField, extraIndent);
-            newMethod = SyntaxIndentHelper.ReindentMember(newMethod, extraIndent);
+            newField = SyntaxIndentHelper.ReindentMember(newField, indent);
+            newMethod = SyntaxIndentHelper.ReindentMember(newMethod, indent);
             if (newConstructor is not null)
-                newConstructor = SyntaxIndentHelper.ReindentMember(newConstructor, extraIndent);
+                newConstructor = SyntaxIndentHelper.ReindentMember(newConstructor, indent);
         }
+
+        newField = newField.WithTrailingTrivia(lineFeed);
+        newMethod = newMethod.WithTrailingTrivia(lineFeed);
+        if (newConstructor is not null)
+            newConstructor = newConstructor.WithTrailingTrivia(lineFeed, lineFeed);
 
         if (!hasInstanceMethods && variableSymbols.Length == 1)
             newMethod = newMethod.WithLeadingTrivia(method.GetLeadingTrivia());
 
-        return ApplyMemberChanges(root, containingClass, method, newField, newMethod, newConstructor, fieldName);
+        return ApplyMemberChanges(root, containingClass, method, newField, newMethod, newConstructor, FieldName);
     }
 
-    private string BuildSpecInvocation(ImmutableArray<ISymbol> variableSymbols, string fieldName)
+    private MemberDeclarationSyntax FormatMember(
+        MemberDeclarationSyntax member,
+        string eol,
+        SyntaxTrivia lineFeed) =>
+        fieldCustomizer.FormatMember(member.NormalizeWhitespace(eol: eol), lineFeed);
+
+    private FieldDeclarationSyntax BuildFieldDeclaration(bool hasInstanceMethods, string? modelTypeName)
     {
-        if (variableSymbols.Length == 1)
-            return $"{fieldName}.Evaluate({variableSymbols.First().Name})";
+        var fieldType = fieldCustomizer.GetFieldType(propositionName, modelTypeName);
+        var declarator = VariableDeclarator(Identifier(FieldName));
 
-        var modelArgs = string.Join(", ", variableSymbols.Select(s => s.Name));
-        return $"{fieldName}.Evaluate(new {propositionName}.{defaultModelName}({modelArgs}))";
+        if (!hasInstanceMethods)
+        {
+            var initializer = fieldCustomizer.GetFieldInitializer(propositionName);
+            declarator = declarator.WithInitializer(EqualsValueClause(initializer));
+        }
+
+        return FieldDeclaration(
+                VariableDeclaration(fieldType)
+                    .WithVariables(SingletonSeparatedList(declarator)))
+            .WithModifiers(TokenList(
+                Token(SyntaxKind.PrivateKeyword),
+                Token(SyntaxKind.ReadOnlyKeyword)));
     }
 
-    private string BuildFieldDeclaration(bool hasInstanceMethods, string fieldName) =>
-        hasInstanceMethods
-            ? $"private readonly {propositionName} {fieldName};"
-            : $"private readonly {propositionName} {fieldName} = new();";
-
-    private string BuildTempClassSource(
-        bool hasInstanceMethods,
-        string fieldDeclaration,
-        ClassDeclarationSyntax containingClass,
-        MethodDeclarationSyntax method,
-        string originalExprText,
+    private MethodDeclarationSyntax BuildReplacementMethod(
+        MethodDeclarationSyntax originalMethod,
+        StatementSyntax? statement,
         string resultVarName,
-        string specInvocation,
-        string assignmentLine) =>
-        hasInstanceMethods
-            ? $$"""
-                class Temp
-                {
-                    {{fieldDeclaration}}
-                    public {{containingClass.Identifier}}()
-                    {
-                        {{$"_{propositionName.ToCamelCase()}"}} = new {{propositionName}}(this);
-                    }
+        ExpressionSyntax specInvocation,
+        SyntaxTriviaList commentTrivia)
+    {
+        var evaluateStatement = LocalDeclarationStatement(
+            VariableDeclaration(IdentifierName("var"))
+                .WithVariables(SingletonSeparatedList(
+                    VariableDeclarator(Identifier(resultVarName))
+                        .WithInitializer(EqualsValueClause(specInvocation)))))
+            .WithLeadingTrivia(commentTrivia);
 
-                    public {{method.ReturnType}} {{method.Identifier}}{{method.ParameterList}}
-                    {
-                        // {{originalExprText}}
-                        var {{resultVarName}} = {{specInvocation}};
-                        {{assignmentLine}}
-                    }
-                }
-                """
-            : $$"""
-                class Temp
-                {
-                    {{fieldDeclaration}}
-                    public {{method.ReturnType}} {{method.Identifier}}{{method.ParameterList}}
-                    {
-                        // {{originalExprText}}
-                        var {{resultVarName}} = {{specInvocation}};
-                        {{assignmentLine}}
-                    }
-                }
-                """;
+        var assignmentStatement = BuildAssignmentStatement(statement, originalMethod, resultVarName);
+
+        var body = Block(evaluateStatement, assignmentStatement);
+
+        return originalMethod
+            .WithAttributeLists(List<AttributeListSyntax>())
+            .WithExpressionBody(null)
+            .WithSemicolonToken(Token(SyntaxKind.None))
+            .WithBody(body);
+    }
+
+    private ConstructorDeclarationSyntax BuildConstructor(ClassDeclarationSyntax containingClass)
+    {
+        var assignment = fieldCustomizer.GetConstructorAssignment(propositionName);
+
+        var assignmentStatement = ExpressionStatement(
+            AssignmentExpression(
+                SyntaxKind.SimpleAssignmentExpression,
+                IdentifierName(FieldName),
+                assignment));
+
+        return ConstructorDeclaration(containingClass.Identifier)
+            .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+            .WithBody(Block(assignmentStatement));
+    }
+
+    private InvocationExpressionSyntax BuildSpecInvocationExpression(
+        ImmutableArray<ISymbol> variableSymbols)
+    {
+        var evaluateAccess = MemberAccessExpression(
+            SyntaxKind.SimpleMemberAccessExpression,
+            IdentifierName(FieldName),
+            IdentifierName("Evaluate"));
+
+        ArgumentSyntax argument;
+        if (variableSymbols.Length == 1)
+        {
+            argument = Argument(IdentifierName(variableSymbols.First().Name));
+        }
+        else
+        {
+            var modelArgs = variableSymbols.Select(s => Argument(IdentifierName(s.Name)));
+            var modelCreation = ObjectCreationExpression(
+                    QualifiedName(IdentifierName(propositionName), IdentifierName(defaultModelName)))
+                .WithArgumentList(ArgumentList(SeparatedList(modelArgs)));
+            argument = Argument(modelCreation);
+        }
+
+        return InvocationExpression(evaluateAccess)
+            .WithArgumentList(ArgumentList(SingletonSeparatedList(argument)));
+    }
+
+    private static StatementSyntax BuildAssignmentStatement(
+        StatementSyntax? statement,
+        MethodDeclarationSyntax method,
+        string resultVarName)
+    {
+        var satisfiedAccess = MemberAccessExpression(
+            SyntaxKind.SimpleMemberAccessExpression,
+            IdentifierName(resultVarName),
+            IdentifierName("Satisfied"));
+
+        return statement switch
+        {
+            ReturnStatementSyntax => ReturnStatement(satisfiedAccess),
+            LocalDeclarationStatementSyntax local =>
+                LocalDeclarationStatement(
+                    VariableDeclaration(IdentifierName("var"))
+                        .WithVariables(SingletonSeparatedList(
+                            VariableDeclarator(local.Declaration.Variables.First().Identifier)
+                                .WithInitializer(EqualsValueClause(satisfiedAccess))))),
+            ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax assignment } =>
+                ExpressionStatement(
+                    AssignmentExpression(
+                        SyntaxKind.SimpleAssignmentExpression,
+                        assignment.Left,
+                        satisfiedAccess)),
+            null when method.ExpressionBody is not null && method.ReturnType.ToString() == "bool"
+                => ReturnStatement(satisfiedAccess),
+            _ => LocalDeclarationStatement(
+                VariableDeclaration(IdentifierName("var"))
+                    .WithVariables(SingletonSeparatedList(
+                        VariableDeclarator(Identifier("isSatisfied"))
+                            .WithInitializer(EqualsValueClause(satisfiedAccess)))))
+        };
+    }
+
+    private static SyntaxTriviaList BuildCommentTrivia(ExpressionSyntax expression)
+    {
+        var normalized = expression.NormalizeWhitespace().ToFullString();
+        var parts = normalized.Split([" || "], 2, StringSplitOptions.None);
+
+        var trivia = new List<SyntaxTrivia>();
+        if (parts.Length <= 1)
+        {
+            trivia.Add(Comment($"// {normalized}"));
+            trivia.Add(EndOfLine("\n"));
+        }
+        else
+        {
+            trivia.Add(Comment($"// {parts[0]} ||"));
+            trivia.Add(EndOfLine("\n"));
+            trivia.Add(Comment($"//     {parts[1]}"));
+            trivia.Add(EndOfLine("\n"));
+        }
+
+        return TriviaList(trivia);
+    }
 
     private static string DeriveResultVarName(MethodDeclarationSyntax method) =>
         $"{method.Identifier.ValueText.ToCamelCase()}Result";
 
-    private static string DeriveAssignmentLine(
-        StatementSyntax? statement,
-        MethodDeclarationSyntax method,
-        string resultVarName) =>
-        statement switch
-        {
-            ReturnStatementSyntax => $"return {resultVarName}.Satisfied;",
-            LocalDeclarationStatementSyntax local =>
-                $"var {local.Declaration.Variables.First().Identifier.Text} = {resultVarName}.Satisfied;",
-            ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax assignment } =>
-                $"{assignment.Left} = {resultVarName}.Satisfied;",
-            null when method.ExpressionBody is not null && method.ReturnType.ToString() == "bool"
-                => $"return {resultVarName}.Satisfied;",
-            _ => $"var isSatisfied = {resultVarName}.Satisfied;"
-        };
-
-    private static string GetExtraIndentFromOriginalMethod(MethodDeclarationSyntax method)
-    {
-        const string templateBaseIndent = "    ";
-        var originalIndent = method
+    private static string GetIndentFromOriginalMethod(MethodDeclarationSyntax method) =>
+        method
             .GetLeadingTrivia()
             .LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia))
             .ToString();
-
-        return originalIndent.Length > templateBaseIndent.Length
-            ? originalIndent.Substring(templateBaseIndent.Length)
-            : "";
-    }
 
     private static SyntaxNode ApplyMemberChanges(
         SyntaxNode root,

@@ -35,22 +35,34 @@ internal static class SpecClassPlacer
     }
 
     /// <summary>
-    ///     Adds <c>using Motiv;</c> to the compilation unit if not already present.
+    ///     Adds <c>using Motiv;</c> and any additional usings from the field customizer
+    ///     to the compilation unit if not already present.
     /// </summary>
     /// <param name="newRoot">The syntax root to update.</param>
+    /// <param name="fieldCustomizer">The field customizer providing additional using directives.</param>
     /// <returns>The updated syntax root with using statements.</returns>
-    public static SyntaxNode AddUsingStatementsIfNeeded(SyntaxNode newRoot)
+    public static SyntaxNode AddUsingStatementsIfNeeded(SyntaxNode newRoot, ISpecFieldCustomizer fieldCustomizer)
     {
         var compilationUnit = (CompilationUnitSyntax)newRoot;
+        var existingUsings = new HashSet<string>(
+            compilationUnit.Usings
+                .Select(u => u.Name?.ToString())
+                .Where(n => n is not null)!);
 
-        if (compilationUnit.Usings.Any(u => u.Name?.ToString() == nameof(Motiv)))
-            return newRoot;
+        var usingsToAdd = fieldCustomizer.GetAdditionalUsings()
+            .Where(u => !existingUsings.Contains(u.Name?.ToString() ?? ""))
+            .ToList();
 
-        var motivUsing = UsingDirective(IdentifierName(nameof(Motiv)))
-            .NormalizeWhitespace()
-            .WithTrailingTrivia(EndOfLine("\n"), EndOfLine("\n"));
+        if (!existingUsings.Contains(nameof(Motiv)))
+        {
+            usingsToAdd.Add(UsingDirective(IdentifierName(nameof(Motiv)))
+                .NormalizeWhitespace()
+                .WithTrailingTrivia(EndOfLine("\n"), EndOfLine("\n")));
+        }
 
-        return compilationUnit.AddUsings(motivUsing);
+        return usingsToAdd.Count > 0
+            ? compilationUnit.AddUsings(usingsToAdd.ToArray())
+            : newRoot;
     }
 
     /// <summary>
