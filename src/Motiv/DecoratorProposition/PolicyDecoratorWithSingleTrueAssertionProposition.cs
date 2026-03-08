@@ -21,9 +21,9 @@ internal sealed class PolicyDecoratorWithSingleTrueAssertionProposition<TModel, 
 
     public override bool Matches(TModel model) => underlyingPolicy.Matches(model);
 
-    protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
+    protected override PolicyResultBase<string> EvaluatePolicy(TModel model)
     {
-        var underlyingResult = underlyingPolicy.IsSatisfiedBy(model);
+        var underlyingResult = underlyingPolicy.Evaluate(model);
         PolicyResultBase<TUnderlyingMetadata>[] underlyingResults = [underlyingResult];
 
         var assertion = new Lazy<string>(() =>

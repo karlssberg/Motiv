@@ -22,12 +22,12 @@ var isEligible = Spec
 var observed = isEligible.TapWhenTrue((customer, result) =>
     logger.LogInformation("Customer {Id} approved", customer.Id));
 
-var result = observed.IsSatisfiedBy(goodCustomer);
+var result = observed.Evaluate(goodCustomer);
 // Logger called: "Customer 42 approved"
 result.Satisfied;  // true
 result.Assertions; // ["eligible for loan"]
 
-var result2 = observed.IsSatisfiedBy(badCustomer);
+var result2 = observed.Evaluate(badCustomer);
 // Logger NOT called
 result2.Satisfied;  // false
 result2.Assertions; // ["not eligible for loan"]

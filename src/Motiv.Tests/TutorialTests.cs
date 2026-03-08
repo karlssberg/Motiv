@@ -9,13 +9,13 @@ public class TutorialTests
             .Build<int>(n => n % 2 == 0)
             .Create("is even");
 
-        isEven.IsSatisfiedBy(2).Satisfied.ShouldBeTrue();
-        isEven.IsSatisfiedBy(2).Reason.ShouldBe("is even == true");
-        isEven.IsSatisfiedBy(2).Assertions.ShouldBe(["is even == true"]);
+        isEven.Evaluate(2).Satisfied.ShouldBeTrue();
+        isEven.Evaluate(2).Reason.ShouldBe("is even == true");
+        isEven.Evaluate(2).Assertions.ShouldBe(["is even == true"]);
 
-        isEven.IsSatisfiedBy(3).Satisfied.ShouldBeFalse();
-        isEven.IsSatisfiedBy(3).Reason.ShouldBe("is even == false");
-        isEven.IsSatisfiedBy(3).Assertions.ShouldBe(["is even == false"]);
+        isEven.Evaluate(3).Satisfied.ShouldBeFalse();
+        isEven.Evaluate(3).Reason.ShouldBe("is even == false");
+        isEven.Evaluate(3).Assertions.ShouldBe(["is even == false"]);
     }
 
     [Fact]
@@ -27,11 +27,11 @@ public class TutorialTests
             .WhenFalse("number is odd")
             .Create();
 
-        isEven.IsSatisfiedBy(2).Reason.ShouldBe("number is even");
-        isEven.IsSatisfiedBy(2).Assertions.ShouldBe(["number is even"]);
+        isEven.Evaluate(2).Reason.ShouldBe("number is even");
+        isEven.Evaluate(2).Assertions.ShouldBe(["number is even"]);
 
-        isEven.IsSatisfiedBy(3).Reason.ShouldBe("number is odd");
-        isEven.IsSatisfiedBy(3).Assertions.ShouldBe(["number is odd"]);
+        isEven.Evaluate(3).Reason.ShouldBe("number is odd");
+        isEven.Evaluate(3).Assertions.ShouldBe(["number is odd"]);
     }
 
     [Fact]
@@ -43,11 +43,11 @@ public class TutorialTests
             .WhenFalse(n => $"{n} is odd")
             .Create("is even");
 
-        isEven.IsSatisfiedBy(2).Reason.ShouldBe("2 is even");
-        isEven.IsSatisfiedBy(2).Assertions.ShouldBe(["2 is even"]);
+        isEven.Evaluate(2).Reason.ShouldBe("2 is even");
+        isEven.Evaluate(2).Assertions.ShouldBe(["2 is even"]);
 
-        isEven.IsSatisfiedBy(3).Reason.ShouldBe("3 is odd");
-        isEven.IsSatisfiedBy(3).Assertions.ShouldBe(["3 is odd"]);
+        isEven.Evaluate(3).Reason.ShouldBe("3 is odd");
+        isEven.Evaluate(3).Assertions.ShouldBe(["3 is odd"]);
     }
 
     [Fact]
@@ -59,10 +59,10 @@ public class TutorialTests
             .WhenFalse(_ => new { English = "the number is odd", Spanish = "el número es impar" })
             .Create("is even number");
 
-        isEven.IsSatisfiedBy(2).Satisfied.ShouldBeTrue();
-        isEven.IsSatisfiedBy(2).Reason.ShouldBe("is even number == true");
-        isEven.IsSatisfiedBy(2).Values.Select(m => m.English).ShouldBe(["the number is even"]);
-        isEven.IsSatisfiedBy(2).Values.Select(m => m.Spanish).ShouldBe(["el número es par"]);
+        isEven.Evaluate(2).Satisfied.ShouldBeTrue();
+        isEven.Evaluate(2).Reason.ShouldBe("is even number == true");
+        isEven.Evaluate(2).Values.Select(m => m.English).ShouldBe(["the number is even"]);
+        isEven.Evaluate(2).Values.Select(m => m.Spanish).ShouldBe(["el número es par"]);
     }
 
     [Fact]
@@ -82,20 +82,20 @@ public class TutorialTests
 
         var isPositiveAndEven = isPositive & isEven;
 
-        isPositiveAndEven.IsSatisfiedBy(2).Satisfied.ShouldBeTrue();
-        isPositiveAndEven.IsSatisfiedBy(2).Reason.ShouldBe("the number is positive & the number is even");
-        isPositiveAndEven.IsSatisfiedBy(2).Assertions.ShouldBe(["the number is positive", "the number is even"]);
-        isPositiveAndEven.IsSatisfiedBy(2).AllAssertions.ShouldBe(["the number is positive", "the number is even"]);
+        isPositiveAndEven.Evaluate(2).Satisfied.ShouldBeTrue();
+        isPositiveAndEven.Evaluate(2).Reason.ShouldBe("the number is positive & the number is even");
+        isPositiveAndEven.Evaluate(2).Assertions.ShouldBe(["the number is positive", "the number is even"]);
+        isPositiveAndEven.Evaluate(2).AllAssertions.ShouldBe(["the number is positive", "the number is even"]);
 
-        isPositiveAndEven.IsSatisfiedBy(3).Satisfied.ShouldBeFalse();
-        isPositiveAndEven.IsSatisfiedBy(3).Reason.ShouldBe("the number is odd");
-        isPositiveAndEven.IsSatisfiedBy(3).Assertions.ShouldBe(["the number is odd"]);
-        isPositiveAndEven.IsSatisfiedBy(3).AllAssertions.ShouldBe(["the number is positive", "the number is odd"]);
+        isPositiveAndEven.Evaluate(3).Satisfied.ShouldBeFalse();
+        isPositiveAndEven.Evaluate(3).Reason.ShouldBe("the number is odd");
+        isPositiveAndEven.Evaluate(3).Assertions.ShouldBe(["the number is odd"]);
+        isPositiveAndEven.Evaluate(3).AllAssertions.ShouldBe(["the number is positive", "the number is odd"]);
 
-        isPositiveAndEven.IsSatisfiedBy(-2).Satisfied.ShouldBeFalse();
-        isPositiveAndEven.IsSatisfiedBy(-2).Reason.ShouldBe("the number is negative");
-        isPositiveAndEven.IsSatisfiedBy(-2).Assertions.ShouldBe(["the number is negative"]);
-        isPositiveAndEven.IsSatisfiedBy(-2).AllAssertions.ShouldBe(["the number is negative", "the number is even"]);
+        isPositiveAndEven.Evaluate(-2).Satisfied.ShouldBeFalse();
+        isPositiveAndEven.Evaluate(-2).Reason.ShouldBe("the number is negative");
+        isPositiveAndEven.Evaluate(-2).Assertions.ShouldBe(["the number is negative"]);
+        isPositiveAndEven.Evaluate(-2).AllAssertions.ShouldBe(["the number is negative", "the number is even"]);
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class TutorialTests
                 })
                 .Create();
 
-        var act = allAreNegativeSpec.IsSatisfiedBy([-2, -1, 0, 1, 2]);
+        var act = allAreNegativeSpec.Evaluate([-2, -1, 0, 1, 2]);
 
         act.Satisfied.ShouldBeFalse();
         act.Assertions.ShouldBe(["0  is not negative", "1  is not negative", "2  is not negative"]);
@@ -145,10 +145,10 @@ public class TutorialTests
                 .WhenFalse((_,evaluation) => $"the number is {evaluation.Assertions.Serialize()}")
                 .Create();
 
-        isEvenAndPositiveSpec.IsSatisfiedBy(2).Satisfied.ShouldBeTrue();
-        isEvenAndPositiveSpec.IsSatisfiedBy(2).Reason.ShouldBe("the number is even and positive");
-        isEvenAndPositiveSpec.IsSatisfiedBy(-2).Reason.ShouldBe("the number is not positive");
-        isEvenAndPositiveSpec.IsSatisfiedBy(-3).Reason.ShouldBe("the number is odd and not positive");
+        isEvenAndPositiveSpec.Evaluate(2).Satisfied.ShouldBeTrue();
+        isEvenAndPositiveSpec.Evaluate(2).Reason.ShouldBe("the number is even and positive");
+        isEvenAndPositiveSpec.Evaluate(-2).Reason.ShouldBe("the number is not positive");
+        isEvenAndPositiveSpec.Evaluate(-3).Reason.ShouldBe("the number is odd and not positive");
     }
 
     public record BasketItem(bool FreeShipping)
@@ -179,7 +179,7 @@ public class TutorialTests
 
         var showShippingPageButton = (!isBasketEmptySpec).AndAlso(!isFreeShippingSpec);
 
-        var result = showShippingPageButton.IsSatisfiedBy(emptyBasket);
+        var result = showShippingPageButton.Evaluate(emptyBasket);
 
         result.Satisfied.ShouldBeFalse();
         result.Reason.ShouldBe("!basket is empty");
@@ -221,27 +221,27 @@ public class TutorialTests
                     })
                 .Create("all are even");
 
-        allAreEven.IsSatisfiedBy([2, 4, 6, 8]).Satisfied.ShouldBeTrue();
-        allAreEven.IsSatisfiedBy([2, 4, 6, 8]).Assertions.ShouldBe(["all are even"]);
+        allAreEven.Evaluate([2, 4, 6, 8]).Satisfied.ShouldBeTrue();
+        allAreEven.Evaluate([2, 4, 6, 8]).Assertions.ShouldBe(["all are even"]);
 
-        allAreEven.IsSatisfiedBy([10]).Satisfied.ShouldBeTrue();
-        allAreEven.IsSatisfiedBy([10]).Assertions.ShouldBe(["10 is even and is the only item"]);
+        allAreEven.Evaluate([10]).Satisfied.ShouldBeTrue();
+        allAreEven.Evaluate([10]).Assertions.ShouldBe(["10 is even and is the only item"]);
 
 
-        allAreEven.IsSatisfiedBy([11]).Satisfied.ShouldBeFalse();
-        allAreEven.IsSatisfiedBy([11]).Assertions.ShouldBe(["11 is odd and is the only item"]);
+        allAreEven.Evaluate([11]).Satisfied.ShouldBeFalse();
+        allAreEven.Evaluate([11]).Assertions.ShouldBe(["11 is odd and is the only item"]);
 
-        allAreEven.IsSatisfiedBy([2, 4, 6, 9]).Satisfied.ShouldBeFalse();
-        allAreEven.IsSatisfiedBy([2, 4, 6, 9]).Assertions.ShouldBe(["only 9 is odd"]);
+        allAreEven.Evaluate([2, 4, 6, 9]).Satisfied.ShouldBeFalse();
+        allAreEven.Evaluate([2, 4, 6, 9]).Assertions.ShouldBe(["only 9 is odd"]);
 
-        allAreEven.IsSatisfiedBy([]).Satisfied.ShouldBeTrue();
-        allAreEven.IsSatisfiedBy([]).Assertions.ShouldBe(["the collection is empty"]);
+        allAreEven.Evaluate([]).Satisfied.ShouldBeTrue();
+        allAreEven.Evaluate([]).Assertions.ShouldBe(["the collection is empty"]);
 
-        allAreEven.IsSatisfiedBy([1, 3, 5, 7]).Satisfied.ShouldBeFalse();
-        allAreEven.IsSatisfiedBy([1, 3, 5, 7]).Assertions.ShouldBe(["all are odd"]);
+        allAreEven.Evaluate([1, 3, 5, 7]).Satisfied.ShouldBeFalse();
+        allAreEven.Evaluate([1, 3, 5, 7]).Assertions.ShouldBe(["all are odd"]);
 
-        allAreEven.IsSatisfiedBy([2, 4, 5, 7]).Satisfied.ShouldBeFalse();
-        allAreEven.IsSatisfiedBy([2, 4, 5, 7]).Assertions.ShouldBe(["5 is odd", "7 is odd"]);
+        allAreEven.Evaluate([2, 4, 5, 7]).Satisfied.ShouldBeFalse();
+        allAreEven.Evaluate([2, 4, 5, 7]).Assertions.ShouldBe(["5 is odd", "7 is odd"]);
     }
 
     [Fact]
@@ -271,33 +271,33 @@ public class TutorialTests
                 .Create("all are negative");
 
 
-        allAreNegative.IsSatisfiedBy([]).Satisfied.ShouldBeTrue();
-        allAreNegative.IsSatisfiedBy([]).Assertions.ShouldBe(["there is an absence of numbers"]);
+        allAreNegative.Evaluate([]).Satisfied.ShouldBeTrue();
+        allAreNegative.Evaluate([]).Assertions.ShouldBe(["there is an absence of numbers"]);
 
-        allAreNegative.IsSatisfiedBy([-10]).Satisfied.ShouldBeTrue();
-        allAreNegative.IsSatisfiedBy([-10]).Assertions.ShouldBe(["-10 is negative and is the only number"]);
+        allAreNegative.Evaluate([-10]).Satisfied.ShouldBeTrue();
+        allAreNegative.Evaluate([-10]).Assertions.ShouldBe(["-10 is negative and is the only number"]);
 
-        allAreNegative.IsSatisfiedBy([-2, -4, -6, -8]).Satisfied.ShouldBeTrue();
-        allAreNegative.IsSatisfiedBy([-2, -4, -6, -8]).Assertions.ShouldBe(["all are negative numbers"]);
+        allAreNegative.Evaluate([-2, -4, -6, -8]).Satisfied.ShouldBeTrue();
+        allAreNegative.Evaluate([-2, -4, -6, -8]).Assertions.ShouldBe(["all are negative numbers"]);
 
-        allAreNegative.IsSatisfiedBy([0]).Satisfied.ShouldBeFalse();
-        allAreNegative.IsSatisfiedBy([0]).Assertions.ShouldBe(["the number is 0 and is the only number"]);
+        allAreNegative.Evaluate([0]).Satisfied.ShouldBeFalse();
+        allAreNegative.Evaluate([0]).Assertions.ShouldBe(["the number is 0 and is the only number"]);
 
-        allAreNegative.IsSatisfiedBy([11]).Satisfied.ShouldBeFalse();
-        allAreNegative.IsSatisfiedBy([11]).Assertions.ShouldBe(["11 is positive and is the only number"]);
+        allAreNegative.Evaluate([11]).Satisfied.ShouldBeFalse();
+        allAreNegative.Evaluate([11]).Assertions.ShouldBe(["11 is positive and is the only number"]);
 
-        allAreNegative.IsSatisfiedBy([0, 0, 0, 0]).Satisfied.ShouldBeFalse();
-        allAreNegative.IsSatisfiedBy([0, 0, 0, 0]).Assertions.ShouldBe(["all are 0"]);
+        allAreNegative.Evaluate([0, 0, 0, 0]).Satisfied.ShouldBeFalse();
+        allAreNegative.Evaluate([0, 0, 0, 0]).Assertions.ShouldBe(["all are 0"]);
 
-        allAreNegative.IsSatisfiedBy([2, 4, 6, 8]).Satisfied.ShouldBeFalse();
-        allAreNegative.IsSatisfiedBy([2, 4, 6, 8]).Assertions.ShouldBe(["all are positive numbers"]);
+        allAreNegative.Evaluate([2, 4, 6, 8]).Satisfied.ShouldBeFalse();
+        allAreNegative.Evaluate([2, 4, 6, 8]).Assertions.ShouldBe(["all are positive numbers"]);
 
-        allAreNegative.IsSatisfiedBy([0, 1, 2, 3]).Satisfied.ShouldBeFalse();
-        allAreNegative.IsSatisfiedBy([0, 1, 2, 3]).Assertions.ShouldBe(["none are negative numbers"]);
+        allAreNegative.Evaluate([0, 1, 2, 3]).Satisfied.ShouldBeFalse();
+        allAreNegative.Evaluate([0, 1, 2, 3]).Assertions.ShouldBe(["none are negative numbers"]);
 
 
-        allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Satisfied.ShouldBeFalse();
-        allAreNegative.IsSatisfiedBy([-2, -4, 0, 9]).Assertions.ShouldBe(["0 is not negative", "9 is not negative"]);
+        allAreNegative.Evaluate([-2, -4, 0, 9]).Satisfied.ShouldBeFalse();
+        allAreNegative.Evaluate([-2, -4, 0, 9]).Assertions.ShouldBe(["0 is not negative", "9 is not negative"]);
     }
 
 #endif
@@ -318,13 +318,13 @@ public class TutorialTests
                 .Create();
 
         var isIntegerPositiveAndEvenSpec =
-            Spec.Build((int n) => isLongEvenSpec.IsSatisfiedBy(n) & isDecimalPositiveSpec.IsSatisfiedBy(n))
+            Spec.Build((int n) => isLongEvenSpec.Evaluate(n) & isDecimalPositiveSpec.Evaluate(n))
                 .Create("even and positive");
 
-        isIntegerPositiveAndEvenSpec.IsSatisfiedBy(2).AllRootAssertions.ShouldBe(["even", "positive"]);
-        isIntegerPositiveAndEvenSpec.IsSatisfiedBy(3).AllRootAssertions.ShouldBe(["odd", "positive"]);
-        isIntegerPositiveAndEvenSpec.IsSatisfiedBy(0).AllRootAssertions.ShouldBe(["even", "not positive"]);
-        isIntegerPositiveAndEvenSpec.IsSatisfiedBy(-3).AllRootAssertions.ShouldBe(["odd", "not positive"]);
+        isIntegerPositiveAndEvenSpec.Evaluate(2).AllRootAssertions.ShouldBe(["even", "positive"]);
+        isIntegerPositiveAndEvenSpec.Evaluate(3).AllRootAssertions.ShouldBe(["odd", "positive"]);
+        isIntegerPositiveAndEvenSpec.Evaluate(0).AllRootAssertions.ShouldBe(["even", "not positive"]);
+        isIntegerPositiveAndEvenSpec.Evaluate(-3).AllRootAssertions.ShouldBe(["odd", "not positive"]);
     }
 
     private record Passenger(bool HasValidTicket, decimal OutstandingFees, DateTime FlightTime)
@@ -363,7 +363,7 @@ public class TutorialTests
         var validPassenger = new Passenger(true, 0, DateTime.Now.AddHours(1));
 
 
-        var canCheckIn = canCheckInSpec.IsSatisfiedBy(validPassenger);
+        var canCheckIn = canCheckInSpec.Evaluate(validPassenger);
 
         canCheckIn.Satisfied.ShouldBe(true);
         canCheckIn.Reason.ShouldBe("has a valid ticket & !does not have outstanding fees & check-in is open");
@@ -397,7 +397,7 @@ public class TutorialTests
                 .WhenFalseYield((_, result) => result.Assertions) // reusing assertions from the original propositions
                 .Create();
 
-        var act = isEligibleForLoan.IsSatisfiedBy(new Customer(200, 20000));
+        var act = isEligibleForLoan.Evaluate(new Customer(200, 20000));
 
         act.Satisfied.ShouldBeFalse();
 
@@ -431,7 +431,7 @@ public class TutorialTests
             .WhenFalse("subscription is not within grace period")
             .Create();
 
-        var act = hasSubscriptionInGracePeriod.IsSatisfiedBy(new Subscription(DateTime.Now.AddDays(-3)));
+        var act = hasSubscriptionInGracePeriod.Evaluate(new Subscription(DateTime.Now.AddDays(-3)));
 
             act.Satisfied.ShouldBeTrue();
             act.Reason.ShouldBe("subscription is within grace period");
@@ -453,7 +453,7 @@ public class TutorialTests
                 .WhenFalse("all odd")
                 .Create();
 
-        var act = areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]);
+        var act = areEven.Evaluate([ 1, 2, 3, 4 ]);
 
         act.GetRootAssertions().ShouldBe(["is even"]);
     }
@@ -475,7 +475,7 @@ public class TutorialTests
                 .WhenFalse("all odd")
                 .Create();
 
-        var act = areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]);
+        var act = areEven.Evaluate([ 1, 2, 3, 4 ]);
 
         act.GetAllRootAssertions().ShouldBe(["is even", "is odd"], true);
     }
@@ -521,7 +521,7 @@ public class TutorialTests
                 .WhenFalse(n => n.ToString())
                 .Create("should substitute number");
 
-        var act = isSubstitution.IsSatisfiedBy(number);
+        var act = isSubstitution.Evaluate(number);
 
         act.Satisfied.ShouldBe(expectedSatisfied);
         act.Value.ShouldBe(expectedReason);
@@ -539,7 +539,7 @@ public class TutorialTests
         var isPartiallyFull = isValid & !(isEmpty | isFull);
 
         // Evaluate proposition
-        var result = isPartiallyFull.IsSatisfiedBy(5);
+        var result = isPartiallyFull.Evaluate(5);
 
         result.Satisfied.ShouldBeTrue();
         result.Assertions.ShouldBe(["valid == true", "empty == false", "full == false"]);
@@ -562,7 +562,7 @@ public class TutorialTests
             .Create("in range and even");
 
         // Evaluate proposition (elsewhere in your code)
-        var result = isInRangeAndEven.IsSatisfiedBy(11);
+        var result = isInRangeAndEven.Evaluate(11);
 
         result.Satisfied.ShouldBeFalse();
         result.Reason.ShouldBe("in range and even == false");
@@ -581,8 +581,8 @@ public class TutorialTests
                 .WhenFalse("none")
                 .Create("xor");
 
-        spec.IsSatisfiedBy(true).Assertions.ShouldBe(["left == true"]);
-        spec.IsSatisfiedBy(false).Assertions.ShouldBe(["right == true"]);
+        spec.Evaluate(true).Assertions.ShouldBe(["left == true"]);
+        spec.Evaluate(false).Assertions.ShouldBe(["right == true"]);
     }
 
     [Fact]
@@ -597,8 +597,8 @@ public class TutorialTests
                 .WhenFalse("none")
                 .Create("xor");
 
-        spec.IsSatisfiedBy(true).Assertions.ShouldBe(["right == false"]);
-        spec.IsSatisfiedBy(false).Assertions.ShouldBe(["left == false"]);
+        spec.Evaluate(true).Assertions.ShouldBe(["right == false"]);
+        spec.Evaluate(false).Assertions.ShouldBe(["left == false"]);
     }
 
     [Fact]
@@ -611,7 +611,7 @@ public class TutorialTests
                 .WhenFalseYield(eval => eval.FalseModels.Select(n => $"{n} is not negative"))
                 .Create();
 
-        BooleanResultBase<string> result = allNegative.IsSatisfiedBy([-1, 2, 3]);
+        BooleanResultBase<string> result = allNegative.Evaluate([-1, 2, 3]);
 
         result.Satisfied.ShouldBeFalse();
         result.Reason.ShouldBe("all are negative == false");
@@ -626,7 +626,7 @@ public class TutorialTests
                 & numbers.All(n => n > 0))
             .Create("all positive numbers amd some are even");
 
-        var result = areAnyEvenAndAllPositive.IsSatisfiedBy([-1, 2, 3]);
+        var result = areAnyEvenAndAllPositive.Evaluate([-1, 2, 3]);
 
         result.Satisfied.ShouldBeFalse();
         result.Assertions.ShouldBe(["n <= 0"]);

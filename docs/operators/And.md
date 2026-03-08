@@ -33,7 +33,7 @@ var hasSubscriptionEnded =
 
 var isActiveSubscription = hasSubscriptionStarted & !hasSubscriptionEnded;
 
-var result = isActiveSubscription.IsSatisfiedBy(activeSubscription);
+var result = isActiveSubscription.Evaluate(activeSubscription);
 
 result.Satisfied; // true
 result.Reason; // "subscription has started & subscription has not ended"
@@ -41,7 +41,7 @@ result.Assertions; // ["subscription has started", "subscription has not ended"]
 ```
 And when encountering an unsatisfied model:
 ```csharp
-var result = isActiveSubscription.IsSatisfiedBy(inactiveSubscription);
+var result = isActiveSubscription.Evaluate(inactiveSubscription);
 
 result.Satisfied; // false
 result.Reason; // "subscription has ended"
@@ -83,8 +83,8 @@ var isValidLocation =
         .Create();
 
 var canViewContent = 
-    isValidLocation.IsSatisfiedBy(device) &
-    isActiveSubscription.IsSatisfiedBy(subscription);
+    isValidLocation.Evaluate(device) &
+    isActiveSubscription.Evaluate(subscription);
 ```
 
 The results of the `&` operation being performed on two boolean results will be a new <xref:Motiv.BooleanResultBase`1>
@@ -92,6 +92,6 @@ instance that contains the results of the two.
 The `Result` property will therefore contain the assertions of both underlying propositions.
 
 ```csharp
-var result = isActiveSubscriptionResult.IsSatisfiedBy(activeSubscription);
+var result = isActiveSubscriptionResult.Evaluate(activeSubscription);
 result.Reason; // "subscription has started & subscription has not ended"
 ```

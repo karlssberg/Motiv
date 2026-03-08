@@ -14,7 +14,7 @@ public class PropositionResultDescriptionTests
             .WhenFalse("is false")
             .Create();
 
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
 
         // Act
         var act = result.Reason;
@@ -35,7 +35,7 @@ public class PropositionResultDescriptionTests
             .WhenFalse("is false")
             .Create("is true proposition");
 
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
 
         // Act
         var act = result.Reason;
@@ -59,7 +59,7 @@ public class PropositionResultDescriptionTests
             .WhenFalse(false)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -90,7 +90,7 @@ public class PropositionResultDescriptionTests
 
         var spec = (left & !right) | (!left & right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -143,7 +143,7 @@ public class PropositionResultDescriptionTests
 
         var spec = (first | second) & (third | fourth);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -204,7 +204,7 @@ public class PropositionResultDescriptionTests
 
         var spec = (first | second) & (third | fourth);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -265,7 +265,7 @@ public class PropositionResultDescriptionTests
 
         var spec = (first | second) & (third | fourth);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Description.ToString();
@@ -453,7 +453,7 @@ public class PropositionResultDescriptionTests
             .WhenFalse("some are false")
             .Create();
 
-        var result = spec.IsSatisfiedBy([true]);
+        var result = spec.Evaluate([true]);
 
         // Act
         var act = result.Justification;
@@ -608,7 +608,7 @@ public class PropositionResultDescriptionTests
             .Create("fourth");
 
         var spec = (first | !second) & !(third | !fourth);
-        var result = spec.IsSatisfiedBy(true);
+        var result = spec.Evaluate(true);
 
         // Act
         var act = result.Justification;
@@ -628,7 +628,7 @@ public class PropositionResultDescriptionTests
             .WhenFalse("is false")
             .Create("always true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         var act = result.Description.ToString();
 
@@ -837,7 +837,7 @@ public class PropositionResultDescriptionTests
             .Create("seventh");
 
         var spec = (first & second).AndAlso((third | fourth) & (fifth | sixth) & seventh);
-        var result = spec.IsSatisfiedBy(true);
+        var result = spec.Evaluate(true);
 
         // Act
         var act = result.Justification;
@@ -882,7 +882,7 @@ public class PropositionResultDescriptionTests
 
 
         var spec = first.AndAlso(second & third & fourth);
-        var result = spec.IsSatisfiedBy(true);
+        var result = spec.Evaluate(true);
 
         // Act
         var act = result.Justification;
@@ -920,7 +920,7 @@ public class PropositionResultDescriptionTests
             .Create("fourth");
 
         var spec = first | (second | third | fourth);
-        var result = spec.IsSatisfiedBy(true);
+        var result = spec.Evaluate(true);
 
         // Act
         var act = result.Justification;
@@ -950,7 +950,7 @@ public class PropositionResultDescriptionTests
 
         var spec =  !(specB | specC);
 
-        var act = spec.IsSatisfiedBy(model);
+        var act = spec.Evaluate(model);
 
         act.Satisfied.ShouldBe(expectedSatisfied);
         act.Reason.ShouldBe(expectedReason);
@@ -971,7 +971,7 @@ public class PropositionResultDescriptionTests
 
         var spec = !(!specB | !specC);
 
-        var act = spec.IsSatisfiedBy(model);
+        var act = spec.Evaluate(model);
 
         act.Satisfied.ShouldBe(expectedSatisfied);
         act.Reason.ShouldBe(expectedReason);
@@ -993,7 +993,7 @@ public class PropositionResultDescriptionTests
 
         var spec = !(!!specB | !!specC);
 
-        var act = spec.IsSatisfiedBy(model);
+        var act = spec.Evaluate(model);
 
         act.Satisfied.ShouldBe(expectedSatisfied);
         act.Reason.ShouldBe(expectedReason);
@@ -1022,7 +1022,7 @@ public class PropositionResultDescriptionTests
 
         var spec = !(!specB | !specC);
 
-        var act = spec.IsSatisfiedBy(model);
+        var act = spec.Evaluate(model);
 
         act.Satisfied.ShouldBe(expectedSatisfied);
         act.Reason.ShouldBe(expectedReason);
@@ -1051,7 +1051,7 @@ public class PropositionResultDescriptionTests
 
         var spec = !(!!specB | !!specC);
 
-        var act = spec.IsSatisfiedBy(model);
+        var act = spec.Evaluate(model);
 
         act.Satisfied.ShouldBe(expectedSatisfied);
         act.Reason.ShouldBe(expectedReason);

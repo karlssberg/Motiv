@@ -19,7 +19,7 @@ internal sealed class HigherOrderFromBooleanPredicateMultiMetadataProposition<TM
     public override bool Matches(IEnumerable<TModel> models) =>
         EvaluateModels(models).IsSatisfied;
 
-    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(IEnumerable<TModel> models)
+    protected override BooleanResultBase<TMetadata> EvaluateSpec(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
 

@@ -22,7 +22,7 @@ internal sealed class HigherOrderFromExpressionTreeMetadataProposition<TModel, T
     public override bool Matches(IEnumerable<TModel> models) =>
         EvaluateModels(models).IsSatisfied;
 
-    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(IEnumerable<TModel> models)
+    protected override PolicyResultBase<TMetadata> EvaluatePolicy(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
         var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>

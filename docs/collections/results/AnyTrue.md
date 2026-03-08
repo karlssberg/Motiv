@@ -9,8 +9,8 @@ The `AnyTrue()` extension method is used to determine whether any of the boolean
 ```csharp
 IEnumerable<BooleanResult<int, string>> results = 
     [
-        new IsEvenProposition().IsSatisfiedBy(6),
-        new IsGreaterThanProposition(5).IsSatisfiedBy(1)
+        new IsEvenProposition().Evaluate(6),
+        new IsGreaterThanProposition(5).Evaluate(1)
     ];
 
 results.AnyTrue();  // true

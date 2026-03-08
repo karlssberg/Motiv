@@ -33,7 +33,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(1);
+        var act = spec.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["n > 0"]);
@@ -75,7 +75,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy([1]);
+        var act = spec.Evaluate([1]);
 
         // Assert
         act.Assertions.ShouldBe(["n > 0"]);
@@ -90,7 +90,7 @@ public class ExpressionTreeMetadataTests
             .Create("is-positive");
 
         // Act
-        var act = spec.IsSatisfiedBy(1);
+        var act = spec.Evaluate(1);
 
         // Assert
         act.Reason.ShouldBe("is-positive == true");
@@ -106,7 +106,7 @@ public class ExpressionTreeMetadataTests
             .Create("is-positive");
 
         // Act
-        var act = spec.IsSatisfiedBy([1]);
+        var act = spec.Evaluate([1]);
 
         // Assert
         act.Reason.ShouldBe("is-positive == true");
@@ -143,7 +143,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(1);
+        var act = spec.Evaluate(1);
 
         // Assert
         act.Reason.ShouldBe("(is-positive == true) | (is-positive == true) | (is-positive == true) | (is-positive == true)");
@@ -185,7 +185,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy([1]);
+        var act = spec.Evaluate([1]);
 
         // Assert
         act.Reason.ShouldBe("(is-positive == true) | (is-positive == true) | (is-positive == true) | (is-positive == true)");
@@ -222,7 +222,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(1);
+        var act = spec.Evaluate(1);
 
         // Assert
         act.Justification.ShouldBe(
@@ -278,7 +278,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy([1]);
+        var act = spec.Evaluate([1]);
 
         // Assert
         act.Justification.ShouldBe(
@@ -330,7 +330,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(-1);
+        var act = spec.Evaluate(-1);
 
         // Assert
         act.Assertions.ShouldBe(["n <= 0"]);
@@ -367,7 +367,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(-1);
+        var act = spec.Evaluate(-1);
 
         // Assert
         act.Assertions.ShouldBe(["n <= 0"]);
@@ -401,7 +401,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy([-1]);
+        var act = spec.Evaluate([-1]);
 
         // Assert
         act.Assertions.ShouldBe(["n <= 0"]);
@@ -416,7 +416,7 @@ public class ExpressionTreeMetadataTests
             .Create("is-positive");
 
         // Act
-        var act = spec.IsSatisfiedBy(-1);
+        var act = spec.Evaluate(-1);
 
         // Assert
         act.Reason.ShouldBe("is-positive == false");
@@ -433,7 +433,7 @@ public class ExpressionTreeMetadataTests
             .Create("is-positive");
 
         // Act
-        var act = spec.IsSatisfiedBy([-1]);
+        var act = spec.Evaluate([-1]);
 
         // Assert
         act.Reason.ShouldBe("is-positive == false");
@@ -470,7 +470,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(-1);
+        var act = spec.Evaluate(-1);
 
         // Assert
         act.Reason.ShouldBe("(is-positive == false) | (is-positive == false) | (is-positive == false) | (is-positive == false)");
@@ -511,7 +511,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy([-1]);
+        var act = spec.Evaluate([-1]);
 
         // Assert
         act.Reason.ShouldBe("(is-positive == false) | (is-positive == false) | (is-positive == false) | (is-positive == false)");
@@ -548,7 +548,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(-1);
+        var act = spec.Evaluate(-1);
 
         // Assert
         act.Justification.ShouldBe(
@@ -604,7 +604,7 @@ public class ExpressionTreeMetadataTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy([-1]);
+        var act = spec.Evaluate([-1]);
 
         // Assert
         act.Justification.ShouldBe(
@@ -632,7 +632,7 @@ public class ExpressionTreeMetadataTests
             Spec.From((ICollection<int> numbers) => numbers.All(n => n > 0 & n <= 10))
                 .Create("all in range");
 
-        var result = areAllInRange.IsSatisfiedBy([-1, 2, 3]);
+        var result = areAllInRange.Evaluate([-1, 2, 3]);
 
         result.Assertions.ShouldBe(["n <= 0"]);
     }
@@ -647,7 +647,7 @@ public class ExpressionTreeMetadataTests
                 .AsAnySatisfied()
                 .Create("all in range");
 
-        var result = areAllInRange.IsSatisfiedBy([[-1, 2, 3]]);
+        var result = areAllInRange.Evaluate([[-1, 2, 3]]);
 
         result.Assertions.ShouldBe(["n <= 0"]);
     }

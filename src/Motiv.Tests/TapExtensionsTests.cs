@@ -20,7 +20,7 @@ public class TapExtensionsTests
         var tapped = spec.Tap((m, r) => callbackFired = true);
 
         // Act
-        tapped.IsSatisfiedBy(model);
+        tapped.Evaluate(model);
 
         // Assert
         callbackFired.ShouldBeTrue();
@@ -49,7 +49,7 @@ public class TapExtensionsTests
         });
 
         // Act
-        tapped.IsSatisfiedBy(model);
+        tapped.Evaluate(model);
 
         // Assert
         receivedModel.ShouldBeSameAs(model);
@@ -71,7 +71,7 @@ public class TapExtensionsTests
         var tapped = spec.TapWhenTrue((m, r) => callbackFired = true);
 
         // Act
-        tapped.IsSatisfiedBy(new object());
+        tapped.Evaluate(new object());
 
         // Assert
         callbackFired.ShouldBeTrue();
@@ -91,7 +91,7 @@ public class TapExtensionsTests
         var tapped = spec.TapWhenTrue((m, r) => callbackFired = true);
 
         // Act
-        tapped.IsSatisfiedBy(new object());
+        tapped.Evaluate(new object());
 
         // Assert
         callbackFired.ShouldBeFalse();
@@ -111,7 +111,7 @@ public class TapExtensionsTests
         var tapped = spec.TapWhenFalse((m, r) => callbackFired = true);
 
         // Act
-        tapped.IsSatisfiedBy(new object());
+        tapped.Evaluate(new object());
 
         // Assert
         callbackFired.ShouldBeTrue();
@@ -131,7 +131,7 @@ public class TapExtensionsTests
         var tapped = spec.TapWhenFalse((m, r) => callbackFired = true);
 
         // Act
-        tapped.IsSatisfiedBy(new object());
+        tapped.Evaluate(new object());
 
         // Assert
         callbackFired.ShouldBeFalse();
@@ -154,8 +154,8 @@ public class TapExtensionsTests
         var tapped = spec.Tap((_, _) => { });
 
         // Act
-        var expectedResult = spec.IsSatisfiedBy(model);
-        var actualResult = tapped.IsSatisfiedBy(model);
+        var expectedResult = spec.Evaluate(model);
+        var actualResult = tapped.Evaluate(model);
 
         // Assert
         actualResult.Satisfied.ShouldBe(expectedResult.Satisfied);
@@ -226,7 +226,7 @@ public class TapExtensionsTests
             .TapWhenFalse((_, _) => whenFalseFired = true);
 
         // Act
-        tapped.IsSatisfiedBy(model);
+        tapped.Evaluate(model);
 
         // Assert
         whenTrueFired.ShouldBe(satisfied);

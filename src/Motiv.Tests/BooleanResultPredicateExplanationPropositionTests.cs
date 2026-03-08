@@ -20,50 +20,50 @@ public class BooleanResultPredicateExplanationPropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue("first is true")
             .WhenFalse("first is false")
             .Create();
 
         var secondSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => "second is true")
             .WhenFalse("second is false")
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue("third is true")
             .WhenFalse(_ => "third is false")
             .Create("is third true");
 
         var fourthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => "fourth is true")
             .WhenFalse(_ => "fourth is false")
             .Create("is fourth true");
 
         var fifthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => "fifth is true")
             .WhenFalse("fifth is false")
             .Create("is fifth true");
 
         var sixthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue("sixth is true")
             .WhenFalse((_, _) => "sixth is false")
             .Create("is sixth true");
 
         var seventhSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => "seventh is true")
             .WhenFalse((_, _) => "seventh is false")
             .Create("is seventh true");
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec | fifthSpec | sixthSpec | seventhSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -90,50 +90,50 @@ public class BooleanResultPredicateExplanationPropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue("first is true")
             .WhenFalse("first is false")
             .Create();
 
         var secondSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => "second is true")
             .WhenFalse("second is false")
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue("third is true")
             .WhenFalse(_ => "third is false")
             .Create("is third true");
 
         var fourthSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => "fourth is true")
             .WhenFalse(_ => "fourth is false")
             .Create("is fourth true");
 
         var fifthSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => "fifth is true")
             .WhenFalse("fifth is false")
             .Create("is fifth true");
 
         var sixthSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue("sixth is true")
             .WhenFalse((_, _) => "sixth is false")
             .Create("is sixth true");
 
         var seventhSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => "seventh is true")
             .WhenFalse((_, _) => "seventh is false")
             .Create("is seventh true");
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec | fifthSpec | sixthSpec | seventhSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -160,26 +160,26 @@ public class BooleanResultPredicateExplanationPropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrueYield((_, _) => ["first is true"])
             .WhenFalse("first is false")
             .Create("first true");
 
         var secondSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue("second is true")
             .WhenFalseYield((_, _) => ["second is false"])
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrueYield((_, _) => ["first is true"])
             .WhenFalseYield((_, _) => ["second is false"])
             .Create("is third true");
 
         var spec = firstSpec | secondSpec | thirdSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -206,26 +206,26 @@ public class BooleanResultPredicateExplanationPropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrueYield((_, _) => ["first is true"])
             .WhenFalse("first is false")
             .Create("first true");
 
         var secondSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue("second is true")
             .WhenFalseYield((_, _) => ["second is false"])
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrueYield((_, _) => ["first is true"])
             .WhenFalseYield((_, _) => ["second is false"])
             .Create("is third true");
 
         var spec = firstSpec | secondSpec | thirdSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -252,50 +252,50 @@ public class BooleanResultPredicateExplanationPropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue("first is true")
             .WhenFalse("first is false")
             .Create();
 
         var secondSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => "second is true")
             .WhenFalse("second is false")
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue("third is true")
             .WhenFalse(_ => "third is false")
             .Create("is third true");
 
         var fourthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => "fourth is true")
             .WhenFalse(_ => "fourth is false")
             .Create("is fourth true");
 
         var fifthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => "fifth is true")
             .WhenFalse("fifth is false")
             .Create("is fifth true");
 
         var sixthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue("sixth is true")
             .WhenFalse((_, _) => "sixth is false")
             .Create("is sixth true");
 
         var seventhSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => "seventh is true")
             .WhenFalse((_, _) => "seventh is false")
             .Create("is seventh true");
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec | fifthSpec | sixthSpec | seventhSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.RootAssertions;
@@ -319,25 +319,25 @@ public class BooleanResultPredicateExplanationPropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue("first is true")
             .WhenFalse("first is false")
             .Create();
 
         var secondSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => "second is true")
             .WhenFalse("second is false")
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue("third is true")
             .WhenFalse(_ => "third is false")
             .Create("is third true");
 
         var fourthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => "fourth is true")
             .WhenFalse(_ => "fourth is false")
             .Create("is fourth true");
@@ -345,7 +345,7 @@ public class BooleanResultPredicateExplanationPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -370,25 +370,25 @@ public class BooleanResultPredicateExplanationPropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue("first is true")
             .WhenFalse("first is false")
             .Create();
 
         var secondSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => "second is true")
             .WhenFalse("second is false")
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue("third is true")
             .WhenFalse(_ => "third is false")
             .Create("is third true");
 
         var fourthSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => "fourth is true")
             .WhenFalse(_ => "fourth is false")
             .Create("is fourth true");
@@ -396,7 +396,7 @@ public class BooleanResultPredicateExplanationPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -420,19 +420,19 @@ public class BooleanResultPredicateExplanationPropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrueYield((_, _) => ["first is true"])
             .WhenFalse("first is false")
             .Create("first true");
 
         var secondSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue("second is true")
             .WhenFalseYield((_, _) => ["second is false"])
             .Create("second true");
 
         var thirdSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrueYield((_, _) => ["third is true"])
             .WhenFalseYield((_, _) => ["third is false"])
             .Create("third true");
@@ -440,7 +440,7 @@ public class BooleanResultPredicateExplanationPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -464,19 +464,19 @@ public class BooleanResultPredicateExplanationPropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrueYield((_, _) => ["first is true"])
             .WhenFalse("first is false")
             .Create("first true");
 
         var secondSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrue("second is true")
             .WhenFalseYield((_, _) => ["second is false"])
             .Create("second true");
 
         var thirdSpec = Spec
-            .Build(BooleanResultBase<string> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<string> (bool m) => underlying.Evaluate(m))
             .WhenTrueYield((_, _) => ["third is true"])
             .WhenFalseYield((_, _) => ["third is false"])
             .Create("third true");
@@ -484,7 +484,7 @@ public class BooleanResultPredicateExplanationPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -508,19 +508,19 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue("true")
                 .WhenFalse("false")
                 .Create();
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue("true")
                 .WhenFalse(_ => "false")
                 .Create();
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue("true")
                 .WhenFalse((_, _) => "false")
                 .Create();
@@ -529,7 +529,7 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsParameterCallback &
                    withFalseAsTwoParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -554,19 +554,19 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue("true")
                 .WhenFalse("false")
                 .Create();
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue("true")
                 .WhenFalse(_ => "false")
                 .Create();
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue("true")
                 .WhenFalse((_, _) => "false")
                 .Create();
@@ -575,7 +575,7 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsParameterCallback &
                    withFalseAsTwoParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -598,19 +598,19 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue("true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue("true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue("true assertion")
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
@@ -619,7 +619,7 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsParameterCallback &
                    withFalseAsTwoParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -643,19 +643,19 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue("true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue("true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue("true assertion")
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
@@ -664,7 +664,7 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsParameterCallback &
                    withFalseAsTwoParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -686,12 +686,12 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue("true assertion")
                 .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -714,12 +714,12 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue("true assertion")
                 .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -741,12 +741,12 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue("true assertion")
                 .WhenFalseYield((_, _) => ["false assertion"])
                 .Create();
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -768,12 +768,12 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue("true assertion")
                 .WhenFalseYield((_, _) => ["false assertion"])
                 .Create();
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -797,19 +797,19 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
@@ -818,7 +818,7 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsParameterCallback &
                    withFalseAsTwoParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -841,19 +841,19 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
@@ -862,7 +862,7 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsParameterCallback &
                    withFalseAsTwoParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -884,12 +884,12 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => "true assertion")
                 .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -911,12 +911,12 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => "true assertion")
                 .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -940,19 +940,19 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => "true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => "true assertion")
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
@@ -961,7 +961,7 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsParameterCallback &
                    withFalseAsTwoParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -985,19 +985,19 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => "true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => "true assertion")
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
@@ -1006,7 +1006,7 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsParameterCallback &
                    withFalseAsTwoParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -1028,12 +1028,12 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => "true assertion")
                 .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -1057,25 +1057,25 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
@@ -1085,7 +1085,7 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -1109,25 +1109,25 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalse((_, _) => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => ["true assertion"])
                 .WhenFalseYield((_, _) => ["false assertion"])
                 .Create("propositional statement");
@@ -1137,7 +1137,7 @@ public class BooleanResultPredicateExplanationPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -1155,7 +1155,7 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
+            Spec.Build((bool model) => underlying.Evaluate(model))
                 .WhenTrue("is true")
                 .WhenFalse("is false")
                 .Create("is model true");
@@ -1176,7 +1176,7 @@ public class BooleanResultPredicateExplanationPropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build(BooleanResultBase<string> (bool model) => underlying.IsSatisfiedBy(model))
+            Spec.Build(BooleanResultBase<string> (bool model) => underlying.Evaluate(model))
                 .WhenTrue("is true")
                 .WhenFalse("is false")
                 .Create("is model true");

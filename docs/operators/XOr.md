@@ -38,7 +38,7 @@ var isGreenLight = Spec
 
 var isOperationalTrafficLight = isRedLight ^ isGreenLight;
 
-var isTrafficLightFunctioning = isOperationalTrafficLight.IsSatisfiedBy(trafficLight);
+var isTrafficLightFunctioning = isOperationalTrafficLight.Evaluate(trafficLight);
 
 isTrafficLightFunctioning.Satisfied; // true`
 isTrafficLightFunctioning.Reason; // "light is red ^ light is not green"

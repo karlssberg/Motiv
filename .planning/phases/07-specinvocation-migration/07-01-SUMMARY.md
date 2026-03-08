@@ -61,7 +61,7 @@ Each task was committed atomically:
 1. **Task 1: Replace ParseExpression with SyntaxFactory construction** - `95397b7` (refactor)
 
 ## Files Created/Modified
-- `src/Motiv.CodeFix/Syntax/SpecInvocationSyntax.cs` - SyntaxFactory-based construction of `new SpecName().IsSatisfiedBy(model).Satisfied` expression
+- `src/Motiv.CodeFix/Syntax/SpecInvocationSyntax.cs` - SyntaxFactory-based construction of `new SpecName().Evaluate(model).Satisfied` expression
 
 ## Decisions Made
 

@@ -21,7 +21,7 @@ public class HigherOrderBooleanEvaluationTests
             .WhenFalse("invalid")
             .Create("all true");
 
-        var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
+        var result = higherOrder.Evaluate([modelA, modelB]);
 
         // Act
         var act = result.Assertions;
@@ -44,7 +44,7 @@ public class HigherOrderBooleanEvaluationTests
             .WhenFalse("invalid")
             .Create("all true");
 
-        var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
+        var result = higherOrder.Evaluate([modelA, modelB]);
 
         // Act
         var act = result.Assertions;
@@ -68,7 +68,7 @@ public class HigherOrderBooleanEvaluationTests
             .WhenFalse(eval => eval.NoneSatisfied ? "none true" : "some true")
             .Create("all true");
 
-        var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
+        var result = higherOrder.Evaluate([modelA, modelB]);
 
         // Act
         var act = result.Assertions;
@@ -95,7 +95,7 @@ public class HigherOrderBooleanEvaluationTests
             .WhenFalse(eval => eval.CausalCount)
             .Create("all true");
 
-        var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
+        var result = higherOrder.Evaluate([modelA, modelB]);
 
         // Act
         var act = result.Values;
@@ -122,7 +122,7 @@ public class HigherOrderBooleanEvaluationTests
             .WhenFalseYield(eval => eval.TrueModels)
             .Create("all true");
 
-        var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
+        var result = higherOrder.Evaluate([modelA, modelB]);
 
         // Act
         var act = result.Values;
@@ -149,7 +149,7 @@ public class HigherOrderBooleanEvaluationTests
             .WhenFalseYield(eval => eval.FalseModels)
             .Create("all true");
 
-        var result = higherOrder.IsSatisfiedBy([modelA, modelB]);
+        var result = higherOrder.Evaluate([modelA, modelB]);
 
         // Act
         var act = result.Values;
@@ -178,7 +178,7 @@ public class HigherOrderBooleanEvaluationTests
             .WhenFalseYield(eval => eval.Models)
             .Create("all true");
 
-        var result = higherOrder.IsSatisfiedBy(models);
+        var result = higherOrder.Evaluate(models);
 
         // Act
         var act = result.Values;
@@ -206,7 +206,7 @@ public class HigherOrderBooleanEvaluationTests
             .WhenFalse(eval => eval.Count)
             .Create("all true");
 
-        var result = higherOrder.IsSatisfiedBy(models);
+        var result = higherOrder.Evaluate(models);
 
         // Act
         var act = result.Values;
@@ -235,7 +235,7 @@ public class HigherOrderBooleanEvaluationTests
             .WhenFalse(eval => eval.TrueCount)
             .Create("all true");
 
-        var result = higherOrder.IsSatisfiedBy(models);
+        var result = higherOrder.Evaluate(models);
 
         // Act
         var act = result.Values;
@@ -264,7 +264,7 @@ public class HigherOrderBooleanEvaluationTests
             .WhenFalse(eval => eval.FalseCount)
             .Create("all true");
 
-        var result = higherOrder.IsSatisfiedBy(models);
+        var result = higherOrder.Evaluate(models);
 
         // Act
         var act = result.Values;

@@ -25,7 +25,7 @@ namespace Motiv.Benchmark
         [Benchmark]
         public string[] EvaluateIsPositiveFromExpression()
         {
-            return _isPositiveFromExpression.IsSatisfiedBy(Random.Shared.Next(1, 21)).Assertions.ToArray();
+            return _isPositiveFromExpression.Evaluate(Random.Shared.Next(1, 21)).Assertions.ToArray();
         }
 
     }

@@ -30,7 +30,7 @@ internal sealed class BooleanResultPredicateProposition<TModel, TMetadata, TUnde
 
     public override bool Matches(TModel model) => underlyingBooleanResultPredicate(model).Satisfied;
 
-    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
+    protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
         BooleanResultBase<TUnderlyingMetadata>[] booleanResults = [booleanResult];

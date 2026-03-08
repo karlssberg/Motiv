@@ -45,7 +45,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -91,7 +91,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -124,7 +124,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -157,7 +157,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -190,7 +190,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -223,7 +223,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -255,7 +255,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -279,7 +279,7 @@ public class BooleanPredicateMetadataPropositionTests
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Value;
@@ -304,7 +304,7 @@ public class BooleanPredicateMetadataPropositionTests
                 .Create("propositional statement");
 
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Value;
@@ -335,7 +335,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Metadata;
@@ -366,7 +366,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -397,7 +397,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Metadata;
@@ -428,7 +428,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -459,7 +459,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Metadata;
@@ -490,7 +490,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -521,7 +521,7 @@ public class BooleanPredicateMetadataPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Metadata;

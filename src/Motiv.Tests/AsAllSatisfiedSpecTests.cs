@@ -32,7 +32,7 @@ public class AsAllSatisfiedSpecTests
             .Create("all are true");
 
         // Act
-        var act = spec.IsSatisfiedBy(models).Satisfied;
+        var act = spec.Evaluate(models).Satisfied;
 
         // Assert
         act.ShouldBe(expected);
@@ -68,7 +68,7 @@ public class AsAllSatisfiedSpecTests
             .Create("all are true");
 
         // Act
-        var act = spec.IsSatisfiedBy(models).Satisfied;
+        var act = spec.Evaluate(models).Satisfied;
 
         // Assert
         act.ShouldBe(expected);
@@ -99,12 +99,12 @@ public class AsAllSatisfiedSpecTests
         bool[] models = [first, second, third];
 
         var spec = Spec
-            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .Build((bool m) => underlyingSpec.Evaluate(m))
             .AsAllSatisfied()
             .Create("all are true");
 
         // Act
-        var act = spec.IsSatisfiedBy(models).Satisfied;
+        var act = spec.Evaluate(models).Satisfied;
 
         // Assert
         act.ShouldBe(expected);
@@ -135,12 +135,12 @@ public class AsAllSatisfiedSpecTests
         bool[] models = [first, second, third];
 
         var spec = Spec
-            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .Build((bool m) => underlyingSpec.Evaluate(m))
             .AsAllSatisfied()
             .Create("all are true");
 
         // Act
-        var act = spec.IsSatisfiedBy(models).Satisfied;
+        var act = spec.Evaluate(models).Satisfied;
 
         // Assert
         act.ShouldBe(expected);
@@ -197,7 +197,7 @@ public class AsAllSatisfiedSpecTests
             .AsAllSatisfied()
             .Create("all are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Justification;
@@ -260,7 +260,7 @@ public class AsAllSatisfiedSpecTests
             .WhenFalseYield(evaluation => evaluation.Values)
             .Create("all are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Justification;
@@ -322,7 +322,7 @@ public class AsAllSatisfiedSpecTests
             .WhenFalseYield(evaluation => evaluation.Values)
             .Create("all are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Justification;
@@ -406,7 +406,7 @@ public class AsAllSatisfiedSpecTests
             .WhenFalseYield(evaluation => evaluation.Values)
             .Create("all are true");
 
-        var result = sut.IsSatisfiedBy([first, second, third]);
+        var result = sut.Evaluate([first, second, third]);
 
         // Act
         var act = result.Justification;
@@ -450,7 +450,7 @@ public class AsAllSatisfiedSpecTests
             .WhenFalseYield(evaluation => evaluation.Values)
             .Create("all are true");
 
-        var result = sut.IsSatisfiedBy([first, second, third]);
+        var result = sut.Evaluate([first, second, third]);
 
         // Act
         var act = result.Reason;
@@ -494,7 +494,7 @@ public class AsAllSatisfiedSpecTests
             .WhenFalseYield(evaluation => evaluation.Values)
             .Create("all are true");
 
-        var result = sut.IsSatisfiedBy([first, second, third]);
+        var result = sut.Evaluate([first, second, third]);
 
         // Act
         var act = result.ToString();
@@ -640,7 +640,7 @@ public class AsAllSatisfiedSpecTests
             .AsAllSatisfied()
             .Create("all are true");
 
-        var result = spec.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
+        var result = spec.Evaluate([firstModel, secondModel, thirdModel]);
 
         // Act
         var act = result.Description.CausalOperandCount;
@@ -662,12 +662,12 @@ public class AsAllSatisfiedSpecTests
             .Create("underlying");
 
         var spec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .AsAllSatisfied()
             .Create("all are true");
 
         // Act
-        var act = spec.IsSatisfiedBy([modelA, modelB]).Satisfied;
+        var act = spec.Evaluate([modelA, modelB]).Satisfied;
 
         // Assert
         act.ShouldBe(expected);
@@ -686,12 +686,12 @@ public class AsAllSatisfiedSpecTests
             .Create("underlying");
 
         var spec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .AsAllSatisfied()
             .Create("all are true");
 
         // Act
-        var act = spec.IsSatisfiedBy([modelA, modelB]).Reason;
+        var act = spec.Evaluate([modelA, modelB]).Reason;
 
         // Assert
         act.ShouldBe(expectedAssertion);
@@ -713,14 +713,14 @@ public class AsAllSatisfiedSpecTests
             .Create("underlying");
 
         var spec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .AsAllSatisfied()
             .WhenTrue("all are true")
             .WhenFalse("not all are true")
             .Create();
 
         // Act
-        var act = spec.IsSatisfiedBy([modelA, modelB]).Satisfied;
+        var act = spec.Evaluate([modelA, modelB]).Satisfied;
 
         // Assert
         act.ShouldBe(expected);
@@ -743,14 +743,14 @@ public class AsAllSatisfiedSpecTests
             .Create("underlying");
 
         var spec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .AsAllSatisfied()
             .WhenTrue("all are true")
             .WhenFalse("not all are true")
             .Create();
 
         // Act
-        var act = spec.IsSatisfiedBy([modelA, modelB]).Assertions;
+        var act = spec.Evaluate([modelA, modelB]).Assertions;
 
         // Assert
         act.ShouldBe((string[])[expectedAssertion]);
@@ -773,14 +773,14 @@ public class AsAllSatisfiedSpecTests
             .Create("underlying");
 
         var spec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .AsAllSatisfied()
             .WhenTrue("all are true")
             .WhenFalse("not all are true")
             .Create();
 
         // Act
-        var act = spec.IsSatisfiedBy([modelA, modelB]).Reason;
+        var act = spec.Evaluate([modelA, modelB]).Reason;
 
         // Assert
         act.ShouldBe(expectedAssertion);
@@ -804,7 +804,7 @@ public class AsAllSatisfiedSpecTests
             .WhenFalse("not all are true")
             .Create();
 
-        var result = spec.IsSatisfiedBy([modelA, modelB]);
+        var result = spec.Evaluate([modelA, modelB]);
 
         // Act
         var act = result.Satisfied;
@@ -832,7 +832,7 @@ public class AsAllSatisfiedSpecTests
             .WhenFalse("not all are true")
             .Create();
 
-        var result = spec.IsSatisfiedBy([modelA, modelB]);
+        var result = spec.Evaluate([modelA, modelB]);
 
         // Act
         var act = result.Reason;
@@ -859,7 +859,7 @@ public class AsAllSatisfiedSpecTests
             .WhenFalse("not all are true")
             .Create();
 
-        var result = spec.IsSatisfiedBy([modelA, modelB]);
+        var result = spec.Evaluate([modelA, modelB]);
 
         // Act
         var act = result.Assertions;
@@ -886,7 +886,7 @@ public class AsAllSatisfiedSpecTests
             .WhenFalse("not all are true")
             .Create("all true");
 
-        var result = spec.IsSatisfiedBy([modelA, modelB]);
+        var result = spec.Evaluate([modelA, modelB]);
 
         // Act
         var act = result.Satisfied;
@@ -913,7 +913,7 @@ public class AsAllSatisfiedSpecTests
             .WhenFalse("not all are true")
             .Create("all true");
 
-        var result = spec.IsSatisfiedBy([modelA, modelB]);
+        var result = spec.Evaluate([modelA, modelB]);
 
         // Act
         var act = result.Reason;
@@ -940,7 +940,7 @@ public class AsAllSatisfiedSpecTests
             .WhenFalse("not all are true")
             .Create("all true");
 
-        var result = spec.IsSatisfiedBy([modelA, modelB]);
+        var result = spec.Evaluate([modelA, modelB]);
 
         // Act
         var act = result.Assertions;

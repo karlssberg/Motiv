@@ -26,7 +26,7 @@ public class AsNSatisfiedSpecTests
             .WhenFalse("is not a pair of even numbers")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second]);
+        var result = spec.Evaluate([first, second]);
 
         // Act
         var act = result.Satisfied;
@@ -62,7 +62,7 @@ public class AsNSatisfiedSpecTests
             .WhenFalse("The pack does not contain exactly a pair of even numbers")
             .Create("a pair of even numbers");
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -98,7 +98,7 @@ public class AsNSatisfiedSpecTests
             .WhenFalse("The pack does not contain exactly a pair of even numbers")
             .Create("a pair of even numbers");
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Assertions;
@@ -135,7 +135,7 @@ public class AsNSatisfiedSpecTests
             .WhenFalse("The pack does not contain exactly a pair of even numbers")
             .Create("a pair of even numbers");
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Explanation.Underlying;
@@ -168,7 +168,7 @@ public class AsNSatisfiedSpecTests
             .WhenFalse(evaluation => $"{evaluation.TrueCount} even and {evaluation.FalseCount} odd")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second]);
+        var result = spec.Evaluate([first, second]);
 
         // Act
         var act = result.Reason;
@@ -222,7 +222,7 @@ public class AsNSatisfiedSpecTests
                 .AsNSatisfied(2)
                 .Create("2 are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Satisfied;
@@ -251,7 +251,7 @@ public class AsNSatisfiedSpecTests
                 .AsNSatisfied(2)
                 .Create("2 are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Reason;
@@ -283,7 +283,7 @@ public class AsNSatisfiedSpecTests
                 .WhenFalse(_ => "2 are true == false")
                 .Create("none true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Satisfied;
@@ -314,7 +314,7 @@ public class AsNSatisfiedSpecTests
                 .WhenFalse(_ => "2 are true == false")
                 .Create("none true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Reason;
@@ -343,13 +343,13 @@ public class AsNSatisfiedSpecTests
                 .Create("is true");
 
         var spec =
-            Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
+            Spec.Build((bool model) => underlying.Evaluate(model))
                 .AsNSatisfied(2)
                 .WhenTrue(_ => "2 are true")
                 .WhenFalse(_ => "2 are true == false")
                 .Create("2 true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Satisfied;
@@ -379,13 +379,13 @@ public class AsNSatisfiedSpecTests
                 .Create("is true");
 
         var spec =
-            Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
+            Spec.Build((bool model) => underlying.Evaluate(model))
                 .AsNSatisfied(2)
                 .WhenTrue(_ => "2 are true")
                 .WhenFalse(_ => "2 are true")
                 .Create("2 true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Reason;

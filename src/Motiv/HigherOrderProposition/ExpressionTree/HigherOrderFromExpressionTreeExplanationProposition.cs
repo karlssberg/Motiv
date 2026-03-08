@@ -23,7 +23,7 @@ internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel
     public override bool Matches(IEnumerable<TModel> models) =>
         EvaluateModels(models).IsSatisfied;
 
-    protected override PolicyResultBase<string> IsPolicySatisfiedBy(IEnumerable<TModel> models)
+    protected override PolicyResultBase<string> EvaluatePolicy(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
 

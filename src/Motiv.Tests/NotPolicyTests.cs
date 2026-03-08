@@ -17,7 +17,7 @@ public class NotPolicyTests
             .WhenFalse(false)
             .Create($"is {operand}");
 
-        var result = (!spec).IsSatisfiedBy(model);
+        var result = (!spec).Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -40,7 +40,7 @@ public class NotPolicyTests
             .WhenFalse(false)
             .Create($"is {operand}");
 
-        var result = (!spec).IsSatisfiedBy(model);
+        var result = (!spec).Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -66,7 +66,7 @@ public class NotPolicyTests
 
         var spec = !underlyingSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -92,7 +92,7 @@ public class NotPolicyTests
 
         var spec = !underlyingSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -169,10 +169,10 @@ public class NotPolicyTests
     {
         // Arrange
         var underlyingSpec = Spec.Build<object>(_ => true).Create("underlying");
-        var expected = underlyingSpec.IsSatisfiedBy(new object());
+        var expected = underlyingSpec.Evaluate(new object());
 
         var spec = !underlyingSpec;
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
 
         // Act
         var act = result.UnderlyingWithValues;

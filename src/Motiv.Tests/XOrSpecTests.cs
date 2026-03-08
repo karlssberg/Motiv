@@ -30,7 +30,7 @@ public class XOrSpecTests
 
         var spec = left ^ right;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -64,7 +64,7 @@ public class XOrSpecTests
 
         var spec = left ^ right;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values.ToList();
@@ -101,7 +101,7 @@ public class XOrSpecTests
 
         var spec = left ^ right;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -134,7 +134,7 @@ public class XOrSpecTests
             .Create("right");
 
         var spec = left ^ right;
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.ToString();
@@ -173,7 +173,7 @@ public class XOrSpecTests
             .WhenFalse("none")
             .Create("xor");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -208,7 +208,7 @@ public class XOrSpecTests
 
         var spec = left ^ right;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -243,7 +243,7 @@ public class XOrSpecTests
 
         var spec = left ^ right;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -364,7 +364,7 @@ public class XOrSpecTests
 
         var spec = leftSpec ^ rightSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Description.CausalOperandCount;
@@ -402,7 +402,7 @@ public class XOrSpecTests
 
         var spec = left ^ right;
 
-        var result = spec.IsSatisfiedBy("");
+        var result = spec.Evaluate("");
 
         // Act
         var act = result.Satisfied;
@@ -436,7 +436,7 @@ public class XOrSpecTests
 
         var spec = left ^ right;
 
-        var result = spec.IsSatisfiedBy("");
+        var result = spec.Evaluate("");
 
         // Act
         var act = result.Assertions;
@@ -470,7 +470,7 @@ public class XOrSpecTests
 
         var spec = left ^ right;
 
-        var result = spec.IsSatisfiedBy("");
+        var result = spec.Evaluate("");
 
         // Act
         var act = result.Values;
@@ -500,7 +500,7 @@ public class XOrSpecTests
             .Create("fourth");
 
         var spec = first ^ second ^ third ^ fourth;
-        var result = spec.IsSatisfiedBy(true);
+        var result = spec.Evaluate(true);
 
         // Act
         var act = result.Justification;
@@ -541,7 +541,7 @@ public class XOrSpecTests
 
         var spec = first ^ second ^ (third ^ fourth);
 
-        var result = spec.IsSatisfiedBy(true);
+        var result = spec.Evaluate(true);
 
         // Act
         var act = result.Justification;
@@ -581,7 +581,7 @@ public class XOrSpecTests
 
         var spec = first ^ (second ^ (third ^ fourth));
 
-        var result = spec.IsSatisfiedBy(true);
+        var result = spec.Evaluate(true);
 
         // Act
         var act = result.Justification;
@@ -608,12 +608,12 @@ public class XOrSpecTests
 
         IEnumerable<BooleanResultBase<string>> expected =
         [
-            left.IsSatisfiedBy(new object()),
-            right.IsSatisfiedBy(new object())
+            left.Evaluate(new object()),
+            right.Evaluate(new object())
         ];
 
         var spec = left ^ right;
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
 
         // Act
         var act = result.UnderlyingWithValues;
@@ -656,7 +656,7 @@ public class XOrSpecTests
 
         var spec = !(left ^ right);
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
@@ -693,7 +693,7 @@ public class XOrSpecTests
 
         var spec = !!(left ^ right);
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
@@ -730,7 +730,7 @@ public class XOrSpecTests
 
         var spec = !!!(left ^ right);
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }

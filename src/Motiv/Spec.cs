@@ -41,8 +41,8 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     /// <summary>Determines whether the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be checked against the proposition.</param>
     /// <returns>A BooleanResultBase containing the result of the proposition check and the associated metadata.</returns>
-    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model) =>
-        _spec.IsSatisfiedBy(model);
+    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model) =>
+        _spec.Evaluate(model);
 }
 
 /// <summary>
@@ -89,7 +89,7 @@ public class Spec<TModel> : SpecBase<TModel, string>
     /// A BooleanResultBase containing the result of the proposition being applied to a model and the associated
     /// metadata.
     /// </returns>
-    protected override BooleanResultBase<string> IsSpecSatisfiedBy(TModel model) => _spec.IsSatisfiedBy(model);
+    protected override BooleanResultBase<string> EvaluateSpec(TModel model) => _spec.Evaluate(model);
 }
 
 /// <summary>Creates propositions using a fluent API.</summary>

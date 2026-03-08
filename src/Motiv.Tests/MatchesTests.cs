@@ -264,7 +264,7 @@ public class MatchesTests
         act.ShouldBe(expected);
     }
 
-    // --- Matches agrees with IsSatisfiedBy().Satisfied ---
+    // --- Matches agrees with Evaluate().Satisfied ---
 
     [Theory]
     [InlineAutoData(true, true)]
@@ -288,12 +288,12 @@ public class MatchesTests
         var orElseSpec = left.OrElse(right);
 
         // Act & Assert
-        andSpec.Matches(model).ShouldBe(andSpec.IsSatisfiedBy(model).Satisfied);
-        orSpec.Matches(model).ShouldBe(orSpec.IsSatisfiedBy(model).Satisfied);
-        xorSpec.Matches(model).ShouldBe(xorSpec.IsSatisfiedBy(model).Satisfied);
-        notSpec.Matches(model).ShouldBe(notSpec.IsSatisfiedBy(model).Satisfied);
-        andAlsoSpec.Matches(model).ShouldBe(andAlsoSpec.IsSatisfiedBy(model).Satisfied);
-        orElseSpec.Matches(model).ShouldBe(orElseSpec.IsSatisfiedBy(model).Satisfied);
+        andSpec.Matches(model).ShouldBe(andSpec.Evaluate(model).Satisfied);
+        orSpec.Matches(model).ShouldBe(orSpec.Evaluate(model).Satisfied);
+        xorSpec.Matches(model).ShouldBe(xorSpec.Evaluate(model).Satisfied);
+        notSpec.Matches(model).ShouldBe(notSpec.Evaluate(model).Satisfied);
+        andAlsoSpec.Matches(model).ShouldBe(andAlsoSpec.Evaluate(model).Satisfied);
+        orElseSpec.Matches(model).ShouldBe(orElseSpec.Evaluate(model).Satisfied);
     }
 
     // --- Implicit Func<TModel, bool> conversion uses Matches ---

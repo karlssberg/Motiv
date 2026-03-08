@@ -30,7 +30,7 @@ public class OrSpecTests
 
         var spec = left | right;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -66,7 +66,7 @@ public class OrSpecTests
 
         var spec = left | right;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -101,7 +101,7 @@ public class OrSpecTests
 
         var spec = left | right;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -134,7 +134,7 @@ public class OrSpecTests
             .Create("right");
 
         var spec = left | right;
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.ToString();
@@ -166,7 +166,7 @@ public class OrSpecTests
 
         var spec = left | right;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -201,7 +201,7 @@ public class OrSpecTests
 
         var spec = left | right;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -353,7 +353,7 @@ public class OrSpecTests
 
         var spec = leftSpec | rightSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Description.CausalOperandCount;
@@ -391,7 +391,7 @@ public class OrSpecTests
 
         var spec = left | right;
 
-        var result = spec.IsSatisfiedBy("");
+        var result = spec.Evaluate("");
 
         // Act
         var act = result.Satisfied;
@@ -425,7 +425,7 @@ public class OrSpecTests
 
         var spec = left | right;
 
-        var result = spec.IsSatisfiedBy("");
+        var result = spec.Evaluate("");
 
         // Act
         var act = result.Assertions;
@@ -459,7 +459,7 @@ public class OrSpecTests
 
         var spec = left | right;
 
-        var result = spec.IsSatisfiedBy("");
+        var result = spec.Evaluate("");
 
         // Act
         var act = result.Values;
@@ -508,12 +508,12 @@ public class OrSpecTests
 
         IEnumerable<BooleanResultBase<string>> expected =
         [
-            left.IsSatisfiedBy(new object()),
-            right.IsSatisfiedBy(new object())
+            left.Evaluate(new object()),
+            right.Evaluate(new object())
         ];
 
         var spec = left | right;
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
 
         // Act
         var act = result.Underlying;
@@ -531,12 +531,12 @@ public class OrSpecTests
 
         IEnumerable<BooleanResultBase<string>> expected =
         [
-            left.IsSatisfiedBy(new object()),
-            right.IsSatisfiedBy(new object())
+            left.Evaluate(new object()),
+            right.Evaluate(new object())
         ];
 
         var spec = left | right;
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
 
         // Act
         var act = result.UnderlyingWithValues;
@@ -575,7 +575,7 @@ public class OrSpecTests
 
         var spec = !(left | right);
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
@@ -610,7 +610,7 @@ public class OrSpecTests
 
         var spec = !!(left | right);
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
@@ -645,7 +645,7 @@ public class OrSpecTests
 
         var spec = !!!(left | right);
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }

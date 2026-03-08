@@ -20,7 +20,7 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
 
     public override bool Matches(TModel model) => _predicate.Match(model);
 
-    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
+    protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
         var result = _predicate.Execute(model);
         BooleanResultBase<string>[] resultArray = [result];

@@ -9,8 +9,8 @@ The `GetAssertions()` extension method is used to extract the assertions from a 
 ```csharp
 IEnumerable<BooleanResult<int, string>> results = 
     [
-        new IsEvenProposition().IsSatisfiedBy(4),
-        new IsGreaterThanProposition(5).IsSatisfiedBy(6)
+        new IsEvenProposition().Evaluate(4),
+        new IsGreaterThanProposition(5).Evaluate(6)
     ];
 
 results.GetAssertions();  // [ "is even", "is greater than 5" ]

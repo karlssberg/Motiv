@@ -37,7 +37,7 @@ public class PolicyExtensionsTests
 
         // Act
         var combinedPolicy = policies.OrElseTogether();
-        var result = combinedPolicy.IsSatisfiedBy(model);
+        var result = combinedPolicy.Evaluate(model);
 
         // Assert
         result.Satisfied.ShouldBe(expectedSatisfied);
@@ -81,7 +81,7 @@ public class PolicyExtensionsTests
 
         // Act
         var combinedPolicy = policies.OrElseTogether();
-        var result = combinedPolicy.IsSatisfiedBy(model);
+        var result = combinedPolicy.Evaluate(model);
 
         // Assert
         result.Satisfied.ShouldBe(expectedSatisfied);
@@ -103,7 +103,7 @@ public class PolicyExtensionsTests
 
         // Act
         var combinedPolicy = policies.OrElseTogether();
-        var result = combinedPolicy.IsSatisfiedBy(model);
+        var result = combinedPolicy.Evaluate(model);
 
         // Assert
         result.Satisfied.ShouldBeTrue();
@@ -162,7 +162,7 @@ public class PolicyExtensionsTests
 
         // Act
         var combinedPolicy = policies.OrElseTogether();
-        var result = combinedPolicy.IsSatisfiedBy(model);
+        var result = combinedPolicy.Evaluate(model);
 
         // Assert
         result.Satisfied.ShouldBeTrue();
@@ -197,7 +197,7 @@ public class PolicyExtensionsTests
 
         // Act
         var combinedPolicy = policies.OrElseTogether();
-        var result = combinedPolicy.IsSatisfiedBy(model);
+        var result = combinedPolicy.Evaluate(model);
 
         // Assert
         result.Satisfied.ShouldBeFalse();
@@ -235,7 +235,7 @@ public class PolicyExtensionsTests
 
         // Act
         var combinedPolicy = policies.OrElseTogether();
-        var result = combinedPolicy.IsSatisfiedBy(model);
+        var result = combinedPolicy.Evaluate(model);
 
         // Assert
         result.Satisfied.ShouldBeTrue();

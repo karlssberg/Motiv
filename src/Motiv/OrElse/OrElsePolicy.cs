@@ -26,13 +26,13 @@ internal sealed class OrElsePolicy<TModel, TMetadata>(
 
     public override bool Matches(TModel model) => left.Matches(model) || right.Matches(model);
 
-    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
+    protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
-        var leftResult = left.IsSatisfiedBy(model);
+        var leftResult = left.Evaluate(model);
         return leftResult.Satisfied switch
         {
             true => new OrElsePolicyResult<TMetadata>(leftResult),
-            false => new OrElsePolicyResult<TMetadata>(leftResult, right.IsSatisfiedBy(model))
+            false => new OrElsePolicyResult<TMetadata>(leftResult, right.Evaluate(model))
         };
     }
 

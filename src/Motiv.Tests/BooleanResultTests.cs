@@ -10,7 +10,7 @@ public class BooleanResultTests
             .Build((object _) => true)
             .Create("is model true");
 
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
         // Act
         var act = result && result; // invokes true operator overload
 
@@ -26,7 +26,7 @@ public class BooleanResultTests
             .Build((object _) => false)
             .Create("is model true");
 
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
 
         // Act
         var act = !result && result; // invokes false operator overload
@@ -48,14 +48,14 @@ public class BooleanResultTests
             .WhenTrue("left is true")
             .WhenFalse("left is false")
             .Create()
-            .IsSatisfiedBy(leftModel);
+            .Evaluate(leftModel);
 
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
             .WhenFalse("right is false")
             .Create()
-            .IsSatisfiedBy(rightModel);
+            .Evaluate(rightModel);
 
         // Act
         var act = left.AndAlso(right);
@@ -77,14 +77,14 @@ public class BooleanResultTests
             .WhenTrue("left is true")
             .WhenFalse("left is false")
             .Create()
-            .IsSatisfiedBy(leftModel);
+            .Evaluate(leftModel);
 
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
             .WhenFalse("right is false")
             .Create()
-            .IsSatisfiedBy(rightModel);
+            .Evaluate(rightModel);
 
         var result = left.AndAlso(right);
 
@@ -107,14 +107,14 @@ public class BooleanResultTests
             .WhenTrue("left is true")
             .WhenFalse("left is false")
             .Create()
-            .IsSatisfiedBy(leftModel);
+            .Evaluate(leftModel);
 
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
             .WhenFalse("right is false")
             .Create()
-            .IsSatisfiedBy(rightModel);
+            .Evaluate(rightModel);
 
         var result = left && right;
 
@@ -141,14 +141,14 @@ public class BooleanResultTests
             .WhenTrue("left is true")
             .WhenFalse("left is false")
             .Create()
-            .IsSatisfiedBy(leftModel);
+            .Evaluate(leftModel);
 
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
             .WhenFalse("right is false")
             .Create()
-            .IsSatisfiedBy(rightModel);
+            .Evaluate(rightModel);
 
         // Act
         var act = left.AndAlso(right);
@@ -173,14 +173,14 @@ public class BooleanResultTests
             .WhenTrue("left is true")
             .WhenFalse("left is false")
             .Create()
-            .IsSatisfiedBy(leftModel);
+            .Evaluate(leftModel);
 
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
             .WhenFalse("right is false")
             .Create()
-            .IsSatisfiedBy(rightModel);
+            .Evaluate(rightModel);
 
         // Act
         var act = left.OrElse((BooleanResultBase<string>) right);
@@ -206,14 +206,14 @@ public class BooleanResultTests
             .WhenTrue("left is true")
             .WhenFalse("left is false")
             .Create()
-            .IsSatisfiedBy(leftModel);
+            .Evaluate(leftModel);
 
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
             .WhenFalse("right is false")
             .Create()
-            .IsSatisfiedBy(rightModel);
+            .Evaluate(rightModel);
 
         // Act
         var act = left.OrElse(right);
@@ -235,14 +235,14 @@ public class BooleanResultTests
             .WhenTrue("left is true")
             .WhenFalse("left is false")
             .Create()
-            .IsSatisfiedBy(leftModel);
+            .Evaluate(leftModel);
 
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
             .WhenFalse("right is false")
             .Create()
-            .IsSatisfiedBy(rightModel);
+            .Evaluate(rightModel);
 
         var result = left.OrElse(right);
 
@@ -266,14 +266,14 @@ public class BooleanResultTests
             .WhenTrue("left is true")
             .WhenFalse("left is false")
             .Create()
-            .IsSatisfiedBy(leftModel);
+            .Evaluate(leftModel);
 
         var right = Spec
             .Build((bool b) => b)
             .WhenTrue("right is true")
             .WhenFalse("right is false")
             .Create()
-            .IsSatisfiedBy(rightModel);
+            .Evaluate(rightModel);
 
         var result = left || right;
 
@@ -296,7 +296,7 @@ public class BooleanResultTests
         var spec = specA & !!!(specB | specC);
 
         // Evaluate proposition
-        var sut = spec.IsSatisfiedBy(true);
+        var sut = spec.Evaluate(true);
 
         var act = sut.Reason;
 
@@ -315,7 +315,7 @@ public class BooleanResultTests
         var spec = specA.AndAlso(!!!(specB | specC));
 
         // Evaluate proposition
-        var sut = spec.IsSatisfiedBy(true);
+        var sut = spec.Evaluate(true);
 
         var act = sut.Reason;
 
@@ -334,7 +334,7 @@ public class BooleanResultTests
         var spec = specA | !!!(specB & specC);
 
         // Evaluate proposition
-        var sut = spec.IsSatisfiedBy(true);
+        var sut = spec.Evaluate(true);
 
         var act = sut.Reason;
 
@@ -353,7 +353,7 @@ public class BooleanResultTests
         var spec = specA.OrElse(!!!(specB & specC));
 
         // Evaluate proposition
-        var sut = spec.IsSatisfiedBy(true);
+        var sut = spec.Evaluate(true);
 
         var act = sut.Reason;
 
@@ -378,17 +378,17 @@ public class BooleanResultTests
                     .WhenTrue("left is true")
                     .WhenFalse("left is false")
                     .Create()
-                    .IsSatisfiedBy(left),
+                    .Evaluate(left),
                 Spec.Build((bool b) => b)
                     .WhenTrue("middle is true")
                     .WhenFalse("middle is false")
                     .Create()
-                    .IsSatisfiedBy(middle),
+                    .Evaluate(middle),
                 Spec.Build((bool b) => b)
                     .WhenTrue("right is true")
                     .WhenFalse("right is false")
                     .Create()
-                    .IsSatisfiedBy(right)
+                    .Evaluate(right)
             ];
 
         // Act
@@ -416,17 +416,17 @@ public class BooleanResultTests
                 .WhenTrue("left is true")
                 .WhenFalse("left is false")
                 .Create()
-                .IsSatisfiedBy(left),
+                .Evaluate(left),
             Spec.Build((bool b) => b)
                 .WhenTrue("middle is true")
                 .WhenFalse("middle is false")
                 .Create()
-                .IsSatisfiedBy(middle),
+                .Evaluate(middle),
             Spec.Build((bool b) => b)
                 .WhenTrue("right is true")
                 .WhenFalse("right is false")
                 .Create()
-                .IsSatisfiedBy(right)
+                .Evaluate(right)
         ];
 
         // Act
@@ -454,17 +454,17 @@ public class BooleanResultTests
                 .WhenTrue("left is true")
                 .WhenFalse("left is false")
                 .Create()
-                .IsSatisfiedBy(left),
+                .Evaluate(left),
             Spec.Build((bool b) => b)
                 .WhenTrue("middle is true")
                 .WhenFalse("middle is false")
                 .Create()
-                .IsSatisfiedBy(middle),
+                .Evaluate(middle),
             Spec.Build((bool b) => b)
                 .WhenTrue("right is true")
                 .WhenFalse("right is false")
                 .Create()
-                .IsSatisfiedBy(right)
+                .Evaluate(right)
         ];
 
         // Act
@@ -492,17 +492,17 @@ public class BooleanResultTests
                 .WhenTrue("left is true")
                 .WhenFalse("left is false")
                 .Create()
-                .IsSatisfiedBy(left),
+                .Evaluate(left),
             Spec.Build((bool b) => b)
                 .WhenTrue("middle is true")
                 .WhenFalse("middle is false")
                 .Create()
-                .IsSatisfiedBy(middle),
+                .Evaluate(middle),
             Spec.Build((bool b) => b)
                 .WhenTrue("right is true")
                 .WhenFalse("right is false")
                 .Create()
-                .IsSatisfiedBy(right)
+                .Evaluate(right)
         ];
 
         // Act
@@ -530,17 +530,17 @@ public class BooleanResultTests
                 .WhenTrue("left is true")
                 .WhenFalse("left is false")
                 .Create()
-                .IsSatisfiedBy(left),
+                .Evaluate(left),
             Spec.Build((bool b) => b)
                 .WhenTrue("middle is true")
                 .WhenFalse("middle is false")
                 .Create()
-                .IsSatisfiedBy(middle),
+                .Evaluate(middle),
             Spec.Build((bool b) => b)
                 .WhenTrue("right is true")
                 .WhenFalse("right is false")
                 .Create()
-                .IsSatisfiedBy(right)
+                .Evaluate(right)
         ];
 
         // Act
@@ -562,7 +562,7 @@ public class BooleanResultTests
         var spec = Spec.Build(specA.OrElse(!!!(specB & specC))).Create("parent");
 
         // Evaluate proposition
-        var sut = spec.IsSatisfiedBy(true);
+        var sut = spec.Evaluate(true);
 
         var act = sut.UnderlyingReasons;
 
@@ -583,7 +583,7 @@ public class BooleanResultTests
         var spec = Spec.Build(!parent | !specA & specB & !!specC).Create("grandparent");
 
         // Evaluate proposition
-        var sut = spec.IsSatisfiedBy(true);
+        var sut = spec.Evaluate(true);
 
         var act = sut.UnderlyingReasons;
 

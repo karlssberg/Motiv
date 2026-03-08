@@ -38,7 +38,7 @@ public class OrElsePolicyTests
 
         var spec = left.OrElse(right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -73,7 +73,7 @@ public class OrElsePolicyTests
 
         var spec = left.OrElse(right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -106,7 +106,7 @@ public class OrElsePolicyTests
             .Create("right");
 
         var spec = left.OrElse(right);
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.ToString();
@@ -134,7 +134,7 @@ public class OrElsePolicyTests
         var spec = left.OrElse(right);
 
         // Act
-        Action act = () => spec.IsSatisfiedBy(new object());
+        Action act = () => spec.Evaluate(new object());
 
         // Assert
         act.ShouldNotThrow();
@@ -217,7 +217,7 @@ public class OrElsePolicyTests
 
         var spec = left.OrElse(right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -251,7 +251,7 @@ public class OrElsePolicyTests
 
         var spec = leftPolicy.OrElse(rightPolicy);
 
-        var result = spec.IsSatisfiedBy(true);
+        var result = spec.Evaluate(true);
 
         // Act
         var act = result.Causes.Select(c => c.Description.Statement);
@@ -286,7 +286,7 @@ public class OrElsePolicyTests
 
         var spec = left.OrElse(right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Justification;
@@ -322,7 +322,7 @@ public class OrElsePolicyTests
 
         var spec = left.OrElse(right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Justification;
@@ -361,7 +361,7 @@ public class OrElsePolicyTests
 
         var spec = left.OrElse(right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -395,7 +395,7 @@ public class OrElsePolicyTests
 
         var spec = left.OrElse(right);
 
-        var result = spec.IsSatisfiedBy("");
+        var result = spec.Evaluate("");
 
         // Act
         var act = result.Values;
@@ -444,12 +444,12 @@ public class OrElsePolicyTests
 
         IEnumerable<BooleanResultBase<string>> expected =
         [
-            left.IsSatisfiedBy(new object()),
-            right.IsSatisfiedBy(new object())
+            left.Evaluate(new object()),
+            right.Evaluate(new object())
         ];
 
         var spec = left.OrElse(right);
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
 
         // Act
         var act = result.UnderlyingWithValues;
@@ -469,12 +469,12 @@ public class OrElsePolicyTests
 
         IEnumerable<BooleanResultBase<string>> expected =
         [
-            left.IsSatisfiedBy(new object()),
-            right.IsSatisfiedBy(new object())
+            left.Evaluate(new object()),
+            right.Evaluate(new object())
         ];
 
         var spec = left.OrElse(right);
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
 
         // Act
         var act = result.Underlying;
@@ -512,7 +512,7 @@ public class OrElsePolicyTests
 
         var spec = !(left.OrElse(right));
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
@@ -546,7 +546,7 @@ public class OrElsePolicyTests
 
         var spec = !!(left.OrElse(right));
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
@@ -580,7 +580,7 @@ public class OrElsePolicyTests
 
         var spec = !!!(left.OrElse(right));
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }

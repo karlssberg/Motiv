@@ -24,13 +24,13 @@ public class HigherOrderMetadataBooleanResultTests
                 .Create("is even spec");
 
         var spec =
-            Spec.Build((int m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((int m) => underlying.Evaluate(m))
                 .AsNSatisfied(2)
                 .WhenTrue(MyMetadata.IsTrue)
                 .WhenFalse(MyMetadata.IsFalse)
                 .Create("is a pair of even numbers");
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Explanation.Assertions;
@@ -50,7 +50,7 @@ public class HigherOrderMetadataBooleanResultTests
                 .Create("is even spec");
 
         var spec =
-            Spec.Build((int m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((int m) => underlying.Evaluate(m))
                 .AsNSatisfied(2)
                 .WhenTrue(MyMetadata.IsTrue)
                 .WhenFalse(MyMetadata.IsFalse)
@@ -82,7 +82,7 @@ public class HigherOrderMetadataBooleanResultTests
                 .Create();
 
         var firstSpec =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(MyMetadata.IsTrue)
                 .WhenFalse(MyMetadata.IsFalse)
@@ -100,7 +100,7 @@ public class HigherOrderMetadataBooleanResultTests
                 .WhenFalse(MyMetadata.IsFalse)
                 .Create("third all true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Explanation.Assertions;
@@ -128,7 +128,7 @@ public class HigherOrderMetadataBooleanResultTests
                 .Create();
 
         var firstSpec =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(MyMetadata.IsTrue)
                 .WhenFalse(MyMetadata.IsFalse)
@@ -146,7 +146,7 @@ public class HigherOrderMetadataBooleanResultTests
                 .WhenFalse(MyMetadata.IsFalse)
                 .Create("all even");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.GetRootAssertions();
@@ -176,13 +176,13 @@ public class HigherOrderMetadataBooleanResultTests
                 .Create("is even spec");
 
         var spec =
-            Spec.Build((int m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((int m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(MyMetadata.IsTrue)
                 .WhenFalse(MyMetadata.IsFalse)
                 .Create("all even");
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -206,14 +206,14 @@ public class HigherOrderMetadataBooleanResultTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(MyMetadata.IsTrue)
                 .WhenFalse(MyMetadata.IsFalse)
                 .Create("true assertion");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(MyMetadata.IsTrue)
                 .WhenFalse(_ => MyMetadata.IsFalse)
@@ -221,7 +221,7 @@ public class HigherOrderMetadataBooleanResultTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Values;
@@ -243,28 +243,28 @@ public class HigherOrderMetadataBooleanResultTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(MyMetadata.IsTrue)
                 .WhenFalse(MyMetadata.IsFalse)
                 .Create("propositional statement");
 
         var withFalseAsCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(MyMetadata.IsTrue)
                 .WhenFalse(_ => MyMetadata.IsFalse)
                 .Create("propositional statement");
 
         var withFalseAsCallbackThatReturnsACollection =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(MyMetadata.IsTrue)
                 .WhenFalseYield(_ => MyMetadata.IsFalse.ToEnumerable())
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollectionWithImpliedName =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(MyMetadata.IsTrue)
                 .WhenFalseYield(_ => MyMetadata.IsFalse.ToEnumerable())
@@ -275,7 +275,7 @@ public class HigherOrderMetadataBooleanResultTests
                    withFalseAsCallbackThatReturnsACollection &
                    withFalseAsTwoParameterCallbackThatReturnsACollectionWithImpliedName;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Values;
@@ -297,28 +297,28 @@ public class HigherOrderMetadataBooleanResultTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => MyMetadata.IsTrue)
                 .WhenFalse(MyMetadata.IsFalse)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => MyMetadata.IsTrue)
                 .WhenFalse(_ => MyMetadata.IsFalse)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => MyMetadata.IsTrue)
                 .WhenFalse(_ => MyMetadata.IsFalse)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => MyMetadata.IsTrue)
                 .WhenFalseYield(_ => MyMetadata.IsFalse.ToEnumerable())
@@ -329,7 +329,7 @@ public class HigherOrderMetadataBooleanResultTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Values;
@@ -351,28 +351,28 @@ public class HigherOrderMetadataBooleanResultTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => MyMetadata.IsTrue)
                 .WhenFalse(MyMetadata.IsFalse)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => MyMetadata.IsTrue)
                 .WhenFalse(_ => MyMetadata.IsFalse)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => MyMetadata.IsTrue)
                 .WhenFalse(_ => MyMetadata.IsFalse)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => MyMetadata.IsTrue)
                 .WhenFalseYield(_ => MyMetadata.IsFalse.ToEnumerable())
@@ -383,7 +383,7 @@ public class HigherOrderMetadataBooleanResultTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Values;
@@ -405,21 +405,21 @@ public class HigherOrderMetadataBooleanResultTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrueYield(_ => MyMetadata.IsTrue.ToEnumerable())
                 .WhenFalse(MyMetadata.IsFalse)
                 .Create("propositional statement");
 
         var withFalseAsCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrueYield(_ => MyMetadata.IsTrue.ToEnumerable())
                 .WhenFalse(_ => MyMetadata.IsFalse)
                 .Create("propositional statement");
 
         var withFalseAsCallbackThatReturnsACollection =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrueYield(_ => MyMetadata.IsTrue.ToEnumerable())
                 .WhenFalseYield(_ => MyMetadata.IsFalse.ToEnumerable())
@@ -429,7 +429,7 @@ public class HigherOrderMetadataBooleanResultTests
                    withFalseAsCallback &
                    withFalseAsCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Values;

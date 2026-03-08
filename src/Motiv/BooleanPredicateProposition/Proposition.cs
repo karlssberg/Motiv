@@ -24,7 +24,7 @@ internal sealed class Proposition<TModel, TMetadata>(
 
     public override bool Matches(TModel model) => predicate(model);
 
-    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model)
+    protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
         var isSatisfied = predicate(model);
 

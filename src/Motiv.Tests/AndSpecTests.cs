@@ -31,7 +31,7 @@ public class AndSpecTests
         var spec = left & right;
 
         // Act
-        var act = spec.IsSatisfiedBy(model).Satisfied;
+        var act = spec.Evaluate(model).Satisfied;
 
         // Assert
         act.ShouldBe(expected);
@@ -64,7 +64,7 @@ public class AndSpecTests
         var spec = left & right;
 
         // Act
-        var act = spec.IsSatisfiedBy(model).Values;
+        var act = spec.Evaluate(model).Values;
 
         // Assert
         act.ShouldBe([expected]);
@@ -95,7 +95,7 @@ public class AndSpecTests
             .Create("right");
 
         var spec = left & right;
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -128,7 +128,7 @@ public class AndSpecTests
             .Create("right");
 
         var spec = left & right;
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.ToString();
@@ -165,7 +165,7 @@ public class AndSpecTests
         var spec = left & right;
 
         // Act
-        var act = spec.IsSatisfiedBy(model).Reason;
+        var act = spec.Evaluate(model).Reason;
 
         // Assert
         act.ShouldBe(expected);
@@ -294,7 +294,7 @@ public class AndSpecTests
         var subscription = new Subscription(now.Date, now.AddDays(1));
 
         // Act
-        var result = isActive.IsSatisfiedBy(subscription).Explanation.Underlying;
+        var result = isActive.Evaluate(subscription).Explanation.Underlying;
 
         // Assert
         result.GetAssertions().ShouldBe(
@@ -314,7 +314,7 @@ public class AndSpecTests
         var subscription = new Subscription(now.Date, now.AddDays(1));
 
         // Act
-        var result = isActive.IsSatisfiedBy(subscription).Assertions;
+        var result = isActive.Evaluate(subscription).Assertions;
 
         // Assert
         result.ShouldBe(["subscription is active"]);
@@ -355,8 +355,8 @@ public class AndSpecTests
             .Create();
 
         var isActiveSpec = hasSubscriptionStartedSpec & !hasSubscriptionEndedSpec;
-        var isActive = isActiveSpec.IsSatisfiedBy(new Subscription(now.Date, now.AddDays(1)));
-        var isUsa = isLocationUsaSpec.IsSatisfiedBy(new Device(Country.Usa));
+        var isActive = isActiveSpec.Evaluate(new Subscription(now.Date, now.AddDays(1)));
+        var isUsa = isLocationUsaSpec.Evaluate(new Device(Country.Usa));
 
         // Act
         var result = (isActive & isUsa).Reason;
@@ -389,8 +389,8 @@ public class AndSpecTests
             .Create();
 
         var isActiveSpec = hasSubscriptionStartedSpec & !hasSubscriptionEndedSpec;
-        var isActive = isActiveSpec.IsSatisfiedBy(new Subscription(now.Date, now.AddDays(1)));
-        var isUsa = isLocationUsaSpec.IsSatisfiedBy(new Device(Country.Usa));
+        var isActive = isActiveSpec.Evaluate(new Subscription(now.Date, now.AddDays(1)));
+        var isUsa = isLocationUsaSpec.Evaluate(new Device(Country.Usa));
 
         // Act
         var act = (isActive & isUsa).Assertions;
@@ -425,7 +425,7 @@ public class AndSpecTests
         var spec = leftSpec & rightSpec;
 
         // Act
-        var act = spec.IsSatisfiedBy(model).Description.CausalOperandCount;
+        var act = spec.Evaluate(model).Description.CausalOperandCount;
 
         // Assert
         act.ShouldBe(expected);
@@ -461,7 +461,7 @@ public class AndSpecTests
         var spec = left & right;
 
         // Act
-        var act = spec.IsSatisfiedBy("").Satisfied;
+        var act = spec.Evaluate("").Satisfied;
 
         // Assert
         act.ShouldBe(expectedSatisfied);
@@ -493,7 +493,7 @@ public class AndSpecTests
         var spec = left & right;
 
         // Act
-        var act = spec.IsSatisfiedBy("").Assertions;
+        var act = spec.Evaluate("").Assertions;
 
         act.ShouldBe(expectedAssertions);
     }
@@ -524,7 +524,7 @@ public class AndSpecTests
         var spec = left & right;
 
         // Act
-        var act = spec.IsSatisfiedBy("").Values;
+        var act = spec.Evaluate("").Values;
 
         // Assert
         act.ShouldBe(expectedAssertions);
@@ -590,12 +590,12 @@ public class AndSpecTests
 
         IEnumerable<BooleanResultBase<string>> expected =
         [
-            left.IsSatisfiedBy(new object()),
-            right.IsSatisfiedBy(new object())
+            left.Evaluate(new object()),
+            right.Evaluate(new object())
         ];
 
         var spec = left & right;
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
 
         // Act
         var act = result.UnderlyingWithValues;
@@ -634,7 +634,7 @@ public class AndSpecTests
 
         var spec = !(left & right);
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
@@ -669,7 +669,7 @@ public class AndSpecTests
 
         var spec = !!(left & right);
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
@@ -704,7 +704,7 @@ public class AndSpecTests
 
         var spec = !!!(left & right);
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }

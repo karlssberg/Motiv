@@ -33,7 +33,7 @@ public readonly struct ExplanationFromSpecHigherOrderPropositionFactory<TModel, 
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanResultProposition<TModel, string, TMetadata>(
-            spec.IsSatisfiedBy,
+            spec.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause,
             falseBecause,

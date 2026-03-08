@@ -19,7 +19,7 @@ internal sealed class ExpressionTreeMultiMetadataProposition<TModel, TMetadata, 
 
     public override bool Matches(TModel model) => _predicate.Match(model);
 
-    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
+    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
         var result = _predicate.Execute(model);
         BooleanResultBase<string>[] resultArray = [result];

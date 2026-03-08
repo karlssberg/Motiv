@@ -36,7 +36,7 @@ internal sealed class PolicyResultPredicateMultiValueProposition<TModel, TMetada
     ///     A <see cref="BooleanResultBase{TMetadata}" /> indicating if the proposition is satisfied and the resulting
     ///     metadata.
     /// </returns>
-    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
+    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
         var policyResult = underlyingPolicyResultPredicate(model);
         PolicyResultBase<TUnderlyingMetadata>[] policyResults = [policyResult];

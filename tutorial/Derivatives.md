@@ -42,7 +42,7 @@ var isEvenAndPositive =
         .WhenFalse((n, result) => $"{n} is {result.Assertions.Serialize()}"))
         .Create();
 
-isEvenAndPositive.IsSatisfiedBy(2).Reason;  // "is even and positive"
-isEvenAndPositive.IsSatisfiedBy(-3).Reason; // "-3 is not even and not positive"
-isEvenAndPositive.IsSatisfiedBy(-2).Reason; // "-2 is not positive"
+isEvenAndPositive.Evaluate(2).Reason;  // "is even and positive"
+isEvenAndPositive.Evaluate(-3).Reason; // "-3 is not even and not positive"
+isEvenAndPositive.Evaluate(-2).Reason; // "-2 is not positive"
 ```

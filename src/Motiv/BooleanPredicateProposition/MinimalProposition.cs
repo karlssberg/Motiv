@@ -15,7 +15,7 @@ internal sealed class MinimalProposition<TModel>(
 
     public override bool Matches(TModel model) => predicate(model);
 
-    protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
+    protected override PolicyResultBase<string> EvaluatePolicy(TModel model)
     {
         var isSatisfied = predicate(model);
         var assertion = isSatisfied

@@ -14,7 +14,7 @@ public class IsSpecialFulfillmentBehaviorTests
         // Arrange
         var sut = new IsSpecialFulfillmentBehavior();
 
-        var result = sut.IsSatisfiedBy(deliveryContext);
+        var result = sut.Evaluate(deliveryContext);
 
         // Act
         var act = result.Satisfied;
@@ -31,7 +31,7 @@ public class IsSpecialFulfillmentBehaviorTests
         // Arrange
         var deliveryContext = ToShipFromStoreContext(context);
 
-        var result = sut.IsSatisfiedBy(deliveryContext);
+        var result = sut.Evaluate(deliveryContext);
 
         // Act
         var act = result.Justification;
@@ -59,7 +59,7 @@ public class IsSpecialFulfillmentBehaviorTests
         // Arrange
         var deliveryContext = ToSameDayDeliveryContext(context);
 
-        var result = sut.IsSatisfiedBy(deliveryContext);
+        var result = sut.Evaluate(deliveryContext);
 
         // Act
         var act = result.Justification;
@@ -82,7 +82,7 @@ public class IsSpecialFulfillmentBehaviorTests
         // Arrange
         var deliveryContext = ToSplitOrderContext(context);
 
-        var result = sut.IsSatisfiedBy(deliveryContext);
+        var result = sut.Evaluate(deliveryContext);
 
         // Act
         var act = result.Justification;
@@ -105,7 +105,7 @@ public class IsSpecialFulfillmentBehaviorTests
         // Arrange
         var deliveryContext = ToLocalDeliveryContext(context);
 
-        var result = sut.IsSatisfiedBy(deliveryContext);
+        var result = sut.Evaluate(deliveryContext);
 
         // Act
         var act = result.Justification;

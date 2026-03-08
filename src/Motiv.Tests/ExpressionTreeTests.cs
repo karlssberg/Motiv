@@ -13,7 +13,7 @@ public class ExpressionTreeTests
                 .Create("is integer");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -32,7 +32,7 @@ public class ExpressionTreeTests
                 .Create("and expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -51,7 +51,7 @@ public class ExpressionTreeTests
                 .Create("conditional and expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -70,7 +70,7 @@ public class ExpressionTreeTests
                 .Create("or expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -89,7 +89,7 @@ public class ExpressionTreeTests
                 .Create(" or expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -108,7 +108,7 @@ public class ExpressionTreeTests
                 .Create("xor expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -124,7 +124,7 @@ public class ExpressionTreeTests
             .Create("checked-operation");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -141,7 +141,7 @@ public class ExpressionTreeTests
             .Create("linq-method-call");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -158,7 +158,7 @@ public class ExpressionTreeTests
             .Create("array-length");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -175,7 +175,7 @@ public class ExpressionTreeTests
             .Create("nested-lambda");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -193,7 +193,7 @@ public class ExpressionTreeTests
             .Create("nested-lambda");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -211,7 +211,7 @@ public class ExpressionTreeTests
             .Create("type-test");
 
         // Act
-        var act = sut.IsSatisfiedBy(type);
+        var act = sut.Evaluate(type);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -229,7 +229,7 @@ public class ExpressionTreeTests
             .Create("compound-arithmetic");
 
         // Act
-        var act = sut.IsSatisfiedBy(value);
+        var act = sut.Evaluate(value);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -247,7 +247,7 @@ public class ExpressionTreeTests
             .Create("array-access");
 
         // Act
-        var act = sut.IsSatisfiedBy(values);
+        var act = sut.Evaluate(values);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -265,7 +265,7 @@ public class ExpressionTreeTests
             .Create("method-call");
 
         // Act
-        var act = sut.IsSatisfiedBy(input);
+        var act = sut.Evaluate(input);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -283,7 +283,7 @@ public class ExpressionTreeTests
             .Create("type-conversion");
 
         // Act
-        var act = sut.IsSatisfiedBy(input);
+        var act = sut.Evaluate(input);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -304,7 +304,7 @@ public class ExpressionTreeTests
             .Create("constant-comparison");
 
         // Act
-        var act = sut.IsSatisfiedBy(value);
+        var act = sut.Evaluate(value);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -320,7 +320,7 @@ public class ExpressionTreeTests
             .Create("compound-arithmetic");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["(1 + n) * (20 - n) / ((n + 1) * 2) / 2 > 0"]);
@@ -340,9 +340,9 @@ public class ExpressionTreeTests
             .Create("repeated-evaluation");
 
         // Act - evaluate same spec with different models to exercise cached delegate path
-        _ = sut.IsSatisfiedBy("test");
-        _ = sut.IsSatisfiedBy("hello");
-        var act = sut.IsSatisfiedBy("test");
+        _ = sut.Evaluate("test");
+        _ = sut.Evaluate("hello");
+        var act = sut.Evaluate("test");
 
         // Assert - the final evaluation should still produce correct model-specific assertions
         act.Satisfied.ShouldBe(expectedResult);

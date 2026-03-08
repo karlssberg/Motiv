@@ -39,7 +39,7 @@ public class MotivConvertToSpecTests
                 public bool IsValid(int value)
                 {
                     // {{booleanExpression}}
-                    var isValidResult = _isValidProposition.IsSatisfiedBy(value);
+                    var isValidResult = _isValidProposition.Evaluate(value);
                     return isValidResult.Satisfied;
                 }
             }
@@ -90,7 +90,7 @@ public class MotivConvertToSpecTests
                 public bool IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
-                    var result = _isValidProposition.IsSatisfiedBy(new IsValidProposition.Model(valueA, valueB, valueC));
+                    var result = _isValidProposition.Evaluate(new IsValidProposition.Model(valueA, valueB, valueC));
                     return result.Satisfied;
                 }
             }
@@ -157,7 +157,7 @@ public class MotivConvertToSpecTests
                 public void IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
-                    var result = _isSatisfiedProposition.IsSatisfiedBy(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
+                    var result = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
                     var isSatisfied = result.Satisfied;
                 }
             }
@@ -226,7 +226,7 @@ public class MotivConvertToSpecTests
                   {
                       // {{clause1}} && ({{clause2}} ||
                       //     !({{clause3}} ^ {{clause4}}))
-                      var result = _isSatisfiedProposition.IsSatisfiedBy(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
+                      var result = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
                       var isSatisfied = result.Satisfied;
                   }
               }
@@ -308,7 +308,7 @@ public class MotivConvertToSpecTests
                 public bool IsValid(Order order)
                 {
                     // order.Total > 100
-                    var isValidResult = _isValidProposition.IsSatisfiedBy(order);
+                    var isValidResult = _isValidProposition.Evaluate(order);
                     return isValidResult.Satisfied;
                 }
             }
@@ -372,7 +372,7 @@ public class MotivConvertToSpecTests
                 public bool IsValid(Order order)
                 {
                     // {{booleanExpression}}
-                    var isValidResult = _isValidProposition.IsSatisfiedBy(order);
+                    var isValidResult = _isValidProposition.Evaluate(order);
                     return isValidResult.Satisfied;
                 }
             }
@@ -424,7 +424,7 @@ public class MotivConvertToSpecTests
                 public bool IsValid(object obj)
                 {
                     // {{booleanExpression}}
-                    var isValidResult = _isValidProposition.IsSatisfiedBy(obj);
+                    var isValidResult = _isValidProposition.Evaluate(obj);
                     return isValidResult.Satisfied;
                 }
             }
@@ -475,7 +475,7 @@ public class MotivConvertToSpecTests
                   public bool IsValid(int x, int y)
                   {
                       // {{booleanExpression}}
-                      var result = _isValidProposition.IsSatisfiedBy(new IsValidProposition.Model(x, y));
+                      var result = _isValidProposition.Evaluate(new IsValidProposition.Model(x, y));
                       return result.Satisfied;
                   }
               }
@@ -541,7 +541,7 @@ public class MotivConvertToSpecTests
                 public void IsValid(int age, bool name)
                 {
                     // {{booleanExpression}}
-                    var result = _isSatisfiedProposition.IsSatisfiedBy(new IsSatisfiedProposition.Model(age, name));
+                    var result = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(age, name));
                     var isSatisfied = result.Satisfied;
                 }
             }
@@ -609,7 +609,7 @@ public class MotivConvertToSpecTests
                   {
                       // ({{clause1}} && {{clause2}}) ||
                       //     ({{clause3}} && {{clause2}})
-                      var result = _isSatisfiedProposition.IsSatisfiedBy(new IsSatisfiedProposition.Model(valueA, valueC, valueB));
+                      var result = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueC, valueB));
                       var isSatisfied = result.Satisfied;
                   }
               }
@@ -680,7 +680,7 @@ public class MotivConvertToSpecTests
                   {
                       // ({{clause1}} && {{clause2}}) ||
                       //     ({{clause3}} && {{clause2}})
-                      var result = _isFeatureEnabledProposition.IsSatisfiedBy(new IsFeatureEnabledProposition.Model(valueA, valueC, valueB));
+                      var result = _isFeatureEnabledProposition.Evaluate(new IsFeatureEnabledProposition.Model(valueA, valueC, valueB));
                       return result.Satisfied;
                   }
               }
@@ -749,7 +749,7 @@ public class MotivConvertToSpecTests
                 public bool IsGreen(string text)
                 {
                     // text == "green"
-                    var isGreenResult = _isGreenProposition.IsSatisfiedBy(text);
+                    var isGreenResult = _isGreenProposition.Evaluate(text);
                     return isGreenResult.Satisfied;
                 }
             }
@@ -814,14 +814,14 @@ public class MotivConvertToSpecTests
                     public bool IsFeatureEnabled(string text)
                     {
                         // {{booleanExpression}}
-                        var isFeatureEnabledResult = _isFeatureEnabledProposition.IsSatisfiedBy(text);
+                        var isFeatureEnabledResult = _isFeatureEnabledProposition.Evaluate(text);
                         return isFeatureEnabledResult.Satisfied;
                     }
 
                     public bool IsGreen(string text)
                     {
                         // text == "green"
-                        var isGreenResult = _isGreenProposition.IsSatisfiedBy(text);
+                        var isGreenResult = _isGreenProposition.Evaluate(text);
                         return isGreenResult.Satisfied;
                     }
                 }
@@ -906,14 +906,14 @@ public class MotivConvertToSpecTests
                 public bool IsFeatureEnabled(int valueA, int valueC, string text)
                 {
                     // {{booleanExpression}}
-                    var result = _isFeatureEnabledProposition.IsSatisfiedBy(new IsFeatureEnabledProposition.Model(valueA, valueC, text));
+                    var result = _isFeatureEnabledProposition.Evaluate(new IsFeatureEnabledProposition.Model(valueA, valueC, text));
                     return result.Satisfied;
                 }
 
                 public bool IsGreen(string text)
                 {
                     // text == "green"
-                    var isGreenResult = _isGreenProposition.IsSatisfiedBy(text);
+                    var isGreenResult = _isGreenProposition.Evaluate(text);
                     return isGreenResult.Satisfied;
                 }
             }
@@ -1002,14 +1002,14 @@ public class MotivConvertToSpecTests
                     {
                         // (valueA >= 0 && 1 < valueC) ||
                         //     valueB >= 0 && 1 < valueC && (string.IsNullOrEmpty(text) && IsGreen(text))
-                        var isFeatureEnabledResult = _isFeatureEnabledProposition.IsSatisfiedBy(new IsFeatureEnabledProposition.Model(valueA, valueC, valueB, text));
+                        var isFeatureEnabledResult = _isFeatureEnabledProposition.Evaluate(new IsFeatureEnabledProposition.Model(valueA, valueC, valueB, text));
                         return isFeatureEnabledResult.Satisfied;
                     }
 
                     public bool IsGreen(string text)
                     {
                         // text == "green"
-                        var isGreenResult = _isGreenProposition.IsSatisfiedBy(text);
+                        var isGreenResult = _isGreenProposition.Evaluate(text);
                         return isGreenResult.Satisfied;
                     }
                 }

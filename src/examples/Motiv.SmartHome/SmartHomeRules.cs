@@ -13,7 +13,7 @@ public class ActivateSmartHomeRules
     ];
 
     public IEnumerable<ISmartHomeAction> Execute(SmartHomeContext context) =>
-        Specs.SelectMany(spec => spec.IsSatisfiedBy(context).Values);
+        Specs.SelectMany(spec => spec.Evaluate(context).Values);
 
     private SpecBase<SmartHomeContext, ISmartHomeAction> ActivateHeating => Spec
         .Build((_isOccupied | _isNight) & _isCold & !_isHighEnergyUsage)

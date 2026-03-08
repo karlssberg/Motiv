@@ -37,7 +37,7 @@ public class ExplanationTests
 
         var isEvenAndPositiveUsingPredicateSpecAtDepth1 =
             Spec.Build((int n) =>
-                    isEvenWrapperSpecAtDepth2.IsSatisfiedBy(n) & isPositiveWrapperSpecAtDepth2.IsSatisfiedBy(n))
+                    isEvenWrapperSpecAtDepth2.Evaluate(n) & isPositiveWrapperSpecAtDepth2.Evaluate(n))
                 .WhenTrue("even and positive from predicate")
                 .WhenFalse("not even and positive from predicate")
                 .Create();
@@ -46,7 +46,7 @@ public class ExplanationTests
             Spec.Build((int n) =>
                     (isEvenWrapperSpecAtDepth2.ChangeModelTo<int>(i => i) &
                      isPositiveWrapperSpecAtDepth2.ChangeModelTo<int>(i => i))
-                    .IsSatisfiedBy(n))
+                    .Evaluate(n))
                 .WhenTrue("even and positive from change model method")
                 .WhenFalse("not even and positive from change model method")
                 .Create();
@@ -70,7 +70,7 @@ public class ExplanationTests
             .WhenFalse("is odd")
             .Create();
 
-        var result = spec.IsSatisfiedBy(n);
+        var result = spec.Evaluate(n);
 
         // Act
         var act = result.Explanation.Assertions;
@@ -87,7 +87,7 @@ public class ExplanationTests
         // Arrange
         var isEvenWholeNumber = new IsEvenWholeNumber();
 
-        var result = isEvenWholeNumber.IsSatisfiedBy(model);
+        var result = isEvenWholeNumber.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -106,7 +106,7 @@ public class ExplanationTests
         // Arrange
         var isEvenWholeNumber = new IsEvenWholeNumber();
 
-        var result = isEvenWholeNumber.IsSatisfiedBy(model);
+        var result = isEvenWholeNumber.Evaluate(model);
 
         // Act
         var act = result.AllRootAssertions;
@@ -127,7 +127,7 @@ public class ExplanationTests
         // Arrange
         var isEvenWholeNumber = new IsEvenWholeNumber();
 
-        var result = isEvenWholeNumber.IsSatisfiedBy(model);
+        var result = isEvenWholeNumber.Evaluate(model);
 
         // Act
         var act = result.RootAssertions;
@@ -146,7 +146,7 @@ public class ExplanationTests
         // Arrange
         var isEvenWholeNumber = new IsEvenWholeNumber();
 
-        var result = isEvenWholeNumber.IsSatisfiedBy(model);
+        var result = isEvenWholeNumber.Evaluate(model);
 
         // Act
         var act = result.SubAssertions;
@@ -187,7 +187,7 @@ public class ExplanationTests
 
         var spec = isEvenSpec & isPositiveSpec & isDivisibleBy3Spec;
 
-        var result = spec.IsSatisfiedBy(n);
+        var result = spec.Evaluate(n);
 
         // Act
         var act = result.AllAssertions;
@@ -233,7 +233,7 @@ public class ExplanationTests
                 .WhenFalse("not even, positive, or divisible by 3")
                 .Create();
 
-        var result = spec.IsSatisfiedBy(n);
+        var result = spec.Evaluate(n);
 
         // Act
         var act = result.SubAssertions;
@@ -279,7 +279,7 @@ public class ExplanationTests
                 .WhenFalse("not even, positive, or divisible by 3")
                 .Create();
 
-        var result = spec.IsSatisfiedBy(n);
+        var result = spec.Evaluate(n);
 
         // Act
         var act = result.AllSubAssertions;
@@ -311,7 +311,7 @@ public class ExplanationTests
                 .WhenFalseYield((_, result) => result.Assertions)
                 .Create("is even wrapper 2");
 
-        var result = isEvenWrapper2.IsSatisfiedBy(model);
+        var result = isEvenWrapper2.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -342,7 +342,7 @@ public class ExplanationTests
                 .WhenFalseYield((_, result) => result.Assertions)
                 .Create("is even wrapper 2");
 
-        var result = isEvenWrapper2.IsSatisfiedBy(model);
+        var result = isEvenWrapper2.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -374,7 +374,7 @@ public class ExplanationTests
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("is even wrapper 2");
 
-        var result = isEvenWrapper2.IsSatisfiedBy(model);
+        var result = isEvenWrapper2.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -407,7 +407,7 @@ public class ExplanationTests
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("is even wrapper 2");
 
-        var result = isEvenWrapper2.IsSatisfiedBy(model);
+        var result = isEvenWrapper2.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -449,7 +449,7 @@ public class ExplanationTests
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("third even");
 
-        var result = thirdEven.IsSatisfiedBy([model]);
+        var result = thirdEven.Evaluate([model]);
 
         // Act
         var act = result.Explanation.Assertions;
@@ -491,7 +491,7 @@ public class ExplanationTests
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("third even");
 
-        var result = thirdEven.IsSatisfiedBy([model]);
+        var result = thirdEven.Evaluate([model]);
 
         // Act
         var act = result.Explanation.Underlying.GetAssertions();
@@ -533,7 +533,7 @@ public class ExplanationTests
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("third even");
 
-        var result = thirdEven.IsSatisfiedBy([model]);
+        var result = thirdEven.Evaluate([model]);
 
         // Act
         var act = result.Explanation.Underlying.SelectMany(explanation => explanation.Underlying);

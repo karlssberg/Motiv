@@ -39,7 +39,7 @@ public class MetadataTests
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("third even");
 
-        var result = thirdEven.IsSatisfiedBy([model]);
+        var result = thirdEven.Evaluate([model]);
 
         var act = result.MetadataTier.Metadata.Select(metadata => metadata.Assertion);
 
@@ -78,7 +78,7 @@ public class MetadataTests
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("third even");
 
-        var result = thirdEven.IsSatisfiedBy([model]);
+        var result = thirdEven.Evaluate([model]);
 
         var act = result.MetadataTier.Underlying.GetValues().Select(meta => meta.ToString());
 
@@ -117,7 +117,7 @@ public class MetadataTests
                 .WhenFalseYield((_, result) => result.Values)
                 .Create("third even");
 
-        var result = thirdEven.IsSatisfiedBy([model]);
+        var result = thirdEven.Evaluate([model]);
 
         var act = result.MetadataTier.Underlying.SelectMany(metadata => metadata.Underlying);
 

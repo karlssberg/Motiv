@@ -19,7 +19,7 @@ public class ExpressionTreeAssertionTests
                 .Create("is-positive");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -41,7 +41,7 @@ public class ExpressionTreeAssertionTests
                 .Create("is-positive-and-even");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Satisfied.ShouldBe(expectedResult);
@@ -62,7 +62,7 @@ public class ExpressionTreeAssertionTests
                 .Create("is-positive-and-even");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion, true);
@@ -77,7 +77,7 @@ public class ExpressionTreeAssertionTests
                 .Create("text-search");
 
         // Act
-        var act = sut.IsSatisfiedBy("the quick brown fox jumps over the lazy dog");
+        var act = sut.Evaluate("the quick brown fox jumps over the lazy dog");
 
         // Assert
         act.Assertions.ShouldBe(
@@ -98,7 +98,7 @@ public class ExpressionTreeAssertionTests
                 .Create("text-search");
 
         // Act
-        var act = sut.IsSatisfiedBy("the quick brown fox jumps over the lazy dog");
+        var act = sut.Evaluate("the quick brown fox jumps over the lazy dog");
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -115,7 +115,7 @@ public class ExpressionTreeAssertionTests
                 .Create("text-search");
 
         // Act
-        var act = sut.IsSatisfiedBy("the quick brown fox jumps over the lazy dog");
+        var act = sut.Evaluate("the quick brown fox jumps over the lazy dog");
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -134,7 +134,7 @@ public class ExpressionTreeAssertionTests
             .Create($"has-more-than-{threshold}-vowels");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -152,7 +152,7 @@ public class ExpressionTreeAssertionTests
             .Create("equals-test");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -170,7 +170,7 @@ public class ExpressionTreeAssertionTests
             .Create("not-equals-test");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -187,7 +187,7 @@ public class ExpressionTreeAssertionTests
             .Create("greater-than-test");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -204,7 +204,7 @@ public class ExpressionTreeAssertionTests
             .Create("greater-than-or-equals-test");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -221,7 +221,7 @@ public class ExpressionTreeAssertionTests
             .Create("less-than-test");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -238,7 +238,7 @@ public class ExpressionTreeAssertionTests
             .Create("less-than-or-equals-test");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -256,7 +256,7 @@ public class ExpressionTreeAssertionTests
             .Create("assert-constant");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -275,7 +275,7 @@ public class ExpressionTreeAssertionTests
             .Create("assert-parameter");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -293,7 +293,7 @@ public class ExpressionTreeAssertionTests
             .Create("assert-binary");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -310,7 +310,7 @@ public class ExpressionTreeAssertionTests
             .Create("assert-unary");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -327,7 +327,7 @@ public class ExpressionTreeAssertionTests
             .Create("assert-method-call");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -346,7 +346,7 @@ public class ExpressionTreeAssertionTests
             .Create("assert-conditional");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion, true);
@@ -363,7 +363,7 @@ public class ExpressionTreeAssertionTests
             .Create("assert-member");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -380,7 +380,7 @@ public class ExpressionTreeAssertionTests
             .Create("assert-new-with-list-initializer");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion, true);
@@ -397,7 +397,7 @@ public class ExpressionTreeAssertionTests
             .Create("new-array-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -414,7 +414,7 @@ public class ExpressionTreeAssertionTests
             .Create("new-array-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -431,7 +431,7 @@ public class ExpressionTreeAssertionTests
             .Create("new-array-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion], true);
@@ -448,7 +448,7 @@ public class ExpressionTreeAssertionTests
             .Create("lambda-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -465,7 +465,7 @@ public class ExpressionTreeAssertionTests
             .Create("type-binary-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -482,7 +482,7 @@ public class ExpressionTreeAssertionTests
             .Create("index-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -501,7 +501,7 @@ public class ExpressionTreeAssertionTests
             .Create("coalesce-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -518,7 +518,7 @@ public class ExpressionTreeAssertionTests
             .Create("member-init-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -535,7 +535,7 @@ public class ExpressionTreeAssertionTests
             .Create("casting-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -559,7 +559,7 @@ public class ExpressionTreeAssertionTests
             .Create("string-interpolation-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -577,7 +577,7 @@ public class ExpressionTreeAssertionTests
             .Create("arithmetic-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy((x, y));
+        var act = sut.Evaluate((x, y));
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -594,7 +594,7 @@ public class ExpressionTreeAssertionTests
             .Create("bitwise-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion, true);
@@ -611,7 +611,7 @@ public class ExpressionTreeAssertionTests
             .Create("bit-shift-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -629,7 +629,7 @@ public class ExpressionTreeAssertionTests
             .Create("enum-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(flags);
+        var act = sut.Evaluate(flags);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -647,7 +647,7 @@ public class ExpressionTreeAssertionTests
             .Create("nullable-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion, true);
@@ -669,7 +669,7 @@ public class ExpressionTreeAssertionTests
             .Create("datetime-expression");
 
         // Act
-        var act = sut.IsSatisfiedBy(DateTime.UtcNow);
+        var act = sut.Evaluate(DateTime.UtcNow);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -688,7 +688,7 @@ public class ExpressionTreeAssertionTests
             .Create($"has-more-than-{threshold}-vowels");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -705,7 +705,7 @@ public class ExpressionTreeAssertionTests
             .Create($"length-greater-than-{threshold}");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -722,7 +722,7 @@ public class ExpressionTreeAssertionTests
             .WhenTrue(query => $"contains '{query}'")
             .WhenFalse(query => $"does not contain '{query}'")
             .Create($"text-equals")
-            .IsSatisfiedBy(model);
+            .Evaluate(model);
 
         var tuple =(Spec: textEquals, query: model);
 
@@ -731,7 +731,7 @@ public class ExpressionTreeAssertionTests
             .Create("supports-embedded-specifications");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -750,11 +750,11 @@ public class ExpressionTreeAssertionTests
             .Create($"text-equals");
 
         var sut = Spec
-            .From((string query) => query.Length > 0 && textEquals.IsSatisfiedBy(query))
+            .From((string query) => query.Length > 0 && textEquals.Evaluate(query))
             .Create("supports-embedded-specifications");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion, true);
@@ -771,14 +771,14 @@ public class ExpressionTreeAssertionTests
             .WhenTrue(query => $"contains '{query}'")
             .WhenFalse(query => $"does not contain '{query}'")
             .Create($"text-equals")
-            .IsSatisfiedBy(m);
+            .Evaluate(m);
 
         var sut = Spec
             .From((string query) => query.Length > 3 && textEquals(query))
             .Create("supports-embedded-specifications");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion, true);
@@ -795,14 +795,14 @@ public class ExpressionTreeAssertionTests
             .WhenTrue(query => $"contains '{query}'")
             .WhenFalse(query => $"does not contain '{query}'")
             .Create($"text-equals")
-            .IsSatisfiedBy(model);
+            .Evaluate(model);
 
         var sut = Spec
             .From((BooleanResultBase<string> equal) => equal)
             .Create("supports-embedded-specifications");
 
         // Act
-        var act = sut.IsSatisfiedBy(textEquals);
+        var act = sut.Evaluate(textEquals);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -825,7 +825,7 @@ public class ExpressionTreeAssertionTests
             .Create($"text-equals");
 
         // Act
-        var act = sut.IsSatisfiedBy([model]);
+        var act = sut.Evaluate([model]);
 
         // Assert
         act.Assertions.ShouldBe(expectedAssertion);
@@ -843,7 +843,7 @@ public class ExpressionTreeAssertionTests
                 .Create("has admin or user");
 
         // Act
-        var act = sut.IsSatisfiedBy([modelA, modelB]);
+        var act = sut.Evaluate([modelA, modelB]);
 
         // Assert
         act.Assertions.ShouldBe(expected);
@@ -866,7 +866,7 @@ public class ExpressionTreeAssertionTests
                 .Create("has admin");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -875,7 +875,7 @@ public class ExpressionTreeAssertionTests
     [Theory]
     [InlineData("is admin", "admin", "user")]
     [InlineData("is not admin", "user")]
-    public void Should_convert_any_linq_function_to_higher_order_proposition_using_its_IsSatisfiedBy_method(string expectedAssertion, params string[] model)
+    public void Should_convert_any_linq_function_to_higher_order_proposition_using_its_Evaluate_method(string expectedAssertion, params string[] model)
     {
         // Assemble
         var isAdmin =
@@ -885,11 +885,11 @@ public class ExpressionTreeAssertionTests
                 .Create("is-admin");
 
         var sut =
-            Spec.From((IEnumerable<string> roles) => roles.Any(role => isAdmin.IsSatisfiedBy(role)))
+            Spec.From((IEnumerable<string> roles) => roles.Any(role => isAdmin.Evaluate(role)))
                 .Create("has admin");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -906,14 +906,14 @@ public class ExpressionTreeAssertionTests
                 .WhenTrue("is admin")
                 .WhenFalse("is not admin")
                 .Create("is-admin")
-                .IsSatisfiedBy(model);
+                .Evaluate(model);
 
         var sut =
             Spec.From((IEnumerable<string> roles) => roles.Any(role => isAdminResult))
                 .Create("all admins");
 
         // Act
-        var act = sut.IsSatisfiedBy([model]);
+        var act = sut.Evaluate([model]);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -931,7 +931,7 @@ public class ExpressionTreeAssertionTests
                 .Create("all admin or user");
 
         // Act
-        var act = sut.IsSatisfiedBy([modelA, modelB]);
+        var act = sut.Evaluate([modelA, modelB]);
 
         // Assert
         act.Assertions.ShouldBe(expected);
@@ -954,7 +954,7 @@ public class ExpressionTreeAssertionTests
                 .Create("all admins");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -963,7 +963,7 @@ public class ExpressionTreeAssertionTests
     [Theory]
     [InlineData("is admin", "admin", "admin")]
     [InlineData("is not admin", "user, admin")]
-    public void Should_convert_all_linq_function_to_higher_order_proposition_using_its_IsSatisfiedBy_method(string expectedAssertion, params string[] model)
+    public void Should_convert_all_linq_function_to_higher_order_proposition_using_its_Evaluate_method(string expectedAssertion, params string[] model)
     {
         // Assemble
         var isAdmin =
@@ -973,11 +973,11 @@ public class ExpressionTreeAssertionTests
                 .Create("is-admin");
 
         var sut =
-            Spec.From((IEnumerable<string> roles) => roles.All(role => isAdmin.IsSatisfiedBy(role)))
+            Spec.From((IEnumerable<string> roles) => roles.All(role => isAdmin.Evaluate(role)))
                 .Create("all admins");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);
@@ -994,14 +994,14 @@ public class ExpressionTreeAssertionTests
                 .WhenTrue("is admin")
                 .WhenFalse("is not admin")
                 .Create("is-admin")
-                .IsSatisfiedBy(model);
+                .Evaluate(model);
 
         var sut =
             Spec.From((IEnumerable<string> roles) => roles.All(role => isAdminResult))
                 .Create("all admins");
 
         // Act
-        var act = sut.IsSatisfiedBy([model]);
+        var act = sut.Evaluate([model]);
 
         // Assert
         act.Assertions.ShouldBe([expectedAssertion]);

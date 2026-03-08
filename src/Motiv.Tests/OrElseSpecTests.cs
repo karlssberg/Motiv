@@ -30,7 +30,7 @@ public class OrElseSpecTests
 
         var spec = left.OrElse((SpecBase<object, string>)right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -65,7 +65,7 @@ public class OrElseSpecTests
 
         var spec = left.OrElse((SpecBase<object, string>)right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -98,7 +98,7 @@ public class OrElseSpecTests
             .Create("right");
 
         var spec = left.OrElse((SpecBase<object, bool>)right);
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.ToString();
@@ -126,7 +126,7 @@ public class OrElseSpecTests
         var spec = left.OrElse(right);
 
         // Act
-        Action act = () => spec.IsSatisfiedBy(new object());
+        Action act = () => spec.Evaluate(new object());
 
         // Assert
         act.ShouldNotThrow();
@@ -209,7 +209,7 @@ public class OrElseSpecTests
 
         var spec = left.OrElse((SpecBase<bool, string>)right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -244,7 +244,7 @@ public class OrElseSpecTests
 
         var spec = left.OrElse((SpecBase<bool, string>)right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Justification;
@@ -280,7 +280,7 @@ public class OrElseSpecTests
 
         var spec = left.OrElse((SpecBase<bool, string>)right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Justification;
@@ -319,7 +319,7 @@ public class OrElseSpecTests
 
         var spec = left.OrElse(right);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -353,7 +353,7 @@ public class OrElseSpecTests
 
         var spec = left.OrElse(right);
 
-        var result = spec.IsSatisfiedBy("");
+        var result = spec.Evaluate("");
 
         // Act
         var act = result.Values;
@@ -387,7 +387,7 @@ public class OrElseSpecTests
 
         var spec = left.OrElse(right);
 
-        var result = spec.IsSatisfiedBy("");
+        var result = spec.Evaluate("");
 
         // Act
         var act = result.Assertions;
@@ -436,12 +436,12 @@ public class OrElseSpecTests
 
         IEnumerable<BooleanResultBase<string>> expected =
         [
-            left.IsSatisfiedBy(new object()),
-            right.IsSatisfiedBy(new object())
+            left.Evaluate(new object()),
+            right.Evaluate(new object())
         ];
 
         var spec = left.OrElse((SpecBase<object, string>)right);
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
 
         // Act
         var act = result.UnderlyingWithValues;
@@ -481,7 +481,7 @@ public class OrElseSpecTests
 
         var spec = !(left.OrElse((SpecBase<bool, string>)right));
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
@@ -515,7 +515,7 @@ public class OrElseSpecTests
 
         var spec = !!(left.OrElse((SpecBase<bool, string>)right));
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
@@ -549,7 +549,7 @@ public class OrElseSpecTests
 
         var spec = !!!(left.OrElse((SpecBase<bool, string>)right));
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }

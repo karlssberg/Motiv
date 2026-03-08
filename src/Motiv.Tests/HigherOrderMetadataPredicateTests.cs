@@ -24,7 +24,7 @@ public class HigherOrderMetadataPredicateTests
                 .WhenFalse(MyMetadata.IsFalse)
                 .Create("is a pair of even numbers");
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Explanation.Assertions;
@@ -83,7 +83,7 @@ public class HigherOrderMetadataPredicateTests
                 .WhenFalse(MyMetadata.IsFalse)
                 .Create("third all true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Explanation.Assertions;
@@ -123,7 +123,7 @@ public class HigherOrderMetadataPredicateTests
                 .WhenFalse(MyMetadata.IsFalse)
                 .Create("third true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.RootAssertions;
@@ -158,7 +158,7 @@ public class HigherOrderMetadataPredicateTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;
@@ -210,7 +210,7 @@ public class HigherOrderMetadataPredicateTests
                    withFalseAsCallbackThatReturnsACollection &
                    withFalseAsTwoParameterCallbackThatReturnsACollectionWithImpliedName;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;
@@ -262,7 +262,7 @@ public class HigherOrderMetadataPredicateTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;

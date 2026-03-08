@@ -77,10 +77,10 @@ internal class SpecInvocationReplacer(string propositionName, string defaultMode
     private string BuildSpecInvocation(ImmutableArray<ISymbol> variableSymbols, string fieldName)
     {
         if (variableSymbols.Length == 1)
-            return $"{fieldName}.IsSatisfiedBy({variableSymbols.First().Name})";
+            return $"{fieldName}.Evaluate({variableSymbols.First().Name})";
 
         var modelArgs = string.Join(", ", variableSymbols.Select(s => s.Name));
-        return $"{fieldName}.IsSatisfiedBy(new {propositionName}.{defaultModelName}({modelArgs}))";
+        return $"{fieldName}.Evaluate(new {propositionName}.{defaultModelName}({modelArgs}))";
     }
 
     private string BuildFieldDeclaration(bool hasInstanceMethods, string fieldName) =>

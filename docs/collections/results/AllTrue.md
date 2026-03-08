@@ -9,8 +9,8 @@ The `AllTrue()` extension method is used to determine whether all the boolean re
 ```csharp
 IEnumerable<BooleanResult<int, string>> results = 
     [
-        new IsEvenProposition().IsSatisfiedBy(6),
-        new IsGreaterThanProposition(5).IsSatisfiedBy(6)
+        new IsEvenProposition().Evaluate(6),
+        new IsGreaterThanProposition(5).Evaluate(6)
     ];
 
 results.AllTrue();  // true

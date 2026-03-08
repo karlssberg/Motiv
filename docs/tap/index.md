@@ -7,7 +7,7 @@ description: Documentation for Tap extension methods in Motiv that attach side-e
 
 Motiv provides Tap extension methods for attaching side-effects to [propositions](xref:Motiv.SpecBase`2) without altering their logical behavior. This is useful for logging, metrics, debugging, or any other observation that should occur during evaluation.
 
-A tapped proposition is fully transparent — its `Description`, `Reason`, `Assertions`, and all other output are identical to the original proposition. The tap simply fires a callback during `IsSatisfiedBy` evaluation.
+A tapped proposition is fully transparent — its `Description`, `Reason`, `Assertions`, and all other output are identical to the original proposition. The tap simply fires a callback during `Evaluate` evaluation.
 
 ## Available Methods
 
@@ -34,7 +34,7 @@ var observed = isEligible
         logger.LogWarning("Customer {Id} denied: {Reason}", customer.Id, result.Reason));
 
 // Use exactly like the original proposition
-var result = observed.IsSatisfiedBy(customer);
+var result = observed.Evaluate(customer);
 result.Satisfied;   // true or false — unchanged
 result.Assertions;  // ["eligible"] or ["not eligible"] — unchanged
 ```
@@ -43,7 +43,7 @@ result.Assertions;  // ["eligible"] or ["not eligible"] — unchanged
 
 - **Transparent**: Tap does not appear in `Reason`, `Justification`, or `Description` output. The tapped proposition behaves identically to the original.
 - **Composable**: Taps can be chained and combined with logical operators like any other proposition.
-- **Evaluation-only**: Callbacks fire during `IsSatisfiedBy` only. The lightweight `Matches` method (boolean-only path) does not trigger callbacks.
+- **Evaluation-only**: Callbacks fire during `Evaluate` only. The lightweight `Matches` method (boolean-only path) does not trigger callbacks.
 - **Returns Spec**: All Tap methods return `SpecBase<TModel, TMetadata>`, not `PolicyBase`. This is consistent with how most composition operations work in Motiv.
 
 ## Next Steps

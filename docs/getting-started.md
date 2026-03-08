@@ -60,7 +60,7 @@ var isAdult = Spec
 
 // Apply the specification to a model
 var person = new Person { Name = "Benjamin", Age = 25 };
-var result = isAdult.IsSatisfiedBy(person);
+var result = isAdult.Evaluate(person);
 
 Console.WriteLine(result.Satisfied);    // true
 Console.WriteLine(result.Explanation);  // "is an adult"
@@ -77,7 +77,7 @@ var isAdultFrom = Spec
     .Create("is adult"); // This name is used in explanations
 
 var person = new Person { Name = "Alice", Age = 16 };
-var result = isAdultFrom.IsSatisfiedBy(person);
+var result = isAdultFrom.Evaluate(person);
 
 // Technical output for debugging
 if (!result.Satisfied)
@@ -116,7 +116,7 @@ var isValidPerson = isAdult.And(hasValidName);
 
 // Apply the combined specification
 var person = new Person { Name = "", Age = 15 };
-var result = isValidPerson.IsSatisfiedBy(person);
+var result = isValidPerson.Evaluate(person);
 
 // Result contains all failed conditions
 Console.WriteLine(result.Satisfied);    // false

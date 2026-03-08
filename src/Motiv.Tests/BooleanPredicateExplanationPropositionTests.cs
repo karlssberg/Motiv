@@ -39,7 +39,7 @@ public class BooleanPredicateExplanationPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -79,7 +79,7 @@ public class BooleanPredicateExplanationPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -122,7 +122,7 @@ public class BooleanPredicateExplanationPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -159,7 +159,7 @@ public class BooleanPredicateExplanationPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -192,7 +192,7 @@ public class BooleanPredicateExplanationPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -225,7 +225,7 @@ public class BooleanPredicateExplanationPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -248,7 +248,7 @@ public class BooleanPredicateExplanationPropositionTests
                 .WhenFalseYield(_ => ["false assertion"])
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -271,7 +271,7 @@ public class BooleanPredicateExplanationPropositionTests
                 .WhenFalseYield(_ => ["false assertion"])
                 .Create();
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -304,7 +304,7 @@ public class BooleanPredicateExplanationPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -327,7 +327,7 @@ public class BooleanPredicateExplanationPropositionTests
                 .WhenFalseYield(_ => ["false assertion"])
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -360,7 +360,7 @@ public class BooleanPredicateExplanationPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -383,7 +383,7 @@ public class BooleanPredicateExplanationPropositionTests
                 .WhenFalseYield(_ => ["false assertion"])
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -416,7 +416,7 @@ public class BooleanPredicateExplanationPropositionTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;

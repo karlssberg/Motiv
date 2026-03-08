@@ -32,7 +32,7 @@ public readonly struct MultiAssertionFromPolicyWithNameHigherOrderPropositionFac
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, string, TMetadata>(
-            policy.IsSatisfiedBy,
+            policy.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause
                 .ToEnumerable()
@@ -49,7 +49,7 @@ public readonly struct MultiAssertionFromPolicyWithNameHigherOrderPropositionFac
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create() =>
         new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, string, TMetadata>(
-            policy.IsSatisfiedBy,
+            policy.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause
                 .ToEnumerable()

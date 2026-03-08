@@ -36,7 +36,7 @@ var isProductSizeSmallSpec = Spec
 var isAtRiskShelfItemSpec = expensiveProductSpec.OrElse(isProductSizeSmallSpec);
 
 var product = new Product("Laptop", 1500, true);
-var isAtRiskShelfItem = isAtRiskShelfItemSpec.IsSatisfiedBy(product);
+var isAtRiskShelfItem = isAtRiskShelfItemSpec.Evaluate(product);
 
 isAtRiskShelfItem.Satisfied; // true
 isAtRiskShelfItem.Reason; // "product is expensive | product is easily stolen"
@@ -74,8 +74,8 @@ var isAtRiskLocationSpec = Spec
     .WhenFalse("the store has low incidents of shop lifting")
     .Create();
 
-var isAtRiskLocation = isAtRiskLocationSpec.IsSatisfiedBy(store);
-var isProductAtRiskOfTheft = isProductAtRiskOfTheftSpec.IsSatisfiedBy(store);
+var isAtRiskLocation = isAtRiskLocationSpec.Evaluate(store);
+var isProductAtRiskOfTheft = isProductAtRiskOfTheftSpec.Evaluate(store);
 
 var isExtraSecurityNeeded = isProductAtRiskOfTheft || isAtRiskLocation;
 

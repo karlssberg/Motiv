@@ -21,7 +21,7 @@ var isEven =
     Spec.Build((int n) => n % 2 == 0)    // predicate
         .Create("is even");              // propositional-statement/name
 
-var result = isEven.IsSatisfiedBy(2);
+var result = isEven.Evaluate(2);
 
 result.Reason;    // "is even"
 result.Assertion; // ["is even"]
@@ -30,7 +30,7 @@ result.Assertion; // ["is even"]
 And when negated:
 
 ```csharp
-var result = isEven.IsSatisfiedBy(3);
+var result = isEven.Evaluate(3);
 
 result.Reason;    // "¬is even"
 result.Assertion; // ["¬is even"]

@@ -189,10 +189,10 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         return
             Spec.Build((TModel model) =>
                 {
-                    var antecedent = test.IsSatisfiedBy(model);
-                    if (antecedent) return antecedent & ifTrue.IsSatisfiedBy(model);
+                    var antecedent = test.Evaluate(model);
+                    if (antecedent) return antecedent & ifTrue.Evaluate(model);
 
-                    var consequent = ifFalse.IsSatisfiedBy(model);
+                    var consequent = ifFalse.Evaluate(model);
                     return (antecedent & consequent) | (antecedent & !consequent);
                 })
                 .WhenTrueYield((_, result) => result.Assertions)

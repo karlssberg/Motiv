@@ -12,7 +12,7 @@ public class MinimalPropositionTests
             Spec.Build((bool b) => b)
                 .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -31,7 +31,7 @@ public class MinimalPropositionTests
             Spec.Build((bool b) => b)
                 .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -54,7 +54,7 @@ public class MinimalPropositionTests
             Spec.Build((bool b) => b)
                 .Create(propositionalStatement);
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;

@@ -29,7 +29,7 @@ public static class EnumerableExtensions
         var results = sourceCollection
             .Select<TModel, BooleanResult<TModel, TMetadata>>(model =>
             {
-                var result = spec.IsSatisfiedBy(model);
+                var result = spec.Evaluate(model);
                 return new BooleanResult<TModel, TMetadata>(model, result);
             });
 

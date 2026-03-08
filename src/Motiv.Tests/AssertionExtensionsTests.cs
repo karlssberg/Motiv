@@ -15,7 +15,7 @@ public class AssertionExtensionsTests
             .WhenFalse(m => m)
             .Create("is positive");
 
-        var booleanResultsCollection = models.Select(spec.IsSatisfiedBy);
+        var booleanResultsCollection = models.Select(spec.Evaluate);
 
         // Act
         var act = booleanResultsCollection.GetAssertions();
@@ -36,7 +36,7 @@ public class AssertionExtensionsTests
             .WhenFalse(m => m)
             .Create("is always true");
 
-        var booleanResultsCollection = models.Select(spec.IsSatisfiedBy);
+        var booleanResultsCollection = models.Select(spec.Evaluate);
 
         // Act
         var act = booleanResultsCollection.GetTrueAssertions();
@@ -56,7 +56,7 @@ public class AssertionExtensionsTests
             .WhenFalse(m => m)
             .Create("is always false");
 
-        var booleanResultsCollection = models.Select(spec.IsSatisfiedBy);
+        var booleanResultsCollection = models.Select(spec.Evaluate);
 
         // Act
         var act = booleanResultsCollection.GetFalseAssertions();

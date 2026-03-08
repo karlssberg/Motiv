@@ -26,50 +26,50 @@ public class BooleanResultPredicateMultiValuePropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(200)
             .WhenFalse(-200)
             .Create("is first true");
 
         var secondSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => 300)
             .WhenFalse(-300)
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(400)
             .WhenFalse(_ => -400)
             .Create("is third true");
 
         var fourthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => 600)
             .WhenFalse(_ => -600)
             .Create("is fourth true");
 
         var fifthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => 700)
             .WhenFalse(-700)
             .Create("is fifth true");
 
         var sixthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(800)
             .WhenFalse((_, _) => -800)
             .Create("is sixth true");
 
         var seventhSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => 900)
             .WhenFalse((_, _) => -900)
             .Create("is seventh true");
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec | fifthSpec | sixthSpec | seventhSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -96,50 +96,50 @@ public class BooleanResultPredicateMultiValuePropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue(200)
             .WhenFalse(-200)
             .Create("is first true");
 
         var secondSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => 300)
             .WhenFalse(-300)
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue(400)
             .WhenFalse(_ => -400)
             .Create("is third true");
 
         var fourthSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => 600)
             .WhenFalse(_ => -600)
             .Create("is fourth true");
 
         var fifthSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => 700)
             .WhenFalse(-700)
             .Create("is fifth true");
 
         var sixthSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue(800)
             .WhenFalse((_, _) => -800)
             .Create("is sixth true");
 
         var seventhSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => 900)
             .WhenFalse((_, _) => -900)
             .Create("is seventh true");
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec | fifthSpec | sixthSpec | seventhSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -166,50 +166,50 @@ public class BooleanResultPredicateMultiValuePropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(200)
             .WhenFalse(-200)
             .Create("is first true");
 
         var secondSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => 300)
             .WhenFalse(-300)
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(400)
             .WhenFalse(_ => -400)
             .Create("is third true");
 
         var fourthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => 500)
             .WhenFalse(_ => -500)
             .Create("is fourth true");
 
         var fifthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => 700)
             .WhenFalse(-700)
             .Create("is fifth true");
 
         var sixthSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue(800)
             .WhenFalse((_, _) => -800)
             .Create("is sixth true");
 
         var seventhSpec = Spec
-            .Build((bool m) => underlying.IsSatisfiedBy(m))
+            .Build((bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => 900)
             .WhenFalse((_, _) => -900)
             .Create("is seventh true");
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec | fifthSpec | sixthSpec | seventhSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -236,50 +236,50 @@ public class BooleanResultPredicateMultiValuePropositionTests
             .Create("are equal");
 
         var firstSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue(200)
             .WhenFalse(-200)
             .Create("is first true");
 
         var secondSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => 300)
             .WhenFalse(-300)
             .Create("is second true");
 
         var thirdSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue(400)
             .WhenFalse(_ => -400)
             .Create("is third true");
 
         var fourthSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue(_ => 500)
             .WhenFalse(_ => -500)
             .Create("is fourth true");
 
         var fifthSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => 700)
             .WhenFalse(-700)
             .Create("is fifth true");
 
         var sixthSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue(800)
             .WhenFalse((_, _) => -800)
             .Create("is sixth true");
 
         var seventhSpec = Spec
-            .Build(BooleanResultBase<int> (bool m) => underlying.IsSatisfiedBy(m))
+            .Build(BooleanResultBase<int> (bool m) => underlying.Evaluate(m))
             .WhenTrue((_, _) => 900)
             .WhenFalse((_, _) => -900)
             .Create("is seventh true");
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec | fifthSpec | sixthSpec | seventhSpec;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -303,25 +303,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -331,7 +331,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -355,25 +355,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -383,7 +383,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -407,25 +407,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -435,7 +435,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -459,25 +459,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -487,7 +487,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -511,25 +511,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -539,7 +539,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -563,25 +563,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -591,7 +591,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -615,25 +615,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -643,7 +643,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -665,25 +665,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -693,7 +693,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -715,25 +715,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -743,7 +743,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -765,12 +765,12 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Value;
@@ -792,12 +792,12 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Value;
@@ -819,12 +819,12 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Value;
@@ -846,12 +846,12 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var spec =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Value;
@@ -874,12 +874,12 @@ public class BooleanResultPredicateMultiValuePropositionTests
 
 
         var spec =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Value;
@@ -904,12 +904,12 @@ public class BooleanResultPredicateMultiValuePropositionTests
 
 
         var spec =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Value;
@@ -931,25 +931,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -959,7 +959,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Metadata;
@@ -981,25 +981,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1009,7 +1009,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Metadata;
@@ -1031,25 +1031,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1059,7 +1059,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -1081,25 +1081,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1109,7 +1109,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -1131,25 +1131,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1159,7 +1159,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Metadata;
@@ -1181,25 +1181,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue(_ => Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1209,7 +1209,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Metadata;
@@ -1231,25 +1231,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1259,7 +1259,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -1281,25 +1281,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1309,7 +1309,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -1331,25 +1331,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1359,7 +1359,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Metadata;
@@ -1381,25 +1381,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrue((_, _) => Metadata.True)
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1409,7 +1409,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Metadata;
@@ -1431,25 +1431,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1459,7 +1459,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -1481,25 +1481,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1509,7 +1509,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -1531,25 +1531,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build((bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1559,7 +1559,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Metadata;
@@ -1581,25 +1581,25 @@ public class BooleanResultPredicateMultiValuePropositionTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse(_ => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalse((_, _) => Metadata.False)
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build(BooleanResultBase<string> (bool b) => underlying.IsSatisfiedBy(b))
+            Spec.Build(BooleanResultBase<string> (bool b) => underlying.Evaluate(b))
                 .WhenTrueYield((_, _) => Metadata.True.ToEnumerable())
                 .WhenFalseYield((_, _) => [Metadata.False])
                 .Create("propositional statement");
@@ -1609,7 +1609,7 @@ public class BooleanResultPredicateMultiValuePropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Metadata;

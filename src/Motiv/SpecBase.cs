@@ -55,7 +55,7 @@ public abstract class SpecBase<TModel> : SpecBase
     /// </summary>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <returns><c>true</c> if the model satisfies the proposition; otherwise, <c>false</c>.</returns>
-    public virtual bool Matches(TModel model) => IsSatisfiedBy(model).Satisfied;
+    public virtual bool Matches(TModel model) => Evaluate(model).Satisfied;
 
     /// <summary>
     /// Evaluates the proposition against the model and returns a result that contains the Boolean result of the
@@ -63,12 +63,16 @@ public abstract class SpecBase<TModel> : SpecBase
     /// </summary>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <returns>A result that contains the Boolean result of the predicate and an explanation of the result.</returns>
-    public BooleanResultBase<string> IsSatisfiedBy(TModel model) =>
+    public BooleanResultBase<string> Evaluate(TModel model) =>
         this switch
         {
-            SpecBase<TModel, string> explanationSpec => explanationSpec.IsSatisfiedBy(model),
-            _ => ToExplanationSpec().IsSatisfiedBy(model)
+            SpecBase<TModel, string> explanationSpec => explanationSpec.Evaluate(model),
+            _ => ToExplanationSpec().Evaluate(model)
         };
+
+    /// <inheritdoc cref="Evaluate(TModel)"/>
+    [Obsolete("Use Evaluate instead.")]
+    public BooleanResultBase<string> IsSatisfiedBy(TModel model) => Evaluate(model);
 
     /// <summary>
     /// Converts this specification to an explanation specification (i.e., Spec&lt;TModel, string&gt;). This is
@@ -186,7 +190,7 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     }
 
     /// <inheritdoc />
-    public override bool Matches(TModel model) => IsSpecSatisfiedBy(model).Satisfied;
+    public override bool Matches(TModel model) => EvaluateSpec(model).Satisfied;
 
     /// <summary>
     /// Evaluates the proposition against the model and returns a result that contains the Boolean result of the
@@ -194,7 +198,11 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// </summary>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    public new BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => IsSpecSatisfiedBy(model);
+    public new BooleanResultBase<TMetadata> Evaluate(TModel model) => EvaluateSpec(model);
+
+    /// <inheritdoc cref="Evaluate(TModel)"/>
+    [Obsolete("Use Evaluate instead.")]
+    public new BooleanResultBase<TMetadata> IsSatisfiedBy(TModel model) => Evaluate(model);
 
     /// <summary>
     /// Combines this specification with another specification using the logical AND operator. Both operands will be
@@ -328,5 +336,5 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// </summary>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    protected abstract BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model);
+    protected abstract BooleanResultBase<TMetadata> EvaluateSpec(TModel model);
 }

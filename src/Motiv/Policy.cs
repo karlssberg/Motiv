@@ -48,8 +48,8 @@ public class Policy<TModel, TMetadata> : PolicyBase<TModel, TMetadata>
     public override bool Matches(TModel model) => _policy.Matches(model);
 
     /// <inheritdoc/>
-    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model) =>
-        _policy.IsSatisfiedBy(model);
+    protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model) =>
+        _policy.Evaluate(model);
 
     /// <inheritdoc/>
     public override IEnumerable<SpecBase> Underlying => _policy.Underlying;

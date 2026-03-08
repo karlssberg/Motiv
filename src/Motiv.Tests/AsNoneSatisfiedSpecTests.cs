@@ -29,7 +29,7 @@ public class AsNoneSatisfiedSpecTests
             .AsNoneSatisfied()
             .Create("none are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Satisfied;
@@ -91,7 +91,7 @@ public class AsNoneSatisfiedSpecTests
                 .WhenFalseYield(evaluation => evaluation.Metadata)
                 .Create("none are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Justification;
@@ -155,7 +155,7 @@ public class AsNoneSatisfiedSpecTests
             .Create("none are true");
 
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Justification;
@@ -217,7 +217,7 @@ public class AsNoneSatisfiedSpecTests
             .WhenFalseYield(evaluation => evaluation.Metadata)
             .Create("none are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Justification;
@@ -260,7 +260,7 @@ public class AsNoneSatisfiedSpecTests
             .WhenFalseYield(evaluation => evaluation.Values)
             .Create("none are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
         var satisfied = result.Satisfied;
         var suffix = satisfied ? "false" : "true";
         var causalCount = new[] { first, second, third }.Count(b => b != satisfied);
@@ -313,7 +313,7 @@ public class AsNoneSatisfiedSpecTests
                 .WhenFalseYield(evaluation => evaluation.Values)
                 .Create("none are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Reason;
@@ -357,7 +357,7 @@ public class AsNoneSatisfiedSpecTests
                 .WhenFalseYield(evaluation => evaluation.Values)
                 .Create("none are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.ToString();
@@ -553,7 +553,7 @@ public class AsNoneSatisfiedSpecTests
                 .WhenFalse(_ => "none are true")
                 .Create("none true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Satisfied;
@@ -585,7 +585,7 @@ public class AsNoneSatisfiedSpecTests
                 .WhenFalse(_ => "some are true")
                 .Create("none true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Reason;
@@ -615,13 +615,13 @@ public class AsNoneSatisfiedSpecTests
                 .Create("is true");
 
         var spec =
-            Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
+            Spec.Build((bool model) => underlying.Evaluate(model))
                 .AsNoneSatisfied()
                 .WhenTrue(_ => "none are true")
                 .WhenFalse(_ => "none are true")
                 .Create("none true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Satisfied;
@@ -651,13 +651,13 @@ public class AsNoneSatisfiedSpecTests
                 .Create("is true");
 
         var spec =
-            Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
+            Spec.Build((bool model) => underlying.Evaluate(model))
                 .AsNoneSatisfied()
                 .WhenTrue(_ => "none are true")
                 .WhenFalse(_ => "none are true")
                 .Create("none true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Reason;

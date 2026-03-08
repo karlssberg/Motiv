@@ -25,7 +25,7 @@ public class ExpressionTreeReasonests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(1);
+        var act = spec.Evaluate(1);
 
         // Assert
         act.Reason.ShouldBe("(is-positive == true) | (is-positive == true) | (is-positive == true) | (is-positive == true)");
@@ -59,7 +59,7 @@ public class ExpressionTreeReasonests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy([1]);
+        var act = spec.Evaluate([1]);
 
         // Assert
         act.Reason.ShouldBe("(is-positive == true) | (is-positive == true) | (is-positive == true) | (is-positive == true)");
@@ -96,7 +96,7 @@ public class ExpressionTreeReasonests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(1);
+        var act = spec.Evaluate(1);
 
         // Assert
         act.Reason.ShouldBe("(is positive == true) | (is positive == true) | (is positive == true) | (is positive == true)");
@@ -137,7 +137,7 @@ public class ExpressionTreeReasonests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy([1]);
+        var act = spec.Evaluate([1]);
 
         // Assert
         act.Reason.ShouldBe("(is positive == true) | (is positive == true) | (is positive == true) | (is positive == true)");

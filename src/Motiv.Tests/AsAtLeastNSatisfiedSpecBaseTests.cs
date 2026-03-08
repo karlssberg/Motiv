@@ -40,7 +40,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .WhenFalse("at least one satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -88,7 +88,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .WhenFalse("at least one satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -129,13 +129,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .Create("returns the model");
 
         var spec = Spec
-            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .Build((bool m) => underlyingSpec.Evaluate(m))
             .AsAtLeastNSatisfied(0)
             .WhenTrue("none satisfied")
             .WhenFalse("at least one satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -177,13 +177,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .Create("returns the model");
 
         var spec = Spec
-            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .Build((bool m) => underlyingSpec.Evaluate(m))
             .AsAtLeastNSatisfied(0)
             .WhenTrue("none satisfied")
             .WhenFalse("at least one satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -230,7 +230,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .WhenFalse("None or more than one satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -277,7 +277,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .WhenFalse("None or more than one satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -320,13 +320,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .Create("returns the model");
 
         var spec = Spec
-            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .Build((bool m) => underlyingSpec.Evaluate(m))
             .AsAtLeastNSatisfied(1)
             .WhenTrue("One satisfied")
             .WhenFalse("None or more than one satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -367,13 +367,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .Create("returns the model");
 
         var spec = Spec
-            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .Build((bool m) => underlyingSpec.Evaluate(m))
             .AsAtLeastNSatisfied(1)
             .WhenTrue("One satisfied")
             .WhenFalse("None or more than one satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -420,7 +420,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .WhenFalse("Less than two satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -467,7 +467,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .WhenFalse("Less than two satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -509,13 +509,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .Create("returns the model");
 
         var spec = Spec
-            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .Build((bool m) => underlyingSpec.Evaluate(m))
             .AsAtLeastNSatisfied(2)
             .WhenTrue("At least two satisfied")
             .WhenFalse("Less than two satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -556,13 +556,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .Create("returns the model");
 
         var spec = Spec
-            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .Build((bool m) => underlyingSpec.Evaluate(m))
             .AsAtLeastNSatisfied(2)
             .WhenTrue("At least two satisfied")
             .WhenFalse("Less than two satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -609,7 +609,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .WhenFalse("Not all satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -656,7 +656,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .WhenFalse("Not all satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -697,13 +697,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .Create("returns the model");
 
         var spec = Spec
-            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .Build((bool m) => underlyingSpec.Evaluate(m))
             .AsAtLeastNSatisfied(4)
             .WhenTrue("All satisfied")
             .WhenFalse("Not all satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -744,13 +744,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .Create("returns the model");
 
         var spec = Spec
-            .Build((bool m) => underlyingSpec.IsSatisfiedBy(m))
+            .Build((bool m) => underlyingSpec.Evaluate(m))
             .AsAtLeastNSatisfied(4)
             .WhenTrue("All satisfied")
             .WhenFalse("Not all satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -812,7 +812,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .WhenFalse("none satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Justification;
@@ -874,7 +874,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .WhenFalse("None satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Justification;
@@ -936,7 +936,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .WhenFalse("none satisfied")
             .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Justification;
@@ -1022,7 +1022,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
             .AsAtLeastNSatisfied(2)
             .Create("all are true");
 
-        var result = spec.IsSatisfiedBy([firstModel, secondModel, thirdModel]);
+        var result = spec.Evaluate([firstModel, secondModel, thirdModel]);
 
         // Act
         var act = result.Description.CausalOperandCount;
@@ -1054,7 +1054,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
                 .WhenFalse(_ => "at least 2 true == false")
                 .Create("at least 2 are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Satisfied;
@@ -1087,7 +1087,7 @@ public class AsAtLeastNSatisfiedSpecBaseTests
                 .WhenFalse(_ => "at least 2 true == false")
                 .Create("at least 2 are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Reason;
@@ -1117,13 +1117,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
                 .Create("is true");
 
         var spec =
-            Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
+            Spec.Build((bool model) => underlying.Evaluate(model))
                 .AsAtLeastNSatisfied(2)
                 .WhenTrue(_ => "at least 2 true")
                 .WhenFalse(_ => "at least 2 true == false")
                 .Create("at least 2 are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Satisfied;
@@ -1154,13 +1154,13 @@ public class AsAtLeastNSatisfiedSpecBaseTests
 
         // Assert
         var spec =
-            Spec.Build((bool model) => underlying.IsSatisfiedBy(model))
+            Spec.Build((bool model) => underlying.Evaluate(model))
                 .AsAtLeastNSatisfied(2)
                 .WhenTrue(_ => "at least 2 true")
                 .WhenFalse(_ => "at least 2 true == false")
                 .Create("at least 2 are true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Reason;

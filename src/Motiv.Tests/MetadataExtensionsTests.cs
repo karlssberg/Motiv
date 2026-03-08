@@ -15,7 +15,7 @@ public class MetadataExtensionsTests
             .WhenFalse(m => m)
             .Create("is positive");
 
-        var booleanResultsCollection = models.Select(spec.IsSatisfiedBy);
+        var booleanResultsCollection = models.Select(spec.Evaluate);
 
         // Act
         var act = booleanResultsCollection.GetValues();
@@ -36,7 +36,7 @@ public class MetadataExtensionsTests
             .WhenFalse(m => m)
             .Create("is always true");
 
-        var booleanResultsCollection = models.Select(spec.IsSatisfiedBy);
+        var booleanResultsCollection = models.Select(spec.Evaluate);
 
         // Act
         var act = booleanResultsCollection.GetTrueMetadata();
@@ -56,7 +56,7 @@ public class MetadataExtensionsTests
             .WhenFalse(m => m)
             .Create("is always false");
 
-        var booleanResultsCollection = metadata.Select(spec.IsSatisfiedBy);
+        var booleanResultsCollection = metadata.Select(spec.Evaluate);
 
         // Act
         var act = booleanResultsCollection.GetFalseMetadata();

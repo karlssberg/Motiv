@@ -6,7 +6,7 @@
 
 ## Summary
 
-This phase migrates `SpecInvocationExpressionSyntax.Create()` from string interpolation + `ParseExpression()` to pure SyntaxFactory API construction. The target output is a chained member access and invocation expression: `new SpecName().IsSatisfiedBy(arg).Satisfied`.
+This phase migrates `SpecInvocationExpressionSyntax.Create()` from string interpolation + `ParseExpression()` to pure SyntaxFactory API construction. The target output is a chained member access and invocation expression: `new SpecName().Evaluate(arg).Satisfied`.
 
 The migration is the simplest of the six-phase SyntaxFactory refactor. It serves as the foundation for establishing trivia handling patterns (specifically, the CRLF constant) that will be reused in Phases 8-12. The existing test suite (10 tests in `MotivConvertToSpecTests.cs`) acts as the verification gate—all tests must pass with identical output.
 
@@ -44,7 +44,7 @@ SpecInvocationExpressionSyntax.cs
 ├── Create(GenericNameSyntax, IdentifierNameSyntax)
 ├── Create(IdentifierNameSyntax, IdentifierNameSyntax)
 └── CreateInternal(string specName, string modelObjectCreation)
-    └── Uses: ParseExpression($$"""new {{specName}}().IsSatisfiedBy({{modelObjectCreation}}).Satisfied""")
+    └── Uses: ParseExpression($$"""new {{specName}}().Evaluate({{modelObjectCreation}}).Satisfied""")
 ```
 
 **Goal:** Replace `CreateInternal` with SyntaxFactory construction, remove `ParseExpression`.
@@ -54,18 +54,18 @@ SpecInvocationExpressionSyntax.cs
 Build the expression tree bottom-up, as demonstrated by the existing `PropositionModelSyntax.cs` (reference implementation):
 
 ```csharp
-// Target expression: new SpecName().IsSatisfiedBy(arg).Satisfied
+// Target expression: new SpecName().Evaluate(arg).Satisfied
 
 // Step 1: Create object creation (leaf)
 var newSpec = ObjectCreationExpression(
     IdentifierName(specName))
     .WithArgumentList(ArgumentList());
 
-// Step 2: Create .IsSatisfiedBy(arg) member access + invocation
+// Step 2: Create .Evaluate(arg) member access + invocation
 var isSatisfiedByAccess = MemberAccessExpression(
     SyntaxKind.SimpleMemberAccessExpression,
     newSpec,
-    IdentifierName("IsSatisfiedBy"));
+    IdentifierName("Evaluate"));
 
 var isSatisfiedByInvocation = InvocationExpression(
     isSatisfiedByAccess,
@@ -183,7 +183,7 @@ member.WithLeadingTrivia(CarriageReturnLineFeed, CarriageReturnLineFeed)
 **What goes wrong:** Forgetting to call `ArgumentList()` for parameterless constructors/methods
 **Why it happens:** Assuming empty arguments mean no ArgumentList node needed
 **How to avoid:** Always include `ArgumentList()` even if empty: `ObjectCreationExpression(type).WithArgumentList(ArgumentList())`
-**Warning signs:** Generated code missing parentheses like `new SpecName.IsSatisfiedBy(arg)` instead of `new SpecName().IsSatisfiedBy(arg)`
+**Warning signs:** Generated code missing parentheses like `new SpecName.Evaluate(arg)` instead of `new SpecName().Evaluate(arg)`
 
 ### Pitfall 4: Generic Name Handling
 **What goes wrong:** Generic type arguments lost when using `IdentifierName` instead of `GenericName`
@@ -236,7 +236,7 @@ var newObject = ObjectCreationExpression(
 ### Using Roslyn Quoter for Verification
 ```csharp
 // Source: https://roslynquoter.azurewebsites.net/
-// Input: new SpecName().IsSatisfiedBy(value).Satisfied
+// Input: new SpecName().Evaluate(value).Satisfied
 // Output (expected SyntaxFactory code):
 
 MemberAccessExpression(
@@ -247,7 +247,7 @@ MemberAccessExpression(
             ObjectCreationExpression(
                 IdentifierName("SpecName"))
             .WithArgumentList(ArgumentList()),
-            IdentifierName("IsSatisfiedBy")))
+            IdentifierName("Evaluate")))
     .WithArgumentList(
         ArgumentList(
             SingletonSeparatedList<ArgumentSyntax>(

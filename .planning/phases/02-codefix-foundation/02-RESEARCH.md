@@ -88,7 +88,7 @@ src/Motiv.CodeFix/
 ├── StringExtensions.cs               # String manipulation utilities
 ├── Syntax/
 │   ├── CustomSpecDeclarationSyntax.cs   # Proposition class generation
-│   ├── SpecInvocationSyntax.cs          # IsSatisfiedBy invocation generation
+│   ├── SpecInvocationSyntax.cs          # Evaluate invocation generation
 │   └── PropositionModelSyntax.cs        # Model record generation
 └── Motiv.CodeFix.csproj
 

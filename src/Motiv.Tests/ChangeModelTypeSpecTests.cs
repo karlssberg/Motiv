@@ -16,7 +16,7 @@ public class ChangeModelTypeSpecTests
 
         var spec = isEmpty.ChangeModelTo<string?>();
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -108,7 +108,7 @@ public class ChangeModelTypeSpecTests
 
         var spec = isEmpty.ChangeModelTo<string?>();
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -203,7 +203,7 @@ public class ChangeModelTypeSpecTests
 
         var spec = isValueType.ChangeModelTo<object>(m => m.GetType());
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -298,7 +298,7 @@ public class ChangeModelTypeSpecTests
 
         var spec = isValueType.ChangeModelTo<object>(m => m.GetType());
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -397,7 +397,7 @@ public class ChangeModelTypeSpecTests
                 .Create()
                 .ChangeModelTo<string>(m => m.ToCharArray());
 
-        var result = isAllLetters.IsSatisfiedBy(model);
+        var result = isAllLetters.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -427,7 +427,7 @@ public class ChangeModelTypeSpecTests
             .Create("has all letters")
             .ChangeModelTo<string>(m => m.ToCharArray());
 
-        var result = isAllLetters.IsSatisfiedBy(model);
+        var result = isAllLetters.Evaluate(model);
 
         // Act
         var act = result.Values;

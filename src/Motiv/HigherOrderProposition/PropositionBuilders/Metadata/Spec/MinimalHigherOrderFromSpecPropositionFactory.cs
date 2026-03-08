@@ -23,7 +23,7 @@ public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TMod
     /// <returns>A specification for the model.</returns>
     public SpecBase<IEnumerable<TModel>, TMetadata> Create(string statement) =>
         new MinimalHigherOrderFromBooleanResultProposition<TModel, TMetadata>(
-            spec.IsSatisfiedBy,
+            spec.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
@@ -32,7 +32,7 @@ public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TMod
 
     internal SpecBase<IEnumerable<TModel>, TMetadata> Create(Expression statement) =>
         new MinimalHigherOrderFromBooleanResultProposition<TModel, TMetadata>(
-            spec.IsSatisfiedBy,
+            spec.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             new ExpressionDescription(
                 statement,
@@ -57,7 +57,7 @@ public readonly struct MinimalHigherOrderFromSpecPropositionFactory<TModel>(
     /// <returns>A specification for the model.</returns>
     public SpecBase<IEnumerable<TModel>, string> Create(string statement) =>
         new MinimalHigherOrderFromBooleanResultProposition<TModel, string>(
-            spec.IsSatisfiedBy,
+            spec.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
@@ -66,7 +66,7 @@ public readonly struct MinimalHigherOrderFromSpecPropositionFactory<TModel>(
 
     internal SpecBase<IEnumerable<TModel>, string> Create(Expression statement) =>
         new MinimalHigherOrderFromBooleanResultProposition<TModel, string>(
-            spec.IsSatisfiedBy,
+            spec.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             new ExpressionDescription(
                 statement,

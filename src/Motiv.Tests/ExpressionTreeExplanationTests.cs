@@ -33,7 +33,7 @@ public class ExpressionTreeExplanationTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(1);
+        var act = spec.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["is positive"]);
@@ -110,7 +110,7 @@ public class ExpressionTreeExplanationTests
                    | multipleCallbackWithImpliedStatement;
 
         // Act
-        var act = spec.IsSatisfiedBy([1]);
+        var act = spec.Evaluate([1]);
 
         // Assert
         act.Assertions.ShouldBe(["is positive"]);
@@ -125,7 +125,7 @@ public class ExpressionTreeExplanationTests
             .Create("is-positive");
 
         // Act
-        var act = spec.IsSatisfiedBy(1);
+        var act = spec.Evaluate(1);
 
         // Assert
         act.Reason.ShouldBe("is-positive == true");
@@ -141,7 +141,7 @@ public class ExpressionTreeExplanationTests
             .Create("is-positive");
 
         // Act
-        var act = spec.IsSatisfiedBy([1]);
+        var act = spec.Evaluate([1]);
 
         // Assert
         act.Reason.ShouldBe("is-positive == true");
@@ -185,7 +185,7 @@ public class ExpressionTreeExplanationTests
         var spec = literal | literalWithoutStatement | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(1);
+        var act = spec.Evaluate(1);
 
         // Assert
         act.Reason.ShouldBe("(is-positive == true) | is positive | (is-positive == true) | (is-positive == true) | (is-positive == true)");
@@ -234,7 +234,7 @@ public class ExpressionTreeExplanationTests
         var spec = literal | literalWithoutStatement | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy([1]);
+        var act = spec.Evaluate([1]);
 
         // Assert
         act.Reason.ShouldBe("(is-positive == true) | is positive | (is-positive == true) | (is-positive == true) | (is-positive == true)");
@@ -271,7 +271,7 @@ public class ExpressionTreeExplanationTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(1);
+        var act = spec.Evaluate(1);
 
         // Assert
         act.Justification.ShouldBe(
@@ -327,7 +327,7 @@ public class ExpressionTreeExplanationTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy([1]);
+        var act = spec.Evaluate([1]);
 
         // Assert
         act.Justification.ShouldBe(
@@ -385,7 +385,7 @@ public class ExpressionTreeExplanationTests
         var spec = literal | modelCallback | resultCallback | multipleCallback | multipleCallbackWithImplicitStatement;
 
         // Act
-        var act = spec.IsSatisfiedBy(-1);
+        var act = spec.Evaluate(-1);
 
         // Assert
         act.Assertions.ShouldBe(["is not positive"]);
@@ -433,7 +433,7 @@ public class ExpressionTreeExplanationTests
         var spec = literal | modelCallback | resultCallback | multipleCallback | multipleCallbackWithImplicitStatement;
 
         // Act
-        var act = spec.IsSatisfiedBy([-1]);
+        var act = spec.Evaluate([-1]);
 
         // Assert
         act.Assertions.ShouldBe(["is not positive"]);
@@ -470,7 +470,7 @@ public class ExpressionTreeExplanationTests
         var spec = literal | modelCallback | resultCallback | multipleCallback;
 
         // Act
-        var act = spec.IsSatisfiedBy(-1);
+        var act = spec.Evaluate(-1);
 
         // Assert
         act.Assertions.ShouldBe(["is not positive"]);
@@ -525,7 +525,7 @@ public class ExpressionTreeExplanationTests
         var spec = literal | literalWithImpliedStatement | modelCallback | resultCallback | multipleCallback | multipleCallbackWithImplicitStatement;
 
         // Act
-        var act = spec.IsSatisfiedBy([-1]);
+        var act = spec.Evaluate([-1]);
 
         // Assert
         act.Assertions.ShouldBe(["is not positive"]);
@@ -540,7 +540,7 @@ public class ExpressionTreeExplanationTests
             .Create("is-positive");
 
         // Act
-        var act = spec.IsSatisfiedBy(-1);
+        var act = spec.Evaluate(-1);
 
         // Assert
         act.Reason.ShouldBe("is-positive == false");
@@ -589,7 +589,7 @@ public class ExpressionTreeExplanationTests
         var spec = literal | literalWithImpliedStatement | modelCallback | resultCallback | multipleCallback | multipleCallbackWithImplicitStatement;
 
         // Act
-        var act = spec.IsSatisfiedBy(-1);
+        var act = spec.Evaluate(-1);
 
         // Assert
         act.Reason.ShouldBe("(is-positive == false) | is not positive | (is-positive == false) | (is-positive == false) | (is-positive == false) | (is positive == false)");
@@ -638,7 +638,7 @@ public class ExpressionTreeExplanationTests
         var spec = literal | literalWithImplicitStatement | modelCallback | resultCallback | multipleCallback | multipleCallbackWithImplicitStatement;
 
         // Act
-        var act = spec.IsSatisfiedBy(-1);
+        var act = spec.Evaluate(-1);
 
         // Assert
         act.Justification.ShouldBe(
@@ -672,7 +672,7 @@ public class ExpressionTreeExplanationTests
             Spec.From((ICollection<int> numbers) => numbers.All(n => n > 0 & n <= 10))
                 .Create("all in range");
 
-        var result = areAllInRange.IsSatisfiedBy([-1, 2, 3]);
+        var result = areAllInRange.Evaluate([-1, 2, 3]);
 
         result.Assertions.ShouldBe(["n <= 0"]);
     }

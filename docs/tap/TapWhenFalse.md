@@ -22,12 +22,12 @@ var isValid = Spec
 var observed = isValid.TapWhenFalse((order, result) =>
     logger.LogWarning("Invalid order {Id}: {Reason}", order.Id, result.Reason));
 
-var result = observed.IsSatisfiedBy(emptyOrder);
+var result = observed.Evaluate(emptyOrder);
 // Logger called: "Invalid order 7: order has no items"
 result.Satisfied;  // false
 result.Assertions; // ["order has no items"]
 
-var result2 = observed.IsSatisfiedBy(validOrder);
+var result2 = observed.Evaluate(validOrder);
 // Logger NOT called
 result2.Satisfied;  // true
 result2.Assertions; // ["order is valid"]

@@ -24,7 +24,7 @@ var isAdult = Spec
 var logged = isAdult.Tap((person, result) =>
     Console.WriteLine($"{person.Name}: {result.Reason}"));
 
-var result = logged.IsSatisfiedBy(new Person("Alice", 25));
+var result = logged.Evaluate(new Person("Alice", 25));
 // Console output: "Alice: is an adult"
 result.Satisfied;  // true
 result.Assertions; // ["is an adult"]

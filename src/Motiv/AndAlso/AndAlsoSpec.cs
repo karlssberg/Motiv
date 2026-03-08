@@ -26,14 +26,14 @@ internal sealed class AndAlsoSpec<TModel, TMetadata>(
 
     public override bool Matches(TModel model) => left.Matches(model) && right.Matches(model);
 
-    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
+    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
-        var leftResult = left.IsSatisfiedBy(model);
+        var leftResult = left.Evaluate(model);
         return leftResult.Satisfied switch
         {
             true =>  new AndAlsoBooleanResult<TMetadata>(
                 leftResult,
-                right.IsSatisfiedBy(model)),
+                right.Evaluate(model)),
             false => new AndAlsoBooleanResult<TMetadata>(leftResult)
         };
     }

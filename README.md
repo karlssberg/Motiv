@@ -30,7 +30,7 @@ var canAccess = Spec
         !user.IsRestricted)
     .Create("can access");
 
-var result = canAccess.IsSatisfiedBy(user);
+var result = canAccess.Evaluate(user);
 result.Satisfied;  // false
 result.Assertions; // ["user.Age < 18", "user.HasValidId == false"]
 ```
@@ -46,7 +46,7 @@ var isEligible = Spec
     .From((Customer c) => c.CreditScore > 600 & c.Income > 100000)
     .Create("eligible for loan");
 
-var result = isEligible.IsSatisfiedBy(eligibleCustomer);
+var result = isEligible.Evaluate(eligibleCustomer);
 result.Satisfied;  // true
 result.Assertions; // ["c.CreditScore > 600", "c.Income > 100000"]
 ```
@@ -72,7 +72,7 @@ var isEligible = hasGoodCredit.And(hasIncome);
 // alternatively, use operator syntax
 // var isEligible = hasGoodCredit & hasIncome;
 
-var result = isEligible.IsSatisfiedBy(eligibleCustomer);
+var result = isEligible.Evaluate(eligibleCustomer);
 result.Satisfied;  // true
 result.Assertions; // ["good credit", "sufficient income"]
 ```
@@ -88,7 +88,7 @@ var hasGoodCredit = Spec
     .WhenFalse("credit score too low")
     .Create();
 
-var result = hasGoodCredit.IsSatisfiedBy(eligibleCustomer);
+var result = hasGoodCredit.Evaluate(eligibleCustomer);
 result.Satisfied;  // true
 result.Assertions; // ["has good credit score"]
 ```
@@ -105,7 +105,7 @@ var observed = isEligible
         logger.LogWarning("Denied: {Reason}", result.Reason));
 
 // Use exactly like the original — result, assertions, reason are all unchanged
-var result = observed.IsSatisfiedBy(customer);
+var result = observed.Evaluate(customer);
 ```
 
 ### Collection Logic
@@ -120,7 +120,7 @@ var allNegative = Spec
     .WhenFalseYield(eval => eval.FalseModels.Select(n => $"{n} is not negative"))
     .Create();
 
-var result = allNegative.IsSatisfiedBy([-1, 2, 3]);
+var result = allNegative.Evaluate([-1, 2, 3]);
 result.Satisfied;  // false
 result.Assertions; // ["2 is not negative", "3 is not negative"]
 ```

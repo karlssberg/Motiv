@@ -33,7 +33,7 @@ public readonly struct ExplanationFromSpecWithNameHigherOrderPropositionFactory<
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanResultProposition<TModel, string, TMetadata>(
-            spec.IsSatisfiedBy,
+            spec.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string>(),
             falseBecause,
@@ -50,7 +50,7 @@ public readonly struct ExplanationFromSpecWithNameHigherOrderPropositionFactory<
     public PolicyBase<IEnumerable<TModel>, string> Create()
     {
         return new HigherOrderFromBooleanResultProposition<TModel, string, TMetadata>(
-            spec.IsSatisfiedBy,
+            spec.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string>(),
             falseBecause,

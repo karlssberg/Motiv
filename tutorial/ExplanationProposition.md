@@ -30,11 +30,11 @@ var isUserActive =
 isUserActive.Statement;  // "user is active"
 isUserActive.Expression; // "user is active"
 
-isUserActive.IsSatisfiedBy(activeUser).Reason;      // "user is active"
-isUserActive.IsSatisfiedBy(activeUser).Assertion;   // ["user is active"]
+isUserActive.Evaluate(activeUser).Reason;      // "user is active"
+isUserActive.Evaluate(activeUser).Assertion;   // ["user is active"]
 
-isUserActive.IsSatisfiedBy(inactiveUser).Reason;    // "user is not active"
-isUserActive.IsSatisfiedBy(inactiveUser).Assertion; // ["user is not active"]
+isUserActive.Evaluate(inactiveUser).Reason;    // "user is not active"
+isUserActive.Evaluate(inactiveUser).Assertion; // ["user is not active"]
 
 ```
 

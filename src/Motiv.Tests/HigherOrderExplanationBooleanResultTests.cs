@@ -17,13 +17,13 @@ public class HigherOrderExplanationBooleanResultTests
                 .Create("is even spec");
 
         var spec =
-            Spec.Build((int m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((int m) => underlying.Evaluate(m))
                 .AsNSatisfied(2)
                 .WhenTrue("is a pair of even numbers")
                 .WhenFalse("is not a pair of even numbers")
                 .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Explanation.Assertions;
@@ -43,7 +43,7 @@ public class HigherOrderExplanationBooleanResultTests
                 .Create("is even spec");
 
         var spec =
-            Spec.Build((int m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((int m) => underlying.Evaluate(m))
                 .AsNSatisfied(2)
                 .WhenTrue("is a pair of even numbers")
                 .WhenFalse("is not a pair of even numbers")
@@ -75,7 +75,7 @@ public class HigherOrderExplanationBooleanResultTests
                 .Create();
 
         var firstSpec =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue("first all true")
                 .WhenFalse("first all false")
@@ -93,7 +93,7 @@ public class HigherOrderExplanationBooleanResultTests
                 .WhenFalse("third all false")
                 .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Explanation.Assertions;
@@ -121,7 +121,7 @@ public class HigherOrderExplanationBooleanResultTests
                 .Create();
 
         var firstSpec =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue("first true")
                 .WhenFalse("first false")
@@ -139,7 +139,7 @@ public class HigherOrderExplanationBooleanResultTests
                 .WhenFalse("third false")
                 .Create("all even");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.GetRootAssertions();
@@ -169,7 +169,7 @@ public class HigherOrderExplanationBooleanResultTests
                 .Create("is even spec");
 
         var spec =
-            Spec.Build((int m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((int m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue("all even")
                 .WhenFalse(results =>
@@ -182,7 +182,7 @@ public class HigherOrderExplanationBooleanResultTests
                 })
                 .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -213,7 +213,7 @@ public class HigherOrderExplanationBooleanResultTests
                 .Create("is even spec");
 
         var spec =
-            Spec.Build((int m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((int m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue("all even")
                 .WhenFalse(results =>
@@ -226,7 +226,7 @@ public class HigherOrderExplanationBooleanResultTests
                 })
                 .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Assertions;
@@ -250,14 +250,14 @@ public class HigherOrderExplanationBooleanResultTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
                 .WhenFalse("false assertion")
                 .Create();
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
                 .WhenFalse(_ => "false assertion")
@@ -265,7 +265,7 @@ public class HigherOrderExplanationBooleanResultTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;
@@ -287,28 +287,28 @@ public class HigherOrderExplanationBooleanResultTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsCallbackThatReturnsACollection =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
                 .WhenFalseYield(_ => ["false assertion"])
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollectionWithImpliedName =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue("true assertion")
                 .WhenFalseYield(_ => ["false assertion"])
@@ -319,7 +319,7 @@ public class HigherOrderExplanationBooleanResultTests
                    withFalseAsCallbackThatReturnsACollection &
                    withFalseAsTwoParameterCallbackThatReturnsACollectionWithImpliedName;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;
@@ -341,28 +341,28 @@ public class HigherOrderExplanationBooleanResultTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalseYield(_ => ["false assertion"])
@@ -373,7 +373,7 @@ public class HigherOrderExplanationBooleanResultTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;
@@ -395,28 +395,28 @@ public class HigherOrderExplanationBooleanResultTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsParameterCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsTwoParameterCallbackThatReturnsACollection =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrue(_ => "true assertion")
                 .WhenFalseYield(_ => ["false assertion"])
@@ -427,7 +427,7 @@ public class HigherOrderExplanationBooleanResultTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;
@@ -450,21 +450,21 @@ public class HigherOrderExplanationBooleanResultTests
                 .Create("is underlying true");
 
         var withFalseAsScalar =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrueYield(_ => ["true assertion"])
                 .WhenFalse("false assertion")
                 .Create("propositional statement");
 
         var withFalseAsCallback =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrueYield(_ => ["true assertion"])
                 .WhenFalse(_ => "false assertion")
                 .Create("propositional statement");
 
         var withFalseAsCallbackThatReturnsACollection =
-            Spec.Build((bool m) => underlying.IsSatisfiedBy(m))
+            Spec.Build((bool m) => underlying.Evaluate(m))
                 .AsAllSatisfied()
                 .WhenTrueYield(_ => ["true assertion"])
                 .WhenFalseYield(_ => ["false assertion"])
@@ -474,7 +474,7 @@ public class HigherOrderExplanationBooleanResultTests
                    withFalseAsCallback &
                    withFalseAsCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;

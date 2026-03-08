@@ -7,7 +7,7 @@ public class HasNCardsWithTheSameRankProposition(int sameRankCount) : Spec<Hand>
     Spec.From((Hand hand) => hand.Ranks
             .Select(rank => new HasNCardsWithTheSameRank(sameRankCount, rank))
             .OrTogether()
-            .IsSatisfiedBy(hand.Cards))
+            .Evaluate(hand.Cards))
         .Create($"has {sameRankCount} card(s) with the same rank"))
 {
     private class HasNCardsWithTheSameRank(int sameRankCount, Rank rank) : Spec<IEnumerable<Card>>(

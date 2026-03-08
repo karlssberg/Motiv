@@ -34,7 +34,7 @@ var isInRangeAndEven = Spec.From((int n) => n >= 1 & n <= 10 & n % 2 == 0)
                            .Create("in range and even");
 
 // Evaluate proposition (typically elsewhere in your code)
-var result = isInRangeAndEven.IsSatisfiedBy(11);
+var result = isInRangeAndEven.Evaluate(11);
 
 result.Satisfied;  // false
 result.Assertions; // ["n > 10", "n % 2 != 0"]
@@ -111,7 +111,7 @@ var isEven =
         .WhenFalse("is odd")
         .Create();
 
-var result = isEven.IsSatisfiedBy(3);
+var result = isEven.Evaluate(3);
 
 result.Satisfied;  // false
 result.Reason;     // "is odd"
@@ -144,7 +144,7 @@ var isEven =
         .WhenFalse(new MyMetadata("odd"))
         .Create("is even");
 
-var result = isEven.IsSatisfiedBy(2);
+var result = isEven.Evaluate(2);
 
 result.Satisfied;  // true
 result.Reason;     // "is even"

@@ -47,7 +47,7 @@ public class SpecTests
             .WhenFalse(false.ToString())
             .Create("returns model value");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -68,7 +68,7 @@ public class SpecTests
             .WhenFalse(false.ToString())
             .Create("returns model value");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -95,7 +95,7 @@ public class SpecTests
             .WhenFalse("underlying false")
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -124,7 +124,7 @@ public class SpecTests
             .WhenFalse("underlying false")
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -150,7 +150,7 @@ public class SpecTests
             .WhenFalse("underlying false")
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Underlying.First().Description.Statement;
@@ -213,7 +213,7 @@ public class SpecTests
     {
         // Arrange
         var spec = new TestSpec();
-        var results = spec.IsSatisfiedBy(model);
+        var results = spec.Evaluate(model);
 
         // Act
         var act = results.Values.First();
@@ -240,7 +240,7 @@ public class SpecTests
             .WhenFalse("underlying false")
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Underlying.SelectMany(m => m.Metadata);
@@ -267,7 +267,7 @@ public class SpecTests
             .WhenFalse(new object())
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.MetadataTier.Underlying.SelectMany(m => m.Metadata);
@@ -297,7 +297,7 @@ public class SpecTests
             .WhenFalse("underlying false")
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -324,7 +324,7 @@ public class SpecTests
             .WhenFalse("underlying false")
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Description.Reason;
@@ -344,7 +344,7 @@ public class SpecTests
             .Create("is null");
 
         // Act
-        var act = () => spec.IsSatisfiedBy(null);
+        var act = () => spec.Evaluate(null);
 
         // Assert
         act.ShouldNotThrow();
@@ -362,7 +362,7 @@ public class SpecTests
             .WhenFalse(false.ToString())
             .Create();
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -389,7 +389,7 @@ public class SpecTests
             .WhenFalse(false)
             .Create("new spec");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -408,7 +408,7 @@ public class SpecTests
                        .Create();
 
         // Act
-        var act = () => spec.IsSatisfiedBy(null);
+        var act = () => spec.Evaluate(null);
 
         // Assert
         act.ShouldNotThrow();
@@ -525,7 +525,7 @@ public class SpecTests
         SpecBase<bool> sut = Spec.Build((bool _) => true).Create("is true");
 
         // Act
-        var act = sut.IsSatisfiedBy(false);
+        var act = sut.Evaluate(false);
 
         // Assert
         act.Values.ShouldBe(["is true == true"]);
@@ -541,7 +541,7 @@ public class SpecTests
             .Create("is true");
 
         // Act
-        var act = sut.IsSatisfiedBy(false);
+        var act = sut.Evaluate(false);
 
         // Assert
         act.Values.ShouldBe(["is true == true"]);

@@ -18,9 +18,9 @@ internal sealed class PolicyDecoratorMultiMetadataProposition<TModel, TMetadata,
 
     public override bool Matches(TModel model) => underlyingSpec.Matches(model);
 
-    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model)
+    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
-        var booleanResult = underlyingSpec.IsSatisfiedBy(model);
+        var booleanResult = underlyingSpec.Evaluate(model);
         PolicyResultBase<TUnderlyingMetadata>[] booleanResults = [booleanResult];
 
         var metadata = new Lazy<IEnumerable<TMetadata>>(() =>

@@ -71,7 +71,7 @@ public readonly struct MultiMetadataFromPolicyHigherOrderPropositionFactory<TMod
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, TReplacementMetadata, TMetadata>(
-            _policy.IsSatisfiedBy,
+            _policy.Evaluate,
             _higherOrderOperation.HigherOrderPredicate,
             _whenTrue,
             _whenFalse,

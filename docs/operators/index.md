@@ -48,8 +48,8 @@ var canVote = isAdult.And(hasValidId);
 The results of evaluated propositions can also be combined using these operators:
 
 ```csharp
-var adultResult = isAdult.IsSatisfiedBy(person);
-var idResult = hasValidId.IsSatisfiedBy(person);
+var adultResult = isAdult.Evaluate(person);
+var idResult = hasValidId.Evaluate(person);
 
 // Combine the results
 var canVoteResult = adultResult & idResult;

@@ -30,7 +30,7 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse(Metadata.False)
                 .Create("is a pair of even numbers");
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Values;
@@ -106,7 +106,7 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse((3, Metadata.False))
                 .Create("third all true");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Values;
@@ -156,7 +156,7 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse((3, Metadata.Unknown))
                 .Create("third all-true encapsulation");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.RootValues;
@@ -192,7 +192,7 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalseYield(results => results.Values)
                 .Create("all are even");
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -228,7 +228,7 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalseYield(results => results.Values)
                 .Create("all are even");
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Values;
@@ -264,7 +264,7 @@ public class HigherOrderMetadataSpecTests
                 .WhenFalse(Metadata.False)
                 .Create("all are even");
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.CausesWithValues;

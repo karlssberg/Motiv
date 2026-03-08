@@ -11,11 +11,11 @@ internal sealed class ChangeModelTypePolicy<TParentModel, TModel, TMetadata>(
 
     public override bool Matches(TParentModel model) => policy.Matches(modelSelector(model));
 
-    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TParentModel model) =>
-        IsPolicySatisfiedBy(model);
+    protected override BooleanResultBase<TMetadata> EvaluateSpec(TParentModel model) =>
+        EvaluatePolicy(model);
 
-    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TParentModel model) =>
-        policy.IsSatisfiedBy(modelSelector(model));
+    protected override PolicyResultBase<TMetadata> EvaluatePolicy(TParentModel model) =>
+        policy.Evaluate(modelSelector(model));
 
     public override string ToString() => policy.ToString();
 }

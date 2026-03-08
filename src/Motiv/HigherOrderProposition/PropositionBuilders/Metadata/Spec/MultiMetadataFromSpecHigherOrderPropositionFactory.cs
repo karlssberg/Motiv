@@ -72,7 +72,7 @@ public readonly struct MultiMetadataFromSpecHigherOrderPropositionFactory<TModel
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TReplacementMetadata, TMetadata>(
-            _spec.IsSatisfiedBy,
+            _spec.Evaluate,
             _higherOrderOperation.HigherOrderPredicate,
             _whenTrue,
             _whenFalse,

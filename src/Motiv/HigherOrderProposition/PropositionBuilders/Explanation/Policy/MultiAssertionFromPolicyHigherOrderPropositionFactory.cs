@@ -70,7 +70,7 @@ public readonly struct MultiAssertionFromPolicyHigherOrderPropositionFactory<TMo
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, string, TMetadata>(
-            _policy.IsSatisfiedBy,
+            _policy.Evaluate,
             _higherOrderOperation.HigherOrderPredicate,
             _whenTrue,
             _whenFalse,

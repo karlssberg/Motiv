@@ -17,7 +17,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n + 1");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["n + 1 > n"]);
@@ -32,7 +32,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("checked(n + 1)");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["checked(n + 1) > n"]);
@@ -47,7 +47,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n & 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["(n | 0) == n"]);
@@ -62,7 +62,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("b && b");
 
         // Act
-        var act = sut.IsSatisfiedBy(true);
+        var act = sut.Evaluate(true);
 
         // Assert
         act.Assertions.ShouldBe(["b == true"]);
@@ -77,7 +77,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("a.Length");
 
         // Act
-        var act = sut.IsSatisfiedBy([1]);
+        var act = sut.Evaluate([1]);
 
         // Assert
         act.Assertions.ShouldBe(["a.Length > 0"]);
@@ -92,7 +92,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("a[0]");
 
         // Act
-        var act = sut.IsSatisfiedBy([1]);
+        var act = sut.Evaluate([1]);
 
         // Assert
         act.Assertions.ShouldBe(["a[0] > 0"]);
@@ -107,7 +107,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("Math.Abs(n)");
 
         // Act
-        var act = sut.IsSatisfiedBy(-1);
+        var act = sut.Evaluate(-1);
 
         // Assert
         act.Assertions.ShouldBe(["Math.Abs(n) > 0"]);
@@ -122,7 +122,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n ?? 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["(n ?? 0) > 0"]);
@@ -137,7 +137,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n > 0 ? n : 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["n <= 10"]);
@@ -153,7 +153,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n > 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["n > 0"]);
@@ -168,7 +168,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("(int)n");
 
         // Act
-        var act = sut.IsSatisfiedBy(1.5);
+        var act = sut.Evaluate(1.5);
 
         // Assert
         act.Assertions.ShouldBe(["(int)n > 0"]);
@@ -183,7 +183,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("checked((int)n)");
 
         // Act
-        var act = sut.IsSatisfiedBy(1.5);
+        var act = sut.Evaluate(1.5);
 
         // Assert
         act.Assertions.ShouldBe(["checked((int)n) > 0"]);
@@ -198,7 +198,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n / 2");
 
         // Act
-        var act = sut.IsSatisfiedBy(2);
+        var act = sut.Evaluate(2);
 
         // Assert
         act.Assertions.ShouldBe(["n / 2 > 0"]);
@@ -213,7 +213,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n == 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(0);
+        var act = sut.Evaluate(0);
 
         // Assert
         act.Assertions.ShouldBe(["n == 0"]);
@@ -229,7 +229,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("a ^ b");
 
         // Act
-        var act = sut.IsSatisfiedBy(true);
+        var act = sut.Evaluate(true);
 
         // Assert
         act.Assertions.ShouldBe(["a == false", "b == true"]);
@@ -244,7 +244,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n > 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["n > 0"]);
@@ -259,7 +259,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n >= 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(0);
+        var act = sut.Evaluate(0);
 
         // Assert
         act.Assertions.ShouldBe(["n >= 0"]);
@@ -274,7 +274,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("f(1)");
 
         // Act
-        var act = sut.IsSatisfiedBy(n => n > 0);
+        var act = sut.Evaluate(n => n > 0);
 
         // Assert
         act.Assertions.ShouldBe(["f(1) == true"]);
@@ -289,7 +289,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("f(1)");
 
         // Act
-        var act = sut.IsSatisfiedBy(n => n > 0);
+        var act = sut.Evaluate(n => n > 0);
 
         // Assert
         act.Assertions.ShouldBe(["f(1) == true"]);
@@ -304,7 +304,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n << 1");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["n << 1 > 0"]);
@@ -319,7 +319,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n < 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(-1);
+        var act = sut.Evaluate(-1);
 
         // Assert
         act.Assertions.ShouldBe(["n < 0"]);
@@ -334,7 +334,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n <= 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(0);
+        var act = sut.Evaluate(0);
 
         // Assert
         act.Assertions.ShouldBe(["n <= 0"]);
@@ -349,7 +349,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("l[0] > 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(new List<int> { 1 });
+        var act = sut.Evaluate(new List<int> { 1 });
 
         // Assert
         act.Assertions.ShouldBe(["l[0] > 0"]);
@@ -364,7 +364,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("d.Year");
 
         // Act
-        var act = sut.IsSatisfiedBy(DateTime.Now);
+        var act = sut.Evaluate(DateTime.Now);
 
         // Assert
         act.Assertions.ShouldBe(["d.Year > 0"]);
@@ -379,7 +379,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("d.Year");
 
         // Act
-        var act = sut.IsSatisfiedBy(new DateTime(2021, 1, 1));
+        var act = sut.Evaluate(new DateTime(2021, 1, 1));
 
         // Assert
         act.Assertions.ShouldBe(["d.Year > 0"]);
@@ -394,7 +394,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n % 2");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["n % 2 > 0"]);
@@ -409,7 +409,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n * 2");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["n * 2 > 0"]);
@@ -424,7 +424,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("checked(n * 2)");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["checked(n * 2) > 0"]);
@@ -439,7 +439,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("-n");
 
         // Act
-        var act = sut.IsSatisfiedBy(-1);
+        var act = sut.Evaluate(-1);
 
         // Assert
         act.Assertions.ShouldBe(["-n > 0"]);
@@ -461,7 +461,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("+n");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["+n > 0"]);
@@ -476,7 +476,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("checked(-n)");
 
         // Act
-        var act = sut.IsSatisfiedBy(-1);
+        var act = sut.Evaluate(-1);
 
         // Assert
         act.Assertions.ShouldBe(["checked(-n) > 0"]);
@@ -491,7 +491,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("new List<int> { n }[0]");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["new List<int> { n }[0] > 0"]);
@@ -506,7 +506,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("new int[] { n }[0]");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["new int[] { n }[0] > 0"]);
@@ -521,7 +521,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("new int[n].Length == n");
 
         // Act
-        var act = sut.IsSatisfiedBy(2);
+        var act = sut.Evaluate(2);
 
         // Assert
         act.Assertions.ShouldBe(["new int[n].Length == n"]);
@@ -536,7 +536,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("new int[n, n, n].Length == n * n * n");
 
         // Act
-        var act = sut.IsSatisfiedBy(2);
+        var act = sut.Evaluate(2);
 
         // Assert
         act.Assertions.ShouldBe(["new int[n, n, n].Length == n * n * n"]);
@@ -551,7 +551,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("!b");
 
         // Act
-        var act = sut.IsSatisfiedBy(false);
+        var act = sut.Evaluate(false);
 
         // Assert
         act.Assertions.ShouldBe(["b == false"]);
@@ -566,7 +566,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n != 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["n != 0"]);
@@ -581,7 +581,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("b || b");
 
         // Act
-        var act = sut.IsSatisfiedBy(true);
+        var act = sut.Evaluate(true);
 
         // Assert
         act.Assertions.ShouldBe(["b == true"]);
@@ -596,7 +596,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("b | b");
 
         // Act
-        var act = sut.IsSatisfiedBy(true);
+        var act = sut.Evaluate(true);
 
         // Assert
         act.Assertions.ShouldBe(["b == true"]);
@@ -611,7 +611,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n > 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["n > 0"]);
@@ -626,7 +626,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n >> 1");
 
         // Act
-        var act = sut.IsSatisfiedBy(2);
+        var act = sut.Evaluate(2);
 
         // Assert
         act.Assertions.ShouldBe(["n >> 1 > 0"]);
@@ -641,7 +641,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("n - 1");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["n - 1 <= 0"]);
@@ -656,7 +656,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("checked(n - 1)");
 
         // Act
-        var act = sut.IsSatisfiedBy(1);
+        var act = sut.Evaluate(1);
 
         // Assert
         act.Assertions.ShouldBe(["checked(n - 1) <= 0"]);
@@ -671,7 +671,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("o as string");
 
         // Act
-        var act = sut.IsSatisfiedBy("string");
+        var act = sut.Evaluate("string");
 
         // Assert
         act.Assertions.ShouldBe(["o as string != null"]);
@@ -686,7 +686,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("o is string");
 
         // Act
-        var act = sut.IsSatisfiedBy("string");
+        var act = sut.Evaluate("string");
 
         // Assert
         act.Assertions.ShouldBe(["o is string"]);
@@ -701,7 +701,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("d[0]");
 
         // Act
-        var act = sut.IsSatisfiedBy(new Dictionary<int, string> { [0] = "0" });
+        var act = sut.Evaluate(new Dictionary<int, string> { [0] = "0" });
 
         // Assert
         act.Assertions.ShouldBe(["d[0] == \"0\""]);
@@ -716,7 +716,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("obj is string");
 
         // Act
-        var act = sut.IsSatisfiedBy("string");
+        var act = sut.Evaluate("string");
 
         // Assert
         act.Assertions.ShouldBe(["obj is string"]);
@@ -731,7 +731,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("obj is not string");
 
         // Act
-        var act = sut.IsSatisfiedBy(3);
+        var act = sut.Evaluate(3);
 
         // Assert
         act.Assertions.ShouldBe(["obj is not string"]);
@@ -746,7 +746,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("~n > 0");
 
         // Act
-        var act = sut.IsSatisfiedBy(-1);
+        var act = sut.Evaluate(-1);
 
         // Assert
         act.Assertions.ShouldBe(["~n <= 0"]);
@@ -761,7 +761,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("true");
 
         // Act
-        var act = sut.IsSatisfiedBy(true);
+        var act = sut.Evaluate(true);
 
         // Assert
         act.Assertions.ShouldBe(["true"]);
@@ -776,7 +776,7 @@ public class ExpressionTreeExpressionTypeTests
                 .Create("false");
 
         // Act
-        var act = sut.IsSatisfiedBy(false);
+        var act = sut.Evaluate(false);
 
         // Assert
         act.Assertions.ShouldBe(["false"]);

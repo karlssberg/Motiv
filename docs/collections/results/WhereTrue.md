@@ -10,8 +10,8 @@ satisfied.
 ```csharp
 IEnumerable<BooleanResult<int, string>> results = 
     [
-        new IsEvenProposition().IsSatisfiedBy(4),
-        new IsGreaterThanProposition(5).IsSatisfiedBy(4)
+        new IsEvenProposition().Evaluate(4),
+        new IsGreaterThanProposition(5).Evaluate(4)
     ];
 
 var trueResults = results.WhereTrue();

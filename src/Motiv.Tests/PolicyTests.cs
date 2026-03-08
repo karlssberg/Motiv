@@ -53,7 +53,7 @@ public class PolicyTests
                 .Create("is even policy");
 
         // Act
-        var result = policy.IsSatisfiedBy(2);
+        var result = policy.Evaluate(2);
 
         // Assert
         result.Value.ShouldBe(trueResult);
@@ -78,7 +78,7 @@ public class PolicyTests
                 .Create("is even policy");
 
         // Act
-        var result = spec.IsSatisfiedBy(2);
+        var result = spec.Evaluate(2);
 
         // Assert
         result.Values.ShouldBe([trueResult]);
@@ -103,7 +103,7 @@ public class PolicyTests
                 .Create("is even policy");
 
         // Act
-        var result = policy.IsSatisfiedBy(2);
+        var result = policy.Evaluate(2);
 
         // Assert
         result.Value.ShouldBe(trueResult);
@@ -128,7 +128,7 @@ public class PolicyTests
                 .Create("is even policy");
 
         // Act
-        var result = policy.IsSatisfiedBy(2);
+        var result = policy.Evaluate(2);
 
         // Assert
         result.Values.ShouldBe(trueResult.ToEnumerable());
@@ -147,13 +147,13 @@ public class PolicyTests
                 .Create("is underlying even policy");
 
         var policy =
-            Spec.Build((int m) => underlyingPolicy.IsSatisfiedBy(m))
+            Spec.Build((int m) => underlyingPolicy.Evaluate(m))
                 .WhenTrue((_, result) => result.Value)
                 .WhenFalse((_, result) => result.Value)
                 .Create("is even policy");
 
         // Act
-        var result = policy.IsSatisfiedBy(2);
+        var result = policy.Evaluate(2);
 
         // Assert
         result.Value.ShouldBe(trueResult);
@@ -172,13 +172,13 @@ public class PolicyTests
                 .Create("is underlying even policy");
 
         var policy =
-            Spec.Build((int m) => underlyingPolicy.IsSatisfiedBy(m))
+            Spec.Build((int m) => underlyingPolicy.Evaluate(m))
                 .WhenTrue((_, result) => result.Value)
                 .WhenFalse((_, result) => result.Value)
                 .Create("is even policy");
 
         // Act
-        var result = policy.IsSatisfiedBy(2);
+        var result = policy.Evaluate(2);
 
         // Assert
         result.Value.ShouldBe(trueResult);
@@ -195,7 +195,7 @@ public class PolicyTests
         var policy = new TestPolicy();
 
         // Act
-        var result = policy.IsSatisfiedBy(model);
+        var result = policy.Evaluate(model);
 
         // Assert
         result.Satisfied.ShouldBe(expected);
@@ -212,7 +212,7 @@ public class PolicyTests
         var policy = new TestPolicy();
 
         // Act
-        var result = policy.IsSatisfiedBy(model);
+        var result = policy.Evaluate(model);
 
         // Assert
         result.Value.ShouldBe(expected);
@@ -229,7 +229,7 @@ public class PolicyTests
         var policy = new TestFromFactoryPolicy();
 
         // Act
-        var result = policy.IsSatisfiedBy(model);
+        var result = policy.Evaluate(model);
 
         // Assert
         result.Satisfied.ShouldBe(expected);
@@ -246,7 +246,7 @@ public class PolicyTests
         var policy = new TestFromFactoryPolicy();
 
         // Act
-        var result = policy.IsSatisfiedBy(model);
+        var result = policy.Evaluate(model);
 
         // Assert
         result.Value.ShouldBe(expected);

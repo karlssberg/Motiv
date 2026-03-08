@@ -23,7 +23,7 @@ public class HigherOrderExplanationPolicyTests
                 .WhenFalse("is not a pair of even numbers")
                 .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Explanation.Assertions;
@@ -93,7 +93,7 @@ public class HigherOrderExplanationPolicyTests
                 .WhenFalse("third all false")
                 .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.Explanation.Assertions;
@@ -138,7 +138,7 @@ public class HigherOrderExplanationPolicyTests
                 .WhenFalse("third false")
                 .Create("all even");
 
-        var result = spec.IsSatisfiedBy([first, second, third]);
+        var result = spec.Evaluate([first, second, third]);
 
         // Act
         var act = result.GetRootAssertions();
@@ -181,7 +181,7 @@ public class HigherOrderExplanationPolicyTests
                 })
                 .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Satisfied;
@@ -225,7 +225,7 @@ public class HigherOrderExplanationPolicyTests
                 })
                 .Create();
 
-        var result = spec.IsSatisfiedBy([first, second, third, fourth]);
+        var result = spec.Evaluate([first, second, third, fourth]);
 
         // Act
         var act = result.Assertions;
@@ -263,7 +263,7 @@ public class HigherOrderExplanationPolicyTests
 
         var spec = withFalseAsScalar & withFalseAsParameterCallback;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;
@@ -318,7 +318,7 @@ public class HigherOrderExplanationPolicyTests
                    withFalseAsCallbackThatReturnsACollection &
                    withFalseAsTwoParameterCallbackThatReturnsACollectionWithImpliedName;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;
@@ -373,7 +373,7 @@ public class HigherOrderExplanationPolicyTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;
@@ -427,7 +427,7 @@ public class HigherOrderExplanationPolicyTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;
@@ -474,7 +474,7 @@ public class HigherOrderExplanationPolicyTests
                    withFalseAsCallback &
                    withFalseAsCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy([model]);
+        var result = spec.Evaluate([model]);
 
         // Act
         var act = result.Reason;

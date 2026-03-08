@@ -37,7 +37,7 @@ For example:
 var inRange = Spec.From((int n) => n > 0 & n <= 10)
                   .Create("n is between 1 and 10 (inclusive)");
 
-var result = inRange.IsSatisfiedBy(0);
+var result = inRange.Evaluate(0);
 
 result.Satisfied;  // false
 result.Assertions; // ["n <= 0"]
@@ -56,7 +56,7 @@ var members = new[] { "Alice", "Ben", "Claudia" };
 var isMember = Spec.From((string name) => members.Contains(Display.AsValue(name)))
                    .Create("is a member");
 
-var result = isMember.IsSatisfiedBy("Ben");
+var result = isMember.Evaluate("Ben");
 
 result.Satisfied;  // true
 result.Assertions; // ["members.Contains(\"Ben\") == true"]
@@ -77,7 +77,7 @@ var isEven = Spec.From((int n) => n % 2 == 0)
                  .WhenFalse("is odd")
                  .Create();
 
-var result = isEven.IsSatisfiedBy(3);
+var result = isEven.Evaluate(3);
 
 result.Satisfied;     // false
 result.Assertions;    // ["is odd"]
@@ -102,7 +102,7 @@ var isEven = Spec.From((int n) => n % 2 == 0)
 var isEvenAndPositive = Spec.From((int n) => isEven.IsSatisfied(n) & n > 0)
                             .Create("is even and positive");
 
-var result = isEvenAndPositive.IsSatisfiedBy(-3);
+var result = isEvenAndPositive.Evaluate(-3);
 
 result.Satisfied;     // false
 result.Assertions;    // ["n is odd", "n <= 0"]
@@ -120,7 +120,7 @@ var areAnyEvenAndAllPositive = Spec.From((IEnumerable<int> numbers) =>
                                        & numbers.All(n => n > 0))
                                    .Create("all positive numbers amd some are even");
 
-var result = areAnyEvenAndAllPositive.IsSatisfiedBy([-1, 2, 3]);
+var result = areAnyEvenAndAllPositive.Evaluate([-1, 2, 3]);
 
 result.Satisfied;     // false
 result.Assertions;    // ["n <= 0"]

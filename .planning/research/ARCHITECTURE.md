@@ -191,17 +191,17 @@ This eliminates the "parse a temporary class to extract syntax nodes" anti-patte
 
 **Currently:**
 ```csharp
-var source = $$"""new {{specName}}().IsSatisfiedBy({{model}}).Satisfied""";
+var source = $$"""new {{specName}}().Evaluate({{model}}).Satisfied""";
 return SyntaxFactory.ParseExpression(source);
 ```
 
 **After migration, builds:**
 ```
 MemberAccessExpression(                          // .Satisfied
-    InvocationExpression(                        // .IsSatisfiedBy(model)
-        MemberAccessExpression(                  // new Spec().IsSatisfiedBy
+    InvocationExpression(                        // .Evaluate(model)
+        MemberAccessExpression(                  // new Spec().Evaluate
             ObjectCreationExpression(specName),  // new Spec()
-            "IsSatisfiedBy"
+            "Evaluate"
         ),
         ArgumentList(model)
     ),

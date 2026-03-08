@@ -327,16 +327,16 @@ SyntaxFactory.ObjectCreationExpression(
 
 ---
 
-### TS-8: Spec Invocation Chain (new Spec().IsSatisfiedBy(model).Satisfied)
+### TS-8: Spec Invocation Chain (new Spec().Evaluate(model).Satisfied)
 
-**What:** Generate `new SpecName().IsSatisfiedBy(value).Satisfied` using SyntaxFactory
+**What:** Generate `new SpecName().Evaluate(value).Satisfied` using SyntaxFactory
 **Why Expected:** The invocation site that replaces the original boolean expression.
 **Complexity:** MEDIUM
 **Current Implementation:** String interpolation in `SpecInvocationExpressionSyntax.CreateInternal()`.
 
 **SyntaxFactory Pattern:**
 ```csharp
-// new SpecName().IsSatisfiedBy(value).Satisfied
+// new SpecName().Evaluate(value).Satisfied
 SyntaxFactory.MemberAccessExpression(
     SyntaxKind.SimpleMemberAccessExpression,
     SyntaxFactory.InvocationExpression(
@@ -345,7 +345,7 @@ SyntaxFactory.MemberAccessExpression(
             SyntaxFactory.ObjectCreationExpression(
                 SyntaxFactory.IdentifierName(specName))
                 .WithArgumentList(SyntaxFactory.ArgumentList()),
-            SyntaxFactory.IdentifierName("IsSatisfiedBy")),
+            SyntaxFactory.IdentifierName("Evaluate")),
         SyntaxFactory.ArgumentList(
             SyntaxFactory.SingletonSeparatedList(
                 SyntaxFactory.Argument(modelExpression)))),
@@ -354,7 +354,7 @@ SyntaxFactory.MemberAccessExpression(
 
 **Key Details:**
 - This is a compound expression: ObjectCreation -> MemberAccess -> Invocation -> MemberAccess
-- Build inside-out: `new Spec()` first, then `.IsSatisfiedBy(model)`, then `.Satisfied`
+- Build inside-out: `new Spec()` first, then `.Evaluate(model)`, then `.Satisfied`
 - The `model` argument can be an `IdentifierNameSyntax` (single variable) or `ObjectCreationExpression` (new Model(...))
 - `.Satisfied` is a property access (MemberAccess without Invocation), not a method call
 
@@ -444,7 +444,7 @@ SyntaxFactory.FieldDeclaration(
 **SyntaxFactory Pattern:**
 ```csharp
 // // originalExpression
-// var result = _proposition.IsSatisfiedBy(new Proposition.Model(a, b));
+// var result = _proposition.Evaluate(new Proposition.Model(a, b));
 // return result.Satisfied;
 
 var comment = SyntaxFactory.Comment($"// {originalExprText}");

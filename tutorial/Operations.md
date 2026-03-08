@@ -38,8 +38,8 @@ flowchart BT
 Like specifications, boolean results can also be operated upon in the same way
 
 ```csharp
-var isPositiveResult = isPositive.IsSatisfiedBy(5);
-var isZeroResult = isZero.IsSatisfiedBy(5);
+var isPositiveResult = isPositive.Evaluate(5);
+var isZeroResult = isZero.Evaluate(5);
 
 var isNegativeResult = !isPositiveResult & !isZero;
 ```

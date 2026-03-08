@@ -21,9 +21,9 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
 
     public override bool Matches(TModel model) => underlyingSpec.Matches(model);
 
-    protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
+    protected override PolicyResultBase<string> EvaluatePolicy(TModel model)
     {
-        var underlyingResult = underlyingSpec.IsSatisfiedBy(model);
+        var underlyingResult = underlyingSpec.Evaluate(model);
         BooleanResultBase<TUnderlyingMetadata>[] underlyingResults = [underlyingResult];
 
         var assertion = new Lazy<string>(() =>

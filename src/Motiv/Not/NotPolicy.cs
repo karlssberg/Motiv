@@ -22,8 +22,8 @@ internal sealed class NotPolicy<TModel, TMetadata>(
 
     public override bool Matches(TModel model) => !operand.Matches(model);
 
-    protected override PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model) =>
-        operand.IsSatisfiedBy(model).Not();
+    protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model) =>
+        operand.Evaluate(model).Not();
 
     public PolicyBase<TModel, TMetadata> Operand => operand;
 

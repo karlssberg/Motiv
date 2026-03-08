@@ -29,7 +29,7 @@ public class ExpressionTreeJustificationTests
                 .Create("is-positive");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Justification.ShouldBe(expectedResult);
@@ -65,7 +65,7 @@ public class ExpressionTreeJustificationTests
                 .WhenFalse("n is not positive")
                 .Create("is-positive");
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Justification.ShouldBe(expectedResult);
@@ -108,7 +108,7 @@ public class ExpressionTreeJustificationTests
                 .Create("any-positive");
 
         // Act
-        var act = sut.IsSatisfiedBy([model]);
+        var act = sut.Evaluate([model]);
 
         // Assert
         act.Justification.ShouldBe(expectedResult);
@@ -155,7 +155,7 @@ public class ExpressionTreeJustificationTests
                 .Create("any-positive");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Justification.ShouldBe(expectedResult);
@@ -217,7 +217,7 @@ public class ExpressionTreeJustificationTests
                 .Create("any-positive");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Justification.ShouldBe(expectedResult);
@@ -255,7 +255,7 @@ public class ExpressionTreeJustificationTests
                 .Create("any positive");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Justification.ShouldBe(expectedResult);
@@ -303,7 +303,7 @@ public class ExpressionTreeJustificationTests
                 .Create("should create guid");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Justification.ShouldBe(expectedResult);
@@ -332,7 +332,7 @@ public class ExpressionTreeJustificationTests
                 .Create("any admins");
 
         // Act
-        var act = sut.IsSatisfiedBy([model]);
+        var act = sut.Evaluate([model]);
 
         // Assert
         act.Justification.ShouldBe(expectedAssertion);
@@ -361,14 +361,14 @@ public class ExpressionTreeJustificationTests
                 .WhenTrue("is admin")
                 .WhenFalse("is not admin")
                 .Create("is-admin")
-                .IsSatisfiedBy(model);
+                .Evaluate(model);
 
         var sut =
             Spec.From((IEnumerable<string> roles) => roles.Any(role => isAdminResult))
                 .Create("any admins");
 
         // Act
-        var act = sut.IsSatisfiedBy([model]);
+        var act = sut.Evaluate([model]);
 
         // Assert
         act.Justification.ShouldBe(expectedAssertion);
@@ -413,21 +413,21 @@ public class ExpressionTreeJustificationTests
                 .WhenTrue("is admin")
                 .WhenFalse("is not admin")
                 .Create("is-admin")
-                .IsSatisfiedBy(model);
+                .Evaluate(model);
 
         var isSuperUser =
             Spec.Build((string role) => role == "superuser")
                 .WhenTrue("is super user")
                 .WhenFalse("is not super user")
                 .Create("is-super-user")
-                .IsSatisfiedBy(model);
+                .Evaluate(model);
 
         var sut =
             Spec.From((IEnumerable<string> roles) => roles.Any(role => isSuperUser || isAdminResult))
                 .Create("any admins or super users");
 
         // Act
-        var act = sut.IsSatisfiedBy([model]);
+        var act = sut.Evaluate([model]);
 
         // Assert
         act.Justification.ShouldBe(expectedAssertion);
@@ -482,7 +482,7 @@ public class ExpressionTreeJustificationTests
                 .Create("any admins or super users");
 
         // Act
-        var act = sut.IsSatisfiedBy([model]);
+        var act = sut.Evaluate([model]);
 
         // Assert
         act.Justification.ShouldBe(expectedAssertion);
@@ -515,14 +515,14 @@ public class ExpressionTreeJustificationTests
                 .WhenTrue("is admin")
                 .WhenFalse("is not admin")
                 .Create("is-admin")
-                .IsSatisfiedBy(model);
+                .Evaluate(model);
 
         var sut =
             Spec.From((IEnumerable<string> roles) => roles.All(role => isAdminResult))
                 .Create("all admins");
 
         // Act
-        var act = sut.IsSatisfiedBy([model]);
+        var act = sut.Evaluate([model]);
 
         // Assert
         act.Justification.ShouldBe(expectedAssertion);
@@ -567,21 +567,21 @@ public class ExpressionTreeJustificationTests
                 .WhenTrue("is admin")
                 .WhenFalse("is not admin")
                 .Create("is-admin")
-                .IsSatisfiedBy(model);
+                .Evaluate(model);
 
         var isSuperUser =
             Spec.Build((string role) => role == "superuser")
                 .WhenTrue("is super user")
                 .WhenFalse("is not super user")
                 .Create("is-super-user")
-                .IsSatisfiedBy(model);
+                .Evaluate(model);
 
         var sut =
             Spec.From((IEnumerable<string> roles) => roles.All(role => isSuperUser || isAdminResult))
                 .Create("all admins or super users");
 
         // Act
-        var act = sut.IsSatisfiedBy([model]);
+        var act = sut.Evaluate([model]);
 
         // Assert
         act.Justification.ShouldBe(expectedAssertion);
@@ -636,7 +636,7 @@ public class ExpressionTreeJustificationTests
                 .Create("all admins or super users");
 
         // Act
-        var act = sut.IsSatisfiedBy([model]);
+        var act = sut.Evaluate([model]);
 
         // Assert
         act.Justification.ShouldBe(expectedAssertion);
@@ -649,7 +649,7 @@ public class ExpressionTreeJustificationTests
             Spec.From((ICollection<int> numbers) => numbers.All(n => n > 0))
                 .Create("all positive");
 
-        var result = allPositive.IsSatisfiedBy([-1, 2, 3]);
+        var result = allPositive.Evaluate([-1, 2, 3]);
 
         result.Justification.ShouldBe(
             """
@@ -668,7 +668,7 @@ public class ExpressionTreeJustificationTests
             Spec.From((ICollection<int> numbers) => numbers.Any(n => n > 0))
                 .Create("any positive");
 
-        var result = allPositive.IsSatisfiedBy([-1, 2, 3]);
+        var result = allPositive.Evaluate([-1, 2, 3]);
 
         result.Justification.ShouldBe(
             """
@@ -687,7 +687,7 @@ public class ExpressionTreeJustificationTests
             Spec.From((int[] numbers) => numbers.All(n => n > 0) )
                 .Create("all positive");
 
-        var result = allPositive.IsSatisfiedBy([-1, 2, 3]);
+        var result = allPositive.Evaluate([-1, 2, 3]);
 
         result.Justification.ShouldBe(
             """
@@ -706,7 +706,7 @@ public class ExpressionTreeJustificationTests
             Spec.From((int[] numbers) => numbers.Any(n => n > 0))
                 .Create("any positive");
 
-        var result = allPositive.IsSatisfiedBy([-1, 2, 3]);
+        var result = allPositive.Evaluate([-1, 2, 3]);
 
         result.Justification.ShouldBe(
             """
@@ -750,7 +750,7 @@ public class ExpressionTreeJustificationTests
                 .Create("is admin");
 
         // Act
-        var act = sut.IsSatisfiedBy(model);
+        var act = sut.Evaluate(model);
 
         // Assert
         act.Justification.ShouldBe(expectedAssertion);

@@ -15,7 +15,7 @@ var specs =
         new IsGreaterThanProposition(5)
     ];
 
-var results = specs.Select(spec => spec.IsSatisfiedBy(6));
+var results = specs.Select(spec => spec.Evaluate(6));
 
 var andTogetherResult = results.AndTogether();
 

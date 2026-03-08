@@ -397,7 +397,7 @@ public class IncompatibleBooleanResultTests
             .WhenFalse("top-level false")
             .Create("top-level proposition");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.SubAssertions;
@@ -420,12 +420,12 @@ public class IncompatibleBooleanResultTests
         var leftResult = Spec
             .Build((bool m) => m)
             .Create("left")
-            .IsSatisfiedBy(leftSatisfied);
+            .Evaluate(leftSatisfied);
 
         var rightResult= Spec
             .Build((bool m) => m)
             .Create("right")
-            .IsSatisfiedBy(rightSatisfied);
+            .Evaluate(rightSatisfied);
 
         // Act
         var act = leftResult.Equals(rightResult);
@@ -448,14 +448,14 @@ public class IncompatibleBooleanResultTests
         var leftResult = Spec
             .Build((bool m) => m)
             .Create("left")
-            .IsSatisfiedBy(leftSatisfied);
+            .Evaluate(leftSatisfied);
 
         var rightResult= Spec
             .Build((bool m) => m)
             .WhenTrue(true)
             .WhenFalse(false)
             .Create("right")
-            .IsSatisfiedBy(rightSatisfied);
+            .Evaluate(rightSatisfied);
 
         // Act
         var act = leftResult == rightResult;
@@ -475,7 +475,7 @@ public class IncompatibleBooleanResultTests
             .WhenTrue(m => m.ToString())
             .WhenFalse(m => m.ToString())
             .Create("policy")
-            .IsSatisfiedBy(satisfied);
+            .Evaluate(satisfied);
 
         // Act
         var act = result.ToExplanationResult().Reason;
@@ -495,7 +495,7 @@ public class IncompatibleBooleanResultTests
             .WhenTrue(m => m.ToString())
             .WhenFalse(m => m.ToString())
             .Create("policy")
-            .IsSatisfiedBy(satisfied);
+            .Evaluate(satisfied);
 
         // Act
         var act = result.ToExplanationResult().Description.ToString();
@@ -515,7 +515,7 @@ public class IncompatibleBooleanResultTests
             .WhenTrue(m => m.ToString())
             .WhenFalse(m => m.ToString())
             .Create("policy")
-            .IsSatisfiedBy(satisfied);
+            .Evaluate(satisfied);
 
         // Act
         var act = result.ToExplanationResult().Justification;
@@ -541,7 +541,7 @@ public class IncompatibleBooleanResultTests
             .WhenTrue(randomText)
             .WhenFalse(randomText)
             .Create("policy")
-            .IsSatisfiedBy(satisfied);
+            .Evaluate(satisfied);
 
         // Act
         var act = result.ToExplanationResult().Underlying.First().Reason;
@@ -567,7 +567,7 @@ public class IncompatibleBooleanResultTests
             .WhenTrue(randomText)
             .WhenFalse(randomText)
             .Create("policy")
-            .IsSatisfiedBy(satisfied);
+            .Evaluate(satisfied);
 
         // Act
         var act = result.ToExplanationResult().UnderlyingWithValues.First().Reason;
@@ -587,7 +587,7 @@ public class IncompatibleBooleanResultTests
             .WhenTrue(m => m.ToString())
             .WhenFalse(m => m.ToString())
             .Create("policy")
-            .IsSatisfiedBy(satisfied);
+            .Evaluate(satisfied);
 
         // Act
         var act = result.ToExplanationResult().Values;
@@ -612,7 +612,7 @@ public class IncompatibleBooleanResultTests
             .WhenTrue(randomText)
             .WhenFalse(randomText)
             .Create("policy")
-            .IsSatisfiedBy(satisfied);
+            .Evaluate(satisfied);
 
         // Act
         var act = result.ToExplanationResult().Causes.First().Reason;
@@ -637,7 +637,7 @@ public class IncompatibleBooleanResultTests
             .WhenTrue(randomText)
             .WhenFalse(randomText)
             .Create("policy")
-            .IsSatisfiedBy(satisfied);
+            .Evaluate(satisfied);
 
         // Act
         var act = result.ToExplanationResult().CausesWithValues.First().Reason;

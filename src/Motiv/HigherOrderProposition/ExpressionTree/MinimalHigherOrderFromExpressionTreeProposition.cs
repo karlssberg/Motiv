@@ -20,7 +20,7 @@ internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TP
     public override bool Matches(IEnumerable<TModel> models) =>
         EvaluateModels(models).IsSatisfied;
 
-    protected override BooleanResultBase<string> IsSpecSatisfiedBy(IEnumerable<TModel> models)
+    protected override BooleanResultBase<string> EvaluateSpec(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
         var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>

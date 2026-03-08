@@ -31,7 +31,7 @@ public readonly struct MetadataHigherOrderPropositionFactory<TModel, TReplacemen
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanResultProposition<TModel, TReplacementMetadata, TMetadata>(
-            spec.IsSatisfiedBy,
+            spec.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,
             whenFalse,

@@ -13,7 +13,7 @@ namespace Motiv;
 public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata>
 {
     /// <inheritdoc />
-    protected override BooleanResultBase<TMetadata> IsSpecSatisfiedBy(TModel model) => IsPolicySatisfiedBy(model);
+    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model) => EvaluatePolicy(model);
 
     /// <summary>
     /// Executes the proposition as a policy and returns a <see cref="PolicyResultBase{TMetadata}" /> primarily
@@ -21,15 +21,19 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// </summary>
     /// <param name="model">The model to evaluate</param>
     /// <returns>A <see cref="PolicyResultBase{TMetadata}" /> containing the metadata instance and the boolean result.</returns>
-    public new PolicyResultBase<TMetadata> IsSatisfiedBy(TModel model) => IsPolicySatisfiedBy(model);
+    public new PolicyResultBase<TMetadata> Evaluate(TModel model) => EvaluatePolicy(model);
+
+    /// <inheritdoc cref="Evaluate(TModel)"/>
+    [Obsolete("Use Evaluate instead.")]
+    public new PolicyResultBase<TMetadata> IsSatisfiedBy(TModel model) => Evaluate(model);
 
     /// <summary>
-    /// Executes the policy as a policy and returns a <see cref="PolicyResultBase{TMetadata}" /> primarily
+    /// Executes the proposition as a policy and returns a <see cref="PolicyResultBase{TMetadata}" /> primarily
     /// containing a single metadata instance.
     /// </summary>
     /// <param name="model">The model to evaluate</param>
     /// <returns>A <see cref="PolicyResultBase{TMetadata}" /> containing the metadata instance and the boolean result.</returns>
-    protected abstract PolicyResultBase<TMetadata> IsPolicySatisfiedBy(TModel model);
+    protected abstract PolicyResultBase<TMetadata> EvaluatePolicy(TModel model);
 
     /// <summary>Changes the <typeparamref name="TModel" /> <see cref="Type" /> of the policy.</summary>
     /// <param name="childModelSelector">

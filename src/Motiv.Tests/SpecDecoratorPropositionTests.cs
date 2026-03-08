@@ -66,7 +66,7 @@ public class SpecDecoratorPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec | fifthSpec | sixthSpec | seventhSpec;
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Assertions;
@@ -134,7 +134,7 @@ public class SpecDecoratorPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec | fifthSpec | sixthSpec | seventhSpec;
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Assertions;
@@ -201,7 +201,7 @@ public class SpecDecoratorPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec | fifthSpec | sixthSpec | seventhSpec;
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Values;
@@ -268,7 +268,7 @@ public class SpecDecoratorPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec | fifthSpec | sixthSpec | seventhSpec;
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Values;
@@ -323,7 +323,7 @@ public class SpecDecoratorPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         result.GetRootAssertions().ShouldBe(
             [
@@ -385,7 +385,7 @@ public class SpecDecoratorPropositionTests
 
         var spec = firstSpec | secondSpec | thirdSpec | fourthSpec;
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         result.GetRootAssertions().ShouldBe(
             [
@@ -415,7 +415,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(Metadata.False)
             .Create("is on");
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Values;
@@ -438,7 +438,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(Metadata.False)
             .Create("is on");
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Values;
@@ -463,7 +463,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(_ => Metadata.False)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -488,7 +488,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(_ => Metadata.False)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -513,7 +513,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(_ => Metadata.False)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Value;
@@ -540,7 +540,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse((m, r) => (Model: m, Metadata: r.Values))
             .Create("is outer on");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -567,7 +567,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse((m, r) => (Model: m, Metadata: r.Values))
             .Create("is outer on");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -595,7 +595,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse("false")
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -623,7 +623,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse("false")
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -649,7 +649,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(isFalseMetadata)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Values;
@@ -675,7 +675,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(isFalseMetadata)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Values;
@@ -705,7 +705,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(model => (model, isFalseMetadata))
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Values;
@@ -735,7 +735,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(model => (model, isFalseMetadata))
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Values;
@@ -765,7 +765,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(model => (model, isFalseMetadata))
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Value;
@@ -795,7 +795,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(model => (model, isFalseMetadata))
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Value;
@@ -826,7 +826,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(model => (model, isFalseMetadata))
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Values;
@@ -857,7 +857,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(model => (model, isFalseMetadata))
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Values;
@@ -888,7 +888,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(model => (model, isFalseMetadata))
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Values;
@@ -911,7 +911,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse("false")
             .Create();
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Values;
@@ -934,7 +934,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse("false")
             .Create();
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Values;
@@ -962,7 +962,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse((falseResult, result) => result.Values.Select(meta => $"{falseResult} - {meta}").First())
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -990,7 +990,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse((falseResult, result) => result.Values.Select(meta => $"{falseResult} - {meta}").First())
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Values;
@@ -1016,7 +1016,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(isFalseMetadata)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Values;
@@ -1042,7 +1042,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(isFalseMetadata)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Values;
@@ -1068,7 +1068,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(model => model)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Values;
@@ -1094,7 +1094,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse(model => model)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Values;
@@ -1124,7 +1124,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse((model, result) => result.Values.Select(meta => (model, meta)).First())
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Value;
@@ -1154,7 +1154,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalse((model, result) => result.Values.Select(meta => (model, meta)).First())
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Value;
@@ -1185,7 +1185,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalseYield((model, result) => result.Values.Select(meta => (model, meta)))
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Values;
@@ -1216,7 +1216,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalseYield((model, result) => result.Values.Select(meta => (model, meta)))
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(guidModel);
+        var result = spec.Evaluate(guidModel);
 
         // Act
         var act = result.Values;
@@ -1239,7 +1239,7 @@ public class SpecDecoratorPropositionTests
             .Build(underlying)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -1262,7 +1262,7 @@ public class SpecDecoratorPropositionTests
             .Build(underlying)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -1285,7 +1285,7 @@ public class SpecDecoratorPropositionTests
             .Build(underlying)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -1308,7 +1308,7 @@ public class SpecDecoratorPropositionTests
             .Build(underlying)
             .Create("is true");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -1339,7 +1339,7 @@ public class SpecDecoratorPropositionTests
             .Build(underlying)
             .Create("top-level proposition");
 
-        var result = spec.IsSatisfiedBy("model");
+        var result = spec.Evaluate("model");
 
         // Act
         var act = result.Description.Reason;
@@ -1365,13 +1365,13 @@ public class SpecDecoratorPropositionTests
 
         var orSpec = left | right;
 
-        var expected = orSpec.IsSatisfiedBy(model);
+        var expected = orSpec.Evaluate(model);
 
         var spec = Spec
             .Build(orSpec)
             .Create("composite");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Underlying;
@@ -1396,13 +1396,13 @@ public class SpecDecoratorPropositionTests
 
         var orSpec = left | right;
 
-        var expected = orSpec.IsSatisfiedBy(model);
+        var expected = orSpec.Evaluate(model);
 
         var spec = Spec
             .Build(orSpec)
             .Create("composite");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Underlying;
@@ -1427,13 +1427,13 @@ public class SpecDecoratorPropositionTests
 
         var orSpec = left | right;
 
-        var expected = orSpec.IsSatisfiedBy(model);
+        var expected = orSpec.Evaluate(model);
 
         var spec = Spec
             .Build(orSpec)
             .Create("composite");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.UnderlyingWithValues;
@@ -1458,13 +1458,13 @@ public class SpecDecoratorPropositionTests
 
         var orSpec = left | right;
 
-        var expected = orSpec.IsSatisfiedBy(model);
+        var expected = orSpec.Evaluate(model);
 
         var spec = Spec
             .Build(orSpec)
             .Create("composite");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.UnderlyingWithValues;
@@ -1493,7 +1493,7 @@ public class SpecDecoratorPropositionTests
             .Build(orSpec)
             .Create("composite");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Description.CausalOperandCount;
@@ -1522,7 +1522,7 @@ public class SpecDecoratorPropositionTests
             .Build(orSpec)
             .Create("composite");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Description.CausalOperandCount;
@@ -1547,13 +1547,13 @@ public class SpecDecoratorPropositionTests
 
         var orSpec = left | right;
 
-        var expected = orSpec.IsSatisfiedBy(model).Causes;
+        var expected = orSpec.Evaluate(model).Causes;
 
         var spec = Spec
             .Build(orSpec)
             .Create("composite");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Causes;
@@ -1578,13 +1578,13 @@ public class SpecDecoratorPropositionTests
 
         var orSpec = left | right;
 
-        var expected = orSpec.IsSatisfiedBy(model).Causes;
+        var expected = orSpec.Evaluate(model).Causes;
 
         var spec = Spec
             .Build(orSpec)
             .Create("composite");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Causes;
@@ -1609,13 +1609,13 @@ public class SpecDecoratorPropositionTests
 
         var orSpec = left | right;
 
-        var expected = orSpec.IsSatisfiedBy(model).CausesWithValues;
+        var expected = orSpec.Evaluate(model).CausesWithValues;
 
         var spec = Spec
             .Build(orSpec)
             .Create("composite");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.CausesWithValues;
@@ -1640,13 +1640,13 @@ public class SpecDecoratorPropositionTests
 
         var orSpec = left | right;
 
-        var expected = orSpec.IsSatisfiedBy(model).CausesWithValues;
+        var expected = orSpec.Evaluate(model).CausesWithValues;
 
         var spec = Spec
             .Build(orSpec)
             .Create("composite");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.CausesWithValues;
@@ -1681,7 +1681,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalseYield((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
             .Create("top-level proposition");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -1716,7 +1716,7 @@ public class SpecDecoratorPropositionTests
             .WhenFalseYield((satisfied, result) => result.Assertions.Select(assertion => $"{satisfied}: {assertion}"))
             .Create("top-level proposition");
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Assertions;
@@ -1766,7 +1766,7 @@ public class SpecDecoratorPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -1816,7 +1816,7 @@ public class SpecDecoratorPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -1866,7 +1866,7 @@ public class SpecDecoratorPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -1916,7 +1916,7 @@ public class SpecDecoratorPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -1966,7 +1966,7 @@ public class SpecDecoratorPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -2016,7 +2016,7 @@ public class SpecDecoratorPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -2066,7 +2066,7 @@ public class SpecDecoratorPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -2116,7 +2116,7 @@ public class SpecDecoratorPropositionTests
                    withFalseAsTwoParameterCallback &
                    withFalseAsTwoParameterCallbackThatReturnsACollection;
 
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;

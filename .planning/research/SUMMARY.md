@@ -38,7 +38,7 @@ All 14 table stakes features (TS-1 through TS-14) are required for the migration
 - TS-3: Lambda expressions -- both expression-body `() => expr` and block-body `() => { ... }` (MEDIUM)
 - TS-4: Fluent method chains `Spec.Build().WhenTrue().WhenFalse().Create()` via nested `InvocationExpression`/`MemberAccessExpression` (HIGH)
 - TS-7: Object creation expressions `new SpecName()`, `new SpecName(this)`, `new SpecName.Model(a, b)` (LOW)
-- TS-8: Spec invocation chain `new Spec().IsSatisfiedBy(model).Satisfied` (MEDIUM)
+- TS-8: Spec invocation chain `new Spec().Evaluate(model).Satisfied` (MEDIUM)
 - TS-9: Local variable declarations in block lambdas (MEDIUM)
 - TS-10: Field declarations and constructor injection (MEDIUM)
 - TS-11: Method body replacement with comment trivia (MEDIUM)

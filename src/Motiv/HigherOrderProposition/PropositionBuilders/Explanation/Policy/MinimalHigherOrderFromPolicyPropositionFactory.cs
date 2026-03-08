@@ -23,7 +23,7 @@ public readonly partial struct MinimalHigherOrderFromPolicyPropositionFactory<TM
     /// <returns>A specification for the model.</returns>
     public SpecBase<IEnumerable<TModel>, TMetadata> Create(string statement) =>
         new MinimalHigherOrderFromPolicyResultProposition<TModel, TMetadata>(
-            policy.IsSatisfiedBy,
+            policy.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
@@ -33,7 +33,7 @@ public readonly partial struct MinimalHigherOrderFromPolicyPropositionFactory<TM
 
     internal SpecBase<IEnumerable<TModel>, TMetadata> Create(Expression statement) =>
         new MinimalHigherOrderFromPolicyResultProposition<TModel, TMetadata>(
-            policy.IsSatisfiedBy,
+            policy.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             new ExpressionDescription(
                 statement,

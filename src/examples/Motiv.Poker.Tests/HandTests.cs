@@ -25,7 +25,7 @@ public class HandTests
 
         var sut = new IsPairRule();
 
-        var act = sut.IsSatisfiedBy(hand);
+        var act = sut.Evaluate(hand);
 
         act.Satisfied.ShouldBe(expected);
         act.Value.ShouldBe(expectedRank);
@@ -50,7 +50,7 @@ public class HandTests
 
         var sut = new IsTwoPairRule();
 
-        var act = sut.IsSatisfiedBy(hand);
+        var act = sut.Evaluate(hand);
 
         act.Satisfied.ShouldBe(expected);
         act.Values.ShouldBe([expectedRank]);
@@ -78,7 +78,7 @@ public class HandTests
 
         var sut = new IsStraightRule();
 
-        var act = sut.IsSatisfiedBy(hand);
+        var act = sut.Evaluate(hand);
 
         act.Satisfied.ShouldBeTrue();
         act.Values.Max().ShouldBe(HandRank.Straight);
@@ -104,7 +104,7 @@ public class HandTests
 
         var sut = new IsStraightRule();
 
-        var act = sut.IsSatisfiedBy(hand);
+        var act = sut.Evaluate(hand);
 
         act.Satisfied.ShouldBeFalse();
     }
@@ -128,7 +128,7 @@ public class HandTests
 
         var sut = new IsFlushRuleRule();
 
-        var act = sut.IsSatisfiedBy(hand);
+        var act = sut.Evaluate(hand);
 
         act.Satisfied.ShouldBeTrue();
         act.Values.Max().ShouldBe(HandRank.Flush);
@@ -154,7 +154,7 @@ public class HandTests
 
         var sut = new IsStraightFlushRule();
 
-        var act = sut.IsSatisfiedBy(hand);
+        var act = sut.Evaluate(hand);
 
         act.Satisfied.ShouldBeTrue();
         act.Values.Max().ShouldBe(HandRank.StraightFlush);
@@ -174,7 +174,7 @@ public class HandTests
         });
         var sut = new IsRoyalFlushRule();
 
-        var act = sut.IsSatisfiedBy(hand);
+        var act = sut.Evaluate(hand);
 
         act.Satisfied.ShouldBeTrue();
         act.Values.Max().ShouldBe(HandRank.RoyalFlush);
@@ -202,7 +202,7 @@ public class HandTests
 
         var sut = new PokerRules();
 
-        var act = sut.IsSatisfiedBy(hand);
+        var act = sut.Evaluate(hand);
 
         act.Satisfied.ShouldBe(expected);
         act.Value.ShouldBe(expectedRank);
@@ -215,7 +215,7 @@ public class HandTests
     {
         var sut = new PokerRules();
 
-        var act = sut.IsSatisfiedBy(new Hand("KH, QH, JH, 10H, 9H"));
+        var act = sut.Evaluate(new Hand("KH, QH, JH, 10H, 9H"));
 
         act.Justification.ShouldBe(
             """

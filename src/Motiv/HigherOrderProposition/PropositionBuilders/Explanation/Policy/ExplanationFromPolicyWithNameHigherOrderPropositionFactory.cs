@@ -32,7 +32,7 @@ public readonly struct ExplanationFromPolicyWithNameHigherOrderPropositionFactor
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromPolicyResultMetadataProposition<TModel, string, TMetadata>(
-            policy.IsSatisfiedBy,
+            policy.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string>(),
             falseBecause,
@@ -48,7 +48,7 @@ public readonly struct ExplanationFromPolicyWithNameHigherOrderPropositionFactor
     public PolicyBase<IEnumerable<TModel>, string> Create()
     {
         return new HigherOrderFromPolicyResultMetadataProposition<TModel, string, TMetadata>(
-            policy.IsSatisfiedBy,
+            policy.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string>(),
             falseBecause,

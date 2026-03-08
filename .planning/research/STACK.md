@@ -183,7 +183,7 @@ InvocationExpression(                              // .Create()
 
 **What the CodeFix generates:**
 ```csharp
-new IsValidProposition().IsSatisfiedBy(value).Satisfied
+new IsValidProposition().Evaluate(value).Satisfied
 // or
 new IsFeatureEnabledProposition(this)
 // or
@@ -258,7 +258,7 @@ private readonly Proposition _proposition = new Proposition();
 public bool IsValid(int value)
 {
     // original expression
-    var result = _proposition.IsSatisfiedBy(new Proposition.Model(valueA, valueB));
+    var result = _proposition.Evaluate(new Proposition.Model(valueA, valueB));
     return result.Satisfied;
 }
 ```

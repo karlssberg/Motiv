@@ -17,7 +17,7 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
 
     public override bool Matches(TModel model) => predicate(model).Satisfied;
 
-    protected override PolicyResultBase<string> IsPolicySatisfiedBy(TModel model)
+    protected override PolicyResultBase<string> EvaluatePolicy(TModel model)
     {
         var predicateResult = predicate(model);
         BooleanResultBase<TUnderlyingMetadata>[] predicateResults = [predicateResult];

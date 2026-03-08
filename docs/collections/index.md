@@ -80,14 +80,14 @@ var specs = new List<Spec<Product>>
 var allChecks = specs.AndTogether();
 
 // Evaluate a product against all checks at once
-var result = allChecks.IsSatisfiedBy(product);
+var result = allChecks.Evaluate(product);
 ```
 
 ### Working with Result Collections
 
 ```csharp
 // Evaluate multiple entities
-var results = products.Select(p => productSpec.IsSatisfiedBy(p)).ToList();
+var results = products.Select(p => productSpec.Evaluate(p)).ToList();
 
 // Get only the valid ones
 var validResults = results.WhereTrue();

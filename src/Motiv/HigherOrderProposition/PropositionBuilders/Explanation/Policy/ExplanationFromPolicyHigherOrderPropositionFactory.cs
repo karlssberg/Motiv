@@ -32,7 +32,7 @@ public readonly struct ExplanationFromPolicyHigherOrderPropositionFactory<TModel
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromPolicyResultMetadataProposition<TModel, string, TMetadata>(
-            policy.IsSatisfiedBy,
+            policy.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause,
             falseBecause,

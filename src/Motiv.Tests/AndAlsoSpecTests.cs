@@ -29,7 +29,7 @@ public class AndAlsoSpecTests
                 .Create();
 
         var spec = left.AndAlso(right);
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Satisfied;
@@ -63,7 +63,7 @@ public class AndAlsoSpecTests
                 .Create();
 
         var spec = left.AndAlso(right);
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.Reason;
@@ -96,7 +96,7 @@ public class AndAlsoSpecTests
             .Create("right");
 
         var spec = left.AndAlso(right);
-        var result = spec.IsSatisfiedBy(model);
+        var result = spec.Evaluate(model);
 
         // Act
         var act = result.ToString();
@@ -124,7 +124,7 @@ public class AndAlsoSpecTests
         var spec = left.AndAlso(right);
 
         // Act
-        Action act = () => spec.IsSatisfiedBy(new object());
+        Action act = () => spec.Evaluate(new object());
 
         // Assert
         act.ShouldNotThrow();
@@ -208,7 +208,7 @@ public class AndAlsoSpecTests
         var spec = left.AndAlso(right);
 
         // Act
-        var act = spec.IsSatisfiedBy(model).Description.Reason;
+        var act = spec.Evaluate(model).Description.Reason;
 
         // Assert
         act.ShouldBe(expected);
@@ -241,7 +241,7 @@ public class AndAlsoSpecTests
         var spec = left.AndAlso(right);
 
         // Act
-        var act = spec.IsSatisfiedBy(model).Justification;
+        var act = spec.Evaluate(model).Justification;
 
         // Assert
         act.ShouldBe(expected);
@@ -274,7 +274,7 @@ public class AndAlsoSpecTests
         var spec = left.AndAlso(right);
 
         // Act
-        var act = spec.IsSatisfiedBy(model).Justification;
+        var act = spec.Evaluate(model).Justification;
 
         // Assert
         act.ShouldBe(expected);
@@ -310,7 +310,7 @@ public class AndAlsoSpecTests
         var spec = left.AndAlso(right);
 
         // Act
-        var act = spec.IsSatisfiedBy("").Satisfied;
+        var act = spec.Evaluate("").Satisfied;
 
         // Assert
         act.ShouldBe(expectedSatisfied);
@@ -342,7 +342,7 @@ public class AndAlsoSpecTests
         var spec = left.AndAlso(right);
 
         // Act
-        var act = spec.IsSatisfiedBy("").Assertions;
+        var act = spec.Evaluate("").Assertions;
 
         // Assert
         act.ShouldBe(expectedAssertions);
@@ -374,7 +374,7 @@ public class AndAlsoSpecTests
         var spec = left.AndAlso(right);
 
         // Act
-        var act = spec.IsSatisfiedBy("").Values;
+        var act = spec.Evaluate("").Values;
 
         // Assert
         act.ShouldBe(expectedAssertions);
@@ -437,12 +437,12 @@ public class AndAlsoSpecTests
 
         IEnumerable<BooleanResultBase<string>> expected =
         [
-            left.IsSatisfiedBy(new object()),
-            right.IsSatisfiedBy(new object())
+            left.Evaluate(new object()),
+            right.Evaluate(new object())
         ];
 
         var spec = left.AndAlso(right);
-        var result = spec.IsSatisfiedBy(new object());
+        var result = spec.Evaluate(new object());
 
         // Act
         var act = result.UnderlyingWithValues;
@@ -482,7 +482,7 @@ public class AndAlsoSpecTests
 
         var spec = !left.AndAlso(right);
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
@@ -516,7 +516,7 @@ public class AndAlsoSpecTests
 
         var spec = !!left.AndAlso(right);
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
@@ -550,7 +550,7 @@ public class AndAlsoSpecTests
 
         var spec = !!!(left.AndAlso(right));
 
-        var result = spec.IsSatisfiedBy(false);
+        var result = spec.Evaluate(false);
 
         result.Justification.ShouldBe(expected);
     }
