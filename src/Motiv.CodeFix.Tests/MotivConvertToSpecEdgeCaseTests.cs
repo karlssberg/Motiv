@@ -185,12 +185,13 @@ public class MotivConvertToSpecEdgeCaseTests
         }.RunAsync();
     }
 
-    [Fact]
-    public async Task Should_convert_nameof_expression_in_comparison()
+    [Theory]
+    [InlineData("name == nameof(MyClass)")]
+    [InlineData("typeof(MyClass).Name == name")]
+    [InlineData("name != default(string)")]
+    public async Task Should_convert_language_keyword_expression_in_comparison(string booleanExpression)
     {
-        const string booleanExpression = "name == nameof(MyClass)";
-
-        const string source =
+        var source =
           $$"""
             namespace MyNamespace;
 
@@ -203,7 +204,7 @@ public class MotivConvertToSpecEdgeCaseTests
             }
             """;
 
-        const string expectedTransformedCode =
+        var expectedTransformedCode =
           $$"""
             using Motiv;
 

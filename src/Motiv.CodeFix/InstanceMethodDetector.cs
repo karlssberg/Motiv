@@ -98,7 +98,8 @@ public class InstanceMethodDetector(SemanticModel semanticModel) : CSharpSyntaxW
 
             case null
                 when symbolInfo.CandidateSymbols.IsEmpty
-                     && node.Expression is IdentifierNameSyntax unresolvedId:
+                     && node.Expression is IdentifierNameSyntax unresolvedId
+                     && !IsLanguageKeyword(unresolvedId.Identifier.ValueText):
                 // Unresolved simple identifier invocations are likely instance methods
                 UnresolvedNames.Add(unresolvedId.Identifier.ValueText);
                 break;
@@ -106,4 +107,11 @@ public class InstanceMethodDetector(SemanticModel semanticModel) : CSharpSyntaxW
 
         base.VisitInvocationExpression(node);
     }
+
+    /// <summary>
+    /// Checks whether the identifier is a C# contextual keyword that is syntactically an invocation
+    /// (e.g., <c>nameof(X)</c>) but should not be treated as a method call.
+    /// </summary>
+    private static bool IsLanguageKeyword(string identifier) =>
+        SyntaxFacts.GetContextualKeywordKind(identifier) != SyntaxKind.None;
 }

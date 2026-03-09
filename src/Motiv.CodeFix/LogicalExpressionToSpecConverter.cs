@@ -194,23 +194,21 @@ internal class LogicalExpressionToSpecConverter(
 
     private static IEnumerable<ISymbol> GetVariablesInExpression(
         ExpressionSyntax expression,
-        SemanticModel semanticModel)
-    {
-        return expression
+        SemanticModel semanticModel) =>
+        expression
             .DescendantNodesAndSelf()
             .OfType<IdentifierNameSyntax>()
             .Where(identifier =>
-            {
-                if (identifier.Parent is MemberAccessExpressionSyntax memberAccess &&
-                    memberAccess.Name == identifier)
-                {
-                    return false;
-                }
-                return true;
-            })
-            .Select(identifier => ModelExtensions.GetSymbolInfo(semanticModel, identifier).Symbol)
-            .Where(symbol => symbol is IFieldSymbol or ILocalSymbol or IParameterSymbol)
+                !(identifier.Parent is MemberAccessExpressionSyntax memberAccess &&
+                  memberAccess.Name == identifier))
+            .Select(identifier => semanticModel.GetSymbolInfo(identifier).Symbol)
+            .Where(symbol =>
+                symbol is IFieldSymbol or IParameterSymbol ||
+                symbol is ILocalSymbol local && !IsPatternIntroducedVariable(local))
             .Distinct(SymbolEqualityComparer.Default)
             .Cast<ISymbol>();
-    }
+
+    private static bool IsPatternIntroducedVariable(ILocalSymbol symbol) =>
+        symbol.DeclaringSyntaxReferences
+            .Any(syntaxRef => syntaxRef.GetSyntax() is SingleVariableDesignationSyntax);
 }
