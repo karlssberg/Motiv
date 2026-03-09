@@ -17,26 +17,26 @@ public class ActivateSmartHomeRules
 
     private SpecBase<SmartHomeContext, ISmartHomeAction> ActivateHeating => Spec
         .Build((_isOccupied | _isNight) & _isCold & !_isHighEnergyUsage)
-        .WhenTrue<ISmartHomeAction>((_, result) => new ActivateHeatingAction(result.Assertions))
-        .WhenFalse((_, result) => new DeactivateHeatingAction(result.Assertions))
+        .WhenTrue(ISmartHomeAction (_, result) => new ActivateHeatingAction(result.Assertions))
+        .WhenFalse(ISmartHomeAction (_, result) => new DeactivateHeatingAction(result.Assertions))
         .Create("heating is needed");
 
     private SpecBase<SmartHomeContext, ISmartHomeAction> ActivateAirCon => Spec
         .Build(_isOccupied & _isHot & !_isHighEnergyUsage)
-        .WhenTrue<ISmartHomeAction>((_, result) => new ActivateAirConAction(result.Assertions))
-        .WhenFalse((_, result) => new DeactivateAirConAction(result.Assertions))
+        .WhenTrue(ISmartHomeAction (_, result) => new ActivateAirConAction(result.Assertions))
+        .WhenFalse(ISmartHomeAction (_, result) => new DeactivateAirConAction(result.Assertions))
         .Create("AC is needed");
 
     private SpecBase<SmartHomeContext, ISmartHomeAction> TurnLightsOn => Spec
         .Build(_isOccupied | _isNight)
-        .WhenTrue<ISmartHomeAction>((_, result) => new KeepLightsOnAction(result.Assertions))
-        .WhenFalse((_, result) => new TurnOffLightsAction(result.Assertions))
+        .WhenTrue(ISmartHomeAction (_, result) => new KeepLightsOnAction(result.Assertions))
+        .WhenFalse(ISmartHomeAction (_, result) => new TurnOffLightsAction(result.Assertions))
         .Create("lights should be on");
 
     private SpecBase<SmartHomeContext, ISmartHomeAction> CloseWindows => Spec
         .Build((_isCold | _isHot | !_isOccupied) & _areWindowsOpen)
-        .WhenTrue<ISmartHomeAction>((_, result) => new CloseWindowsAction(result.Assertions))
-        .WhenFalse((_, result) => new KeepWindowsOpenAction(result.Assertions))
+        .WhenTrue(ISmartHomeAction (_, result) => new CloseWindowsAction(result.Assertions))
+        .WhenFalse(ISmartHomeAction (_, result) => new KeepWindowsOpenAction(result.Assertions))
         .Create("windows should be closed");
 
     private readonly SpecBase<SmartHomeContext, string> _isOccupied = Spec
