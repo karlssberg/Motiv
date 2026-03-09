@@ -37,50 +37,51 @@ public class MotivAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(AnalyzeBinaryExpression, SyntaxKind.GreaterThanExpression);
-        context.RegisterSyntaxNodeAction(AnalyzeBinaryExpression, SyntaxKind.LessThanExpression);
-        context.RegisterSyntaxNodeAction(AnalyzeBinaryExpression, SyntaxKind.GreaterThanOrEqualExpression);
-        context.RegisterSyntaxNodeAction(AnalyzeBinaryExpression, SyntaxKind.LessThanOrEqualExpression);
-        context.RegisterSyntaxNodeAction(AnalyzeBinaryExpression, SyntaxKind.EqualsExpression);
-        context.RegisterSyntaxNodeAction(AnalyzeBinaryExpression, SyntaxKind.NotEqualsExpression);
-        context.RegisterSyntaxNodeAction(AnalyzeBinaryExpression, SyntaxKind.LogicalAndExpression);
-        context.RegisterSyntaxNodeAction(AnalyzeBinaryExpression, SyntaxKind.LogicalOrExpression);
+        context.RegisterSyntaxNodeAction(AnalyzeLogicalExpression, SyntaxKind.GreaterThanExpression);
+        context.RegisterSyntaxNodeAction(AnalyzeLogicalExpression, SyntaxKind.LessThanExpression);
+        context.RegisterSyntaxNodeAction(AnalyzeLogicalExpression, SyntaxKind.GreaterThanOrEqualExpression);
+        context.RegisterSyntaxNodeAction(AnalyzeLogicalExpression, SyntaxKind.LessThanOrEqualExpression);
+        context.RegisterSyntaxNodeAction(AnalyzeLogicalExpression, SyntaxKind.EqualsExpression);
+        context.RegisterSyntaxNodeAction(AnalyzeLogicalExpression, SyntaxKind.NotEqualsExpression);
+        context.RegisterSyntaxNodeAction(AnalyzeLogicalExpression, SyntaxKind.LogicalAndExpression);
+        context.RegisterSyntaxNodeAction(AnalyzeLogicalExpression, SyntaxKind.LogicalOrExpression);
+        context.RegisterSyntaxNodeAction(AnalyzeLogicalExpression, SyntaxKind.LogicalNotExpression);
         context.RegisterSyntaxNodeAction(AnalyzeIsPatternExpression, SyntaxKind.IsExpression);
         context.RegisterSyntaxNodeAction(AnalyzeIsPatternExpression, SyntaxKind.IsPatternExpression);
     }
 
-    private static void AnalyzeBinaryExpression(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeLogicalExpression(SyntaxNodeAnalysisContext context)
     {
-        var binaryExpression = (BinaryExpressionSyntax)context.Node;
+        var expression = (ExpressionSyntax)context.Node;
 
-        if (IsNestedInBinaryExpression(binaryExpression)) return;
-        if (IsNestedInPatternExpression(binaryExpression)) return;
+        if (IsNestedInLogicalExpression(expression)) return;
+        if (IsNestedInPatternExpression(expression)) return;
 
         // Check if this expression is inside a Spec.Build() lambda - if so, ignore it
-        if (IsInsideSpecBuildLambda(binaryExpression, context.SemanticModel)) return;
+        if (IsInsideSpecLambda(expression, context.SemanticModel)) return;
 
-        // Report diagnostic for the boolean expression
-        var diagnostic = Diagnostic.Create(Motiv0001, binaryExpression.GetLocation());
+        var diagnostic = Diagnostic.Create(Motiv0001, expression.GetLocation());
         context.ReportDiagnostic(diagnostic);
     }
 
-    private static bool IsNestedInBinaryExpression(SyntaxNode node)
+    private static bool IsNestedInLogicalExpression(SyntaxNode node)
     {
-        // Walk up through parenthesized expressions to find if we're inside a binary expression
+        // Walk up through parenthesized expressions to find if we're inside a logical expression
         var parent = node.Parent;
-        while (parent is ParenthesizedExpressionSyntax or PrefixUnaryExpressionSyntax)
+        while (parent is ParenthesizedExpressionSyntax)
         {
             parent = parent.Parent;
         }
 
-        return parent is BinaryExpressionSyntax;
+        return parent is BinaryExpressionSyntax
+            or PrefixUnaryExpressionSyntax { OperatorToken.RawKind: (int)SyntaxKind.ExclamationToken };
     }
 
     private static bool IsNestedInPatternExpression(SyntaxNode node)
     {
-        // Walk up through parenthesized and prefix unary expressions
+        // Walk up through parenthesized expressions
         var parent = node.Parent;
-        while (parent is ParenthesizedExpressionSyntax or PrefixUnaryExpressionSyntax)
+        while (parent is ParenthesizedExpressionSyntax)
         {
             parent = parent.Parent;
         }
@@ -99,42 +100,57 @@ public class MotivAnalyzer : DiagnosticAnalyzer
     {
         var node = context.Node;
 
-        if (IsNestedInBinaryExpression(node)) return;
+        if (IsNestedInLogicalExpression(node)) return;
         if (IsNestedInPatternExpression(node)) return;
 
-        if (IsInsideSpecBuildLambda(node, context.SemanticModel)) return;
+        if (IsInsideSpecLambda(node, context.SemanticModel)) return;
 
         var diagnostic = Diagnostic.Create(Motiv0001, node.GetLocation());
         context.ReportDiagnostic(diagnostic);
     }
 
-    private static bool IsInsideSpecBuildLambda(SyntaxNode node, SemanticModel semanticModel)
+    private static bool IsInsideSpecLambda(SyntaxNode node, SemanticModel semanticModel)
     {
-        // Walk up the syntax tree to find if we're inside a lambda expression
         var lambda = node.FirstAncestorOrSelf<LambdaExpressionSyntax>();
+        if (lambda is null) return false;
 
-        // Check if the lambda is an argument to Spec.Build()
-        var invocation = lambda?.FirstAncestorOrSelf<InvocationExpressionSyntax>();
+        return IsInsideSpecBuildInvocation(lambda, semanticModel)
+            || IsInsideSpecBaseConstructor(lambda, semanticModel);
+    }
 
-        // Check if this is a call to Spec.Build with strong typing
+    private static bool IsInsideSpecBuildInvocation(LambdaExpressionSyntax lambda, SemanticModel semanticModel)
+    {
+        var invocation = lambda.FirstAncestorOrSelf<InvocationExpressionSyntax>();
+
         if (invocation?.Expression is
             not MemberAccessExpressionSyntax { Name.Identifier.ValueText: "Build" } memberAccess)
             return false;
 
-        // Syntactic check: is the expression literally `Spec` or `Spec<T>` before `.Build`?
         if (memberAccess.Expression is IdentifierNameSyntax { Identifier.ValueText: "Spec" }
             or GenericNameSyntax { Identifier.ValueText: "Spec" })
             return true;
 
-        // Semantic check for more complex cases (e.g., fully-qualified Motiv.Spec)
-        var symbolInfo = semanticModel.GetSymbolInfo(memberAccess.Expression);
-        if (symbolInfo.Symbol is INamedTypeSymbol typeSymbol)
-        {
-            // Check if the type is Motiv.Spec
-            return typeSymbol.ContainingNamespace.Name == "Motiv" &&
-                   typeSymbol.Name == "Spec";
-        }
+        return IsMotivSpecType(semanticModel, memberAccess.Expression);
+    }
 
-        return false;
+    private static bool IsInsideSpecBaseConstructor(LambdaExpressionSyntax lambda, SemanticModel semanticModel)
+    {
+        var baseType = lambda.FirstAncestorOrSelf<PrimaryConstructorBaseTypeSyntax>();
+        if (baseType is null) return false;
+
+        if (baseType.Type is GenericNameSyntax { Identifier.ValueText: "Spec" })
+            return true;
+
+        return IsMotivSpecType(semanticModel, baseType.Type);
+    }
+
+    private static bool IsMotivSpecType(SemanticModel semanticModel, SyntaxNode node)
+    {
+        var symbolInfo = semanticModel.GetSymbolInfo(node);
+        return symbolInfo.Symbol is INamedTypeSymbol
+        {
+            Name: "Spec",
+            ContainingNamespace.Name: "Motiv"
+        };
     }
 }
