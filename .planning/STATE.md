@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 08-simple-spec-declaration-migration 08-01-PLAN.md
-last_updated: "2026-03-12T20:08:42.481Z"
+stopped_at: Completed 09-composed-spec-declaration-migration 09-01-PLAN.md
+last_updated: "2026-03-12T21:52:25.890Z"
 last_activity: 2026-02-09 -- Phase 7 complete (verified)
 progress:
   total_phases: 12
   completed_phases: 3
-  total_plans: 4
-  completed_plans: 6
+  total_plans: 6
+  completed_plans: 7
   percent: 100
 ---
 
@@ -49,6 +49,7 @@ Progress: [██████████] 100%
 
 *Updated after each plan completion*
 | Phase 08-simple-spec-declaration-migration P01 | 2 | 1 tasks | 4 files |
+| Phase 09-composed-spec-declaration-migration P01 | 10 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -65,6 +66,8 @@ Recent decisions affecting current work:
 - NormalizeWhitespace on final expression: Apply formatting to complete tree, not intermediate nodes (07-01)
 - [Phase 08-simple-spec-declaration-migration]: Class hierarchy over monolithic method: SpecClassDeclaration abstract base with AttachLambdaBody and FormatOutput hooks
 - [Phase 08-simple-spec-declaration-migration]: SpecFluentChainBuilder as shared static helper: reused by SimpleSpecClassDeclaration and ComposedSpecClassDeclaration
+- [Phase 09-composed-spec-declaration-migration]: ExpressionSyntax flows end-to-end: leaf clauses use IdentifierName(clauseName) composition nodes instead of string names
+- [Phase 09-composed-spec-declaration-migration]: ReplaceNodes with DescendantNodesAndSelf().OfType<IdentifierNameSyntax>() replaces string.Replace for structural correctness in ClauseSet.ResolveComposition
 
 ### Pending Todos
 
@@ -76,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T20:05:09.495Z
-Stopped at: Completed 08-simple-spec-declaration-migration 08-01-PLAN.md
+Last session: 2026-03-12T21:52:25.888Z
+Stopped at: Completed 09-composed-spec-declaration-migration 09-01-PLAN.md
 Resume file: None
