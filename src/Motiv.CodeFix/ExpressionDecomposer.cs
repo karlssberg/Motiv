@@ -1,11 +1,12 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Motiv.CodeFix;
 
 /// <summary>
 ///     Recursively decomposes a logical expression tree into individual clauses
-///     and a composition expression string that describes how to recombine them.
+///     and a composition expression tree that describes how to recombine them.
 /// </summary>
 internal static class ExpressionDecomposer
 {
@@ -40,7 +41,7 @@ internal static class ExpressionDecomposer
             var inner = DecomposeCore(paren.Expression);
             return new ExpressionDecomposition(
                 inner.Clauses,
-                $"({inner.CompositionExpression})");
+                ParenthesizedExpression(inner.CompositionExpression));
         }
 
         ExpressionDecomposition DecomposeNot(PrefixUnaryExpressionSyntax unary)
@@ -48,7 +49,7 @@ internal static class ExpressionDecomposer
             var inner = DecomposeCore(unary.Operand);
             return new ExpressionDecomposition(
                 inner.Clauses,
-                $"!{inner.CompositionExpression}");
+                PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, inner.CompositionExpression));
         }
 
         ExpressionDecomposition DecomposeBinary(BinaryExpressionSyntax binary, (string Op, bool IsInfix) op)
@@ -57,9 +58,24 @@ internal static class ExpressionDecomposer
             var right = DecomposeCore(binary.Right);
             var allClauses = left.Clauses.Concat(right.Clauses).ToList();
 
-            var composition = op.IsInfix
-                ? $"{left.CompositionExpression}{op.Op}{right.CompositionExpression}"
-                : $"{left.CompositionExpression}{op.Op}({right.CompositionExpression})";
+            ExpressionSyntax composition;
+            if (op.IsInfix)
+            {
+                composition = BinaryExpression(
+                    SyntaxKind.ExclusiveOrExpression,
+                    left.CompositionExpression,
+                    right.CompositionExpression);
+            }
+            else
+            {
+                var methodName = op.Op == ".AndAlso" ? "AndAlso" : "OrElse";
+                composition = InvocationExpression(
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        left.CompositionExpression,
+                        IdentifierName(methodName)),
+                    ArgumentList(SingletonSeparatedList(Argument(right.CompositionExpression))));
+            }
 
             return new ExpressionDecomposition(allClauses, composition);
         }
@@ -70,8 +86,8 @@ internal static class ExpressionDecomposer
             var transformed = transformClause(expr);
             var clauseName = ClauseNameDeriver.DeriveName(expr, counter);
             return new ExpressionDecomposition(
-                [(expr.ToString().Trim(), transformed.ToString(), expr)],
-                clauseName);
+                [(expr.ToString().Trim(), transformed, expr)],
+                IdentifierName(clauseName));
         }
     }
 

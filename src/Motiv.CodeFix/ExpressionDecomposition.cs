@@ -7,11 +7,11 @@ namespace Motiv.CodeFix;
 /// </summary>
 public readonly struct ExpressionDecomposition
 {
-    /// <summary>The individual clauses with their original text, model-transformed text, and expression syntax.</summary>
-    public IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> Clauses { get; }
+    /// <summary>The individual clauses with their original text, model-transformed expression, and original expression syntax.</summary>
+    public IReadOnlyList<(string OriginalText, ExpressionSyntax TransformedExpression, ExpressionSyntax OriginalExpression)> Clauses { get; }
 
-    /// <summary>The Motiv composition expression (e.g. "Clause1.AndAlso(Clause2)").</summary>
-    public string CompositionExpression { get; }
+    /// <summary>The Motiv composition expression tree (e.g. Clause1.AndAlso(Clause2)).</summary>
+    public ExpressionSyntax CompositionExpression { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExpressionDecomposition"/> struct.
@@ -19,8 +19,8 @@ public readonly struct ExpressionDecomposition
     /// <param name="clauses">The individual clauses.</param>
     /// <param name="compositionExpression">The composition expression.</param>
     public ExpressionDecomposition(
-        IReadOnlyList<(string OriginalText, string TransformedText, ExpressionSyntax Expression)> clauses,
-        string compositionExpression)
+        IReadOnlyList<(string OriginalText, ExpressionSyntax TransformedExpression, ExpressionSyntax OriginalExpression)> clauses,
+        ExpressionSyntax compositionExpression)
     {
         Clauses = clauses;
         CompositionExpression = compositionExpression;
