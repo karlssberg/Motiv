@@ -161,7 +161,7 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10 -> 11 -> 12
 | 5. CodeFix Edge Cases | v1.0-rc1 | 0/TBD | Deferred | - |
 | 6. XML Documentation Quality | v1.0-rc1 | 0/TBD | Deferred | - |
 | 7. SpecInvocation Migration | SyntaxFactory | 1/1 | Complete | 2026-02-09 |
-| 8. Simple Spec Declaration | SyntaxFactory | 0/1 | In progress | - |
+| 8. Simple Spec Declaration | 1/1 | Complete   | 2026-03-12 | - |
 | 9. Composed Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
 | 10. Constructor Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
 | 11. Orchestrator Cleanup | SyntaxFactory | 0/TBD | Not started | - |
