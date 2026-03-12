@@ -33,7 +33,7 @@ public class ComposedSpecClassDeclaration(
         IEnumerable<StatementSyntax> statementSyntaxes =
         [
             ..GenerateClauseStatementSyntaxes(clauseSet),
-            ReturnStatement(ParseExpression(updatedComposition))
+            ReturnStatement(updatedComposition)
         ];
 
         return lambda.WithBlock(Block(statementSyntaxes));
@@ -73,12 +73,12 @@ public class ComposedSpecClassDeclaration(
 
     private IEnumerable<StatementSyntax> GenerateClauseStatementSyntaxes(ClauseSet clauseSet)
     {
-        foreach (var (original, transformed, _, derivedName) in clauseSet.UniqueClauses.Values)
+        foreach (var (original, transformedExpression, _, derivedName) in clauseSet.UniqueClauses.Values)
         {
             var specChain = SpecFluentChainBuilder.Build(
                 innerLambdaModelType,
                 innerLambdaParameterName,
-                ParseExpression(transformed),
+                transformedExpression,
                 original);
 
             yield return LocalDeclarationStatement(
