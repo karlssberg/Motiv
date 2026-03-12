@@ -24,7 +24,7 @@ Requirements for SyntaxFactory migration. Each maps to roadmap phases.
 
 - [x] **SFMC-01**: `CustomSpecDeclarationSyntax.CreateComposedInternal()` uses SyntaxFactory
 - [x] **SFMC-02**: Block lambda with local variable declarations constructed via SyntaxFactory
-- [ ] **SFMC-03**: Nested record declaration constructed via SyntaxFactory
+- [x] **SFMC-03**: Nested record declaration constructed via SyntaxFactory
 - [x] **SFMC-04**: Composition expression uses `ReplaceNodes` instead of `string.Replace` for clause name substitution
 - [x] **SFMC-05**: All existing composed spec tests pass unchanged
 
@@ -69,7 +69,7 @@ Requirements for SyntaxFactory migration. Each maps to roadmap phases.
 | SFMD-04 | Phase 8 | Pending |
 | SFMC-01 | Phase 9 | Complete |
 | SFMC-02 | Phase 9 | Complete |
-| SFMC-03 | Phase 9 | Pending |
+| SFMC-03 | Phase 9 | Complete |
 | SFMC-04 | Phase 9 | Complete |
 | SFMC-05 | Phase 9 | Complete |
 | SFMK-01 | Phase 10 | Pending |
