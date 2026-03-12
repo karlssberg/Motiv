@@ -1,7 +1,9 @@
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Motiv.CodeFix.Syntax;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Motiv.CodeFix;
 
@@ -171,11 +173,11 @@ internal class LogicalExpressionToSpecConverter(
             logicalExpressionSyntax,
             expr => ExpressionTransformer.ConvertVariablesToModelMemberAccess(expr, variableSymbols, instanceMethodNames, staticMethodNames, containingTypeName));
 
-        var recordParameters = string.Join(", ", variableSymbols.Select(s =>
-        {
-            var typeName = GetSymbolTypeName(s);
-            return $"{typeName} {s.Name.Capitalize()}";
-        }));
+        var recordParameterList = ParameterList(
+            SeparatedList(
+                variableSymbols.Select(s =>
+                    Parameter(Identifier(s.Name.Capitalize()))
+                        .WithType(ParseTypeName(GetSymbolTypeName(s))))));
 
         var resolvedContainingTypeName = hasInstanceMethods ? containingTypeName : null;
 
@@ -186,7 +188,7 @@ internal class LogicalExpressionToSpecConverter(
             decomposition,
             resolvedContainingTypeName,
             nestedRecordName: defaultModelName,
-            nestedRecordParameters: recordParameters).Build();
+            nestedRecordParameterList: recordParameterList).Build();
     }
 
     private static string GetSymbolTypeName(ISymbol symbol) =>

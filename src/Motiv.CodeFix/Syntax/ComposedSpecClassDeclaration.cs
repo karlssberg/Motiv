@@ -16,7 +16,7 @@ public class ComposedSpecClassDeclaration(
     ExpressionDecomposition decomposition,
     string? containingTypeName = null,
     string? nestedRecordName = null,
-    string? nestedRecordParameters = null)
+    ParameterListSyntax? nestedRecordParameterList = null)
     : SpecClassDeclaration(syntaxContext, propositionName)
 {
     protected override TypeSyntax GetModelType() =>
@@ -48,7 +48,7 @@ public class ComposedSpecClassDeclaration(
 
     protected override ClassDeclarationSyntax AddClassBody(ClassDeclarationSyntax classDeclaration)
     {
-        if (nestedRecordName is null || nestedRecordParameters is null)
+        if (nestedRecordName is null || nestedRecordParameterList is null)
             return base.AddClassBody(classDeclaration);
 
         var nestedRecord = RecordDeclaration(
@@ -56,7 +56,7 @@ public class ComposedSpecClassDeclaration(
                 Token(SyntaxKind.RecordKeyword),
                 Identifier(nestedRecordName))
             .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-            .WithParameterList(ParseParameterList($"({nestedRecordParameters})"))
+            .WithParameterList(nestedRecordParameterList)
             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 
         return classDeclaration
