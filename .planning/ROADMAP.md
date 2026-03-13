@@ -117,10 +117,10 @@ Plans:
   1. `CustomSpecDeclarationSyntax.CreateWithConstructorInternal()` produces constructor spec classes using SyntaxFactory (no StringBuilder or raw string code generation)
   2. Constructor parameters and instance method injection are expressed via SyntaxFactory node construction (not string manipulation)
   3. All existing constructor spec tests pass with identical output (no test changes)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-(Plans will be created during `/gsd:plan-phase 10`)
+- [ ] 10-01-PLAN.md -- Verify constructor spec path is fully SyntaxFactory-migrated (SFMK-01, SFMK-02, SFMK-03)
 
 #### Phase 11: Orchestrator Cleanup
 **Goal**: The CodeFix orchestrator constructs fields, methods, and constructors directly via SyntaxFactory, eliminating the temporary-class-parse round-trip
@@ -163,11 +163,11 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10 -> 11 -> 12
 | 6. XML Documentation Quality | v1.0-rc1 | 0/TBD | Deferred | - |
 | 7. SpecInvocation Migration | SyntaxFactory | 1/1 | Complete | 2026-02-09 |
 | 8. Simple Spec Declaration | 1/1 | Complete   | 2026-03-12 | - |
-| 9. Composed Spec Declaration | 1/2 | In Progress|  | - |
-| 10. Constructor Spec Declaration | SyntaxFactory | 0/TBD | Not started | - |
+| 9. Composed Spec Declaration | 2/2 | Complete |  | - |
+| 10. Constructor Spec Declaration | SyntaxFactory | 0/1 | Planned | - |
 | 11. Orchestrator Cleanup | SyntaxFactory | 0/TBD | Not started | - |
 | 12. Dead Code Removal | SyntaxFactory | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-02-06*
-*Last updated: 2026-02-09 -- Phase 8 planned*
+*Last updated: 2026-03-13 -- Phase 10 planned*
