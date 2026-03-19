@@ -49,7 +49,7 @@ public readonly struct MultiAssertionExplanationExpressionTreePropositionFactory
     public MultiAssertionExplanationExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, string> trueBecause,
-        [FluentMethod("WhenFalseYield", Priority = -1)]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> falseBecause)
+        [FluentMethod("WhenFalseYield")]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> falseBecause)
     {
         _expression = expression;
         _trueBecause = trueBecause.ToEnumerableReturn();

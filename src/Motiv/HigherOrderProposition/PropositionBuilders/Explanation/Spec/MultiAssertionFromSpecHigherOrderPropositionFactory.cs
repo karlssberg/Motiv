@@ -54,7 +54,7 @@ public readonly struct MultiAssertionFromSpecHigherOrderPropositionFactory<TMode
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string> whenTrue,
-        [FluentMethod("WhenFalseYield", Priority = -1)]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, IEnumerable<string>> whenFalse)
+        [FluentMethod("WhenFalseYield")]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, IEnumerable<string>> whenFalse)
     {
         _spec = spec;
         _higherOrderOperation = higherOrderOperation;

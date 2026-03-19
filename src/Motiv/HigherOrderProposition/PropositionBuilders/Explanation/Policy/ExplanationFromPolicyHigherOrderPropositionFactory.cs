@@ -19,7 +19,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Policy;
 public readonly struct ExplanationFromPolicyHigherOrderPropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
-    [MultipleFluentMethods(typeof(WhenTrueOverloads), Priority = -1)]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> trueBecause,
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> trueBecause,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> falseBecause)
 {
     /// <summary>

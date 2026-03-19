@@ -40,7 +40,7 @@ public readonly struct MultiMetadataPropositionFactory<TModel, TMetadata>
     public MultiMetadataPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> predicate,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))] Func<TModel, TMetadata> whenTrue,
-        [FluentMethod("WhenFalseYield", Priority = -1)]Func<TModel, IEnumerable<TMetadata>> whenFalse)
+        [FluentMethod("WhenFalseYield")]Func<TModel, IEnumerable<TMetadata>> whenFalse)
     {
         predicate.ThrowIfNull(nameof(predicate));
         _predicate = predicate;

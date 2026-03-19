@@ -18,7 +18,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Expressio
 public readonly struct ExplanationHigherOrderExpressionTreePropositionFactory<TModel, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,
-    [MultipleFluentMethods(typeof(WhenTrueOverloads), Priority = -1)]Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> trueBecause,
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> trueBecause,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> falseBecause)
 {
     /// <summary>

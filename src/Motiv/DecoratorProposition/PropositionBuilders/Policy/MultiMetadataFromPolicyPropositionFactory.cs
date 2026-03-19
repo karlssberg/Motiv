@@ -43,7 +43,7 @@ public readonly struct MultiMetadataFromPolicyPropositionFactory<TModel, TReplac
     public MultiMetadataFromPolicyPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> spec,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, PolicyResultBase<TMetadata>, TReplacementMetadata> whenTrue,
-        [FluentMethod("WhenFalseYield", Priority = -1)]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
+        [FluentMethod("WhenFalseYield")]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
     {
         _spec = spec;
         _whenTrue = whenTrue.ToEnumerableReturn();

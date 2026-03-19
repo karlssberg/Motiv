@@ -55,7 +55,7 @@ public readonly struct MultiMetadataFromPolicyHigherOrderPropositionFactory<TMod
         [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
         [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, TReplacementMetadata> whenTrue,
-        [FluentMethod("WhenFalseYield", Priority = -1)]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
+        [FluentMethod("WhenFalseYield")]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
     {
         _policy = policy;
         _higherOrderOperation = higherOrderOperation;
