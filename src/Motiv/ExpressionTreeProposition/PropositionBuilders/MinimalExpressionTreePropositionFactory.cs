@@ -10,7 +10,7 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 /// <param name="expression">The expression tree predicate to represent</param>
 /// <typeparam name="TModel">The model type</typeparam>
 /// <typeparam name="TPredicateResult">The predicate type</typeparam>
-[FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+[FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
 public readonly partial struct MinimalExpressionTreePropositionFactory<TModel, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression)
 {

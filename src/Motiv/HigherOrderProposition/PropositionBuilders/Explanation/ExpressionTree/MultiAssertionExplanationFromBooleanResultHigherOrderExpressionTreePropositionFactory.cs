@@ -24,7 +24,7 @@ public readonly struct MultiAssertionExplanationFromBooleanResultHigherOrderExpr
     /// <param name="higherOrderOperation">The higher-order predicate operation.</param>
     /// <param name="trueBecause">The explanation for when the predicate is true.</param>
     /// <param name="falseBecause">The explanation for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionExplanationFromBooleanResultHigherOrderExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,
@@ -45,7 +45,7 @@ public readonly struct MultiAssertionExplanationFromBooleanResultHigherOrderExpr
     /// <param name="higherOrderOperation">The higher-order predicate operation.</param>
     /// <param name="trueBecause">The explanation for when the predicate is true.</param>
     /// <param name="falseBecause">The explanation for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionExplanationFromBooleanResultHigherOrderExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,

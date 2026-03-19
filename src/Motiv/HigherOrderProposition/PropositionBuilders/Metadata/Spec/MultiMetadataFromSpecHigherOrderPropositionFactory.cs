@@ -12,7 +12,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Spec;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the specification.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
 public readonly struct MultiMetadataFromSpecHigherOrderPropositionFactory<TModel, TReplacementMetadata, TMetadata>
 {
     private readonly SpecBase<TModel, TMetadata> _spec;
@@ -29,7 +29,7 @@ public readonly struct MultiMetadataFromSpecHigherOrderPropositionFactory<TModel
     /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataFromSpecHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,
@@ -51,7 +51,7 @@ public readonly struct MultiMetadataFromSpecHigherOrderPropositionFactory<TModel
     /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataFromSpecHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,

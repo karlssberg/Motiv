@@ -23,7 +23,7 @@ public readonly struct MultiMetadataPropositionExpressionTreeFactory<TModel, TMe
     /// <param name="expression">The expression to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataPropositionExpressionTreeFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<TMetadata>> whenTrue,
@@ -40,7 +40,7 @@ public readonly struct MultiMetadataPropositionExpressionTreeFactory<TModel, TMe
     /// <param name="expression">The expression to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataPropositionExpressionTreeFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, TMetadata> whenTrue,

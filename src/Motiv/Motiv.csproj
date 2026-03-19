@@ -21,9 +21,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Motiv.FluentFactory" PrivateAssets="all" />
       <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" PrivateAssets="all" OutputItemType="Analyzer" />
         <ProjectReference Include="..\Motiv.Analyzer\Motiv.Analyzer.csproj" PrivateAssets="all" OutputItemType="Analyzer" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Motiv.FluentFactory" />
     </ItemGroup>
 
 </Project>

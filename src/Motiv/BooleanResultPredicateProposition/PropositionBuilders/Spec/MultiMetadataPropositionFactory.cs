@@ -22,7 +22,7 @@ public readonly struct MultiMetadataPropositionFactory<TModel, TReplacementMetad
     /// <param name="spec">The predicate function that evaluates the model to a <see cref="BooleanResultBase{TMetadata}"/>.</param>
     /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> spec,
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenTrue,
@@ -39,7 +39,7 @@ public readonly struct MultiMetadataPropositionFactory<TModel, TReplacementMetad
     /// <param name="spec">The predicate function that evaluates the model to a <see cref="BooleanResultBase{TMetadata}"/>.</param>
     /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> spec,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<TMetadata>, TReplacementMetadata> whenTrue,

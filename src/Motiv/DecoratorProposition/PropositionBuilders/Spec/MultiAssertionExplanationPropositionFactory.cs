@@ -14,7 +14,7 @@ namespace Motiv.DecoratorProposition.PropositionBuilders.Spec;
 /// <param name="falseBecause">The explanation for when the specification is false.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
 public readonly struct MultiAssertionExplanationPropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
     [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> trueBecause,

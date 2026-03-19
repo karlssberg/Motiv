@@ -26,7 +26,7 @@ public readonly struct MultiAssertionExplanationHigherOrderPropositionFactory<TM
     /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionExplanationHigherOrderPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> resultResolver,
         [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,

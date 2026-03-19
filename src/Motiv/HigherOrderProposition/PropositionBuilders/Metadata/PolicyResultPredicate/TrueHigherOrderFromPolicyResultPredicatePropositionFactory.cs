@@ -13,7 +13,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.PolicyResult
 /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
 public readonly partial struct TrueHigherOrderFromPolicyResultPredicatePropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation)

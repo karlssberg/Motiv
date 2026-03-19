@@ -21,7 +21,7 @@ public readonly struct MultiMetadataPropositionFactory<TModel, TMetadata>
     /// <param name="predicate">The predicate to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> predicate,
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenTrue,
@@ -36,7 +36,7 @@ public readonly struct MultiMetadataPropositionFactory<TModel, TMetadata>
     /// <summary>
     /// A factory for creating propositions based on the supplied predicate and metadata factories.
     /// </summary>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> predicate,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))] Func<TModel, TMetadata> whenTrue,

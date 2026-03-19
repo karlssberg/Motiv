@@ -28,7 +28,7 @@ public readonly struct MultiMetadataFromBooleanResultHigherOrderPropositionFacto
     /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataFromBooleanResultHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> resultResolver,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,
@@ -50,7 +50,7 @@ public readonly struct MultiMetadataFromBooleanResultHigherOrderPropositionFacto
     /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataFromBooleanResultHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> resultResolver,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,

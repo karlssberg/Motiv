@@ -10,7 +10,7 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Policy;
 /// <param name="predicate">The predicate function that evaluates the model to a <see cref="PolicyResultBase{TMetadata}" />.</param>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the underlying boolean result.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
 public readonly partial struct MinimalPolicyResultPredicatePropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> predicate)
 {

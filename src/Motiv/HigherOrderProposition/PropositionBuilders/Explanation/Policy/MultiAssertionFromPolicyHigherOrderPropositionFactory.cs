@@ -27,7 +27,7 @@ public readonly struct MultiAssertionFromPolicyHigherOrderPropositionFactory<TMo
     /// <param name="higherOrderOperation">The higher-order predicate operation.</param>
     /// <param name="whenTrue">The explanation for when the policy is true.</param>
     /// <param name="whenFalse">The explanation for when the policy is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionFromPolicyHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
         [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
@@ -49,7 +49,7 @@ public readonly struct MultiAssertionFromPolicyHigherOrderPropositionFactory<TMo
     /// <param name="higherOrderOperation">The higher-order predicate operation.</param>
     /// <param name="whenTrue">The explanation for when the policy is true.</param>
     /// <param name="whenFalse">The explanation for when the policy is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionFromPolicyHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
         [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,

@@ -8,7 +8,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// <param name="trueBecause">The explanation for when the predicate is true.</param>
 /// <param name="falseBecause">The explanation for when the predicate is false.</param>
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
-[FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+[FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
 public readonly struct MultiAssertionExplanationWithNamePropositionFactory<TModel>(
     [FluentMethod("Build")]Func<TModel, bool> predicate,
     [FluentMethod("WhenTrue")]string trueBecause,

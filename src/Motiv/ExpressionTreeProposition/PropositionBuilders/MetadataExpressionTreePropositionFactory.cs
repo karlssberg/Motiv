@@ -14,7 +14,7 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
 /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
-[FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+[FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
 public readonly struct MetadataExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
     [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, TMetadata> whenTrue,

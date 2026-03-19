@@ -28,7 +28,7 @@ public readonly struct MultiMetadataFromPolicyResultHigherOrderPropositionFactor
     /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataFromPolicyResultHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
         [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
@@ -50,7 +50,7 @@ public readonly struct MultiMetadataFromPolicyResultHigherOrderPropositionFactor
     /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataFromPolicyResultHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
         [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,

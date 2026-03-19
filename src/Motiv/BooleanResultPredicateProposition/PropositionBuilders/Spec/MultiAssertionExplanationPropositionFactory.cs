@@ -23,7 +23,7 @@ public readonly struct MultiAssertionExplanationPropositionFactory<TModel, TMeta
     /// <param name="predicate">The predicate to use for the specification.</param>
     /// <param name="trueBecause">The explanation for when the predicate is true.</param>
     /// <param name="falseBecause">The explanation for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionExplanationPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> predicate,
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>> trueBecause,

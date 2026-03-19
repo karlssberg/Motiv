@@ -26,7 +26,7 @@ public readonly struct MultiAssertionExplanationExpressionTreePropositionFactory
     /// <param name="expression">The expression to use for the specification.</param>
     /// <param name="trueBecause">The explanation to use when the expression evaluates to true.</param>
     /// <param name="falseBecause">The explanation to use when the expression evaluates to false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionExplanationExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> trueBecause,
@@ -45,7 +45,7 @@ public readonly struct MultiAssertionExplanationExpressionTreePropositionFactory
     /// <param name="expression">The expression to use for the specification.</param>
     /// <param name="trueBecause">The explanation to use when the expression evaluates to true.</param>
     /// <param name="falseBecause">The explanation to use when the expression evaluates to false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionExplanationExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
         [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, string> trueBecause,

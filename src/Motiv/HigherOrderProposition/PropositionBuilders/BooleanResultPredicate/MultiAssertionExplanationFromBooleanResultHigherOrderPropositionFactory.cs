@@ -23,7 +23,7 @@ public readonly struct MultiAssertionExplanationFromBooleanResultHigherOrderProp
     /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
     /// <param name="trueBecause">The explanation for when the predicate is true.</param>
     /// <param name="falseBecause">The explanation for when the predicate is false.</param>
-    [FluentConstructor(typeof(Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionExplanationFromBooleanResultHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> resultResolver,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,

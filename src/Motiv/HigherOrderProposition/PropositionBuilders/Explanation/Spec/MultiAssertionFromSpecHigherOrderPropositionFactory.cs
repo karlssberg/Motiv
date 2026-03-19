@@ -27,7 +27,7 @@ public readonly struct MultiAssertionFromSpecHigherOrderPropositionFactory<TMode
     /// <param name="higherOrderOperation">The higher-order predicate operation.</param>
     /// <param name="whenTrue">The explanation for when the predicate is true.</param>
     /// <param name="whenFalse">The explanation for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionFromSpecHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,
@@ -49,7 +49,7 @@ public readonly struct MultiAssertionFromSpecHigherOrderPropositionFactory<TMode
     /// <param name="higherOrderOperation">The higher-order predicate operation.</param>
     /// <param name="whenTrue">The explanation for when the predicate is true.</param>
     /// <param name="whenFalse">The explanation for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionFromSpecHigherOrderPropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,

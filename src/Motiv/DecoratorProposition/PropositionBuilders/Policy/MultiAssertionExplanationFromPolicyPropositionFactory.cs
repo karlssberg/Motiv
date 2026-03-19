@@ -25,7 +25,7 @@ public readonly struct MultiAssertionExplanationFromPolicyPropositionFactory<TMo
     /// <param name="policy">The policy to decorate.</param>
     /// <param name="trueBecause">The explanation for when the policy is true.</param>
     /// <param name="falseBecause">The explanation for when the policy is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionExplanationFromPolicyPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> trueBecause,

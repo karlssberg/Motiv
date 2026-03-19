@@ -29,7 +29,7 @@ public readonly struct MultiMetadataFromSpecHigherOrderExpressionTreeProposition
     /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,
@@ -51,7 +51,7 @@ public readonly struct MultiMetadataFromSpecHigherOrderExpressionTreeProposition
     /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory(
         [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
         [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,

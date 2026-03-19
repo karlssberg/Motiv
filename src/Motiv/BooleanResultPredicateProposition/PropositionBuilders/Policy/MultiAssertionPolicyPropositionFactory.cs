@@ -23,7 +23,7 @@ public readonly struct MultiAssertionPolicyPropositionFactory<TModel, TMetadata>
     /// <param name="predicate">The predicate to use for the specification.</param>
     /// <param name="trueBecause">The explanation for when the predicate is true.</param>
     /// <param name="falseBecause">The explanation for when the predicate is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), Options = FluentOptions.NoCreateMethod)]
+    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
     public MultiAssertionPolicyPropositionFactory(
         [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> predicate,
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>> trueBecause,
