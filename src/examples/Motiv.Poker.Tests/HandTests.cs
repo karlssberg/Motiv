@@ -66,7 +66,7 @@ public class HandTests
     [InlineData(EightHighStraight)]
     [InlineData(SevenHighStraight)]
     [InlineData(SixHighStraight)]
-    [InlineData(FiveHighStraightWheelorBicycle)]
+    [InlineData(FiveHighStraightWheelOrBicycle)]
     public void Should_evaluate_a_straight(string straightRanks)
     {
         var cards = straightRanks
@@ -144,7 +144,7 @@ public class HandTests
     [InlineAutoData(EightHighStraight)]
     [InlineAutoData(SevenHighStraight)]
     [InlineAutoData(SixHighStraight)]
-    [InlineAutoData(FiveHighStraightWheelorBicycle)]
+    [InlineAutoData(FiveHighStraightWheelOrBicycle)]
     public void Should_evaluate_a_straight_flush(string handRanks, Suit flushSuit)
     {
         var hand = new Hand(handRanks

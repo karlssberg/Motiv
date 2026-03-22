@@ -11,5 +11,5 @@ public static class HandRanks
     public const string EightHighStraight = "8, 7, 6, 5, 4";
     public const string SevenHighStraight = "7, 6, 5, 4, 3";
     public const string SixHighStraight = "6, 5, 4, 3, 2";
-    public const string FiveHighStraightWheelorBicycle = "5, 4, 3, 2, A";
+    public const string FiveHighStraightWheelOrBicycle = "5, 4, 3, 2, A";
 }
