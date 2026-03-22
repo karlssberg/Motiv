@@ -26,7 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Motiv.FluentFactory" />
+      <PackageReference Include="Converj" />
     </ItemGroup>
 
 </Project>

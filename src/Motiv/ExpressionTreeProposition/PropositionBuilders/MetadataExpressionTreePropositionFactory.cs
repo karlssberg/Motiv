@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 using Motiv.ExpressionTreeProposition.PropositionBuilders.Overloads;
-using Motiv.FluentFactory.Attributes;
+using Converj.Attributes;
 using Motiv.Shared;
 
 namespace Motiv.ExpressionTreeProposition.PropositionBuilders;

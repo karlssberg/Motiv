@@ -1,4 +1,4 @@
-using Motiv.FluentFactory.Attributes;
+using Converj.Attributes;
 using Motiv.HigherOrderProposition.BooleanResultPredicate;
 using Motiv.Shared;
 

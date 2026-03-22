@@ -1,4 +1,4 @@
-using Motiv.FluentFactory.Attributes;
+using Converj.Attributes;
 using Motiv.Shared;
 
 namespace Motiv.DecoratorProposition.PropositionBuilders.Policy;

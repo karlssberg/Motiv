@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using Motiv.FluentFactory.Attributes;
+using Converj.Attributes;
 using Motiv.HigherOrderProposition.ExpressionTree;
 using Motiv.Shared;
 

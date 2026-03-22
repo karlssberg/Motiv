@@ -1,4 +1,4 @@
-using Motiv.FluentFactory.Attributes;
+using Converj.Attributes;
 
 namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Overloads;
 
