@@ -16,11 +16,11 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Spec;
 /// <param name="whenTrue">The explanation for when the predicate is true.</param>
 /// <param name="whenFalse">The explanation for when the predicate is false.</param>
 [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
-public readonly struct MultiAssertionFromSpecHigherOrderPropositionFactory<TModel, TMetadata>(
+public readonly struct MultiAssertionFromSpecHigherOrderWithSingularWhenTruePropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,
-    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, IEnumerable<string>> whenTrue,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, IEnumerable<string>> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string> whenTrue,
+    [FluentMethod("WhenFalseYield")]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, IEnumerable<string>> whenFalse)
 {
     /// <summary>Creates a specification and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>
@@ -32,7 +32,7 @@ public readonly struct MultiAssertionFromSpecHigherOrderPropositionFactory<TMode
         return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, string, TMetadata>(
             spec.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
-            whenTrue,
+            whenTrue.ToEnumerableReturn(),
             whenFalse,
             new SpecDescription(statement, spec.Description) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);

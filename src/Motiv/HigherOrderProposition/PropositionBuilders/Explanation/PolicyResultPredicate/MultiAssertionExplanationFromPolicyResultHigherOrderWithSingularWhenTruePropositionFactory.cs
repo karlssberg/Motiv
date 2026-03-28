@@ -14,11 +14,11 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.PolicyRes
 /// <param name="trueBecause">The explanation for when the predicate is true.</param>
 /// <param name="falseBecause">The explanation for when the predicate is false.</param>
 [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
-public readonly struct MultiAssertionExplanationFromPolicyResultHigherOrderPropositionFactory<TModel, TMetadata>(
+public readonly struct MultiAssertionExplanationFromPolicyResultHigherOrderWithSingularWhenTruePropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
-    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> trueBecause,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> falseBecause)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> trueBecause,
+    [FluentMethod("WhenFalseYield")]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> falseBecause)
 {
     /// <summary>
     /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.
@@ -32,7 +32,7 @@ public readonly struct MultiAssertionExplanationFromPolicyResultHigherOrderPropo
         return new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, string, TMetadata>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
-            trueBecause,
+            trueBecause.ToEnumerableReturn(),
             falseBecause,
             new SpecDescription(statement) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);

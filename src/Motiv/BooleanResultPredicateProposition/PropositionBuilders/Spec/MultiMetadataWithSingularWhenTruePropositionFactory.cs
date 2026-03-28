@@ -2,22 +2,22 @@ using Motiv.BooleanResultPredicateProposition.PropositionBuilders.Overloads;
 using Converj.Attributes;
 using Motiv.Shared;
 
-namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Policy;
+namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Spec;
 
 /// <summary>
-/// A builder for creating propositions using a predicate function that returns a <see cref="PolicyResultBase{TMetadata}"/>.
+/// A builder for creating propositions using a predicate function that returns a <see cref="BooleanResultBase{TMetadata}"/>.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
-/// <param name="spec">The predicate function that evaluates the model to a <see cref="PolicyResultBase{TMetadata}"/>.</param>
-/// <param name="whenTrue">The metadata to yield when the predicate is true.</param>
-/// <param name="whenFalse">The metadata to yield when the predicate is false.</param>
+/// <param name="spec">The predicate function that evaluates the model to a <see cref="BooleanResultBase{TMetadata}"/>.</param>
+/// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
+/// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
 [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
-public readonly struct MultiMetadataFromPolicyResultPropositionFactory<TModel, TReplacementMetadata, TMetadata>(
-    [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> spec,
-    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenTrue,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
+public readonly struct MultiMetadataWithSingularWhenTruePropositionFactory<TModel, TReplacementMetadata, TMetadata>(
+    [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> spec,
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<TMetadata>, TReplacementMetadata> whenTrue,
+    [FluentMethod("WhenFalseYield")]Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
@@ -26,9 +26,9 @@ public readonly struct MultiMetadataFromPolicyResultPropositionFactory<TModel, T
     public SpecBase<TModel, TReplacementMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new PolicyResultPredicateMultiValueProposition<TModel, TReplacementMetadata, TMetadata>(
+        return new BooleanResultPredicateMultiValueProposition<TModel, TReplacementMetadata, TMetadata>(
             spec,
-            whenTrue,
+            whenTrue.ToEnumerableReturn(),
             whenFalse,
             new SpecDescription(statement) { HasExplicitStatement = true });
     }

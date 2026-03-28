@@ -13,10 +13,10 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
 /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
 [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
-public readonly struct MultiMetadataPropositionFactory<TModel, TMetadata>(
+public readonly struct MultiMetadataWithSingularWhenTruePropositionFactory<TModel, TMetadata>(
     [FluentMethod("Build")]Func<TModel, bool> predicate,
-    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenTrue,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))] Func<TModel, TMetadata> whenTrue,
+    [FluentMethod("WhenFalseYield")]Func<TModel, IEnumerable<TMetadata>> whenFalse)
 {
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
@@ -29,7 +29,7 @@ public readonly struct MultiMetadataPropositionFactory<TModel, TMetadata>(
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new MultiValueProposition<TModel, TMetadata>(
             predicate,
-            whenTrue,
+            whenTrue.ToEnumerableReturn(),
             whenFalse,
             new SpecDescription(statement) { HasExplicitStatement = true });
     }

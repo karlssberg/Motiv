@@ -14,10 +14,10 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Policy;
 /// <param name="whenTrue">The metadata to yield when the predicate is true.</param>
 /// <param name="whenFalse">The metadata to yield when the predicate is false.</param>
 [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
-public readonly struct MultiMetadataFromPolicyResultPropositionFactory<TModel, TReplacementMetadata, TMetadata>(
+public readonly struct MultiMetadataFromPolicyResultWithSingularWhenTruePropositionFactory<TModel, TReplacementMetadata, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> spec,
-    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenTrue,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, PolicyResultBase<TMetadata>, TReplacementMetadata> whenTrue,
+    [FluentMethod("WhenFalseYield")]Func<TModel, PolicyResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
@@ -28,7 +28,7 @@ public readonly struct MultiMetadataFromPolicyResultPropositionFactory<TModel, T
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new PolicyResultPredicateMultiValueProposition<TModel, TReplacementMetadata, TMetadata>(
             spec,
-            whenTrue,
+            whenTrue.ToEnumerableReturn(),
             whenFalse,
             new SpecDescription(statement) { HasExplicitStatement = true });
     }

@@ -16,11 +16,11 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanPredicate;
 /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
 /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
 [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
-public readonly struct MultiMetadataFromBooleanHigherOrderPropositionFactory<TModel, TMetadata>(
+public readonly struct MultiMetadataFromBooleanHigherOrderWithSingularWhenTruePropositionFactory<TModel, TMetadata>(
     [FluentMethod("Build")]Func<TModel, bool> resultResolver,
     [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,
-    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenTrue,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> whenTrue,
+    [FluentMethod("WhenFalseYield")]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenFalse)
 {
     /// <summary>Creates a specification and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>
@@ -32,7 +32,7 @@ public readonly struct MultiMetadataFromBooleanHigherOrderPropositionFactory<TMo
         return new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel,TMetadata>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
-            whenTrue,
+            whenTrue.ToEnumerableReturn(),
             whenFalse,
             new SpecDescription(statement) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);

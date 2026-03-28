@@ -16,10 +16,10 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 /// <param name="trueBecause">The explanation to use when the expression evaluates to true.</param>
 /// <param name="falseBecause">The explanation to use when the expression evaluates to false.</param>
 [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
-public readonly struct MultiAssertionExplanationExpressionTreePropositionFactory<TModel, TPredicateResult>(
+public readonly struct MultiAssertionExplanationWithSingularWhenTrueExpressionTreePropositionFactory<TModel, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
-    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> trueBecause,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> falseBecause)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, string> trueBecause,
+    [FluentMethod("WhenFalseYield")]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> falseBecause)
 {
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.
@@ -30,7 +30,7 @@ public readonly struct MultiAssertionExplanationExpressionTreePropositionFactory
     public SpecBase<TModel, string> Create(string statement) =>
         new ExpressionTreeMultiMetadataProposition<TModel, string, TPredicateResult>(
             expression,
-            trueBecause,
+            trueBecause.ToEnumerableReturn(),
             falseBecause,
             new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
 }

@@ -1,8 +1,8 @@
 using Converj.Attributes;
-using Motiv.HigherOrderProposition.BooleanPredicate;
+using Motiv.HigherOrderProposition.BooleanResultPredicate;
 using Motiv.Shared;
 
-namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanPredicate;
+namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanResultPredicate;
 
 /// <summary>
 /// A factory for creating propositions based on a predicate and metadata factories. This is particularly useful
@@ -10,29 +10,30 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanPredicate;
 /// every possibility, so instead it is done on a case-by-case basis.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-/// <typeparam name="TMetadata">The type of the metadata associated with the specification.</typeparam>
+/// <typeparam name="TReplacementMetadata">The type of the metadata associated with the specification.</typeparam>
+/// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
 /// <param name="resultResolver">The predicate to use for the specification.</param>
 /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
 /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
 /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
 [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
-public readonly struct MultiMetadataFromBooleanHigherOrderPropositionFactory<TModel, TMetadata>(
-    [FluentMethod("Build")]Func<TModel, bool> resultResolver,
-    [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,
-    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenTrue,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenFalse)
+public readonly struct MultiMetadataFromBooleanResultHigherOrderWithSingularWhenTruePropositionFactory<TModel, TReplacementMetadata, TMetadata>(
+    [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> resultResolver,
+    [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, TReplacementMetadata> whenTrue,
+    [FluentMethod("WhenFalseYield")]Func<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, IEnumerable<TReplacementMetadata>> whenFalse)
 {
     /// <summary>Creates a specification and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
-    public SpecBase<IEnumerable<TModel>, TMetadata> Create(string statement)
+    public SpecBase<IEnumerable<TModel>, TReplacementMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel,TMetadata>(
+        return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TReplacementMetadata, TMetadata>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
-            whenTrue,
+            whenTrue.ToEnumerableReturn(),
             whenFalse,
             new SpecDescription(statement) { HasExplicitStatement = true },
             higherOrderOperation.CauseSelector);

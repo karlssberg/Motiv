@@ -15,10 +15,10 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
 /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
 [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
-public readonly struct MultiMetadataPropositionExpressionTreeFactory<TModel, TMetadata, TPredicateResult>(
+public readonly struct MultiMetadataWithSingularWhenTruePropositionExpressionTreeFactory<TModel, TMetadata, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
-    [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<TMetadata>> whenTrue,
-    [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<TModel, BooleanResultBase<string>, IEnumerable<TMetadata>> whenFalse)
+    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, TMetadata> whenTrue,
+    [FluentMethod("WhenFalseYield")]Func<TModel, BooleanResultBase<string>, IEnumerable<TMetadata>> whenFalse)
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
@@ -27,7 +27,7 @@ public readonly struct MultiMetadataPropositionExpressionTreeFactory<TModel, TMe
     public SpecBase<TModel, TMetadata> Create(string statement) =>
         new ExpressionTreeMultiMetadataProposition<TModel, TMetadata, TPredicateResult>(
             expression,
-            whenTrue,
+            whenTrue.ToEnumerableReturn(),
             whenFalse,
             new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
 }
