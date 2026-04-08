@@ -14,7 +14,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Expressio
 /// <param name="falseBecause">The explanation for when the predicate is false.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TPredicateResult">The return type of the predicate function.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MultiAssertionExplanationFromBooleanResultWithNameHigherOrderExpressionTreePropositionFactory<TModel, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,

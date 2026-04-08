@@ -10,7 +10,7 @@ namespace Motiv.DecoratorProposition.PropositionBuilders.Spec;
 /// <param name="spec">The proposition to decorate.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly partial struct MinimalSpecDecoratorFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec)
 {

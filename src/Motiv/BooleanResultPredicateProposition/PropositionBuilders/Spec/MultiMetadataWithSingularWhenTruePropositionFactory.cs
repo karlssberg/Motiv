@@ -13,7 +13,7 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Spec;
 /// <param name="spec">The predicate function that evaluates the model to a <see cref="BooleanResultBase{TMetadata}"/>.</param>
 /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
 /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MultiMetadataWithSingularWhenTruePropositionFactory<TModel, TReplacementMetadata, TMetadata>(
     [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> spec,
     [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<TMetadata>, TReplacementMetadata> whenTrue,

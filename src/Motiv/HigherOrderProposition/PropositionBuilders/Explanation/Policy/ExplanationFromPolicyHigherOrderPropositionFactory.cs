@@ -15,11 +15,11 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Policy;
 /// <param name="falseBecause">The explanation for when the predicate is false.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct ExplanationFromPolicyHigherOrderPropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
-    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> trueBecause,
+    [FluentMethod("WhenTrue")]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> trueBecause,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> falseBecause)
 {
     /// <summary>

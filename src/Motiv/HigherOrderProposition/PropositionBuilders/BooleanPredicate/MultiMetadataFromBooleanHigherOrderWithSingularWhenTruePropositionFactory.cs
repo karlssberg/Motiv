@@ -15,7 +15,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanPredicate;
 /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
 /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
 /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-[FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MultiMetadataFromBooleanHigherOrderWithSingularWhenTruePropositionFactory<TModel, TMetadata>(
     [FluentMethod("Build")]Func<TModel, bool> resultResolver,
     [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,

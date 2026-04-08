@@ -14,7 +14,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.BooleanPredicate;
 /// <param name="trueBecause">The explanation for when the predicate is true.</param>
 /// <param name="falseBecause">The explanation for when the predicate is false.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-[FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct ExplanationFromBooleanPredicateWithNameHigherOrderPropositionFactory<TModel>(
     [FluentMethod("Build")]Func<TModel, bool> predicate,
     [MultipleFluentMethods(typeof(HigherOrderBooleanPredicateSpecMethods))]HigherOrderSpecBooleanPredicateOperation<TModel> higherOrderOperation,

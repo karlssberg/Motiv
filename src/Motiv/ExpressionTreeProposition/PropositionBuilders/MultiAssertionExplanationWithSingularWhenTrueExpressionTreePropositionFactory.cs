@@ -15,10 +15,10 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 /// <param name="expression">The expression to use for the specification.</param>
 /// <param name="trueBecause">The explanation to use when the expression evaluates to true.</param>
 /// <param name="falseBecause">The explanation to use when the expression evaluates to false.</param>
-[FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MultiAssertionExplanationWithSingularWhenTrueExpressionTreePropositionFactory<TModel, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
-    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, string> trueBecause,
+    [MultipleFluentMethods(typeof(WhenTrueLambdaOverloads))]Func<TModel, BooleanResultBase<string>, string> trueBecause,
     [FluentMethod("WhenFalseYield")]Func<TModel, BooleanResultBase<string>, IEnumerable<string>> falseBecause)
 {
     /// <summary>

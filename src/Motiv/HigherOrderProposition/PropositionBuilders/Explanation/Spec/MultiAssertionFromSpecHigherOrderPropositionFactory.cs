@@ -15,7 +15,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Spec;
 /// <param name="higherOrderOperation">The higher-order predicate operation.</param>
 /// <param name="whenTrue">The explanation for when the predicate is true.</param>
 /// <param name="whenFalse">The explanation for when the predicate is false.</param>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MultiAssertionFromSpecHigherOrderPropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,

@@ -17,7 +17,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.ExpressionTr
 /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
 /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
 /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MultiMetadataFromSpecHigherOrderWithSingularWhenTrueExpressionTreePropositionFactory<TModel, TMetadata, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation,

@@ -13,7 +13,7 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 /// <param name="falseBecause">The explanation to use when the expression evaluates to false.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TPredicateResult">The return type of the predicate expression.</typeparam>
-[FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct ExplanationWithNameExpressionTreePropositionFactory<TModel, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
     [FluentMethod("WhenTrue")]string trueBecause,

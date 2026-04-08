@@ -15,11 +15,11 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Explanation.Policy;
 /// <param name="higherOrderOperation">The higher-order predicate operation.</param>
 /// <param name="whenTrue">The explanation for when the policy is true.</param>
 /// <param name="whenFalse">The explanation for when the policy is false.</param>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MultiAssertionFromPolicyHigherOrderWithSingularWhenTruePropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyBuildOverloads))]PolicyBase<TModel, TMetadata> policy,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,
-    [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> whenTrue,
+    [FluentMethod("WhenTrue")]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string> whenTrue,
     [FluentMethod("WhenFalseYield")]Func<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>> whenFalse)
 {
     /// <summary>Creates a specification and names it with the propositional statement provided.</summary>

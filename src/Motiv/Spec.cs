@@ -93,5 +93,5 @@ public class Spec<TModel> : SpecBase<TModel, string>
 }
 
 /// <summary>Creates propositions using a fluent API.</summary>
-[FluentFactory]
+[FluentRoot]
 public static partial class Spec;

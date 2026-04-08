@@ -16,7 +16,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.PolicyResult
 /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
 /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
 /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MultiMetadataFromPolicyResultHigherOrderPropositionFactory<TModel, TReplacementMetadata, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,

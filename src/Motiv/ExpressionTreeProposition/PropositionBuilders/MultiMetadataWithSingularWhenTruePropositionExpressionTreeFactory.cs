@@ -14,7 +14,7 @@ namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
 /// <param name="expression">The expression to use for the specification.</param>
 /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
 /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
-[FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MultiMetadataWithSingularWhenTruePropositionExpressionTreeFactory<TModel, TMetadata, TPredicateResult>(
     [FluentMethod("From")]Expression<Func<TModel, TPredicateResult>> expression,
     [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<string>, TMetadata> whenTrue,

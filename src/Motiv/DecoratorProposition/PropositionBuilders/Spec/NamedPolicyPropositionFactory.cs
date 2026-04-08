@@ -21,7 +21,7 @@ public readonly struct NamedPolicyPropositionFactory<TModel, TMetadata>
     /// <param name="spec">The specification to decorate.</param>
     /// <param name="trueBecause">The explanation for when the policy is true.</param>
     /// <param name="falseBecause">The explanation for when the policy is false.</param>
-    [FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+    [FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
     public NamedPolicyPropositionFactory(
         [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
         [FluentMethod("WhenTrue")]string trueBecause,

@@ -16,7 +16,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.PolicyResult
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the specification.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the specification.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MetadataFromPolicyResultHigherOrderPropositionFactory<TModel, TReplacementMetadata, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> resultResolver,
     [MultipleFluentMethods(typeof(HigherOrderPredicatePolicyMethods))]HigherOrderPolicyPredicateOperation<TModel, TMetadata> higherOrderOperation,

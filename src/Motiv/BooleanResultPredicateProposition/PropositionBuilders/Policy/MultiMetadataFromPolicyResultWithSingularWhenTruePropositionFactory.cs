@@ -13,7 +13,7 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Policy;
 /// <param name="spec">The predicate function that evaluates the model to a <see cref="PolicyResultBase{TMetadata}"/>.</param>
 /// <param name="whenTrue">The metadata to yield when the predicate is true.</param>
 /// <param name="whenFalse">The metadata to yield when the predicate is false.</param>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MultiMetadataFromPolicyResultWithSingularWhenTruePropositionFactory<TModel, TReplacementMetadata, TMetadata>(
     [MultipleFluentMethods(typeof(PolicyResultBuildOverloads))]Func<TModel, PolicyResultBase<TMetadata>> spec,
     [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, PolicyResultBase<TMetadata>, TReplacementMetadata> whenTrue,

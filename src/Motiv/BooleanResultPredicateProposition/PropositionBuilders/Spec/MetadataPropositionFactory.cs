@@ -13,7 +13,7 @@ namespace Motiv.BooleanResultPredicateProposition.PropositionBuilders.Spec;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TReplacementMetadata">The type of the metadata associated with the proposition.</typeparam>
 /// <typeparam name="TMetadata">The type of the underlying metadata associated with the proposition.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MetadataPropositionFactory<TModel, TReplacementMetadata, TMetadata>(
     [MultipleFluentMethods(typeof(BooleanResultBuildOverloads))]Func<TModel, BooleanResultBase<TMetadata>> spec,
     [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, BooleanResultBase<TMetadata>, TReplacementMetadata> whenTrue,

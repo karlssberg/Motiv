@@ -20,7 +20,7 @@ public readonly struct MultiAssertionExplanationPropositionFactory<TModel>
     /// <param name="predicate">The predicate to use for the specification.</param>
     /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
     /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
-    [FluentConstructor(typeof(Spec), CreateMethod = CreateMethod.None)]
+    [FluentTarget(typeof(Spec), TerminalMethod = TerminalMethod.None)]
     public MultiAssertionExplanationPropositionFactory(
         [FluentMethod("Build")]Func<TModel, bool> predicate,
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))] Func<TModel, IEnumerable<string>> whenTrue,

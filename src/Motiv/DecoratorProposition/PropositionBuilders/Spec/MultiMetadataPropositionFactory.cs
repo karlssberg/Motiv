@@ -13,7 +13,7 @@ namespace Motiv.DecoratorProposition.PropositionBuilders.Spec;
 /// <param name="spec">The specification to decorate.</param>
 /// <param name="whenTrue">The metadata factory for the proposition when the predicate is true.</param>
 /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MultiMetadataPropositionFactory<TModel, TReplacementMetadata, TMetadata>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
     [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TReplacementMetadata>> whenTrue,

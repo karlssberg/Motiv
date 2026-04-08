@@ -16,7 +16,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Spec;
 /// <param name="higherOrderOperation">The higher-order operation to use for the specification.</param>
 /// <param name="whenTrue">The metadata factory for when the predicate is true.</param>
 /// <param name="whenFalse">The metadata factory for when the predicate is false.</param>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MultiMetadataFromSpecHigherOrderWithSingularWhenTruePropositionFactory<TModel, TReplacementMetadata, TMetadata>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation,

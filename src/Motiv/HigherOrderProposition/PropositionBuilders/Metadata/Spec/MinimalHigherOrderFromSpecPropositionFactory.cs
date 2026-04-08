@@ -12,7 +12,7 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders.Metadata.Spec;
 /// <param name="higherOrderOperation">The higher-order predicate operation.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TModel, TMetadata>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, TMetadata> spec,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, TMetadata> higherOrderOperation)
@@ -46,7 +46,7 @@ public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TMod
 /// <param name="spec">The specification.</param>
 /// <param name="higherOrderOperation">The higher-order predicate operation.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-[FluentConstructor(typeof(Motiv.Spec), CreateMethod = CreateMethod.None)]
+[FluentTarget(typeof(Motiv.Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct MinimalHigherOrderFromSpecPropositionFactory<TModel>(
     [MultipleFluentMethods(typeof(SpecBuildOverloads))]SpecBase<TModel, string> spec,
     [MultipleFluentMethods(typeof(HigherOrderPredicateSpecMethods))]HigherOrderSpecPredicateOperation<TModel, string> higherOrderOperation)
