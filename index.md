@@ -38,7 +38,7 @@ var result = isInRangeAndEven.Evaluate(11);
 
 result.Satisfied;  // false
 result.Assertions; // ["n > 10", "n % 2 != 0"]
-result.Reason;     // "¬in range and even"
+result.Reason;     // "in range and even == false"
 ```
 
 

@@ -1,8 +1,8 @@
 # Proposition Visibility
 
-### Statement
+### Name
 
-The `Statement` property will provide a simplified high-level representation of the proposition, while the
+The `Name` property will provide a simplified high-level representation of the proposition, while the
 `Expression` will go into more detail about the structure.
 
 ```csharp
@@ -12,7 +12,7 @@ var specC = Spec.Build((bool b) => !b).Create("c");
 
 var spec = specA & !(specB | specC);
 
-spec.Statement; // "a & !(¬b | ¬c)"
+spec.Name; // "a & !(b | c)"
 ```
 
 ### Expression

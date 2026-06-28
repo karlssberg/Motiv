@@ -11,12 +11,12 @@ The most concise form. Uses only a predicate and a propositional statement (name
 
 ```csharp
 var isEven = Spec.Build((int n) => n % 2 == 0).Create("is even");
-// true:  Assertions = ["is even"]
-// false: Assertions = ["¬is even"]  (auto-negated)
+// true:  Assertions = ["is even == true"]
+// false: Assertions = ["is even == false"]
 ```
 
-- No explicit WhenTrue/WhenFalse — the name IS the assertion
-- False assertion is auto-negated with `¬` prefix
+- No explicit WhenTrue/WhenFalse — the name is suffixed with `== true` / `== false` to form the assertion
+- The outcome is disambiguated by the `== true` / `== false` suffix
 - Creates a **Policy** (single assertion type)
 
 ### 2. Explanation Proposition
@@ -138,7 +138,7 @@ Spec.Build(input)
 
 1. **Explanation propositions**: Assertions come from WhenTrue/WhenFalse strings directly
 2. **Metadata propositions**: Assertions are `"{name} == true"` or `"{name} == false"` (derived from Create name)
-3. **Minimal propositions**: Same as metadata — `"{name}"` or `"¬{name}"`
+3. **Minimal propositions**: Same as metadata — `"{name} == true"` or `"{name} == false"`
 4. **Compositions**: Aggregated from all contributing operands
 5. **Mixed metadata types**: Falls back to string Assertions when TMetadata types differ across operands
 
