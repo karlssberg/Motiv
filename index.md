@@ -147,8 +147,8 @@ var isEven =
 var result = isEven.Evaluate(2);
 
 result.Satisfied;  // true
-result.Reason;     // "is even"
-result.Assertions; // ["is even"]
+result.Reason;     // "is even == true"
+result.Assertions; // ["is even == true"]
 result.Value;      // { Text: "even" }
 ```
 
