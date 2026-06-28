@@ -175,5 +175,29 @@ To cut a release:
    Release with auto-generated notes.
 
 Tags must be `v`-prefixed (e.g. `v8.1.0`). The first release tag must be
-`v8.0.0` or higher. To validate the pipeline without a real release, push a
-prerelease tag such as `v8.0.0-rc.1`.
+`v8.0.0` or higher.
+
+### Dry run with a prerelease tag
+
+Before cutting a real release — especially the first one through this pipeline —
+validate the whole chain end to end with a prerelease tag. MinVer treats a tag
+like `v8.0.0-rc.1` as a prerelease version, so NuGet flags the package as
+pre-release and never serves it as the default `Install-Package Motiv` result.
+
+1. Push a prerelease tag from the commit you intend to release:
+   ```bash
+   git tag v8.0.0-rc.1
+   git push origin v8.0.0-rc.1
+   ```
+2. Watch the `Release` workflow run. Confirm it: runs the test gate, packs
+   `Motiv` at version `8.0.0-rc.1`, pushes the package and its symbol package to
+   NuGet, and creates a GitHub Release.
+3. Verify the prerelease appears on
+   [nuget.org/packages/Motiv](https://www.nuget.org/packages/Motiv) (it shows
+   only when "Include prerelease" is enabled).
+4. When you're satisfied, cut the real release by tagging the same commit
+   `v8.0.0` (see "To cut a release" above). You can unlist the `-rc` prerelease
+   from NuGet afterwards if you prefer to keep the package page tidy.
+
+Repeat with `-rc.2`, `-rc.3`, etc. if you need further iterations — each is an
+independent prerelease and won't collide with the final `v8.0.0`.
