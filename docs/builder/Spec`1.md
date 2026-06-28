@@ -1,6 +1,11 @@
-### Creating explanation propositions as a spec class
+---
+title: Spec<TModel>
+category: building
+---
 
-### `Spec<TModel>`
+# Creating explanation propositions as a spec class
+
+## `Spec<TModel>`
 
 ```csharp
 public class IsEvenProposition : Spec<int>( // Spec used as base type

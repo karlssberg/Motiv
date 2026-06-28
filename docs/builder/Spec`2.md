@@ -1,6 +1,11 @@
-### Creating metadata propositions as a spec class
+---
+title: Spec<TModel, TMetadata>
+category: building
+---
 
-### `Spec<TModel, TMetadata>`
+# Creating metadata propositions as a spec class
+
+## `Spec<TModel, TMetadata>`
 
 ```csharp
 public class IsEvenProposition : Spec<int, MyMetadata>( // Spec used as base type

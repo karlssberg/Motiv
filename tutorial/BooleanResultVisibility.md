@@ -13,7 +13,7 @@ var specC = Spec.Build((bool b) => !b).Create("c");
 
 var spec = specA & !(specB | specC);
 
-var act = spec.IsSatisfiedBy(true);
+var act = spec.Evaluate(true);
 
 act.Reason; // "a & !(¬b | ¬c)"
 ```
@@ -43,7 +43,7 @@ Below is an example of identifying a _straight flush_ hand in a poker game.
 ```csharp
 var sut = new IsHandStraightFlushProposition();
 
-var act = sut.IsSatisfiedBy(new Hand("KH, QH, JH, 10H, 9H");
+var act = sut.Evaluate(new Hand("KH, QH, JH, 10H, 9H");
 
 act.Justification; // is a straight flush hand
                    //     AND

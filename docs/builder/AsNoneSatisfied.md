@@ -1,4 +1,9 @@
-### None satisfied
+---
+title: AsNoneSatisfied()
+category: building
+---
+
+# None satisfied
 
 ```csharp
 AsNoneSatisfied()

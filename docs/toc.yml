@@ -1,10 +1,15 @@
 ### YamlMime:ManagedReference
 items:
+  - name: Getting Started
+    href: getting-started.md
   - name: Overview
     href: Overview.md
   - name: Builder
     href: builder/toc.yml
   - name: Operators
     href: operators/toc.yml
+  - name: Tap
+    href: tap/toc.yml
   - name: Collections
     href: collections/toc.yml
+

@@ -8,8 +8,8 @@ The `AllFalse()` extension method is used to determine whether all the boolean r
 ```csharp
 IEnumerable<BooleanResult<int, string>> results = 
     [
-        new IsEvenProposition().IsSatisfiedBy(1),
-        new IsGreaterThanProposition(5).IsSatisfiedBy(1)
+        new IsEvenProposition().Evaluate(1),
+        new IsGreaterThanProposition(5).Evaluate(1)
     ];
 
 results.AllFalse();  // true

@@ -1,3 +1,8 @@
+---
+title: AsAtMostNSatisfied()
+category: building
+---
+
 # At most _n_ satisfied
 
 ```csharp

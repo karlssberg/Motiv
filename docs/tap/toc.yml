@@ -1,0 +1,8 @@
+### YamlMime:ManagedReference
+items:
+  - name: Tap()
+    href: Tap.md
+  - name: TapWhenTrue()
+    href: TapWhenTrue.md
+  - name: TapWhenFalse()
+    href: TapWhenFalse.md

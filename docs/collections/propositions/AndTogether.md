@@ -18,6 +18,6 @@ IEnumerable<SpecBase<int>> specs =
 
 var isEvenAndGreaterThanFive = specs.AndTogether();
 
-isEvenAndGreaterThanFive.IsSatisfiedBy(6).Reason;  // "is even & is greater than 5"
-isEvenAndGreaterThanFive.IsSatisfiedBy(3).Reason;  // "is odd & is less than or equal to 5"
+isEvenAndGreaterThanFive.Evaluate(6).Reason;  // "is even & is greater than 5"
+isEvenAndGreaterThanFive.Evaluate(3).Reason;  // "is odd & is less than or equal to 5"
 ```

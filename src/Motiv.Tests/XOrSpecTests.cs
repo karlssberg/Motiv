@@ -1,0 +1,738 @@
+using System.Text.RegularExpressions;
+
+namespace Motiv.Tests;
+
+public class XOrSpecTests
+{
+    [Theory]
+    [InlineAutoData(true, true, false)]
+    [InlineAutoData(true, false, true)]
+    [InlineAutoData(false, true, true)]
+    [InlineAutoData(false, false, false)]
+    public void Should_perform_logical_xor(
+        bool leftResult,
+        bool rightResult,
+        bool expected,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = left ^ right;
+
+        var result = spec.Evaluate(model);
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_yield_metadata(
+        bool leftResult,
+        bool rightResult,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = left ^ right;
+
+        var result = spec.Evaluate(model);
+
+        // Act
+        var act = result.Values.ToList();
+
+        // Assert
+        act.ShouldContain(leftResult);
+        act.ShouldContain(rightResult);
+        act.Count.ShouldBe(leftResult == rightResult ? 1 : 2);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true, "(left == true) ^ (right == true)")]
+    [InlineAutoData(true, false, "(left == true) ^ (right == false)")]
+    [InlineAutoData(false, true, "(left == false) ^ (right == true)")]
+    [InlineAutoData(false, false, "(left == false) ^ (right == false)")]
+    public void Should_serialize_the_result_of_the_xor_operation(
+        bool leftResult,
+        bool rightResult,
+        string expected,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = left ^ right;
+
+        var result = spec.Evaluate(model);
+
+        // Act
+        var act = result.Reason;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_use_the_reason_property_for_ToString(
+        bool leftResult,
+        bool rightResult,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = left ^ right;
+        var result = spec.Evaluate(model);
+
+        // Act
+        var act = result.ToString();
+
+        // Assert
+        act.ShouldBe(result.Reason);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true, "none")]
+    [InlineAutoData(true, false, "left == true")]
+    [InlineAutoData(false, true, "right == true")]
+    [InlineAutoData(false, false, "none")]
+    public void Should_be_able_to_override_the_assertions_to_only_the_true_operand_has_its_output(
+        bool leftResult,
+        bool rightResult,
+        string expected,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = Spec
+            .Build(left ^ right)
+            .WhenTrueYield((_, result) => result.Causes.GetTrueAssertions())
+            .WhenFalse("none")
+            .Create("xor");
+
+        var result = spec.Evaluate(model);
+
+        // Act
+        var act = result.Assertions;
+
+        // Assert
+        act.ShouldBe([expected]);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true, "True ^ True")]
+    [InlineAutoData(true, false, "True ^ False")]
+    [InlineAutoData(false, true, "False ^ True")]
+    [InlineAutoData(false, false, "False ^ False")]
+    public void Should_serialize_the_result_of_the_xor_operation_when_metadata_is_a_string(
+        bool leftResult,
+        bool rightResult,
+        string expected,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var spec = left ^ right;
+
+        var result = spec.Evaluate(model);
+
+        // Act
+        var act = result.Reason;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true, "True ^ True")]
+    [InlineAutoData(true, false, "True ^ False")]
+    [InlineAutoData(false, true, "False ^ True")]
+    [InlineAutoData(false, false, "False ^ False")]
+    public void Should_serializeing_when_using_the_single_generic_specification_type(
+        bool leftResult,
+        bool rightResult,
+        string expected,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var spec = left ^ right;
+
+        var result = spec.Evaluate(model);
+
+        // Act
+        var act = result.Reason;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_provide_a_statement_about_the_specification(bool leftResult, bool rightResult)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var expected = $"{left.Name} ^ {right.Name}";
+
+        var spec = left ^ right;
+
+        // Act
+        var act = spec.Name;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_serialize_specification(bool leftResult, bool rightResult)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var expected = $"{left.Name} ^ {right.Name}";
+
+        var spec = left ^ right;
+
+        // Act
+        var act = spec.ToString();
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_implicitly_obtain_the_statement_from_the_assertion(bool leftResult, bool rightResult)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var expected = $"{left.Name} ^ {right.Name}";
+
+        var spec = left ^ right;
+
+        // Act
+        var act = spec.Name;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, 2)]
+    [InlineAutoData(false, true, 2)]
+    [InlineAutoData(true, false, 2)]
+    [InlineAutoData(true, true, 2)]
+    public void Should_accurately_report_the_number_of_causal_operands(bool left, bool right, int expected,
+        object model)
+    {
+        // Arrange
+        var leftSpec = Spec
+            .Build<object>(_ => left)
+            .Create("left");
+
+        var rightSpec = Spec
+            .Build<object>(_ => right)
+            .Create("right");
+
+        var spec = leftSpec ^ rightSpec;
+
+        var result = spec.Evaluate(model);
+
+        // Act
+        var act = result.Description.CausalOperandCount;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false)]
+    [InlineAutoData(false, true, true)]
+    [InlineAutoData(true, false, true)]
+    [InlineAutoData(true, true, false)]
+    public void Should_perform_OrElse_on_specs_with_different_metadata(
+        bool leftValue,
+        bool rightValue,
+        bool expectedSatisfied,
+        Guid leftTrue,
+        Guid leftFalse,
+        int  rightTrue,
+        int  rightFalse)
+    {
+        // Arrange
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(leftTrue)
+                .WhenFalse(leftFalse)
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(rightTrue)
+                .WhenFalse(rightFalse)
+                .Create("right");
+
+        var spec = left ^ right;
+
+        var result = spec.Evaluate("");
+
+        // Act
+        var act = result.Satisfied;
+
+        // Assert
+        act.ShouldBe(expectedSatisfied);
+    }
+
+    [Theory]
+    [InlineData(false, false, "left == false", "right == false")]
+    [InlineData(false, true, "left == false", "right == true")]
+    [InlineData(true, false, "left == true", "right == false")]
+    [InlineData(true, true, "left == true", "right == true")]
+    public void Should_perform_OrElse_on_specs_with_different_metadata_and_preserve_assertions(
+        bool leftValue,
+        bool rightValue,
+        params string[] expected)
+    {
+        // Arrange
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(new Uri("http://true"))
+                .WhenFalse(new Uri("http://false"))
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(new Regex("true"))
+                .WhenFalse(new Regex("false"))
+                .Create("right");
+
+        var spec = left ^ right;
+
+        var result = spec.Evaluate("");
+
+        // Act
+        var act = result.Assertions;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(false, false, "left == false", "right == false")]
+    [InlineData(false, true, "left == false", "right == true")]
+    [InlineData(true, false, "left == true", "right == false")]
+    [InlineData(true, true, "left == true", "right == true")]
+    public void Should_yield_metadata_as_a_string_when_specs_containing_different_metadata_types_are_composed(
+        bool leftValue,
+        bool rightValue,
+        params string[] expected)
+    {
+        // Arrange
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(new Uri("http://true"))
+                .WhenFalse(new Uri("http://false"))
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(new Regex("true"))
+                .WhenFalse(new Regex("false"))
+                .Create("right");
+
+        var spec = left ^ right;
+
+        var result = spec.Evaluate("");
+
+        // Act
+        var act = result.Values;
+
+        // Assert
+        act.ShouldBe(expected, true);
+    }
+
+    [Fact]
+    public void Should_not_collapse_xor_operators_in_spec_result_description()
+    {
+        // Arrange
+        var first = Spec
+            .Build<bool>(_ => true)
+            .Create("first");
+
+        var second = Spec
+            .Build<bool>(_ => true)
+            .Create("second");
+
+        var third = Spec
+            .Build<bool>(_ => true)
+            .Create("third");
+
+        var fourth = Spec
+            .Build<bool>(_ => true)
+            .Create("fourth");
+
+        var spec = first ^ second ^ third ^ fourth;
+        var result = spec.Evaluate(true);
+
+        // Act
+        var act = result.Justification;
+
+        // Assert
+        act.ShouldBe(
+            """
+            XOR
+                XOR
+                    XOR
+                        first == true
+                        second == true
+                    third == true
+                fourth == true
+            """);
+    }
+
+    [Fact]
+    public void Should_not_collapse_xor_operators_in_spec_result_description_when_grouped()
+    {
+        // Arrange
+        var first = Spec
+            .Build<bool>(_ => true)
+            .Create("first");
+
+        var second = Spec
+            .Build<bool>(_ => true)
+            .Create("second");
+
+        var third = Spec
+            .Build<bool>(_ => true)
+            .Create("third");
+
+        var fourth = Spec
+            .Build<bool>(_ => true)
+            .Create("fourth");
+
+
+        var spec = first ^ second ^ (third ^ fourth);
+
+        var result = spec.Evaluate(true);
+
+        // Act
+        var act = result.Justification;
+
+        // Assert
+        act.ShouldBe(
+            """
+            XOR
+                XOR
+                    first == true
+                    second == true
+                XOR
+                    third == true
+                    fourth == true
+            """);
+    }
+
+    [Fact]
+    public void Should_not_collapse_xor_operators_in_spec_result_description_when_grouped_in_reverse_order()
+    {
+        // Arrange
+        var first = Spec
+            .Build<bool>(_ => true)
+            .Create("first");
+
+        var second = Spec
+            .Build<bool>(_ => true)
+            .Create("second");
+
+        var third = Spec
+            .Build<bool>(_ => true)
+            .Create("third");
+
+        var fourth = Spec
+            .Build<bool>(_ => true)
+            .Create("fourth");
+
+        var spec = first ^ (second ^ (third ^ fourth));
+
+        var result = spec.Evaluate(true);
+
+        // Act
+        var act = result.Justification;
+
+        // Assert
+        act.ShouldBe(
+            """
+            XOR
+                first == true
+                XOR
+                    second == true
+                    XOR
+                        third == true
+                        fourth == true
+            """);
+    }
+
+    [Fact]
+    public void Should_populate_underlying_results_with_metadata()
+    {
+        // Arrange
+        var left = Spec.Build<object>(_ => true).Create("left");
+        var right = Spec.Build<object>(_ => false).Create("right");
+
+        IEnumerable<BooleanResultBase<string>> expected =
+        [
+            left.Evaluate(new object()),
+            right.Evaluate(new object())
+        ];
+
+        var spec = left ^ right;
+        var result = spec.Evaluate(new object());
+
+        // Act
+        var act = result.UnderlyingWithValues;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        XNOR
+            left == true
+            right == true
+        """)]
+    [InlineData(true, false,
+        """
+        XNOR
+            left == true
+            right == false
+        """)]
+    [InlineData(false, true,
+        """
+        XNOR
+            left == false
+            right == true
+        """)]
+    [InlineData(false, false,
+        """
+        XNOR
+            left == false
+            right == false
+        """)]
+
+    public void Should_justify_a_xnor_creation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !(left ^ right);
+
+        var result = spec.Evaluate(false);
+
+        result.Justification.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        XOR
+            left == true
+            right == true
+        """)]
+    [InlineData(true, false,
+        """
+        XOR
+            left == true
+            right == false
+        """)]
+    [InlineData(false, true,
+        """
+        XOR
+            left == false
+            right == true
+        """)]
+    [InlineData(false, false,
+        """
+        XOR
+            left == false
+            right == false
+        """)]
+    public void Should_justify_a_xnor_negation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !!(left ^ right);
+
+        var result = spec.Evaluate(false);
+
+        result.Justification.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        XNOR
+            left == true
+            right == true
+        """)]
+    [InlineData(true, false,
+        """
+        XNOR
+            left == true
+            right == false
+        """)]
+    [InlineData(false, true,
+        """
+        XNOR
+            left == false
+            right == true
+        """)]
+    [InlineData(false, false,
+        """
+        XNOR
+            left == false
+            right == false
+        """)]
+    public void Should_justify_a_xnor_double_negation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !!!(left ^ right);
+
+        var result = spec.Evaluate(false);
+
+        result.Justification.ShouldBe(expected);
+    }
+}
+

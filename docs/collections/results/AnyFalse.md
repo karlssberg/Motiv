@@ -9,8 +9,8 @@ The `AnyFalse()` extension method is used to determine whether any of the boolea
 ```csharp
 IEnumerable<BooleanResult<int, string>> results = 
     [
-        new IsEvenProposition().IsSatisfiedBy(1),
-        new IsGreaterThanProposition(5).IsSatisfiedBy(6)
+        new IsEvenProposition().Evaluate(1),
+        new IsGreaterThanProposition(5).Evaluate(6)
     ];
 
 results.AnyFalse();  // true

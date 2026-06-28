@@ -18,6 +18,6 @@ var spec =
           .WhenFalse("none")
           .Create("xor");
 
-spec.IsSatisfiedBy(true).Assertions;  // ["¬right"]
-spec.IsSatisfiedBy(false).Assertions;  // ["¬left"]
+spec.Evaluate(true).Assertions;  // ["¬right"]
+spec.Evaluate(false).Assertions;  // ["¬left"]
 ```

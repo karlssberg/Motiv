@@ -23,57 +23,22 @@ flowchart BT
 
 ---
 
-Motiv is a developer-first .NET library that transforms the way you work with boolean logic.
-It lets you form expressions from discrete [propositions](https://en.wikipedia.org/wiki/Proposition) so that you
-can explain _why_ decisions were made.
+Motiv offers a pragmatic solution to the _[Boolean Blindness](https://existentialtype.wordpress.com/2011/03/15/boolean-blindness/)_ problem—the loss of context when logic is evaluated to a single true or false value. It achieves this by decomposing logical expressions into individual atomic [propositions](https://en.wikipedia.org/wiki/Proposition). This preserves the specific causes of a decision during evaluation, allowing them to be utilized later. In most cases, this means providing a human-readable explanation of the decision, but it can also be used to surface underlying state.
 
-To demonstrate Motiv in action,
-let's create some [atomic propositions](https://en.wikipedia.org/wiki/Atomic_sentence):
+To see Motiv in action:
+
 
 ```csharp
-// Define propositions
-var isValid = Spec.Build((int n) => n is >= 0 and <= 11).Create("valid");
-var isEmpty = Spec.Build((int n) => n == 0).Create("empty");
-var isFull  = Spec.Build((int n) => n == 11).Create("full");
-```
+// Define a proposition using an expression tree
+var isInRangeAndEven = Spec.From((int n) => n >= 1 & n <= 10 & n % 2 == 0)
+                           .Create("in range and even");
 
-Then compose using boolean operators:
+// Evaluate proposition (typically elsewhere in your code)
+var result = isInRangeAndEven.Evaluate(11);
 
-```csharp
-// Compose a new proposition
-var isPartiallyFull = isValid & !(isEmpty | isFull);
-```
-
-And evaluate to get detailed feedback:
-
-```csharp
-// Evaluate the proposition
-var result = isPartiallyFull.IsSatisfiedBy(5);
-
-result.Satisfied;   // true
-result.Assertions;  // ["valid", "¬empty", "¬full"]
-result.Reason;      // "valid & !(¬empty | ¬full)"
-```
-
-Assertions will bubble up the root of the proposition tree (if they contributed to the final results).
-This can be seen in the following flowchart:
-
-
-```mermaid
-%%{init: { 'themeVariables': { 'fontSize': '13px' }}}%%
-flowchart BT
-
-    AND --> P(("&nbsp;Is partially&nbsp;\n full?"))
-    B(["&quot;valid&quot;"]) --> AND((AND))
-    NOT((NOT)) --> AND
-    OR((OR)) --> NOT
-    D(["&quot;¬empty&quot;"]) --> OR
-    E(["&quot;¬full&quot;"]) --> OR
-
-    style E stroke:darkcyan,stroke-width:2px
-    style D stroke:darkcyan,stroke-width:2px
-    style B stroke:darkcyan,stroke-width:2px
-    style P stroke:darkcyan,stroke-width:4px
+result.Satisfied;  // false
+result.Assertions; // ["n > 10", "n % 2 != 0"]
+result.Reason;     // "¬in range and even"
 ```
 
 
@@ -92,41 +57,33 @@ Install-Package Motiv
 dotnet add package Motiv
 ```
 
-## Basic Usage
+## Usage
 
+There are two primary ways to create propositions in Motiv:
 
-Let's start with an example of a minimal/atomic proposition to demonstrate Motiv's core concepts.  Take the example of
-determining if a number is even:
+1.  **[`Spec.Build()`](docs/builder/Build.md)**: For creating individual, atomic propositions using a predicate function.
+2.  **[`Spec.From()`](docs/builder/From.md)**: For transforming a lambda expression tree into multiple, interconnected atomic propositions.
 
+### Build()
 
-```mermaid
-%%{init: { 'themeVariables': { 'fontSize': '13px' }}}%%
-flowchart BT
-
-    True(["&quot;is even&quot;"]) -->|true| P(("is even?"))
-    False(["&quot;¬is even&quot;"]) -->|false| P
-
-    style P stroke:darkcyan,stroke-width:4px
-    style True stroke:darkgreen,stroke-width:2px
-    style False stroke:darkred,stroke-width:2px
-```
+The `Spec.Build()` method is fundamental for creating propositions. It accepts a lambda function that returns a `bool`, a `BooleanResult<TMetadata>`, or a `PolicyResult<TMetadata>`. It can also take another proposition or a composition of propositions as its argument.
 
 
 ```csharp
-// Define a atomic proposition
-var isEven = Spec.Build((int n) => n % 2 == 0).Create("is even");
-
-// Evaluate the proposition
-var result = isEven.IsSatisfiedBy(2);
-
-result.Satisfied;   // true
-result.Reason;      // "is even"
-result.Assertions;  // ["is even"]
+Spec.Build((int n) => n % 2 == 0)
+    .Create("is even");
 ```
 
-This minimal example showcases how easily you can create and evaluate propositions with Motiv.
+### From()
 
-## Advanced Usage
+The `Spec.From()` method creates a proposition from a lambda expression tree (`Expression<Func<TModel, bool>>`). This is often the simplest way to start with Motiv, as it automatically breaks down a single lambda expression into multiple propositions. Each sub-expression is evaluated individually and its result is expressed as an assertion in code form. This is particularly useful for debugging and understanding complex logic. These auto-generated assertions can be overridden with custom ones if needed, while still retaining the original expression for reference.
+
+```csharp
+Spec.From((int n) => n >= 1 & n <= 10 & n % 2 == 0)
+    .Create("in range and even");
+```
+
+## Advanced Proposition Features
 
 ### Explicit Assertions
 
@@ -154,7 +111,7 @@ var isEven =
         .WhenFalse("is odd")
         .Create();
 
-var result = isEven.IsSatisfiedBy(3);
+var result = isEven.Evaluate(3);
 
 result.Satisfied;  // false
 result.Reason;     // "is odd"
@@ -187,7 +144,7 @@ var isEven =
         .WhenFalse(new MyMetadata("odd"))
         .Create("is even");
 
-var result = isEven.IsSatisfiedBy(2);
+var result = isEven.Evaluate(2);
 
 result.Satisfied;  // true
 result.Reason;     // "is even"
@@ -228,57 +185,38 @@ flowchart BT
     style False stroke:darkred,stroke-width:2px
 ```
 
-
 This is then implemented in code as follows:
 
-```csharp
-// Define atomic propositions
-var isFizz = Spec.Build((int n) => n % 3 == 0).Create("fizz");
-var isBuzz = Spec.Build((int n) => n % 5 == 0).Create("buzz");
-
-// Compose atomic propositions and redefine assertions
-var isSubstitution =
-    Spec.Build(isFizz | isBuzz)
-        .WhenTrue((_, result) => string.Concat(result.Assertions))  // Concatenate "fizz" and/or "buzz"
-        .WhenFalse(n => n.ToString())
-        .Create("is substitution");
-
-isSubstitution.IsSatisfiedBy(15).Value;  // "fizzbuzz"
-isSubstitution.IsSatisfiedBy(3).Value;   // "fizz"
-isSubstitution.IsSatisfiedBy(5).Value;   // "buzz"
-isSubstitution.IsSatisfiedBy(2).Value;   // "2"
-```
+<!--
+<iframe width="100%" height="475" src="https://dotnetfiddle.net/Widget/uYefQ8" frameborder="0"></iframe>
+-->
+See the live example on [.NET Fiddle](https://dotnetfiddle.net/uYefQ8).
 
 This example demonstrates how you can compose complex propositions from simpler ones using Motiv.
 
 ### Custom Types and Reuse
 
-Motiv provides some classes to inherit from so that you can create your own strongly typed propositions which
-can be reused across your codebase.
+Motiv provides base classes to create your own strongly-typed propositions, promoting reusability across your codebase.
 
-For example, let's create a strongly typed proposition to determine if a number is even:
+For example, let's create a strongly-typed proposition to determine if a number is even:
 
 ```csharp
 public class IsEven() : Spec<int>(
     Spec.Build((int n) => n % 2 == 0)
         .WhenTrue("is even")
         .WhenFalse("is odd")
-        .Create();
+        .Create());
 ```
-This can then be instantiated where needed and used as-is.
-Also, by making it strongly typed, you can ensure that there is no ambiguity when registering it with a DI container.
+
+This `IsEven` class can then be instantiated and used directly. Strongly typing also helps avoid ambiguity when registering with a Dependency Injection (DI) container.
 
 ---
 
 ## When to Use Motiv
 
-Motiv is not meant to replace all your boolean logic.
-You should only use it when it makes sense to do so.
-If your logic is pretty straightforward or does not really need any feedback about the decisions being made, then
-you might not see a big benefit from using Motiv.
-It is just another tool in your toolbox, and sometimes the simplest solution is the best fit.
+Motiv is not intended to replace all boolean logic in your application. It should be used selectively where its benefits are most apparent. If your logic is straightforward or doesn't require detailed feedback on decisions, Motiv might not offer a significant advantage. It's another tool in your development toolkit; sometimes, the simplest solution is the most effective.
 
-Consider using Motiv when you need two or more of the following:
+Consider using Motiv when you need two or more of the following capabilities:
 
 1. **Visibility**: Granular, real-time feedback about decisions
 2. **Decomposition**: Break down complex logic into meaningful subclauses

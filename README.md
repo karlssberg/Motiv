@@ -1,216 +1,203 @@
+<img src="https://raw.githubusercontent.com/karlssberg/Motiv/main/icon.png" alt="Motiv logo" width="64" align="left"/>
+
 # Motiv
 
 ![Build Status](https://github.com/karlssberg/Motiv/actions/workflows/dotnet.yml/badge.svg) [![NuGet](https://img.shields.io/nuget/v/Motiv.svg)](https://www.nuget.org/packages/Motiv/) [![codecov](https://codecov.io/gh/karlssberg/Motiv/graph/badge.svg?token=XNN34D2JIP)](https://codecov.io/gh/karlssberg/Motiv)
 
-## Know _Why_, not just _What_
+The boolean type has a problem: once evaluated,
+you lose all context about _why_ the value is true or false.
 
-Motiv is a developer-first .NET library that transforms the way you work with boolean logic.
-It lets you form expressions from discrete [propositions](https://en.wikipedia.org/wiki/Proposition) so that you
-can explain _why_ decisions were made.
-
-First create [atomic propositions](https://en.wikipedia.org/wiki/Atomic_sentence):
+This is known as _the boolean blindness problem_:
 
 ```csharp
-// Define atomic propositions
-var isValid = Spec.Build((int n) => n is >= 0 and <= 11).Create("valid");
-var isEmpty = Spec.Build((int n) => n == 0).Create("empty");
-var isFull  = Spec.Build((int n) => n == 11).Create("full");
+// Traditional approach - life before Motiv
+if (user.Age >= 18 &&
+    user.HasValidId &&
+    (user.Country == "US" || user.HasInternationalPermit) &&
+    !user.IsRestricted)
+{
+    // Which condition failed? How do I debug this in production?
+}
 ```
 
-Then compose using operators (e.g., `!`,  `&`, `|`, `^`):
+Motiv addresses this by preserving the structure of boolean expressions, allowing you to identify the underlying causes when needed:
 
 ```csharp
-// Compose a new ad-hoc proposition
-var composed = isValid & !(isEmpty | isFull);
+// With Motiv
+var canAccess = Spec
+    .From((User user) =>
+        user.Age >= 18 &
+        user.HasValidId &
+        (user.Country == "US" || user.HasInternationalPermit) &
+        !user.IsRestricted)
+    .Create("can access");
 
-// Give it a new name
-var isPartiallyFull = Spec.Build(composed).Create("partial");
+var result = canAccess.Evaluate(user);
+result.Satisfied;  // false
+result.Assertions; // ["user.Age < 18", "user.HasValidId == false"]
 ```
 
-To get detailed feedback:
+## Core Features
+
+### Automatic Propositions
+
+Transform boolean expressions into explanatory logic using the `Spec.From()` method:
 
 ```csharp
-// Evaluate the proposition against a model/value
-var result = isPartiallyFull.IsSatisfiedBy(5);
+var isEligible = Spec
+    .From((Customer c) => c.CreditScore > 600 & c.Income > 100000)
+    .Create("eligible for loan");
 
-result.Satisfied;         // true
-result.Reason;            // "partial"
-result.UnderlyingReasons; // ["valid & !(¬empty | ¬full)"]
-result.SubAssertions;     // ["valid", "¬empty", "¬full"]
-result.Justifications     // partial
-                          //     AND
-                          //         valid
-                          //         NOR
-                          //             ¬empty
-                          //             ¬full
+var result = isEligible.Evaluate(eligibleCustomer);
+result.Satisfied;  // true
+result.Assertions; // ["c.CreditScore > 600", "c.Income > 100000"]
 ```
 
-## Why Use Motiv?
+This takes a lambda expression tree (`Expression<Func<T, bool>>`) and transforms it into a hierarchy of propositions that mirror the expression's logic.
 
-Motiv primarily gives you visibility into your application's decision-making process.
-By decomposing expressions into propositions,
-it addresses important architectural concerns and enables more advanced use cases,
-such as implementing dynamic logic or determining state.
+### Manual Composition
 
-Consider using Motiv if your project requires two or more of the following:
+Alternatively, if you want full control, you can do this yourself:
 
-1. **Visibility**: Provide detailed, real-time feedback about decisions made.
-2. **Decomposition**: Break down complex logic into meaningful subclauses for improved readability.
-3. **Reusability**: Reuse logic across multiple locations to reduce duplication.
-4. **Modeling**: Explicitly model your domain logic.
-5. **Testing**: Simplify the testing your logic without mocking or stubbing dependencies.
+```csharp
+var hasGoodCredit = Spec
+    .Build((Customer c) => c.CreditScore > 600)
+    .Create("good credit");
 
-## Use Cases
+var hasIncome = Spec
+    .Build((Customer c) => c.Income > 100000)
+    .Create("sufficient income");
 
-Motiv can be applied in various scenarios, including:
+// create a new proposition
+var isEligible = hasGoodCredit.And(hasIncome);
 
-* **User Feedback**: Provide detailed explanations about decision outcomes.
-* **Debugging**: Quickly find out the causes from complex logic.
-* **Multilingual Support**: Offer explanations in different languages.
-* **Validation**: Ensure user input meets specific criteria and provide detailed feedback.
-* **Dynamic Logic**: Compose logic at runtime based on user input.
-* **Rules Processing**: Declaratively define and compose complex _if-then_ rules.
-* **Conditional State**: Yield different states based on complex criteria.
-* **Auditing**: Log _why_ something happened, instead of _what_ happened.
+// alternatively, use operator syntax
+// var isEligible = hasGoodCredit & hasIncome;
 
-## Installation
-
-Install Motiv via NuGet Package Manager Console:
-```bash
-Install-Package Motiv
+var result = isEligible.Evaluate(eligibleCustomer);
+result.Satisfied;  // true
+result.Assertions; // ["good credit == true", "sufficient income == true"]
 ```
-Or using the .NET CLI:
+
+### Custom Assertions
+
+Add readable explanations to your logic:
+
+```csharp
+var hasGoodCredit = Spec
+    .Build((Customer c) => c.CreditScore > 600)
+    .WhenTrue("has good credit score")
+    .WhenFalse("credit score too low")
+    .Create();
+
+var result = hasGoodCredit.Evaluate(eligibleCustomer);
+result.Satisfied;  // true
+result.Assertions; // ["has good credit score"]
+```
+
+### Side-Effect Observers
+
+Attach logging, metrics, or other side-effects without altering a proposition's behavior:
+
+```csharp
+var observed = isEligible
+    .TapWhenTrue((customer, result) =>
+        logger.LogInformation("Approved: {Id}", customer.Id))
+    .TapWhenFalse((customer, result) =>
+        logger.LogWarning("Denied: {Reason}", result.Reason));
+
+// Use exactly like the original — result, assertions, reason are all unchanged
+var result = observed.Evaluate(customer);
+```
+
+### Collection Logic
+
+Make assertions about collections of items (also known as higher-order logic):
+
+```csharp
+var allNegative = Spec
+    .Build((int n) => n < 0)
+    .AsAllSatisfied()
+    .WhenTrue("all numbers are negative")
+    .WhenFalseYield(eval => eval.FalseModels.Select(n => $"{n} is not negative"))
+    .Create();
+
+var result = allNegative.Evaluate([-1, 2, 3]);
+result.Satisfied;  // false
+result.Assertions; // ["2 is not negative", "3 is not negative"]
+```
+
+## Quick Start
+
+Installation involves adding the Motiv NuGet package to your project:
+
 ```bash
 dotnet add package Motiv
 ```
 
-## Usage
+or via the NuGet Package Manager:
 
-### Basic Proposition
-
-Create and evaluate a basic proposition:
-
-```csharp
-var isEligibleForLoan =
-    Spec.Build((Customer customer) =>
-            customer is
-            {
-                CreditScore: > 600,
-                Income: > 100000
-            })
-        .Create("eligible for loan");
-
-var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
-
-result.Satisfied;  // true
-result.Reason;     // "eligible for loan"
-result.Assertions; // ["eligible for loan"]
+```bash
+Install-Package Motiv
 ```
 
-### Propositions with Custom Assertions
+## Technical Notes
 
-Use `WhenTrue()` and `WhenFalse()` for user-friendly explanations:
+- Zero additional dependencies
+- Metadata lazily evaluated
+- .NET & .NET Framework compatible
+- Performance optimized
+- MIT licensed
 
-```csharp
-var isEligibleForLoan =
-    Spec.Build((Customer customer) =>
-            customer is
-            {
-                CreditScore: > 600,
-                Income: > 100000
-            })
-        .WhenTrue("eligible for a loan")
-        .WhenFalse("not eligible for a loan")
-        .Create();
-
-var result = isEligibleForLoanPolicy.IsSatisfiedBy(ineligibleCustomer);
-
-result.Satisfied;  // false
-result.Reason;     // "not eligible for a loan"
-```
-
-### Propositions with Custom Metadata
-
-Use `WhenTrue()` and `WhenFalse()` with types other than `string`:
-
-```csharp
-var isEligibleForLoanPolicy =
-    Spec.Build((Customer customer) =>
-            customer is
-            {
-                CreditScore: > 600,
-                Income: > 100000
-            })
-        .WhenTrue(MyEnum.EligibleForLoan)
-        .WhenFalse(MyEnum.NotEligibleForLoan)
-        .Create("eligible for a loan");
-
-var result = isEligibleForLoanPolicy.IsSatisfiedBy(eligibleCustomer);
-
-result.Satisfied;  // true
-result.Value;      // MyEnum.EligibleForLoan
-result.Reason;     // "eligible for a loan"
-```
-
-### Composing Propositions
-
-Combine propositions using boolean operators:
-
-```csharp
-var hasGoodCreditScore =
-    Spec.Build((Customer customer) => customer.CreditScore > 600)
-        .WhenTrue("good credit score")
-        .WhenFalse("inadequate credit score")
-        .Create();
-
-var hasSufficientIncome =
-    Spec.Build((Customer customer) => customer.Income > 100000)
-        .WhenTrue("sufficient income")
-        .WhenFalse("insufficient income")
-        .Create();
-
-var isEligibleForLoan = hasGoodCreditScore & hasSufficientIncome;
-
-var result = isEligibleForLoan.IsSatisfiedBy(eligibleCustomer);
-
-result.Satisfied;  // true
-result.Reason;     // "good credit score & sufficient income"
-result.Assertions; // ["good credit score", "sufficient income"]
-```
-
-### Higher Order Logic
-
-Provide facts about collections:
-
-```csharp
-var allNegative =
-    Spec.Build((int n) => n < 0)
-        .AsAllSatisfied()
-        .WhenTrue("all are negative")
-        .WhenFalseYield(eval => eval.FalseModels.Select(n => $"{n} is not negative"))
-        .Create();
-
-var result = allNegative.IsSatisfiedBy([-1, 2, 3]);
-
-result.Satisfied;  // false
-result.Reason;     // "¬all are negative"
-result.Assertions; // ["2 is not negative", "3 is not negative"]
-```
-
-## Tradeoffs
-
-Consider these potential tradeoffs when using Motiv:
-
-1. **Performance**: Motiv isn't optimized for high-performance scenarios where nanoseconds matter.
-2. **Dependency**: Once integrated, Motiv becomes a core dependency in your codebase.
-3. **Learning Curve**: While Motiv introduces a new approach, it's designed to be intuitive and easy to use.
-
-## License
-
-Motiv is released under the MIT License. See the [LICENSE](./LICENSE) file for details.
-
-## Resources
+## Learn More
 
 - [Documentation](https://karlssberg.github.io/Motiv/)
-- [NuGet Package](https://www.nuget.org/packages/Motiv/)
-- [Official GitHub Repository](https://github.com/karlssberg/Motiv)
+- [Try Online](https://dotnetfiddle.net/knykpD)
+- [GitHub](https://github.com/karlssberg/Motiv/)
+
+## Releasing
+
+Releases are published to NuGet automatically when a version tag is pushed.
+The git tag is the single source of truth for the package version (derived via
+[MinVer](https://github.com/adamralph/minver)) — there is no version number to
+edit in the repository.
+
+To cut a release:
+
+1. Merge your changes to `main` (CI runs the full test suite and deploys docs).
+2. Tag the release commit and push the tag:
+   ```bash
+   git tag v8.1.0
+   git push origin v8.1.0
+   ```
+3. The `Release` workflow then runs the tests, packs `Motiv` at version `8.1.0`,
+   pushes the package (and its symbol package) to NuGet, and creates a GitHub
+   Release with auto-generated notes.
+
+Tags must be `v`-prefixed (e.g. `v8.1.0`). The first release tag must be
+`v8.0.0` or higher.
+
+### Dry run with a prerelease tag
+
+Before cutting a real release — especially the first one through this pipeline —
+validate the whole chain end to end with a prerelease tag. MinVer treats a tag
+like `v8.0.0-rc.1` as a prerelease version, so NuGet flags the package as
+pre-release and never serves it as the default `Install-Package Motiv` result.
+
+1. Push a prerelease tag from the commit you intend to release:
+   ```bash
+   git tag v8.0.0-rc.1
+   git push origin v8.0.0-rc.1
+   ```
+2. Watch the `Release` workflow run. Confirm it: runs the test gate, packs
+   `Motiv` at version `8.0.0-rc.1`, pushes the package and its symbol package to
+   NuGet, and creates a GitHub Release.
+3. Verify the prerelease appears on
+   [nuget.org/packages/Motiv](https://www.nuget.org/packages/Motiv) (it shows
+   only when "Include prerelease" is enabled).
+4. When you're satisfied, cut the real release by tagging the same commit
+   `v8.0.0` (see "To cut a release" above). You can unlist the `-rc` prerelease
+   from NuGet afterwards if you prefer to keep the package page tidy.
+
+Repeat with `-rc.2`, `-rc.3`, etc. if you need further iterations — each is an
+independent prerelease and won't collide with the final `v8.0.0`.

@@ -34,7 +34,7 @@ var isFreeShipping =
 
 var chooseShippingOptions = (!isBasketEmpty).AndAlso(!isFreeShipping);
 
-var result = chooseShippingOptions.IsSatisfiedBy(emptyBasket);
+var result = chooseShippingOptions.Evaluate(emptyBasket);
 
 result.Satisfied; // false
 result.Reason; // "basket is empty"
@@ -47,7 +47,7 @@ If the results were caused by both operands, then the `Reason` property will con
 assertion that was responsible.
 
 ```csharp
-var result = isActiveSubscription.IsSatisfiedBy(lapsedSubscription);
+var result = isActiveSubscription.Evaluate(lapsedSubscription);
 
 result.Reason; // "subscription has ended"
 ```
@@ -78,8 +78,8 @@ var isValidLocation =
     Spec.Build((Device device) => device.Country == Country.USA)
         .Create();
 
-var isValidLocationResult = isValidLocation.IsSatisfiedBy(device);
-var isActiveSubscriptionResult = isActiveSubscription.IsSatisfiedBy(subscription)
+var isValidLocationResult = isValidLocation.Evaluate(device);
+var isActiveSubscriptionResult = isActiveSubscription.Evaluate(subscription)
 
 BooleanResultBase<string> canViewContent = isActiveSubscriptionResult.AndAlso(isValidLocationResult);
 ```
@@ -89,6 +89,6 @@ instance that contains the results of the two.
 The `Result` property will therefore contain the assertions of both underlying propositions.
 
 ```csharp
-var result = isActiveSubscription.IsSatisfiedBy(activeSubscription);
+var result = isActiveSubscription.Evaluate(activeSubscription);
 result.Reason; // "subscription has started && subscription has not ended"
 ```

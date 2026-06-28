@@ -21,5 +21,5 @@ var areEven =
         .WhenFalse("all odd")
         .Create();
 
-areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]).GetAllRootAssertions();  // [ "is even", "is odd" ]
+areEven.Evaluate([ 1, 2, 3, 4 ]).GetAllRootAssertions();  // [ "is even", "is odd" ]
 ```

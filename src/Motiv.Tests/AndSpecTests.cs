@@ -1,0 +1,712 @@
+using System.Text.RegularExpressions;
+
+namespace Motiv.Tests;
+
+public class AndSpecTests
+{
+    [Theory]
+    [InlineAutoData(true, true, true)]
+    [InlineAutoData(true, false, false)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(false, false, false)]
+    public void Should_perform_logical_and(
+        bool leftResult,
+        bool rightResult,
+        bool expected,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = left & right;
+
+        // Act
+        var act = spec.Evaluate(model).Satisfied;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true, true)]
+    [InlineAutoData(true, false, false)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(false, false, false)]
+    public void Should_yield_metadata(
+        bool leftResult,
+        bool rightResult,
+        bool expected,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = left & right;
+
+        // Act
+        var act = spec.Evaluate(model).Values;
+
+        // Assert
+        act.ShouldBe([expected]);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true, "(left == true) & (right == true)")]
+    [InlineAutoData(true, false, "right == false")]
+    [InlineAutoData(false, true, "left == false")]
+    [InlineAutoData(false, false, "(left == false) & (right == false)")]
+    public void Should_serialize_the_result_of_the_and_operation(
+        bool leftResult,
+        bool rightResult,
+        string expected,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = left & right;
+        var result = spec.Evaluate(model);
+
+        // Act
+        var act = result.Reason;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_use_the_reason_property_for_ToString(
+        bool leftResult,
+        bool rightResult,
+        object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var spec = left & right;
+        var result = spec.Evaluate(model);
+
+        // Act
+        var act = result.ToString();
+
+        // Assert
+        act.ShouldBe(result.Reason);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true, "True & True")]
+    [InlineAutoData(true, false, "False")]
+    [InlineAutoData(false, true, "False")]
+    [InlineAutoData(false, false, "False & False")]
+    public void
+        Should_serialize_the_result_of_the_and_operation_when_metadata_is_a_string_when_using_the_single_generic_specification_type(
+            bool leftResult,
+            bool rightResult,
+            string expected,
+            object model)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var spec = left & right;
+
+        // Act
+        var act = spec.Evaluate(model).Reason;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_provide_a_statement_of_the_specification_when_using_metadata_specification(bool leftResult, bool rightResult)
+    {
+        // Arrange
+        var left = Spec
+            .Build<object>(_ => leftResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("left");
+
+        var right = Spec
+            .Build<object>(_ => rightResult)
+            .WhenTrue(true)
+            .WhenFalse(false)
+            .Create("right");
+
+        var expected = $"{left.Name} & {right.Name}";
+
+        // Act
+        var act = (left & right).Name;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_provide_a_statement_of_the_specification_when_using_explanation_specification(bool leftResult,
+        bool rightResult)
+    {
+        // Arrange
+        var left = Spec.Build<object>(_ => leftResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var right = Spec.Build<object>(_ => rightResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var expected = $"{left.Name} & {right.Name}";
+
+        // Act
+        var act = (left & right).Name;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(true, true)]
+    [InlineAutoData(true, false)]
+    [InlineAutoData(false, true)]
+    [InlineAutoData(false, false)]
+    public void Should_correctly_serialize_the_specification_when_using_explanation_specification(bool leftResult,
+        bool rightResult)
+    {
+        // Arrange
+        var left = Spec.Build<object>(_ => leftResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var right = Spec.Build<object>(_ => rightResult)
+            .WhenTrue(true.ToString())
+            .WhenFalse(false.ToString())
+            .Create();
+
+        var expected = $"{left.Name} & {right.Name}";
+
+        // Act
+        var act = (left & right).Name;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    private record Subscription(DateTime Start, DateTime End)
+    {
+        public DateTime Start { get; } = Start;
+        public DateTime End { get; } = End;
+    }
+
+    private class IsSubscriptionActive(DateTime now) : Spec<Subscription>(() =>
+    {
+        var hasSubscriptionStarted = Spec
+            .Build((Subscription s) => s.Start < now)
+            .WhenTrue("subscription has started")
+            .WhenFalse("subscription has not started")
+            .Create();
+
+        var hasSubscriptionEnded = Spec
+            .Build((Subscription s) => s.End < now)
+            .WhenTrue("subscription has ended")
+            .WhenFalse("subscription has not ended")
+            .Create();
+
+        return Spec
+            .Build(hasSubscriptionStarted & !hasSubscriptionEnded)
+            .WhenTrue("subscription is active")
+            .WhenFalse("subscription is inactive")
+            .Create();
+    });
+
+
+    [Fact]
+    public void Should_evaluate_underlying_explanations_with_a_complex_model()
+    {
+        // Arrange
+        var now = DateTime.Now;
+        var isActive = new IsSubscriptionActive(now);
+
+        var subscription = new Subscription(now.Date, now.AddDays(1));
+
+        // Act
+        var result = isActive.Evaluate(subscription).Explanation.Underlying;
+
+        // Assert
+        result.GetAssertions().ShouldBe(
+        [
+            "subscription has started",
+            "subscription has not ended"
+        ]);
+    }
+
+    [Fact]
+    public void Should_evaluate_assertions_with_a_complex_model()
+    {
+        // Arrange
+        var now = DateTime.Now;
+        var isActive = new IsSubscriptionActive(now);
+
+        var subscription = new Subscription(now.Date, now.AddDays(1));
+
+        // Act
+        var result = isActive.Evaluate(subscription).Assertions;
+
+        // Assert
+        result.ShouldBe(["subscription is active"]);
+    }
+
+    private enum Country
+    {
+        Usa
+    }
+
+    private record Device(Country Country)
+    {
+        public Country Country { get; } = Country;
+    }
+
+
+    [Theory]
+    [AutoData]
+    public void Should_format_the_reason_from_the_results_obtained_from_two_specs_of_different_models(DateTime now)
+    {
+        // Arrange
+        var hasSubscriptionStartedSpec = Spec
+            .Build<Subscription>(s => s.Start < now)
+            .WhenTrue("subscription has started")
+            .WhenFalse("subscription has not started")
+            .Create();
+
+        var hasSubscriptionEndedSpec = Spec
+            .Build<Subscription>(s => s.End < now)
+            .WhenTrue("subscription has ended")
+            .WhenFalse("subscription has not ended")
+            .Create();
+
+        var isLocationUsaSpec = Spec
+            .Build<Device>(device => device.Country == Country.Usa)
+            .WhenTrue("the location is in the USA")
+            .WhenFalse("the location is outside the USA")
+            .Create();
+
+        var isActiveSpec = hasSubscriptionStartedSpec & !hasSubscriptionEndedSpec;
+        var isActive = isActiveSpec.Evaluate(new Subscription(now.Date, now.AddDays(1)));
+        var isUsa = isLocationUsaSpec.Evaluate(new Device(Country.Usa));
+
+        // Act
+        var result = (isActive & isUsa).Reason;
+
+        // Assert
+        result.ShouldBe("subscription has started & !subscription has not ended & the location is in the USA");
+    }
+
+    [Theory]
+    [AutoData]
+    public void Should_obtain_assertions_from_the_results_obtained_from_two_specs_of_different_models(DateTime now)
+    {
+        // Arrange
+        var hasSubscriptionStartedSpec = Spec
+            .Build<Subscription>(s => s.Start < now)
+            .WhenTrue("subscription has started")
+            .WhenFalse("subscription has not started")
+            .Create();
+
+        var hasSubscriptionEndedSpec = Spec
+            .Build<Subscription>(s => s.End < now)
+            .WhenTrue("subscription has ended")
+            .WhenFalse("subscription has not ended")
+            .Create();
+
+        var isLocationUsaSpec = Spec
+            .Build<Device>(device => device.Country == Country.Usa)
+            .WhenTrue("the location is in the USA")
+            .WhenFalse("the location is outside the USA")
+            .Create();
+
+        var isActiveSpec = hasSubscriptionStartedSpec & !hasSubscriptionEndedSpec;
+        var isActive = isActiveSpec.Evaluate(new Subscription(now.Date, now.AddDays(1)));
+        var isUsa = isLocationUsaSpec.Evaluate(new Device(Country.Usa));
+
+        // Act
+        var act = (isActive & isUsa).Assertions;
+
+        // Assert
+        act.ShouldBe(
+            (string[])
+        [
+            "subscription has started",
+            "subscription has not ended",
+            "the location is in the USA"
+        ]);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, 2)]
+    [InlineAutoData(false, true, 1)]
+    [InlineAutoData(true, false, 1)]
+    [InlineAutoData(true, true, 2)]
+    public void Should_accurately_report_the_number_of_causal_operands(bool left, bool right, int expected,
+        object model)
+    {
+        // Arrange
+        var leftSpec = Spec
+            .Build<object>(_ => left)
+            .Create("left");
+
+        var rightSpec = Spec
+            .Build<object>(_ => right)
+            .Create("right");
+
+        var spec = leftSpec & rightSpec;
+
+        // Act
+        var act = spec.Evaluate(model).Description.CausalOperandCount;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineAutoData(false, false, false)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(true, false, false)]
+    [InlineAutoData(true, true, true)]
+    public void Should_perform_And_on_specs_with_different_metadata(
+        bool leftValue,
+        bool rightValue,
+        bool expectedSatisfied,
+        Guid leftTrue,
+        Guid leftFalse,
+        int  rightTrue,
+        int  rightFalse)
+    {
+        // Arrange
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(leftTrue)
+                .WhenFalse(leftFalse)
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(rightTrue)
+                .WhenFalse(rightFalse)
+                .Create("right");
+
+        var spec = left & right;
+
+        // Act
+        var act = spec.Evaluate("").Satisfied;
+
+        // Assert
+        act.ShouldBe(expectedSatisfied);
+    }
+
+    [Theory]
+    [InlineData(false, false, "left == false", "right == false")]
+    [InlineData(false, true, "left == false")]
+    [InlineData(true, false, "right == false")]
+    [InlineData(true, true, "left == true", "right == true")]
+    public void Should_perform_And_on_specs_with_different_metadata_and_preserve_assertions(
+        bool leftValue,
+        bool rightValue,
+        params string[] expectedAssertions)
+    {
+        // Arrange
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(new Uri("http://true"))
+                .WhenFalse(new Uri("http://false"))
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(new Regex("true"))
+                .WhenFalse(new Regex("false"))
+                .Create("right");
+
+        var spec = left & right;
+
+        // Act
+        var act = spec.Evaluate("").Assertions;
+
+        act.ShouldBe(expectedAssertions);
+    }
+
+    [Theory]
+    [InlineData(false, false, "left == false", "right == false")]
+    [InlineData(false, true, "left == false")]
+    [InlineData(true, false, "right == false")]
+    [InlineData(true, true, "left == true", "right == true")]
+    public void Should_perform_And_on_specs_with_different_metadata_and_preserve_metadata(
+        bool leftValue,
+        bool rightValue,
+        params string[] expectedAssertions)
+    {
+        // Arrange
+        var left =
+            Spec.Build((string _) => leftValue)
+                .WhenTrue(new Uri("http://true"))
+                .WhenFalse(new Uri("http://false"))
+                .Create("left");
+
+        var right =
+            Spec.Build((string _) => rightValue)
+                .WhenTrue(new Regex("true"))
+                .WhenFalse(new Regex("false"))
+                .Create("right");
+
+        var spec = left & right;
+
+        // Act
+        var act = spec.Evaluate("").Values;
+
+        // Assert
+        act.ShouldBe(expectedAssertions);
+    }
+
+    [Fact]
+    public void Should_not_collapse_ORELSE_operators_in_spec_description()
+    {
+        // Arrange
+        var first = Spec
+            .Build<bool>(_ => true)
+            .Create("first");
+
+        var second = Spec
+            .Build<bool>(_ => true)
+            .Create("second");
+
+        var third = Spec
+            .Build<bool>(_ => true)
+            .Create("third");
+
+        var spec = first & second & third;
+
+        // Act
+        var act = spec.Expression;
+
+        // Assert
+        act.ShouldBe(
+            """
+            AND
+                first
+                second
+                third
+            """);
+    }
+
+    [Fact]
+    public void Should_return_the_underlying_specs()
+    {
+        // Arrange
+        var left = Spec
+            .Build<bool>(_ => true)
+            .Create("left");
+
+        var right = Spec
+            .Build<bool>(_ => true)
+            .Create("right");
+
+        // Act
+        var act = (left & right).Underlying;
+
+        // Assert
+        act.ShouldBe(
+            (PolicyBase<bool,string>[]) [left, right]);
+    }
+
+    [Fact]
+    public void Should_populate_underlying_results_with_metadata()
+    {
+        // Arrange
+        var left = Spec.Build<object>(_ => true).Create("left");
+        var right = Spec.Build<object>(_ => true).Create("right");
+
+        IEnumerable<BooleanResultBase<string>> expected =
+        [
+            left.Evaluate(new object()),
+            right.Evaluate(new object())
+        ];
+
+        var spec = left & right;
+        var result = spec.Evaluate(new object());
+
+        // Act
+        var act = result.UnderlyingWithValues;
+
+        // Assert
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        NAND
+            left == true
+            right == true
+        """)]
+    [InlineData(true, false,
+        """
+        NAND
+            right == false
+        """)]
+    [InlineData(false, true,
+        """
+        NAND
+            left == false
+        """)]
+    [InlineData(false, false,
+        """
+        NAND
+            left == false
+            right == false
+        """)]
+    public void Should_justify_a_nand_creation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !(left & right);
+
+        var result = spec.Evaluate(false);
+
+        result.Justification.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        AND
+            left == true
+            right == true
+        """)]
+    [InlineData(true, false,
+        """
+        AND
+            right == false
+        """)]
+    [InlineData(false, true,
+        """
+        AND
+            left == false
+        """)]
+    [InlineData(false, false,
+        """
+        AND
+            left == false
+            right == false
+        """)]
+    public void Should_justify_a_nand_negation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !!(left & right);
+
+        var result = spec.Evaluate(false);
+
+        result.Justification.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(true, true,
+        """
+        NAND
+            left == true
+            right == true
+        """)]
+    [InlineData(true, false,
+        """
+        NAND
+            right == false
+        """)]
+    [InlineData(false, true,
+        """
+        NAND
+            left == false
+        """)]
+    [InlineData(false, false,
+        """
+        NAND
+            left == false
+            right == false
+        """)]
+    public void Should_justify_a_nand_double_negation(bool leftBool, bool rightBool, string expected)
+    {
+        var left = Spec.Build((bool _) => leftBool).Create("left");
+        var right = Spec.Build((bool _) => rightBool).Create("right");
+
+        var spec = !!!(left & right);
+
+        var result = spec.Evaluate(false);
+
+        result.Justification.ShouldBe(expected);
+    }
+}
+

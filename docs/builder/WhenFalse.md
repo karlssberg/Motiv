@@ -2,7 +2,6 @@
 title: WhenFalse()
 category: building
 ---
-# WhenFalse()
 
 The `WhenFalse()` method is used to yield values when the proposition is unsatisfied.
 It also implicitly sets `TMetadata` type for the rest of the proposition.
@@ -16,7 +15,6 @@ The outliers are the Higher-Order propositions, which require the pairing of mod
 them to be useful, and atomic propositions that have no underlying propositions to yield assertions/metadata
 from.
 
-
 This method is overloaded and takes one of the following types
 
 | Type                                                    | Description                                             |
@@ -28,15 +26,12 @@ This method is overloaded and takes one of the following types
 | `Func<TModel, BooleanResultBase<TMetadata>, string>`    | a factory function that returns an assertion statement. |
 | `Func<TModel, BooleanResultBase<TMetadata>, TMetadata>` | a factory function that returns a metadata value.       |
 
-
 ### Fixed assertion
 
-```csharp
-WhenFalse(string assertion)
-```
+`WhenFalse(string assertion)`
 
 This overload generates an assertion statement when the proposition is not satisfied.
-When the proposition is not satisfied, the metadata returned by the factory function will be used to populate the
+When the proposition is not satisfied, the assertion will be used to populate the
 `Reason`, `Assertions` and `Metadata` properties of the result.
 
 ```csharp
@@ -48,9 +43,7 @@ Spec.Build((int n) => n % 2 == 0)
 
 ### Fixed metadata
 
-```csharp
-WhenFalse(TMetadata metadata)
-```
+`WhenFalse(TMetadata metadata)`
 
 This overload generates a metadata value when the proposition is not satisfied.
 When the proposition is not satisfied, the metadata returned by the factory function will populate the `Metadata`
@@ -65,9 +58,7 @@ Spec.Build((int n) => n % 2 == 0)
 
 ### Dynamic assertion (derived from model)
 
-```csharp
-WhenFalse(Func<TModel, string> factory)
-```
+`WhenFalse(Func<TModel, string> factory)`
 
 This overload generates an assertion statement based on the model when the proposition is not satisfied.
 When the proposition is not satisfied, the metadata returned by the factory function will be used to populate the
@@ -82,9 +73,7 @@ Spec.Build((int n) => n % 2 == 0)
 
 ### Dynamic metadata (derived from model)
 
-```csharp
-WhenFalse(Func<TModel, TMetadata> factory)
-```
+`WhenFalse(Func<TModel, TMetadata> factory)`
 
 This overload generates a metadata value based on the model when the proposition is not satisfied.
 When the proposition is not satisfied, the metadata returned by the factory function will populate the `Metadata`
@@ -101,9 +90,7 @@ Spec.Build((int n) => n % 2 == 0)
 
 ### Dynamic assertion (derived from model and underlying result)
 
-```csharp
-WhenFalse(Func<TModel, BooleanResultBase<TMetadata>, string> factory)
-```
+`WhenFalse(Func<TModel, BooleanResultBase<TMetadata>, string> factory)`
 
 This overload generates an assertion statement based on the model and the result of the underlying proposition.
 When the proposition is not satisfied, the metadata returned by the factory function will be used to populate the
@@ -116,11 +103,9 @@ Spec.Build(new IsEvenProposition())
     .Create();
 ```
 
-### Dynamic assertion (derived from model and underlying result)
+### Dynamic metadata (derived from model and underlying result)
 
-```csharp
-WhenFalse(Func<TModel, BooleanResultBase<TMetadata>, TMetadata> factory)
-```
+`WhenFalse(Func<TModel, BooleanResultBase<TMetadata>, TMetadata> factory)`
 
 This overload generates a metadata value based on the model and the result of the underlying proposition.
 When the proposition is not satisfied, the metadata returned by the factory function will populate the `Metadata`
@@ -137,9 +122,7 @@ Spec.Build(new IsEvenProposition())
 
 ### Dynamic assertion (derived from pairwise models and results)
 
-```csharp
-WhenFalse(Func<HigherOrderBooleanEvaluation<TModel>, string> factory)
-```
+`WhenFalse(Func<HigherOrderBooleanEvaluation<TModel>, string> factory)`
 
 This overload generates an assertion statement based on the pairwise models and results when the proposition is not
 satisfied.
@@ -154,11 +137,9 @@ Spec.Build((int n) => n % 2 == 0)
     .Create();
 ```
 
-### Dynamic metadata (derived from pairwise models and results)
+### Dynamic metadata (derived from higher-order evaluations)
 
-```csharp
-WhenFalse(Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> factory)
-```
+`WhenFalse(Func<HigherOrderBooleanEvaluation<TModel>, TMetadata> factory)`
 
 This overload generates a metadata value based on the pairwise models and results when the proposition is not satisfied.
 When the proposition is not satisfied, the metadata returned by the factory function will populate the `Metadata`
@@ -169,45 +150,5 @@ Spec.Build((int n) => n % 2 == 0)
     .AsAllSatisfied()
     .WhenTrue(new MyMetadata("is even"))
     .WhenFalse(eval => new MyMetadata($"{eval.CausalModels.Serialize()} are odd"))
-    .Create("is even");
-```
-
-## Extra usages when building a higher-order proposition from an existing proposition or result
-
-### Dynamic assertion (derived from model and underlying result)
-
-```csharp
-WhenFalse(Func<HigherOrderEvaluation<TModel>, string> factory)
-```
-
-This overload generates an assertion statement based on the model and the result of the underlying proposition when the
-proposition is not satisfied.
-When the proposition is not satisfied, the metadata returned by the factory function will be used to populate the
-`Reason`, `Assertions` and `Metadata` properties of the result.
-
-```csharp
-Spec.Build(new IsEvenProposition())
-    .AsAllSatisfied()
-    .WhenTrue("is even")
-    .WhenFalse(eval => eval.Assertions.Serialize())
-    .Create();
-```
-
-### Dynamic metadata (derived from model and underlying result)
-
-```csharp
-WhenFalse(Func<HigherOrderEvaluation<TModel>, TMetadata> factory)
-```
-
-This overload generates a metadata value based on the model and the result of the underlying proposition when the
-proposition is not satisfied.
-When the proposition is not satisfied, the metadata returned by the factory function will populate the `Metadata`
-property of the result.
-
-```csharp
-Spec.Build(new IsEvenProposition())
-    .AsAllSatisfied()
-    .WhenTrue(new MyMetadata("is even"))
-    .WhenFalse(eval => new MyMetadata(eval.Assertions.Serialize()))
     .Create("is even");
 ```

@@ -1,0 +1,126 @@
+namespace Motiv.HigherOrderProposition;
+
+/// <summary>
+/// The meta-result of a higher order evaluation.
+/// </summary>
+/// <typeparam name="TModel">
+/// The type of the model.
+/// </typeparam>
+/// <typeparam name="TMetadata">
+/// The type of the metadata associated with the evaluation.
+/// </typeparam>
+public class HigherOrderBooleanResultEvaluation<TModel, TMetadata>
+{
+    private readonly IReadOnlyList<BooleanResult<TModel, TMetadata>> _results;
+    private readonly IReadOnlyList<BooleanResult<TModel, TMetadata>> _causalResults;
+
+    private bool? _allSatisfied;
+    private bool? _anySatisfied;
+    private bool? _noneSatisfied;
+    private IReadOnlyList<TModel>? _allModels;
+    private IReadOnlyList<TModel>? _causalModels;
+    private IReadOnlyList<BooleanResult<TModel, TMetadata>>? _trueResults;
+    private IReadOnlyList<BooleanResult<TModel, TMetadata>>? _falseResults;
+    private IReadOnlyList<TModel>? _trueModels;
+    private IReadOnlyList<TModel>? _falseModels;
+    private IReadOnlyList<string>? _assertions;
+    private IReadOnlyList<TMetadata>? _metadata;
+
+    internal HigherOrderBooleanResultEvaluation(IReadOnlyList<BooleanResult<TModel, TMetadata>> results,
+        IReadOnlyList<BooleanResult<TModel, TMetadata>> causalResults)
+    {
+        _results = results;
+        _causalResults = causalResults;
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether all results are satisfied.
+    /// </summary>
+    public bool AllSatisfied => _allSatisfied ??= _results.All(result => result.Satisfied);
+
+    /// <summary>
+    /// Gets a value indicating whether any results are satisfied.
+    /// </summary>
+    public bool AnySatisfied => _anySatisfied ??= _results.Any(result => result.Satisfied);
+
+    /// <summary>
+    /// Gets a value indicating whether none of the results are satisfied.
+    /// </summary>
+    public bool NoneSatisfied => _noneSatisfied ??= _results.All(result => !result.Satisfied);
+
+    /// <summary>
+    /// Gets the list of all models.
+    /// </summary>
+    public IReadOnlyList<TModel> Models => _allModels ??= _results.Select(result => result.Model).ToArray();
+
+    /// <summary>
+    /// Gets the list of models where the result is true.
+    /// </summary>
+    public IReadOnlyList<TModel> TrueModels => _trueModels ??=
+        (_trueResults ??= _results.WhereTrue().ToArray()).Select(result => result.Model).ToArray();
+
+    /// <summary>
+    /// Gets the list of models where the result is false.
+    /// </summary>
+    public IReadOnlyList<TModel> FalseModels => _falseModels ??=
+        (_falseResults ??= _results.WhereFalse().ToArray()).Select(result => result.Model).ToArray();
+
+    /// <summary>
+    /// Gets the list of causal models.
+    /// </summary>
+    public IReadOnlyList<TModel> CausalModels => _causalModels ??= _causalResults.Select(result => result.Model).ToArray();
+
+    /// <summary>
+    /// Gets the values associated with the evaluation.
+    /// </summary>
+    public IEnumerable<TMetadata> Values => _metadata ??=
+        _causalResults.SelectMany(result => result.MetadataTier.Metadata).DistinctWithOrderPreserved().ToArray();
+
+    /// <summary>
+    /// Gets the assertions made during the evaluation.
+    /// </summary>
+    public IEnumerable<string> Assertions => _assertions ??=
+        _causalResults.SelectMany(result => result.Explanation.Assertions).DistinctWithOrderPreserved().ToArray();
+
+    /// <summary>
+    /// Gets the list of all results.
+    /// </summary>
+    public IEnumerable<BooleanResult<TModel, TMetadata>> Results => _results;
+
+    /// <summary>
+    /// Gets the list of results where the result is true.
+    /// </summary>
+    public IEnumerable<BooleanResult<TModel, TMetadata>> TrueResults =>
+        _trueResults ??= _results.WhereTrue().ToArray();
+
+    /// <summary>
+    /// Gets the list of results where the result is false.
+    /// </summary>
+    public IEnumerable<BooleanResult<TModel, TMetadata>> FalseResults =>
+        _falseResults ??= _results.WhereFalse().ToArray();
+
+    /// <summary>
+    /// Gets the list of causal results.
+    /// </summary>
+    public IEnumerable<BooleanResult<TModel, TMetadata>> CausalResults => _causalResults;
+
+    /// <summary>
+    /// Gets the total count of results.
+    /// </summary>
+    public int Count => _results.Count;
+
+    /// <summary>
+    /// Gets the count of true results.
+    /// </summary>
+    public int TrueCount => (_trueResults ??= _results.WhereTrue().ToArray()).Count;
+
+    /// <summary>
+    /// Gets the count of false results.
+    /// </summary>
+    public int FalseCount => (_falseResults ??= _results.WhereFalse().ToArray()).Count;
+
+    /// <summary>
+    /// Gets the count of causal results.
+    /// </summary>
+    public int CausalCount => _causalResults.Count;
+}

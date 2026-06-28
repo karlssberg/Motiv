@@ -22,5 +22,5 @@ var areEven =
         .Create();
 
 
-areEven.IsSatisfiedBy([ 1, 2, 3, 4 ]).GetRootAssertions();  // [ "is even" ]
+areEven.Evaluate([ 1, 2, 3, 4 ]).GetRootAssertions();  // [ "is even" ]
 ```

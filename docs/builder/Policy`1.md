@@ -1,6 +1,6 @@
-### Creating explanation propositions as a policy class
+# Creating explanation propositions as a policy class
 
-### `Policy<TModel>`
+## `Policy<TModel>`
 
 ```csharp
 public class IsEvenProposition : Policy<int>( // Spec used as base type
@@ -19,7 +19,6 @@ public class IsEvenAndPositiveProposition : Policy<int>(() => // Spec used as ba
                    .Create();
     });
 ```
-
 
 This type is used to derive new types of _metadata_ policies that can be instantiated anywhere in your codebase.
 It is a syntactic sugar for the `Policy<TModel, string>` type.

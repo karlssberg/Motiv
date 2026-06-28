@@ -1,3 +1,8 @@
+---
+title: AsAnySatisfied()
+category: building
+---
+
 # Any satisfied
 
 ```csharp

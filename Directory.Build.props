@@ -1,0 +1,25 @@
+﻿<Project>
+    <PropertyGroup>
+        <!-- Common properties for all projects -->
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <NoWarn>$(NoWarn);NETSDK1233;NU1510;MFFG0002</NoWarn>
+
+        <!-- Common package metadata -->
+        <Authors>Daniel Karlsson</Authors>
+        <Copyright>Copyright (c) 2026 Daniel Karlsson</Copyright>
+        <PackageProjectUrl>https://karlssberg.github.io/Motiv</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/karlssberg/Motiv</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+        <!-- Package debugging: symbol packages + SourceLink (SourceLink is bundled in the .NET 8+ SDK) -->
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    </PropertyGroup>
+</Project>

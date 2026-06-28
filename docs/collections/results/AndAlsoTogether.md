@@ -12,8 +12,8 @@ remaining results will not be generated.
 ```csharp
 IEnumerable<BooleanResult<int, string>> results = 
     [
-        new IsEvenProposition().IsSatisfiedBy(6),
-        new IsGreaterThanProposition(5).IsSatisfiedBy(6)
+        new IsEvenProposition().Evaluate(6),
+        new IsGreaterThanProposition(5).Evaluate(6)
     ];
 
 var andAlsoTogetherResult = results.AndAlsoTogether();

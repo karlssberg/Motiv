@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>Motiv</PackageId>
+        <Title>Motiv</Title>
+        <Description>Transform the way you work with boolean logic by forming them from discrete propositions. This enables you to dynamically generate custom output, such as providing explanations about the causes behind a result.</Description>
+        <PackageTags>Boolean Logic, Decision Making, Explainability, Visibility, Boolean Blindness, Specification Pattern</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>icon.png</PackageIcon>
+        <TargetFrameworks>net8.0;net9.0;netstandard2.0;net10.0</TargetFrameworks>
+        <MinVerTagPrefix>v</MinVerTagPrefix>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MinVer" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="$(AssemblyName).Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" PrivateAssets="all" OutputItemType="Analyzer" />
+        <ProjectReference Include="..\Motiv.Analyzer\Motiv.Analyzer.csproj" PrivateAssets="all" OutputItemType="Analyzer" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Converj" />
+    </ItemGroup>
+
+</Project>

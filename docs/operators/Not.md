@@ -24,7 +24,7 @@ var isEvenSpec = Spec
 
 var isOddSpec = !isEvenSpec; // same as: isEvenSpec.Not()
 
-var isOdd = isOddSpec.IsSatisfiedBy(3);
+var isOdd = isOddSpec.Evaluate(3);
 isOdd.Satisfied; // true
 isOdd.Reason; // "odd"
 isOdd.Assertions; // ["odd"]

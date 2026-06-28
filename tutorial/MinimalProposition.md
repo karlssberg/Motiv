@@ -18,10 +18,10 @@ It uses the minimum set of fluent builder methods to create a proposition.
 
 ```csharp
 var isEven =
-    Spec.Build((int n) => n % 2 == 0)   // predicate
-        .Create("is even");             // propositional-statement/name
+    Spec.Build((int n) => n % 2 == 0)    // predicate
+        .Create("is even");              // propositional-statement/name
 
-var result = isEven.IsSatisfiedBy(2);
+var result = isEven.Evaluate(2);
 
 result.Reason;    // "is even"
 result.Assertion; // ["is even"]
@@ -30,7 +30,7 @@ result.Assertion; // ["is even"]
 And when negated:
 
 ```csharp
-var result = isEven.IsSatisfiedBy(3);
+var result = isEven.Evaluate(3);
 
 result.Reason;    // "¬is even"
 result.Assertion; // ["¬is even"]
@@ -49,8 +49,8 @@ Spec.Build((int n) => n % 2 == 0)
 This is functionally the same as:
 
 ```csharp
-Spec.Build((int n) => n % 2 == 0)   // predicate
-    .WhenTrue("is even")            // propositional statement
-    .WhenFalse("¬is even")          // negation of the propositional statement
+Spec.Build((int n) => n % 2 == 0)        // predicate
+    .WhenTrue("is even")                 // propositional statement
+    .WhenFalse("¬is even")               // negation of the propositional statement
     .Create();
 ```

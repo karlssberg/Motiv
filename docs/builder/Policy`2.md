@@ -1,6 +1,11 @@
-### Creating metadata propositions as a spec class
+---
+title: Policy<TModel, TMetadata>
+category: building
+---
 
-### `Policy<TModel, TMetadata>`
+# Creating metadata propositions as a policy class
+
+## `Policy<TModel, TMetadata>`
 
 ```csharp
 public class IsEvenProposition : Policy<int, MyMetadata>( // Spec used as base type

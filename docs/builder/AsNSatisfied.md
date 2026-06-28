@@ -1,4 +1,9 @@
-### _n_ satisfied
+---
+title: AsNSatisfied()
+category: building
+---
+
+# _n_ satisfied
 
 ```csharp
 AsNSatisfied(int n)
