@@ -82,7 +82,7 @@ We use GitHub Flow, a simple and effective branching strategy:
 
 1. Ensure any install or build dependencies are removed before the end of the layer when doing a build.
 2. Update documentation with details of changes to the interface, including new APIs, breaking changes, or significant functionality updates.
-3. Increase the version numbers in any examples files and the README.md to the new version that this Pull Request would represent. The versioning scheme we use is [SemVer](http://semver.org/).
+3. Do not edit version numbers anywhere in the repository — the git tag is the single source of truth for the package version (see [Releasing](#releasing)). The versioning scheme we use is [SemVer](http://semver.org/).
 4. You may merge the Pull Request once you have the sign-off of two other developers, or if you do not have permission to do that, you may request the second reviewer to merge it for you.
 
 ## Reporting Issues
@@ -113,6 +113,53 @@ We use GitHub Flow, a simple and effective branching strategy:
 
 - If you have questions or need help, please open an issue in the GitHub issue tracker.
 - For general discussions about development, use the Discussions feature on GitHub.
+
+## Releasing
+
+Releases are published to NuGet automatically when a version tag is pushed.
+The git tag is the single source of truth for the package version (derived via
+[MinVer](https://github.com/adamralph/minver)) — there is no version number to
+edit in the repository.
+
+To cut a release:
+
+1. Merge your changes to `main` (CI runs the full test suite and deploys docs).
+2. Tag the release commit and push the tag:
+   ```bash
+   git tag v8.1.0
+   git push origin v8.1.0
+   ```
+3. The `Release` workflow then runs the tests, packs `Motiv` at version `8.1.0`,
+   pushes the package (and its symbol package) to NuGet, and creates a GitHub
+   Release with auto-generated notes.
+
+Tags must be `v`-prefixed (e.g. `v8.1.0`). The first release tag must be
+`v8.0.0` or higher.
+
+### Dry run with a prerelease tag
+
+Before cutting a real release — especially the first one through this pipeline —
+validate the whole chain end to end with a prerelease tag. MinVer treats a tag
+like `v8.0.0-rc.1` as a prerelease version, so NuGet flags the package as
+pre-release and never serves it as the default `Install-Package Motiv` result.
+
+1. Push a prerelease tag from the commit you intend to release:
+   ```bash
+   git tag v8.0.0-rc.1
+   git push origin v8.0.0-rc.1
+   ```
+2. Watch the `Release` workflow run. Confirm it: runs the test gate, packs
+   `Motiv` at version `8.0.0-rc.1`, pushes the package and its symbol package to
+   NuGet, and creates a GitHub Release.
+3. Verify the prerelease appears on
+   [nuget.org/packages/Motiv](https://www.nuget.org/packages/Motiv) (it shows
+   only when "Include prerelease" is enabled).
+4. When you're satisfied, cut the real release by tagging the same commit
+   `v8.0.0` (see "To cut a release" above). You can unlist the `-rc` prerelease
+   from NuGet afterwards if you prefer to keep the package page tidy.
+
+Repeat with `-rc.2`, `-rc.3`, etc. if you need further iterations — each is an
+independent prerelease and won't collide with the final `v8.0.0`.
 
 ## Acknowledgements
 
