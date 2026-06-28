@@ -37,5 +37,6 @@
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="BenchmarkDotNet.Diagnostics.dotTrace" Version="0.15.8" />
     <!-- Other packages -->
+    <PackageVersion Include="MinVer" Version="6.0.0" />
   </ItemGroup>
 </Project>
