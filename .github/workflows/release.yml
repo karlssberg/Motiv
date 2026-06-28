@@ -48,6 +48,9 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         generate_release_notes: true
+        # Mark hyphenated SemVer tags (e.g. v8.0.0-rc.1, -beta, -alpha) as a GitHub
+        # prerelease; a plain tag like v8.0.0 stays a full "Latest" release.
+        prerelease: ${{ contains(github.ref_name, '-') }}
         files: |
           nupkgs/*.nupkg
           nupkgs/*.snupkg
