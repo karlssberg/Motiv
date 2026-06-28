@@ -16,7 +16,7 @@ if (user.Age >= 18 &&
     (user.Country == "US" || user.HasInternationalPermit) &&
     !user.IsRestricted)
 {
-    // Which condition failed? How do I debug this?
+    // Which condition failed? How do I debug this in production?
 }
 ```
 
@@ -76,7 +76,7 @@ var isEligible = hasGoodCredit.And(hasIncome);
 
 var result = isEligible.Evaluate(eligibleCustomer);
 result.Satisfied;  // true
-result.Assertions; // ["good credit", "sufficient income"]
+result.Assertions; // ["good credit == true", "sufficient income == true"]
 ```
 
 ### Custom Assertions
@@ -154,3 +154,26 @@ Install-Package Motiv
 - [Documentation](https://karlssberg.github.io/Motiv/)
 - [Try Online](https://dotnetfiddle.net/knykpD)
 - [GitHub](https://github.com/karlssberg/Motiv/)
+
+## Releasing
+
+Releases are published to NuGet automatically when a version tag is pushed.
+The git tag is the single source of truth for the package version (derived via
+[MinVer](https://github.com/adamralph/minver)) — there is no version number to
+edit in the repository.
+
+To cut a release:
+
+1. Merge your changes to `main` (CI runs the full test suite and deploys docs).
+2. Tag the release commit and push the tag:
+   ```bash
+   git tag v8.1.0
+   git push origin v8.1.0
+   ```
+3. The `Release` workflow then runs the tests, packs `Motiv` at version `8.1.0`,
+   pushes the package (and its symbol package) to NuGet, and creates a GitHub
+   Release with auto-generated notes.
+
+Tags must be `v`-prefixed (e.g. `v8.1.0`). The first release tag must be
+`v8.0.0` or higher. To validate the pipeline without a real release, push a
+prerelease tag such as `v8.0.0-rc.1`.
