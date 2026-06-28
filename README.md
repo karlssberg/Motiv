@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/karlssberg/Motiv/main/icon.png" alt="Motiv logo" width="64" align="left"/>
+
 # Motiv
 
 ![Build Status](https://github.com/karlssberg/Motiv/actions/workflows/dotnet.yml/badge.svg) [![NuGet](https://img.shields.io/nuget/v/Motiv.svg)](https://www.nuget.org/packages/Motiv/) [![codecov](https://codecov.io/gh/karlssberg/Motiv/graph/badge.svg?token=XNN34D2JIP)](https://codecov.io/gh/karlssberg/Motiv)
