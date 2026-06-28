@@ -20,10 +20,10 @@ flowchart BT
     NotZero((NOT)) --> And
     IsPositive((Positive?)) --> NotPositive
     IsZero((Zero?)) --> NotZero
-    TrueIsPositive(["&quot;positive&quot;"]) -->|true| IsPositive
-    FalseIsPositive(["&quot;¬positive&quot;"]) -->|false| IsPositive
-    TrueIsZero(["&quot;zero&quot;"]) -->|true| IsZero
-    FalseIsZero(["&quot;¬zero&quot;"]) -->|false| IsZero
+    TrueIsPositive(["&quot;positive == true&quot;"]) -->|true| IsPositive
+    FalseIsPositive(["&quot;positive == false&quot;"]) -->|false| IsPositive
+    TrueIsZero(["&quot;zero == true&quot;"]) -->|true| IsZero
+    FalseIsZero(["&quot;zero == false&quot;"]) -->|false| IsZero
 
     style P stroke:darkcyan,stroke-width:4px
     style IsPositive stroke:darkcyan,stroke-width:4px

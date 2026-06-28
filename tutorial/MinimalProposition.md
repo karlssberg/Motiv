@@ -4,8 +4,8 @@
 ```mermaid
 %%{init: { 'themeVariables': { 'fontSize': '13px' }}}%%
 flowchart BT
-    True(["&quot;is satisfied&quot;"]) -->|true| P((is satisfied?))
-    False(["&quot;¬is satisfied&quot;"]) -->|false| P
+    True(["&quot;is satisfied == true&quot;"]) -->|true| P((is satisfied?))
+    False(["&quot;is satisfied == false&quot;"]) -->|false| P
 
     style P stroke:darkcyan,stroke-width:4px
     style True stroke:darkgreen,stroke-width:2px
@@ -23,21 +23,23 @@ var isEven =
 
 var result = isEven.Evaluate(2);
 
-result.Reason;    // "is even"
-result.Assertion; // ["is even"]
+result.Reason;    // "is even == true"
+result.Assertion; // ["is even == true"]
 ```
 
-And when negated:
+And when not satisfied:
 
 ```csharp
 var result = isEven.Evaluate(3);
 
-result.Reason;    // "¬is even"
-result.Assertion; // ["¬is even"]
+result.Reason;    // "is even == false"
+result.Assertion; // ["is even == false"]
 ```
 
-It will implicitly create a `WhenTrue()` and `WhenFalse()` method, using as assertions the propositional statement
-provided to the `Create()` method, with the _false_ assertion being the negation of the propositional statement (prefixed with a `!`).
+Because no explicit `WhenTrue()` or `WhenFalse()` assertions are provided, Motiv derives them from the propositional
+statement supplied to the `Create()` method.
+It appends `== true` when the proposition is satisfied and `== false` when it is not, which disambiguates the outcome
+when the name is the only text available.
 
 So using the example:
 
@@ -46,11 +48,4 @@ Spec.Build((int n) => n % 2 == 0)
     .Create("is even");
 ```
 
-This is functionally the same as:
-
-```csharp
-Spec.Build((int n) => n % 2 == 0)        // predicate
-    .WhenTrue("is even")                 // propositional statement
-    .WhenFalse("¬is even")               // negation of the propositional statement
-    .Create();
-```
+yields the assertion `is even == true` when satisfied and `is even == false` when not.

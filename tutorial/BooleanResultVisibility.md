@@ -15,13 +15,13 @@ var spec = specA & !(specB | specC);
 
 var act = spec.Evaluate(true);
 
-act.Reason; // "a & !(¬b | ¬c)"
+act.Reason; // "(a == true) & !((b == false) | (c == false))"
 ```
 
 The operators used in the `Reason` property are there to indicate how the propositions are combined.
-You will notice that the `¬` symbol is used to indicate that a proposition resolved to false, and is not used
-indicate that the original sub-expression was negated, which instead uses the `!` symbol.
-Presenting the expression in this way allows you to quickly identify a negative-assertion from a NOT operator.
+You will notice that each proposition is suffixed with `== true` or `== false` to indicate the value it resolved to,
+while the `!` symbol indicates that the original sub-expression was negated with a NOT operator.
+Presenting the expression in this way allows you to quickly distinguish a proposition's outcome from a NOT operator.
 
 ### Justification
 

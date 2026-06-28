@@ -124,7 +124,7 @@ var result = areAnyEvenAndAllPositive.Evaluate([-1, 2, 3]);
 
 result.Satisfied;     // false
 result.Assertions;    // ["n <= 0"]
-result.Justification; // ¬all positive numbers amd some are even
+result.Justification; // all positive numbers amd some are even == false
                       //     AND
                       //         numbers.All((int n) => n > 0) == false
                       //             n <= 0
