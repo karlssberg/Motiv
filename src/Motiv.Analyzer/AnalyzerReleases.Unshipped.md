@@ -6,3 +6,4 @@
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 MOTIV0001 | Category | Info | MotivAnalyzer
+MOTIV0007 | Category | Info | NegatedSpecResultAnalyzer

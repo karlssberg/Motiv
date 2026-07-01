@@ -60,11 +60,16 @@ public class MotivAnalyzer : DiagnosticAnalyzer
         // Check if this expression is inside a Spec.Build() lambda - if so, ignore it
         if (IsInsideSpecLambda(expression, context.SemanticModel)) return;
 
+        // Negating a spec's evaluation result is MOTIV0007 territory
+        if (expression is PrefixUnaryExpressionSyntax notExpression
+            && NegatedSpecResultAnalyzer.IsSpecResultNegation(notExpression, context.SemanticModel))
+            return;
+
         var diagnostic = Diagnostic.Create(Motiv0001, expression.GetLocation());
         context.ReportDiagnostic(diagnostic);
     }
 
-    private static bool IsNestedInLogicalExpression(SyntaxNode node)
+    internal static bool IsNestedInLogicalExpression(SyntaxNode node)
     {
         // Walk up through parenthesized expressions to find if we're inside a logical expression
         var parent = node.Parent;
