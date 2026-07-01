@@ -14,16 +14,17 @@ This document outlines potential enhancements to the Motiv.Analyzer and Motiv.Co
 ## Current State
 
 ### Existing Functionality
-- **Analyzer:** Detects binary expressions (comparisons, logical operators) - `MOTIV0001`
-- **Code Fix:** Converts expressions to `Spec<T>` with `.IsSatisfiedBy()` invocations
-- **Coverage:** Simple and complex boolean expressions
+- **Analyzer:** Detects binary expressions, comparisons, logical operators, and `is`/pattern-matching expressions - `MOTIV0001`
+- **Code Fix:** Converts expressions to `Spec<T>` with `.Evaluate()` invocations, generating named private readonly fields with semantically derived names (e.g. `_isValidProposition`) via `ExpressionNameDeriver`/`ClauseNameDeriver`
+- **Coverage:** Simple and complex boolean expressions, including `is`/`is`-pattern expressions
 - **Smart Filtering:** Ignores expressions already inside `Spec.Build()` lambdas
 
 ### Limitations
 - Only handles expression-level transformations
-- Generic "Proposition" naming doesn't capture domain semantics
 - Doesn't detect higher-level composition anti-patterns
 - Doesn't leverage full Motiv API (collection methods, policies, higher-order specs)
+
+> **Note:** An earlier version of this roadmap listed generic "Proposition" naming as a limitation and proposed "Context-Aware Semantic Naming" (#3 below) as a fix. That naming derivation has since been implemented in the existing MOTIV0001 code fix, so #3 is now largely done rather than proposed — see the note under that item.
 
 ---
 
@@ -57,7 +58,7 @@ private static readonly SpecBase<Person> IsAdult =
 public bool CanVote(Person p) =>
     IsAdult.AndAlso(Spec.Build((Person p) => p.HasCitizenship)
                         .Create("has citizenship"))
-    .IsSatisfiedBy(p).Satisfied;
+    .Evaluate(p).Satisfied;
 ```
 
 **Benefits:**
@@ -71,21 +72,21 @@ public bool CanVote(Person p) =>
 
 ---
 
-#### 2. Suggest Spec Composition Over Multiple IsSatisfiedBy Calls
+#### 2. Suggest Spec Composition Over Multiple Evaluate Calls
 **Diagnostic ID:** `MOTIV0003`
 **Severity:** Info
 **Title:** "Compose specs instead of multiple satisfaction checks"
 
 **Description:**
-Detects multiple `.IsSatisfiedBy()` calls on the same model combined with boolean operators. Suggests composing the specs first.
+Detects multiple `.Evaluate()` calls on the same model combined with boolean operators. Suggests composing the specs first.
 
 **Example:**
 
 ```csharp
 // Detected anti-pattern:
-if (isAdult.IsSatisfiedBy(person).Satisfied &&
-    hasLicense.IsSatisfiedBy(person).Satisfied &&
-    !hasDUI.IsSatisfiedBy(person).Satisfied)
+if (isAdult.Evaluate(person).Satisfied &&
+    hasLicense.Evaluate(person).Satisfied &&
+    !hasDUI.Evaluate(person).Satisfied)
 {
     AllowDriving();
 }
@@ -96,7 +97,7 @@ if (isAdult.IsSatisfiedBy(person).Satisfied &&
 private static readonly SpecBase<Person> CanDrive =
     isAdult.AndAlso(hasLicense).AndAlso(hasDUI.Not());
 
-if (CanDrive.IsSatisfiedBy(person).Satisfied)
+if (CanDrive.Evaluate(person).Satisfied)
 {
     AllowDriving();
 }
@@ -116,6 +117,7 @@ if (CanDrive.IsSatisfiedBy(person).Satisfied)
 #### 3. Context-Aware Semantic Naming
 **Enhancement to:** Existing `MOTIV0001` code fix
 **Priority:** High
+**Status:** Largely implemented — the MOTIV0001 code fix now derives field/spec names from the expression, method, and variable context via `ExpressionNameDeriver` and `ClauseNameDeriver` rather than generating a generic "Proposition" name. Remaining work here is refinement (e.g. offering multiple naming alternatives), not building the capability from scratch.
 
 **Description:**
 Enhance the current code fix to suggest semantically meaningful names instead of generic "Proposition" by analyzing:
@@ -127,10 +129,10 @@ Enhance the current code fix to suggest semantically meaningful names instead of
 **Example:**
 
 ```csharp
-// Current fix generates:
-public class Proposition() : Spec<int> { ... }
+// Current fix already generates a derived name, e.g.:
+private readonly SpecBase<int> _isAdultSpec = ...;
 
-// Enhanced fix suggests (with options):
+// Remaining enhancement: offer multiple naming alternatives instead of one:
 // Option 1: IsAdultSpec (from pattern: age >= 18)
 // Option 2: IsVotingEligibleSpec (from method: IsEligibleForVoting)
 // Option 3: MeetsAgeRequirementSpec (from context)
@@ -168,7 +170,7 @@ Detects manual aggregation of specs with LINQ and suggests using Motiv's semanti
 ```csharp
 // Detected:
 var combined = specs.Aggregate((left, right) => left & right);
-var anyTrue = specs.Any(s => s.IsSatisfiedBy(model).Satisfied);
+var anyTrue = specs.Any(s => s.Evaluate(model).Satisfied);
 ```
 
 **Suggested Fix:**
@@ -180,8 +182,8 @@ var anyTrue = specs.AnyTrue(model);
 **Patterns to Detect:**
 - `Aggregate((l, r) => l & r)` → `AndTogether()`
 - `Aggregate((l, r) => l | r)` → `OrTogether()`
-- `Any(s => s.IsSatisfiedBy(...).Satisfied)` → `AnyTrue(...)`
-- `All(s => s.IsSatisfiedBy(...).Satisfied)` → `AllTrue(...)`
+- `Any(s => s.Evaluate(...).Satisfied)` → `AnyTrue(...)`
+- `All(s => s.Evaluate(...).Satisfied)` → `AllTrue(...)`
 
 **Benefits:**
 - Idiomatic API usage
@@ -278,11 +280,11 @@ Detects if/else-if chains evaluating conditions on the same model with different
 // Detected pattern:
 public HandRank EvaluateHand(Hand hand)
 {
-    if (isRoyalFlush.IsSatisfiedBy(hand).Satisfied)
+    if (isRoyalFlush.Evaluate(hand).Satisfied)
         return HandRank.RoyalFlush;
-    else if (isStraightFlush.IsSatisfiedBy(hand).Satisfied)
+    else if (isStraightFlush.Evaluate(hand).Satisfied)
         return HandRank.StraightFlush;
-    else if (isFourOfKind.IsSatisfiedBy(hand).Satisfied)
+    else if (isFourOfKind.Evaluate(hand).Satisfied)
         return HandRank.FourOfKind;
     // ... more conditions
 }
@@ -325,20 +327,20 @@ public HandRank EvaluateHand(Hand hand) =>
 **Title:** "Use spec negation instead of inverting result"
 
 **Description:**
-Detects negation of `.IsSatisfiedBy().Satisfied` and suggests composing with `.Not()`.
+Detects negation of `.Evaluate().Satisfied` and suggests composing with `.Not()`.
 
 **Example:**
 
 ```csharp
 // Detected:
-if (!isExpired.IsSatisfiedBy(token).Satisfied)
+if (!isExpired.Evaluate(token).Satisfied)
 {
     ProcessToken();
 }
 
 // Suggested:
 var isValid = isExpired.Not();
-if (isValid.IsSatisfiedBy(token).Satisfied)
+if (isValid.Evaluate(token).Satisfied)
 {
     ProcessToken();
 }
@@ -367,12 +369,12 @@ Detects LINQ collection operations that could use Motiv's higher-order spec capa
 
 ```csharp
 // Detected:
-var allValid = items.All(item => isValid.IsSatisfiedBy(item).Satisfied);
-var hasAnyExpired = items.Any(item => isExpired.IsSatisfiedBy(item).Satisfied);
+var allValid = items.All(item => isValid.Evaluate(item).Satisfied);
+var hasAnyExpired = items.Any(item => isExpired.Evaluate(item).Satisfied);
 
 // Suggested:
-var allValid = isValid.AsAllSatisfy().IsSatisfiedBy(items).Satisfied;
-var hasAnyExpired = isExpired.AsAnySatisfy().IsSatisfiedBy(items).Satisfied;
+var allValid = isValid.AsAllSatisfy().Evaluate(items).Satisfied;
+var hasAnyExpired = isExpired.AsAnySatisfy().Evaluate(items).Satisfied;
 ```
 
 **Benefits:**
@@ -413,7 +415,7 @@ var hasAnyExpired = isExpired.AsAnySatisfy().IsSatisfiedBy(items).Satisfied;
 
 1. **Composition Over Multiple Calls** (#2)
    - Semantic model analysis
-   - Detect multiple `.IsSatisfiedBy()` on same model
+   - Detect multiple `.Evaluate()` on same model
    - Generate composed spec
 
 2. **Collection Methods** (#4)
@@ -423,7 +425,7 @@ var hasAnyExpired = isExpired.AsAnySatisfy().IsSatisfiedBy(items).Satisfied;
 
 3. **Inverted Logic** (#8)
    - Simple pattern, quick win
-   - Detect `!...IsSatisfiedBy().Satisfied`
+   - Detect `!...Evaluate().Satisfied`
    - Suggest `.Not()` composition
 
 **Deliverables:**
@@ -626,15 +628,15 @@ Motiv.CodeFix/
 ## References
 
 - **Existing Implementation:**
-  - `/home/user/Motiv/src/Motiv.Analyzer/MotivAnalyzer.cs`
-  - `/home/user/Motiv/src/Motiv.CodeFix/ConvertToSpecCodeFix.cs`
+  - `src/Motiv.Analyzer/MotivAnalyzer.cs`
+  - `src/Motiv.CodeFix/MotivCodeFixProvider.cs` (plus supporting converters/derivers in `src/Motiv.CodeFix/`, e.g. `LogicalExpressionToSpecConverter.cs`, `ExpressionDecomposer.cs`, `ExpressionNameDeriver.cs`, `ClauseNameDeriver.cs`)
 
 - **Motiv Core API:**
-  - `/home/user/Motiv/Motiv/` (core library)
+  - `src/Motiv/` (core library)
   - Composition operators: And, AndAlso, Or, OrElse, XOr, Not
   - Collection methods: AndTogether, OrElseTogether, etc.
   - Policy pattern implementation
 
 - **Test Examples:**
-  - `/home/user/Motiv/src/Motiv.Analyzer.Tests/`
-  - `/home/user/Motiv/src/Motiv.CodeFix.Tests/`
+  - `src/Motiv.Analyzer.Tests/`
+  - `src/Motiv.CodeFix.Tests/`
