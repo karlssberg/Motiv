@@ -160,6 +160,43 @@ public class NegatedSpecResultAnalyzerTests
     }
 
     [Fact]
+    public async Task Should_report_negation_when_evaluation_invocation_is_parenthesized()
+    {
+        const string negatedExpression = "!(IsPositive.Evaluate(value)).Satisfied";
+        const string code =
+            $$"""
+              using Motiv;
+
+              namespace MyNamespace;
+
+              public class MyClass
+              {
+                  private static readonly SpecBase<int, string> IsPositive =
+                      Spec.Build((int value) => value > 0)
+                          .Create("is positive");
+
+                  public bool IsInvalid(int value)
+                  {
+                      return {{negatedExpression}};
+                  }
+              }
+              """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (Source, code) },
+                ExpectedDiagnostics =
+                {
+                    new DiagnosticResult("MOTIV0007", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                        .WithSpan(Source, 13, 16, 13, 16 + negatedExpression.Length)
+                }
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task Should_not_report_negation_of_structurally_similar_non_Motiv_type()
     {
         const string code =
