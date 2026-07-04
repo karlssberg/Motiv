@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Motiv.And;
 
 namespace Motiv;
 
@@ -20,4 +21,38 @@ public abstract class ExpressionSpecBase<TModel, TMetadata> : SpecBase<TModel, T
     /// <summary>Gets the predicate expression tree that this proposition represents.</summary>
     /// <returns>The predicate lambda expression describing this proposition.</returns>
     public abstract Expression<Func<TModel, bool>> ToExpression();
+
+    /// <summary>
+    /// Combines this proposition with another expression-backed proposition using the logical AND
+    /// operator. The result is itself expression-backed.
+    /// </summary>
+    /// <param name="spec">The expression-backed proposition to combine with this proposition.</param>
+    /// <returns>An expression-backed proposition representing the logical AND of the two propositions.</returns>
+    public ExpressionSpecBase<TModel, TMetadata> And(ExpressionSpecBase<TModel, TMetadata> spec) =>
+        new ExpressionAndSpec<TModel, TMetadata>(this, spec, this, spec);
+
+    /// <inheritdoc cref="And(ExpressionSpecBase{TModel, TMetadata})"/>
+    public ExpressionSpecBase<TModel, TMetadata> And(ExpressionPolicyBase<TModel, TMetadata> spec) =>
+        new ExpressionAndSpec<TModel, TMetadata>(this, spec, this, spec);
+
+    /// <summary>Combines two expression-backed propositions using the logical AND operator.</summary>
+    /// <param name="left">The left operand of the AND operation.</param>
+    /// <param name="right">The right operand of the AND operation.</param>
+    /// <returns>An expression-backed proposition representing the logical AND of the two propositions.</returns>
+    public static ExpressionSpecBase<TModel, TMetadata> operator &(
+        ExpressionSpecBase<TModel, TMetadata> left,
+        ExpressionSpecBase<TModel, TMetadata> right) =>
+        left.And(right);
+
+    /// <inheritdoc cref="op_BitwiseAnd(ExpressionSpecBase{TModel, TMetadata}, ExpressionSpecBase{TModel, TMetadata})"/>
+    public static ExpressionSpecBase<TModel, TMetadata> operator &(
+        ExpressionSpecBase<TModel, TMetadata> left,
+        ExpressionPolicyBase<TModel, TMetadata> right) =>
+        left.And(right);
+
+    /// <inheritdoc cref="op_BitwiseAnd(ExpressionSpecBase{TModel, TMetadata}, ExpressionSpecBase{TModel, TMetadata})"/>
+    public static ExpressionSpecBase<TModel, TMetadata> operator &(
+        ExpressionPolicyBase<TModel, TMetadata> left,
+        ExpressionSpecBase<TModel, TMetadata> right) =>
+        new ExpressionAndSpec<TModel, TMetadata>(left, right, left, right);
 }
