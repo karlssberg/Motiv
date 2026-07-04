@@ -14,7 +14,7 @@ public static class ExpressionTreeExtensions
     /// </summary>
     /// <param name="expression">The expression to </param>
     /// <typeparam name="TModel"></typeparam>
-    /// <returns></returns>
-    public static SpecBase<TModel, string> ToSpec<TModel>(this Expression<Func<TModel, bool>> expression) =>
+    /// <returns>An expression-backed proposition whose predicate expression tree can be recovered via <see cref="ExpressionSpecBase{TModel,TMetadata}.ToExpression"/>.</returns>
+    public static ExpressionSpecBase<TModel, string> ToSpec<TModel>(this Expression<Func<TModel, bool>> expression) =>
         new ExpressionTreeTransformer<TModel>(expression).Transform();
 }

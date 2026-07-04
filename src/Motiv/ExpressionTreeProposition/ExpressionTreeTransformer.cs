@@ -6,12 +6,20 @@ namespace Motiv.ExpressionTreeProposition;
 
 internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> lambdaExpression)
 {
-    internal SpecBase<TModel, string> Transform()
+    internal ExpressionSpecBase<TModel, string> Transform()
     {
         return Transform(lambdaExpression.Body, lambdaExpression.Parameters.First());
     }
 
-    private SpecBase<TModel, string> Transform(
+    private static ExpressionSpecBase<TModel, string> WithFragment(
+        SpecBase<TModel, string> spec,
+        Expression expression,
+        ParameterExpression parameter) =>
+        new ExpressionSpecDecorator<TModel, string>(
+            spec,
+            Expression.Lambda<Func<TModel, bool>>(expression, parameter));
+
+    private ExpressionSpecBase<TModel, string> Transform(
         Expression expression,
         ParameterExpression parameter)
     {
@@ -29,7 +37,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         };
     }
 
-    private SpecBase<TModel, string> TransformBinaryExpression(
+    private ExpressionSpecBase<TModel, string> TransformBinaryExpression(
         BinaryExpression expression,
         ParameterExpression parameter)
     {
@@ -60,18 +68,18 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
             _ => TransformQuasiProposition(expression, parameter)
         };
 
-        SpecBase<TModel, string> Right(BinaryExpression binaryExpression)
+        ExpressionSpecBase<TModel, string> Right(BinaryExpression binaryExpression)
         {
             return Transform(binaryExpression.Right, parameter);
         }
 
-        SpecBase<TModel, string> Left(BinaryExpression binaryExpression)
+        ExpressionSpecBase<TModel, string> Left(BinaryExpression binaryExpression)
         {
             return Transform(binaryExpression.Left, parameter);
         }
     }
 
-    private SpecBase<TModel, string> TransformMethodCallExpression(
+    private ExpressionSpecBase<TModel, string> TransformMethodCallExpression(
         MethodCallExpression expression,
         ParameterExpression parameter)
     {
@@ -80,30 +88,30 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
             { Method.Name: nameof(Enumerable.Any), Arguments.Count: 2 }
                 when IsSpecPredicate() &&
                      IsCollectionsType() =>
-                TransformSpecExpression(expression, CreateAnySpec),
+                WithFragment(TransformSpecExpression(expression, CreateAnySpec), expression, parameter),
             { Method.Name: nameof(Enumerable.Any), Arguments.Count: 2 }
                 when IsBooleanResultPredicate() &&
                      IsCollectionsType() =>
-                TransformPredicateExpression(expression, CreateAnySpec),
+                WithFragment(TransformPredicateExpression(expression, CreateAnySpec), expression, parameter),
             { Method.Name: nameof(Enumerable.Any), Arguments.Count: 2 }
                 when IsBooleanPredicate() &&
                      IsSimpleEnumerableRelationship() &&
                      IsCollectionsType() =>
-                TransformPredicateExpression(expression, CreateAnySpec),
+                WithFragment(TransformPredicateExpression(expression, CreateAnySpec), expression, parameter),
 
             { Method.Name: nameof(Enumerable.All), Arguments.Count: 2 }
                 when IsSpecPredicate() &&
                      IsCollectionsType() =>
-                TransformSpecExpression(expression, CreateAllSpec),
+                WithFragment(TransformSpecExpression(expression, CreateAllSpec), expression, parameter),
             { Method.Name: nameof(Enumerable.All), Arguments.Count: 2 }
                 when IsBooleanResultPredicate() &&
                      IsCollectionsType() =>
-                TransformPredicateExpression(expression, CreateAllSpec),
+                WithFragment(TransformPredicateExpression(expression, CreateAllSpec), expression, parameter),
             { Method.Name: nameof(Enumerable.All), Arguments.Count: 2 }
                 when IsBooleanPredicate() &&
                      IsSimpleEnumerableRelationship() &&
                      IsCollectionsType() =>
-                TransformPredicateExpression(expression, CreateAllSpec),
+                WithFragment(TransformPredicateExpression(expression, CreateAllSpec), expression, parameter),
             _ => TransformQuasiProposition(expression, parameter)
         };
 
@@ -176,7 +184,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         }
     }
 
-    private SpecBase<TModel, string> TransformBooleanConditionalExpression(
+    private ExpressionSpecBase<TModel, string> TransformBooleanConditionalExpression(
         ConditionalExpression expression,
         ParameterExpression parameter)
     {
@@ -186,7 +194,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
 
         var whenConditional = expression.Serialize();
 
-        return
+        var spec =
             Spec.Build((TModel model) =>
                 {
                     var antecedent = test.Evaluate(model);
@@ -198,9 +206,11 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
                 .WhenTrueYield((_, result) => result.Assertions)
                 .WhenFalseYield((_, result) => result.Assertions)
                 .Create(whenConditional);
+
+        return WithFragment(spec, expression, parameter);
     }
 
-    private SpecBase<TModel, string> TransformComparisonExpression(
+    private ExpressionSpecBase<TModel, string> TransformComparisonExpression(
         BinaryExpression expression,
         ParameterExpression parameter,
         Func<Expression, Expression, BinaryExpression> whenTrueFactory,
@@ -211,14 +221,16 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         var whenTrueExpression = whenTrueFactory(expression.Left, expression.Right);
         var whenFalseExpression = whenFalseFactory(expression.Left, expression.Right);
 
-        return
+        var spec =
             Spec.Build(predicate)
                 .WhenTrue(model => whenTrueExpression.Serialize(model, parameter))
                 .WhenFalse(model => whenFalseExpression.Serialize(model, parameter))
                 .Create(whenTrueExpression.Serialize());
+
+        return WithFragment(spec, expression, parameter);
     }
 
-    private SpecBase<TModel, string> TransformUnaryExpression(
+    private ExpressionSpecBase<TModel, string> TransformUnaryExpression(
         UnaryExpression expression,
         ParameterExpression parameter)
     {
@@ -411,7 +423,7 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
             : null;
     }
 
-    private SpecBase<TModel, string> TransformQuasiProposition(
+    private ExpressionSpecBase<TModel, string> TransformQuasiProposition(
         Expression expression,
         ParameterExpression parameter)
     {
@@ -436,27 +448,31 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
             expression.ToAssertionExpression(false));
     }
 
-    private SpecBase<TModel, string> CreateSpecForBoolean(
+    private ExpressionSpecBase<TModel, string> CreateSpecForBoolean(
         Expression expression,
         ParameterExpression parameter,
         Expression whenTrueExpression,
         Expression whenFalseExpression)
     {
-        return
+        var spec =
             Spec.Build(CreateFunc<TModel, bool>(expression, parameter))
                 .WhenTrue(model => whenTrueExpression.Serialize(model, parameter))
                 .WhenFalse(model => whenFalseExpression.Serialize(model, parameter))
                 .Create(whenTrueExpression.Serialize());
+
+        return WithFragment(spec, expression, parameter);
     }
 
-    private SpecBase<TModel, string> CreateSpecForBooleanResult(
+    private ExpressionSpecBase<TModel, string> CreateSpecForBooleanResult(
         Expression expression,
         ParameterExpression parameter,
         Expression propositionalStatementExpression)
     {
-        return
+        var spec =
             Spec.Build(CreateFunc<TModel, BooleanResultBase<string>>(expression, parameter))
                 .Create(propositionalStatementExpression.Serialize());
+
+        return WithFragment(spec, propositionalStatementExpression, parameter);
     }
 
     private static (Expression, PredicateReturnType) ResolvePredicateResultExpression(Expression expression)
