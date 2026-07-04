@@ -1,18 +1,26 @@
+using System.Linq.Expressions;
+using Motiv.ExpressionTreeProposition;
 using Motiv.Or;
 using Motiv.Shared;
 using Motiv.Traversal;
+using Expr = System.Linq.Expressions.Expression;
 
 namespace Motiv.OrElse;
 
-internal sealed class OrElseSpec<TModel, TMetadata>(
+internal sealed class ExpressionOrElseSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
-    SpecBase<TModel, TMetadata> right)
-    : SpecBase<TModel, TMetadata>,
+    SpecBase<TModel, TMetadata> right,
+    IExpressionSpec<TModel> leftExpression,
+    IExpressionSpec<TModel> rightExpression)
+    : ExpressionSpecBase<TModel, TMetadata>,
         IBinaryOperationSpec<TModel, TMetadata>,
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
 {
     private readonly SpecBase[] _underlying = [left, right];
+
+    private readonly Lazy<Expression<Func<TModel, bool>>> _expression = new(() =>
+        ExpressionComposer.Combine(leftExpression, rightExpression, Expr.OrElse));
 
     public override IEnumerable<SpecBase> Underlying => _underlying;
 
@@ -37,6 +45,8 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
     SpecBase IBinaryOperationSpec.Right => Right;
 
     SpecBase IBinaryOperationSpec.Left => Left;
+
+    public override Expression<Func<TModel, bool>> ToExpression() => _expression.Value;
 
     public override bool Matches(TModel model) => left.Matches(model) || right.Matches(model);
 

@@ -1,17 +1,25 @@
+using System.Linq.Expressions;
+using Motiv.ExpressionTreeProposition;
 using Motiv.Shared;
 using Motiv.Traversal;
+using Expr = System.Linq.Expressions.Expression;
 
 namespace Motiv.XOr;
 
-internal sealed class XOrSpec<TModel, TMetadata>(
+internal sealed class ExpressionXOrSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
-    SpecBase<TModel, TMetadata> right)
-    : SpecBase<TModel, TMetadata>,
+    SpecBase<TModel, TMetadata> right,
+    IExpressionSpec<TModel> leftExpression,
+    IExpressionSpec<TModel> rightExpression)
+    : ExpressionSpecBase<TModel, TMetadata>,
         IBinaryOperationSpec<TModel, TMetadata>,
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
 {
     private readonly SpecBase[] _underlying = [left, right];
+
+    private readonly Lazy<Expression<Func<TModel, bool>>> _expression = new(() =>
+        ExpressionComposer.Combine(leftExpression, rightExpression, Expr.ExclusiveOr));
 
     public override IEnumerable<SpecBase> Underlying => _underlying;
 
@@ -20,7 +28,10 @@ internal sealed class XOrSpec<TModel, TMetadata>(
             operand => operand is XOrSpec<TModel, TMetadata> or ExpressionXOrSpec<TModel, TMetadata>);
 
     public string Operation => Operator.XOr;
+
     public bool IsCollapsable => false;
+
+    public override Expression<Func<TModel, bool>> ToExpression() => _expression.Value;
 
     public override bool Matches(TModel model) => left.Matches(model) ^ right.Matches(model);
 

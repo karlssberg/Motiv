@@ -1,18 +1,26 @@
+using System.Linq.Expressions;
 using Motiv.AndAlso;
+using Motiv.ExpressionTreeProposition;
 using Motiv.Shared;
 using Motiv.Traversal;
+using Expr = System.Linq.Expressions.Expression;
 
 namespace Motiv.And;
 
-internal sealed class AndSpec<TModel, TMetadata>(
+internal sealed class ExpressionAndSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> left,
-    SpecBase<TModel, TMetadata> right)
-    : SpecBase<TModel, TMetadata>,
+    SpecBase<TModel, TMetadata> right,
+    IExpressionSpec<TModel> leftExpression,
+    IExpressionSpec<TModel> rightExpression)
+    : ExpressionSpecBase<TModel, TMetadata>,
         IBinaryOperationSpec<TModel, TMetadata>,
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
 {
     private readonly SpecBase[] _underlying = [left, right];
+
+    private readonly Lazy<Expression<Func<TModel, bool>>> _expression = new(() =>
+        ExpressionComposer.Combine(leftExpression, rightExpression, Expr.And));
 
     public override IEnumerable<SpecBase> Underlying => _underlying;
 
@@ -36,6 +44,8 @@ internal sealed class AndSpec<TModel, TMetadata>(
     SpecBase IBinaryOperationSpec.Right => Right;
 
     SpecBase IBinaryOperationSpec.Left => Left;
+
+    public override Expression<Func<TModel, bool>> ToExpression() => _expression.Value;
 
     public override bool Matches(TModel model) => left.Matches(model) & right.Matches(model);
 

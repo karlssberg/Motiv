@@ -1,18 +1,24 @@
+using System.Linq.Expressions;
+using Motiv.ExpressionTreeProposition;
 using Motiv.Or;
 using Motiv.Shared;
 using Motiv.Traversal;
+using Expr = System.Linq.Expressions.Expression;
 
 namespace Motiv.OrElse;
 
-internal sealed class OrElsePolicy<TModel, TMetadata>(
-    PolicyBase<TModel, TMetadata> left,
-    PolicyBase<TModel, TMetadata> right)
-    : PolicyBase<TModel, TMetadata>,
+internal sealed class ExpressionOrElsePolicy<TModel, TMetadata>(
+    ExpressionPolicyBase<TModel, TMetadata> left,
+    ExpressionPolicyBase<TModel, TMetadata> right)
+    : ExpressionPolicyBase<TModel, TMetadata>,
         IBinaryOperationSpec<TModel, TMetadata>,
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
 {
     private readonly SpecBase[] _underlying = [left, right];
+
+    private readonly Lazy<Expression<Func<TModel, bool>>> _expression = new(() =>
+        ExpressionComposer.Combine(left, right, Expr.OrElse));
 
     public override IEnumerable<SpecBase> Underlying => _underlying;
 
@@ -25,6 +31,8 @@ internal sealed class OrElsePolicy<TModel, TMetadata>(
     public string Operation => Operator.OrElse;
 
     public bool IsCollapsable => true;
+
+    public override Expression<Func<TModel, bool>> ToExpression() => _expression.Value;
 
     public override bool Matches(TModel model) => left.Matches(model) || right.Matches(model);
 
