@@ -1,0 +1,51 @@
+using System.Linq.Expressions;
+using Motiv.ExpressionTreeProposition.PropositionBuilders.Overloads;
+using Converj.Attributes;
+using Motiv.Shared;
+
+namespace Motiv.ExpressionTreeProposition.PropositionBuilders;
+
+/// <summary>
+/// A factory for creating propositions based on the supplied proposition and explanation factories.
+/// </summary>
+/// <param name="expression">The expression to use for the specification.</param>
+/// <param name="trueBecause">The explanation for when the predicate is true.</param>
+/// <param name="falseBecause">The explanation for when the predicate is false.</param>
+/// <typeparam name="TModel">The type of the model.</typeparam>
+[FluentTarget(typeof(Spec), TerminalMethod = TerminalMethod.None)]
+public readonly struct BooleanExplanationWithNameExpressionTreePropositionFactory<TModel>(
+    [FluentMethod("From")]Expression<Func<TModel, bool>> expression,
+    [FluentMethod("WhenTrue")]string trueBecause,
+    [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, BooleanResultBase<string>, string> falseBecause)
+{
+    /// <summary>
+    /// Creates a proposition with descriptive assertions, but using the supplied proposition to succinctly explain
+    /// the decision.
+    /// </summary>
+    /// <param name="statement">The proposition statement of what the proposition represents.</param>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <returns>An expression-backed policy for the model.</returns>
+    public ExpressionPolicyBase<TModel, string> Create(string statement) =>
+        new ExpressionPolicyDecorator<TModel, string>(
+            new ExpressionTreeWithSingleTrueAssertionProposition<TModel, bool>(
+                expression,
+                trueBecause,
+                falseBecause,
+                new SpecDescription(
+                    statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true }),
+            expression);
+
+    /// <summary>
+    /// Creates a proposition with explanations for when the condition is true or false. The propositional statement
+    /// will be obtained from the .WhenTrue() assertion.
+    /// </summary>
+    /// <returns>An expression-backed policy for the model.</returns>
+    public ExpressionPolicyBase<TModel, string> Create() =>
+        new ExpressionPolicyDecorator<TModel, string>(
+            new ExpressionTreeWithSingleTrueAssertionProposition<TModel, bool>(
+                expression,
+                trueBecause,
+                falseBecause,
+                new ExpressionTreeDescription<TModel, bool>(expression)),
+            expression);
+}
