@@ -187,4 +187,181 @@ public class ExpressionSpecMixedMetadataTests
         act.ShouldBeAssignableTo<SpecBase<int, string>>();
         act.Matches(model).ShouldBe(expectedMatch);
     }
+
+    [Fact]
+    public void Should_stay_expression_backed_when_and_alsoing_with_a_same_metadata_expression_policy()
+    {
+        // Arrange — AndAlso(ExpressionPolicyBase<TModel,TMetadata>) is a distinct overload from
+        // AndAlso(ExpressionSpecBase<TModel,TMetadata>) since ExpressionPolicyBase and ExpressionSpecBase
+        // are sibling hierarchies rather than one deriving from the other.
+        var sut = IsPositive().AndAlso(IsPositivePolicy());
+
+        // Act & Assert
+        sut.ShouldBeAssignableTo<ExpressionSpecBase<int, string>>();
+        sut.Matches(4).ShouldBeTrue();
+        sut.Matches(-3).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(4, true)]
+    [InlineData(-3, false)]
+    public void Should_compose_and_also_with_a_different_metadata_ordinary_spec_via_the_untyped_overload(int model, bool expectedMatch)
+    {
+        // Arrange
+        var exprSpec = IsPositive();
+        var ordinaryGuidSpec = Spec.Build((int n) => n > 0)
+            .WhenTrue(Guid.NewGuid())
+            .WhenFalse(Guid.NewGuid())
+            .Create("positive");
+
+        // Act
+        var act = exprSpec.AndAlso(ordinaryGuidSpec);
+
+        // Assert
+        act.ShouldBeAssignableTo<SpecBase<int, string>>();
+        act.Matches(model).ShouldBe(expectedMatch);
+    }
+
+    [Theory]
+    [InlineData(4)]
+    [InlineData(-3)]
+    public void Should_stay_expression_backed_when_and_alsoing_specs_with_different_metadata(int model)
+    {
+        // Arrange
+        var sut = IsPositive().AndAlso(ErrorCodeSpec());
+        SpecBase<int> l = IsPositive();
+        SpecBase<int> r = ErrorCodeSpec();
+        var ordinary = l.AndAlso(r);
+
+        // Act & Assert
+        sut.ShouldBeAssignableTo<ExpressionSpecBase<int, string>>();
+        sut.ToExpression().Compile()(model).ShouldBe(sut.Matches(model));
+        sut.Evaluate(model).Assertions.ShouldBe(ordinary.Evaluate(model).Assertions);
+    }
+
+    [Theory]
+    [InlineData(4, true)]
+    [InlineData(-3, false)]
+    public void Should_compose_or_with_a_different_metadata_ordinary_spec_via_the_untyped_overload(int model, bool expectedMatch)
+    {
+        // Arrange
+        var exprSpec = IsPositive();
+        var ordinaryGuidSpec = Spec.Build((int n) => n > 0)
+            .WhenTrue(Guid.NewGuid())
+            .WhenFalse(Guid.NewGuid())
+            .Create("positive");
+
+        // Act
+        var act = exprSpec.Or(ordinaryGuidSpec);
+
+        // Assert
+        act.ShouldBeAssignableTo<SpecBase<int, string>>();
+        act.Matches(model).ShouldBe(expectedMatch);
+    }
+
+    [Theory]
+    [InlineData(4)]
+    [InlineData(-3)]
+    public void Should_stay_expression_backed_when_oring_specs_with_different_metadata(int model)
+    {
+        // Arrange
+        var sut = IsPositive().Or(ErrorCodeSpec());
+        SpecBase<int> l = IsPositive();
+        SpecBase<int> r = ErrorCodeSpec();
+        var ordinary = l.Or(r);
+
+        // Act & Assert
+        sut.ShouldBeAssignableTo<ExpressionSpecBase<int, string>>();
+        sut.ToExpression().Compile()(model).ShouldBe(sut.Matches(model));
+        sut.Evaluate(model).Assertions.ShouldBe(ordinary.Evaluate(model).Assertions);
+    }
+
+    [Fact]
+    public void Should_stay_expression_backed_when_or_elseing_with_a_same_metadata_expression_policy()
+    {
+        // Arrange — OrElse(ExpressionPolicyBase<TModel,TMetadata>) on ExpressionSpecBase returns an
+        // ExpressionSpecBase (unlike the Policy-Else combinator on ExpressionPolicyBase, which returns
+        // a policy), since the left operand here isn't itself a policy.
+        var sut = IsPositive().OrElse(IsPositivePolicy());
+
+        // Act & Assert
+        sut.ShouldBeAssignableTo<ExpressionSpecBase<int, string>>();
+        sut.Matches(4).ShouldBeTrue();
+        sut.Matches(-3).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(4, true)]
+    [InlineData(-3, false)]
+    public void Should_compose_or_else_with_a_different_metadata_ordinary_spec_via_the_untyped_overload(int model, bool expectedMatch)
+    {
+        // Arrange
+        var exprSpec = IsPositive();
+        var ordinaryGuidSpec = Spec.Build((int n) => n > 0)
+            .WhenTrue(Guid.NewGuid())
+            .WhenFalse(Guid.NewGuid())
+            .Create("positive");
+
+        // Act
+        var act = exprSpec.OrElse(ordinaryGuidSpec);
+
+        // Assert
+        act.ShouldBeAssignableTo<SpecBase<int, string>>();
+        act.Matches(model).ShouldBe(expectedMatch);
+    }
+
+    [Theory]
+    [InlineData(4)]
+    [InlineData(-3)]
+    public void Should_stay_expression_backed_when_or_elseing_specs_with_different_metadata(int model)
+    {
+        // Arrange
+        var sut = IsPositive().OrElse(ErrorCodeSpec());
+        SpecBase<int> l = IsPositive();
+        SpecBase<int> r = ErrorCodeSpec();
+        var ordinary = l.OrElse(r);
+
+        // Act & Assert
+        sut.ShouldBeAssignableTo<ExpressionSpecBase<int, string>>();
+        sut.ToExpression().Compile()(model).ShouldBe(sut.Matches(model));
+        sut.Evaluate(model).Assertions.ShouldBe(ordinary.Evaluate(model).Assertions);
+    }
+
+    [Theory]
+    [InlineData(4, false)]
+    [InlineData(-3, true)]
+    public void Should_compose_xor_with_a_different_metadata_ordinary_spec_via_the_untyped_overload(int model, bool expectedMatch)
+    {
+        // Arrange — the ordinary operand uses a different predicate (n < 100) than the expression spec
+        // (n > 0), so the XOR truth table is meaningfully exercised rather than degenerating to "always false".
+        var exprSpec = IsPositive();
+        var ordinaryGuidSpec = Spec.Build((int n) => n < 100)
+            .WhenTrue(Guid.NewGuid())
+            .WhenFalse(Guid.NewGuid())
+            .Create("small");
+
+        // Act
+        var act = exprSpec.XOr(ordinaryGuidSpec);
+
+        // Assert
+        act.ShouldBeAssignableTo<SpecBase<int, string>>();
+        act.Matches(model).ShouldBe(expectedMatch);
+    }
+
+    [Theory]
+    [InlineData(4)]
+    [InlineData(-3)]
+    public void Should_stay_expression_backed_when_xoring_specs_with_different_metadata(int model)
+    {
+        // Arrange
+        var sut = IsPositive().XOr(ErrorCodeSpec());
+        SpecBase<int> l = IsPositive();
+        SpecBase<int> r = ErrorCodeSpec();
+        var ordinary = l.XOr(r);
+
+        // Act & Assert
+        sut.ShouldBeAssignableTo<ExpressionSpecBase<int, string>>();
+        sut.ToExpression().Compile()(model).ShouldBe(sut.Matches(model));
+        sut.Evaluate(model).Assertions.ShouldBe(ordinary.Evaluate(model).Assertions);
+    }
 }

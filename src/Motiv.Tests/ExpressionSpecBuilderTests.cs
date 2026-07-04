@@ -114,4 +114,39 @@ public class ExpressionSpecBuilderTests
         act.ToExpression().Compile()(30).ShouldBeTrue();
         act.ToExpression().Compile()(70).ShouldBeFalse();
     }
+
+    [Fact]
+    public void Should_create_an_expression_spec_from_a_singular_when_true_with_when_false_yield_proposition()
+    {
+        // Act — a WhenTrue lambda (rather than a scalar) is required to bind to the explanation-specific
+        // overload set (WhenTrueLambdaOverloads) instead of the generic metadata one (WhenTrueOverloads),
+        // which also accepts bare scalars.
+        ExpressionSpecBase<int, string> act = Spec
+            .From((int n) => n > 3)
+            .WhenTrue(_ => "big")
+            .WhenFalseYield((_, _) => ["small", "not enough"])
+            .Create("is greater than three");
+
+        // Assert
+        act.Evaluate(4).Assertions.ShouldBe(["big"]);
+        act.Evaluate(2).Assertions.ShouldBe(["small", "not enough"]);
+        act.ToExpression().Compile()(4).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Should_create_an_unnamed_higher_order_expression_backed_metadata_proposition()
+    {
+        // Act — no explicit statement, so the name is derived from the expression tree itself
+        var act = Spec
+            .From((int n) => n % 2 == 0)
+            .AsAllSatisfied()
+            .WhenTrue(Guid.Empty)
+            .WhenFalse(Guid.NewGuid())
+            .Create();
+
+        // Assert
+        act.Evaluate([2, 4, 6]).Value.ShouldBe(Guid.Empty);
+        act.Evaluate([2, 4, 6]).Satisfied.ShouldBeTrue();
+        act.Evaluate([2, 3, 6]).Satisfied.ShouldBeFalse();
+    }
 }

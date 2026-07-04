@@ -63,4 +63,22 @@ public class ExpressionPolicyDecoratorTests
         sut.ShouldBeAssignableTo<IExpressionSpec<int>>();
         sut.ShouldBeAssignableTo<ExpressionPolicyBase<int, string>>();
     }
+
+    [Fact]
+    public void Should_forward_underlying_to_the_underlying_policy()
+    {
+        // Arrange
+        Expression<Func<int, bool>> expression = n => n > 3;
+        var inner = Spec.Build((int n) => n > 3)
+            .WhenTrue("is greater than three")
+            .WhenFalse("is not greater than three")
+            .Create();
+        var sut = new ExpressionPolicyDecorator<int, string>(inner, expression);
+
+        // Act
+        var act = sut.Underlying;
+
+        // Assert
+        act.ShouldBeSameAs(inner.Underlying);
+    }
 }

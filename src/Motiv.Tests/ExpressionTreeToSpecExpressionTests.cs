@@ -71,4 +71,43 @@ public class ExpressionTreeToSpecExpressionTests
         // Assert
         act.Satisfied.ShouldBe(!isMinor);
     }
+
+    public record FlagModel(bool IsActive, bool? Flag);
+
+    [Fact]
+    public void Should_fall_back_to_a_quasi_proposition_for_a_binary_node_type_that_is_not_explicitly_handled()
+    {
+        // Arrange — Coalesce (??) is a BinaryExpression whose NodeType isn't one of the explicit cases
+        // in TransformBinaryExpression, so nesting it as the right operand of an AND forces the
+        // recursive Transform() call to fall back to the quasi-proposition path for that operand.
+        Expression<Func<FlagModel, bool>> expression = m => m.IsActive & (m.Flag ?? false);
+
+        // Act
+        var act = expression.ToSpec();
+
+        // Assert
+        act.ToExpression().Compile()(new FlagModel(true, null)).ShouldBeFalse();
+        act.ToExpression().Compile()(new FlagModel(true, true)).ShouldBeTrue();
+        act.Matches(new FlagModel(true, true)).ShouldBeTrue();
+        act.Matches(new FlagModel(true, null)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_fall_back_to_a_quasi_proposition_for_a_unary_node_type_that_is_not_explicitly_handled()
+    {
+        // Arrange — IsTrue is a UnaryExpression NodeType that TransformUnaryExpression doesn't
+        // explicitly handle (only Not/Convert/ConvertChecked are), forcing the quasi-proposition fallback.
+        var parameter = Expression.Parameter(typeof(Customer), "c");
+        var isActiveProperty = Expression.Property(parameter, nameof(Customer.IsActive));
+        var isTrueUnary = Expression.MakeUnary(ExpressionType.IsTrue, isActiveProperty, typeof(bool));
+        Expression<Func<Customer, bool>> expression = Expression.Lambda<Func<Customer, bool>>(isTrueUnary, parameter);
+
+        // Act
+        var act = expression.ToSpec();
+
+        // Assert
+        act.ToExpression().Compile()(new Customer(30, true, [])).ShouldBeTrue();
+        act.ToExpression().Compile()(new Customer(30, false, [])).ShouldBeFalse();
+        act.Matches(new Customer(30, true, [])).ShouldBeTrue();
+    }
 }
