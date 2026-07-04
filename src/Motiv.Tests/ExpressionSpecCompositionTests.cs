@@ -98,4 +98,22 @@ public class ExpressionSpecCompositionTests
         act.ShouldBeAssignableTo<ExpressionSpecBase<int, string>>();
         act.ToExpression().Compile()(4).ShouldBeTrue();
     }
+
+    [Fact]
+    public void Should_collapse_mixed_expression_and_ordinary_nesting_identically_to_ordinary_specs()
+    {
+        // Arrange — an ordinary AndSpec whose left operand is an ExpressionAndSpec (mixed nesting)
+        var ordinary = Spec.Build((int n) => n < 100).Create("is small");
+        var mixed = IsEven.And(IsPositive).And(ordinary);
+
+        SpecBase<int, string> l = IsEven;
+        SpecBase<int, string> r = IsPositive;
+        var allOrdinary = l.And(r).And(ordinary);
+
+        // Act & Assert
+        mixed.Evaluate(4).Reason.ShouldBe(allOrdinary.Evaluate(4).Reason);
+        mixed.Evaluate(4).Justification.ShouldBe(allOrdinary.Evaluate(4).Justification);
+        mixed.Evaluate(-3).Reason.ShouldBe(allOrdinary.Evaluate(-3).Reason);
+        mixed.Evaluate(-3).Justification.ShouldBe(allOrdinary.Evaluate(-3).Justification);
+    }
 }
