@@ -15,7 +15,6 @@
     <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
-  <Folder Name="/src/" />
   <Project Path="src/Motiv.Analyzer.Tests/Motiv.Analyzer.Tests.csproj" />
   <Project Path="src/Motiv.Analyzer/Motiv.Analyzer.csproj" />
   <Project Path="src/Motiv.CodeFix.Tests/Motiv.CodeFix.Tests.csproj" />
