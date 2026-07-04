@@ -70,3 +70,12 @@ Motiv offers extension methods to enhance code readability when working with col
 | [AndAlsoTogether()](./collections/propositions/AndAlsoTogether.md)      | Creates a new proposition by performing a logical [AndAlso()](./operators/AndAlso.md) operation on all propositions in a collection. Also applicable to <xref:Motiv.BooleanResultBase`1>. |
 | [OrTogether()](./collections/propositions/OrTogether.md)                | Creates a new proposition by performing a logical [Or()](./operators/Or.md) operation on all propositions in a collection. Also applicable to <xref:Motiv.BooleanResultBase`1>.   |
 | [OrElseTogether()](./collections/propositions/OrElseTogether.md)     | Creates a new proposition by performing a logical [OrElse()](./operators/OrElse.md) operation on all propositions in a collection. Also applicable to <xref:Motiv.BooleanResultBase`1>.      |
+
+## Expression Composition
+
+Propositions built from a boolean predicate lambda via [`Spec.From()`](./builder/From.md) are *expression-backed*: alongside their usual explanatory decomposition, they retain a recoverable `Expression<Func<TModel, bool>>` that stays intact through composition with the logical operators, so it can be handed to a query provider (such as EF Core) for server-side translation instead of client-side evaluation. See [Expression Composition](./expression-composition/index.md) for the full composition and degradation rules.
+
+| Method                                                            | Description                                                                                       |
+|----------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| [ToExpression()](./expression-composition/ToExpression.md)           | Recovers the composed `Expression<Func<TModel, bool>>` behind an expression-backed proposition.  |
+| [Where()](./expression-composition/Where.md)                         | Filters an `IQueryable<TModel>` using an expression-backed proposition's predicate expression.   |

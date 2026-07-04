@@ -150,3 +150,27 @@ var hasAccess = Spec
 ```
 
 This also works with the results from evaluating propositions.
+
+## Query Provider Integration
+
+When the lambda passed to `Spec.From()` is a boolean predicate (`Expression<Func<TModel, bool>>`), the resulting
+proposition is *expression-backed*: in addition to being decomposed for explanations, it retains a recoverable
+`Expression<Func<TModel, bool>>` that stays intact through composition with `And()`, `Or()`, `Not()`, and the other
+logical operators. This means propositions built with `Spec.From()` can be handed to any `IQueryable<TModel>`
+provider (such as EF Core) for server-side translation, in addition to being evaluated normally:
+
+```csharp
+var isAdult  = Spec.From((Customer c) => c.Age >= 18).Create("is adult");
+var isActive = Spec.From((Customer c) => c.IsActive).Create("is active");
+
+var eligible = isAdult & isActive;
+
+// Translate to SQL via any IQueryable provider (e.g. EF Core)
+var customers = dbContext.Customers.Where(eligible);
+
+// Or take the raw expression anywhere expressions are accepted
+Expression<Func<Customer, bool>> predicate = eligible.ToExpression();
+```
+
+See [Expression Composition](../expression-composition/index.md) for the full composition, degradation, and
+mixed-metadata rules that govern when a proposition remains expression-backed.
