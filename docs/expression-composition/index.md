@@ -50,10 +50,9 @@ Expression<Func<Customer, bool>> predicate = eligible.ToExpression();
 // c => c.Age >= 18 And c.IsActive
 ```
 
-This mirrors the existing **Policy Preservation** rule (see [Policy vs Spec](../builder/Spec.md)): just as `!policy`
-and `policy.OrElse(policy)` keep returning a policy, `Not()` and `OrElse()` on an `ExpressionPolicyBase` keep
-returning an `ExpressionPolicyBase`. Every other operator &mdash; on either policies or specs &mdash; returns an
-`ExpressionSpecBase`.
+Just as `!policy` and `policy.OrElse(policy)` return a policy (while all other operators return a spec),
+`Not()` and `OrElse()` on an `ExpressionPolicyBase` keep returning an `ExpressionPolicyBase`. Every other
+operator &mdash; on either policies or specs &mdash; returns an `ExpressionSpecBase`.
 
 ### Faithful Operator Mapping
 
