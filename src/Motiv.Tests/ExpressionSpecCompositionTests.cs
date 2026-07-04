@@ -116,4 +116,91 @@ public class ExpressionSpecCompositionTests
         mixed.Evaluate(-3).Reason.ShouldBe(allOrdinary.Evaluate(-3).Reason);
         mixed.Evaluate(-3).Justification.ShouldBe(allOrdinary.Evaluate(-3).Justification);
     }
+
+    public static TheoryData<int> Models => new() { 4, 3, -2, -3, 0 };
+
+    [Theory]
+    [MemberData(nameof(Models))]
+    public void Should_compose_and_also_with_expression_parity(int model)
+    {
+        // Arrange
+        var sut = IsEven.AndAlso(IsPositive);
+        SpecBase<int, string> l = IsEven; SpecBase<int, string> r = IsPositive;
+        var ordinary = l.AndAlso(r);
+
+        // Act & Assert
+        sut.ToExpression().Body.NodeType.ShouldBe(ExpressionType.AndAlso);
+        sut.ToExpression().Compile()(model).ShouldBe(sut.Matches(model));
+        sut.Evaluate(model).Reason.ShouldBe(ordinary.Evaluate(model).Reason);
+        sut.Evaluate(model).Justification.ShouldBe(ordinary.Evaluate(model).Justification);
+    }
+
+    [Theory]
+    [MemberData(nameof(Models))]
+    public void Should_compose_or_with_expression_parity(int model)
+    {
+        // Arrange
+        var sut = IsEven.Or(IsPositive);
+        SpecBase<int, string> l = IsEven; SpecBase<int, string> r = IsPositive;
+        var ordinary = l.Or(r);
+
+        // Act & Assert
+        sut.ToExpression().Body.NodeType.ShouldBe(ExpressionType.Or);
+        sut.ToExpression().Compile()(model).ShouldBe(sut.Matches(model));
+        sut.Evaluate(model).Reason.ShouldBe(ordinary.Evaluate(model).Reason);
+        sut.Evaluate(model).Justification.ShouldBe(ordinary.Evaluate(model).Justification);
+    }
+
+    [Theory]
+    [MemberData(nameof(Models))]
+    public void Should_compose_or_else_with_expression_parity(int model)
+    {
+        // Arrange
+        var sut = IsEven.OrElse(IsPositive);
+        SpecBase<int, string> l = IsEven; SpecBase<int, string> r = IsPositive;
+        var ordinary = l.OrElse(r);
+
+        // Act & Assert
+        sut.ToExpression().Body.NodeType.ShouldBe(ExpressionType.OrElse);
+        sut.ToExpression().Compile()(model).ShouldBe(sut.Matches(model));
+        sut.Evaluate(model).Reason.ShouldBe(ordinary.Evaluate(model).Reason);
+        sut.Evaluate(model).Justification.ShouldBe(ordinary.Evaluate(model).Justification);
+    }
+
+    [Theory]
+    [MemberData(nameof(Models))]
+    public void Should_compose_xor_with_expression_parity(int model)
+    {
+        // Arrange
+        var sut = IsEven.XOr(IsPositive);
+        SpecBase<int, string> l = IsEven; SpecBase<int, string> r = IsPositive;
+        var ordinary = l.XOr(r);
+
+        // Act & Assert
+        sut.ToExpression().Body.NodeType.ShouldBe(ExpressionType.ExclusiveOr);
+        sut.ToExpression().Compile()(model).ShouldBe(sut.Matches(model));
+        sut.Evaluate(model).Reason.ShouldBe(ordinary.Evaluate(model).Reason);
+        sut.Evaluate(model).Justification.ShouldBe(ordinary.Evaluate(model).Justification);
+    }
+
+    [Fact]
+    public void Should_keep_operator_forms_closed_over_expression_specs()
+    {
+        // Act & Assert
+        (IsEven | IsPositive).ShouldBeAssignableTo<ExpressionSpecBase<int, string>>();
+        (IsEven ^ IsPositive).ShouldBeAssignableTo<ExpressionSpecBase<int, string>>();
+    }
+
+    [Fact]
+    public void Should_collapse_nested_and_reasons_identically_to_ordinary_specs()
+    {
+        // Arrange — three-way AND exercises the collapse predicate across families
+        var sut = IsEven.And(IsPositive).And(IsEven);
+        SpecBase<int, string> l = IsEven; SpecBase<int, string> r = IsPositive;
+        var ordinary = l.And(r).And(l);
+
+        // Act & Assert
+        sut.Evaluate(4).Reason.ShouldBe(ordinary.Evaluate(4).Reason);
+        sut.Evaluate(3).Justification.ShouldBe(ordinary.Evaluate(3).Justification);
+    }
 }

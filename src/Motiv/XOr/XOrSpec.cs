@@ -17,7 +17,7 @@ internal sealed class XOrSpec<TModel, TMetadata>(
 
     public override ISpecDescription Description =>
         new BinarySpecDescription<TModel, TMetadata>(left, right, "^", Operator.XOr,
-            operand => operand is XOrSpec<TModel, TMetadata>);
+            operand => operand is XOrSpec<TModel, TMetadata> or ExpressionXOrSpec<TModel, TMetadata>);
 
     public string Operation => Operator.XOr;
     public bool IsCollapsable => false;

@@ -1,5 +1,9 @@
 using System.Linq.Expressions;
 using Motiv.And;
+using Motiv.AndAlso;
+using Motiv.Or;
+using Motiv.OrElse;
+using Motiv.XOr;
 
 namespace Motiv;
 
@@ -55,4 +59,102 @@ public abstract class ExpressionSpecBase<TModel, TMetadata> : SpecBase<TModel, T
         ExpressionPolicyBase<TModel, TMetadata> left,
         ExpressionSpecBase<TModel, TMetadata> right) =>
         new ExpressionAndSpec<TModel, TMetadata>(left, right, left, right);
+
+    /// <summary>
+    /// Combines this proposition with another expression-backed proposition using the conditional AND
+    /// operator. The right operand is only evaluated if the left operand resolves to <c>true</c>, since a
+    /// <c>false</c> left operand means the AND operation cannot return <c>true</c>. This is commonly referred
+    /// to as "short-circuiting".
+    /// </summary>
+    /// <param name="spec">The expression-backed proposition to combine with this proposition.</param>
+    /// <returns>An expression-backed proposition representing the conditional AND of the two propositions.</returns>
+    public ExpressionSpecBase<TModel, TMetadata> AndAlso(ExpressionSpecBase<TModel, TMetadata> spec) =>
+        new ExpressionAndAlsoSpec<TModel, TMetadata>(this, spec, this, spec);
+
+    /// <inheritdoc cref="AndAlso(ExpressionSpecBase{TModel, TMetadata})"/>
+    public ExpressionSpecBase<TModel, TMetadata> AndAlso(ExpressionPolicyBase<TModel, TMetadata> spec) =>
+        new ExpressionAndAlsoSpec<TModel, TMetadata>(this, spec, this, spec);
+
+    /// <summary>
+    /// Combines this proposition with another expression-backed proposition using the logical OR operator.
+    /// Both operands will be evaluated, regardless of whether the left operand evaluated to <c>true</c>.
+    /// </summary>
+    /// <param name="spec">The expression-backed proposition to combine with this proposition.</param>
+    /// <returns>An expression-backed proposition representing the logical OR of the two propositions.</returns>
+    public ExpressionSpecBase<TModel, TMetadata> Or(ExpressionSpecBase<TModel, TMetadata> spec) =>
+        new ExpressionOrSpec<TModel, TMetadata>(this, spec, this, spec);
+
+    /// <inheritdoc cref="Or(ExpressionSpecBase{TModel, TMetadata})"/>
+    public ExpressionSpecBase<TModel, TMetadata> Or(ExpressionPolicyBase<TModel, TMetadata> spec) =>
+        new ExpressionOrSpec<TModel, TMetadata>(this, spec, this, spec);
+
+    /// <summary>Combines two expression-backed propositions using the logical OR operator.</summary>
+    /// <param name="left">The left operand of the OR operation.</param>
+    /// <param name="right">The right operand of the OR operation.</param>
+    /// <returns>An expression-backed proposition representing the logical OR of the two propositions.</returns>
+    public static ExpressionSpecBase<TModel, TMetadata> operator |(
+        ExpressionSpecBase<TModel, TMetadata> left,
+        ExpressionSpecBase<TModel, TMetadata> right) =>
+        left.Or(right);
+
+    /// <inheritdoc cref="op_BitwiseOr(ExpressionSpecBase{TModel, TMetadata}, ExpressionSpecBase{TModel, TMetadata})"/>
+    public static ExpressionSpecBase<TModel, TMetadata> operator |(
+        ExpressionSpecBase<TModel, TMetadata> left,
+        ExpressionPolicyBase<TModel, TMetadata> right) =>
+        left.Or(right);
+
+    /// <inheritdoc cref="op_BitwiseOr(ExpressionSpecBase{TModel, TMetadata}, ExpressionSpecBase{TModel, TMetadata})"/>
+    public static ExpressionSpecBase<TModel, TMetadata> operator |(
+        ExpressionPolicyBase<TModel, TMetadata> left,
+        ExpressionSpecBase<TModel, TMetadata> right) =>
+        new ExpressionOrSpec<TModel, TMetadata>(left, right, left, right);
+
+    /// <summary>
+    /// Combines this proposition with another expression-backed proposition using the conditional OR
+    /// operator. The right operand is only evaluated if the left operand resolves to <c>false</c>, since a
+    /// <c>true</c> left operand means the OR operation is already satisfied. This is commonly referred to as
+    /// "short-circuiting".
+    /// </summary>
+    /// <param name="spec">The expression-backed proposition to combine with this proposition.</param>
+    /// <returns>An expression-backed proposition representing the conditional OR of the two propositions.</returns>
+    public ExpressionSpecBase<TModel, TMetadata> OrElse(ExpressionSpecBase<TModel, TMetadata> spec) =>
+        new ExpressionOrElseSpec<TModel, TMetadata>(this, spec, this, spec);
+
+    /// <inheritdoc cref="OrElse(ExpressionSpecBase{TModel, TMetadata})"/>
+    public ExpressionSpecBase<TModel, TMetadata> OrElse(ExpressionPolicyBase<TModel, TMetadata> spec) =>
+        new ExpressionOrElseSpec<TModel, TMetadata>(this, spec, this, spec);
+
+    /// <summary>
+    /// Combines this proposition with another expression-backed proposition using the logical XOR operator.
+    /// Both operands are always evaluated.
+    /// </summary>
+    /// <param name="spec">The expression-backed proposition to combine with this proposition.</param>
+    /// <returns>An expression-backed proposition representing the logical XOR of the two propositions.</returns>
+    public ExpressionSpecBase<TModel, TMetadata> XOr(ExpressionSpecBase<TModel, TMetadata> spec) =>
+        new ExpressionXOrSpec<TModel, TMetadata>(this, spec, this, spec);
+
+    /// <inheritdoc cref="XOr(ExpressionSpecBase{TModel, TMetadata})"/>
+    public ExpressionSpecBase<TModel, TMetadata> XOr(ExpressionPolicyBase<TModel, TMetadata> spec) =>
+        new ExpressionXOrSpec<TModel, TMetadata>(this, spec, this, spec);
+
+    /// <summary>Combines two expression-backed propositions using the logical XOR operator.</summary>
+    /// <param name="left">The left operand of the XOR operation.</param>
+    /// <param name="right">The right operand of the XOR operation.</param>
+    /// <returns>An expression-backed proposition representing the logical XOR of the two propositions.</returns>
+    public static ExpressionSpecBase<TModel, TMetadata> operator ^(
+        ExpressionSpecBase<TModel, TMetadata> left,
+        ExpressionSpecBase<TModel, TMetadata> right) =>
+        left.XOr(right);
+
+    /// <inheritdoc cref="op_ExclusiveOr(ExpressionSpecBase{TModel, TMetadata}, ExpressionSpecBase{TModel, TMetadata})"/>
+    public static ExpressionSpecBase<TModel, TMetadata> operator ^(
+        ExpressionSpecBase<TModel, TMetadata> left,
+        ExpressionPolicyBase<TModel, TMetadata> right) =>
+        left.XOr(right);
+
+    /// <inheritdoc cref="op_ExclusiveOr(ExpressionSpecBase{TModel, TMetadata}, ExpressionSpecBase{TModel, TMetadata})"/>
+    public static ExpressionSpecBase<TModel, TMetadata> operator ^(
+        ExpressionPolicyBase<TModel, TMetadata> left,
+        ExpressionSpecBase<TModel, TMetadata> right) =>
+        new ExpressionXOrSpec<TModel, TMetadata>(left, right, left, right);
 }
