@@ -72,7 +72,11 @@ public class ExpressionTreeToSpecExpressionTests
         act.Satisfied.ShouldBe(!isMinor);
     }
 
-    public record FlagModel(bool IsActive, bool? Flag);
+    public record FlagModel(bool IsActive, bool? Flag)
+    {
+        public bool IsActive { get; } = IsActive;
+        public bool? Flag { get; } = Flag;
+    }
 
     [Fact]
     public void Should_fall_back_to_a_quasi_proposition_for_a_binary_node_type_that_is_not_explicitly_handled()
