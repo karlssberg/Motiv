@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Motiv.And;
 using Motiv.AndAlso;
+using Motiv.Not;
 using Motiv.Or;
 using Motiv.OrElse;
 using Motiv.XOr;
@@ -157,4 +158,16 @@ public abstract class ExpressionSpecBase<TModel, TMetadata> : SpecBase<TModel, T
         ExpressionPolicyBase<TModel, TMetadata> left,
         ExpressionSpecBase<TModel, TMetadata> right) =>
         new ExpressionXOrSpec<TModel, TMetadata>(left, right, left, right);
+
+    /// <summary>Negates this proposition. The result is itself expression-backed.</summary>
+    /// <returns>An expression-backed proposition representing the logical NOT of this proposition.</returns>
+    public new ExpressionSpecBase<TModel, TMetadata> Not() =>
+        new ExpressionNotSpec<TModel, TMetadata>(this, this);
+
+    /// <summary>Negates an expression-backed proposition.</summary>
+    /// <param name="spec">The proposition to negate.</param>
+    /// <returns>An expression-backed proposition representing the logical NOT of the proposition.</returns>
+    public static ExpressionSpecBase<TModel, TMetadata> operator !(
+        ExpressionSpecBase<TModel, TMetadata> spec) =>
+        spec.Not();
 }

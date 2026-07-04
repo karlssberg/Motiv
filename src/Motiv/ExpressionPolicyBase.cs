@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Motiv.And;
 using Motiv.AndAlso;
+using Motiv.Not;
 using Motiv.Or;
 using Motiv.OrElse;
 using Motiv.XOr;
@@ -117,4 +118,25 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
         ExpressionPolicyBase<TModel, TMetadata> left,
         ExpressionPolicyBase<TModel, TMetadata> right) =>
         new ExpressionXOrSpec<TModel, TMetadata>(left, right, left, right);
+
+    /// <summary>Negates this policy. The result remains both a policy and expression-backed.</summary>
+    /// <returns>An expression-backed policy representing the logical NOT of this policy.</returns>
+    public new ExpressionPolicyBase<TModel, TMetadata> Not() =>
+        new ExpressionNotPolicy<TModel, TMetadata>(this);
+
+    /// <summary>Negates an expression-backed policy.</summary>
+    /// <param name="policy">The policy to negate.</param>
+    /// <returns>An expression-backed policy representing the logical NOT of the policy.</returns>
+    public static ExpressionPolicyBase<TModel, TMetadata> operator !(
+        ExpressionPolicyBase<TModel, TMetadata> policy) =>
+        policy.Not();
+
+    /// <summary>
+    /// Creates a policy equivalent to a conditional "OR" of this policy and the alternative policy.
+    /// The result remains both a policy and expression-backed.
+    /// </summary>
+    /// <param name="alternative">The policy to evaluate when this policy is unsatisfied.</param>
+    /// <returns>An expression-backed policy representing the conditional OR of the two policies.</returns>
+    public ExpressionPolicyBase<TModel, TMetadata> OrElse(ExpressionPolicyBase<TModel, TMetadata> alternative) =>
+        new ExpressionOrElsePolicy<TModel, TMetadata>(this, alternative);
 }

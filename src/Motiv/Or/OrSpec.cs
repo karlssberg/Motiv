@@ -20,7 +20,7 @@ internal sealed class OrSpec<TModel, TMetadata>(
         new BinarySpecDescription<TModel, TMetadata>(left, right, "|", Operator.Or,
             operand => operand is OrSpec<TModel, TMetadata> or OrElseSpec<TModel, TMetadata>
                 or OrElsePolicy<TModel, TMetadata> or ExpressionOrSpec<TModel, TMetadata>
-                or ExpressionOrElseSpec<TModel, TMetadata>);
+                or ExpressionOrElseSpec<TModel, TMetadata> or ExpressionOrElsePolicy<TModel, TMetadata>);
 
     public string Operation => Operator.Or;
 
