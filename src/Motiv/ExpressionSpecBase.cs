@@ -66,6 +66,19 @@ public abstract class ExpressionSpecBase<TModel, TMetadata> : SpecBase<TModel, T
         base.And(spec);
 
     /// <summary>
+    /// Combines this proposition with an ordinary proposition of a different metadata type, using the
+    /// logical AND operator. Because neither operand's predicate can be recovered as an expression (the
+    /// other operand isn't expression-backed), the result degrades to an ordinary explanation proposition.
+    /// Redeclared here (rather than relying on the inherited base implementation) so this overload remains
+    /// a candidate of equal declaring-type precedence to <see cref="And{TSpec}"/>, preserving overload
+    /// resolution parity.
+    /// </summary>
+    /// <param name="spec">The proposition to combine with this proposition.</param>
+    /// <returns>An ordinary explanation proposition representing the logical AND of the two propositions.</returns>
+    public new SpecBase<TModel, string> And(SpecBase<TModel> spec) =>
+        ((SpecBase<TModel>)this).And(spec);
+
+    /// <summary>
     /// Combines this proposition with an expression-backed proposition that has a different metadata
     /// type, using the logical AND operator. The operands are coerced to string metadata, and the
     /// result remains expression-backed.
@@ -126,6 +139,19 @@ public abstract class ExpressionSpecBase<TModel, TMetadata> : SpecBase<TModel, T
         base.AndAlso(spec);
 
     /// <summary>
+    /// Combines this proposition with an ordinary proposition of a different metadata type, using the
+    /// conditional AND operator. Because neither operand's predicate can be recovered as an expression
+    /// (the other operand isn't expression-backed), the result degrades to an ordinary explanation
+    /// proposition. Redeclared here (rather than relying on the inherited base implementation) so this
+    /// overload remains a candidate of equal declaring-type precedence to <see cref="AndAlso{TSpec}"/>,
+    /// preserving overload resolution parity.
+    /// </summary>
+    /// <param name="spec">The proposition to combine with this proposition.</param>
+    /// <returns>An ordinary explanation proposition representing the conditional AND of the two propositions.</returns>
+    public new SpecBase<TModel, string> AndAlso(SpecBase<TModel> spec) =>
+        ((SpecBase<TModel>)this).AndAlso(spec);
+
+    /// <summary>
     /// Combines this proposition with an expression-backed proposition that has a different metadata
     /// type, using the conditional AND operator. The right operand is only evaluated if the left operand
     /// resolves to <c>true</c>. The operands are coerced to string metadata, and the result remains
@@ -162,6 +188,19 @@ public abstract class ExpressionSpecBase<TModel, TMetadata> : SpecBase<TModel, T
     /// <returns>An ordinary proposition representing the logical OR of the two propositions.</returns>
     public new SpecBase<TModel, TMetadata> Or(SpecBase<TModel, TMetadata> spec) =>
         base.Or(spec);
+
+    /// <summary>
+    /// Combines this proposition with an ordinary proposition of a different metadata type, using the
+    /// logical OR operator. Because neither operand's predicate can be recovered as an expression (the
+    /// other operand isn't expression-backed), the result degrades to an ordinary explanation proposition.
+    /// Redeclared here (rather than relying on the inherited base implementation) so this overload remains
+    /// a candidate of equal declaring-type precedence to <see cref="Or{TSpec}"/>, preserving overload
+    /// resolution parity.
+    /// </summary>
+    /// <param name="spec">The proposition to combine with this proposition.</param>
+    /// <returns>An ordinary explanation proposition representing the logical OR of the two propositions.</returns>
+    public new SpecBase<TModel, string> Or(SpecBase<TModel> spec) =>
+        ((SpecBase<TModel>)this).Or(spec);
 
     /// <summary>
     /// Combines this proposition with an expression-backed proposition that has a different metadata
@@ -224,6 +263,19 @@ public abstract class ExpressionSpecBase<TModel, TMetadata> : SpecBase<TModel, T
         base.OrElse(spec);
 
     /// <summary>
+    /// Combines this proposition with an ordinary proposition of a different metadata type, using the
+    /// conditional OR operator. Because neither operand's predicate can be recovered as an expression (the
+    /// other operand isn't expression-backed), the result degrades to an ordinary explanation proposition.
+    /// Redeclared here (rather than relying on the inherited base implementation) so this overload remains
+    /// a candidate of equal declaring-type precedence to <see cref="OrElse{TSpec}"/>, preserving overload
+    /// resolution parity.
+    /// </summary>
+    /// <param name="spec">The proposition to combine with this proposition.</param>
+    /// <returns>An ordinary explanation proposition representing the conditional OR of the two propositions.</returns>
+    public new SpecBase<TModel, string> OrElse(SpecBase<TModel> spec) =>
+        ((SpecBase<TModel>)this).OrElse(spec);
+
+    /// <summary>
     /// Combines this proposition with an expression-backed proposition that has a different metadata
     /// type, using the conditional OR operator. The right operand is only evaluated if the left operand
     /// resolves to <c>false</c>. The operands are coerced to string metadata, and the result remains
@@ -260,6 +312,19 @@ public abstract class ExpressionSpecBase<TModel, TMetadata> : SpecBase<TModel, T
     /// <returns>An ordinary proposition representing the logical XOR of the two propositions.</returns>
     public new SpecBase<TModel, TMetadata> XOr(SpecBase<TModel, TMetadata> spec) =>
         base.XOr(spec);
+
+    /// <summary>
+    /// Combines this proposition with an ordinary proposition of a different metadata type, using the
+    /// logical XOR operator. Because neither operand's predicate can be recovered as an expression (the
+    /// other operand isn't expression-backed), the result degrades to an ordinary explanation proposition.
+    /// Redeclared here (rather than relying on the inherited base implementation) so this overload remains
+    /// a candidate of equal declaring-type precedence to <see cref="XOr{TSpec}"/>, preserving overload
+    /// resolution parity.
+    /// </summary>
+    /// <param name="spec">The proposition to combine with this proposition.</param>
+    /// <returns>An ordinary explanation proposition representing the logical XOR of the two propositions.</returns>
+    public new SpecBase<TModel, string> XOr(SpecBase<TModel> spec) =>
+        ((SpecBase<TModel>)this).XOr(spec);
 
     /// <summary>
     /// Combines this proposition with an expression-backed proposition that has a different metadata
