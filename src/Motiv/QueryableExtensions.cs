@@ -18,5 +18,5 @@ public static class QueryableExtensions
     public static IQueryable<TModel> Where<TModel>(
         this IQueryable<TModel> source,
         IExpressionSpec<TModel> spec) =>
-        Queryable.Where(source, spec.ToExpression());
+        source.Where(spec.ToExpression());
 }
