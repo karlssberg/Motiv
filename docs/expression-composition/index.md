@@ -36,7 +36,7 @@ start recovering expressions &mdash; existing `Spec.From()` propositions already
 ## Closed Composition
 
 Combining two expression-backed propositions over the same model type with `And()`, `AndAlso()`, `Or()`,
-`OrElse()`, `XOr()`, or `Not()` (and their `&`, `&&`, `|`, `||`, `^`, `!` operator equivalents) produces another
+`OrElse()`, `XOr()`, or `Not()` (and their `&`, `|`, `^`, `!` operator equivalents) produces another
 expression-backed proposition. The resulting `ToExpression()` recombines both operands' expressions into a single
 tree, so a whole hierarchy of composed propositions still yields one expression that a query provider can consume.
 
@@ -63,9 +63,9 @@ expression stays faithful to exactly what was composed, which is what query prov
 | Motiv operator      | Expression node produced |
 |----------------------|---------------------------|
 | `And()` / `&`         | `Expression.And`           |
-| `AndAlso()` / `&&`    | `Expression.AndAlso`        |
+| `AndAlso()` (method only) | `Expression.AndAlso`        |
 | `Or()` / `\|`          | `Expression.Or`             |
-| `OrElse()` / `\|\|`    | `Expression.OrElse`         |
+| `OrElse()` (method only)  | `Expression.OrElse`         |
 | `XOr()` / `^`         | `Expression.ExclusiveOr`    |
 | `Not()` / `!`         | `Expression.Not`            |
 

@@ -132,6 +132,7 @@ public class ExpressionSpecCompositionTests
         sut.ToExpression().Body.NodeType.ShouldBe(ExpressionType.AndAlso);
         sut.ToExpression().Compile()(model).ShouldBe(sut.Matches(model));
         sut.Evaluate(model).Reason.ShouldBe(ordinary.Evaluate(model).Reason);
+        sut.Evaluate(model).Assertions.ShouldBe(ordinary.Evaluate(model).Assertions);
         sut.Evaluate(model).Justification.ShouldBe(ordinary.Evaluate(model).Justification);
     }
 
@@ -148,6 +149,7 @@ public class ExpressionSpecCompositionTests
         sut.ToExpression().Body.NodeType.ShouldBe(ExpressionType.Or);
         sut.ToExpression().Compile()(model).ShouldBe(sut.Matches(model));
         sut.Evaluate(model).Reason.ShouldBe(ordinary.Evaluate(model).Reason);
+        sut.Evaluate(model).Assertions.ShouldBe(ordinary.Evaluate(model).Assertions);
         sut.Evaluate(model).Justification.ShouldBe(ordinary.Evaluate(model).Justification);
     }
 
@@ -164,6 +166,7 @@ public class ExpressionSpecCompositionTests
         sut.ToExpression().Body.NodeType.ShouldBe(ExpressionType.OrElse);
         sut.ToExpression().Compile()(model).ShouldBe(sut.Matches(model));
         sut.Evaluate(model).Reason.ShouldBe(ordinary.Evaluate(model).Reason);
+        sut.Evaluate(model).Assertions.ShouldBe(ordinary.Evaluate(model).Assertions);
         sut.Evaluate(model).Justification.ShouldBe(ordinary.Evaluate(model).Justification);
     }
 
@@ -180,6 +183,7 @@ public class ExpressionSpecCompositionTests
         sut.ToExpression().Body.NodeType.ShouldBe(ExpressionType.ExclusiveOr);
         sut.ToExpression().Compile()(model).ShouldBe(sut.Matches(model));
         sut.Evaluate(model).Reason.ShouldBe(ordinary.Evaluate(model).Reason);
+        sut.Evaluate(model).Assertions.ShouldBe(ordinary.Evaluate(model).Assertions);
         sut.Evaluate(model).Justification.ShouldBe(ordinary.Evaluate(model).Justification);
     }
 
@@ -201,6 +205,7 @@ public class ExpressionSpecCompositionTests
 
         // Act & Assert
         sut.Evaluate(4).Reason.ShouldBe(ordinary.Evaluate(4).Reason);
+        sut.Evaluate(4).Assertions.ShouldBe(ordinary.Evaluate(4).Assertions);
         sut.Evaluate(3).Justification.ShouldBe(ordinary.Evaluate(3).Justification);
     }
 }
