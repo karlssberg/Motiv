@@ -88,32 +88,35 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
             { Method.Name: nameof(Enumerable.Any), Arguments.Count: 2 }
                 when IsSpecPredicate() &&
                      IsCollectionsType() =>
-                WithFragment(TransformSpecExpression(expression, CreateAnySpec), expression, parameter),
+                Wrap(TransformSpecExpression(expression, CreateAnySpec)),
             { Method.Name: nameof(Enumerable.Any), Arguments.Count: 2 }
                 when IsBooleanResultPredicate() &&
                      IsCollectionsType() =>
-                WithFragment(TransformPredicateExpression(expression, CreateAnySpec), expression, parameter),
+                Wrap(TransformPredicateExpression(expression, CreateAnySpec)),
             { Method.Name: nameof(Enumerable.Any), Arguments.Count: 2 }
                 when IsBooleanPredicate() &&
                      IsSimpleEnumerableRelationship() &&
                      IsCollectionsType() =>
-                WithFragment(TransformPredicateExpression(expression, CreateAnySpec), expression, parameter),
+                Wrap(TransformPredicateExpression(expression, CreateAnySpec)),
 
             { Method.Name: nameof(Enumerable.All), Arguments.Count: 2 }
                 when IsSpecPredicate() &&
                      IsCollectionsType() =>
-                WithFragment(TransformSpecExpression(expression, CreateAllSpec), expression, parameter),
+                Wrap(TransformSpecExpression(expression, CreateAllSpec)),
             { Method.Name: nameof(Enumerable.All), Arguments.Count: 2 }
                 when IsBooleanResultPredicate() &&
                      IsCollectionsType() =>
-                WithFragment(TransformPredicateExpression(expression, CreateAllSpec), expression, parameter),
+                Wrap(TransformPredicateExpression(expression, CreateAllSpec)),
             { Method.Name: nameof(Enumerable.All), Arguments.Count: 2 }
                 when IsBooleanPredicate() &&
                      IsSimpleEnumerableRelationship() &&
                      IsCollectionsType() =>
-                WithFragment(TransformPredicateExpression(expression, CreateAllSpec), expression, parameter),
+                Wrap(TransformPredicateExpression(expression, CreateAllSpec)),
             _ => TransformQuasiProposition(expression, parameter)
         };
+
+        ExpressionSpecBase<TModel, string> Wrap(SpecBase<TModel, string> spec) =>
+            WithFragment(spec, expression, parameter);
 
         bool IsCollectionsType()
         {
