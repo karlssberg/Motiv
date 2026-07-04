@@ -3,6 +3,7 @@
     <Project Path="src/examples/Motiv.Benchmark/Motiv.Benchmark.csproj" />
     <Project Path="src/examples/Motiv.ECommerce.Tests/Motiv.ECommerce.Tests.csproj" />
     <Project Path="src/examples/Motiv.ECommerce/Motiv.ECommerce.csproj" />
+    <Project Path="src/examples/Motiv.EntityFramework.Tests/Motiv.EntityFramework.Tests.csproj" />
     <Project Path="src/examples/Motiv.Poker.Tests/Motiv.Poker.Tests.csproj" />
     <Project Path="src/examples/Motiv.Poker/Motiv.Poker.csproj" />
     <Project Path="src/examples/Motiv.SmartHome.Tests/Motiv.SmartHome.Tests.csproj" />
@@ -15,9 +16,6 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/" />
-  <Folder Name="/src/examples/">
-    <Project Path="src/examples/Motiv.EntityFramework.Tests/Motiv.EntityFramework.Tests.csproj" />
-  </Folder>
   <Project Path="src/Motiv.Analyzer.Tests/Motiv.Analyzer.Tests.csproj" />
   <Project Path="src/Motiv.Analyzer/Motiv.Analyzer.csproj" />
   <Project Path="src/Motiv.CodeFix.Tests/Motiv.CodeFix.Tests.csproj" />
