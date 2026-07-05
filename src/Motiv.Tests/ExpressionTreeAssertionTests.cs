@@ -335,8 +335,8 @@ public class ExpressionTreeAssertionTests
 
     [Theory]
     [InlineData("", "txt.Length == 0 == true", "txt == \"\" == true")]
-    [InlineData("a", "txt.Length == 0 == false", "tryParseInt(txt) == true == false")]
-    [InlineData("123", "txt.Length == 0 == false", "tryParseInt(txt) == true == true")]
+    [InlineData("a", "txt.Length == 0 == false", "tryParseInt(txt) == false")]
+    [InlineData("123", "txt.Length == 0 == false", "tryParseInt(txt) == true")]
     public void Should_assert_expressions_containing_a_conditional_expression(string model, params string[] expectedAssertion)
     {
         // Assemble
@@ -813,12 +813,12 @@ public class ExpressionTreeAssertionTests
     // Named higher-order multi-assertion explanations now surface the underlying decomposed clause
     // assertion instead of the WhenTrueYield/WhenFalseYield because-strings (matching the family's
     // named-adopts-metadata-semantics rule). For this non-comparison boolean sub-expression
-    // (`text.Contains(query)`), the decomposed clause text is doubly-suffixed
-    // ("text.Contains(query) == true == true/false") - a pre-existing quirk of
-    // ExpressionTreeTransformer.CreateSpecForBoolean (it names the leaf using the already-suffixed
-    // `expr == true` form rather than the raw expression), unrelated to and out of scope for this change.
-    [InlineData("hello world", "hello", "text.Contains(query) == true == true")]
-    [InlineData("high-roller", "world", "text.Contains(query) == true == false")]
+    // (`text.Contains(query)`), ExpressionTreeTransformer.CreateSpecForBoolean names the leaf using
+    // the already-suffixed `expr == true` form rather than the raw expression; AsSatisfied/AsUnsatisfied
+    // now recognize the trailing equality assertion and negate it in place instead of appending a
+    // second suffix.
+    [InlineData("hello world", "hello", "text.Contains(query) == true")]
+    [InlineData("high-roller", "world", "text.Contains(query) == false")]
     public void Should_override_assertions_with_custom_assertions_when_using_higher_order_propositions(string text, string model, params string[] expectedAssertion)
     {
         // Assemble
