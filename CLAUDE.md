@@ -67,7 +67,7 @@ var isAdmin = Spec
 
 ## The `== true` / `== false` Suffix Rule
 
-This is how Motiv textually describes a boolean outcome whenever an explicit name is supplied via `.Create("name")`. The name is the sole authority for explanation text — `Reason`, `Assertions`, and `Justification` all resolve to `"name == true"` / `"name == false"`, regardless of what WhenTrue/WhenFalse were given. WhenTrue/WhenFalse payloads — strings included — are metadata (`Values`) whenever a name exists; a supplied name always outranks them as the source of explanation text.
+This is how Motiv textually describes a boolean outcome whenever an explicit name is supplied via `.Create("name")`. The name is the sole authority for explanation text — `Reason`, `Assertions`, and `Justification` all resolve to `"name == true"` / `"name == false"`, regardless of what WhenTrue/WhenFalse were given. WhenTrue/WhenFalse payloads — strings included — are metadata (`Values`) whenever a name exists; a supplied name always outranks them as the source of explanation text. **Exception:** ExpressionTree propositions (`Spec.From(...)`) operate differently — when named, only `Reason` takes the `name == true` / `name == false` form; `Assertions` and `Justification` surface the underlying decomposed expression-clause assertions (e.g., `["n > 0 == true"]` rather than `["name == true"]`).
 
 **Use `== true` / `== false`** when:
 - **Minimal propositions** — `.Create("name")` with no WhenTrue/WhenFalse. The name is the only text available, so the suffix disambiguates the outcome.
@@ -149,7 +149,7 @@ Spec.Build(input)
 
 ## Assertions Property Rules
 
-1. **Explanation propositions**: Assertions come from WhenTrue/WhenFalse strings directly only when `Create()` is parameterless (unnamed); with `Create("name")`, Assertions are `"{name} == true"` / `"{name} == false"` and the strings surface instead via `Values`
+1. **Explanation propositions**: Assertions come from WhenTrue/WhenFalse strings directly only when `Create()` is parameterless (unnamed); with `Create("name")`, Assertions are `"{name} == true"` / `"{name} == false"` and the strings surface instead via `Values`. ExpressionTree propositions are the exception — named `Assertions` remain the underlying decomposed clause assertions (e.g., `["n > 0 == true"]`), while only `Reason` takes the suffix
 2. **Metadata propositions**: Assertions are `"{name} == true"` or `"{name} == false"` (derived from Create name)
 3. **Minimal propositions**: Same as metadata — `"{name} == true"` or `"{name} == false"`
 4. **Compositions**: Aggregated from all contributing operands
