@@ -51,9 +51,6 @@ internal sealed class MinimalPolicyResultPredicateProposition<TModel, TMetadata>
                 _ => Description.ToReason(booleanResult.Satisfied)
             }, LazyThreadSafetyMode.None);
 
-        var reason = new Lazy<string>(() =>
-            Description.ToReason(booleanResult.Satisfied), LazyThreadSafetyMode.None);
-
         return new PolicyResultWithUnderlying<TMetadata,TMetadata>(
             booleanResult,
             () => metadata.Value,
@@ -65,7 +62,7 @@ internal sealed class MinimalPolicyResultPredicateProposition<TModel, TMetadata>
                 booleanResults),
             () => new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
-                reason.Value,
+                Description.ToReason(booleanResult.Satisfied),
                 Description.Statement));
     }
 }
