@@ -22,18 +22,21 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
         var predicateResult = predicate(model);
         BooleanResultBase<TUnderlyingMetadata>[] predicateResults = [predicateResult];
 
-        var assertion = new Lazy<string>(() =>
+        var because = new Lazy<string>(() =>
             predicateResult.Satisfied switch
             {
                 true => trueBecause,
                 false => whenFalse(model, predicateResult)
             }, LazyThreadSafetyMode.None);
 
+        var assertion = new Lazy<string>(() =>
+            because.Value.ElseFallback(() => Description.ToReason(predicateResult.Satisfied)), LazyThreadSafetyMode.None);
+
         return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
             predicateResult,
-            () => assertion.Value,
+            () => because.Value,
             () => new MetadataNode<string>(
-                assertion.Value.ToEnumerable(),
+                because.Value.ToEnumerable(),
                 predicateResults as IEnumerable<BooleanResultBase<string>> ?? []),
             () => new Explanation(
                 assertion.Value,

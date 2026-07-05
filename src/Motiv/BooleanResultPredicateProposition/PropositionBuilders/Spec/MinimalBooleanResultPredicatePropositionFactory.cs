@@ -21,7 +21,7 @@ public readonly partial struct MinimalBooleanResultPredicatePropositionFactory<T
     public SpecBase<TModel, TMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new BooleanResultPredicateMultiValueProposition<TModel, TMetadata, TMetadata>(
+        return new MinimalBooleanResultPredicateProposition<TModel, TMetadata>(
             predicate,
             (_, result) => result.Values,
             (_, result) => result.Values,

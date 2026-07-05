@@ -11,14 +11,14 @@ namespace Motiv.BooleanResultPredicateProposition;
 /// <param name="whenFalse">The metadata to yield when the predicate is false.</param>
 /// <param name="specDescription">The description of the proposition.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-/// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-/// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the boolean result.</typeparam>
-internal sealed class BooleanResultPredicateProposition<TModel, TMetadata, TUnderlyingMetadata>(
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>> underlyingBooleanResultPredicate,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenTrue,
-    Func<TModel, BooleanResultBase<TUnderlyingMetadata>, TMetadata> whenFalse,
+/// <typeparam name="TMetadata">The type of the metadata, which is also the type of the underlying metadata
+/// associated with the boolean result.</typeparam>
+internal sealed class MinimalBooleanResultPredicateProposition<TModel, TMetadata>(
+    Func<TModel, BooleanResultBase<TMetadata>> underlyingBooleanResultPredicate,
+    Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> whenTrue,
+    Func<TModel, BooleanResultBase<TMetadata>, IEnumerable<TMetadata>> whenFalse,
     ISpecDescription specDescription)
-    : PolicyBase<TModel, TMetadata>
+    : SpecBase<TModel, TMetadata>
 {
     /// <summary>
     /// Gets an empty collection of underlying propositions, since there are no underlying specifications.
@@ -30,10 +30,16 @@ internal sealed class BooleanResultPredicateProposition<TModel, TMetadata, TUnde
 
     public override bool Matches(TModel model) => underlyingBooleanResultPredicate(model).Satisfied;
 
-    protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
+    /// <summary>Determines if the proposition is satisfied by the given model.</summary>
+    /// <param name="model">The model to be evaluated.</param>
+    /// <returns>
+    ///     A <see cref="BooleanResultBase{TMetadata}" /> indicating if the proposition is satisfied and the resulting
+    ///     metadata.
+    /// </returns>
+    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
-        BooleanResultBase<TUnderlyingMetadata>[] booleanResults = [booleanResult];
+        BooleanResultBase<TMetadata>[] booleanResults = [booleanResult];
 
         var metadataResolver =
             booleanResult.Satisfied switch
@@ -42,23 +48,26 @@ internal sealed class BooleanResultPredicateProposition<TModel, TMetadata, TUnde
                 false => whenFalse
             };
 
-        var metadata = new Lazy<TMetadata>(() => metadataResolver(model, booleanResult), LazyThreadSafetyMode.None);
+        var metadata = new Lazy<TMetadata[]>(() => metadataResolver(model, booleanResult).ToArray(), LazyThreadSafetyMode.None);
 
-        var assertion = new Lazy<string>(() =>
-            Description.ToReason(booleanResult.Satisfied), LazyThreadSafetyMode.None);
+        var assertions = new Lazy<string[]>(() =>
+            metadata.Value switch
+            {
+                IEnumerable<string> assertion => assertion.ToArray(),
+                _ => [Description.ToReason(booleanResult.Satisfied)]
+            }, LazyThreadSafetyMode.None);
 
-        return new PolicyResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
+        return new BooleanResultWithUnderlying<TMetadata,TMetadata>(
             booleanResult,
-            () => metadata.Value,
             () => new MetadataNode<TMetadata>(metadata.Value,
                 booleanResults as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
             () => new Explanation(
-                assertion.Value,
+                assertions.Value,
                 booleanResults,
                 booleanResults),
             () => new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
-                assertion.Value,
+                Description.ToReason(booleanResult.Satisfied),
                 Description.Statement));
     }
 }

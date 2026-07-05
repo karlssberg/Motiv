@@ -23,12 +23,15 @@ public readonly struct NamedPropositionFactory<TModel, TMetadata>(
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>A proposition for the model.</returns>
-    public PolicyBase<TModel, string> Create() =>
-        new BooleanResultPredicateWithSingleAssertionProposition<TModel, TMetadata>(
+    public PolicyBase<TModel, string> Create()
+    {
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new BooleanResultPredicateWithSingleAssertionProposition<TModel, TMetadata>(
             predicate,
             trueBecause,
             falseBecause,
             new SpecDescription(trueBecause));
+    }
 
     /// <summary>
     /// Creates a proposition with descriptive assertions, but using the supplied proposition to succinctly explain
