@@ -27,7 +27,5 @@ internal sealed class ExpressionDescription(Expression statement, ISpecDescripti
         ? _reasonWhenTrue ??= statement.ToExpressionAssertion(true).Serialize()
         : _reasonWhenFalse ??= statement.ToExpressionAssertion(false).Serialize();
 
-    public bool HasExplicitStatement { get; set; }
-
     public override string ToString() => Statement;
 }

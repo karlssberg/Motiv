@@ -72,16 +72,17 @@ public class AsNSatisfiedSpecTests
     }
 
     [Theory]
-    [InlineData(1, 3, 5, 7, "The pack does not contain exactly a pair of even numbers")]
-    [InlineData(1, 3, 5, 6, "The pack does not contain exactly a pair of even numbers")]
-    [InlineData(1, 3, 4, 6, "4, 6 are a pair of even numbers")]
-    [InlineData(1, 4, 6, 8, "The pack does not contain exactly a pair of even numbers")]
+    [InlineData(1, 3, 5, 7, "a pair of even numbers == false", "The pack does not contain exactly a pair of even numbers")]
+    [InlineData(1, 3, 5, 6, "a pair of even numbers == false", "The pack does not contain exactly a pair of even numbers")]
+    [InlineData(1, 3, 4, 6, "a pair of even numbers == true", "4, 6 are a pair of even numbers")]
+    [InlineData(1, 4, 6, 8, "a pair of even numbers == false", "The pack does not contain exactly a pair of even numbers")]
     public void Should_assert_the_outcome_of_an_n_satisfied_spec_metadata(
         int first,
         int second,
         int third,
         int fourth,
-        string expectedShallowAssertionSerialized)
+        string expectedShallowAssertionSerialized,
+        string expectedShallowValueSerialized)
     {
         // Arrange
         var isEven = Spec
@@ -105,13 +106,14 @@ public class AsNSatisfiedSpecTests
 
         // Assert
         act.ShouldBe([expectedShallowAssertionSerialized]);
+        result.Values.ShouldBe([expectedShallowValueSerialized]);
     }
 
     [Theory]
-    [InlineData(1, 3, 5, 7, "1 is odd, 3 is odd, 5 is odd, 7 is odd")]
-    [InlineData(1, 3, 5, 6, "6 is even")]
-    [InlineData(1, 3, 4, 6, "4 is even, 6 is even")]
-    [InlineData(1, 4, 6, 8, "4 is even, 6 is even, 8 is even")]
+    [InlineData(1, 3, 5, 7, "is even spec == false")]
+    [InlineData(1, 3, 5, 6, "is even spec == true")]
+    [InlineData(1, 3, 4, 6, "is even spec == true")]
+    [InlineData(1, 4, 6, 8, "is even spec == true")]
     public void Should_provide_an_underlying_explanation_of_an_n_satisfied_spec_metadata(
         int first,
         int second,

@@ -44,19 +44,8 @@ internal sealed class PolicyResultPredicateProposition<TModel, TMetadata, TUnder
 
         var metadata = new Lazy<TMetadata>(() => metadataResolver(model, booleanResult), LazyThreadSafetyMode.None);
 
-        var assertions = new Lazy<string>(() =>
-            metadata.Value switch
-            {
-                string assertion => assertion,
-                _ => Description.ToReason(booleanResult.Satisfied)
-            }, LazyThreadSafetyMode.None);
-
-        var reason = new Lazy<string>(() =>
-            metadata.Value switch
-            {
-                string reason when !Description.HasExplicitStatement => reason,
-                _ => Description.ToReason(booleanResult.Satisfied)
-            }, LazyThreadSafetyMode.None);
+        var assertion = new Lazy<string>(() =>
+            Description.ToReason(booleanResult.Satisfied), LazyThreadSafetyMode.None);
 
         return new PolicyResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,
@@ -64,12 +53,12 @@ internal sealed class PolicyResultPredicateProposition<TModel, TMetadata, TUnder
             () => new MetadataNode<TMetadata>(metadata.Value,
                 booleanResults as IEnumerable<PolicyResultBase<TMetadata>> ?? []),
             () => new Explanation(
-                assertions.Value,
+                assertion.Value,
                 booleanResults,
                 booleanResults),
             () => new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
-                reason.Value,
+                assertion.Value,
                 Description.Statement));
     }
 }

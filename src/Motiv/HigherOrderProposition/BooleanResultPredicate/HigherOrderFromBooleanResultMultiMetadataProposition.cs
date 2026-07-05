@@ -37,11 +37,7 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
         return new HigherOrderBooleanResult<TMetadata, TUnderlyingMetadata>(
             isSatisfied,
             () => metadata.Value,
-            () => metadata.Value switch
-            {
-                IEnumerable<string> reasons => reasons,
-                _ => specDescription.ToReason(isSatisfied).ToEnumerable()
-            },
+            () => specDescription.ToReason(isSatisfied).ToEnumerable(),
             () => new HigherOrderResultDescription<TUnderlyingMetadata>(
                 specDescription.ToReason(isSatisfied),
                 causes.Value,

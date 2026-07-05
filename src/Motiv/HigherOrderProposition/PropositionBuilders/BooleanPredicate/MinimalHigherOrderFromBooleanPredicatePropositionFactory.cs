@@ -21,6 +21,7 @@ public readonly partial struct MinimalHigherOrderFromBooleanPredicateProposition
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
         predicate.ThrowIfNull(nameof(predicate));
@@ -30,7 +31,7 @@ public readonly partial struct MinimalHigherOrderFromBooleanPredicateProposition
             higherOrderOperation.HigherOrderPredicate,
             _ => statement.AsSatisfied(),
             _ => statement.AsUnsatisfied(),
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 }

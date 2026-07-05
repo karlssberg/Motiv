@@ -21,8 +21,9 @@ public readonly struct MultiAssertionPolicyExplanationWithNamePropositionFactory
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable. Because a name is supplied, the <c>WhenTrue</c>/<c>WhenFalse</c> values are surfaced via <see cref="BooleanResultBase{TMetadata}.Values"/>, not <see cref="BooleanResultBase.Assertions"/>.</remarks>
     /// <returns>A proposition for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<TModel, string> Create(string statement) =>
         new PolicyDecoratorMultiMetadataProposition<TModel, string, TMetadata>(
             spec,
@@ -30,19 +31,23 @@ public readonly struct MultiAssertionPolicyExplanationWithNamePropositionFactory
                 .ToEnumerable()
                 .ToFunc<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description));
 
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create() =>
-        new PolicyDecoratorMultiMetadataProposition<TModel, string, TMetadata>(
+    /// <exception cref="ArgumentException">Thrown when the WhenTrue assertion is null, empty or whitespace (it doubles as the propositional statement).</exception>
+    public SpecBase<TModel, string> Create()
+    {
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new PolicyDecoratorMultiAssertionExplanationProposition<TModel, TMetadata>(
             spec,
             trueBecause
                 .ToEnumerable()
-                .ToFunc<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>(),
+                .ToFunc<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>>(),
             falseBecause,
             new SpecDescription(trueBecause, spec.Description));
+    }
 }

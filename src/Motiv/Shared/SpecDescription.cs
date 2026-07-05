@@ -19,7 +19,6 @@ internal sealed class SpecDescription(string statement, ISpecDescription? underl
     }
 
     public string ToReason(bool satisfied) => Statement.ToReason(satisfied);
-    public bool HasExplicitStatement { get; set; }
 
     public override string ToString() => Statement;
 }

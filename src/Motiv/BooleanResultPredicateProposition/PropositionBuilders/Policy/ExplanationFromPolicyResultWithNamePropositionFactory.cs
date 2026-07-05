@@ -23,29 +23,33 @@ public readonly struct ExplanationFromPolicyResultWithNamePropositionFactory<TMo
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>A proposition for the model.</returns>
-    public PolicyBase<TModel, string> Create() =>
-        new PolicyResultPredicateWithSingleAssertionProposition<TModel, TMetadata>(
+    /// <exception cref="ArgumentException">Thrown when the WhenTrue assertion is null, empty or whitespace (it doubles as the propositional statement).</exception>
+    public PolicyBase<TModel, string> Create()
+    {
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new PolicyResultPredicateWithSingleAssertionProposition<TModel, TMetadata>(
             predicate,
             trueBecause,
             falseBecause,
             new SpecDescription(trueBecause));
+    }
 
     /// <summary>
     /// Creates a proposition with descriptive assertions, but using the supplied proposition to succinctly explain
     /// the decision.
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable. Because a name is supplied, the <c>WhenTrue</c>/<c>WhenFalse</c> values are surfaced via <see cref="BooleanResultBase{TMetadata}.Values"/>, not <see cref="BooleanResultBase.Assertions"/>.</remarks>
     /// <returns>A proposition for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public PolicyBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
         return new PolicyResultPredicateProposition<TModel, string, TMetadata>(
             predicate,
             trueBecause.ToFunc<TModel, PolicyResultBase<TMetadata>, string>(),
             falseBecause,
-            new SpecDescription(statement) { HasExplicitStatement = true }
+            new SpecDescription(statement)
         );
     }
 }

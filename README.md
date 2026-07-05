@@ -112,6 +112,22 @@ result.Satisfied;  // true
 result.Assertions; // ["has good credit score"]
 ```
 
+Supplying an explicit name via `Create("name")` instead of parameterless `Create()` changes the semantics: the name plus
+a `== true`/`== false` suffix becomes the assertion, and the custom strings become metadata, available via `Values`:
+
+```csharp
+var hasGoodCredit = Spec
+    .Build((Customer c) => c.CreditScore > 600)
+    .WhenTrue("has good credit score")
+    .WhenFalse("credit score too low")
+    .Create("good credit");
+
+var result = hasGoodCredit.Evaluate(eligibleCustomer);
+result.Satisfied;  // true
+result.Assertions; // ["good credit == true"]
+result.Values;     // ["has good credit score"]
+```
+
 ### Side-Effect Observers
 
 Attach logging, metrics, or other side-effects without altering a proposition's behavior:

@@ -7,6 +7,9 @@ category: building
 
 The `Create()` method finalizes the specification building process, producing a `SpecBase<TModel, TMetadata>` instance that represents the proposition.
 
+> [!IMPORTANT]
+> **v8 breaking change:** Named explanation specs now report `name == true/false`; to keep string assertions, use parameterless `Create()`, or read the strings from `Values`.
+
 ## Default
 
 ```csharp
@@ -36,6 +39,19 @@ The propositional statement is used when serializing the proposition to a string
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
     .Create("is even");
+```
+
+When `WhenTrue()`/`WhenFalse()` strings are also present, supplying an explicit name demotes those strings to metadata:
+the name plus the `== true`/`== false` suffix becomes the `Reason`/`Assertions`/`Justification` text, and the strings
+surface instead via `Values`.
+
+```csharp
+Spec.Build((int n) => n % 2 == 0)
+    .WhenTrue("is even")
+    .WhenFalse("is odd")
+    .Create("even check");
+// true:  Assertions = ["even check == true"], Values = ["is even"]
+// false: Assertions = ["even check == false"], Values = ["is odd"]
 ```
 
 ## With an implicit propositional statement

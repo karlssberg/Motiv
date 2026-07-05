@@ -21,14 +21,14 @@ public readonly partial struct MinimalHigherOrderFromPolicyPropositionFactory<TM
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<IEnumerable<TModel>, TMetadata> Create(string statement) =>
         new MinimalHigherOrderFromPolicyResultProposition<TModel, TMetadata>(
             policy.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
-                policy.Description)
-            { HasExplicitStatement = true },
+                policy.Description),
             higherOrderOperation.CauseSelector);
 
     internal SpecBase<IEnumerable<TModel>, TMetadata> Create(Expression statement) =>

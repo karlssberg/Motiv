@@ -24,10 +24,11 @@ public readonly struct MultiMetadataPropositionExpressionTreeFactory<TModel, TMe
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<TModel, TMetadata> Create(string statement) =>
         new ExpressionTreeMultiMetadataProposition<TModel, TMetadata, TPredicateResult>(
             expression,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
 }

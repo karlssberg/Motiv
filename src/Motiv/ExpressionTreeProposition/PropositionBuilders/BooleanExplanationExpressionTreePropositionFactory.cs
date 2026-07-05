@@ -21,15 +21,16 @@ public readonly struct BooleanExplanationExpressionTreePropositionFactory<TModel
 {
     /// <summary>Creates a proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable. Because a name is supplied, the <c>WhenTrue</c>/<c>WhenFalse</c> values are surfaced via <see cref="BooleanResultBase{TMetadata}.Values"/>, not <see cref="BooleanResultBase.Assertions"/>.</remarks>
     /// <returns>An expression-backed policy for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public ExpressionPolicyBase<TModel, string> Create(string statement) =>
         new ExpressionPolicyDecorator<TModel, string>(
-            new ExpressionTreeExplanationProposition<TModel, bool>(
+            new ExpressionTreeMetadataProposition<TModel, string, bool>(
                 expression,
                 trueBecause,
                 falseBecause,
-                new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true }),
+                new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)))),
             expression);
 
     /// <summary>

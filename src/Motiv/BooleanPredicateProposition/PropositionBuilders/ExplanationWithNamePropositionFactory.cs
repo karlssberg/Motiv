@@ -20,10 +20,12 @@ public readonly struct ExplanationWithNamePropositionFactory<TModel>(
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="PolicyBase{TModel, TMetadata}" />.</returns>
+    /// <exception cref="ArgumentException">Thrown when the WhenTrue assertion is null, empty or whitespace (it doubles as the propositional statement).</exception>
     public PolicyBase<TModel, string> Create()
     {
         predicate.ThrowIfNull(nameof(predicate));
-        return new Proposition<TModel, string>(
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new ExplanationProposition<TModel>(
             predicate,
             trueBecause.ToFunc<TModel, string>(),
             falseBecause,
@@ -35,8 +37,9 @@ public readonly struct ExplanationWithNamePropositionFactory<TModel>(
     /// the decision.
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable. Because a name is supplied, the <c>WhenTrue</c>/<c>WhenFalse</c> values are surfaced via <see cref="BooleanResultBase{TMetadata}.Values"/>, not <see cref="BooleanResultBase.Assertions"/>.</remarks>
     /// <returns>An instance of <see cref="PolicyBase{TModel, TMetadata}" />.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public PolicyBase<TModel, string> Create(string statement)
     {
         predicate.ThrowIfNull(nameof(predicate));
@@ -45,6 +48,6 @@ public readonly struct ExplanationWithNamePropositionFactory<TModel>(
             predicate,
             trueBecause.ToFunc<TModel, string>(),
             falseBecause,
-            new SpecDescription(statement) { HasExplicitStatement = true });
+            new SpecDescription(statement));
     }
 }

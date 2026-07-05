@@ -18,13 +18,14 @@ public readonly partial struct MinimalPolicyResultPredicatePropositionFactory<TM
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public PolicyBase<TModel, TMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new PolicyResultPredicateProposition<TModel, TMetadata, TMetadata>(
+        return new MinimalPolicyResultPredicateProposition<TModel, TMetadata>(
             predicate,
             (_, result) => result.Value,
             (_, result) => result.Value,
-            new SpecDescription(statement) { HasExplicitStatement = true });
+            new SpecDescription(statement));
     }
 }

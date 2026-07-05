@@ -31,11 +31,7 @@ internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, T
             }, LazyThreadSafetyMode.None);
 
         var assertions = new Lazy<string[]>(() =>
-            metadata.Value switch
-            {
-                IEnumerable<string> because => because.ToArray(),
-                _ => [Description.ToReason(booleanResult.Satisfied)]
-            }, LazyThreadSafetyMode.None);
+            [Description.ToReason(booleanResult.Satisfied)], LazyThreadSafetyMode.None);
 
         return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,

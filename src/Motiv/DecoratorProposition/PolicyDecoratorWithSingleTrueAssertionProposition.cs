@@ -7,17 +7,14 @@ internal sealed class PolicyDecoratorWithSingleTrueAssertionProposition<TModel, 
     PolicyBase<TModel, TUnderlyingMetadata> underlyingPolicy,
     string trueBecause,
     Func<TModel, PolicyResultBase<TUnderlyingMetadata>, string> whenFalse,
-    string? propositionalStatement = null)
+    ISpecDescription description)
     : PolicyBase<TModel, string>
 {
     private readonly SpecBase[] _underlying = [underlyingPolicy];
 
     public override IEnumerable<SpecBase> Underlying => _underlying;
 
-    public override ISpecDescription Description =>
-        new SpecDescription(
-            propositionalStatement ?? trueBecause,
-            underlyingPolicy.Description);
+    public override ISpecDescription Description => description;
 
     public override bool Matches(TModel model) => underlyingPolicy.Matches(model);
 
@@ -26,17 +23,20 @@ internal sealed class PolicyDecoratorWithSingleTrueAssertionProposition<TModel, 
         var underlyingResult = underlyingPolicy.Evaluate(model);
         PolicyResultBase<TUnderlyingMetadata>[] underlyingResults = [underlyingResult];
 
-        var assertion = new Lazy<string>(() =>
+        var because = new Lazy<string>(() =>
             underlyingResult.Satisfied switch
             {
                 true => trueBecause,
                 false => whenFalse(model, underlyingResult)
             }, LazyThreadSafetyMode.None);
 
+        var assertion = new Lazy<string>(() =>
+            because.Value.ElseFallback(() => Description.ToReason(underlyingResult.Satisfied)), LazyThreadSafetyMode.None);
+
         return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
             underlyingResult,
-            () => assertion.Value,
-            () => new MetadataNode<string>(assertion.Value,
+            () => because.Value,
+            () => new MetadataNode<string>(because.Value,
                 underlyingResults as IEnumerable<PolicyResultBase<string>> ?? []),
             () => new Explanation(
                 assertion.Value,

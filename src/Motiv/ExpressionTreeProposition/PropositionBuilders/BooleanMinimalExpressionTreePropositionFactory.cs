@@ -18,12 +18,13 @@ public readonly partial struct BooleanMinimalExpressionTreePropositionFactory<TM
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An expression-backed proposition for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public ExpressionSpecBase<TModel, string> Create(string statement) =>
         new ExpressionSpecDecorator<TModel, string>(
-            new ExpressionTreeMultiMetadataProposition<TModel, string, bool>(
+            new MinimalExpressionTreeProposition<TModel, bool>(
                 expression,
                 (_, result) => result.Values,
                 (_, result) => result.Values,
-                new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true }),
+                new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)))),
             expression);
 }

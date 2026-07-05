@@ -8,10 +8,14 @@ public class HigherOrderBooleanEvaluationTests
     }
 
     [Theory]
-    [InlineData(true, true, "all true")]
-    [InlineData(true, false, "some false")]
-    [InlineData(false, true, "some false")]
-    public void Should_yield_using_all_satisfied_property(bool modelA, bool modelB, params string[] expected)
+    [InlineData(true, true, "all true == true", "all true")]
+    [InlineData(true, false, "all true == true", "some false")]
+    [InlineData(false, true, "all true == true", "some false")]
+    public void Should_yield_using_all_satisfied_property(
+        bool modelA,
+        bool modelB,
+        string expectedAssertion,
+        string expectedValue)
     {
         // Arrange
         var higherOrder = Spec
@@ -23,18 +27,20 @@ public class HigherOrderBooleanEvaluationTests
 
         var result = higherOrder.Evaluate([modelA, modelB]);
 
-        // Act
-        var act = result.Assertions;
-
         // Assert
-        act.ShouldBe(expected);
+        result.Assertions.ShouldBe([expectedAssertion]);
+        result.Values.ShouldBe([expectedValue]);
     }
 
     [Theory]
-    [InlineData(true, true, "any true")]
-    [InlineData(false, true, "any true")]
-    [InlineData(true, false, "any true")]
-    public void Should_yield_using_any_satisfied_property(bool modelA, bool modelB, params string[] expected)
+    [InlineData(true, true, "all true == true", "any true")]
+    [InlineData(false, true, "all true == true", "any true")]
+    [InlineData(true, false, "all true == true", "any true")]
+    public void Should_yield_using_any_satisfied_property(
+        bool modelA,
+        bool modelB,
+        string expectedAssertion,
+        string expectedValue)
     {
         // Arrange
         var higherOrder = Spec
@@ -46,19 +52,21 @@ public class HigherOrderBooleanEvaluationTests
 
         var result = higherOrder.Evaluate([modelA, modelB]);
 
-        // Act
-        var act = result.Assertions;
-
         // Assert
-        act.ShouldBe(expected);
+        result.Assertions.ShouldBe([expectedAssertion]);
+        result.Values.ShouldBe([expectedValue]);
     }
 
     [Theory]
-    [InlineData(false, false, "none true")]
-    [InlineData(false, true, "some true")]
-    [InlineData(true, false, "some true")]
-    [InlineData(true, true, "some true")]
-    public void Should_yield_using_none_satisfied_property(bool modelA, bool modelB, params string[] expected)
+    [InlineData(false, false, "all true == true", "none true")]
+    [InlineData(false, true, "all true == false", "some true")]
+    [InlineData(true, false, "all true == false", "some true")]
+    [InlineData(true, true, "all true == false", "some true")]
+    public void Should_yield_using_none_satisfied_property(
+        bool modelA,
+        bool modelB,
+        string expectedAssertion,
+        string expectedValue)
     {
         // Arrange
         var higherOrder = Spec
@@ -70,11 +78,9 @@ public class HigherOrderBooleanEvaluationTests
 
         var result = higherOrder.Evaluate([modelA, modelB]);
 
-        // Act
-        var act = result.Assertions;
-
         // Assert
-        act.ShouldBe(expected);
+        result.Assertions.ShouldBe([expectedAssertion]);
+        result.Values.ShouldBe([expectedValue]);
     }
 
     [Theory]

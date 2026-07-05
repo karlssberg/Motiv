@@ -43,11 +43,11 @@ public class TutorialTests
             .WhenFalse(n => $"{n} is odd")
             .Create("is even");
 
-        isEven.Evaluate(2).Reason.ShouldBe("2 is even");
-        isEven.Evaluate(2).Assertions.ShouldBe(["2 is even"]);
+        isEven.Evaluate(2).Reason.ShouldBe("is even == true");
+        isEven.Evaluate(2).Assertions.ShouldBe(["is even == true"]);
 
-        isEven.Evaluate(3).Reason.ShouldBe("3 is odd");
-        isEven.Evaluate(3).Assertions.ShouldBe(["3 is odd"]);
+        isEven.Evaluate(3).Reason.ShouldBe("is even == false");
+        isEven.Evaluate(3).Assertions.ShouldBe(["is even == false"]);
     }
 
     [Fact]
@@ -222,26 +222,33 @@ public class TutorialTests
                 .Create("all are even");
 
         allAreEven.Evaluate([2, 4, 6, 8]).Satisfied.ShouldBeTrue();
-        allAreEven.Evaluate([2, 4, 6, 8]).Assertions.ShouldBe(["all are even"]);
+        allAreEven.Evaluate([2, 4, 6, 8]).Assertions.ShouldBe(["all are even == true"]);
+        allAreEven.Evaluate([2, 4, 6, 8]).Values.ShouldBe(["all are even"]);
 
         allAreEven.Evaluate([10]).Satisfied.ShouldBeTrue();
-        allAreEven.Evaluate([10]).Assertions.ShouldBe(["10 is even and is the only item"]);
+        allAreEven.Evaluate([10]).Assertions.ShouldBe(["all are even == true"]);
+        allAreEven.Evaluate([10]).Values.ShouldBe(["10 is even and is the only item"]);
 
 
         allAreEven.Evaluate([11]).Satisfied.ShouldBeFalse();
-        allAreEven.Evaluate([11]).Assertions.ShouldBe(["11 is odd and is the only item"]);
+        allAreEven.Evaluate([11]).Assertions.ShouldBe(["all are even == false"]);
+        allAreEven.Evaluate([11]).Values.ShouldBe(["11 is odd and is the only item"]);
 
         allAreEven.Evaluate([2, 4, 6, 9]).Satisfied.ShouldBeFalse();
-        allAreEven.Evaluate([2, 4, 6, 9]).Assertions.ShouldBe(["only 9 is odd"]);
+        allAreEven.Evaluate([2, 4, 6, 9]).Assertions.ShouldBe(["all are even == false"]);
+        allAreEven.Evaluate([2, 4, 6, 9]).Values.ShouldBe(["only 9 is odd"]);
 
         allAreEven.Evaluate([]).Satisfied.ShouldBeTrue();
-        allAreEven.Evaluate([]).Assertions.ShouldBe(["the collection is empty"]);
+        allAreEven.Evaluate([]).Assertions.ShouldBe(["all are even == true"]);
+        allAreEven.Evaluate([]).Values.ShouldBe(["the collection is empty"]);
 
         allAreEven.Evaluate([1, 3, 5, 7]).Satisfied.ShouldBeFalse();
-        allAreEven.Evaluate([1, 3, 5, 7]).Assertions.ShouldBe(["all are odd"]);
+        allAreEven.Evaluate([1, 3, 5, 7]).Assertions.ShouldBe(["all are even == false"]);
+        allAreEven.Evaluate([1, 3, 5, 7]).Values.ShouldBe(["all are odd"]);
 
         allAreEven.Evaluate([2, 4, 5, 7]).Satisfied.ShouldBeFalse();
-        allAreEven.Evaluate([2, 4, 5, 7]).Assertions.ShouldBe(["5 is odd", "7 is odd"]);
+        allAreEven.Evaluate([2, 4, 5, 7]).Assertions.ShouldBe(["all are even == false"]);
+        allAreEven.Evaluate([2, 4, 5, 7]).Values.ShouldBe(["5 is odd", "7 is odd"]);
     }
 
     [Fact]
@@ -272,32 +279,41 @@ public class TutorialTests
 
 
         allAreNegative.Evaluate([]).Satisfied.ShouldBeTrue();
-        allAreNegative.Evaluate([]).Assertions.ShouldBe(["there is an absence of numbers"]);
+        allAreNegative.Evaluate([]).Assertions.ShouldBe(["all are negative == true"]);
+        allAreNegative.Evaluate([]).Values.ShouldBe(["there is an absence of numbers"]);
 
         allAreNegative.Evaluate([-10]).Satisfied.ShouldBeTrue();
-        allAreNegative.Evaluate([-10]).Assertions.ShouldBe(["-10 is negative and is the only number"]);
+        allAreNegative.Evaluate([-10]).Assertions.ShouldBe(["all are negative == true"]);
+        allAreNegative.Evaluate([-10]).Values.ShouldBe(["-10 is negative and is the only number"]);
 
         allAreNegative.Evaluate([-2, -4, -6, -8]).Satisfied.ShouldBeTrue();
-        allAreNegative.Evaluate([-2, -4, -6, -8]).Assertions.ShouldBe(["all are negative numbers"]);
+        allAreNegative.Evaluate([-2, -4, -6, -8]).Assertions.ShouldBe(["all are negative == true"]);
+        allAreNegative.Evaluate([-2, -4, -6, -8]).Values.ShouldBe(["all are negative numbers"]);
 
         allAreNegative.Evaluate([0]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([0]).Assertions.ShouldBe(["the number is 0 and is the only number"]);
+        allAreNegative.Evaluate([0]).Assertions.ShouldBe(["all are negative == false"]);
+        allAreNegative.Evaluate([0]).Values.ShouldBe(["the number is 0 and is the only number"]);
 
         allAreNegative.Evaluate([11]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([11]).Assertions.ShouldBe(["11 is positive and is the only number"]);
+        allAreNegative.Evaluate([11]).Assertions.ShouldBe(["all are negative == false"]);
+        allAreNegative.Evaluate([11]).Values.ShouldBe(["11 is positive and is the only number"]);
 
         allAreNegative.Evaluate([0, 0, 0, 0]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([0, 0, 0, 0]).Assertions.ShouldBe(["all are 0"]);
+        allAreNegative.Evaluate([0, 0, 0, 0]).Assertions.ShouldBe(["all are negative == false"]);
+        allAreNegative.Evaluate([0, 0, 0, 0]).Values.ShouldBe(["all are 0"]);
 
         allAreNegative.Evaluate([2, 4, 6, 8]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([2, 4, 6, 8]).Assertions.ShouldBe(["all are positive numbers"]);
+        allAreNegative.Evaluate([2, 4, 6, 8]).Assertions.ShouldBe(["all are negative == false"]);
+        allAreNegative.Evaluate([2, 4, 6, 8]).Values.ShouldBe(["all are positive numbers"]);
 
         allAreNegative.Evaluate([0, 1, 2, 3]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([0, 1, 2, 3]).Assertions.ShouldBe(["none are negative numbers"]);
+        allAreNegative.Evaluate([0, 1, 2, 3]).Assertions.ShouldBe(["all are negative == false"]);
+        allAreNegative.Evaluate([0, 1, 2, 3]).Values.ShouldBe(["none are negative numbers"]);
 
 
         allAreNegative.Evaluate([-2, -4, 0, 9]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([-2, -4, 0, 9]).Assertions.ShouldBe(["0 is not negative", "9 is not negative"]);
+        allAreNegative.Evaluate([-2, -4, 0, 9]).Assertions.ShouldBe(["all are negative == false"]);
+        allAreNegative.Evaluate([-2, -4, 0, 9]).Values.ShouldBe(["is negative == false"]);
     }
 
 #endif
@@ -483,24 +499,24 @@ public class TutorialTests
     [Theory]
     [InlineData(1, false, "1")]
     [InlineData(2, false, "2")]
-    [InlineData(3, true, "fizz")]
+    [InlineData(3, true, "fizz == true")]
     [InlineData(4, false, "4")]
-    [InlineData(5, true, "buzz")]
-    [InlineData(6, true, "fizz")]
+    [InlineData(5, true, "buzz == true")]
+    [InlineData(6, true, "fizz == true")]
     [InlineData(7, false, "7")]
     [InlineData(8, false, "8")]
-    [InlineData(9, true, "fizz")]
-    [InlineData(10, true, "buzz")]
+    [InlineData(9, true, "fizz == true")]
+    [InlineData(10, true, "buzz == true")]
     [InlineData(11, false, "11")]
-    [InlineData(12, true, "fizz")]
+    [InlineData(12, true, "fizz == true")]
     [InlineData(13, false, "13")]
     [InlineData(14, false, "14")]
-    [InlineData(15, true, "fizzbuzz")]
+    [InlineData(15, true, "fizz == truebuzz == true")]
     [InlineData(16, false, "16")]
     [InlineData(17, false, "17")]
-    [InlineData(18, true, "fizz")]
+    [InlineData(18, true, "fizz == true")]
     [InlineData(19, false, "19")]
-    [InlineData(20, true, "buzz")]
+    [InlineData(20, true, "buzz == true")]
     public void Should_solve_fizzbuzz(int number, bool expectedSatisfied, string expectedReason)
     {
         var isFizz =
@@ -581,8 +597,8 @@ public class TutorialTests
                 .WhenFalse("none")
                 .Create("xor");
 
-        spec.Evaluate(true).Assertions.ShouldBe(["left == true"]);
-        spec.Evaluate(false).Assertions.ShouldBe(["right == true"]);
+        spec.Evaluate(true).Values.ShouldBe(["left == true"]);
+        spec.Evaluate(false).Values.ShouldBe(["right == true"]);
     }
 
     [Fact]
@@ -597,8 +613,8 @@ public class TutorialTests
                 .WhenFalse("none")
                 .Create("xor");
 
-        spec.Evaluate(true).Assertions.ShouldBe(["right == false"]);
-        spec.Evaluate(false).Assertions.ShouldBe(["left == false"]);
+        spec.Evaluate(true).Values.ShouldBe(["right == false"]);
+        spec.Evaluate(false).Values.ShouldBe(["left == false"]);
     }
 
     [Fact]

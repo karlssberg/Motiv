@@ -9,7 +9,7 @@ that are satisfied.
 
 ```csharp
 var left = Spec.Build((bool b) => b).Create("left");
-var right = Spec.Build(bool b) => !b).Create("right");    
+var right = Spec.Build((bool b) => !b).Create("right");
 
 // XOR always considers both operands as causes, regardless of their results
 var spec =
@@ -18,6 +18,6 @@ var spec =
               .WhenFalse("none")
               .Create("xor");
 
-spec.Evaluate(true).Assertions;  // ["left"]
-spec.Evaluate(false).Assertions;  // ["right"]
+spec.Evaluate(true).Values;  // ["left == true"]
+spec.Evaluate(false).Values;  // ["right == true"]
 ```

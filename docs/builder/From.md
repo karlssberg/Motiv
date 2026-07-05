@@ -93,19 +93,23 @@ rewrite the entire lambda expression.
 
 For example:
 
+Supplying an explicit name to `isEven` demotes its `WhenTrue`/`WhenFalse` strings to metadata (available via `Values`);
+its own `Assertions` become the name-suffixed form, and when it's embedded inside a larger expression, the composite's
+`Assertions` reflect the embedded call site rather than the custom strings:
+
 ```csharp
 var isEven = Spec.From((int n) => n % 2 == 0)
                  .WhenTrue("n is even")
                  .WhenFalse("n is odd")
                  .Create("is even");
 
-var isEvenAndPositive = Spec.From((int n) => isEven.IsSatisfied(n) & n > 0)
+var isEvenAndPositive = Spec.From((int n) => isEven.Matches(n) & n > 0)
                             .Create("is even and positive");
 
 var result = isEvenAndPositive.Evaluate(-3);
 
 result.Satisfied;     // false
-result.Assertions;    // ["n is odd", "n <= 0"]
+result.Assertions;    // ["isEven.Matches(n) == false", "n <= 0"]
 ```
 
 ## Inlining Any and All LINQ Methods

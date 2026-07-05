@@ -44,13 +44,8 @@ internal sealed class ExpressionTreeMultiMetadataProposition<TModel, TMetadata, 
             () =>
             {
                 metadataResults ??= metadataResolver(model, result);
-                var assertions = metadataResults switch
-                {
-                    IEnumerable<string> because => because,
-                    _ => result.Assertions
-                };
                 return new Explanation(
-                    assertions,
+                    result.Assertions,
                     result);
             },
             () => new ExpressionTreeBooleanResultDescription(

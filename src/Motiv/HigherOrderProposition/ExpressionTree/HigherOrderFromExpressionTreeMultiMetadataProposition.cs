@@ -43,11 +43,7 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
         return new HigherOrderBooleanResult<TMetadata, string>(
             isSatisfied,
             () => metadata.Value,
-            () => metadata.Value switch
-            {
-                IEnumerable<string> reasons => reasons,
-                _ => underlyingResults.GetAssertions()
-            },
+            () => underlyingResults.GetAssertions(),
             () => new HigherOrderExpressionTreeResultDescription<string>(
                 isSatisfied,
                 Description.ToReason(isSatisfied),

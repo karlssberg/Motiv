@@ -28,8 +28,9 @@ public readonly struct MultiAssertionExplanationWithNameHigherOrderPropositionFa
     /// Creates a specification with explanations for when the condition is true or false, and names it with the propositional statement provided.
     /// </summary>
     /// <param name="statement">The proposition statement of what the specification represents.</param>
-    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable. Because a name is supplied, the <c>WhenTrue</c>/<c>WhenFalse</c> values are surfaced via <see cref="BooleanResultBase{TMetadata}.Values"/>, not <see cref="BooleanResultBase.Assertions"/>.</remarks>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
         resultResolver.ThrowIfNull(nameof(resultResolver));
@@ -39,7 +40,7 @@ public readonly struct MultiAssertionExplanationWithNameHigherOrderPropositionFa
             higherOrderOperation.HigherOrderPredicate,
             TrueBecauseFunc,
             falseBecause,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 
@@ -48,12 +49,17 @@ public readonly struct MultiAssertionExplanationWithNameHigherOrderPropositionFa
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel, string>(
+    /// <exception cref="ArgumentException">Thrown when the WhenTrue assertion is null, empty or whitespace (it doubles as the propositional statement).</exception>
+    public SpecBase<IEnumerable<TModel>, string> Create()
+    {
+        resultResolver.ThrowIfNull(nameof(resultResolver));
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new HigherOrderFromBooleanPredicateMultiAssertionExplanationProposition<TModel>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
             TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause),
             higherOrderOperation.CauseSelector);
+    }
 }

@@ -344,14 +344,14 @@ public class ExpressionTreeJustificationTests
                     (IEnumerable<string> roles) => roles.Any((string role) => isAdminResult) == true
                         roles.Any((string role) => isAdminResult) == true
                             (string role) => isAdminResult == true
-                                is admin
+                                is-admin == true
                 """, "admin")]
     [InlineData("""
                 any admins == false
                     (IEnumerable<string> roles) => roles.Any((string role) => isAdminResult) == false
                         roles.Any((string role) => isAdminResult) == false
                             (string role) => isAdminResult == false
-                                is not admin
+                                is-admin == false
                 """, "user")]
     public void Should_justify_any_linq_function_to_higher_order_proposition_when_boolean_result_is_returned(string expectedAssertion, string model)
     {
@@ -382,7 +382,7 @@ public class ExpressionTreeJustificationTests
                 roles.Any((string role) => isSuperUser || isAdminResult) == true
                     (string role) => (isSuperUser || isAdminResult) == true
                         OR
-                            is admin
+                            is-admin == true
         """,
         "admin")]
     [InlineData(
@@ -391,7 +391,7 @@ public class ExpressionTreeJustificationTests
             (IEnumerable<string> roles) => roles.Any((string role) => isSuperUser || isAdminResult) == true
                 roles.Any((string role) => isSuperUser || isAdminResult) == true
                     (string role) => (isSuperUser || isAdminResult) == true
-                        is super user
+                        is-super-user == true
         """,
         "superuser")]
     [InlineData(
@@ -401,8 +401,8 @@ public class ExpressionTreeJustificationTests
                 roles.Any((string role) => isSuperUser || isAdminResult) == false
                     (string role) => (isSuperUser || isAdminResult) == false
                         OR
-                            is not super user
-                            is not admin
+                            is-super-user == false
+                            is-admin == false
         """,
         "user")]
     public void Should_justify_any_linq_function_to_higher_order_proposition_when_multiple_boolean_results_are_returned(string expectedAssertion, string model)
@@ -440,7 +440,7 @@ public class ExpressionTreeJustificationTests
             (IEnumerable<string> roles) => roles.Any(isSuperUser | isAdminResult) == true
                 roles.Any(isSuperUser | isAdminResult) == true
                     OR
-                        is admin
+                        is-admin == true
         """,
         "admin")]
     [InlineData(
@@ -449,7 +449,7 @@ public class ExpressionTreeJustificationTests
             (IEnumerable<string> roles) => roles.Any(isSuperUser | isAdminResult) == true
                 roles.Any(isSuperUser | isAdminResult) == true
                     OR
-                        is super user
+                        is-super-user == true
         """,
         "superuser")]
     [InlineData(
@@ -458,8 +458,8 @@ public class ExpressionTreeJustificationTests
             (IEnumerable<string> roles) => roles.Any(isSuperUser | isAdminResult) == false
                 roles.Any(isSuperUser | isAdminResult) == false
                     OR
-                        is not super user
-                        is not admin
+                        is-super-user == false
+                        is-admin == false
         """,
         "user")]
     public void Should_justify_any_linq_function_to_higher_order_proposition_when_multiple_specs_are_returned(string expectedAssertion, string model)
@@ -495,7 +495,7 @@ public class ExpressionTreeJustificationTests
             (IEnumerable<string> roles) => roles.All((string role) => isAdminResult) == true
                 roles.All((string role) => isAdminResult) == true
                     (string role) => isAdminResult == true
-                        is admin
+                        is-admin == true
         """,
         "admin")]
     [InlineData(
@@ -504,7 +504,7 @@ public class ExpressionTreeJustificationTests
             (IEnumerable<string> roles) => roles.All((string role) => isAdminResult) == false
                 roles.All((string role) => isAdminResult) == false
                     (string role) => isAdminResult == false
-                        is not admin
+                        is-admin == false
         """,
         "user")]
     public void Should_justify_all_linq_function_to_higher_order_proposition_when_boolean_result_is_returned(string expectedAssertion, string model)
@@ -536,7 +536,7 @@ public class ExpressionTreeJustificationTests
                 roles.All((string role) => isSuperUser || isAdminResult) == true
                     (string role) => (isSuperUser || isAdminResult) == true
                         OR
-                            is admin
+                            is-admin == true
         """,
         "admin")]
     [InlineData(
@@ -545,7 +545,7 @@ public class ExpressionTreeJustificationTests
             (IEnumerable<string> roles) => roles.All((string role) => isSuperUser || isAdminResult) == true
                 roles.All((string role) => isSuperUser || isAdminResult) == true
                     (string role) => (isSuperUser || isAdminResult) == true
-                        is super user
+                        is-super-user == true
         """,
         "superuser")]
     [InlineData(
@@ -555,8 +555,8 @@ public class ExpressionTreeJustificationTests
                 roles.All((string role) => isSuperUser || isAdminResult) == false
                     (string role) => (isSuperUser || isAdminResult) == false
                         OR
-                            is not super user
-                            is not admin
+                            is-super-user == false
+                            is-admin == false
         """,
         "user")]
     public void Should_justify_all_linq_function_to_higher_order_proposition_when_multiple_boolean_results_are_returned(string expectedAssertion, string model)
@@ -594,7 +594,7 @@ public class ExpressionTreeJustificationTests
             (IEnumerable<string> roles) => roles.All(isSuperUser | isAdminResult) == true
                 roles.All(isSuperUser | isAdminResult) == true
                     OR
-                        is admin
+                        is-admin == true
         """,
         "admin")]
     [InlineData(
@@ -603,7 +603,7 @@ public class ExpressionTreeJustificationTests
             (IEnumerable<string> roles) => roles.All(isSuperUser | isAdminResult) == true
                 roles.All(isSuperUser | isAdminResult) == true
                     OR
-                        is super user
+                        is-super-user == true
         """,
         "superuser")]
     [InlineData(
@@ -612,8 +612,8 @@ public class ExpressionTreeJustificationTests
             (IEnumerable<string> roles) => roles.All(isSuperUser | isAdminResult) == false
                 roles.All(isSuperUser | isAdminResult) == false
                     OR
-                        is not super user
-                        is not admin
+                        is-super-user == false
+                        is-admin == false
         """,
         "user")]
     public void Should_justify_all_linq_function_to_higher_order_proposition_when_multiple_specs_are_returned(string expectedAssertion, string model)

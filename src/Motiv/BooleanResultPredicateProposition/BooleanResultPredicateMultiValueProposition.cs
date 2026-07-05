@@ -51,11 +51,7 @@ internal sealed class BooleanResultPredicateMultiValueProposition<TModel, TMetad
         var metadata = new Lazy<TMetadata[]>(() => metadataResolver(model, booleanResult).ToArray(), LazyThreadSafetyMode.None);
 
         var assertions = new Lazy<string[]>(() =>
-            metadata.Value switch
-            {
-                IEnumerable<string> assertion => assertion.ToArray(),
-                _ => [Description.ToReason(booleanResult.Satisfied)]
-            }, LazyThreadSafetyMode.None);
+            [Description.ToReason(booleanResult.Satisfied)], LazyThreadSafetyMode.None);
 
         return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
             booleanResult,

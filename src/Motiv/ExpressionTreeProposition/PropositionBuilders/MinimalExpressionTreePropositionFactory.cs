@@ -18,10 +18,11 @@ public readonly partial struct MinimalExpressionTreePropositionFactory<TModel, T
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<TModel, string> Create(string statement) =>
-        new ExpressionTreeMultiMetadataProposition<TModel, string, TPredicateResult>(
+        new MinimalExpressionTreeProposition<TModel, TPredicateResult>(
             expression,
             (_, result) => result.Values,
             (_, result) => result.Values,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
 }

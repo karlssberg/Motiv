@@ -90,6 +90,14 @@ public static class StringExtensions
     internal static bool EndsWithEqualityAssertion(this string text) =>
         text.EndsWith(" == false") || text.EndsWith(" == true");
 
-    internal static string AsUnsatisfied(this string text) => $"{text} == false";
-    internal static string AsSatisfied(this string text) => $"{text} == true";
+    internal static string AsUnsatisfied(this string text) =>
+        text switch
+        {
+            _ when text.EndsWith(" == true") => text.Substring(0, text.Length - " == true".Length) + " == false",
+            _ when text.EndsWith(" == false") => text.Substring(0, text.Length - " == false".Length) + " == true",
+            _ => $"{text} == false"
+        };
+
+    internal static string AsSatisfied(this string text) =>
+        text.EndsWithEqualityAssertion() ? text : $"{text} == true";
 }

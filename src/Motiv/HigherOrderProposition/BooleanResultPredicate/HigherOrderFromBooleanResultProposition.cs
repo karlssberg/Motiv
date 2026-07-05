@@ -37,16 +37,7 @@ internal sealed class HigherOrderFromBooleanResultProposition<TModel, TMetadata,
             }, LazyThreadSafetyMode.None);
 
         var assertion = new Lazy<string>(() =>
-            metadata.Value switch
-            {
-                string reasons => reasons,
-                _ => specDescription.ToReason(isSatisfied)
-            }, LazyThreadSafetyMode.None);
-
-        var reason = new Lazy<string>(() =>
-            specDescription.HasExplicitStatement
-                ? specDescription.ToReason(isSatisfied)
-                : assertion.Value, LazyThreadSafetyMode.None);
+            specDescription.ToReason(isSatisfied), LazyThreadSafetyMode.None);
 
         return new HigherOrderPolicyResult<TMetadata, TUnderlyingMetadata>(
             isSatisfied,
@@ -54,7 +45,7 @@ internal sealed class HigherOrderFromBooleanResultProposition<TModel, TMetadata,
             () => metadata.Value.ToEnumerable(),
             () => assertion.Value.ToEnumerable(),
             () => new HigherOrderResultDescription<TUnderlyingMetadata>(
-                reason.Value,
+                assertion.Value,
                 causes.Value,
                 Description.Statement),
             underlyingResults,

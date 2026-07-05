@@ -37,12 +37,7 @@ internal sealed class Proposition<TModel, TMetadata>(
 
         var metadata = new Lazy<TMetadata>(() => metadataResolver(model), LazyThreadSafetyMode.None);
 
-        var assertion = new Lazy<string> (() =>
-            metadata.Value switch
-            {
-                string because => because,
-                _ => Description.ToReason(isSatisfied)
-            }, LazyThreadSafetyMode.None);
+        var assertion = new Lazy<string>(() => Description.ToReason(isSatisfied), LazyThreadSafetyMode.None);
 
         return new PropositionPolicyResult<TMetadata>(
             isSatisfied,

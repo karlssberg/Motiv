@@ -34,11 +34,7 @@ internal sealed class HigherOrderFromBooleanPredicateMultiMetadataProposition<TM
             }, LazyThreadSafetyMode.None);
 
         var lazyAssertion = new Lazy<IEnumerable<string>>(() =>
-            lazyMetadata.Value switch
-            {
-                IEnumerable<string> because => because,
-                _ => specDescription.ToReason(isSatisfied).ToEnumerable()
-            }, LazyThreadSafetyMode.None);
+            specDescription.ToReason(isSatisfied).ToEnumerable(), LazyThreadSafetyMode.None);
 
         return new HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
             isSatisfied,

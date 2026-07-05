@@ -46,11 +46,7 @@ internal sealed class MultiValueProposition<TModel, TMetadata>(
         return new PropositionBooleanResult<TMetadata>(
             isSatisfied,
             () => metadataNode.Value,
-            () => new Explanation(metadataNode.Value.Metadata switch
-            {
-                IEnumerable<string> because => because,
-                _ => Description.ToReason(isSatisfied).ToEnumerable()
-            }),
+            () => new Explanation(Description.ToReason(isSatisfied).ToEnumerable()),
             () => new PropositionResultDescription(
                 Description.ToReason(isSatisfied),
                 Description.Statement));

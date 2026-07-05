@@ -35,8 +35,9 @@ public class ExpressionTreeExplanationTests
         // Act
         var act = spec.Evaluate(1);
 
-        // Assert
-        act.Assertions.ShouldBe(["is positive"]);
+        // Assert - named explanation specs now surface the underlying decomposed clause assertions
+        // (ExpressionTreeMetadataProposition-style named rule) instead of the because-strings.
+        act.Assertions.ShouldBe(["n > 0"]);
     }
 
     [Fact]
@@ -112,8 +113,9 @@ public class ExpressionTreeExplanationTests
         // Act
         var act = spec.Evaluate([1]);
 
-        // Assert
-        act.Assertions.ShouldBe(["is positive"]);
+        // Assert - the named higher-order specs now surface the underlying decomposed clause assertion;
+        // only the unnamed literalWithImpliedStatement keeps its because-string.
+        act.Assertions.ShouldBe(["n > 0", "is positive"]);
     }
 
     [Fact]
@@ -387,8 +389,9 @@ public class ExpressionTreeExplanationTests
         // Act
         var act = spec.Evaluate(-1);
 
-        // Assert
-        act.Assertions.ShouldBe(["is not positive"]);
+        // Assert - the four named specs now surface the underlying decomposed clause assertion; only
+        // the unnamed multipleCallbackWithImplicitStatement keeps its because-string.
+        act.Assertions.ShouldBe(["n <= 0", "is not positive"]);
     }
 
     [Fact]
@@ -435,8 +438,9 @@ public class ExpressionTreeExplanationTests
         // Act
         var act = spec.Evaluate([-1]);
 
-        // Assert
-        act.Assertions.ShouldBe(["is not positive"]);
+        // Assert - the named higher-order specs now surface the underlying decomposed clause assertion;
+        // only the unnamed multipleCallbackWithImplicitStatement keeps its because-string.
+        act.Assertions.ShouldBe(["n <= 0", "is not positive"]);
     }
 
     [Fact]
@@ -472,8 +476,9 @@ public class ExpressionTreeExplanationTests
         // Act
         var act = spec.Evaluate(-1);
 
-        // Assert
-        act.Assertions.ShouldBe(["is not positive"]);
+        // Assert - named multi-assertion explanation specs now surface the underlying decomposed clause
+        // assertion instead of the because-strings.
+        act.Assertions.ShouldBe(["n <= 0"]);
     }
 
     [Fact]
@@ -527,8 +532,10 @@ public class ExpressionTreeExplanationTests
         // Act
         var act = spec.Evaluate([-1]);
 
-        // Assert
-        act.Assertions.ShouldBe(["is not positive"]);
+        // Assert - the named higher-order specs now surface the underlying decomposed clause assertion;
+        // only the unnamed literalWithImpliedStatement and multipleCallbackWithImplicitStatement keep
+        // their because-strings.
+        act.Assertions.ShouldBe(["n <= 0", "is not positive"]);
     }
 
     [Fact]

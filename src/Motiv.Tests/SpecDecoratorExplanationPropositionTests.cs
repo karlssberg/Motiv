@@ -2,8 +2,8 @@ namespace Motiv.Tests;
 
 public class SpecDecoratorExplanationPropositionTests
 {
-    [InlineData(true, "true - A", "true + model - B", "true - C", "true + model - D", "true + model - E", "true + model - F", "true + model - G")]
-    [InlineData(false, "false - A", "false - B", "false + model - C", "false + model - D", "false + model - E", "false + model - F", "false + model - G")]
+    [InlineData(true, "true - A", "is second true == true", "true - C", "true + model - D == true", "true + model - E == true", "true + model - F == true", "true + model -G == true")]
+    [InlineData(false, "false - A", "is second true == false", "false + model - C", "true + model - D == false", "true + model - E == false", "true + model - F == false", "true + model -G == false")]
     [Theory]
     public void Should_replace_the_assertions_with_new_assertions_for_policies(
         bool isSatisfied,
@@ -69,8 +69,8 @@ public class SpecDecoratorExplanationPropositionTests
         act.ShouldBe(expected);
     }
 
-    [InlineData(true, "true - A", "true + model - B", "true - C", "true + model - D", "true + model - E", "true + model - F", "true + model - G")]
-    [InlineData(false, "false - A", "false - B", "false + model - C", "false + model - D", "false + model - E", "false + model - F", "false + model - G")]
+    [InlineData(true, "true - A", "is second true == true", "true - C", "true + model - D == true", "true + model - E == true", "true + model - F == true", "true + model -G == true")]
+    [InlineData(false, "false - A", "is second true == false", "false + model - C", "true + model - D == false", "true + model - E == false", "true + model - F == false", "true + model -G == false")]
     [Theory]
     public void Should_replace_the_assertions_with_new_assertions_for_specs(
         bool isSatisfied,
@@ -1175,7 +1175,7 @@ public class SpecDecoratorExplanationPropositionTests
         var result = spec.Evaluate(model);
 
         // Act
-        var act = result.Assertions;
+        var act = result.Values;
 
         // Assert
         act.ShouldBe([expectedLeft, expectedRight]);
@@ -1210,7 +1210,7 @@ public class SpecDecoratorExplanationPropositionTests
         var result = spec.Evaluate(model);
 
         // Act
-        var act = result.Assertions;
+        var act = result.Values;
 
         // Assert
         act.ShouldBe([expectedLeft, expectedRight]);
@@ -1304,9 +1304,9 @@ public class SpecDecoratorExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion & true assertion & true assertion")]
-    [InlineData(false, "false assertion & false assertion & false assertion")]
-    public void Should_not_use_the_propositional_statement_in_the_reason_for_policies(
+    [InlineData(true, "(propositional statement == true) & (propositional statement == true) & (propositional statement == true)")]
+    [InlineData(false, "(propositional statement == false) & (propositional statement == false) & (propositional statement == false)")]
+    public void Should_use_the_propositional_statement_in_the_reason_for_policies(
         bool model,
         string expectedReason)
     {
@@ -1347,9 +1347,9 @@ public class SpecDecoratorExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion & true assertion & true assertion")]
-    [InlineData(false, "false assertion & false assertion & false assertion")]
-    public void Should_use_assertions_in_the_reason_when_propositional_statements_are_used(
+    [InlineData(true, "(propositional statement == true) & (propositional statement == true) & (propositional statement == true)")]
+    [InlineData(false, "(propositional statement == false) & (propositional statement == false) & (propositional statement == false)")]
+    public void Should_use_the_propositional_statement_in_the_reason_for_specs(
         bool model,
         string expectedReason)
     {
@@ -1442,8 +1442,8 @@ public class SpecDecoratorExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion & true assertion & true assertion")]
-    [InlineData(false, "false assertion & false assertion & false assertion")]
+    [InlineData(true, "(propositional statement == true) & (propositional statement == true) & (propositional statement == true)")]
+    [InlineData(false, "(propositional statement == false) & (propositional statement == false) & (propositional statement == false)")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_for_policies(
         bool model,
         string expectedReason)
@@ -1485,8 +1485,8 @@ public class SpecDecoratorExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion & true assertion & true assertion")]
-    [InlineData(false, "false assertion & false assertion & false assertion")]
+    [InlineData(true, "(propositional statement == true) & (propositional statement == true) & (propositional statement == true)")]
+    [InlineData(false, "(propositional statement == false) & (propositional statement == false) & (propositional statement == false)")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_single_parameter_callback_for_specs(
         bool model,
         string expectedReason)
@@ -1582,8 +1582,8 @@ public class SpecDecoratorExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion & true assertion & true assertion")]
-    [InlineData(false, "false assertion & false assertion & false assertion")]
+    [InlineData(true, "(propositional statement == true) & (propositional statement == true) & (propositional statement == true)")]
+    [InlineData(false, "(propositional statement == false) & (propositional statement == false) & (propositional statement == false)")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_for_policies(
         bool model,
         string expectedReason)
@@ -1625,8 +1625,8 @@ public class SpecDecoratorExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true, "true assertion & true assertion & true assertion")]
-    [InlineData(false, "false assertion & false assertion & false assertion")]
+    [InlineData(true, "(propositional statement == true) & (propositional statement == true) & (propositional statement == true)")]
+    [InlineData(false, "(propositional statement == false) & (propositional statement == false) & (propositional statement == false)")]
     public void Should_use_the_propositional_statement_in_the_reason_when_true_assertion_uses_a_two_parameter_callback_for_specs(
         bool model,
         string expectedReason)

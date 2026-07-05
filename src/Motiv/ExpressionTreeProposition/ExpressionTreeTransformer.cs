@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
+using Motiv.BooleanPredicateProposition;
+using Motiv.BooleanResultPredicateProposition;
+using Motiv.Shared;
 
 namespace Motiv.ExpressionTreeProposition;
 
@@ -197,18 +200,18 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
 
         var whenConditional = expression.Serialize();
 
-        var spec =
-            Spec.Build((TModel model) =>
-                {
-                    var antecedent = test.Evaluate(model);
-                    if (antecedent) return antecedent & ifTrue.Evaluate(model);
+        var spec = new BooleanResultPredicateMultiAssertionExplanationProposition<TModel, string>(
+            model =>
+            {
+                var antecedent = test.Evaluate(model);
+                if (antecedent) return antecedent & ifTrue.Evaluate(model);
 
-                    var consequent = ifFalse.Evaluate(model);
-                    return (antecedent & consequent) | (antecedent & !consequent);
-                })
-                .WhenTrueYield((_, result) => result.Assertions)
-                .WhenFalseYield((_, result) => result.Assertions)
-                .Create(whenConditional);
+                var consequent = ifFalse.Evaluate(model);
+                return (antecedent & consequent) | (antecedent & !consequent);
+            },
+            (_, result) => result.Assertions,
+            (_, result) => result.Assertions,
+            new SpecDescription(whenConditional));
 
         return WithFragment(spec, expression, parameter);
     }
@@ -224,11 +227,11 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         var whenTrueExpression = whenTrueFactory(expression.Left, expression.Right);
         var whenFalseExpression = whenFalseFactory(expression.Left, expression.Right);
 
-        var spec =
-            Spec.Build(predicate)
-                .WhenTrue(model => whenTrueExpression.Serialize(model, parameter))
-                .WhenFalse(model => whenFalseExpression.Serialize(model, parameter))
-                .Create(whenTrueExpression.Serialize());
+        var spec = new ExplanationProposition<TModel>(
+            predicate,
+            model => whenTrueExpression.Serialize(model, parameter),
+            model => whenFalseExpression.Serialize(model, parameter),
+            new SpecDescription(whenTrueExpression.Serialize()));
 
         return WithFragment(spec, expression, parameter);
     }
@@ -457,11 +460,11 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         Expression whenTrueExpression,
         Expression whenFalseExpression)
     {
-        var spec =
-            Spec.Build(CreateFunc<TModel, bool>(expression, parameter))
-                .WhenTrue(model => whenTrueExpression.Serialize(model, parameter))
-                .WhenFalse(model => whenFalseExpression.Serialize(model, parameter))
-                .Create(whenTrueExpression.Serialize());
+        var spec = new ExplanationProposition<TModel>(
+            CreateFunc<TModel, bool>(expression, parameter),
+            model => whenTrueExpression.Serialize(model, parameter),
+            model => whenFalseExpression.Serialize(model, parameter),
+            new SpecDescription(whenTrueExpression.Serialize()));
 
         return WithFragment(spec, expression, parameter);
     }

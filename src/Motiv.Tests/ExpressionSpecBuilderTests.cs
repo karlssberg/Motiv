@@ -68,8 +68,9 @@ public class ExpressionSpecBuilderTests
             .WhenFalseYield((_, _) => ["small"])
             .Create("is greater than three");
 
-        // Assert
-        act.Evaluate(4).Assertions.ShouldBe(["big"]);
+        // Assert - named multi-assertion explanation specs surface the underlying decomposed clause
+        // assertions (ExpressionTreeMetadataProposition-style named rule), not the because-strings.
+        act.Evaluate(4).Assertions.ShouldBe(["n > 3"]);
     }
 
     [Fact]
@@ -127,9 +128,9 @@ public class ExpressionSpecBuilderTests
             .WhenFalseYield((_, _) => ["small", "not enough"])
             .Create("is greater than three");
 
-        // Assert
-        act.Evaluate(4).Assertions.ShouldBe(["big"]);
-        act.Evaluate(2).Assertions.ShouldBe(["small", "not enough"]);
+        // Assert - named rule: Assertions surface the underlying decomposed clause assertions.
+        act.Evaluate(4).Assertions.ShouldBe(["n > 3"]);
+        act.Evaluate(2).Assertions.ShouldBe(["n <= 3"]);
         act.ToExpression().Compile()(4).ShouldBeTrue();
     }
 
