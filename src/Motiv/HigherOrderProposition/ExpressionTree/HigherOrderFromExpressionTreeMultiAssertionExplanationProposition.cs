@@ -1,17 +1,18 @@
 using System.Linq.Expressions;
 using System.Threading;
 using Motiv.ExpressionTreeProposition;
+using Motiv.Shared;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
 
-internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TModel, TMetadata, TPredicateResult>(
+internal sealed class HigherOrderFromExpressionTreeMultiAssertionExplanationProposition<TModel, TPredicateResult>(
     Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
-    Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenTrue,
-    Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenFalse,
+    Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>> trueBecause,
+    Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<string>> falseBecause,
     ISpecDescription description,
     Func<bool, IEnumerable<BooleanResult<TModel, string>>, IEnumerable<BooleanResult<TModel, string>>> causeSelector)
-    : SpecBase<IEnumerable<TModel>, TMetadata>
+    : SpecBase<IEnumerable<TModel>, string>
 {
     private readonly ExpressionPredicate<TModel, TPredicateResult> _predicate = new(expression);
 
@@ -22,28 +23,31 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
     public override bool Matches(IEnumerable<TModel> models) =>
         EvaluateModels(models).IsSatisfied;
 
-    protected override BooleanResultBase<TMetadata> EvaluateSpec(IEnumerable<TModel> models)
+    protected override BooleanResultBase<string> EvaluateSpec(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
         var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>
             causeSelector(isSatisfied, underlyingResults)
                 .ToArray(), LazyThreadSafetyMode.None);
 
-        var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
+        var because = new Lazy<IEnumerable<string>>(() =>
             {
                 var evaluation = new HigherOrderBooleanResultEvaluation<TModel, string>(
                     underlyingResults,
                     causes.Value);
 
                 return isSatisfied
-                    ? whenTrue(evaluation)
-                    : whenFalse(evaluation);
+                    ? trueBecause(evaluation)
+                    : falseBecause(evaluation);
             }, LazyThreadSafetyMode.None);
 
-        return new HigherOrderBooleanResult<TMetadata, string>(
+        var assertion = new Lazy<IEnumerable<string>>(() =>
+            because.Value.ElseFallback(() => underlyingResults.GetAssertions()), LazyThreadSafetyMode.None);
+
+        return new HigherOrderBooleanResult<string, string>(
             isSatisfied,
-            () => metadata.Value,
-            () => underlyingResults.GetAssertions(),
+            () => because.Value,
+            () => assertion.Value,
             () => new HigherOrderExpressionTreeResultDescription<string>(
                 isSatisfied,
                 Description.ToReason(isSatisfied),

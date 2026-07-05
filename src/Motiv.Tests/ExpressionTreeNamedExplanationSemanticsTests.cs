@@ -279,4 +279,214 @@ public class ExpressionTreeNamedExplanationSemanticsTests
 
         spec.Evaluate(-1).Assertions.ShouldBe(["n <= 0"]);
     }
+
+    [Fact]
+    public void Should_use_name_suffix_reason_for_named_higher_order_single_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalse(_ => "neg")
+            .Create("all positive");
+
+        spec.Evaluate([1, 2]).Reason.ShouldBe("all positive == true");
+    }
+
+    [Fact]
+    public void Should_use_underlying_assertions_when_true_for_named_higher_order_single_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalse(_ => "neg")
+            .Create("all positive");
+
+        spec.Evaluate([1, 2]).Assertions.ShouldBe(["n > 0 == true"]);
+    }
+
+    [Fact]
+    public void Should_use_underlying_assertions_when_false_for_named_higher_order_single_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalse(_ => "neg")
+            .Create("all positive");
+
+        spec.Evaluate([1, -1]).Assertions.ShouldBe(["n > 0 == true", "n > 0 == false"]);
+    }
+
+    [Fact]
+    public void Should_use_because_strings_as_values_for_named_higher_order_single_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalse(_ => "neg")
+            .Create("all positive");
+
+        spec.Evaluate([1, 2]).Values.ShouldBe(["pos"]);
+    }
+
+    [Fact]
+    public void Should_keep_because_strings_when_true_for_unnamed_higher_order_single_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalse(_ => "neg")
+            .Create();
+
+        spec.Evaluate([1, 2]).Assertions.ShouldBe(["pos"]);
+    }
+
+    [Fact]
+    public void Should_keep_because_strings_when_false_for_unnamed_higher_order_single_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalse(_ => "neg")
+            .Create();
+
+        spec.Evaluate([1, -1]).Assertions.ShouldBe(["neg"]);
+    }
+
+    [Fact]
+    public void Should_keep_raw_because_string_in_values_for_unnamed_higher_order_single_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalse(_ => "neg")
+            .Create();
+
+        spec.Evaluate([1, 2]).Values.ShouldBe(["pos"]);
+    }
+
+    [Fact]
+    public void Should_fall_back_to_reason_when_because_string_is_degenerate_for_unnamed_higher_order_single_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalse(_ => " ")
+            .Create();
+
+        spec.Evaluate([1, -1]).Assertions.ShouldBe(["pos == false"]);
+    }
+
+    [Fact]
+    public void Should_keep_raw_degenerate_because_string_in_values_for_unnamed_higher_order_single_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalse(_ => " ")
+            .Create();
+
+        // Assertions/Reason fall back to the description-derived reason, but Values must retain the raw
+        // (degenerate) because-string per the mandatory Values contract.
+        spec.Evaluate([1, -1]).Values.ShouldBe([" "]);
+    }
+
+    [Fact]
+    public void Should_throw_when_creating_an_unnamed_higher_order_single_explanation_with_a_blank_whentrue()
+    {
+        var create = () => Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue(" ")
+            .WhenFalse(_ => "neg")
+            .Create();
+
+        Should.Throw<ArgumentException>(create);
+    }
+
+    [Fact]
+    public void Should_use_underlying_assertions_when_true_for_named_higher_order_multi_assertion_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalseYield(_ => ["neg1", "neg2"])
+            .Create("all positive");
+
+        spec.Evaluate([1, 2]).Assertions.ShouldBe(["n > 0 == true"]);
+    }
+
+    [Fact]
+    public void Should_use_underlying_assertions_when_false_for_named_higher_order_multi_assertion_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalseYield(_ => ["neg1", "neg2"])
+            .Create("all positive");
+
+        spec.Evaluate([1, -1]).Assertions.ShouldBe(["n > 0 == true", "n > 0 == false"]);
+    }
+
+    [Fact]
+    public void Should_keep_because_strings_when_true_for_unnamed_higher_order_multi_assertion_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalseYield(_ => ["neg1", "neg2"])
+            .Create();
+
+        spec.Evaluate([1, 2]).Assertions.ShouldBe(["pos"]);
+    }
+
+    [Fact]
+    public void Should_keep_because_strings_when_false_for_unnamed_higher_order_multi_assertion_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalseYield(_ => ["neg1", "neg2"])
+            .Create();
+
+        spec.Evaluate([1, -1]).Assertions.ShouldBe(["neg1", "neg2"]);
+    }
+
+    [Fact]
+    public void Should_fall_back_to_underlying_assertions_when_all_because_strings_are_degenerate_for_unnamed_higher_order_multi_assertion_explanation()
+    {
+        var spec = Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue("pos")
+            .WhenFalseYield(_ => [" ", ""])
+            .Create();
+
+        spec.Evaluate([1, -1]).Assertions.ShouldBe(["n > 0 == true", "n > 0 == false"]);
+    }
+
+    [Fact]
+    public void Should_throw_when_creating_an_unnamed_higher_order_multi_assertion_explanation_with_a_blank_whentrue()
+    {
+        var create = () => Spec
+            .From((int n) => n > 0)
+            .AsAllSatisfied()
+            .WhenTrue(" ")
+            .WhenFalseYield(_ => ["neg1", "neg2"])
+            .Create();
+
+        Should.Throw<ArgumentException>(create);
+    }
 }

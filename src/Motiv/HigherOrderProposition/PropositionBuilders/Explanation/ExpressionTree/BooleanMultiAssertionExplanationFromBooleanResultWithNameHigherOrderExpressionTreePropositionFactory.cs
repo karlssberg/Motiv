@@ -58,12 +58,15 @@ public readonly struct BooleanMultiAssertionExplanationFromBooleanResultWithName
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromExpressionTreeMultiMetadataProposition<TModel, string, bool>(
+    public SpecBase<IEnumerable<TModel>, string> Create()
+    {
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new HigherOrderFromExpressionTreeMultiAssertionExplanationProposition<TModel, bool>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause),
             higherOrderOperation.CauseSelector);
+    }
 }

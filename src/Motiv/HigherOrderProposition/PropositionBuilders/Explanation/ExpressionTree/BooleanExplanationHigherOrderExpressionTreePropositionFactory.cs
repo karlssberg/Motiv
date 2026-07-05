@@ -40,7 +40,7 @@ public readonly struct BooleanExplanationHigherOrderExpressionTreePropositionFac
     public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromExpressionTreeExplanationProposition<TModel, bool>(
+        return new HigherOrderFromExpressionTreeMetadataProposition<TModel, string, bool>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause,

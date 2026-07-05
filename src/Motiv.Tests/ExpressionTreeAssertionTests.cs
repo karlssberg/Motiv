@@ -810,8 +810,15 @@ public class ExpressionTreeAssertionTests
 
 
     [Theory]
-    [InlineData("hello world", "hello", "contains 'hello'")]
-    [InlineData("high-roller", "world", "does not contain 'world'")]
+    // Named higher-order multi-assertion explanations now surface the underlying decomposed clause
+    // assertion instead of the WhenTrueYield/WhenFalseYield because-strings (matching the family's
+    // named-adopts-metadata-semantics rule). For this non-comparison boolean sub-expression
+    // (`text.Contains(query)`), the decomposed clause text is doubly-suffixed
+    // ("text.Contains(query) == true == true/false") - a pre-existing quirk of
+    // ExpressionTreeTransformer.CreateSpecForBoolean (it names the leaf using the already-suffixed
+    // `expr == true` form rather than the raw expression), unrelated to and out of scope for this change.
+    [InlineData("hello world", "hello", "text.Contains(query) == true == true")]
+    [InlineData("high-roller", "world", "text.Contains(query) == true == false")]
     public void Should_override_assertions_with_custom_assertions_when_using_higher_order_propositions(string text, string model, params string[] expectedAssertion)
     {
         // Assemble

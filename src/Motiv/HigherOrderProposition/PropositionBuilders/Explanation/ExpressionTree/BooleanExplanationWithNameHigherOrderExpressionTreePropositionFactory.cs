@@ -38,14 +38,17 @@ public readonly struct BooleanExplanationWithNameHigherOrderExpressionTreePropos
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public PolicyBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromExpressionTreeExplanationProposition<TModel, bool>(
+    public PolicyBase<IEnumerable<TModel>, string> Create()
+    {
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new HigherOrderFromExpressionTreeExplanationProposition<TModel, bool>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause),
             higherOrderOperation.CauseSelector);
+    }
 
     /// <summary>
     /// Creates a specification with descriptive assertions, but using the supplied proposition to succinctly explain
@@ -57,7 +60,7 @@ public readonly struct BooleanExplanationWithNameHigherOrderExpressionTreePropos
     public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromExpressionTreeExplanationProposition<TModel, bool>(
+        return new HigherOrderFromExpressionTreeMetadataProposition<TModel, string, bool>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             TrueBecauseFunc,

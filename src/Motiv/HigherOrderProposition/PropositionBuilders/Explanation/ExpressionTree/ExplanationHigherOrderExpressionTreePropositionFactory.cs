@@ -30,7 +30,7 @@ public readonly struct ExplanationHigherOrderExpressionTreePropositionFactory<TM
     public PolicyBase<IEnumerable<TModel>, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new HigherOrderFromExpressionTreeExplanationProposition<TModel, TPredicateResult>(
+        return new HigherOrderFromExpressionTreeMetadataProposition<TModel, string, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause,
