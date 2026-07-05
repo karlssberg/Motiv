@@ -272,32 +272,41 @@ public class TutorialTests
 
 
         allAreNegative.Evaluate([]).Satisfied.ShouldBeTrue();
-        allAreNegative.Evaluate([]).Assertions.ShouldBe(["there is an absence of numbers"]);
+        allAreNegative.Evaluate([]).Assertions.ShouldBe(["all are negative == true"]);
+        allAreNegative.Evaluate([]).Values.ShouldBe(["there is an absence of numbers"]);
 
         allAreNegative.Evaluate([-10]).Satisfied.ShouldBeTrue();
-        allAreNegative.Evaluate([-10]).Assertions.ShouldBe(["-10 is negative and is the only number"]);
+        allAreNegative.Evaluate([-10]).Assertions.ShouldBe(["all are negative == true"]);
+        allAreNegative.Evaluate([-10]).Values.ShouldBe(["-10 is negative and is the only number"]);
 
         allAreNegative.Evaluate([-2, -4, -6, -8]).Satisfied.ShouldBeTrue();
-        allAreNegative.Evaluate([-2, -4, -6, -8]).Assertions.ShouldBe(["all are negative numbers"]);
+        allAreNegative.Evaluate([-2, -4, -6, -8]).Assertions.ShouldBe(["all are negative == true"]);
+        allAreNegative.Evaluate([-2, -4, -6, -8]).Values.ShouldBe(["all are negative numbers"]);
 
         allAreNegative.Evaluate([0]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([0]).Assertions.ShouldBe(["the number is 0 and is the only number"]);
+        allAreNegative.Evaluate([0]).Assertions.ShouldBe(["all are negative == false"]);
+        allAreNegative.Evaluate([0]).Values.ShouldBe(["the number is 0 and is the only number"]);
 
         allAreNegative.Evaluate([11]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([11]).Assertions.ShouldBe(["11 is positive and is the only number"]);
+        allAreNegative.Evaluate([11]).Assertions.ShouldBe(["all are negative == false"]);
+        allAreNegative.Evaluate([11]).Values.ShouldBe(["11 is positive and is the only number"]);
 
         allAreNegative.Evaluate([0, 0, 0, 0]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([0, 0, 0, 0]).Assertions.ShouldBe(["all are 0"]);
+        allAreNegative.Evaluate([0, 0, 0, 0]).Assertions.ShouldBe(["all are negative == false"]);
+        allAreNegative.Evaluate([0, 0, 0, 0]).Values.ShouldBe(["all are 0"]);
 
         allAreNegative.Evaluate([2, 4, 6, 8]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([2, 4, 6, 8]).Assertions.ShouldBe(["all are positive numbers"]);
+        allAreNegative.Evaluate([2, 4, 6, 8]).Assertions.ShouldBe(["all are negative == false"]);
+        allAreNegative.Evaluate([2, 4, 6, 8]).Values.ShouldBe(["all are positive numbers"]);
 
         allAreNegative.Evaluate([0, 1, 2, 3]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([0, 1, 2, 3]).Assertions.ShouldBe(["none are negative numbers"]);
+        allAreNegative.Evaluate([0, 1, 2, 3]).Assertions.ShouldBe(["all are negative == false"]);
+        allAreNegative.Evaluate([0, 1, 2, 3]).Values.ShouldBe(["none are negative numbers"]);
 
 
         allAreNegative.Evaluate([-2, -4, 0, 9]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([-2, -4, 0, 9]).Assertions.ShouldBe(["is negative == false"]);
+        allAreNegative.Evaluate([-2, -4, 0, 9]).Assertions.ShouldBe(["all are negative == false"]);
+        allAreNegative.Evaluate([-2, -4, 0, 9]).Values.ShouldBe(["is negative == false"]);
     }
 
 #endif
