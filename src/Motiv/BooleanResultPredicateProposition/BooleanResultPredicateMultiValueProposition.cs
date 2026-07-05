@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.BooleanResultPredicateProposition;
 
 /// <summary>
@@ -39,7 +36,6 @@ internal sealed class BooleanResultPredicateMultiValueProposition<TModel, TMetad
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
-        BooleanResultBase<TUnderlyingMetadata>[] booleanResults = [booleanResult];
 
         var metadataResolver =
             booleanResult.Satisfied switch
@@ -48,22 +44,10 @@ internal sealed class BooleanResultPredicateMultiValueProposition<TModel, TMetad
                 false => whenFalse
             };
 
-        var metadata = new Lazy<TMetadata[]>(() => metadataResolver(model, booleanResult).ToArray(), LazyThreadSafetyMode.None);
-
-        var assertions = new Lazy<string[]>(() =>
-            [Description.ToReason(booleanResult.Satisfied)], LazyThreadSafetyMode.None);
-
-        return new BooleanResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
+        return new BooleanResultPredicateMultiValueBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
+            model,
             booleanResult,
-            () => new MetadataNode<TMetadata>(metadata.Value,
-                booleanResults as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
-            () => new Explanation(
-                assertions.Value,
-                booleanResults,
-                booleanResults),
-            () => new BooleanResultDescriptionWithUnderlying(
-                booleanResult,
-                Description.ToReason(booleanResult.Satisfied),
-                Description.Statement));
+            metadataResolver,
+            specDescription);
     }
 }

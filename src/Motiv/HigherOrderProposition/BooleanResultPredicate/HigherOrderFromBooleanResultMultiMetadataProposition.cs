@@ -19,31 +19,14 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataProposition<TMode
     protected override BooleanResultBase<TMetadata> EvaluateSpec(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
-        var causes = new Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]>(() =>
-            causeSelector(isSatisfied, underlyingResults)
-                .ToArray(), LazyThreadSafetyMode.None);
 
-        var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
-            {
-                var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(
-                    underlyingResults,
-                    causes.Value);
-
-                return isSatisfied
-                    ? whenTrue(evaluation)
-                    : whenFalse(evaluation);
-            }, LazyThreadSafetyMode.None);
-
-        return new HigherOrderBooleanResult<TMetadata, TUnderlyingMetadata>(
+        return new HigherOrderFromBooleanResultMultiMetadataBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
-            () => metadata.Value,
-            () => specDescription.ToReason(isSatisfied).ToEnumerable(),
-            () => new HigherOrderResultDescription<TUnderlyingMetadata>(
-                specDescription.ToReason(isSatisfied),
-                causes.Value,
-                Description.Statement),
             underlyingResults,
-            () => causes.Value);
+            whenTrue,
+            whenFalse,
+            specDescription,
+            causeSelector);
     }
 
     private (BooleanResult<TModel, TUnderlyingMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

@@ -13,7 +13,7 @@ internal sealed class NotSpec<TModel, TMetadata>(
 
     public override IEnumerable<SpecBase> Underlying => _underlying;
 
-    public override ISpecDescription Description =>
+    public override ISpecDescription Description => field ??=
         new NotSpecDescription<TModel, TMetadata>(operand);
 
     public string Operation => Operator.Not;

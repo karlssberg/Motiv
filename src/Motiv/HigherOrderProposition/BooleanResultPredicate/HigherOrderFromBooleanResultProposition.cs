@@ -19,37 +19,14 @@ internal sealed class HigherOrderFromBooleanResultProposition<TModel, TMetadata,
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
-        var metadataResolver = isSatisfied
-            ? whenTrue
-            : whenFalse;
 
-        var causes = new Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]>(() =>
-            causeSelector(isSatisfied, underlyingResults)
-                .ToArray(), LazyThreadSafetyMode.None);
-
-        var metadata = new Lazy<TMetadata>(() =>
-            {
-                var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(
-                    underlyingResults,
-                    causes.Value);
-
-                return metadataResolver(evaluation);
-            }, LazyThreadSafetyMode.None);
-
-        var assertion = new Lazy<string>(() =>
-            specDescription.ToReason(isSatisfied), LazyThreadSafetyMode.None);
-
-        return new HigherOrderPolicyResult<TMetadata, TUnderlyingMetadata>(
+        return new HigherOrderFromBooleanResultPolicyResult<TModel, TMetadata, TUnderlyingMetadata>(
             isSatisfied,
-            () => metadata.Value,
-            () => metadata.Value.ToEnumerable(),
-            () => assertion.Value.ToEnumerable(),
-            () => new HigherOrderResultDescription<TUnderlyingMetadata>(
-                assertion.Value,
-                causes.Value,
-                Description.Statement),
             underlyingResults,
-            () => causes.Value);
+            whenTrue,
+            whenFalse,
+            specDescription,
+            causeSelector);
     }
 
     private (BooleanResult<TModel, TUnderlyingMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

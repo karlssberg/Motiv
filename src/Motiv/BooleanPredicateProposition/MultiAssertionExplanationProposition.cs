@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.BooleanPredicateProposition;
 
 /// <summary>
@@ -41,18 +38,10 @@ internal sealed class MultiAssertionExplanationProposition<TModel>(
                 false => whenFalse
             };
 
-        var metadataNode = new Lazy<MetadataNode<string>>(() =>
-            new MetadataNode<string>(
-                metadataResolver(model),
-                []), LazyThreadSafetyMode.None);
-
-        return new PropositionBooleanResult<string>(
+        return new MultiAssertionExplanationPropositionBooleanResult<TModel>(
             isSatisfied,
-            () => metadataNode.Value,
-            () => new Explanation(
-                metadataNode.Value.Metadata.ElseFallback(() => Description.ToReason(isSatisfied))),
-            () => new PropositionResultDescription(
-                Description.ToReason(isSatisfied),
-                Description.Statement));
+            model,
+            metadataResolver,
+            specDescription);
     }
 }

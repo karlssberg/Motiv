@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using System.Threading;
 using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
@@ -25,33 +24,15 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
     protected override BooleanResultBase<TMetadata> EvaluateSpec(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
-        var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>
-            causeSelector(isSatisfied, underlyingResults)
-                .ToArray(), LazyThreadSafetyMode.None);
 
-        var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
-            {
-                var evaluation = new HigherOrderBooleanResultEvaluation<TModel, string>(
-                    underlyingResults,
-                    causes.Value);
-
-                return isSatisfied
-                    ? whenTrue(evaluation)
-                    : whenFalse(evaluation);
-            }, LazyThreadSafetyMode.None);
-
-        return new HigherOrderBooleanResult<TMetadata, string>(
+        return new HigherOrderFromExpressionTreeMultiMetadataBooleanResult<TModel, TMetadata>(
             isSatisfied,
-            () => metadata.Value,
-            () => underlyingResults.GetAssertions(),
-            () => new HigherOrderExpressionTreeResultDescription<string>(
-                isSatisfied,
-                Description.ToReason(isSatisfied),
-                expression,
-                causes.Value,
-                Description.Statement),
             underlyingResults,
-            () => causes.Value);
+            whenTrue,
+            whenFalse,
+            description,
+            expression,
+            causeSelector);
     }
 
     private (BooleanResult<TModel, string>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

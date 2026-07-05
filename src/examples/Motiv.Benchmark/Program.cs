@@ -3,7 +3,7 @@ using BenchmarkDotNet.Diagnostics.dotTrace;
 using BenchmarkDotNet.Running;
 using Motiv.Benchmark;
 
-_ = BenchmarkRunner.Run<MotivBenchmark>();
+_ = BenchmarkSwitcher.FromAssembly(typeof(MotivBenchmark).Assembly).Run(args);
 
 namespace Motiv.Benchmark
 {

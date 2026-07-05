@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.BooleanPredicateProposition;
 
 /// <summary>
@@ -38,17 +35,10 @@ internal sealed class MultiValueProposition<TModel, TMetadata>(
                 false => whenFalse
             };
 
-        var metadataNode = new Lazy<MetadataNode<TMetadata>>(() =>
-            new MetadataNode<TMetadata>(
-                metadataResolver(model),
-                []), LazyThreadSafetyMode.None);
-
-        return new PropositionBooleanResult<TMetadata>(
+        return new MultiValuePropositionBooleanResult<TModel, TMetadata>(
             isSatisfied,
-            () => metadataNode.Value,
-            () => new Explanation(Description.ToReason(isSatisfied).ToEnumerable()),
-            () => new PropositionResultDescription(
-                Description.ToReason(isSatisfied),
-                Description.Statement));
+            model,
+            metadataResolver,
+            specDescription);
     }
 }

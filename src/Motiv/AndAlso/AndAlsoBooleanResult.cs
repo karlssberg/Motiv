@@ -9,9 +9,8 @@ internal sealed class AndAlsoBooleanResult<TMetadata>(
 {
     public override bool Satisfied { get; } = left.Satisfied && (right?.Satisfied ?? false);
 
-    private ResultDescriptionBase? _description;
     public override ResultDescriptionBase Description =>
-        _description ??= new AndAlsoBooleanResultDescription<TMetadata>(CausalResults);
+        field ??= new AndAlsoBooleanResultDescription<TMetadata>(CausalResults);
 
     public override string Operation => Operator.AndAlso;
 

@@ -8,7 +8,6 @@ internal class ExpressionAsStatementDescription : ISpecDescription
     private readonly string _trueBecause;
     private readonly string _falseBecause;
     private readonly ISpecDescription? _underlyingDescription;
-    private string? _detailed;
 
     public ExpressionAsStatementDescription(Expression expression,
         ISpecDescription? underlyingDescription = null)
@@ -22,7 +21,7 @@ internal class ExpressionAsStatementDescription : ISpecDescription
 
     public string Statement { get; }
 
-    public string Detailed => _detailed ??= string.Join(Environment.NewLine, GetDetailsAsLines());
+    public string Detailed => field ??= string.Join(Environment.NewLine, GetDetailsAsLines());
 
     public IEnumerable<string> GetDetailsAsLines()
     {

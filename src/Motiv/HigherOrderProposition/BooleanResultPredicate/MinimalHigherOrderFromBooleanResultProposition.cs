@@ -17,33 +17,12 @@ internal sealed class MinimalHigherOrderFromBooleanResultProposition<TModel, TMe
     protected override BooleanResultBase<TMetadata> EvaluateSpec(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
-        var causes = new Lazy<BooleanResult<TModel, TMetadata>[]>(() =>
-            causeSelector(isSatisfied, underlyingResults)
-                .ToArray(), LazyThreadSafetyMode.None);
 
-        var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
-            {
-                var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TMetadata>(
-                    underlyingResults,
-                    causes.Value);
-
-                return evaluation.Values;
-            }, LazyThreadSafetyMode.None);
-
-        return new HigherOrderBooleanResult<TMetadata, TMetadata>(
+        return new MinimalHigherOrderFromBooleanResultBooleanResult<TModel, TMetadata>(
             isSatisfied,
-            () => metadata.Value,
-            () => metadata.Value switch
-            {
-                IEnumerable<string> reasons => reasons,
-                _ => specDescription.ToReason(isSatisfied).ToEnumerable()
-            },
-            () => new HigherOrderResultDescription<TMetadata>(
-                specDescription.ToReason(isSatisfied),
-                causes.Value,
-                Description.Statement),
             underlyingResults,
-            () => causes.Value);
+            specDescription,
+            causeSelector);
     }
 
     private (BooleanResult<TModel, TMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

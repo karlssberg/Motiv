@@ -1,5 +1,3 @@
-using Motiv.Shared;
-
 namespace Motiv.DecoratorProposition;
 
 internal sealed class MinimalSpecDecoratorProposition<TModel, TMetadata>(
@@ -18,17 +16,7 @@ internal sealed class MinimalSpecDecoratorProposition<TModel, TMetadata>(
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
         var predicateResult = underlyingSpec.Evaluate(model);
-        BooleanResultBase<TMetadata>[] predicateResults = [predicateResult];
 
-        return new BooleanResultWithUnderlying<TMetadata, TMetadata>(
-            predicateResult,
-            () => new MetadataNode<TMetadata>(
-                predicateResult.Values,
-                predicateResults),
-            () => predicateResult.Explanation,
-            () => new BooleanResultDescriptionWithUnderlying(
-                predicateResult,
-                description.ToReason(predicateResult.Satisfied),
-                Description.Statement));
+        return new MinimalSpecDecoratorBooleanResult<TMetadata>(predicateResult, description);
     }
 }

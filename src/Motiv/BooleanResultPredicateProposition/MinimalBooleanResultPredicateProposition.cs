@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.BooleanResultPredicateProposition;
 
 /// <summary>
@@ -39,7 +36,6 @@ internal sealed class MinimalBooleanResultPredicateProposition<TModel, TMetadata
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
         var booleanResult = underlyingBooleanResultPredicate(model);
-        BooleanResultBase<TMetadata>[] booleanResults = [booleanResult];
 
         var metadataResolver =
             booleanResult.Satisfied switch
@@ -48,26 +44,10 @@ internal sealed class MinimalBooleanResultPredicateProposition<TModel, TMetadata
                 false => whenFalse
             };
 
-        var metadata = new Lazy<TMetadata[]>(() => metadataResolver(model, booleanResult).ToArray(), LazyThreadSafetyMode.None);
-
-        var assertions = new Lazy<string[]>(() =>
-            metadata.Value switch
-            {
-                IEnumerable<string> assertion => assertion.ToArray(),
-                _ => [Description.ToReason(booleanResult.Satisfied)]
-            }, LazyThreadSafetyMode.None);
-
-        return new BooleanResultWithUnderlying<TMetadata,TMetadata>(
+        return new MinimalBooleanResultPredicateBooleanResult<TModel, TMetadata>(
+            model,
             booleanResult,
-            () => new MetadataNode<TMetadata>(metadata.Value,
-                booleanResults as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
-            () => new Explanation(
-                assertions.Value,
-                booleanResults,
-                booleanResults),
-            () => new BooleanResultDescriptionWithUnderlying(
-                booleanResult,
-                Description.ToReason(booleanResult.Satisfied),
-                Description.Statement));
+            metadataResolver,
+            specDescription);
     }
 }

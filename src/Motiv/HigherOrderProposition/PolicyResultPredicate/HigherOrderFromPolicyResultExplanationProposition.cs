@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.HigherOrderProposition.PolicyResultPredicate;
 
 internal sealed class HigherOrderFromPolicyResultExplanationProposition<TModel, TUnderlyingMetadata>(
@@ -22,37 +19,14 @@ internal sealed class HigherOrderFromPolicyResultExplanationProposition<TModel, 
     protected override PolicyResultBase<string> EvaluatePolicy(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
-        var metadataResolver = isSatisfied
-            ? whenTrue
-            : whenFalse;
 
-        var causes = new Lazy<IReadOnlyList<PolicyResult<TModel, TUnderlyingMetadata>>>(() =>
-            causeSelector(isSatisfied, underlyingResults)
-                .ToArray(), LazyThreadSafetyMode.None);
-
-        var metadata = new Lazy<string>(() =>
-            {
-                var evaluation = new HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>(
-                    underlyingResults,
-                    causes.Value);
-
-                return metadataResolver(evaluation);
-            }, LazyThreadSafetyMode.None);
-
-        var assertion = new Lazy<string>(() =>
-            metadata.Value.ElseFallback(() => specDescription.ToReason(isSatisfied)), LazyThreadSafetyMode.None);
-
-        return new HigherOrderPolicyResult<string, TUnderlyingMetadata>(
+        return new HigherOrderFromPolicyResultExplanationPolicyResult<TModel, TUnderlyingMetadata>(
             isSatisfied,
-            () => metadata.Value,
-            () => metadata.Value.ToEnumerable(),
-            () => assertion.Value.ToEnumerable(),
-            () => new HigherOrderResultDescription<TUnderlyingMetadata>(
-                assertion.Value,
-                causes.Value,
-                Description.Statement),
             underlyingResults,
-            () => causes.Value);
+            whenTrue,
+            whenFalse,
+            specDescription,
+            causeSelector);
     }
 
     private (PolicyResult<TModel, TUnderlyingMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

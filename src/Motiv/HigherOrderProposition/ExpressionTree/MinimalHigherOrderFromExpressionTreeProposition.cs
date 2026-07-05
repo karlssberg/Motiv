@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using System.Threading;
 using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
@@ -23,25 +22,13 @@ internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TP
     protected override BooleanResultBase<string> EvaluateSpec(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
-        var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>
-            causeSelector(isSatisfied, underlyingResults)
-                .ToArray(), LazyThreadSafetyMode.None);
 
-        var metadata = new Lazy<IEnumerable<string>>(() =>
-            causes.Value.SelectMany(result => result.MetadataTier.Metadata), LazyThreadSafetyMode.None);
-
-        return new HigherOrderBooleanResult<string, string>(
+        return new MinimalHigherOrderFromExpressionTreeBooleanResult<TModel>(
             isSatisfied,
-            () => metadata.Value,
-            () => metadata.Value,
-            () => new HigherOrderExpressionTreeResultDescription<string>(
-                isSatisfied,
-                Description.ToReason(isSatisfied),
-                expression,
-                causes.Value,
-                Description.Statement),
             underlyingResults,
-            () => causes.Value);
+            description,
+            expression,
+            causeSelector);
     }
 
     private (BooleanResult<TModel, string>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

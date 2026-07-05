@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.BooleanPredicateProposition;
 
 /// <summary>
@@ -31,16 +28,10 @@ internal sealed class ExplanationProposition<TModel>(
                 false => falseBecause
             };
 
-        var because = new Lazy<string>(() => becauseResolver(model), LazyThreadSafetyMode.None);
-
-        var assertion = new Lazy<string>(() =>
-            because.Value.ElseFallback(() => Description.ToReason(isSatisfied)), LazyThreadSafetyMode.None);
-
-        return new PropositionPolicyResult<string>(
+        return new ExplanationPropositionPolicyResult<TModel>(
             isSatisfied,
-            () => because.Value,
-            () => new MetadataNode<string>(because.Value),
-            () => new Explanation(assertion.Value),
-            () => new PropositionResultDescription(assertion.Value, Description.Statement));
+            model,
+            becauseResolver,
+            specDescription);
     }
 }

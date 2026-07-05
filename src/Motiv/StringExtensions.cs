@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Motiv;
 
 /// <summary>
@@ -15,7 +17,7 @@ public static class StringExtensions
     /// <returns>The serialized string.</returns>
     public static string Serialize<T>(
         this IEnumerable<T> collection) =>
-        string.Concat(collection.SerializeToEnumerable(",", "and", true));
+        collection.SerializeToString(",", "and", true);
 
     /// <summary>Serializes a collection to a human-readable string.</summary>
     /// <param name="collection">The collection to serialize.</param>
@@ -29,53 +31,43 @@ public static class StringExtensions
         this IEnumerable<T> collection,
         string conjunction,
         bool useOxfordComma = true) =>
-        string.Concat(collection.SerializeToEnumerable(",", conjunction, useOxfordComma));
+        collection.SerializeToString(",", conjunction, useOxfordComma);
 
-    private static IEnumerable<string?> SerializeToEnumerable<T>(
+    private static string SerializeToString<T>(
         this IEnumerable<T> collection,
         string delimiter,
         string? conjunction,
         bool useOxfordComma)
     {
-        const int bufferSize = 2;
-        var buffer = new Queue<string?>(bufferSize);
-        var size = 0;
-        foreach (var item in collection)
-        {
-            size++;
-            buffer.Enqueue(item?.ToString());
-            if (buffer.Count <= bufferSize)
-                continue;
+        using var enumerator = collection.GetEnumerator();
+        if (!enumerator.MoveNext())
+            return string.Empty;
 
-            yield return buffer.Dequeue();
-            yield return delimiter;
-            yield return " ";
+        var previous = enumerator.Current?.ToString();
+        if (!enumerator.MoveNext())
+            return previous ?? string.Empty;
+
+        var builder = new StringBuilder();
+        var current = enumerator.Current?.ToString();
+        var count = 2;
+        while (enumerator.MoveNext())
+        {
+            builder.Append(previous).Append(delimiter).Append(' ');
+            previous = current;
+            current = enumerator.Current?.ToString();
+            count++;
         }
 
-        switch (size)
-        {
-            case 0:
-                yield break;
-            case 1:
-                yield return buffer.Dequeue();
-                yield break;
-            case 2:
-                yield return buffer.Dequeue();
-                yield return " ";
-                yield return conjunction;
-                yield return " ";
-                yield return buffer.Dequeue();
-                yield break;
-            default:
-                yield return buffer.Dequeue();
-                if (useOxfordComma)
-                    yield return delimiter;
-                yield return " ";
-                yield return conjunction;
-                yield return " ";
-                yield return buffer.Dequeue();
-                yield break;
-        }
+        builder.Append(previous);
+        if (count > 2 && useOxfordComma)
+            builder.Append(delimiter);
+
+        return builder
+            .Append(' ')
+            .Append(conjunction)
+            .Append(' ')
+            .Append(current)
+            .ToString();
     }
 
     internal static bool ContainsReservedCharacters(this string text)

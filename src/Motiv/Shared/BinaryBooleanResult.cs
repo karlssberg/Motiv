@@ -23,18 +23,15 @@ internal abstract class BinaryBooleanResult<TMetadata>(
 
     public abstract bool IsCollapsable { get; }
 
-    private BooleanResultBase<TMetadata>[]? _causalResults;
-    protected BooleanResultBase<TMetadata>[] CausalResults => _causalResults ??= GetCausalResults().ToArray();
+    protected BooleanResultBase<TMetadata>[] CausalResults => field ??= GetCausalResults();
 
-    private BooleanResultBase<TMetadata>[]? _allResults;
-    private BooleanResultBase<TMetadata>[] AllResults => _allResults ??= GetAllResults().ToArray();
+    private protected BooleanResultBase<TMetadata>[] AllResults =>
+        field ??= Right is null ? [Left] : [Left, Right];
 
-    private Explanation? _explanation;
-    public override Explanation Explanation => _explanation ??= new(CausalResults, AllResults);
+    public override Explanation Explanation => field ??= new(CausalResults, AllResults);
 
-    private MetadataNode<TMetadata>? _metadataTier;
     public override MetadataNode<TMetadata> MetadataTier =>
-        _metadataTier ??= new(CausalResults.GetValues(), CausalResults);
+        field ??= new(CausalResults.GetValues(), CausalResults);
 
     public override IEnumerable<BooleanResultBase> Underlying => AllResults;
 
@@ -44,20 +41,12 @@ internal abstract class BinaryBooleanResult<TMetadata>(
 
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => CausalResults;
 
-    protected virtual IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults()
-    {
-        if (Left.Satisfied == Satisfied)
-            yield return Left;
-
-        if (Right is not null && Right.Satisfied == Satisfied)
-            yield return Right;
-    }
-
-    protected IEnumerable<BooleanResultBase<TMetadata>> GetAllResults()
-    {
-        yield return Left;
-
-        if (Right is not null)
-            yield return Right;
-    }
+    protected virtual BooleanResultBase<TMetadata>[] GetCausalResults() =>
+        (Left.Satisfied == Satisfied, Right is not null && Right.Satisfied == Satisfied) switch
+        {
+            (true, true) => [Left, Right!],
+            (true, _) => [Left],
+            (_, true) => [Right!],
+            _ => []
+        };
 }

@@ -9,9 +9,6 @@ namespace Motiv.Shared;
 [DebuggerDisplay("{Debug}")]
 public sealed class Explanation
 {
-    private IEnumerable<Explanation>? _underlying;
-    private IEnumerable<Explanation>? _allUnderlying;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="Explanation"/> class that redefines assertions.
     /// </summary>
@@ -101,18 +98,20 @@ public sealed class Explanation
     /// <summary>
     /// Gets the underlying explanations of the causes.
     /// </summary>
-    public IEnumerable<Explanation> Underlying => _underlying ??= ResolveUnderlying(Assertions, Causes);
+    public IEnumerable<Explanation> Underlying => field ??= ResolveUnderlying(Assertions, Causes);
 
     /// <summary>
     /// Gets the all underlying explanations, regardless of whether they determined the outcome.
     /// </summary>
-    public IEnumerable<Explanation> AllUnderlying => _allUnderlying ??= ResolveAllUnderlying(Assertions, Results);
+    public IEnumerable<Explanation> AllUnderlying => field ??= ResolveAllUnderlying(Assertions, Results);
+
+    private string? _toString;
 
     /// <summary>
     /// Returns a string that represents the current object.
     /// </summary>
     /// <returns>A string that represents the current object.</returns>
-    public override string ToString() => Assertions.Serialize();
+    public override string ToString() => _toString ??= Assertions.Serialize();
 
     private static IEnumerable<Explanation> ResolveUnderlying(
         IEnumerable<string> assertions,

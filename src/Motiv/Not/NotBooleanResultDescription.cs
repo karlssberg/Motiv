@@ -4,13 +4,11 @@ namespace Motiv.Not;
 
 internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase operand) : ResultDescriptionBase
 {
-    private string? _reason;
-
     internal override int CausalOperandCount => 1;
 
     internal override string Statement => Operator.Not;
 
-    public override string Reason => _reason ??= FormatReason(operand);
+    public override string Reason => field ??= FormatReason(operand);
 
     public override IEnumerable<string> GetJustificationAsLines() =>
         NegateFirstLine(operand.Description.GetJustificationAsLines());

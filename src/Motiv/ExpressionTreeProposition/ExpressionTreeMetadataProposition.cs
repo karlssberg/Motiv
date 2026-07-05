@@ -1,7 +1,4 @@
 using System.Linq.Expressions;
-using System.Threading;
-using Motiv.BooleanPredicateProposition;
-using Motiv.Shared;
 
 namespace Motiv.ExpressionTreeProposition;
 
@@ -23,35 +20,20 @@ internal sealed class ExpressionTreeMetadataProposition<TModel, TMetadata, TPred
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
         var result = _predicate.Execute(model);
-        BooleanResultBase<string>[] resultArray = [result];
 
-        var lazyMetadata = new Lazy<TMetadata>(() =>
+        var metadataResolver =
             result.Satisfied switch
             {
-                true => whenTrue(model, result),
-                false => whenFalse(model, result)
-            }, LazyThreadSafetyMode.None);
+                true => whenTrue,
+                false => whenFalse
+            };
 
-        return new PropositionPolicyResult<TMetadata>(
+        return new ExpressionTreeMetadataPropositionPolicyResult<TModel, TMetadata, TPredicateResult>(
             result.Satisfied,
-            () => lazyMetadata.Value,
-            () => new MetadataNode<TMetadata>(lazyMetadata.Value,
-                resultArray as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
-            () =>
-            {
-                var assertions = lazyMetadata.Value switch
-                {
-                    IEnumerable<string> because => because.ToArray(),
-                    _ => result.Assertions
-                };
-
-                return new Explanation(assertions, resultArray,
-                    resultArray);
-            },
-            () => new ExpressionTreeBooleanResultDescription(
-                result,
-                description.ToReason(result.Satisfied),
-                expression,
-                Description.Statement));
+            model,
+            result,
+            metadataResolver,
+            expression,
+            description);
     }
 }

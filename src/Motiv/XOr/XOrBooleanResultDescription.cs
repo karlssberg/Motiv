@@ -9,13 +9,12 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
     : ResultDescriptionBase
 {
     private readonly BooleanResultBase<TMetadata>[] _results = [left, right];
-    private string? _reason;
 
     internal override int CausalOperandCount => _results.Length;
 
     internal override string Statement => Operator.XOr;
 
-    public override string Reason => _reason ??= string.Join(" ^ ", _results.Select(result =>
+    public override string Reason => field ??= string.Join(" ^ ", _results.Select(result =>
         ContainsBinaryOperation(result) switch
         {
             true => $"({result.Description.Reason})",

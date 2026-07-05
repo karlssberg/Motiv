@@ -1,5 +1,3 @@
-using Motiv.Shared;
-
 namespace Motiv.MetadataToExplanationAdapter;
 
 internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingMetadata>(
@@ -17,17 +15,7 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingMetada
     protected override BooleanResultBase<string> EvaluateSpec(TModel model)
     {
         var result = spec.Evaluate(model);
-        BooleanResultBase<TUnderlyingMetadata>[] results = [result];
 
-        return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
-            result,
-            () => new MetadataNode<string>(
-                result.Assertions,
-                results as IEnumerable<BooleanResultBase<string>> ?? []),
-            () => result.Explanation,
-            () => new BooleanResultDescriptionWithUnderlying(
-                result,
-                Description.ToReason(result.Satisfied),
-                Description.Statement));
+        return new MetadataToExplanationAdapterBooleanResult<TUnderlyingMetadata>(result, spec.Description);
     }
 }

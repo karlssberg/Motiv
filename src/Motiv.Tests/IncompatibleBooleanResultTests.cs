@@ -1,37 +1,50 @@
-using Motiv.BooleanPredicateProposition;
 using Motiv.Shared;
+using Motiv.Tests.Customizations;
 
 namespace Motiv.Tests;
 
 public class IncompatibleBooleanResultTests
 {
-    public class ResultDescription(string reason, string statement) : ResultDescriptionBase
-    {
-        public override string Reason => reason;
-        internal override int CausalOperandCount { get; } = 1;
-        internal override string Statement => statement;
-        public override IEnumerable<string> GetJustificationAsLines() => [reason];
-    }
-
     private enum MyMetadata
     {
         True,
         False
     }
 
+    /// <summary>
+    /// Produces a string-metadata result whose single assertion is the outcome's <c>ToString()</c> ("True"/"False"),
+    /// mirroring the hand-built results the deleted <c>PropositionBooleanResult</c> factory previously created.
+    /// </summary>
+    private static BooleanResultBase<string> StringResult(bool satisfied) =>
+        Spec.Build((bool m) => m)
+            .WhenTrue("True")
+            .WhenFalse("False")
+            .Create()
+            .Evaluate(satisfied);
+
+    /// <summary>
+    /// Produces a result carrying an arbitrary (non-string) metadata type while asserting the outcome's
+    /// <c>ToString()</c>, so that composing two such results exercises the incompatible-metadata fallback.
+    /// </summary>
+    private static BooleanResultBase<T> IncompatibleResult<T>(bool satisfied, T metadata) =>
+        new PolicyResult<T>(
+            satisfied,
+            new MetadataNode<T>(metadata, []),
+            new Explanation(satisfied.ToString()),
+            new BooleanResultDescription(satisfied.ToString(), satisfied.ToString()),
+            [],
+            [],
+            [],
+            [],
+            metadata);
+
     [Theory]
-    [InlineAutoData]
-    public void Should_support_explicit_conversion_to_a_bool(
-        bool isSatisfied,
-        string because,
-        ResultDescription resultDescription)
+    [InlineAutoData(true)]
+    [InlineAutoData(false)]
+    public void Should_support_explicit_conversion_to_a_bool(bool isSatisfied)
     {
         // Arrange
-        var result = new PropositionBooleanResult<string>(
-            isSatisfied,
-            () => new MetadataNode<string>(because, []),
-            () => new Explanation(because),
-            () => resultDescription);
+        var result = StringResult(isSatisfied);
 
         // Act
         var act = (bool)result;
@@ -48,17 +61,8 @@ public class IncompatibleBooleanResultTests
     public void Should_support_and_operation(bool left, bool right, bool expected)
     {
         // Arrange
-        var leftResult = new PropositionBooleanResult<string>(
-            left,
-            () => new MetadataNode<string>(left.ToString(), []),
-            () => new Explanation(left.ToString()),
-            () => new BooleanResultDescription(left.ToString(), left.ToString()));
-
-        var rightResult = new  PropositionBooleanResult<string>(
-            right,
-            () => new MetadataNode<string>(right.ToString(), []),
-            () => new Explanation(right.ToString()),
-            () => new BooleanResultDescription(right.ToString(), right.ToString()));
+        var leftResult = StringResult(left);
+        var rightResult = StringResult(right);
 
         var result = leftResult & rightResult;
 
@@ -77,17 +81,8 @@ public class IncompatibleBooleanResultTests
     public void Should_provide_assertions_when_two_results_have_the_and_operation_applied_to_them(bool left, bool right)
     {
         // Arrange
-        var leftResult = new PropositionBooleanResult<string>(
-            left,
-            () => new MetadataNode<string>(left.ToString(), []),
-            () => new Explanation(left.ToString()),
-            () => new BooleanResultDescription(left.ToString(), left.ToString()));
-
-        var rightResult = new  PropositionBooleanResult<string>(
-            right,
-            () => new MetadataNode<string>(right.ToString(), []),
-            () => new Explanation(right.ToString()),
-            () => new BooleanResultDescription(right.ToString(), right.ToString()));
+        var leftResult = StringResult(left);
+        var rightResult = StringResult(right);
 
         var result = leftResult & rightResult;
 
@@ -110,16 +105,8 @@ public class IncompatibleBooleanResultTests
     public void Should_assert_with_incompatible_metadata(bool left, bool right, params string[] expected)
     {
         // Arrange
-        var leftResult = new PropositionBooleanResult<bool>(
-            left,
-            () => new MetadataNode<bool>(left, []),
-            () => new Explanation(left.ToString()),
-            () => new BooleanResultDescription(left.ToString(), left.ToString()));
-        var rightResult = new  PropositionBooleanResult<MyMetadata>(
-            right,
-            () => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
-            () => new Explanation(right.ToString()),
-            () => new BooleanResultDescription(right.ToString(), right.ToString()));
+        var leftResult = IncompatibleResult(left, left);
+        var rightResult = IncompatibleResult(right, right ? MyMetadata.True : MyMetadata.False);
 
         var result = leftResult & rightResult;
 
@@ -138,16 +125,8 @@ public class IncompatibleBooleanResultTests
     public void Should_determine_causes_with_incompatible_metadata(bool left, bool right, params string[] expected)
     {
         // Arrange
-        var leftResult = new PropositionBooleanResult<bool>(
-            left,
-            () => new MetadataNode<bool>(left, []),
-            () => new Explanation(left.ToString()),
-            () => new BooleanResultDescription(left.ToString(), left.ToString()));
-        var rightResult = new  PropositionBooleanResult<MyMetadata>(
-            right,
-            () => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
-            () => new Explanation(right.ToString()),
-            () => new BooleanResultDescription(right.ToString(), right.ToString()));
+        var leftResult = IncompatibleResult(left, left);
+        var rightResult = IncompatibleResult(right, right ? MyMetadata.True : MyMetadata.False);
 
         var result = leftResult & rightResult;
 
@@ -166,17 +145,8 @@ public class IncompatibleBooleanResultTests
     public void Should_support_or_operation(bool left, bool right, bool expected)
     {
         // Arrange
-        var leftResult = new PropositionBooleanResult<string>(
-            left,
-            () => new MetadataNode<string>(left.ToString(), []),
-            () => new Explanation(left.ToString()),
-            () => new BooleanResultDescription(left.ToString(), left.ToString()));
-
-        var rightResult = new  PropositionBooleanResult<string>(
-            right,
-            () => new MetadataNode<string>(right.ToString(), []),
-            () => new Explanation(right.ToString()),
-            () => new BooleanResultDescription(right.ToString(), right.ToString()));
+        var leftResult = StringResult(left);
+        var rightResult = StringResult(right);
 
         var result = leftResult | rightResult;
 
@@ -195,17 +165,8 @@ public class IncompatibleBooleanResultTests
     public void Should_assert_or_operation(bool left, bool right)
     {
         // Arrange
-        var leftResult = new PropositionBooleanResult<string>(
-            left,
-            () => new MetadataNode<string>(left.ToString(), []),
-            () => new Explanation(left.ToString()),
-            () => new BooleanResultDescription(left.ToString(), left.ToString()));
-
-        var rightResult = new  PropositionBooleanResult<string>(
-            right,
-            () => new MetadataNode<string>(right.ToString(), []),
-            () => new Explanation(right.ToString()),
-            () => new BooleanResultDescription(right.ToString(), right.ToString()));
+        var leftResult = StringResult(left);
+        var rightResult = StringResult(right);
 
         var result = leftResult | rightResult;
 
@@ -228,16 +189,8 @@ public class IncompatibleBooleanResultTests
     public void Should_assert_or_operation_with_incompatible_metadata(bool left, bool right, params string[] expected)
     {
         // Arrange
-        var leftResult = new PropositionBooleanResult<bool>(
-            left,
-            () => new MetadataNode<bool>(left, []),
-            () => new Explanation(left.ToString()),
-            () => new BooleanResultDescription(left.ToString(), left.ToString()));
-        var rightResult = new  PropositionBooleanResult<MyMetadata>(
-            right,
-            () => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
-            () => new Explanation(right.ToString()),
-            () => new BooleanResultDescription(right.ToString(), right.ToString()));
+        var leftResult = IncompatibleResult(left, left);
+        var rightResult = IncompatibleResult(right, right ? MyMetadata.True : MyMetadata.False);
 
         var result = leftResult | rightResult;
 
@@ -256,17 +209,8 @@ public class IncompatibleBooleanResultTests
     public void Should_support_xor_operation(bool left, bool right, bool expected)
     {
         // Arrange
-        var leftResult = new PropositionBooleanResult<string>(
-            left,
-            () => new MetadataNode<string>(left.ToString(), []),
-            () => new Explanation(left.ToString()),
-            () => new BooleanResultDescription(left.ToString(), left.ToString()));
-
-        var rightResult = new  PropositionBooleanResult<string>(
-            right,
-            () => new MetadataNode<string>(right.ToString(), []),
-            () => new Explanation(right.ToString()),
-            () => new BooleanResultDescription(right.ToString(), right.ToString()));
+        var leftResult = StringResult(left);
+        var rightResult = StringResult(right);
 
         var result = leftResult ^ rightResult;
 
@@ -285,17 +229,8 @@ public class IncompatibleBooleanResultTests
     public void Should_yield_assertions_for_xor_operation(bool left, bool right)
     {
         // Arrange
-        var leftResult = new PropositionBooleanResult<string>(
-            left,
-            () => new MetadataNode<string>(left.ToString(), []),
-            () => new Explanation(left.ToString()),
-            () => new BooleanResultDescription(left.ToString(), left.ToString()));
-
-        var rightResult = new  PropositionBooleanResult<string>(
-            right,
-            () => new MetadataNode<string>(right.ToString(), []),
-            () => new Explanation(right.ToString()),
-            () => new BooleanResultDescription(right.ToString(), right.ToString()));
+        var leftResult = StringResult(left);
+        var rightResult = StringResult(right);
 
         var result = leftResult ^ rightResult;
 
@@ -316,17 +251,8 @@ public class IncompatibleBooleanResultTests
     public void Should_assert_xor_operation_with_incompatible_metadata(bool left, bool right, params string[] expected)
     {
         // Arrange
-        var leftResult = new PropositionBooleanResult<bool>(
-            left,
-            () => new MetadataNode<bool>(left, []),
-            () => new Explanation(left.ToString()),
-            () => new BooleanResultDescription(left.ToString(), left.ToString()));
-
-        var rightResult = new  PropositionBooleanResult<MyMetadata>(
-            right,
-            () => new MetadataNode<MyMetadata>(right ? MyMetadata.True : MyMetadata.False, []),
-            () => new Explanation(right.ToString()),
-            () => new BooleanResultDescription(right.ToString(), right.ToString()));
+        var leftResult = IncompatibleResult(left, left);
+        var rightResult = IncompatibleResult(right, right ? MyMetadata.True : MyMetadata.False);
 
         var result = leftResult ^ rightResult;
 
@@ -343,11 +269,7 @@ public class IncompatibleBooleanResultTests
     public void Should_support_not_operation(bool operand, bool expected)
     {
         // Arrange
-        var operandResult = new  PropositionBooleanResult<string>(
-            operand,
-            () => new MetadataNode<string>(operand.ToString(), []),
-            () => new Explanation(operand.ToString()),
-            () => new BooleanResultDescription(operand.ToString(), operand.ToString()));
+        var operandResult = StringResult(operand);
 
         var result = !operandResult;
 
@@ -364,11 +286,7 @@ public class IncompatibleBooleanResultTests
     public void Should_yield_assertions_for_not_operation(bool operand)
     {
         // Arrange
-        var operandResult = new  PropositionBooleanResult<string>(
-            operand,
-            () => new MetadataNode<string>(operand.ToString(), []),
-            () => new Explanation(operand.ToString()),
-            () => new BooleanResultDescription(operand.ToString(), operand.ToString()));
+        var operandResult = StringResult(operand);
 
         var result = !operandResult;
 
@@ -646,5 +564,3 @@ public class IncompatibleBooleanResultTests
         act.ShouldBe($"underlying == {(satisfied ? "true" : "false")}");
     }
 }
-
-

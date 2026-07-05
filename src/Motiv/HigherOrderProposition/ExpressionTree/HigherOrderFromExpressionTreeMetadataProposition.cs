@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using System.Threading;
 using Motiv.ExpressionTreeProposition;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
@@ -25,41 +24,15 @@ internal sealed class HigherOrderFromExpressionTreeMetadataProposition<TModel, T
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
-        var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>
-            causeSelector(isSatisfied, underlyingResults)
-                .ToArray(), LazyThreadSafetyMode.None);
 
-        var metadata = new Lazy<TMetadata>(() =>
-            {
-                var evaluation = new HigherOrderBooleanResultEvaluation<TModel, string>(
-                    underlyingResults,
-                    causes.Value);
-
-                return isSatisfied
-                    ? whenTrue(evaluation)
-                    : whenFalse(evaluation);
-            }, LazyThreadSafetyMode.None);
-
-        var assertions = new Lazy<IEnumerable<string>>(() =>
-            metadata.Value switch
-            {
-                IEnumerable<string> reasons => reasons,
-                _ => underlyingResults.GetAssertions()
-            }, LazyThreadSafetyMode.None);
-
-        return new HigherOrderPolicyResult<TMetadata, string>(
+        return new HigherOrderFromExpressionTreeMetadataPolicyResult<TModel, TMetadata>(
             isSatisfied,
-            () => metadata.Value,
-            () => metadata.Value.ToEnumerable(),
-            () => assertions.Value,
-            () => new HigherOrderExpressionTreeResultDescription<string>(
-                isSatisfied,
-                Description.ToReason(isSatisfied),
-                expression,
-                causes.Value,
-                Description.Statement),
             underlyingResults,
-            () => causes.Value);
+            whenTrue,
+            whenFalse,
+            description,
+            expression,
+            causeSelector);
     }
 
     private (BooleanResult<TModel, string>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

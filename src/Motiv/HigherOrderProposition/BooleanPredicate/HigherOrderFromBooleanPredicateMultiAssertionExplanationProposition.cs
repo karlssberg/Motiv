@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.HigherOrderProposition.BooleanPredicate;
 
 internal sealed class HigherOrderFromBooleanPredicateMultiAssertionExplanationProposition<TModel>(
@@ -23,27 +20,13 @@ internal sealed class HigherOrderFromBooleanPredicateMultiAssertionExplanationPr
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
 
-        var lazyMetadata = new Lazy<IEnumerable<string>>(() =>
-            {
-                var causes = causeSelector(isSatisfied, underlyingResults).ToArray();
-                var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
-
-                return isSatisfied
-                    ? whenTrue(evaluation)
-                    : whenFalse(evaluation);
-            }, LazyThreadSafetyMode.None);
-
-        var lazyAssertion = new Lazy<IEnumerable<string>>(() =>
-            lazyMetadata.Value.ElseFallback(() => specDescription.ToReason(isSatisfied)), LazyThreadSafetyMode.None);
-
-        return new HigherOrderFromBooleanPredicateBooleanResult<string>(
+        return new HigherOrderFromBooleanPredicateMultiAssertionExplanationBooleanResult<TModel>(
             isSatisfied,
-            () => new MetadataNode<string>(lazyMetadata.Value, []),
-            () => new Explanation(lazyAssertion.Value),
-            () => new BooleanResultDescription(
-                specDescription.ToReason(isSatisfied),
-                Description.Statement,
-                lazyAssertion.Value));
+            underlyingResults,
+            whenTrue,
+            whenFalse,
+            specDescription,
+            causeSelector);
     }
 
     private (ModelResult<TModel>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

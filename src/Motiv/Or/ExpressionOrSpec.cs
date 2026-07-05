@@ -24,7 +24,7 @@ internal sealed class ExpressionOrSpec<TModel, TMetadata>(
 
     public override IEnumerable<SpecBase> Underlying => _underlying;
 
-    public override ISpecDescription Description =>
+    public override ISpecDescription Description => field ??=
         new BinarySpecDescription<TModel, TMetadata>(left, right, "|", Operator.Or,
             operand => operand is OrSpec<TModel, TMetadata> or OrElseSpec<TModel, TMetadata>
                 or OrElsePolicy<TModel, TMetadata> or ExpressionOrSpec<TModel, TMetadata>

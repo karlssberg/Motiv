@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.DecoratorProposition;
 
 internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
@@ -21,29 +18,18 @@ internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, T
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
         var booleanResult = underlyingSpec.Evaluate(model);
-        BooleanResultBase<TUnderlyingMetadata>[] booleanResults = [booleanResult];
 
-        var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
+        var metadataResolver =
             booleanResult.Satisfied switch
             {
-                true => whenTrue(model, booleanResult),
-                false => whenFalse(model, booleanResult)
-            }, LazyThreadSafetyMode.None);
+                true => whenTrue,
+                false => whenFalse
+            };
 
-        var assertions = new Lazy<string[]>(() =>
-            [Description.ToReason(booleanResult.Satisfied)], LazyThreadSafetyMode.None);
-
-        return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
+        return new SpecDecoratorMultiMetadataBooleanResult<TModel, TMetadata, TUnderlyingMetadata>(
             booleanResult,
-            () => new MetadataNode<TMetadata>(metadata.Value,
-                booleanResults as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
-            () => new Explanation(
-                assertions.Value,
-                booleanResults,
-                booleanResults),
-            () => new BooleanResultDescriptionWithUnderlying(
-                booleanResult,
-                Description.ToReason(booleanResult.Satisfied),
-                Description.Statement));
+            model,
+            metadataResolver,
+            description);
     }
 }

@@ -1,6 +1,4 @@
 using System.Linq.Expressions;
-using Motiv.BooleanPredicateProposition;
-using Motiv.Shared;
 
 namespace Motiv.ExpressionTreeProposition;
 
@@ -22,7 +20,6 @@ internal sealed class ExpressionTreeMultiMetadataProposition<TModel, TMetadata, 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
         var result = _predicate.Execute(model);
-        BooleanResultBase<string>[] resultArray = [result];
 
         var metadataResolver =
             result.Satisfied switch
@@ -31,27 +28,12 @@ internal sealed class ExpressionTreeMultiMetadataProposition<TModel, TMetadata, 
                 false => whenFalse
             };
 
-        IEnumerable<TMetadata>? metadataResults = null;
-
-        return new PropositionBooleanResult<TMetadata>(
+        return new ExpressionTreeMultiMetadataPropositionBooleanResult<TModel, TMetadata, TPredicateResult>(
             result.Satisfied,
-            () =>
-            {
-                metadataResults ??= metadataResolver(model, result);
-                return new MetadataNode<TMetadata>(metadataResults,
-                    resultArray as IEnumerable<BooleanResultBase<TMetadata>> ?? []);
-            },
-            () =>
-            {
-                metadataResults ??= metadataResolver(model, result);
-                return new Explanation(
-                    result.Assertions,
-                    result);
-            },
-            () => new ExpressionTreeBooleanResultDescription(
-                result,
-                description.ToReason(result.Satisfied),
-                expression,
-                Description.Statement));
+            model,
+            result,
+            metadataResolver,
+            expression,
+            description);
     }
 }
