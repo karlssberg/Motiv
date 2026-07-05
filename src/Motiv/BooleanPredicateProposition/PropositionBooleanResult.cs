@@ -17,14 +17,10 @@ internal sealed class PropositionBooleanResult<TMetadata>(
     Func<ResultDescriptionBase> descriptionFactory)
     : BooleanResultBase<TMetadata>
 {
-    private MetadataNode<TMetadata>? _metadataTier;
-    private Explanation? _explanation;
-    private ResultDescriptionBase? _description;
-
     /// <summary>
     /// Gets the metadata tier of the result.
     /// </summary>
-    public override MetadataNode<TMetadata> MetadataTier => _metadataTier ??= metadataTierFactory();
+    public override MetadataNode<TMetadata> MetadataTier => field ??= metadataTierFactory();
 
     /// <summary>
     /// Gets the underlying results of the result.
@@ -47,11 +43,11 @@ internal sealed class PropositionBooleanResult<TMetadata>(
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => [];
 
     /// <summary>Gets the reasons for the result.</summary>
-    public override Explanation Explanation => _explanation ??= explanationFactory();
+    public override Explanation Explanation => field ??= explanationFactory();
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
     public override bool Satisfied { get; } = satisfied;
 
     /// <summary>Gets the description of the result.</summary>
-    public override ResultDescriptionBase Description => _description ??= descriptionFactory();
+    public override ResultDescriptionBase Description => field ??= descriptionFactory();
 }

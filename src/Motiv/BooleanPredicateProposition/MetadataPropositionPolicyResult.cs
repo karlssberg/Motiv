@@ -3,20 +3,21 @@ using Motiv.Shared;
 namespace Motiv.BooleanPredicateProposition;
 
 /// <summary>
-///     Represents a proposition that yields custom metadata based on the result of a boolean predicate.
+///     Represents the result of a metadata proposition evaluation. The metadata resolver is only invoked when the
+///     <see cref="Value" /> or <see cref="MetadataTier" /> is read, and all derived state is cached in fields to
+///     avoid per-evaluation lazy-wrapper and closure allocations.
 /// </summary>
 /// <param name="satisfied">The value of the proposition.</param>
-/// <param name="valueFactory">The factory for the policy result value.</param>
-/// <param name="metadataTierFactory">The factory for the metadata tier.</param>
-/// <param name="explanationFactory">The factory for the explanation of the proposition.</param>
-/// <param name="descriptionFactory">The factory for the description of the proposition result.</param>
+/// <param name="model">The model that was evaluated.</param>
+/// <param name="metadataResolver">Resolves the metadata for the outcome from the model.</param>
+/// <param name="specDescription">The description of the proposition.</param>
+/// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-internal sealed class PropositionPolicyResult<TMetadata>(
+internal sealed class MetadataPropositionPolicyResult<TModel, TMetadata>(
     bool satisfied,
-    Func<TMetadata> valueFactory,
-    Func<MetadataNode<TMetadata>> metadataTierFactory,
-    Func<Explanation> explanationFactory,
-    Func<ResultDescriptionBase> descriptionFactory)
+    TModel model,
+    Func<TModel, TMetadata> metadataResolver,
+    ISpecDescription specDescription)
     : PolicyResultBase<TMetadata>
 {
     private bool _hasValue;
@@ -26,15 +27,17 @@ internal sealed class PropositionPolicyResult<TMetadata>(
     {
         get
         {
-            if (!_hasValue) { field = valueFactory(); _hasValue = true; }
+            if (!_hasValue) { field = metadataResolver(model); _hasValue = true; }
             return field;
         }
     } = default!;
 
+    private string Assertion => field ??= specDescription.ToReason(Satisfied);
+
     /// <summary>
     ///     Gets the metadata tier of the result.
     /// </summary>
-    public override MetadataNode<TMetadata> MetadataTier => field ??= metadataTierFactory();
+    public override MetadataNode<TMetadata> MetadataTier => field ??= new MetadataNode<TMetadata>(Value);
 
     /// <summary>
     ///     Gets the underlying results of the result.
@@ -57,11 +60,12 @@ internal sealed class PropositionPolicyResult<TMetadata>(
     public override IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues => [];
 
     /// <summary>Gets the reasons for the result.</summary>
-    public override Explanation Explanation => field ??= explanationFactory();
+    public override Explanation Explanation => field ??= new Explanation(Assertion);
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>
     public override bool Satisfied { get; } = satisfied;
 
     /// <summary>Gets the description of the result.</summary>
-    public override ResultDescriptionBase Description => field ??= descriptionFactory();
+    public override ResultDescriptionBase Description =>
+        field ??= new PropositionResultDescription(Assertion, specDescription.Statement);
 }
