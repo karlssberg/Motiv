@@ -8,9 +8,9 @@ public class HigherOrderBooleanEvaluationTests
     }
 
     [Theory]
-    [InlineData(true, true, "all true")]
-    [InlineData(true, false, "some false")]
-    [InlineData(false, true, "some false")]
+    [InlineData(true, true, "all true == true")]
+    [InlineData(true, false, "all true == true")]
+    [InlineData(false, true, "all true == true")]
     public void Should_yield_using_all_satisfied_property(bool modelA, bool modelB, params string[] expected)
     {
         // Arrange
@@ -31,9 +31,9 @@ public class HigherOrderBooleanEvaluationTests
     }
 
     [Theory]
-    [InlineData(true, true, "any true")]
-    [InlineData(false, true, "any true")]
-    [InlineData(true, false, "any true")]
+    [InlineData(true, true, "all true == true")]
+    [InlineData(false, true, "all true == true")]
+    [InlineData(true, false, "all true == true")]
     public void Should_yield_using_any_satisfied_property(bool modelA, bool modelB, params string[] expected)
     {
         // Arrange
@@ -54,10 +54,10 @@ public class HigherOrderBooleanEvaluationTests
     }
 
     [Theory]
-    [InlineData(false, false, "none true")]
-    [InlineData(false, true, "some true")]
-    [InlineData(true, false, "some true")]
-    [InlineData(true, true, "some true")]
+    [InlineData(false, false, "all true == true")]
+    [InlineData(false, true, "all true == false")]
+    [InlineData(true, false, "all true == false")]
+    [InlineData(true, true, "all true == false")]
     public void Should_yield_using_none_satisfied_property(bool modelA, bool modelB, params string[] expected)
     {
         // Arrange

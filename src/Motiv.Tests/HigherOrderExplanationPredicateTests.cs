@@ -86,14 +86,14 @@ public class HigherOrderExplanationPredicateTests
     }
 
     [Theory]
-    [InlineData(true, true, true, "first true")]
-    [InlineData(true, true, false, "first false")]
-    [InlineData(true, false, true, "first false")]
-    [InlineData(true, false, false, "first false")]
-    [InlineData(false, true, true, "first false")]
-    [InlineData(false, true, false, "first false")]
-    [InlineData(false, false, true, "first false")]
-    [InlineData(false, false, false, "first false")]
+    [InlineData(true, true, true, "all even == true")]
+    [InlineData(true, true, false, "all even == false")]
+    [InlineData(true, false, true, "all even == false")]
+    [InlineData(true, false, false, "all even == false")]
+    [InlineData(false, true, true, "all even == false")]
+    [InlineData(false, true, false, "all even == false")]
+    [InlineData(false, false, true, "all even == false")]
+    [InlineData(false, false, false, "all even == false")]
     public void Should_yield_the_most_deeply_nested_reason_when_requested(bool first, bool second, bool third, string expected)
     {
         // Arrange

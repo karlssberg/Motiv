@@ -835,10 +835,10 @@ public class AsAnySatisfiedSpecTests
     }
 
     [Theory]
-    [InlineData(false, false, "none are true")]
-    [InlineData(false, true, "some are true")]
-    [InlineData(true, false, "some are true")]
-    [InlineData(true, true, "some are true")]
+    [InlineData(false, false, "any true == false")]
+    [InlineData(false, true, "any true == true")]
+    [InlineData(true, false, "any true == true")]
+    [InlineData(true, true, "any true == true")]
     public void Should_surface_assertions_of_boolean_results_created_from_predicate_when_a_proposition_is_specified(
         bool modelA,
         bool modelB,

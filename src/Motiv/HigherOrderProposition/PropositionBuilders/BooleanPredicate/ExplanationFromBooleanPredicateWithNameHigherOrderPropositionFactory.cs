@@ -29,7 +29,8 @@ public readonly struct ExplanationFromBooleanPredicateWithNameHigherOrderProposi
     public PolicyBase<IEnumerable<TModel>, string> Create()
     {
         predicate.ThrowIfNull(nameof(predicate));
-        return new HigherOrderFromBooleanPredicateProposition<TModel, string>(
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new HigherOrderFromBooleanPredicateExplanationProposition<TModel>(
             predicate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanEvaluation<TModel>, string>(),

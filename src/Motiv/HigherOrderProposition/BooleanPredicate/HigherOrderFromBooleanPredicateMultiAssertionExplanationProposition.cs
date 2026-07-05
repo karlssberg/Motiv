@@ -3,14 +3,14 @@ using Motiv.Shared;
 
 namespace Motiv.HigherOrderProposition.BooleanPredicate;
 
-internal sealed class HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel, TMetadata>(
+internal sealed class HigherOrderFromBooleanPredicateMultiAssertionExplanationProposition<TModel>(
     Func<TModel, bool> predicate,
     Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,
-    Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenTrue,
-    Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<TMetadata>> whenFalse,
+    Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> whenTrue,
+    Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> whenFalse,
     ISpecDescription specDescription,
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
-    : SpecBase<IEnumerable<TModel>, TMetadata>
+    : SpecBase<IEnumerable<TModel>, string>
 {
     public override IEnumerable<SpecBase> Underlying => [];
 
@@ -19,11 +19,11 @@ internal sealed class HigherOrderFromBooleanPredicateMultiMetadataProposition<TM
     public override bool Matches(IEnumerable<TModel> models) =>
         EvaluateModels(models).IsSatisfied;
 
-    protected override BooleanResultBase<TMetadata> EvaluateSpec(IEnumerable<TModel> models)
+    protected override BooleanResultBase<string> EvaluateSpec(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
 
-        var lazyMetadata = new Lazy<IEnumerable<TMetadata>>(() =>
+        var lazyMetadata = new Lazy<IEnumerable<string>>(() =>
             {
                 var causes = causeSelector(isSatisfied, underlyingResults).ToArray();
                 var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
@@ -34,11 +34,11 @@ internal sealed class HigherOrderFromBooleanPredicateMultiMetadataProposition<TM
             }, LazyThreadSafetyMode.None);
 
         var lazyAssertion = new Lazy<IEnumerable<string>>(() =>
-            specDescription.ToReason(isSatisfied).ToEnumerable(), LazyThreadSafetyMode.None);
+            lazyMetadata.Value.ElseFallback(() => specDescription.ToReason(isSatisfied)), LazyThreadSafetyMode.None);
 
-        return new HigherOrderFromBooleanPredicateBooleanResult<TMetadata>(
+        return new HigherOrderFromBooleanPredicateBooleanResult<string>(
             isSatisfied,
-            () => new MetadataNode<TMetadata>(lazyMetadata.Value, []),
+            () => new MetadataNode<string>(lazyMetadata.Value, []),
             () => new Explanation(lazyAssertion.Value),
             () => new BooleanResultDescription(
                 specDescription.ToReason(isSatisfied),
