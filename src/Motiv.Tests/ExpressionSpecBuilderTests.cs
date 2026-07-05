@@ -70,7 +70,7 @@ public class ExpressionSpecBuilderTests
 
         // Assert - named multi-assertion explanation specs surface the underlying decomposed clause
         // assertions (ExpressionTreeMetadataProposition-style named rule), not the because-strings.
-        act.Evaluate(4).Assertions.ShouldBe(["n > 3 == true"]);
+        act.Evaluate(4).Assertions.ShouldBe(["n > 3"]);
     }
 
     [Fact]
@@ -129,8 +129,8 @@ public class ExpressionSpecBuilderTests
             .Create("is greater than three");
 
         // Assert - named rule: Assertions surface the underlying decomposed clause assertions.
-        act.Evaluate(4).Assertions.ShouldBe(["n > 3 == true"]);
-        act.Evaluate(2).Assertions.ShouldBe(["n > 3 == false"]);
+        act.Evaluate(4).Assertions.ShouldBe(["n > 3"]);
+        act.Evaluate(2).Assertions.ShouldBe(["n <= 3"]);
         act.ToExpression().Compile()(4).ShouldBeTrue();
     }
 

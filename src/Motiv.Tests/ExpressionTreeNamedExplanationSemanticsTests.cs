@@ -20,7 +20,7 @@ public class ExpressionTreeNamedExplanationSemanticsTests
 
         var act = spec.Evaluate(1);
 
-        act.Assertions.ShouldBe(["n > 0 == true"]);
+        act.Assertions.ShouldBe(["n > 0"]);
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class ExpressionTreeNamedExplanationSemanticsTests
 
         var act = spec.Evaluate(-1);
 
-        act.Assertions.ShouldBe(["n > 0 == false"]);
+        act.Assertions.ShouldBe(["n <= 0"]);
     }
 
     [Fact]
@@ -195,7 +195,7 @@ public class ExpressionTreeNamedExplanationSemanticsTests
             .WhenFalseYield((_, _) => ["neg1", "neg2"])
             .Create("is positive");
 
-        spec.Evaluate(1).Assertions.ShouldBe(["n > 0 == true"]);
+        spec.Evaluate(1).Assertions.ShouldBe(["n > 0"]);
     }
 
     [Fact]
@@ -207,7 +207,7 @@ public class ExpressionTreeNamedExplanationSemanticsTests
             .WhenFalseYield((_, _) => ["neg1", "neg2"])
             .Create("is positive");
 
-        spec.Evaluate(-1).Assertions.ShouldBe(["n > 0 == false"]);
+        spec.Evaluate(-1).Assertions.ShouldBe(["n <= 0"]);
     }
 
     [Fact]
@@ -243,7 +243,7 @@ public class ExpressionTreeNamedExplanationSemanticsTests
             .WhenFalseYield((_, _) => [" ", ""])
             .Create();
 
-        spec.Evaluate(-1).Assertions.ShouldBe(["n > 0 == false"]);
+        spec.Evaluate(-1).Assertions.ShouldBe(["n <= 0"]);
     }
 
     [Fact]
@@ -303,7 +303,7 @@ public class ExpressionTreeNamedExplanationSemanticsTests
             .WhenFalse(_ => "neg")
             .Create("all positive");
 
-        spec.Evaluate([1, 2]).Assertions.ShouldBe(["n > 0 == true"]);
+        spec.Evaluate([1, 2]).Assertions.ShouldBe(["n > 0"]);
     }
 
     [Fact]
@@ -316,7 +316,7 @@ public class ExpressionTreeNamedExplanationSemanticsTests
             .WhenFalse(_ => "neg")
             .Create("all positive");
 
-        spec.Evaluate([1, -1]).Assertions.ShouldBe(["n > 0 == true", "n > 0 == false"]);
+        spec.Evaluate([1, -1]).Assertions.ShouldBe(["n > 0", "n <= 0"]);
     }
 
     [Fact]
@@ -422,7 +422,7 @@ public class ExpressionTreeNamedExplanationSemanticsTests
             .WhenFalseYield(_ => ["neg1", "neg2"])
             .Create("all positive");
 
-        spec.Evaluate([1, 2]).Assertions.ShouldBe(["n > 0 == true"]);
+        spec.Evaluate([1, 2]).Assertions.ShouldBe(["n > 0"]);
     }
 
     [Fact]
@@ -435,7 +435,7 @@ public class ExpressionTreeNamedExplanationSemanticsTests
             .WhenFalseYield(_ => ["neg1", "neg2"])
             .Create("all positive");
 
-        spec.Evaluate([1, -1]).Assertions.ShouldBe(["n > 0 == true", "n > 0 == false"]);
+        spec.Evaluate([1, -1]).Assertions.ShouldBe(["n > 0", "n <= 0"]);
     }
 
     [Fact]
@@ -474,7 +474,7 @@ public class ExpressionTreeNamedExplanationSemanticsTests
             .WhenFalseYield(_ => [" ", ""])
             .Create();
 
-        spec.Evaluate([1, -1]).Assertions.ShouldBe(["n > 0 == true", "n > 0 == false"]);
+        spec.Evaluate([1, -1]).Assertions.ShouldBe(["n > 0", "n <= 0"]);
     }
 
     [Fact]

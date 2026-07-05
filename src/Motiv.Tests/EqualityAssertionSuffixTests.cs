@@ -31,9 +31,9 @@ public class EqualityAssertionSuffixTests
     }
 
     [Theory]
-    [InlineData("", "txt.Length == 0 == true", "txt == \"\" == true")]
-    [InlineData("a", "txt.Length == 0 == false", "tryParseInt(txt) == false")]
-    [InlineData("123", "txt.Length == 0 == false", "tryParseInt(txt) == true")]
+    [InlineData("", "txt.Length == 0", "txt == \"\"")]
+    [InlineData("a", "txt.Length != 0", "tryParseInt(txt) == false")]
+    [InlineData("123", "txt.Length != 0", "tryParseInt(txt) == true")]
     public void Should_not_double_suffix_a_decomposed_boolean_clause_in_a_conditional_expression(
         string model, params string[] expectedAssertion)
     {

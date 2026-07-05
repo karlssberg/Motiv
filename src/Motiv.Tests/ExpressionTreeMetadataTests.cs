@@ -36,7 +36,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.Evaluate(1);
 
         // Assert
-        act.Assertions.ShouldBe(["n > 0 == true"]);
+        act.Assertions.ShouldBe(["n > 0"]);
     }
 
 
@@ -78,7 +78,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.Evaluate([1]);
 
         // Assert
-        act.Assertions.ShouldBe(["n > 0 == true"]);
+        act.Assertions.ShouldBe(["n > 0"]);
     }
 
     [Fact]
@@ -230,16 +230,16 @@ public class ExpressionTreeMetadataTests
             OR
                 is-positive == true
                     (int n) => n > 0 == true
-                        n > 0 == true
+                        n > 0
                 is-positive == true
                     (int n) => n > 0 == true
-                        n > 0 == true
+                        n > 0
                 is-positive == true
                     (int n) => n > 0 == true
-                        n > 0 == true
+                        n > 0
                 is-positive == true
                     (int n) => n > 0 == true
-                        n > 0 == true
+                        n > 0
             """);
     }
 
@@ -286,16 +286,16 @@ public class ExpressionTreeMetadataTests
             OR
                 is-positive == true
                     (int n) => n > 0 == true (1)
-                        n > 0 == true
+                        n > 0
                 is-positive == true
                     (int n) => n > 0 == true (1)
-                        n > 0 == true
+                        n > 0
                 is-positive == true
                     (int n) => n > 0 == true (1)
-                        n > 0 == true
+                        n > 0
                 is-positive == true
                     (int n) => n > 0 == true (1)
-                        n > 0 == true
+                        n > 0
             """);
     }
 
@@ -333,7 +333,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.Evaluate(-1);
 
         // Assert
-        act.Assertions.ShouldBe(["n > 0 == false"]);
+        act.Assertions.ShouldBe(["n <= 0"]);
     }
 
     [Fact]
@@ -370,7 +370,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.Evaluate(-1);
 
         // Assert
-        act.Assertions.ShouldBe(["n > 0 == false"]);
+        act.Assertions.ShouldBe(["n <= 0"]);
     }
 
     [Fact]
@@ -404,7 +404,7 @@ public class ExpressionTreeMetadataTests
         var act = spec.Evaluate([-1]);
 
         // Assert
-        act.Assertions.ShouldBe(["n > 0 == false"]);
+        act.Assertions.ShouldBe(["n <= 0"]);
     }
 
     [Fact]
@@ -556,16 +556,16 @@ public class ExpressionTreeMetadataTests
             OR
                 is-positive == false
                     (int n) => n > 0 == false
-                        n > 0 == false
+                        n <= 0
                 is-positive == false
                     (int n) => n > 0 == false
-                        n > 0 == false
+                        n <= 0
                 is-positive == false
                     (int n) => n > 0 == false
-                        n > 0 == false
+                        n <= 0
                 is-positive == false
                     (int n) => n > 0 == false
-                        n > 0 == false
+                        n <= 0
             """);
     }
 
@@ -612,16 +612,16 @@ public class ExpressionTreeMetadataTests
             OR
                 is-positive == false
                     (int n) => n > 0 == false (1)
-                        n > 0 == false
+                        n <= 0
                 is-positive == false
                     (int n) => n > 0 == false (1)
-                        n > 0 == false
+                        n <= 0
                 is-positive == false
                     (int n) => n > 0 == false (1)
-                        n > 0 == false
+                        n <= 0
                 is-positive == false
                     (int n) => n > 0 == false (1)
-                        n > 0 == false
+                        n <= 0
             """);
     }
 

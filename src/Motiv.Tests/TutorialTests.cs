@@ -423,10 +423,10 @@ public class TutorialTests
                 AND
                     customer has an inadequate credit score
                         (Customer customer) => customer.CreditScore > 600 == false
-                            customer.CreditScore > 600 == false
+                            customer.CreditScore <= 600
                     customer has insufficient income
                         (Customer customer) => customer.Income > 100000 == false
-                            customer.Income > 100000 == false
+                            customer.Income <= 100000
             """);
     }
 
@@ -653,7 +653,7 @@ public class TutorialTests
                     AND
                         numbers.All((int n) => n > 0) == false
                             (int n) => n > 0 == false
-                                n > 0 == false
+                                n <= 0
             """);
     }
 }
