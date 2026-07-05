@@ -23,6 +23,7 @@ public readonly struct MetadataPropositionFactory<TModel, TReplacementMetadata, 
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public PolicyBase<TModel, TReplacementMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));

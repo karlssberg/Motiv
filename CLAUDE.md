@@ -36,6 +36,18 @@ var isActive = Spec
 - `Create()` can be called without a name (first WhenTrue string becomes the implicit propositional statement)
 - Creates a **Policy** when both WhenTrue and WhenFalse are used
 
+Supplying an explicit name via `Create("name")` changes the semantics — the strings become metadata (`Values`) rather than assertions, and the name + `== true`/`== false` suffix takes over as the assertion text:
+
+```csharp
+var isActive = Spec
+    .Build((User u) => u.IsActive)
+    .WhenTrue("user is active")
+    .WhenFalse("user is not active")
+    .Create("is active");
+// true:  Assertions = ["is active == true"], Values = ["user is active"]
+// false: Assertions = ["is active == false"], Values = ["user is not active"]
+```
+
 ### 3. Metadata Proposition
 Provides arbitrary non-string objects as metadata (e.g., for multilingual support, error codes, structured data).
 
@@ -55,17 +67,18 @@ var isAdmin = Spec
 
 ## The `== true` / `== false` Suffix Rule
 
-This is how Motiv textually describes a boolean outcome when the **proposition name** (from `.Create("name")`) is the sole source of explanation text.
+This is how Motiv textually describes a boolean outcome whenever an explicit name is supplied via `.Create("name")`. The name is the sole authority for explanation text — `Reason`, `Assertions`, and `Justification` all resolve to `"name == true"` / `"name == false"`, regardless of what WhenTrue/WhenFalse were given. WhenTrue/WhenFalse payloads — strings included — are metadata (`Values`) whenever a name exists; a supplied name always outranks them as the source of explanation text.
 
 **Use `== true` / `== false`** when:
 - **Minimal propositions** — `.Create("name")` with no WhenTrue/WhenFalse. The name is the only text available, so the suffix disambiguates the outcome.
 - **Metadata propositions** — `.WhenTrue(nonStringValue)` / `.WhenFalse(nonStringValue)` with `.Create("name")`. The metadata is an object (bool, int, Uri, Regex, Guid, etc.) that can't serve as a textual explanation, so the name + suffix describes the outcome.
+- **Named explanation propositions** — `.WhenTrue("some string").WhenFalse("some string").Create("name")`. Even though the strings are textual, supplying a name means they are demoted to metadata (`Values`); the name + suffix becomes the assertion text. This also applies to delegate forms (`.WhenTrue(model => "...")`) and yield forms (`.WhenTrueYield(model => [...])`) when named.
 
 **Do NOT use `== true` / `== false`** when:
-- **Explanation propositions** — `.WhenTrue("some string")` / `.WhenFalse("some string")`. The strings ARE the textual explanations. They already describe the outcome in human terms, so the suffix would be redundant.
-- This applies to all string-returning overloads, including delegate forms like `.WhenTrue(model => "...")` and `.WhenTrueYield(model => ["..."])`.
+- **Unnamed explanation propositions** — `.WhenTrue("some string").WhenFalse("some string").Create()` with no name. The WhenTrue string doubles as the propositional statement, so the strings ARE the textual explanations directly. `Create()` guards the WhenTrue string as non-whitespace; a degenerate resolved string (null/empty/whitespace, e.g. from a delegate at runtime) falls back to `"statement == true"` / `"statement == false"`.
+- **Exception**: the two `Spec.From(expr).WhenTrue("...").WhenFalse("...")` expression-tree WithName factories (single-value, not yield) derive their unnamed statement from the expression itself, so they have no `trueBecause` guard — a degenerate string simply falls back at evaluation time.
 
-**In short:** `== true` / `== false` bridges the gap between a proposition name and its boolean outcome. When WhenTrue/WhenFalse already provide that bridge as strings, the suffix is unnecessary.
+**In short:** `== true` / `== false` bridges the gap between a proposition name and its boolean outcome. It appears whenever a name is the source of the statement — whether that name was supplied explicitly via `Create("name")`, or implicitly derived from an unguarded expression-tree statement.
 
 ## Result Properties
 
@@ -136,7 +149,7 @@ Spec.Build(input)
 
 ## Assertions Property Rules
 
-1. **Explanation propositions**: Assertions come from WhenTrue/WhenFalse strings directly
+1. **Explanation propositions**: Assertions come from WhenTrue/WhenFalse strings directly only when `Create()` is parameterless (unnamed); with `Create("name")`, Assertions are `"{name} == true"` / `"{name} == false"` and the strings surface instead via `Values`
 2. **Metadata propositions**: Assertions are `"{name} == true"` or `"{name} == false"` (derived from Create name)
 3. **Minimal propositions**: Same as metadata — `"{name} == true"` or `"{name} == false"`
 4. **Compositions**: Aggregated from all contributing operands

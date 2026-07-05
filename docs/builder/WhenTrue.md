@@ -65,14 +65,17 @@ Spec.Build((int n) => n % 2 == 0)
 `WhenTrue(Func<TModel, string> factory)`
 
 This overload generates assertion statements based on the model when the proposition is satisfied.
-When the proposition is satisfied, the assertion result from the factory function will be used to populate the
-`Reason`, `Assertions` and `Metadata` properties of the result.
+Because a delegate cannot supply an implicit propositional statement, `Create()` must be called with an explicit
+name. Supplying that name means `Reason`, `Assertions` and `Justification` resolve to `"is even == true"` /
+`"is even == false"`; the factory's assertion result surfaces instead via the `Values`/`Metadata` properties.
 
 ```csharp
 Spec.Build((int n) => n % 2 == 0)
     .WhenTrue(n => $"{n} is even")
     .WhenFalse("is odd")
     .Create("is even");
+// true:  Assertions = ["is even == true"], Values = ["<n> is even"]
+// false: Assertions = ["is even == false"], Values = ["is odd"]
 ```
 
 ### Dynamic metadata (derived from model)
@@ -95,14 +98,17 @@ Spec.Build((int n) => n % 2 == 0)
 `WhenTrue(Func<TModel, BooleanResultBase<TMetadata>, string> factory)`
 
 This overload generates assertion statements based on the model and the result of the underlying proposition.
-When the proposition is satisfied, the assertion result from the factory function will be used to populate the
-`Reason`, `Assertions` and `Metadata` properties of the result.
+Because a delegate cannot supply an implicit propositional statement, `Create()` must be called with an explicit
+name. Supplying that name means `Reason`, `Assertions` and `Justification` resolve to `"is even == true"` /
+`"is even == false"`; the factory's assertion result surfaces instead via the `Values`/`Metadata` properties.
 
 ```csharp
 Spec.Build(new IsEvenProposition())
     .WhenTrue((n, result) => result.Reason)
     .WhenFalse("is odd")
     .Create("is even");
+// true:  Assertions = ["is even == true"], Values = [<underlying result.Reason>]
+// false: Assertions = ["is even == false"], Values = ["is odd"]
 ```
 
 ### Dynamic metadata (derived from model and underlying result)
@@ -128,8 +134,9 @@ Spec.Build(new IsEvenProposition())
 
 This overload generates an assertion statement based on the model and the result of the underlying proposition when the
 proposition is not satisfied.
-When the proposition is not satisfied, the metadata returned by the factory function will be used to populate the
-`Reason`, `Assertions` and `Metadata` properties of the result.
+Because a delegate cannot supply an implicit propositional statement, `Create()` must be called with an explicit
+name. Supplying that name means `Reason`, `Assertions` and `Justification` resolve to `"is even == true"` /
+`"is even == false"`; the factory's result surfaces instead via the `Values`/`Metadata` properties.
 
 ```csharp
 Spec.Build(new IsEvenProposition())
@@ -137,6 +144,8 @@ Spec.Build(new IsEvenProposition())
     .WhenTrue(eval => eval.Assertions.Serialize())
     .WhenFalse("is odd")
     .Create("is even");
+// true:  Assertions = ["is even == true"], Values = [<eval.Assertions.Serialize()>]
+// false: Assertions = ["is even == false"], Values = ["is odd"]
 ```
 
 ### Dynamic metadata (derived from higher-order evaluations)

@@ -21,6 +21,7 @@ public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TMod
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<IEnumerable<TModel>, TMetadata> Create(string statement) =>
         new MinimalHigherOrderFromBooleanResultProposition<TModel, TMetadata>(
             spec.Evaluate,
@@ -55,6 +56,7 @@ public readonly struct MinimalHigherOrderFromSpecPropositionFactory<TModel>(
     /// <param name="statement">The proposition statement of what the specification represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A specification for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<IEnumerable<TModel>, string> Create(string statement) =>
         new MinimalHigherOrderFromBooleanResultProposition<TModel, string>(
             spec.Evaluate,

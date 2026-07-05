@@ -26,8 +26,9 @@ public readonly struct BooleanMultiAssertionExplanationWithNameExpressionTreePro
     /// Creates a proposition and names it with the propositional statement provided.
     /// </summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
-    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
+    /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable. Because a name is supplied, the <c>WhenTrue</c>/<c>WhenFalse</c> values are surfaced via <see cref="BooleanResultBase{TMetadata}.Values"/>, not <see cref="BooleanResultBase.Assertions"/>.</remarks>
     /// <returns>An expression-backed proposition for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public ExpressionSpecBase<TModel, string> Create(string statement) =>
         new ExpressionSpecDecorator<TModel, string>(
             new ExpressionTreeMultiMetadataProposition<TModel, string, bool>(
@@ -42,6 +43,7 @@ public readonly struct BooleanMultiAssertionExplanationWithNameExpressionTreePro
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An expression-backed proposition for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when the WhenTrue assertion is null, empty or whitespace (it doubles as the propositional statement).</exception>
     public ExpressionSpecBase<TModel, string> Create() =>
         new ExpressionSpecDecorator<TModel, string>(
             new ExpressionTreeMultiAssertionExplanationProposition<TModel, bool>(

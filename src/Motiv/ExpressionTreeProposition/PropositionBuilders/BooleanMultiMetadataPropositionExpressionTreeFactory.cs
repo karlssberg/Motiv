@@ -23,6 +23,7 @@ public readonly struct BooleanMultiMetadataPropositionExpressionTreeFactory<TMod
     /// <param name="statement">The proposition statement of what the proposition represents.</param>
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>An expression-backed proposition for the model.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public ExpressionSpecBase<TModel, TMetadata> Create(string statement) =>
         new ExpressionSpecDecorator<TModel, TMetadata>(
             new ExpressionTreeMultiMetadataProposition<TModel, TMetadata, bool>(
