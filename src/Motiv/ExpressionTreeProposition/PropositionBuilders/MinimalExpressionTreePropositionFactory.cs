@@ -19,7 +19,7 @@ public readonly partial struct MinimalExpressionTreePropositionFactory<TModel, T
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, string> Create(string statement) =>
-        new ExpressionTreeMultiMetadataProposition<TModel, string, TPredicateResult>(
+        new MinimalExpressionTreeProposition<TModel, TPredicateResult>(
             expression,
             (_, result) => result.Values,
             (_, result) => result.Values,

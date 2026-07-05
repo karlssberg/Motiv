@@ -25,7 +25,7 @@ public readonly struct BooleanExplanationExpressionTreePropositionFactory<TModel
     /// <returns>An expression-backed policy for the model.</returns>
     public ExpressionPolicyBase<TModel, string> Create(string statement) =>
         new ExpressionPolicyDecorator<TModel, string>(
-            new ExpressionTreeExplanationProposition<TModel, bool>(
+            new ExpressionTreeMetadataProposition<TModel, string, bool>(
                 expression,
                 trueBecause,
                 falseBecause,

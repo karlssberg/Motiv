@@ -20,7 +20,7 @@ public readonly partial struct BooleanMinimalExpressionTreePropositionFactory<TM
     /// <returns>An expression-backed proposition for the model.</returns>
     public ExpressionSpecBase<TModel, string> Create(string statement) =>
         new ExpressionSpecDecorator<TModel, string>(
-            new ExpressionTreeMultiMetadataProposition<TModel, string, bool>(
+            new MinimalExpressionTreeProposition<TModel, bool>(
                 expression,
                 (_, result) => result.Values,
                 (_, result) => result.Values,

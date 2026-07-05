@@ -26,16 +26,11 @@ internal sealed class ExpressionTreeExplanationProposition<TModel, TPredicateRes
         BooleanResultBase<string>[] resultArray = [result];
 
         var assertion = new Lazy<string>(() =>
-            result.Satisfied switch
+            (result.Satisfied switch
             {
                 true => trueBecause(model, result),
                 false => falseBecause(model, result)
-            }, LazyThreadSafetyMode.None);
-
-        var reason = new Lazy<string>(() =>
-            description.HasExplicitStatement
-                ? description.ToReason(result.Satisfied)
-                : assertion.Value, LazyThreadSafetyMode.None);
+            }).ElseFallback(() => description.ToReason(result.Satisfied)), LazyThreadSafetyMode.None);
 
         return new PropositionPolicyResult<string>(
             result.Satisfied,
@@ -48,7 +43,7 @@ internal sealed class ExpressionTreeExplanationProposition<TModel, TPredicateRes
                 resultArray),
             () => new ExpressionTreeBooleanResultDescription(
                 result,
-                reason.Value,
+                assertion.Value,
                 expression,
                 Description.Statement));
     }

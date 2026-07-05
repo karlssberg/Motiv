@@ -27,7 +27,7 @@ public readonly struct ExplanationExpressionTreePropositionFactory<TModel, TPred
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, string> Create(string statement) =>
-        new ExpressionTreeExplanationProposition<TModel, TPredicateResult>(
+        new ExpressionTreeMetadataProposition<TModel, string, TPredicateResult>(
             expression,
             trueBecause,
             falseBecause,

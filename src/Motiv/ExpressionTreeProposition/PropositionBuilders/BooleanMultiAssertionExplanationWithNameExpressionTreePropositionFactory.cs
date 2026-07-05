@@ -44,10 +44,10 @@ public readonly struct BooleanMultiAssertionExplanationWithNameExpressionTreePro
     /// <returns>An expression-backed proposition for the model.</returns>
     public ExpressionSpecBase<TModel, string> Create() =>
         new ExpressionSpecDecorator<TModel, string>(
-            new ExpressionTreeMultiMetadataProposition<TModel, string, bool>(
+            new ExpressionTreeMultiAssertionExplanationProposition<TModel, bool>(
                 expression,
                 TrueBecauseFunc,
                 falseBecause,
-                new SpecDescription(trueBecause)),
+                new SpecDescription(trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause)))),
             expression);
 }

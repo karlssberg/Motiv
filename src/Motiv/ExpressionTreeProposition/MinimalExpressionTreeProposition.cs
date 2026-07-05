@@ -4,12 +4,12 @@ using Motiv.Shared;
 
 namespace Motiv.ExpressionTreeProposition;
 
-internal sealed class ExpressionTreeMultiMetadataProposition<TModel, TMetadata, TPredicateResult>(
+internal sealed class MinimalExpressionTreeProposition<TModel, TPredicateResult>(
     Expression<Func<TModel, TPredicateResult>> expression,
-    Func<TModel, BooleanResultBase<string>, IEnumerable<TMetadata>> whenTrue,
-    Func<TModel, BooleanResultBase<string>, IEnumerable<TMetadata>> whenFalse,
+    Func<TModel, BooleanResultBase<string>, IEnumerable<string>> whenTrue,
+    Func<TModel, BooleanResultBase<string>, IEnumerable<string>> whenFalse,
     ISpecDescription description)
-    : SpecBase<TModel, TMetadata>
+    : SpecBase<TModel, string>
 {
     public override IEnumerable<SpecBase> Underlying { get; } = [];
 
@@ -19,7 +19,7 @@ internal sealed class ExpressionTreeMultiMetadataProposition<TModel, TMetadata, 
 
     public override bool Matches(TModel model) => _predicate.Match(model);
 
-    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
+    protected override BooleanResultBase<string> EvaluateSpec(TModel model)
     {
         var result = _predicate.Execute(model);
         BooleanResultBase<string>[] resultArray = [result];
@@ -31,21 +31,26 @@ internal sealed class ExpressionTreeMultiMetadataProposition<TModel, TMetadata, 
                 false => whenFalse
             };
 
-        IEnumerable<TMetadata>? metadataResults = null;
+        IEnumerable<string>? metadataResults = null;
 
-        return new PropositionBooleanResult<TMetadata>(
+        return new PropositionBooleanResult<string>(
             result.Satisfied,
             () =>
             {
                 metadataResults ??= metadataResolver(model, result);
-                return new MetadataNode<TMetadata>(metadataResults,
-                    resultArray as IEnumerable<BooleanResultBase<TMetadata>> ?? []);
+                return new MetadataNode<string>(metadataResults,
+                    resultArray as IEnumerable<BooleanResultBase<string>> ?? []);
             },
             () =>
             {
                 metadataResults ??= metadataResolver(model, result);
+                var assertions = metadataResults switch
+                {
+                    IEnumerable<string> because => because,
+                    _ => result.Assertions
+                };
                 return new Explanation(
-                    result.Assertions,
+                    assertions,
                     result);
             },
             () => new ExpressionTreeBooleanResultDescription(

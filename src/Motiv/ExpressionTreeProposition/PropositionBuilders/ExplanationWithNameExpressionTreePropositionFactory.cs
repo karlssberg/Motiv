@@ -27,9 +27,9 @@ public readonly struct ExplanationWithNameExpressionTreePropositionFactory<TMode
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, string> Create(string statement) =>
-        new ExpressionTreeWithSingleTrueAssertionProposition<TModel, TPredicateResult>(
+        new ExpressionTreeMetadataProposition<TModel, string, TPredicateResult>(
             expression,
-            trueBecause,
+            trueBecause.ToFunc<TModel, BooleanResultBase<string>, string>(),
             falseBecause,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });

@@ -27,9 +27,9 @@ public readonly struct BooleanExplanationWithNameExpressionTreePropositionFactor
     /// <returns>An expression-backed policy for the model.</returns>
     public ExpressionPolicyBase<TModel, string> Create(string statement) =>
         new ExpressionPolicyDecorator<TModel, string>(
-            new ExpressionTreeWithSingleTrueAssertionProposition<TModel, bool>(
+            new ExpressionTreeMetadataProposition<TModel, string, bool>(
                 expression,
-                trueBecause,
+                trueBecause.ToFunc<TModel, BooleanResultBase<string>, string>(),
                 falseBecause,
                 new SpecDescription(
                     statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true }),

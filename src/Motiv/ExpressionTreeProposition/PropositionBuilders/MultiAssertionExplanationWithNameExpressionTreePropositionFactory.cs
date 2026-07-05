@@ -42,9 +42,9 @@ public readonly struct MultiAssertionExplanationWithNameExpressionTreePropositio
     /// </summary>
     /// <returns>A proposition for the model.</returns>
     public SpecBase<TModel, string> Create() =>
-        new ExpressionTreeMultiMetadataProposition<TModel, string, TPredicateResult>(
+        new ExpressionTreeMultiAssertionExplanationProposition<TModel, TPredicateResult>(
             expression,
             TrueBecauseFunc,
             falseBecause,
-            new SpecDescription(trueBecause));
+            new SpecDescription(trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause))));
 }
