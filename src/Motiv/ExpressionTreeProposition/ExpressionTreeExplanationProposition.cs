@@ -25,17 +25,20 @@ internal sealed class ExpressionTreeExplanationProposition<TModel, TPredicateRes
         var result = _predicate.Execute(model);
         BooleanResultBase<string>[] resultArray = [result];
 
-        var assertion = new Lazy<string>(() =>
-            (result.Satisfied switch
+        var because = new Lazy<string>(() =>
+            result.Satisfied switch
             {
                 true => trueBecause(model, result),
                 false => falseBecause(model, result)
-            }).ElseFallback(() => description.ToReason(result.Satisfied)), LazyThreadSafetyMode.None);
+            }, LazyThreadSafetyMode.None);
+
+        var assertion = new Lazy<string>(() =>
+            because.Value.ElseFallback(() => description.ToReason(result.Satisfied)), LazyThreadSafetyMode.None);
 
         return new PropositionPolicyResult<string>(
             result.Satisfied,
-            () => assertion.Value,
-            () => new MetadataNode<string>(assertion.Value.ToEnumerable(),
+            () => because.Value,
+            () => new MetadataNode<string>(because.Value.ToEnumerable(),
                 resultArray),
             () => new Explanation(
                 assertion.Value,

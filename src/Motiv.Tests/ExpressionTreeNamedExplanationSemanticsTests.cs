@@ -136,6 +136,42 @@ public class ExpressionTreeNamedExplanationSemanticsTests
     }
 
     [Fact]
+    public void Should_keep_raw_because_string_in_values_when_degenerate_for_unnamed_explanation_func_factory()
+    {
+        // Routes through ExpressionTreeExplanationProposition (both trueBecause/falseBecause are Funcs).
+        var spec = Spec
+            .From((int n) => n > 0)
+            .WhenTrue("pos")
+            .WhenFalse((_, _) => " ")
+            .Create();
+
+        var result = spec.Evaluate(-1);
+
+        // The Assertions/Reason still fall back to the expression-derived reason...
+        result.Assertions.ShouldBe(["n > 0 == false"]);
+        // ...but Values must retain the raw (degenerate) because-string, not the fallback.
+        result.Values.ShouldBe([" "]);
+    }
+
+    [Fact]
+    public void Should_keep_raw_because_string_in_values_when_degenerate_for_unnamed_explanation_with_name_factory()
+    {
+        // Routes through ExpressionTreeWithSingleTrueAssertionProposition (trueBecause is a plain string).
+        var spec = Spec
+            .From((int n) => n > 0)
+            .WhenTrue("pos")
+            .WhenFalse(" ")
+            .Create();
+
+        var result = spec.Evaluate(-1);
+
+        // The Assertions/Reason still fall back to the expression-derived reason...
+        result.Assertions.ShouldBe(["n > 0 == false"]);
+        // ...but Values must retain the raw (degenerate) because-string, not the fallback.
+        result.Values.ShouldBe([" "]);
+    }
+
+    [Fact]
     public void Should_not_throw_when_creating_with_a_whitespace_whentrue_and_no_explicit_statement()
     {
         // ExplanationWithNameExpressionTreePropositionFactory.Create() derives its statement from the

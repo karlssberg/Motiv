@@ -28,17 +28,20 @@ internal sealed class ExpressionTreeWithSingleTrueAssertionProposition<TModel, T
         var result = _predicate.Execute(model);
         BooleanResultBase<string>[] resultAsCollection = [result];
 
-        var assertion = new Lazy<string>(() =>
-            (result.Satisfied switch
+        var because = new Lazy<string>(() =>
+            result.Satisfied switch
             {
                 true => trueBecause,
                 false => whenFalse(model, result)
-            }).ElseFallback(() => description.ToReason(result.Satisfied)), LazyThreadSafetyMode.None);
+            }, LazyThreadSafetyMode.None);
+
+        var assertion = new Lazy<string>(() =>
+            because.Value.ElseFallback(() => description.ToReason(result.Satisfied)), LazyThreadSafetyMode.None);
 
         return new PropositionPolicyResult<string>(
             result.Satisfied,
-            () => assertion.Value,
-            () => new MetadataNode<string>(assertion.Value,
+            () => because.Value,
+            () => new MetadataNode<string>(because.Value,
                 resultAsCollection),
             () => new Explanation(
                 assertion.Value,
