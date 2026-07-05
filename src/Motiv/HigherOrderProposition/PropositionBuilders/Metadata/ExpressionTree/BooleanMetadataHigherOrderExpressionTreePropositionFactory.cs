@@ -45,7 +45,7 @@ public readonly struct BooleanMetadataHigherOrderExpressionTreePropositionFactor
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 

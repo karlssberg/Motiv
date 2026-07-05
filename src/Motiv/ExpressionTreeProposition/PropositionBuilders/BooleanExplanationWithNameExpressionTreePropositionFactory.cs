@@ -32,7 +32,7 @@ public readonly struct BooleanExplanationWithNameExpressionTreePropositionFactor
                 trueBecause.ToFunc<TModel, BooleanResultBase<string>, string>(),
                 falseBecause,
                 new SpecDescription(
-                    statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true }),
+                    statement.ThrowIfNullOrWhitespace(nameof(statement)))),
             expression);
 
     /// <summary>

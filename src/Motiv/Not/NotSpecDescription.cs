@@ -49,7 +49,5 @@ internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMe
             _ => spec.Underlying.Any(ContainsBinaryOperation)
         };
 
-    public bool HasExplicitStatement => false;
-
     public override string ToString() => Statement;
 }

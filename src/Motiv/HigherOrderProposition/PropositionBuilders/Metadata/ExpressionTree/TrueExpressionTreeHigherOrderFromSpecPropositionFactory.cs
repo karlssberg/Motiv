@@ -28,7 +28,7 @@ public readonly partial struct TrueExpressionTreeHigherOrderFromSpecPropositionF
         new MinimalHigherOrderFromExpressionTreeProposition<TModel, TPredicateResult>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true },
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))),
             higherOrderOperation.CauseSelector);
 
     /// <summary>Creates a proposition.</summary>

@@ -29,5 +29,5 @@ public readonly struct MetadataExpressionTreePropositionFactory<TModel, TMetadat
             expression,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
 }

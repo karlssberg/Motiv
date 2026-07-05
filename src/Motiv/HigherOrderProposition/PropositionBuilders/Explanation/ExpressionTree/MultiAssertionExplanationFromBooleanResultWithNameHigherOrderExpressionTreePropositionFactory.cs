@@ -40,7 +40,7 @@ public readonly struct MultiAssertionExplanationFromBooleanResultWithNameHigherO
             higherOrderOperation.HigherOrderPredicate,
             TrueBecauseFunc,
             falseBecause,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 

@@ -32,5 +32,5 @@ public readonly struct MultiAssertionExplanationWithSingularWhenTrueExpressionTr
             expression,
             trueBecause.ToEnumerableReturn(),
             falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
 }

@@ -34,7 +34,7 @@ public readonly struct MultiAssertionFromPolicyHigherOrderWithSingularWhenTruePr
             higherOrderOperation.HigherOrderPredicate,
             whenTrue.ToEnumerableReturn(),
             whenFalse,
-            new SpecDescription(statement, policy.Description) { HasExplicitStatement = true },
+            new SpecDescription(statement, policy.Description),
             higherOrderOperation.CauseSelector);
     }
 }

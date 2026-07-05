@@ -47,5 +47,5 @@ public readonly struct MultiAssertionExplanationFromPolicyPropositionFactory<TMo
             _policy,
             _trueBecause,
             _falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), _policy.Description) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), _policy.Description));
 }

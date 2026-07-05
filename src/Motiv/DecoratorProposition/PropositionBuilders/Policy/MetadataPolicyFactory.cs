@@ -28,5 +28,5 @@ public readonly struct MetadataPolicyFactory<TModel, TReplacementMetadata, TMeta
             spec,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description));
 }

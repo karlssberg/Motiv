@@ -34,7 +34,7 @@ public readonly struct BooleanMultiAssertionExplanationWithNameExpressionTreePro
                 expression,
                 TrueBecauseFunc,
                 falseBecause,
-                new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true }),
+                new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)))),
             expression);
 
     /// <summary>

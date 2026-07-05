@@ -34,7 +34,7 @@ public readonly struct MultiAssertionExplanationFromPolicyResultHigherOrderWithS
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToEnumerableReturn(),
             falseBecause,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 }

@@ -65,7 +65,7 @@ public readonly struct BooleanExplanationWithNameHigherOrderExpressionTreePropos
             higherOrderOperation.HigherOrderPredicate,
             TrueBecauseFunc,
             falseBecause,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 }

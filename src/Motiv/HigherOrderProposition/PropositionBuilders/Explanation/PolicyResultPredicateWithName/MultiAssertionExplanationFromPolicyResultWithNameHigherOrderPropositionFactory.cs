@@ -36,7 +36,7 @@ public readonly struct MultiAssertionExplanationFromPolicyResultWithNameHigherOr
                 .ToEnumerable()
                 .ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 

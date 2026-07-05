@@ -31,6 +31,6 @@ public readonly struct MultiMetadataWithSingularWhenTruePropositionFactory<TMode
             predicate,
             whenTrue.ToEnumerableReturn(),
             whenFalse,
-            new SpecDescription(statement) { HasExplicitStatement = true });
+            new SpecDescription(statement));
     }
 }

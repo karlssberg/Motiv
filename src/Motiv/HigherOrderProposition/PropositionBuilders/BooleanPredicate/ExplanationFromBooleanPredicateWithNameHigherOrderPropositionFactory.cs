@@ -55,7 +55,7 @@ public readonly struct ExplanationFromBooleanPredicateWithNameHigherOrderProposi
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanEvaluation<TModel>, string>(),
             falseBecause,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 }

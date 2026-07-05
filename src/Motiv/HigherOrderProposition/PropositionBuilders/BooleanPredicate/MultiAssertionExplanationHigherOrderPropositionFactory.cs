@@ -52,7 +52,7 @@ public readonly struct MultiAssertionExplanationHigherOrderPropositionFactory<TM
             _higherOrderOperation.HigherOrderPredicate,
             _whenTrue,
             _whenFalse,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             _higherOrderOperation.CauseSelector);
     }
 }

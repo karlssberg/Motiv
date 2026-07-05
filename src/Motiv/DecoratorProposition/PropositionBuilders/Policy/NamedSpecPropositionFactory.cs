@@ -45,5 +45,5 @@ public readonly struct NamedSpecPropositionFactory<TModel, TMetadata>(
             policy,
             trueBecause.ToFunc<TModel, PolicyResultBase<TMetadata>, string>(),
             falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), policy.Description) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), policy.Description));
 }

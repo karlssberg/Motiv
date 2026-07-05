@@ -30,6 +30,6 @@ public readonly struct MetadataPropositionFactory<TModel, TReplacementMetadata, 
             spec,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement) { HasExplicitStatement = true });
+            new SpecDescription(statement));
     }
 }

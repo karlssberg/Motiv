@@ -30,7 +30,7 @@ public readonly struct MultiAssertionPolicyExplanationWithNamePropositionFactory
                 .ToEnumerable()
                 .ToFunc<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>(),
             falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), spec.Description));
 
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement

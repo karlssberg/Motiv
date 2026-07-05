@@ -34,7 +34,7 @@ public readonly struct MultiMetadataFromBooleanHigherOrderPropositionFactory<TMo
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 }

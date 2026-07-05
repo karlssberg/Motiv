@@ -30,6 +30,6 @@ public readonly struct MetadataFromPolicyResultPropositionFactory<TModel, TRepla
             spec,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement) { HasExplicitStatement = true });
+            new SpecDescription(statement));
     }
 }

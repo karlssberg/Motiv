@@ -23,5 +23,5 @@ public readonly partial struct MinimalPolicyDecoratorFactory<TModel, TMetadata>(
     public PolicyBase<TModel, TMetadata> Create(string statement) =>
         new MinimalPolicyDecoratorProposition<TModel, TMetadata>(
             policy,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), policy.Description) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), policy.Description));
 }

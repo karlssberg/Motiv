@@ -34,7 +34,7 @@ public readonly struct MultiAssertionExplanationWithNameExpressionTreePropositio
             expression,
             TrueBecauseFunc,
             falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
 
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement

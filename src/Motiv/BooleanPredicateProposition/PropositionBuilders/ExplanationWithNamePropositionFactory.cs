@@ -46,6 +46,6 @@ public readonly struct ExplanationWithNamePropositionFactory<TModel>(
             predicate,
             trueBecause.ToFunc<TModel, string>(),
             falseBecause,
-            new SpecDescription(statement) { HasExplicitStatement = true });
+            new SpecDescription(statement));
     }
 }

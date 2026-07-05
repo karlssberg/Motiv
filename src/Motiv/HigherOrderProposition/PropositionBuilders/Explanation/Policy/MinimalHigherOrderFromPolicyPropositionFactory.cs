@@ -27,8 +27,7 @@ public readonly partial struct MinimalHigherOrderFromPolicyPropositionFactory<TM
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
-                policy.Description)
-            { HasExplicitStatement = true },
+                policy.Description),
             higherOrderOperation.CauseSelector);
 
     internal SpecBase<IEnumerable<TModel>, TMetadata> Create(Expression statement) =>

@@ -35,7 +35,7 @@ public readonly struct MetadataFromPolicyResultHigherOrderPropositionFactory<TMo
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 }

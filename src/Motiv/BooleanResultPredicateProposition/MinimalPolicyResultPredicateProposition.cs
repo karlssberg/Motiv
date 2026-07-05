@@ -52,11 +52,7 @@ internal sealed class MinimalPolicyResultPredicateProposition<TModel, TMetadata>
             }, LazyThreadSafetyMode.None);
 
         var reason = new Lazy<string>(() =>
-            metadata.Value switch
-            {
-                string reason when !Description.HasExplicitStatement => reason,
-                _ => Description.ToReason(booleanResult.Satisfied)
-            }, LazyThreadSafetyMode.None);
+            Description.ToReason(booleanResult.Satisfied), LazyThreadSafetyMode.None);
 
         return new PolicyResultWithUnderlying<TMetadata,TMetadata>(
             booleanResult,

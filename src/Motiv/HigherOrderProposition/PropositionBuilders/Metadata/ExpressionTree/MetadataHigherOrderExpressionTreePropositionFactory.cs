@@ -37,7 +37,7 @@ public readonly struct MetadataHigherOrderExpressionTreePropositionFactory<TMode
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 

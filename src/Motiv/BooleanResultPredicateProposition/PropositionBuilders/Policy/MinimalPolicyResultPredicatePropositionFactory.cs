@@ -25,6 +25,6 @@ public readonly partial struct MinimalPolicyResultPredicatePropositionFactory<TM
             predicate,
             (_, result) => result.Value,
             (_, result) => result.Value,
-            new SpecDescription(statement) { HasExplicitStatement = true });
+            new SpecDescription(statement));
     }
 }

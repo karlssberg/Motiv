@@ -36,7 +36,7 @@ public readonly partial struct BooleanTrueExpressionTreeHigherOrderFromSpecPropo
         new MinimalHigherOrderFromExpressionTreeProposition<TModel, bool>(
             expression,
             higherOrderOperation.HigherOrderPredicate,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true },
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))),
             higherOrderOperation.CauseSelector);
 
     /// <summary>Creates a proposition.</summary>

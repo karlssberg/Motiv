@@ -35,7 +35,7 @@ public readonly struct ExplanationHigherOrderExpressionTreePropositionFactory<TM
             higherOrderOperation.HigherOrderPredicate,
             trueBecause,
             falseBecause,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 }

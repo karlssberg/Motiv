@@ -30,6 +30,6 @@ public readonly struct MultiMetadataFromPolicyResultWithSingularWhenTrueProposit
             spec,
             whenTrue.ToEnumerableReturn(),
             whenFalse,
-            new SpecDescription(statement) { HasExplicitStatement = true });
+            new SpecDescription(statement));
     }
 }

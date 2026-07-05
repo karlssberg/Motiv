@@ -19,6 +19,6 @@ public readonly partial struct MinimalBooleanPredicatePropositionFactory<TModel>
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new MinimalProposition<TModel>(
             predicate,
-            new SpecDescription(statement) { HasExplicitStatement = true });
+            new SpecDescription(statement));
     }
 }

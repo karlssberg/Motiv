@@ -34,7 +34,7 @@ public readonly struct MultiAssertionFromSpecHigherOrderPropositionFactory<TMode
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,
             whenFalse,
-            new SpecDescription(statement, spec.Description) { HasExplicitStatement = true },
+            new SpecDescription(statement, spec.Description),
             higherOrderOperation.CauseSelector);
     }
 }

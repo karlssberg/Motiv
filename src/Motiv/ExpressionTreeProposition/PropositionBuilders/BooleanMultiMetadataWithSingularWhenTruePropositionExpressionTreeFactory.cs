@@ -29,6 +29,6 @@ public readonly struct BooleanMultiMetadataWithSingularWhenTruePropositionExpres
                 expression,
                 whenTrue.ToEnumerableReturn(),
                 whenFalse,
-                new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true }),
+                new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)))),
             expression);
 }

@@ -27,7 +27,7 @@ public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TMod
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
-                spec.Description) { HasExplicitStatement = true },
+                spec.Description),
             higherOrderOperation.CauseSelector);
 
     internal SpecBase<IEnumerable<TModel>, TMetadata> Create(Expression statement) =>
@@ -61,7 +61,7 @@ public readonly struct MinimalHigherOrderFromSpecPropositionFactory<TModel>(
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
-                spec.Description) { HasExplicitStatement = true },
+                spec.Description),
             higherOrderOperation.CauseSelector);
 
     internal SpecBase<IEnumerable<TModel>, string> Create(Expression statement) =>

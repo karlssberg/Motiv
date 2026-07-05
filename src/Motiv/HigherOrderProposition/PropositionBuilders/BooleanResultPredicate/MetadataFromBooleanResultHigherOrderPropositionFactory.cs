@@ -36,7 +36,7 @@ public readonly struct MetadataFromBooleanResultHigherOrderPropositionFactory<TM
             whenTrue,
 
             whenFalse,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 }

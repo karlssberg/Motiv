@@ -59,5 +59,5 @@ public readonly struct NamedPolicyPropositionFactory<TModel, TMetadata>
             _spec,
             _trueBecause.ToFunc<TModel, BooleanResultBase<TMetadata>, string>(),
             _falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), _spec.Description) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), _spec.Description));
 }

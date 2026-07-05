@@ -32,7 +32,7 @@ public readonly struct ExplanationWithNameExpressionTreePropositionFactory<TMode
             trueBecause.ToFunc<TModel, BooleanResultBase<string>, string>(),
             falseBecause,
             new SpecDescription(
-                statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
+                statement.ThrowIfNullOrWhitespace(nameof(statement))));
 
     /// <summary>
     /// Creates a proposition with explanations for when the condition is true or false. The propositional statement

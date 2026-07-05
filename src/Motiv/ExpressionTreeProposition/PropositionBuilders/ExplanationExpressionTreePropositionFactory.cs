@@ -31,7 +31,7 @@ public readonly struct ExplanationExpressionTreePropositionFactory<TModel, TPred
             expression,
             trueBecause,
             falseBecause,
-            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true });
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))));
 
     /// <summary>
     /// Creates a proposition and names it with the propositional statement provided.

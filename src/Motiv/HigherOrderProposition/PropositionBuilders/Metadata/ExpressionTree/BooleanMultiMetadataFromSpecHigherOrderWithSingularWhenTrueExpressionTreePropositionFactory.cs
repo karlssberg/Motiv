@@ -44,7 +44,7 @@ public readonly struct BooleanMultiMetadataFromSpecHigherOrderWithSingularWhenTr
             higherOrderOperation.HigherOrderPredicate,
             whenTrue.ToEnumerableReturn(),
             whenFalse,
-            new SpecDescription(statement) { HasExplicitStatement = true },
+            new SpecDescription(statement),
             higherOrderOperation.CauseSelector);
     }
 }

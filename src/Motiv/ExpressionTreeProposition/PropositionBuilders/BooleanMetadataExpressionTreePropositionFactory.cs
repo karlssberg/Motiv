@@ -30,6 +30,6 @@ public readonly struct BooleanMetadataExpressionTreePropositionFactory<TModel, T
                 expression,
                 whenTrue,
                 whenFalse,
-                new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))) { HasExplicitStatement = true }),
+                new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)))),
             expression);
 }
