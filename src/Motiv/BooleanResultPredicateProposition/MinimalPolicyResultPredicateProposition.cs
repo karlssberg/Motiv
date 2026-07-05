@@ -11,12 +11,12 @@ namespace Motiv.BooleanResultPredicateProposition;
 /// <param name="whenFalse">The metadata to yield when the predicate is false.</param>
 /// <param name="specDescription">The description of the proposition.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
-/// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-/// <typeparam name="TUnderlyingMetadata">The type of the underlying metadata associated with the boolean result.</typeparam>
-internal sealed class PolicyResultPredicateProposition<TModel, TMetadata, TUnderlyingMetadata>(
-    Func<TModel, PolicyResultBase<TUnderlyingMetadata>> underlyingPolicyResultPredicate,
-    Func<TModel, PolicyResultBase<TUnderlyingMetadata>, TMetadata> whenTrue,
-    Func<TModel, PolicyResultBase<TUnderlyingMetadata>, TMetadata> whenFalse,
+/// <typeparam name="TMetadata">The type of the metadata, which is also the type of the underlying metadata
+/// associated with the boolean result.</typeparam>
+internal sealed class MinimalPolicyResultPredicateProposition<TModel, TMetadata>(
+    Func<TModel, PolicyResultBase<TMetadata>> underlyingPolicyResultPredicate,
+    Func<TModel, PolicyResultBase<TMetadata>, TMetadata> whenTrue,
+    Func<TModel, PolicyResultBase<TMetadata>, TMetadata> whenFalse,
     ISpecDescription specDescription)
     : PolicyBase<TModel, TMetadata>
 {
@@ -33,7 +33,7 @@ internal sealed class PolicyResultPredicateProposition<TModel, TMetadata, TUnder
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
         var booleanResult = underlyingPolicyResultPredicate(model);
-        PolicyResultBase<TUnderlyingMetadata>[] booleanResults = [booleanResult];
+        PolicyResultBase<TMetadata>[] booleanResults = [booleanResult];
 
         var metadataResolver =
             booleanResult.Satisfied switch
@@ -44,21 +44,32 @@ internal sealed class PolicyResultPredicateProposition<TModel, TMetadata, TUnder
 
         var metadata = new Lazy<TMetadata>(() => metadataResolver(model, booleanResult), LazyThreadSafetyMode.None);
 
-        var assertion = new Lazy<string>(() =>
-            Description.ToReason(booleanResult.Satisfied), LazyThreadSafetyMode.None);
+        var assertions = new Lazy<string>(() =>
+            metadata.Value switch
+            {
+                string assertion => assertion,
+                _ => Description.ToReason(booleanResult.Satisfied)
+            }, LazyThreadSafetyMode.None);
 
-        return new PolicyResultWithUnderlying<TMetadata,TUnderlyingMetadata>(
+        var reason = new Lazy<string>(() =>
+            metadata.Value switch
+            {
+                string reason when !Description.HasExplicitStatement => reason,
+                _ => Description.ToReason(booleanResult.Satisfied)
+            }, LazyThreadSafetyMode.None);
+
+        return new PolicyResultWithUnderlying<TMetadata,TMetadata>(
             booleanResult,
             () => metadata.Value,
             () => new MetadataNode<TMetadata>(metadata.Value,
                 booleanResults as IEnumerable<PolicyResultBase<TMetadata>> ?? []),
             () => new Explanation(
-                assertion.Value,
+                assertions.Value,
                 booleanResults,
                 booleanResults),
             () => new BooleanResultDescriptionWithUnderlying(
                 booleanResult,
-                assertion.Value,
+                reason.Value,
                 Description.Statement));
     }
 }

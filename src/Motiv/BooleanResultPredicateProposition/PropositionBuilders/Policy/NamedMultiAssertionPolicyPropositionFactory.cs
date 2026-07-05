@@ -43,10 +43,13 @@ public readonly struct NamedMultiAssertionPolicyPropositionFactory<TModel, TMeta
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create() =>
-        new PolicyResultPredicateMultiValueProposition<TModel, string, TMetadata>(
+    public SpecBase<TModel, string> Create()
+    {
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new PolicyResultPredicateMultiAssertionExplanationProposition<TModel, TMetadata>(
             predicate,
             TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause));
+    }
 }

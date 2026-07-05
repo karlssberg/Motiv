@@ -23,12 +23,15 @@ public readonly struct ExplanationFromPolicyResultWithNamePropositionFactory<TMo
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>A proposition for the model.</returns>
-    public PolicyBase<TModel, string> Create() =>
-        new PolicyResultPredicateWithSingleAssertionProposition<TModel, TMetadata>(
+    public PolicyBase<TModel, string> Create()
+    {
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new PolicyResultPredicateWithSingleAssertionProposition<TModel, TMetadata>(
             predicate,
             trueBecause,
             falseBecause,
             new SpecDescription(trueBecause));
+    }
 
     /// <summary>
     /// Creates a proposition with descriptive assertions, but using the supplied proposition to succinctly explain
@@ -40,7 +43,6 @@ public readonly struct ExplanationFromPolicyResultWithNamePropositionFactory<TMo
     public PolicyBase<TModel, string> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
         return new PolicyResultPredicateProposition<TModel, string, TMetadata>(
             predicate,
             trueBecause.ToFunc<TModel, PolicyResultBase<TMetadata>, string>(),

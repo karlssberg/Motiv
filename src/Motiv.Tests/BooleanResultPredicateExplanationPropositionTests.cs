@@ -305,8 +305,8 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true,  "first is true", "second is true", "third is true", "fourth is true")]
-    [InlineData(false,  "first is false", "second is false", "third is false", "fourth is false")]
+    [InlineData(true,  "first is true", "is second true == true", "is third true == true", "is fourth true == true")]
+    [InlineData(false,  "first is false", "is second true == false", "is third true == false", "is fourth true == false")]
     public void Should_replace_policy_result_assertion_with_new_assertion(
         bool model,
         params string[] expectedAssertions)
@@ -406,8 +406,8 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(true,  "first is true", "second is true", "third is true")]
-    [InlineData(false, "first is false", "second is false", "third is false")]
+    [InlineData(true,  "first true == true", "second true == true", "third true == true")]
+    [InlineData(false, "first true == false", "second true == false", "third true == false")]
     public void Should_replace_policy_result_assertion_with_new_assertion_when_yielding_multiple_assertions(
         bool model,
         params string[] expectedAssertions)

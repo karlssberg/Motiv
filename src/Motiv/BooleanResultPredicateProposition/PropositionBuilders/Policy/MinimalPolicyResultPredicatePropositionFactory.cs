@@ -21,7 +21,7 @@ public readonly partial struct MinimalPolicyResultPredicatePropositionFactory<TM
     public PolicyBase<TModel, TMetadata> Create(string statement)
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
-        return new PolicyResultPredicateProposition<TModel, TMetadata, TMetadata>(
+        return new MinimalPolicyResultPredicateProposition<TModel, TMetadata>(
             predicate,
             (_, result) => result.Value,
             (_, result) => result.Value,
