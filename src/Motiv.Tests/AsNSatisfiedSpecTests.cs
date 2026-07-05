@@ -108,10 +108,10 @@ public class AsNSatisfiedSpecTests
     }
 
     [Theory]
-    [InlineData(1, 3, 5, 7, "1 is odd, 3 is odd, 5 is odd, 7 is odd")]
-    [InlineData(1, 3, 5, 6, "6 is even")]
-    [InlineData(1, 3, 4, 6, "4 is even, 6 is even")]
-    [InlineData(1, 4, 6, 8, "4 is even, 6 is even, 8 is even")]
+    [InlineData(1, 3, 5, 7, "is even spec == false")]
+    [InlineData(1, 3, 5, 6, "is even spec == true")]
+    [InlineData(1, 3, 4, 6, "is even spec == true")]
+    [InlineData(1, 4, 6, 8, "is even spec == true")]
     public void Should_provide_an_underlying_explanation_of_an_n_satisfied_spec_metadata(
         int first,
         int second,

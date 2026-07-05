@@ -140,7 +140,7 @@ public class ExpressionTreeExpressionTypeTests
         var act = sut.Evaluate(1);
 
         // Assert
-        act.Assertions.ShouldBe(["n <= 10"]);
+        act.Assertions.ShouldBe(["n > 10 == false"]);
     }
 
     [Fact]

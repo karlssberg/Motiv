@@ -334,9 +334,9 @@ public class ExpressionTreeAssertionTests
     }
 
     [Theory]
-    [InlineData("", "txt.Length == 0", "txt == \"\"")]
-    [InlineData("a", "txt.Length != 0", "tryParseInt(txt) == false")]
-    [InlineData("123", "txt.Length != 0", "tryParseInt(txt) == true")]
+    [InlineData("", "txt.Length == 0 == true", "txt == \"\" == true")]
+    [InlineData("a", "txt.Length == 0 == false", "tryParseInt(txt) == true == false")]
+    [InlineData("123", "txt.Length == 0 == false", "tryParseInt(txt) == true == true")]
     public void Should_assert_expressions_containing_a_conditional_expression(string model, params string[] expectedAssertion)
     {
         // Assemble

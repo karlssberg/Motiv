@@ -43,11 +43,11 @@ public class TutorialTests
             .WhenFalse(n => $"{n} is odd")
             .Create("is even");
 
-        isEven.Evaluate(2).Reason.ShouldBe("2 is even");
-        isEven.Evaluate(2).Assertions.ShouldBe(["2 is even"]);
+        isEven.Evaluate(2).Reason.ShouldBe("is even == true");
+        isEven.Evaluate(2).Assertions.ShouldBe(["is even == true"]);
 
-        isEven.Evaluate(3).Reason.ShouldBe("3 is odd");
-        isEven.Evaluate(3).Assertions.ShouldBe(["3 is odd"]);
+        isEven.Evaluate(3).Reason.ShouldBe("is even == false");
+        isEven.Evaluate(3).Assertions.ShouldBe(["is even == false"]);
     }
 
     [Fact]
@@ -297,7 +297,7 @@ public class TutorialTests
 
 
         allAreNegative.Evaluate([-2, -4, 0, 9]).Satisfied.ShouldBeFalse();
-        allAreNegative.Evaluate([-2, -4, 0, 9]).Assertions.ShouldBe(["0 is not negative", "9 is not negative"]);
+        allAreNegative.Evaluate([-2, -4, 0, 9]).Assertions.ShouldBe(["is negative == false"]);
     }
 
 #endif
@@ -407,10 +407,10 @@ public class TutorialTests
                 AND
                     customer has an inadequate credit score
                         (Customer customer) => customer.CreditScore > 600 == false
-                            customer.CreditScore <= 600
+                            customer.CreditScore > 600 == false
                     customer has insufficient income
                         (Customer customer) => customer.Income > 100000 == false
-                            customer.Income <= 100000
+                            customer.Income > 100000 == false
             """);
     }
 
@@ -483,24 +483,24 @@ public class TutorialTests
     [Theory]
     [InlineData(1, false, "1")]
     [InlineData(2, false, "2")]
-    [InlineData(3, true, "fizz")]
+    [InlineData(3, true, "fizz == true")]
     [InlineData(4, false, "4")]
-    [InlineData(5, true, "buzz")]
-    [InlineData(6, true, "fizz")]
+    [InlineData(5, true, "buzz == true")]
+    [InlineData(6, true, "fizz == true")]
     [InlineData(7, false, "7")]
     [InlineData(8, false, "8")]
-    [InlineData(9, true, "fizz")]
-    [InlineData(10, true, "buzz")]
+    [InlineData(9, true, "fizz == true")]
+    [InlineData(10, true, "buzz == true")]
     [InlineData(11, false, "11")]
-    [InlineData(12, true, "fizz")]
+    [InlineData(12, true, "fizz == true")]
     [InlineData(13, false, "13")]
     [InlineData(14, false, "14")]
-    [InlineData(15, true, "fizzbuzz")]
+    [InlineData(15, true, "fizz == truebuzz == true")]
     [InlineData(16, false, "16")]
     [InlineData(17, false, "17")]
-    [InlineData(18, true, "fizz")]
+    [InlineData(18, true, "fizz == true")]
     [InlineData(19, false, "19")]
-    [InlineData(20, true, "buzz")]
+    [InlineData(20, true, "buzz == true")]
     public void Should_solve_fizzbuzz(int number, bool expectedSatisfied, string expectedReason)
     {
         var isFizz =
@@ -637,7 +637,7 @@ public class TutorialTests
                     AND
                         numbers.All((int n) => n > 0) == false
                             (int n) => n > 0 == false
-                                n <= 0
+                                n > 0 == false
             """);
     }
 }

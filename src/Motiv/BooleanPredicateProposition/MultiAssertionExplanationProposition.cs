@@ -8,14 +8,13 @@ namespace Motiv.BooleanPredicateProposition;
 /// of the underlying proposition that were responsible for the result.
 /// </summary>
 /// <typeparam name="TModel">The type of the input parameter.</typeparam>
-/// <typeparam name="TMetadata">The type of the return value.</typeparam>
 /// <returns>The return value.</returns>
-internal sealed class MultiValueProposition<TModel, TMetadata>(
+internal sealed class MultiAssertionExplanationProposition<TModel>(
     Func<TModel, bool> predicate,
-    Func<TModel, IEnumerable<TMetadata>> whenTrue,
-    Func<TModel, IEnumerable<TMetadata>> whenFalse,
+    Func<TModel, IEnumerable<string>> whenTrue,
+    Func<TModel, IEnumerable<string>> whenFalse,
     ISpecDescription specDescription)
-    : SpecBase<TModel, TMetadata>
+    : SpecBase<TModel, string>
 {
     public override IEnumerable<SpecBase> Underlying => [];
 
@@ -27,7 +26,7 @@ internal sealed class MultiValueProposition<TModel, TMetadata>(
     /// <summary>Determines if the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be evaluated.</param>
     /// <returns>A BooleanResultBase object containing the result of the evaluation.</returns>
-    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
+    protected override BooleanResultBase<string> EvaluateSpec(TModel model)
     {
         var isSatisfied = predicate(model);
 
@@ -38,15 +37,16 @@ internal sealed class MultiValueProposition<TModel, TMetadata>(
                 false => whenFalse
             };
 
-        var metadataNode = new Lazy<MetadataNode<TMetadata>>(() =>
-            new MetadataNode<TMetadata>(
+        var metadataNode = new Lazy<MetadataNode<string>>(() =>
+            new MetadataNode<string>(
                 metadataResolver(model),
                 []), LazyThreadSafetyMode.None);
 
-        return new PropositionBooleanResult<TMetadata>(
+        return new PropositionBooleanResult<string>(
             isSatisfied,
             () => metadataNode.Value,
-            () => new Explanation(Description.ToReason(isSatisfied).ToEnumerable()),
+            () => new Explanation(
+                metadataNode.Value.Metadata.ElseFallback(() => Description.ToReason(isSatisfied))),
             () => new PropositionResultDescription(
                 Description.ToReason(isSatisfied),
                 Description.Statement));

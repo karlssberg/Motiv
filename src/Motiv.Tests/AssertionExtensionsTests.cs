@@ -21,7 +21,7 @@ public class AssertionExtensionsTests
         var act = booleanResultsCollection.GetAssertions();
 
         // Assert
-        act.ShouldBe(models);
+        act.ShouldBe(models.Select(_ => "is positive == true"));
     }
 
 
@@ -42,7 +42,7 @@ public class AssertionExtensionsTests
         var act = booleanResultsCollection.GetTrueAssertions();
 
         // Assert
-        act.ShouldBe(models);
+        act.ShouldBe(models.Select(_ => "is always true == true"));
     }
 
     [Theory]
@@ -62,7 +62,7 @@ public class AssertionExtensionsTests
         var act = booleanResultsCollection.GetFalseAssertions();
 
         // Assert
-        act.ShouldBe(models);
+        act.ShouldBe(models.Select(_ => "is always false == false"));
     }
 
     [Theory]

@@ -279,16 +279,16 @@ public class ExpressionTreeExplanationTests
             OR
                 is-positive == true
                     (int n) => n > 0 == true
-                        n > 0
+                        n > 0 == true
                 is-positive == true
                     (int n) => n > 0 == true
-                        n > 0
+                        n > 0 == true
                 is-positive == true
                     (int n) => n > 0 == true
-                        n > 0
+                        n > 0 == true
                 is-positive == true
                     (int n) => n > 0 == true
-                        n > 0
+                        n > 0 == true
             """);
     }
 
@@ -335,16 +335,16 @@ public class ExpressionTreeExplanationTests
             OR
                 is-positive == true
                     (int n) => n > 0 == true (1)
-                        n > 0
+                        n > 0 == true
                 is-positive == true
                     (int n) => n > 0 == true (1)
-                        n > 0
+                        n > 0 == true
                 is-positive == true
                     (int n) => n > 0 == true (1)
-                        n > 0
+                        n > 0 == true
                 is-positive == true
                     (int n) => n > 0 == true (1)
-                        n > 0
+                        n > 0 == true
             """);
     }
 
@@ -646,22 +646,22 @@ public class ExpressionTreeExplanationTests
             OR
                 is-positive == false
                     (int n) => n > 0 == false
-                        n <= 0
+                        n > 0 == false
                 is not positive
                     (int n) => n > 0 == false
-                        n <= 0
+                        n > 0 == false
                 is-positive == false
                     (int n) => n > 0 == false
-                        n <= 0
+                        n > 0 == false
                 is-positive == false
                     (int n) => n > 0 == false
-                        n <= 0
+                        n > 0 == false
                 is-positive == false
                     (int n) => n > 0 == false
-                        n <= 0
+                        n > 0 == false
                 is positive == false
                     (int n) => n > 0 == false
-                        n <= 0
+                        n > 0 == false
             """);
     }
 

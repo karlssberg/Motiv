@@ -44,10 +44,10 @@ public class IsSpecialFulfillmentBehaviorTests
                     AND (1)
                         is out of stock == true
                             (InventoryPricedProduct product) => product.WarehouseStockLevel == 0 == true
-                                product.WarehouseStockLevel == 0
+                                product.WarehouseStockLevel == 0 == true
                         is available in store == true
                             (InventoryPricedProduct product) => product.InStoreStockLevel > 0 == true
-                                product.InStoreStockLevel > 0
+                                product.InStoreStockLevel > 0 == true
             """);
     }
 
@@ -70,7 +70,7 @@ public class IsSpecialFulfillmentBehaviorTests
             should deliver same day == true
                 is same day delivery == true
                     (FulfillmentContext context) => context.DistanceFromStore < 10 == true
-                        context.DistanceFromStore < 10
+                        context.DistanceFromStore < 10 == true
             """);
     }
 
@@ -93,7 +93,7 @@ public class IsSpecialFulfillmentBehaviorTests
             should split order == true
                 is expensive == true
                     (FulfillmentContext context) => context.Order.Products.Sum((InventoryPricedProduct product) => product.Price) > 1000 == true
-                        context.Order.Products.Sum((InventoryPricedProduct product) => product.Price) > 1000
+                        context.Order.Products.Sum((InventoryPricedProduct product) => product.Price) > 1000 == true
             """);
     }
 
@@ -116,7 +116,7 @@ public class IsSpecialFulfillmentBehaviorTests
             should locally fulfill == true
                 any perishable == true
                     (InventoryPricedProduct product) => product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30) == true (1)
-                        product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30)
+                        product.ExpireDate - product.DateInStock < TimeSpan.FromDays(30) == true
             """);
     }
 

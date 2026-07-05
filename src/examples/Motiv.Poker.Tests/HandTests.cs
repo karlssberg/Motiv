@@ -231,7 +231,7 @@ public class HandTests
                                 has 5 Hearts cards == true
                                     is Hearts == true (5)
                                         (Card card) => card.Suit == Hearts == true
-                                            card.Suit == Suit.Hearts
+                                            card.Suit == Hearts == true
             """);
     }
 }

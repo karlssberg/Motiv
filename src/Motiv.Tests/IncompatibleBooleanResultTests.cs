@@ -481,7 +481,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().Reason;
 
         // Assert
-        act.ShouldBe(satisfied.ToString());
+        act.ShouldBe($"policy == {(satisfied ? "true" : "false")}");
     }
 
     [Theory]
@@ -501,7 +501,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().Description.ToString();
 
         // Assert
-        act.ShouldBe(satisfied.ToString());
+        act.ShouldBe($"policy == {(satisfied ? "true" : "false")}");
     }
 
     [Theory]
@@ -521,7 +521,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().Justification;
 
         // Assert
-        act.ShouldBe(satisfied.ToString());
+        act.ShouldBe($"policy == {(satisfied ? "true" : "false")}");
     }
 
     [Theory]
@@ -547,7 +547,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().Underlying.First().Reason;
 
         // Assert
-        act.ShouldBe(satisfied.ToString());
+        act.ShouldBe($"underlying == {(satisfied ? "true" : "false")}");
     }
 
     [Theory]
@@ -573,7 +573,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().UnderlyingWithValues.First().Reason;
 
         // Assert
-        act.ShouldBe(satisfied.ToString());
+        act.ShouldBe($"underlying == {(satisfied ? "true" : "false")}");
     }
 
     [Theory]
@@ -593,7 +593,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().Values;
 
         // Assert
-        act.ShouldBe(satisfied.ToString().ToEnumerable());
+        act.ShouldBe($"policy == {(satisfied ? "true" : "false")}".ToEnumerable());
     }
 
     [Theory]
@@ -618,7 +618,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().Causes.First().Reason;
 
         // Assert
-        act.ShouldBe(satisfied.ToString());
+        act.ShouldBe($"underlying == {(satisfied ? "true" : "false")}");
     }
 
     [Theory]
@@ -643,7 +643,7 @@ public class IncompatibleBooleanResultTests
         var act = result.ToExplanationResult().CausesWithValues.First().Reason;
 
         // Assert
-        act.ShouldBe(satisfied.ToString());
+        act.ShouldBe($"underlying == {(satisfied ? "true" : "false")}");
     }
 }
 

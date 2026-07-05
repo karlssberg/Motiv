@@ -23,7 +23,8 @@ public readonly struct ExplanationWithNamePropositionFactory<TModel>(
     public PolicyBase<TModel, string> Create()
     {
         predicate.ThrowIfNull(nameof(predicate));
-        return new Proposition<TModel, string>(
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new ExplanationProposition<TModel>(
             predicate,
             trueBecause.ToFunc<TModel, string>(),
             falseBecause,

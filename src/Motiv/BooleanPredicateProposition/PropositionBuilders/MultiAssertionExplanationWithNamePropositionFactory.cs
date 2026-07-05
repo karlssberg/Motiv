@@ -22,11 +22,10 @@ public readonly struct MultiAssertionExplanationWithNamePropositionFactory<TMode
     public SpecBase<TModel, string> Create()
     {
         predicate.ThrowIfNull(nameof(predicate));
-        return new MultiValueProposition<TModel, string>(
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new MultiAssertionExplanationProposition<TModel>(
             predicate,
-            trueBecause
-                .ToEnumerable()
-                .ToFunc<TModel, IEnumerable<string>>(),
+            trueBecause.ToEnumerable().ToFunc<TModel, IEnumerable<string>>(),
             falseBecause,
             new SpecDescription(trueBecause));
     }

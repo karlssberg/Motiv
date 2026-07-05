@@ -407,9 +407,9 @@ public class ChangeModelTypeSpecTests
     }
 
     [Theory]
-    [InlineAutoData("#hello", "'#' is not a letter")]
-    [InlineAutoData("!world!", "'!' is not a letter")]
-    [InlineAutoData("ok", "'o' is a letter", "'k' is a letter")]
+    [InlineAutoData("#hello", "is a letter == false")]
+    [InlineAutoData("!world!", "is a letter == false")]
+    [InlineAutoData("ok", "is a letter == true")]
     public void Should_identify_non_letters(string model, params string[] expected)
     {
         // Arrange

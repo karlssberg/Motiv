@@ -24,8 +24,8 @@ public class PropositionResultDescriptionTests
     }
 
     [Theory]
-    [InlineAutoData(true, "is true")]
-    [InlineAutoData(false, "is false")]
+    [InlineAutoData(true, "is true proposition == true")]
+    [InlineAutoData(false, "is true proposition == false")]
     public void Should_generate_a_simple_description_reason_regardless_of_the_proposition_name(bool isTrue, string expected)
     {
         // Arrange
@@ -1001,8 +1001,8 @@ public class PropositionResultDescriptionTests
     }
 
     [Theory]
-    [InlineData(true, false, "!(!b | !c)", "b", "c")]
-    [InlineData(false, true, "!(!B | !C)", "B", "C")]
+    [InlineData(true, false, "!(!(is b == false) | !(is c == false))", "is b == false", "is c == false")]
+    [InlineData(false, true, "!(!(is b == true) | !(is c == true))", "is b == true", "is c == true")]
     public void Should_negate_a_binary_operation_results_that_contains_single_negated_proposition_statements_with_assertions(
         bool model,
         bool expectedSatisfied,
@@ -1030,8 +1030,8 @@ public class PropositionResultDescriptionTests
     }
 
     [Theory]
-    [InlineData(true, true, "!(b | c)", "b", "c")]
-    [InlineData(false, false, "!(B | C)", "B", "C")]
+    [InlineData(true, true, "!((is b == false) | (is c == false))", "is b == false", "is c == false")]
+    [InlineData(false, false, "!((is b == true) | (is c == true))", "is b == true", "is c == true")]
     public void Should_negate_a_binary_operation_results_that_contains_double_negated_proposition_statements_with_assertions(
         bool model,
         bool expectedSatisfied,

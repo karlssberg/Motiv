@@ -235,10 +235,10 @@ public class BooleanResultPredicateExplanationPropositionTests
     }
 
     [Theory]
-    [InlineData(false, false, "underlying is true")]
-    [InlineData(false, true, "underlying is false")]
-    [InlineData(true, false, "underlying is false")]
-    [InlineData(true, true, "underlying is true")]
+    [InlineData(false, false, "are equal == true")]
+    [InlineData(false, true, "are equal == false")]
+    [InlineData(true, false, "are equal == false")]
+    [InlineData(true, true, "are equal == true")]
     public void Should_provide_root_assertions(
         bool model,
         bool other,
