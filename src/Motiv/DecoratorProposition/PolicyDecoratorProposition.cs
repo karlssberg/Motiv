@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.DecoratorProposition;
 
 internal sealed class PolicyDecoratorProposition<TModel, TMetadata, TUnderlyingMetadata>(
@@ -21,7 +18,6 @@ internal sealed class PolicyDecoratorProposition<TModel, TMetadata, TUnderlyingM
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
         var policyResult = underlyingSpec.Evaluate(model);
-        PolicyResultBase<TUnderlyingMetadata>[] policyResults = [policyResult];
 
         var valueResolver =
             policyResult.Satisfied switch
@@ -30,23 +26,10 @@ internal sealed class PolicyDecoratorProposition<TModel, TMetadata, TUnderlyingM
                 false => whenFalse
             };
 
-        var lazyMetadata = new Lazy<TMetadata>(() => valueResolver(model, policyResult), LazyThreadSafetyMode.None);
-
-        var assertion = new Lazy<string>(() =>
-            Description.ToReason(policyResult.Satisfied), LazyThreadSafetyMode.None);
-
-        return new PolicyResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
+        return new PolicyDecoratorPolicyResult<TModel, TMetadata, TUnderlyingMetadata>(
             policyResult,
-            () => lazyMetadata.Value,
-            () => new MetadataNode<TMetadata>(lazyMetadata.Value,
-                policyResults as IEnumerable<PolicyResultBase<TMetadata>> ?? []),
-            () => new Explanation(
-                assertion.Value,
-                policyResults,
-                policyResults),
-            () => new BooleanResultDescriptionWithUnderlying(
-                policyResult,
-                assertion.Value,
-                Description.Statement));
+            model,
+            valueResolver,
+            description);
     }
 }

@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.HigherOrderProposition.BooleanResultPredicate;
 
 internal sealed class HigherOrderFromBooleanResultMultiAssertionExplanationProposition<TModel, TUnderlyingMetadata>(
@@ -22,34 +19,14 @@ internal sealed class HigherOrderFromBooleanResultMultiAssertionExplanationPropo
     protected override BooleanResultBase<string> EvaluateSpec(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
-        var causes = new Lazy<BooleanResult<TModel, TUnderlyingMetadata>[]>(() =>
-            causeSelector(isSatisfied, underlyingResults)
-                .ToArray(), LazyThreadSafetyMode.None);
 
-        var metadata = new Lazy<IEnumerable<string>>(() =>
-            {
-                var evaluation = new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(
-                    underlyingResults,
-                    causes.Value);
-
-                return isSatisfied
-                    ? whenTrue(evaluation)
-                    : whenFalse(evaluation);
-            }, LazyThreadSafetyMode.None);
-
-        var assertion = new Lazy<IEnumerable<string>>(() =>
-            metadata.Value.ElseFallback(() => specDescription.ToReason(isSatisfied)), LazyThreadSafetyMode.None);
-
-        return new HigherOrderBooleanResult<string, TUnderlyingMetadata>(
+        return new HigherOrderFromBooleanResultMultiAssertionExplanationBooleanResult<TModel, TUnderlyingMetadata>(
             isSatisfied,
-            () => metadata.Value,
-            () => assertion.Value,
-            () => new HigherOrderResultDescription<TUnderlyingMetadata>(
-                specDescription.ToReason(isSatisfied),
-                causes.Value,
-                Description.Statement),
             underlyingResults,
-            () => causes.Value);
+            whenTrue,
+            whenFalse,
+            specDescription,
+            causeSelector);
     }
 
     private (BooleanResult<TModel, TUnderlyingMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

@@ -1,7 +1,5 @@
 using System.Linq.Expressions;
-using System.Threading;
 using Motiv.ExpressionTreeProposition;
-using Motiv.Shared;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
 
@@ -26,36 +24,15 @@ internal sealed class HigherOrderFromExpressionTreeMultiAssertionExplanationProp
     protected override BooleanResultBase<string> EvaluateSpec(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
-        var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>
-            causeSelector(isSatisfied, underlyingResults)
-                .ToArray(), LazyThreadSafetyMode.None);
 
-        var because = new Lazy<IEnumerable<string>>(() =>
-            {
-                var evaluation = new HigherOrderBooleanResultEvaluation<TModel, string>(
-                    underlyingResults,
-                    causes.Value);
-
-                return isSatisfied
-                    ? trueBecause(evaluation)
-                    : falseBecause(evaluation);
-            }, LazyThreadSafetyMode.None);
-
-        var assertion = new Lazy<IEnumerable<string>>(() =>
-            because.Value.ElseFallback(() => underlyingResults.GetAssertions()), LazyThreadSafetyMode.None);
-
-        return new HigherOrderBooleanResult<string, string>(
+        return new HigherOrderFromExpressionTreeMultiAssertionExplanationBooleanResult<TModel>(
             isSatisfied,
-            () => because.Value,
-            () => assertion.Value,
-            () => new HigherOrderExpressionTreeResultDescription<string>(
-                isSatisfied,
-                Description.ToReason(isSatisfied),
-                expression,
-                causes.Value,
-                Description.Statement),
             underlyingResults,
-            () => causes.Value);
+            trueBecause,
+            falseBecause,
+            description,
+            expression,
+            causeSelector);
     }
 
     private (BooleanResult<TModel, string>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

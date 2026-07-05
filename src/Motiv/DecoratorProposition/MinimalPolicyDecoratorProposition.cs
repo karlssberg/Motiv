@@ -1,5 +1,3 @@
-using Motiv.Shared;
-
 namespace Motiv.DecoratorProposition;
 
 internal sealed class MinimalPolicyDecoratorProposition<TModel, TMetadata>(
@@ -18,17 +16,7 @@ internal sealed class MinimalPolicyDecoratorProposition<TModel, TMetadata>(
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
         var predicateResult = underlyingPolicy.Evaluate(model);
-        PolicyResultBase<TMetadata>[] predicateResults = [predicateResult];
 
-        return new PolicyResultWithUnderlying<TMetadata, TMetadata>(
-            predicateResult,
-            () => predicateResult.Value,
-            () => new MetadataNode<TMetadata>(predicateResult.Value,
-                predicateResults),
-            () => predicateResult.Explanation,
-            () => new BooleanResultDescriptionWithUnderlying(
-                predicateResult,
-                description.ToReason(predicateResult.Satisfied),
-                Description.Statement));
+        return new MinimalPolicyDecoratorPolicyResult<TMetadata>(predicateResult, description);
     }
 }

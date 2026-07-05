@@ -1,7 +1,5 @@
 using System.Linq.Expressions;
-using System.Threading;
 using Motiv.ExpressionTreeProposition;
-using Motiv.Shared;
 
 namespace Motiv.HigherOrderProposition.ExpressionTree;
 
@@ -28,37 +26,14 @@ internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
 
-        var causes = new Lazy<BooleanResult<TModel, string>[]>(() =>
-            causeSelector(isSatisfied, underlyingResults)
-                .ToArray(), LazyThreadSafetyMode.None);
-
-        var because = new Lazy<string>(() =>
-            {
-                var booleanCollectionResults = new HigherOrderBooleanResultEvaluation<TModel, string>(
-                    underlyingResults,
-                    causes.Value);
-
-                return isSatisfied
-                    ? trueBecause(booleanCollectionResults)
-                    : falseBecause(booleanCollectionResults);
-            }, LazyThreadSafetyMode.None);
-
-        var assertion = new Lazy<string>(() =>
-            because.Value.ElseFallback(() => description.ToReason(isSatisfied)), LazyThreadSafetyMode.None);
-
-        return new HigherOrderPolicyResult<string, string>(
+        return new HigherOrderFromExpressionTreeExplanationPolicyResult<TModel>(
             isSatisfied,
-            () => because.Value,
-            () => because.Value.ToEnumerable(),
-            () => assertion.Value.ToEnumerable(),
-            () => new HigherOrderExpressionTreeResultDescription<string>(
-                isSatisfied,
-                assertion.Value,
-                expression,
-                causes.Value,
-                Description.Statement),
             underlyingResults,
-            () => causes.Value);
+            trueBecause,
+            falseBecause,
+            description,
+            expression,
+            causeSelector);
     }
 
     private (BooleanResult<TModel, string>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

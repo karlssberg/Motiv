@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.BooleanResultPredicateProposition;
 
 internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TModel, TUnderlyingMetadata>(
@@ -20,31 +17,16 @@ internal sealed class BooleanResultPredicateWithSingleAssertionProposition<TMode
     protected override PolicyResultBase<string> EvaluatePolicy(TModel model)
     {
         var predicateResult = predicate(model);
-        BooleanResultBase<TUnderlyingMetadata>[] predicateResults = [predicateResult];
 
-        var because = new Lazy<string>(() =>
-            predicateResult.Satisfied switch
-            {
-                true => trueBecause,
-                false => whenFalse(model, predicateResult)
-            }, LazyThreadSafetyMode.None);
+        Func<TModel, BooleanResultBase<TUnderlyingMetadata>, string> becauseResolver =
+            predicateResult.Satisfied
+                ? (_, _) => trueBecause
+                : whenFalse;
 
-        var assertion = new Lazy<string>(() =>
-            because.Value.ElseFallback(() => Description.ToReason(predicateResult.Satisfied)), LazyThreadSafetyMode.None);
-
-        return new PolicyResultWithUnderlying<string, TUnderlyingMetadata>(
+        return new BooleanResultPredicateWithSingleAssertionPolicyResult<TModel, TUnderlyingMetadata>(
+            model,
             predicateResult,
-            () => because.Value,
-            () => new MetadataNode<string>(
-                because.Value.ToEnumerable(),
-                predicateResults as IEnumerable<BooleanResultBase<string>> ?? []),
-            () => new Explanation(
-                assertion.Value,
-                predicateResults,
-                predicateResults),
-            () => new BooleanResultDescriptionWithUnderlying(
-                predicateResult,
-                assertion.Value,
-                Description.Statement));
+            becauseResolver,
+            specDescription);
     }
 }

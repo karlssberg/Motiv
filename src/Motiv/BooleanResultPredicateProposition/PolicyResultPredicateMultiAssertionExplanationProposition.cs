@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.BooleanResultPredicateProposition;
 
 /// <summary>
@@ -40,33 +37,18 @@ internal sealed class PolicyResultPredicateMultiAssertionExplanationProposition<
     protected override BooleanResultBase<string> EvaluateSpec(TModel model)
     {
         var policyResult = underlyingPolicyResultPredicate(model);
-        PolicyResultBase<TUnderlyingMetadata>[] policyResults = [policyResult];
 
-        var metadataResolver =
+        var assertionsResolver =
             policyResult.Satisfied switch
             {
                 true => whenTrue,
                 false => whenFalse
             };
 
-        var metadata = new Lazy<string[]>(() => metadataResolver(model, policyResult).ToArray(), LazyThreadSafetyMode.None);
-
-        var assertions = new Lazy<string[]>(() =>
-            metadata.Value
-                .ElseFallback(() => Description.ToReason(policyResult.Satisfied))
-                .ToArray(), LazyThreadSafetyMode.None);
-
-        return new BooleanResultWithUnderlying<string,TUnderlyingMetadata>(
+        return new PolicyResultPredicateMultiAssertionExplanationBooleanResult<TModel, TUnderlyingMetadata>(
+            model,
             policyResult,
-            () => new MetadataNode<string>(metadata.Value,
-                policyResults as IEnumerable<BooleanResultBase<string>> ?? []),
-            () => new Explanation(
-                assertions.Value,
-                policyResults,
-                policyResults),
-            () => new BooleanResultDescriptionWithUnderlying(
-                policyResult,
-                Description.ToReason(policyResult.Satisfied),
-                Description.Statement));
+            assertionsResolver,
+            specDescription);
     }
 }

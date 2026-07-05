@@ -17,26 +17,12 @@ internal sealed class MinimalHigherOrderFromPolicyResultProposition<TModel, TMet
     protected override BooleanResultBase<TMetadata> EvaluateSpec(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
-        var causes = new Lazy<PolicyResult<TModel, TMetadata>[]>(() =>
-            causeSelector(isSatisfied, underlyingResults)
-                .ToArray(), LazyThreadSafetyMode.None);
 
-        var metadata = new Lazy<IEnumerable<TMetadata>>(() => causes.Value.Select(result => result.Value).ToArray(), LazyThreadSafetyMode.None);
-
-        return new HigherOrderBooleanResult<TMetadata, TMetadata>(
+        return new MinimalHigherOrderFromPolicyResultBooleanResult<TModel, TMetadata>(
             isSatisfied,
-            () => metadata.Value,
-            () => metadata.Value switch
-            {
-                IEnumerable<string> reasons => reasons,
-                _ => specDescription.ToReason(isSatisfied).ToEnumerable()
-            },
-            () => new HigherOrderResultDescription<TMetadata>(
-                specDescription.ToReason(isSatisfied),
-                causes.Value,
-                Description.Statement),
             underlyingResults,
-            () => causes.Value);
+            specDescription,
+            causeSelector);
     }
 
     private (PolicyResult<TModel, TMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

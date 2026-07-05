@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.BooleanResultPredicateProposition;
 
 /// <summary>
@@ -33,7 +30,6 @@ internal sealed class MinimalPolicyResultPredicateProposition<TModel, TMetadata>
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
         var booleanResult = underlyingPolicyResultPredicate(model);
-        PolicyResultBase<TMetadata>[] booleanResults = [booleanResult];
 
         var metadataResolver =
             booleanResult.Satisfied switch
@@ -42,27 +38,10 @@ internal sealed class MinimalPolicyResultPredicateProposition<TModel, TMetadata>
                 false => whenFalse
             };
 
-        var metadata = new Lazy<TMetadata>(() => metadataResolver(model, booleanResult), LazyThreadSafetyMode.None);
-
-        var assertions = new Lazy<string>(() =>
-            metadata.Value switch
-            {
-                string assertion => assertion,
-                _ => Description.ToReason(booleanResult.Satisfied)
-            }, LazyThreadSafetyMode.None);
-
-        return new PolicyResultWithUnderlying<TMetadata,TMetadata>(
+        return new MinimalPolicyResultPredicatePolicyResult<TModel, TMetadata>(
+            model,
             booleanResult,
-            () => metadata.Value,
-            () => new MetadataNode<TMetadata>(metadata.Value,
-                booleanResults as IEnumerable<PolicyResultBase<TMetadata>> ?? []),
-            () => new Explanation(
-                assertions.Value,
-                booleanResults,
-                booleanResults),
-            () => new BooleanResultDescriptionWithUnderlying(
-                booleanResult,
-                Description.ToReason(booleanResult.Satisfied),
-                Description.Statement));
+            metadataResolver,
+            specDescription);
     }
 }

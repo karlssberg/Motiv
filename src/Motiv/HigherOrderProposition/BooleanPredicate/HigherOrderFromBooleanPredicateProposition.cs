@@ -1,6 +1,3 @@
-using System.Threading;
-using Motiv.Shared;
-
 namespace Motiv.HigherOrderProposition.BooleanPredicate;
 
 internal sealed class HigherOrderFromBooleanPredicateProposition<TModel, TMetadata>(
@@ -22,27 +19,14 @@ internal sealed class HigherOrderFromBooleanPredicateProposition<TModel, TMetada
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(IEnumerable<TModel> models)
     {
         var (underlyingResults, isSatisfied) = EvaluateModels(models);
-        var metadataResolver = isSatisfied
-            ? whenTrue
-            : whenFalse;
 
-        var metadata = new Lazy<TMetadata>(() =>
-            {
-                var causes = causeSelector(isSatisfied, underlyingResults).ToArray();
-                var evaluation = new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causes);
-
-                return metadataResolver(evaluation);
-            }, LazyThreadSafetyMode.None);
-
-        var assertion = new Lazy<string>(() =>
-            specDescription.ToReason(isSatisfied), LazyThreadSafetyMode.None);
-
-        return new HigherOrderFromBooleanPredicatePolicyResult<TMetadata>(
+        return new HigherOrderFromBooleanPredicateMetadataPolicyResult<TModel, TMetadata>(
             isSatisfied,
-            () => metadata.Value,
-            () => new MetadataNode<TMetadata>(metadata.Value),
-            () => new Explanation(assertion.Value),
-            () => new BooleanResultDescription(assertion.Value, Description.Statement));
+            underlyingResults,
+            whenTrue,
+            whenFalse,
+            specDescription,
+            causeSelector);
     }
 
     private (ModelResult<TModel>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)

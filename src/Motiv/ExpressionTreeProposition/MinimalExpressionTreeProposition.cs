@@ -1,6 +1,4 @@
 using System.Linq.Expressions;
-using Motiv.BooleanPredicateProposition;
-using Motiv.Shared;
 
 namespace Motiv.ExpressionTreeProposition;
 
@@ -22,41 +20,20 @@ internal sealed class MinimalExpressionTreeProposition<TModel, TPredicateResult>
     protected override BooleanResultBase<string> EvaluateSpec(TModel model)
     {
         var result = _predicate.Execute(model);
-        BooleanResultBase<string>[] resultArray = [result];
 
-        var metadataResolver =
+        var assertionsResolver =
             result.Satisfied switch
             {
                 true => whenTrue,
                 false => whenFalse
             };
 
-        IEnumerable<string>? metadataResults = null;
-
-        return new PropositionBooleanResult<string>(
+        return new MinimalExpressionTreePropositionBooleanResult<TModel, TPredicateResult>(
             result.Satisfied,
-            () =>
-            {
-                metadataResults ??= metadataResolver(model, result);
-                return new MetadataNode<string>(metadataResults,
-                    resultArray as IEnumerable<BooleanResultBase<string>> ?? []);
-            },
-            () =>
-            {
-                metadataResults ??= metadataResolver(model, result);
-                var assertions = metadataResults switch
-                {
-                    IEnumerable<string> because => because,
-                    _ => result.Assertions
-                };
-                return new Explanation(
-                    assertions,
-                    result);
-            },
-            () => new ExpressionTreeBooleanResultDescription(
-                result,
-                description.ToReason(result.Satisfied),
-                expression,
-                Description.Statement));
+            model,
+            result,
+            assertionsResolver,
+            expression,
+            description);
     }
 }
