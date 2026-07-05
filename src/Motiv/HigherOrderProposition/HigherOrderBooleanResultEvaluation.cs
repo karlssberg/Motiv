@@ -17,12 +17,8 @@ public class HigherOrderBooleanResultEvaluation<TModel, TMetadata>
     private bool? _allSatisfied;
     private bool? _anySatisfied;
     private bool? _noneSatisfied;
-    private IReadOnlyList<TModel>? _allModels;
-    private IReadOnlyList<TModel>? _causalModels;
     private IReadOnlyList<BooleanResult<TModel, TMetadata>>? _trueResults;
     private IReadOnlyList<BooleanResult<TModel, TMetadata>>? _falseResults;
-    private IReadOnlyList<TModel>? _trueModels;
-    private IReadOnlyList<TModel>? _falseModels;
     private IReadOnlyList<string>? _assertions;
     private IReadOnlyList<TMetadata>? _metadata;
 
@@ -51,24 +47,24 @@ public class HigherOrderBooleanResultEvaluation<TModel, TMetadata>
     /// <summary>
     /// Gets the list of all models.
     /// </summary>
-    public IReadOnlyList<TModel> Models => _allModels ??= _results.Select(result => result.Model).ToArray();
+    public IReadOnlyList<TModel> Models => field ??= _results.Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets the list of models where the result is true.
     /// </summary>
-    public IReadOnlyList<TModel> TrueModels => _trueModels ??=
+    public IReadOnlyList<TModel> TrueModels => field ??=
         (_trueResults ??= _results.WhereTrue().ToArray()).Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets the list of models where the result is false.
     /// </summary>
-    public IReadOnlyList<TModel> FalseModels => _falseModels ??=
+    public IReadOnlyList<TModel> FalseModels => field ??=
         (_falseResults ??= _results.WhereFalse().ToArray()).Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets the list of causal models.
     /// </summary>
-    public IReadOnlyList<TModel> CausalModels => _causalModels ??= _causalResults.Select(result => result.Model).ToArray();
+    public IReadOnlyList<TModel> CausalModels => field ??= _causalResults.Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets the values associated with the evaluation.

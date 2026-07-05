@@ -12,11 +12,13 @@ internal sealed class HigherOrderExpressionTreeResultDescription<TUnderlyingMeta
     string propositionStatement)
     : HigherOrderResultDescriptionBase<TUnderlyingMetadata>(reason, causes, propositionStatement)
 {
+    private string Assertion => field ??= expression.ToAssertion(satisfied);
+
     public override IEnumerable<string> GetJustificationAsLines()
     {
         yield return Reason;
 
-        yield return $"{expression.ToAssertion(satisfied)} ({CausalOperandCount})".Indent();
+        yield return $"{Assertion} ({CausalOperandCount})".Indent();
 
         foreach (var line in GetUnderlyingJustificationsAsLines())
         {
@@ -28,7 +30,7 @@ internal sealed class HigherOrderExpressionTreeResultDescription<TUnderlyingMeta
     {
         yield return Reason;
 
-        yield return expression.ToAssertion(satisfied).Indent();
+        yield return Assertion.Indent();
 
         foreach (var line in GetUnderlyingJustificationsAsLines())
         {

@@ -11,7 +11,6 @@ public class MetadataNode<TMetadata>
 
     private readonly IEnumerable<TMetadata>? _metadataSource;
     private readonly IEnumerable<BooleanResultBase<TMetadata>>? _causes;
-    private IEnumerable<MetadataNode<TMetadata>>? _underlying;
     private ISet<TMetadata>? _metadataSet;
 
     /// <summary>Initializes a new instance of the MetadataNode class.</summary>
@@ -37,12 +36,12 @@ public class MetadataNode<TMetadata>
     /// <param name="metadata">The metadata to associate with this node.</param>
     internal MetadataNode(TMetadata metadata)
     {
-        _underlying = EmptyUnderlying;
+        Underlying = EmptyUnderlying;
         _metadataSet = new HashSet<TMetadata> { metadata };
     }
 
     /// <summary>Gets the underlying metadata nodes.</summary>
-    public IEnumerable<MetadataNode<TMetadata>> Underlying => _underlying ??= ResolveUnderlying(_metadataSource!, _causes!);
+    public IEnumerable<MetadataNode<TMetadata>> Underlying => field ??= ResolveUnderlying(_metadataSource!, _causes!);
 
     /// <summary>Gets the metadata associated with this node.</summary>
     public IEnumerable<TMetadata> Metadata => _metadataSet ??= _metadataSource switch

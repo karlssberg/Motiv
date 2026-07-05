@@ -4,12 +4,9 @@ namespace Motiv.Not;
 
 internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMetadata> operand) : ISpecDescription
 {
-    private string? _statement;
-    private string? _detailed;
+    public string Statement => field ??= FormatStatement();
 
-    public string Statement => _statement ??= FormatStatement();
-
-    public string Detailed => _detailed ??= string.Join(Environment.NewLine, GetDetailsAsLines());
+    public string Detailed => field ??= string.Join(Environment.NewLine, GetDetailsAsLines());
 
     public IEnumerable<string> GetDetailsAsLines()
     {

@@ -8,7 +8,8 @@ internal abstract class HigherOrderResultDescriptionBase<TUnderlyingMetadata>(
     string propositionStatement)
     : ResultDescriptionBase
 {
-    private readonly BooleanResultBase<TUnderlyingMetadata>[] _causes = causes.ToArray();
+    private readonly BooleanResultBase<TUnderlyingMetadata>[] _causes =
+        causes as BooleanResultBase<TUnderlyingMetadata>[] ?? causes.ToArray();
 
     internal override int CausalOperandCount => _causes.Length;
 
@@ -16,22 +17,21 @@ internal abstract class HigherOrderResultDescriptionBase<TUnderlyingMetadata>(
 
     public override string Reason => reason;
 
-    protected IEnumerable<string> GetUnderlyingJustificationsAsLines() =>
-        _causes
-            .DistinctWithOrderPreserved(result => result.Justification)
-            .SelectMany(cause => cause.Description.GetJustificationAsLines());
-
-    protected IEnumerable<string> GetUnderlyingJustificationsWithCountsAsLines()
-    {
-        var distinctCauses = _causes
+    private BooleanResultBase<TUnderlyingMetadata>[] DistinctCauses =>
+        field ??= _causes
             .DistinctWithOrderPreserved(result => result.Justification)
             .ToArray();
 
-        if (distinctCauses.Length > 1)
-            return distinctCauses
+    protected IEnumerable<string> GetUnderlyingJustificationsAsLines() =>
+        DistinctCauses.SelectMany(cause => cause.Description.GetJustificationAsLines());
+
+    protected IEnumerable<string> GetUnderlyingJustificationsWithCountsAsLines()
+    {
+        if (DistinctCauses.Length > 1)
+            return DistinctCauses
                 .SelectMany(cause => cause.Description.GetJustificationAsLines());
 
-        return distinctCauses
+        return DistinctCauses
             .SelectMany(cause => cause.Description
                 .GetJustificationAsLines()
                 .ReplaceFirstLine(line => $"{line} ({_causes.Length})"));

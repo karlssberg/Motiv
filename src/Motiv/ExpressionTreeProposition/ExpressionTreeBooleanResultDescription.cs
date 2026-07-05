@@ -10,11 +10,13 @@ internal sealed class ExpressionTreeBooleanResultDescription(
     string propositionalStatement)
     : ResultDescriptionWithUnderlying(booleanResult, reason, propositionalStatement)
 {
+    private string Assertion => field ??= expression.ToAssertion(BooleanResult.Satisfied);
+
     public override IEnumerable<string> GetJustificationAsLines()
     {
         if (IsReasonTheSameAsUnderlying())
         {
-            yield return expression.ToAssertion(BooleanResult.Satisfied);
+            yield return Assertion;
             foreach (var line in BooleanResult.Description.GetJustificationAsLinesWithoutCausalCount())
                 yield return line.Indent();
 
@@ -22,7 +24,7 @@ internal sealed class ExpressionTreeBooleanResultDescription(
         }
 
         yield return Reason;
-        yield return expression.ToAssertion(BooleanResult.Satisfied).Indent();
+        yield return Assertion.Indent();
         foreach (var line in BooleanResult.Description.GetJustificationAsLinesWithoutCausalCount())
             yield return line.Indent(2);
     }

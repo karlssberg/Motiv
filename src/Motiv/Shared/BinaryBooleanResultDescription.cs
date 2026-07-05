@@ -5,12 +5,11 @@ internal abstract class BinaryBooleanResultDescription<TMetadata>(
     : ResultDescriptionBase
 {
     private readonly BooleanResultBase<TMetadata>[] _causalResults = causalResults.ToArray();
-    private string? _reason;
 
     internal override int CausalOperandCount => _causalResults.Length;
 
     public override string Reason =>
-        _reason ??= CausalOperandCount switch
+        field ??= CausalOperandCount switch
         {
             0 => "",
             1 => _causalResults[0].Description.Reason,

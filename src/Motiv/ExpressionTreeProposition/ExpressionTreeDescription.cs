@@ -8,11 +8,9 @@ internal class ExpressionTreeDescription<TModel, TPredicateResult>(
     ISpecDescription? underlyingDescription = null)
     : ISpecDescription
 {
-    private string? _detailed;
-
     public string Statement { get; } = expression.Body.Serialize();
 
-    public string Detailed => _detailed ??= string.Join(Environment.NewLine, GetDetailsAsLines());
+    public string Detailed => field ??= string.Join(Environment.NewLine, GetDetailsAsLines());
 
     public IEnumerable<string> GetDetailsAsLines()
     {

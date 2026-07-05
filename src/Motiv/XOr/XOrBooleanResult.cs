@@ -11,9 +11,8 @@ internal sealed class XOrBooleanResult<TMetadata>(
 {
     public override bool Satisfied { get; } = left.Satisfied ^ right.Satisfied;
 
-    private ResultDescriptionBase? _description;
     public override ResultDescriptionBase Description =>
-        _description ??= new XOrBooleanResultDescription<TMetadata>(Left, Right!);
+        field ??= new XOrBooleanResultDescription<TMetadata>(Left, Right!);
 
     public override string Operation => Operator.XOr;
 

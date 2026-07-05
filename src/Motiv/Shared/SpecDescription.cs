@@ -2,13 +2,12 @@ namespace Motiv.Shared;
 
 internal sealed class SpecDescription(string statement, ISpecDescription? underlyingDescription = null) : ISpecDescription
 {
-    private string? _detailed;
     private string? _satisfiedReason;
     private string? _unsatisfiedReason;
 
     public string Statement => statement;
 
-    public string Detailed => _detailed ??= string.Join(Environment.NewLine, GetDetailsAsLines());
+    public string Detailed => field ??= string.Join(Environment.NewLine, GetDetailsAsLines());
 
     public IEnumerable<string> GetDetailsAsLines()
     {

@@ -12,10 +12,6 @@ public sealed class HigherOrderBooleanEvaluation<TModel>
     private bool? _allSatisfied;
     private bool? _anySatisfied;
     private bool? _noneSatisfied;
-    private IReadOnlyList<TModel>? _allModels;
-    private IReadOnlyList<TModel>? _causalModels;
-    private IReadOnlyList<TModel>? _trueModels;
-    private IReadOnlyList<TModel>? _falseModels;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="HigherOrderBooleanEvaluation{TModel}"/> class.
@@ -48,22 +44,22 @@ public sealed class HigherOrderBooleanEvaluation<TModel>
     /// <summary>
     /// Gets all models.
     /// </summary>
-    public IReadOnlyList<TModel> Models => _allModels ??= _allResults.Select(result => result.Model).ToArray();
+    public IReadOnlyList<TModel> Models => field ??= _allResults.Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets all models that are true.
     /// </summary>
-    public IReadOnlyList<TModel> TrueModels => _trueModels ??= _allResults.WhereTrue().Select(result => result.Model).ToArray();
+    public IReadOnlyList<TModel> TrueModels => field ??= _allResults.WhereTrue().Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets all models that are false.
     /// </summary>
-    public IReadOnlyList<TModel> FalseModels => _falseModels ??= _allResults.WhereFalse().Select(result => result.Model).ToArray();
+    public IReadOnlyList<TModel> FalseModels => field ??= _allResults.WhereFalse().Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets all causal models.
     /// </summary>
-    public IReadOnlyList<TModel> CausalModels => _causalModels ??= _causalResults.Select(result => result.Model).ToArray();
+    public IReadOnlyList<TModel> CausalModels => field ??= _causalResults.Select(result => result.Model).ToArray();
 
     /// <summary>
     /// Gets the total count of all results.
