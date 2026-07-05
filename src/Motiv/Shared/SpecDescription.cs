@@ -3,6 +3,8 @@ namespace Motiv.Shared;
 internal sealed class SpecDescription(string statement, ISpecDescription? underlyingDescription = null) : ISpecDescription
 {
     private string? _detailed;
+    private string? _satisfiedReason;
+    private string? _unsatisfiedReason;
 
     public string Statement => statement;
 
@@ -18,7 +20,9 @@ internal sealed class SpecDescription(string statement, ISpecDescription? underl
             yield return line.Indent();
     }
 
-    public string ToReason(bool satisfied) => Statement.ToReason(satisfied);
+    public string ToReason(bool satisfied) => satisfied
+        ? _satisfiedReason ??= Statement.ToReason(true)
+        : _unsatisfiedReason ??= Statement.ToReason(false);
 
     public override string ToString() => Statement;
 }

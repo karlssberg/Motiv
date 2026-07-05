@@ -32,12 +32,9 @@ internal static class HigherOrderPredicatePolicyMethods
     [FluentMethodTemplate]
     internal static HigherOrderPolicyPredicateOperation<TModel, TUnderlyingMetadata> AsAllSatisfied<TModel, TUnderlyingMetadata>()
     {
-        Func<IEnumerable<PolicyResult<TModel,TUnderlyingMetadata>>,bool> higherOrderPredicate =
-            policyResults => policyResults.AllTrue();
-
         return new HigherOrderPolicyPredicateOperation<TModel, TUnderlyingMetadata>(
-            higherOrderPredicate,
-            (isSatisfied, results) => Causes.Get(isSatisfied, results, higherOrderPredicate));
+            policyResults => policyResults.AllTrue(),
+            (isSatisfied, results) => isSatisfied ? results : results.WhereFalse());
     }
 
     /// <summary>
@@ -49,12 +46,9 @@ internal static class HigherOrderPredicatePolicyMethods
     [FluentMethodTemplate]
     internal static HigherOrderPolicyPredicateOperation<TModel, TUnderlyingMetadata> AsAnySatisfied<TModel, TUnderlyingMetadata>()
     {
-        Func<IEnumerable<PolicyResult<TModel,TUnderlyingMetadata>>,bool> higherOrderPredicate =
-            policyResults => policyResults.AnyTrue();
-
         return new HigherOrderPolicyPredicateOperation<TModel, TUnderlyingMetadata>(
-            higherOrderPredicate,
-            (isSatisfied, results) => Causes.Get(isSatisfied, results, higherOrderPredicate));
+            policyResults => policyResults.AnyTrue(),
+            (isSatisfied, results) => isSatisfied ? results.WhereTrue() : results);
     }
 
     /// <summary>
@@ -71,19 +65,10 @@ internal static class HigherOrderPredicatePolicyMethods
 
         return new HigherOrderPolicyPredicateOperation<TModel, TUnderlyingMetadata>(
             HigherOrderPredicate,
-            CauseSelector);
+            (_, results) => Causes.SatisfiedElseAll(results));
 
         bool HigherOrderPredicate(IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>> policyResults) =>
-            policyResults.CountTrue() >= n;
-
-        IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>> CauseSelector(bool _, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>> policyResults)
-        {
-            var policyResultsArray = policyResults.ToArray();
-            return policyResultsArray
-                .WhereTrue()
-                .ElseIfEmpty(policyResultsArray);
-        }
-    }
+            policyResults.CountTrue() >= n;    }
 
     /// <summary>
     /// Creates a higher order proposition which is satisfied if at most 'n' of the underlying propositions are satisfied.
@@ -99,19 +84,10 @@ internal static class HigherOrderPredicatePolicyMethods
 
         return new HigherOrderPolicyPredicateOperation<TModel, TUnderlyingMetadata>(
             HigherOrderPredicate,
-            CauseSelector);
+            (_, results) => Causes.SatisfiedElseAll(results));
 
         bool HigherOrderPredicate(IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>> policyResults) =>
-            policyResults.CountTrue() <= n;
-
-        IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>> CauseSelector(bool _, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>> policyResults)
-        {
-            var policyResultsArray = policyResults.ToArray();
-            return policyResultsArray
-                .WhereTrue()
-                .ElseIfEmpty(policyResultsArray);
-        }
-    }
+            policyResults.CountTrue() <= n;    }
 
     /// <summary>
     /// Creates a higher order proposition that is satisfied if none of the underlying propositions are satisfied.
@@ -122,12 +98,9 @@ internal static class HigherOrderPredicatePolicyMethods
     [FluentMethodTemplate]
     internal static HigherOrderPolicyPredicateOperation<TModel, TUnderlyingMetadata> AsNoneSatisfied<TModel, TUnderlyingMetadata>()
     {
-        Func<IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate =
-            policyResults => policyResults.AllFalse();
-
         return new HigherOrderPolicyPredicateOperation<TModel, TUnderlyingMetadata>(
-            higherOrderPredicate,
-            (isSatisfied, results) => Causes.Get(isSatisfied, results, higherOrderPredicate));
+            policyResults => policyResults.AllFalse(),
+            (isSatisfied, results) => isSatisfied ? results : results.WhereTrue());
     }
 
     /// <summary>
@@ -144,17 +117,8 @@ internal static class HigherOrderPredicatePolicyMethods
 
         return new HigherOrderPolicyPredicateOperation<TModel, TUnderlyingMetadata>(
             HigherOrderPredicate,
-            CauseSelector);
+            (_, results) => Causes.SatisfiedElseAll(results));
 
         bool HigherOrderPredicate(IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>> policyResults) =>
-            policyResults.CountTrue() == n;
-
-        IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>> CauseSelector(bool _, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>> policyResults)
-        {
-            var policyResultsArray = policyResults.ToArray();
-            return policyResultsArray
-                .WhereTrue()
-                .ElseIfEmpty(policyResultsArray);
-        }
-    }
+            policyResults.CountTrue() == n;    }
 }

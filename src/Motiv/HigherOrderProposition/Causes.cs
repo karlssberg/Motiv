@@ -20,6 +20,29 @@ internal static class Causes
         Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate) =>
         Resolve(isSatisfied, operandResults, higherOrderPredicate, result => result.Satisfied);
 
+    /// <summary>
+    ///     Selects the satisfied results as the causes, falling back to all results when none are satisfied.
+    ///     Used by the count-based higher-order propositions (at-least-n, at-most-n, exactly-n).
+    /// </summary>
+    internal static IEnumerable<TBooleanResult> SatisfiedElseAll<TBooleanResult>(
+        IEnumerable<TBooleanResult> results)
+        where TBooleanResult : BooleanResultBase
+    {
+        var resultsArray = results as TBooleanResult[] ?? results.ToArray();
+        return resultsArray.WhereTrue().ElseIfEmpty(resultsArray);
+    }
+
+    /// <summary>
+    ///     Selects the satisfied results as the causes, falling back to all results when none are satisfied.
+    ///     Used by the count-based higher-order propositions (at-least-n, at-most-n, exactly-n).
+    /// </summary>
+    internal static IEnumerable<ModelResult<TModel>> SatisfiedElseAll<TModel>(
+        IEnumerable<ModelResult<TModel>> results)
+    {
+        var resultsArray = results as ModelResult<TModel>[] ?? results.ToArray();
+        return resultsArray.WhereTrue().ElseIfEmpty(resultsArray);
+    }
+
     private static IEnumerable<T> Resolve<T>(
         bool isSatisfied,
         IEnumerable<T> operandResults,

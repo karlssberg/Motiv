@@ -19,7 +19,6 @@ public class BooleanResultsCollection<TModel, TMetadata>
     : IEnumerable<TModel>
 {
     private readonly BooleanResult<TModel, TMetadata>[] _results;
-    private readonly BooleanResult<TModel, TMetadata>[] _satisfied;
 
     private TModel[]? _models;
     private TMetadata[]? _values;
@@ -33,7 +32,6 @@ public class BooleanResultsCollection<TModel, TMetadata>
     public BooleanResultsCollection(IEnumerable<BooleanResult<TModel, TMetadata>> results)
     {
         _results = results as BooleanResult<TModel, TMetadata>[] ?? results.ToArray();
-        _satisfied = _results.Where(r => r.Satisfied).ToArray();
     }
 
     /// <summary>
@@ -66,7 +64,7 @@ public class BooleanResultsCollection<TModel, TMetadata>
     /// <inheritdoc cref="IEnumerable{T}.GetEnumerator" />
     public IEnumerator<TModel> GetEnumerator()
     {
-        var models = _satisfiedModels ??= _satisfied.Select(r => r.Model).ToArray();
+        var models = _satisfiedModels ??= _results.Where(r => r.Satisfied).Select(r => r.Model).ToArray();
         return ((IEnumerable<TModel>)models).GetEnumerator();
     }
 

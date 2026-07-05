@@ -19,5 +19,7 @@ internal sealed class XOrBooleanResult<TMetadata>(
 
     public override bool IsCollapsable => false;
 
-    protected override IEnumerable<BooleanResultBase<TMetadata>> GetCausalResults() => GetAllResults();
+    // XOR always shows both operands, so the causal and full result arrays are intentionally the
+    // same instance — neither is ever mutated.
+    protected override BooleanResultBase<TMetadata>[] GetCausalResults() => AllResults;
 }

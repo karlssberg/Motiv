@@ -15,7 +15,9 @@ internal sealed class XOrSpec<TModel, TMetadata>(
 
     public override IEnumerable<SpecBase> Underlying => _underlying;
 
-    public override ISpecDescription Description =>
+    private ISpecDescription? _description;
+
+    public override ISpecDescription Description => _description ??=
         new BinarySpecDescription<TModel, TMetadata>(left, right, "^", Operator.XOr,
             operand => operand is XOrSpec<TModel, TMetadata> or ExpressionXOrSpec<TModel, TMetadata>);
 

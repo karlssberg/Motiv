@@ -31,12 +31,9 @@ internal static class HigherOrderBooleanPredicateSpecMethods
     [FluentMethodTemplate]
     internal static HigherOrderSpecBooleanPredicateOperation<TModel> AsAllSatisfied<TModel>()
     {
-        Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate =
-            modelResult => modelResult.AllTrue();
-
         return new HigherOrderSpecBooleanPredicateOperation<TModel>(
-            higherOrderPredicate,
-            (isSatisfied, results) => Causes.Get(isSatisfied, results, higherOrderPredicate));
+            modelResult => modelResult.AllTrue(),
+            (isSatisfied, results) => isSatisfied ? results : results.WhereFalse());
     }
 
     /// <summary>
@@ -47,12 +44,9 @@ internal static class HigherOrderBooleanPredicateSpecMethods
     [FluentMethodTemplate]
     internal static HigherOrderSpecBooleanPredicateOperation<TModel> AsAnySatisfied<TModel>()
     {
-        Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate =
-            modelResults => modelResults.AnyTrue();
-
         return new HigherOrderSpecBooleanPredicateOperation<TModel>(
-            higherOrderPredicate,
-            (isSatisfied, results) => Causes.Get(isSatisfied, results, higherOrderPredicate));
+            modelResults => modelResults.AnyTrue(),
+            (isSatisfied, results) => isSatisfied ? results.WhereTrue() : results);
     }
 
     /// <summary>
@@ -68,19 +62,10 @@ internal static class HigherOrderBooleanPredicateSpecMethods
 
         return new HigherOrderSpecBooleanPredicateOperation<TModel>(
             HigherOrderPredicate,
-            CauseSelector);
+            (_, results) => Causes.SatisfiedElseAll(results));
 
         bool HigherOrderPredicate(IEnumerable<ModelResult<TModel>> modelResults) =>
-            modelResults.CountTrue() >= n;
-
-        IEnumerable<ModelResult<TModel>> CauseSelector(bool _, IEnumerable<ModelResult<TModel>> modelResults)
-        {
-            var modelResultsArray = modelResults.ToArray();
-            return modelResultsArray
-                .WhereTrue()
-                .ElseIfEmpty(modelResultsArray);
-        }
-    }
+            modelResults.CountTrue() >= n;    }
 
     /// <summary>
     /// Creates a higher order proposition which is satisfied if at most 'n' of the underlying propositions are satisfied.
@@ -95,19 +80,10 @@ internal static class HigherOrderBooleanPredicateSpecMethods
 
         return new HigherOrderSpecBooleanPredicateOperation<TModel>(
             HigherOrderPredicate,
-            CauseSelector);
+            (_, results) => Causes.SatisfiedElseAll(results));
 
         bool HigherOrderPredicate(IEnumerable<ModelResult<TModel>> modelResults) =>
-            modelResults.CountTrue() <= n;
-
-        IEnumerable<ModelResult<TModel>> CauseSelector(bool _, IEnumerable<ModelResult<TModel>> modelResults)
-        {
-            var modelResultsArray = modelResults.ToArray();
-            return modelResultsArray
-                .WhereTrue()
-                .ElseIfEmpty(modelResultsArray);
-        }
-    }
+            modelResults.CountTrue() <= n;    }
 
     /// <summary>
     /// Creates a higher order proposition that is satisfied if none of the underlying propositions are satisfied.
@@ -117,12 +93,9 @@ internal static class HigherOrderBooleanPredicateSpecMethods
     [FluentMethodTemplate]
     internal static HigherOrderSpecBooleanPredicateOperation<TModel> AsNoneSatisfied<TModel>()
     {
-        Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate =
-            modelResults => modelResults.AllFalse();
-
         return new HigherOrderSpecBooleanPredicateOperation<TModel>(
-            higherOrderPredicate,
-            (isSatisfied, results) => Causes.Get(isSatisfied, results, higherOrderPredicate));
+            modelResults => modelResults.AllFalse(),
+            (isSatisfied, results) => isSatisfied ? results : results.WhereTrue());
     }
 
     /// <summary>
@@ -138,17 +111,8 @@ internal static class HigherOrderBooleanPredicateSpecMethods
 
         return new HigherOrderSpecBooleanPredicateOperation<TModel>(
             HigherOrderPredicate,
-            CauseSelector);
+            (_, results) => Causes.SatisfiedElseAll(results));
 
         bool HigherOrderPredicate(IEnumerable<ModelResult<TModel>> modelResults) =>
-            modelResults.CountTrue() == n;
-
-        IEnumerable<ModelResult<TModel>> CauseSelector(bool _, IEnumerable<ModelResult<TModel>> modelResults)
-        {
-            var modelResultsArray = modelResults.ToArray();
-            return modelResultsArray
-                .WhereTrue()
-                .ElseIfEmpty(modelResultsArray);
-        }
-    }
+            modelResults.CountTrue() == n;    }
 }

@@ -13,7 +13,9 @@ internal sealed class NotPolicy<TModel, TMetadata>(
 
     public override IEnumerable<SpecBase> Underlying => _underlying;
 
-    public override ISpecDescription Description =>
+    private ISpecDescription? _description;
+
+    public override ISpecDescription Description => _description ??=
         new NotSpecDescription<TModel, TMetadata>(operand);
 
     string IBooleanOperationSpec.Operation => Operator.Not;
