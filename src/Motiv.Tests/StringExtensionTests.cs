@@ -38,4 +38,29 @@ public class StringExtensionTests
 
         act.ShouldBe(expected);
     }
+
+    [Theory]
+    [InlineData("", new string?[] { null })]
+    [InlineData(" and b", new[] { null, "b" })]
+    [InlineData("a and ", new[] { "a", null })]
+    [InlineData(" and ", new string?[] { null, null })]
+    [InlineData("a, , and c", new[] { "a", null, "c" })]
+    [InlineData(", a, and ", new[] { null, "a", null })]
+    public void Should_serialize_null_items_as_empty_strings(string expected, string?[] collection)
+    {
+        var act = collection.Serialize();
+
+        act.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("", new[] { "" })]
+    [InlineData(" and b", new[] { "", "b" })]
+    [InlineData("a, , and c", new[] { "a", "", "c" })]
+    public void Should_serialize_empty_string_items_verbatim(string expected, string[] collection)
+    {
+        var act = collection.Serialize();
+
+        act.ShouldBe(expected);
+    }
 }
