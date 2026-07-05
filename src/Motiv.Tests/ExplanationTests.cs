@@ -503,7 +503,7 @@ public class ExplanationTests
     [Theory]
     [InlineData(2, "even")]
     [InlineData(3, "odd")]
-    public void Should_ensure_there_are_no_superfluous_descendants_of_explanations(int model, string expected)
+    public void Should_retain_underlying_explanations_as_descendants_when_using_named_decorators(int model, string expected)
     {
         // Arrange
         var isEven =
