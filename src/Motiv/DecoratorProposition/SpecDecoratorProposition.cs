@@ -33,11 +33,7 @@ internal sealed class SpecDecoratorProposition<TModel, TMetadata, TUnderlyingMet
         var lazyMetadata = new Lazy<TMetadata>(() => metadataResolver(model, booleanResult), LazyThreadSafetyMode.None);
 
         var assertion = new Lazy<string>(() =>
-            lazyMetadata.Value switch
-            {
-                string because => because,
-                _ => Description.ToReason(booleanResult.Satisfied)
-            }, LazyThreadSafetyMode.None);
+            Description.ToReason(booleanResult.Satisfied), LazyThreadSafetyMode.None);
 
         return new PolicyResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             booleanResult,

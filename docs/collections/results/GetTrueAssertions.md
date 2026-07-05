@@ -18,6 +18,6 @@ var spec =
               .WhenFalse("none")
               .Create("xor");
 
-spec.Evaluate(true).Assertions;  // ["left"]
-spec.Evaluate(false).Assertions;  // ["right"]
+spec.Evaluate(true).Values;  // ["left == true"]
+spec.Evaluate(false).Values;  // ["right == true"]
 ```

@@ -3,12 +3,17 @@ using Motiv.Shared;
 
 namespace Motiv.DecoratorProposition;
 
-internal sealed class PolicyDecoratorMultiMetadataProposition<TModel, TMetadata, TUnderlyingMetadata>(
+/// <summary>
+/// Represents a proposition that yields a collection of assertions based on the result of an underlying policy. The
+/// because-strings double as the assertions; degenerate (null/empty/whitespace) strings fall back to the
+/// statement-derived reason.
+/// </summary>
+internal sealed class PolicyDecoratorMultiAssertionExplanationProposition<TModel, TUnderlyingMetadata>(
     PolicyBase<TModel, TUnderlyingMetadata> underlyingSpec,
-    Func<TModel, PolicyResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenTrue,
-    Func<TModel, PolicyResultBase<TUnderlyingMetadata>, IEnumerable<TMetadata>> whenFalse,
+    Func<TModel, PolicyResultBase<TUnderlyingMetadata>, IEnumerable<string>> whenTrue,
+    Func<TModel, PolicyResultBase<TUnderlyingMetadata>, IEnumerable<string>> whenFalse,
     ISpecDescription description)
-    : SpecBase<TModel, TMetadata>
+    : SpecBase<TModel, string>
 {
     private readonly SpecBase[] _underlying = [underlyingSpec];
 
@@ -18,12 +23,12 @@ internal sealed class PolicyDecoratorMultiMetadataProposition<TModel, TMetadata,
 
     public override bool Matches(TModel model) => underlyingSpec.Matches(model);
 
-    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
+    protected override BooleanResultBase<string> EvaluateSpec(TModel model)
     {
         var booleanResult = underlyingSpec.Evaluate(model);
         PolicyResultBase<TUnderlyingMetadata>[] booleanResults = [booleanResult];
 
-        var metadata = new Lazy<IEnumerable<TMetadata>>(() =>
+        var metadata = new Lazy<IEnumerable<string>>(() =>
             booleanResult.Satisfied switch
             {
                 true => whenTrue(model, booleanResult),
@@ -31,12 +36,14 @@ internal sealed class PolicyDecoratorMultiMetadataProposition<TModel, TMetadata,
             }, LazyThreadSafetyMode.None);
 
         var assertions = new Lazy<string[]>(() =>
-            [Description.ToReason(booleanResult.Satisfied)], LazyThreadSafetyMode.None);
+            metadata.Value
+                .ElseFallback(() => Description.ToReason(booleanResult.Satisfied))
+                .ToArray(), LazyThreadSafetyMode.None);
 
-        return new BooleanResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
+        return new BooleanResultWithUnderlying<string, TUnderlyingMetadata>(
             booleanResult,
-            () => new MetadataNode<TMetadata>(metadata.Value,
-                booleanResults as IEnumerable<BooleanResultBase<TMetadata>> ?? []),
+            () => new MetadataNode<string>(metadata.Value,
+                booleanResults as IEnumerable<BooleanResultBase<string>> ?? []),
             () => new Explanation(
                 assertions.Value,
                 booleanResults,

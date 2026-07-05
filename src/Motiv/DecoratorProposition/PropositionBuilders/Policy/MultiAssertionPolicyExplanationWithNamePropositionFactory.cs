@@ -37,12 +37,15 @@ public readonly struct MultiAssertionPolicyExplanationWithNamePropositionFactory
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create() =>
-        new PolicyDecoratorMultiMetadataProposition<TModel, string, TMetadata>(
+    public SpecBase<TModel, string> Create()
+    {
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new PolicyDecoratorMultiAssertionExplanationProposition<TModel, TMetadata>(
             spec,
             trueBecause
                 .ToEnumerable()
-                .ToFunc<TModel, BooleanResultBase<TMetadata>, IEnumerable<string>>(),
+                .ToFunc<TModel, PolicyResultBase<TMetadata>, IEnumerable<string>>(),
             falseBecause,
             new SpecDescription(trueBecause, spec.Description));
+    }
 }

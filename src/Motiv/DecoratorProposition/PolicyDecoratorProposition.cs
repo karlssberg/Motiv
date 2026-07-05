@@ -33,11 +33,7 @@ internal sealed class PolicyDecoratorProposition<TModel, TMetadata, TUnderlyingM
         var lazyMetadata = new Lazy<TMetadata>(() => valueResolver(model, policyResult), LazyThreadSafetyMode.None);
 
         var assertion = new Lazy<string>(() =>
-            lazyMetadata.Value switch
-            {
-                string because => because,
-                _ => Description.ToReason(policyResult.Satisfied)
-            }, LazyThreadSafetyMode.None);
+            Description.ToReason(policyResult.Satisfied), LazyThreadSafetyMode.None);
 
         return new PolicyResultWithUnderlying<TMetadata, TUnderlyingMetadata>(
             policyResult,

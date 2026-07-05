@@ -278,8 +278,8 @@ public class SpecTests
 
 
     [Theory]
-    [InlineAutoData(true, "underlying true")]
-    [InlineAutoData(false, "underlying false")]
+    [InlineAutoData(true, "is true == true")]
+    [InlineAutoData(false, "is true == false")]
     public void Should_return_the_assertions(
         bool model,
         string expectedAssertion)
@@ -307,8 +307,8 @@ public class SpecTests
     }
 
     [Theory]
-    [InlineAutoData(true, "underlying true")]
-    [InlineAutoData(false, "underlying false")]
+    [InlineAutoData(true, "is true == true")]
+    [InlineAutoData(false, "is true == false")]
     public void Should_return_a_result_that_explains_the_result(bool model,string expectedDescription)
     {
         // Arrange

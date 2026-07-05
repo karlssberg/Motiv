@@ -23,11 +23,15 @@ public readonly struct NamedSpecPropositionFactory<TModel, TMetadata>(
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>A proposition for the model.</returns>
-    public PolicyBase<TModel, string> Create() =>
-        new PolicyDecoratorWithSingleTrueAssertionProposition<TModel,TMetadata>(
+    public PolicyBase<TModel, string> Create()
+    {
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new PolicyDecoratorWithSingleTrueAssertionProposition<TModel, TMetadata>(
             policy,
             trueBecause,
-            falseBecause);
+            falseBecause,
+            new SpecDescription(trueBecause, policy.Description));
+    }
 
     /// <summary>
     /// Creates a proposition with descriptive assertions, but using the supplied proposition to succinctly explain
@@ -37,9 +41,9 @@ public readonly struct NamedSpecPropositionFactory<TModel, TMetadata>(
     /// <remarks>It is best to use short phrases in natural-language, as if you were naming a boolean variable.</remarks>
     /// <returns>A proposition for the model.</returns>
     public PolicyBase<TModel, string> Create(string statement) =>
-        new PolicyDecoratorWithSingleTrueAssertionProposition<TModel, TMetadata>(
+        new PolicyDecoratorProposition<TModel, string, TMetadata>(
             policy,
-            trueBecause,
+            trueBecause.ToFunc<TModel, PolicyResultBase<TMetadata>, string>(),
             falseBecause,
-            statement.ThrowIfNullOrWhitespace(nameof(statement)));
+            new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement)), policy.Description) { HasExplicitStatement = true });
 }

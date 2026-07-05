@@ -581,8 +581,8 @@ public class TutorialTests
                 .WhenFalse("none")
                 .Create("xor");
 
-        spec.Evaluate(true).Assertions.ShouldBe(["left == true"]);
-        spec.Evaluate(false).Assertions.ShouldBe(["right == true"]);
+        spec.Evaluate(true).Values.ShouldBe(["left == true"]);
+        spec.Evaluate(false).Values.ShouldBe(["right == true"]);
     }
 
     [Fact]
@@ -597,8 +597,8 @@ public class TutorialTests
                 .WhenFalse("none")
                 .Create("xor");
 
-        spec.Evaluate(true).Assertions.ShouldBe(["right == false"]);
-        spec.Evaluate(false).Assertions.ShouldBe(["left == false"]);
+        spec.Evaluate(true).Values.ShouldBe(["right == false"]);
+        spec.Evaluate(false).Values.ShouldBe(["left == false"]);
     }
 
     [Fact]

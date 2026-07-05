@@ -290,8 +290,8 @@ public class ExplanationTests
 
 
     [Theory]
-    [InlineData(1, "odd")]
-    [InlineData(2, "even")]
+    [InlineData(1, "is even wrapper 2 == false")]
+    [InlineData(2, "is even wrapper 2 == true")]
     public void Should_forward_assertions_when_using_basic_explanation_propositions(int model, string expected)
     {
         // Arrange
@@ -417,8 +417,8 @@ public class ExplanationTests
     }
 
     [Theory]
-    [InlineData(2, "even")]
-    [InlineData(3, "odd")]
+    [InlineData(2, "third even == true")]
+    [InlineData(3, "third even == false")]
     public void Should_not_have_duplicate_assertions_in_explanation(int model, string expected)
     {
         // Arrange
@@ -501,9 +501,9 @@ public class ExplanationTests
     }
 
     [Theory]
-    [InlineData(2)]
-    [InlineData(3)]
-    public void Should_ensure_there_are_no_superfluous_descendants_of_explanations(int model)
+    [InlineData(2, "even")]
+    [InlineData(3, "odd")]
+    public void Should_ensure_there_are_no_superfluous_descendants_of_explanations(int model, string expected)
     {
         // Arrange
         var isEven =
@@ -536,9 +536,9 @@ public class ExplanationTests
         var result = thirdEven.Evaluate([model]);
 
         // Act
-        var act = result.Explanation.Underlying.SelectMany(explanation => explanation.Underlying);
+        var act = result.Explanation.Underlying.SelectMany(explanation => explanation.Underlying).GetAssertions();
 
         // Assert
-        act.ShouldBeEmpty();
+        act.ShouldBe([expected]);
     }
 }

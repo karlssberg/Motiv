@@ -1684,7 +1684,7 @@ public class SpecDecoratorPropositionTests
         var result = spec.Evaluate(model);
 
         // Act
-        var act = result.Assertions;
+        var act = result.Values;
 
         // Assert
         act.ShouldBe([expectedLeft, expectedRight]);
@@ -1719,7 +1719,7 @@ public class SpecDecoratorPropositionTests
         var result = spec.Evaluate(model);
 
         // Act
-        var act = result.Assertions;
+        var act = result.Values;
 
         // Assert
         act.ShouldBe([expectedLeft, expectedRight]);

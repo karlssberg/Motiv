@@ -40,10 +40,13 @@ public readonly struct MultiAssertionSpecExplanationWithNamePropositionFactory<T
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>A proposition for the model.</returns>
-    public SpecBase<TModel, string> Create() =>
-        new SpecDecoratorMultiMetadataProposition<TModel, string, TMetadata>(
+    public SpecBase<TModel, string> Create()
+    {
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new SpecDecoratorMultiAssertionExplanationProposition<TModel, TMetadata>(
             spec,
             TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause, spec.Description));
+    }
 }
