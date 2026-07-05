@@ -27,14 +27,17 @@ public readonly struct ExplanationFromPolicyResultWithNameHigherOrderProposition
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public PolicyBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromPolicyResultMetadataProposition<TModel, string, TMetadata>(
+    public PolicyBase<IEnumerable<TModel>, string> Create()
+    {
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new HigherOrderFromPolicyResultExplanationProposition<TModel, TMetadata>(
             resultResolver,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string>(),
             falseBecause,
             new SpecDescription(trueBecause),
             higherOrderOperation.CauseSelector);
+    }
 
     /// <summary>
     /// Creates a specification with descriptive assertions, but using the supplied proposition to succinctly explain

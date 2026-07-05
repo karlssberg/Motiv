@@ -222,26 +222,33 @@ public class TutorialTests
                 .Create("all are even");
 
         allAreEven.Evaluate([2, 4, 6, 8]).Satisfied.ShouldBeTrue();
-        allAreEven.Evaluate([2, 4, 6, 8]).Assertions.ShouldBe(["all are even"]);
+        allAreEven.Evaluate([2, 4, 6, 8]).Assertions.ShouldBe(["all are even == true"]);
+        allAreEven.Evaluate([2, 4, 6, 8]).Values.ShouldBe(["all are even"]);
 
         allAreEven.Evaluate([10]).Satisfied.ShouldBeTrue();
-        allAreEven.Evaluate([10]).Assertions.ShouldBe(["10 is even and is the only item"]);
+        allAreEven.Evaluate([10]).Assertions.ShouldBe(["all are even == true"]);
+        allAreEven.Evaluate([10]).Values.ShouldBe(["10 is even and is the only item"]);
 
 
         allAreEven.Evaluate([11]).Satisfied.ShouldBeFalse();
-        allAreEven.Evaluate([11]).Assertions.ShouldBe(["11 is odd and is the only item"]);
+        allAreEven.Evaluate([11]).Assertions.ShouldBe(["all are even == false"]);
+        allAreEven.Evaluate([11]).Values.ShouldBe(["11 is odd and is the only item"]);
 
         allAreEven.Evaluate([2, 4, 6, 9]).Satisfied.ShouldBeFalse();
-        allAreEven.Evaluate([2, 4, 6, 9]).Assertions.ShouldBe(["only 9 is odd"]);
+        allAreEven.Evaluate([2, 4, 6, 9]).Assertions.ShouldBe(["all are even == false"]);
+        allAreEven.Evaluate([2, 4, 6, 9]).Values.ShouldBe(["only 9 is odd"]);
 
         allAreEven.Evaluate([]).Satisfied.ShouldBeTrue();
-        allAreEven.Evaluate([]).Assertions.ShouldBe(["the collection is empty"]);
+        allAreEven.Evaluate([]).Assertions.ShouldBe(["all are even == true"]);
+        allAreEven.Evaluate([]).Values.ShouldBe(["the collection is empty"]);
 
         allAreEven.Evaluate([1, 3, 5, 7]).Satisfied.ShouldBeFalse();
-        allAreEven.Evaluate([1, 3, 5, 7]).Assertions.ShouldBe(["all are odd"]);
+        allAreEven.Evaluate([1, 3, 5, 7]).Assertions.ShouldBe(["all are even == false"]);
+        allAreEven.Evaluate([1, 3, 5, 7]).Values.ShouldBe(["all are odd"]);
 
         allAreEven.Evaluate([2, 4, 5, 7]).Satisfied.ShouldBeFalse();
-        allAreEven.Evaluate([2, 4, 5, 7]).Assertions.ShouldBe(["5 is odd", "7 is odd"]);
+        allAreEven.Evaluate([2, 4, 5, 7]).Assertions.ShouldBe(["all are even == false"]);
+        allAreEven.Evaluate([2, 4, 5, 7]).Values.ShouldBe(["5 is odd", "7 is odd"]);
     }
 
     [Fact]

@@ -101,7 +101,7 @@ public class HigherOrderBooleanResultEvaluationTests
     [InlineData(true, true, "all true")]
     [InlineData(true, false, "some false")]
     [InlineData(false, true, "some false")]
-    public void Should_yield_using_all_satisfied_property(bool modelA, bool modelB, params string[] expected)
+    public void Should_yield_using_all_satisfied_property(bool modelA, bool modelB, string expectedValue)
     {
         // Arrange
         var underlying = Spec
@@ -123,13 +123,14 @@ public class HigherOrderBooleanResultEvaluationTests
         var act = result.Assertions;
 
         // Assert
-        act.ShouldBe(expected);
+        act.ShouldBe(["all true == true"]);
+        result.Values.ShouldBe([expectedValue]);
     }
 
 
     [Theory]
     [InlineData(true, true, "any true")]
-    public void Should_yield_using_any_satisfied_property(bool modelA, bool modelB, params string[] expected)
+    public void Should_yield_using_any_satisfied_property(bool modelA, bool modelB, string expectedValue)
     {
         // Arrange
         var underlying = Spec
@@ -151,7 +152,8 @@ public class HigherOrderBooleanResultEvaluationTests
         var act = result.Assertions;
 
         // Assert
-        act.ShouldBe(expected);
+        act.ShouldBe(["all true == true"]);
+        result.Values.ShouldBe([expectedValue]);
     }
 
     [Theory]

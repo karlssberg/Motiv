@@ -47,8 +47,10 @@ public readonly struct MultiAssertionFromPolicyWithNameHigherOrderPropositionFac
     /// will be obtained from the .WhenTrue() assertion.
     /// </summary>
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
-    public SpecBase<IEnumerable<TModel>, string> Create() =>
-        new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, string, TMetadata>(
+    public SpecBase<IEnumerable<TModel>, string> Create()
+    {
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new HigherOrderFromPolicyResultMultiAssertionExplanationProposition<TModel, TMetadata>(
             policy.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause
@@ -57,4 +59,5 @@ public readonly struct MultiAssertionFromPolicyWithNameHigherOrderPropositionFac
             falseBecause,
             new SpecDescription(trueBecause, policy.Description),
             higherOrderOperation.CauseSelector);
+    }
 }

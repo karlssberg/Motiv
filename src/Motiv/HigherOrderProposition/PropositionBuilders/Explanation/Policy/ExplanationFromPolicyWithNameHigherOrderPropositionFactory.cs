@@ -47,7 +47,8 @@ public readonly struct ExplanationFromPolicyWithNameHigherOrderPropositionFactor
     /// <returns>An instance of <see cref="SpecBase{TModel, TMetadata}" />.</returns>
     public PolicyBase<IEnumerable<TModel>, string> Create()
     {
-        return new HigherOrderFromPolicyResultMetadataProposition<TModel, string, TMetadata>(
+        trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
+        return new HigherOrderFromPolicyResultExplanationProposition<TModel, TMetadata>(
             policy.Evaluate,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string>(),
