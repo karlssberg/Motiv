@@ -78,7 +78,7 @@ public class MetadataNode<TMetadata>
         var doesParentEqualChildAssertion = underlyingMetadata.SequenceEqual(metadata);
 
         return doesParentEqualChildAssertion
-            ? underlying.SelectMany(result => result.Underlying)
+            ? underlying.SelectMany(result => result.Underlying).ToArray()
             : underlying;
     }
 

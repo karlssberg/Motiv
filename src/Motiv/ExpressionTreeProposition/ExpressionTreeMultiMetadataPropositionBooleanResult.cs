@@ -29,7 +29,7 @@ internal sealed class ExpressionTreeMultiMetadataPropositionBooleanResult<TModel
 {
     private BooleanResultBase<string>[] ResultArray => field ??= [result];
 
-    private IEnumerable<TMetadata> MetadataResults => field ??= metadataResolver(model, result);
+    private IEnumerable<TMetadata> MetadataResults => field ??= metadataResolver(model, result).ToArray();
 
     /// <summary>
     ///     Gets the metadata tier of the result.
