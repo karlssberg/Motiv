@@ -29,7 +29,7 @@ internal sealed class ExpressionTreeMultiAssertionExplanationPropositionBooleanR
 {
     private BooleanResultBase<string>[] ResultArray => field ??= [result];
 
-    private IEnumerable<string> MetadataResults => field ??= assertionsResolver(model, result).ToArray();
+    private IEnumerable<string> MetadataResults => field ??= assertionsResolver(model, result)?.ToArray()!;
 
     /// <summary>
     ///     Gets the metadata tier of the result.

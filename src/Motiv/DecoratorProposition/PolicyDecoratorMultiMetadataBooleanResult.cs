@@ -32,7 +32,7 @@ internal sealed class PolicyDecoratorMultiMetadataBooleanResult<TModel, TMetadat
     ///     Gets the metadata tier of the result.
     /// </summary>
     public override MetadataNode<TMetadata> MetadataTier =>
-        field ??= new MetadataNode<TMetadata>(metadataResolver(model, policyResult).ToArray(),
+        field ??= new MetadataNode<TMetadata>(metadataResolver(model, policyResult)?.ToArray()!,
             _underlyingResults as IEnumerable<BooleanResultBase<TMetadata>> ?? []);
 
     /// <summary>

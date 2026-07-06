@@ -23,7 +23,7 @@ internal sealed class HigherOrderFromPolicyResultMultiAssertionExplanationBoolea
         field ??= new HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>(underlyingResults, CausesInternal);
 
     private IEnumerable<string> MetadataValues =>
-        field ??= (Satisfied ? whenTrue(Evaluation) : whenFalse(Evaluation)).ToArray();
+        field ??= (Satisfied ? whenTrue(Evaluation) : whenFalse(Evaluation))?.ToArray()!;
 
     /// <inheritdoc />
     public override MetadataNode<string> MetadataTier => field ??=
