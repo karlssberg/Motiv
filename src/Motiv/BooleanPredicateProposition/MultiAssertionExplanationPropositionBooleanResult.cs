@@ -26,7 +26,7 @@ internal sealed class MultiAssertionExplanationPropositionBooleanResult<TModel>(
     ///     Gets the metadata tier of the result.
     /// </summary>
     public override MetadataNode<string> MetadataTier =>
-        field ??= new MetadataNode<string>(assertionsResolver(model)?.ToArray()!, []);
+        field ??= new MetadataNode<string>(assertionsResolver(model).ToArray(), []);
 
     /// <summary>
     ///     Gets the underlying results of the result.

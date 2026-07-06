@@ -111,4 +111,21 @@ public class ExpressionTreeMultiAssertionExplanationPropositionBooleanResultTest
 
         result.Explanation.Assertions.ShouldBe(underlying.Assertions);
     }
+
+    [Theory]
+    [InlineAutoData(true)]
+    [InlineAutoData(false)]
+    public void Explanation_ShouldFallBackToUnderlyingAssertionsWhenResolverReturnsNull(bool satisfied)
+    {
+        var underlying = Underlying(satisfied);
+        var result = new ExpressionTreeMultiAssertionExplanationPropositionBooleanResult<int, bool>(
+            satisfied,
+            satisfied ? 1 : -1,
+            underlying,
+            (_, _) => null!,
+            Expression,
+            new SpecDescription("is positive"));
+
+        result.Explanation.Assertions.ShouldBe(underlying.Assertions);
+    }
 }

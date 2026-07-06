@@ -32,7 +32,7 @@ internal sealed class SpecDecoratorMultiMetadataBooleanResult<TModel, TMetadata,
     ///     Gets the metadata tier of the result.
     /// </summary>
     public override MetadataNode<TMetadata> MetadataTier =>
-        field ??= new MetadataNode<TMetadata>(metadataResolver(model, booleanResult)?.ToArray()!,
+        field ??= new MetadataNode<TMetadata>(metadataResolver(model, booleanResult).ToArray(),
             _underlyingResults as IEnumerable<BooleanResultBase<TMetadata>> ?? []);
 
     /// <summary>

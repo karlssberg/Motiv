@@ -29,4 +29,20 @@ public class HigherOrderFromBooleanPredicateMultiAssertionExplanationBooleanResu
         result.Description.ShouldBeOfType<BooleanResultDescription>();
         result.Description.Reason.ShouldBe(ExpectedReason(satisfied));
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Explanation_FallsBackToStatementReason_WhenResolverReturnsNull(bool satisfied)
+    {
+        var result = new HigherOrderFromBooleanPredicateMultiAssertionExplanationBooleanResult<int>(
+            satisfied,
+            [Model(satisfied)],
+            _ => null!,
+            _ => null!,
+            Description,
+            (_, results) => results);
+
+        result.Explanation.Assertions.ShouldBe([ExpectedReason(satisfied)]);
+    }
 }

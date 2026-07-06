@@ -26,7 +26,7 @@ internal sealed class MultiValuePropositionBooleanResult<TModel, TMetadata>(
     ///     Gets the metadata tier of the result.
     /// </summary>
     public override MetadataNode<TMetadata> MetadataTier =>
-        field ??= new MetadataNode<TMetadata>(metadataResolver(model)?.ToArray()!, []);
+        field ??= new MetadataNode<TMetadata>(metadataResolver(model).ToArray(), []);
 
     /// <summary>
     ///     Gets the underlying results of the result.

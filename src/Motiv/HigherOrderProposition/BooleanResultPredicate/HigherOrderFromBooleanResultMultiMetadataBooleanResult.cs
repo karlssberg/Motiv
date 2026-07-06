@@ -23,7 +23,7 @@ internal sealed class HigherOrderFromBooleanResultMultiMetadataBooleanResult<TMo
         field ??= new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(underlyingResults, CausesInternal);
 
     private IEnumerable<TMetadata> MetadataValues =>
-        field ??= (Satisfied ? whenTrue(Evaluation) : whenFalse(Evaluation))?.ToArray()!;
+        field ??= (Satisfied ? whenTrue(Evaluation) : whenFalse(Evaluation)).ToArray();
 
     private string Assertion => field ??= specDescription.ToReason(Satisfied);
 
