@@ -31,7 +31,8 @@ internal sealed class HigherOrderFromPolicyResultExplanationProposition<TModel, 
 
     private (PolicyResult<TModel, TUnderlyingMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
     {
-        var results = models.Select(model => new PolicyResult<TModel, TUnderlyingMetadata>(model, resultResolver(model))).ToArray();
+        var results = HigherOrderResults.Materialize(models, resultResolver,
+            static (model, resolve) => new PolicyResult<TModel, TUnderlyingMetadata>(model, resolve(model)));
         return (results, higherOrderPredicate(results));
     }
 }

@@ -93,5 +93,8 @@ public class EvaluationBenchmarks
     public bool HigherOrder_Satisfied() => _allPositive.Evaluate(_models).Satisfied;
 
     [Benchmark]
+    public bool HigherOrder_Matches() => _allPositive.Matches(_models);
+
+    [Benchmark]
     public int HigherOrder_Assertions() => _allPositive.Evaluate(_models).Assertions.Count();
 }

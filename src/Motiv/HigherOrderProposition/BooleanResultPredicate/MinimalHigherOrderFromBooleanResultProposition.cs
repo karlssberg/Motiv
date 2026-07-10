@@ -27,7 +27,8 @@ internal sealed class MinimalHigherOrderFromBooleanResultProposition<TModel, TMe
 
     private (BooleanResult<TModel, TMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
     {
-        var results = models.Select(model => new BooleanResult<TModel, TMetadata>(model, resultResolver(model))).ToArray();
+        var results = HigherOrderResults.Materialize(models, resultResolver,
+            static (model, resolve) => new BooleanResult<TModel, TMetadata>(model, resolve(model)));
         return (results, higherOrderPredicate(results));
     }
 }

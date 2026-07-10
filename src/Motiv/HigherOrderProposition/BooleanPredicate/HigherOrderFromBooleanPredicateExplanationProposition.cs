@@ -31,7 +31,8 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationProposition<TMod
 
     private (ModelResult<TModel>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
     {
-        var results = models.Select(model => new ModelResult<TModel>(model, predicate(model))).ToArray();
+        var results = HigherOrderResults.Materialize(models, predicate,
+            static (model, p) => new ModelResult<TModel>(model, p(model)));
         return (results, higherOrderPredicate(results));
     }
 }

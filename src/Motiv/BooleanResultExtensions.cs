@@ -77,8 +77,17 @@ public static class BooleanResultExtensions
     /// <typeparam name="TMetadata">The specific type of metadata used by <see cref="BooleanResultBase{TMetadata}"/>.</typeparam>
     /// <returns>The count of boolean results where the result is true.</returns>
     public static int CountTrue<TMetadata>(
-        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
-        results.Count(result => result.Satisfied);
+        this IEnumerable<BooleanResultBase<TMetadata>> results)
+    {
+        if (results is not BooleanResultBase<TMetadata>[] array)
+            return results.Count(result => result.Satisfied);
+
+        var count = 0;
+        foreach (var result in array)
+            if (result.Satisfied)
+                count++;
+        return count;
+    }
 
     /// <summary>
     /// Counts the number of boolean results in a collection where the result is false.
@@ -87,8 +96,17 @@ public static class BooleanResultExtensions
     /// <typeparam name="TMetadata">The specific type of metadata used by <see cref="BooleanResultBase{TMetadata}"/>.</typeparam>
     /// <returns>The count of boolean results where the result is false.</returns>
     public static int CountFalse<TMetadata>(
-        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
-        results.Count(result => !result.Satisfied);
+        this IEnumerable<BooleanResultBase<TMetadata>> results)
+    {
+        if (results is not BooleanResultBase<TMetadata>[] array)
+            return results.Count(result => !result.Satisfied);
+
+        var count = 0;
+        foreach (var result in array)
+            if (!result.Satisfied)
+                count++;
+        return count;
+    }
 
     /// <summary>
     /// Checks if all boolean results in a collection are true.
@@ -97,8 +115,16 @@ public static class BooleanResultExtensions
     /// <typeparam name="TMetadata">The specific type of metadata in the <see cref="BooleanResultBase{TMetadata}"/>.</typeparam>
     /// <returns>True if all boolean results are true, false otherwise.</returns>
     public static bool AllTrue<TMetadata>(
-        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
-        results.All(result => result.Satisfied);
+        this IEnumerable<BooleanResultBase<TMetadata>> results)
+    {
+        if (results is not BooleanResultBase<TMetadata>[] array)
+            return results.All(result => result.Satisfied);
+
+        foreach (var result in array)
+            if (!result.Satisfied)
+                return false;
+        return true;
+    }
 
     /// <summary>
     /// Checks if all boolean results in a collection are false.
@@ -107,8 +133,16 @@ public static class BooleanResultExtensions
     /// <typeparam name="TMetadata">The specific type of metadata in the <see cref="BooleanResultBase{TMetadata}"/>.</typeparam>
     /// <returns>True if all boolean results are false, false otherwise.</returns>
     public static bool AllFalse<TMetadata>(
-        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
-        results.All(result => !result.Satisfied);
+        this IEnumerable<BooleanResultBase<TMetadata>> results)
+    {
+        if (results is not BooleanResultBase<TMetadata>[] array)
+            return results.All(result => !result.Satisfied);
+
+        foreach (var result in array)
+            if (result.Satisfied)
+                return false;
+        return true;
+    }
 
     /// <summary>
     /// Checks if any boolean result in a collection are true.
@@ -117,8 +151,16 @@ public static class BooleanResultExtensions
     /// <typeparam name="TMetadata">The specific type of metadata in the <see cref="BooleanResultBase{TMetadata}"/>.</typeparam>
     /// <returns>True if any boolean result is true, false otherwise.</returns>
     public static bool AnyTrue<TMetadata>(
-        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
-        results.Any(result => result.Satisfied);
+        this IEnumerable<BooleanResultBase<TMetadata>> results)
+    {
+        if (results is not BooleanResultBase<TMetadata>[] array)
+            return results.Any(result => result.Satisfied);
+
+        foreach (var result in array)
+            if (result.Satisfied)
+                return true;
+        return false;
+    }
 
     /// <summary>
     /// Checks if any boolean result in a collection are false.
@@ -127,8 +169,16 @@ public static class BooleanResultExtensions
     /// <typeparam name="TMetadata">The specific type of metadata in the <see cref="BooleanResultBase{TMetadata}"/>.</typeparam>
     /// <returns>True if any boolean result is false, false otherwise.</returns>
     public static bool AnyFalse<TMetadata>(
-        this IEnumerable<BooleanResultBase<TMetadata>> results) =>
-        results.Any(result => !result.Satisfied);
+        this IEnumerable<BooleanResultBase<TMetadata>> results)
+    {
+        if (results is not BooleanResultBase<TMetadata>[] array)
+            return results.Any(result => !result.Satisfied);
+
+        foreach (var result in array)
+            if (!result.Satisfied)
+                return true;
+        return false;
+    }
 
     internal static IEnumerable<string> GetBinaryJustificationAsLines(
         this IEnumerable<BooleanResultBase> causalResults,

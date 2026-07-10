@@ -27,7 +27,8 @@ internal sealed class MinimalHigherOrderFromPolicyResultProposition<TModel, TMet
 
     private (PolicyResult<TModel, TMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
     {
-        var results = models.Select(model => new PolicyResult<TModel, TMetadata>(model, resultResolver(model))).ToArray();
+        var results = HigherOrderResults.Materialize(models, resultResolver,
+            static (model, resolve) => new PolicyResult<TModel, TMetadata>(model, resolve(model)));
         return (results, higherOrderPredicate(results));
     }
 }
