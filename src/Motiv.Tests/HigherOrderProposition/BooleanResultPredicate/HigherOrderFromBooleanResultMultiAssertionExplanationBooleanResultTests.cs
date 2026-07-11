@@ -62,4 +62,20 @@ public class HigherOrderFromBooleanResultMultiAssertionExplanationBooleanResultT
 
         result.Explanation.Assertions.ShouldBe([ExpectedReason(satisfied)]);
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Values_ShouldBeEmpty_WhenResolverReturnsNull(bool satisfied)
+    {
+        var result = new HigherOrderFromBooleanResultMultiAssertionExplanationBooleanResult<int, string>(
+            satisfied,
+            [StringBoolResult(satisfied)],
+            _ => null!,
+            _ => null!,
+            Description,
+            (_, results) => results);
+
+        result.Values.ShouldBeEmpty();
+    }
 }

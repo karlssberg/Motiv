@@ -95,4 +95,15 @@ public class BooleanResultsCollectionTests
         result.AsEnumerable().ShouldBe((IEnumerable<int>)[2, 4]);
         results.Count().ShouldBe(4);
     }
+
+    [Fact]
+    public void Should_throw_when_constructed_with_null_results()
+    {
+        // Act
+        var act = () => new BooleanResultsCollection<int, string>(null!);
+
+        // Assert
+        act.ShouldThrow<ArgumentNullException>()
+            .ParamName!.ShouldBe("results");
+    }
 }
