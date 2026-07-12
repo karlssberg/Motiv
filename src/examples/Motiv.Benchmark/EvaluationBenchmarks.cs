@@ -63,10 +63,16 @@ public class EvaluationBenchmarks
     public bool Minimal_Satisfied() => _minimal.Evaluate(7).Satisfied;
 
     [Benchmark]
+    public bool Minimal_Matches() => _minimal.Matches(7);
+
+    [Benchmark]
     public string Minimal_Reason() => _minimal.Evaluate(7).Reason;
 
     [Benchmark]
     public bool Explanation_Satisfied() => _explanation.Evaluate(7).Satisfied;
+
+    [Benchmark]
+    public bool Explanation_Matches() => _explanation.Matches(7);
 
     [Benchmark]
     public string Explanation_Reason() => _explanation.Evaluate(7).Reason;
@@ -75,16 +81,25 @@ public class EvaluationBenchmarks
     public bool Metadata_Satisfied() => _metadata.Evaluate(7).Satisfied;
 
     [Benchmark]
+    public bool Metadata_Matches() => _metadata.Matches(7);
+
+    [Benchmark]
     public Message Metadata_Value() => _metadata.Evaluate(7).Value;
 
     [Benchmark]
     public bool MultiAssertion_Satisfied() => _multiAssertion.Evaluate(7).Satisfied;
 
     [Benchmark]
+    public bool MultiAssertion_Matches() => _multiAssertion.Matches(7);
+
+    [Benchmark]
     public int MultiAssertion_Assertions() => _multiAssertion.Evaluate(7).Assertions.Count();
 
     [Benchmark]
     public bool Composed_Satisfied() => _composed.Evaluate(6).Satisfied;
+
+    [Benchmark]
+    public bool Composed_Matches() => _composed.Matches(6);
 
     [Benchmark]
     public string Composed_Reason() => _composed.Evaluate(6).Reason;
