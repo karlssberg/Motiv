@@ -39,6 +39,7 @@ public readonly struct ExplanationFromSpecHigherOrderPropositionFactory<TModel, 
             trueBecause,
             falseBecause,
             new SpecDescription(statement, spec.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

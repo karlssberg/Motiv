@@ -52,6 +52,7 @@ public readonly struct MultiAssertionExplanationFromBooleanResultHigherOrderProp
             _trueBecause,
             _falseBecause,
             new SpecDescription(statement),
-            _higherOrderOperation.CauseSelector);
+            _higherOrderOperation.CauseSelector,
+            _higherOrderOperation.ShortCircuit);
     }
 }

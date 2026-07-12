@@ -29,7 +29,8 @@ public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TMod
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
                 spec.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
 
     internal SpecBase<IEnumerable<TModel>, TMetadata> Create(Expression statement) =>
         new MinimalHigherOrderFromBooleanResultProposition<TModel, TMetadata>(
@@ -38,7 +39,8 @@ public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TMod
             new ExpressionDescription(
                 statement,
                 spec.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
 }
 
 /// <summary>
@@ -64,7 +66,8 @@ public readonly struct MinimalHigherOrderFromSpecPropositionFactory<TModel>(
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
                 spec.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
 
     internal SpecBase<IEnumerable<TModel>, string> Create(Expression statement) =>
         new MinimalHigherOrderFromBooleanResultProposition<TModel, string>(
@@ -73,5 +76,6 @@ public readonly struct MinimalHigherOrderFromSpecPropositionFactory<TModel>(
             new ExpressionDescription(
                 statement,
                 spec.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
 }

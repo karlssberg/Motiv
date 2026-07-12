@@ -38,6 +38,7 @@ public readonly struct MetadataFromBooleanResultHigherOrderPropositionFactory<TM
 
             whenFalse,
             new SpecDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

@@ -4,7 +4,8 @@ internal sealed class MinimalHigherOrderFromBooleanResultProposition<TModel, TMe
     Func<TModel, BooleanResultBase<TMetadata>> resultResolver,
     Func<IEnumerable<BooleanResult<TModel, TMetadata>>, bool> higherOrderPredicate,
     ISpecDescription specDescription,
-    Func<bool, IEnumerable<BooleanResult<TModel, TMetadata>>, IEnumerable<BooleanResult<TModel, TMetadata>>> causeSelector)
+    Func<bool, IEnumerable<BooleanResult<TModel, TMetadata>>, IEnumerable<BooleanResult<TModel, TMetadata>>> causeSelector,
+    HigherOrderShortCircuit? shortCircuit = null)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
     public override IEnumerable<SpecBase> Underlying => [];
@@ -12,7 +13,9 @@ internal sealed class MinimalHigherOrderFromBooleanResultProposition<TModel, TMe
     public override ISpecDescription Description => specDescription;
 
     public override bool Matches(IEnumerable<TModel> models) =>
-        EvaluateModels(models).IsSatisfied;
+        shortCircuit is { } sc
+            ? sc.Evaluate(models, resultResolver, static (m, r) => r(m).Satisfied)
+            : EvaluateModels(models).IsSatisfied;
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(IEnumerable<TModel> models)
     {

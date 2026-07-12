@@ -6,7 +6,8 @@ internal sealed class HigherOrderFromBooleanResultProposition<TModel, TMetadata,
     Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenTrue,
     Func<HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>, TMetadata> whenFalse,
     ISpecDescription specDescription,
-    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
+    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector,
+    HigherOrderShortCircuit? shortCircuit = null)
     : PolicyBase<IEnumerable<TModel>, TMetadata>
 {
     public override IEnumerable<SpecBase> Underlying => [];
@@ -14,7 +15,9 @@ internal sealed class HigherOrderFromBooleanResultProposition<TModel, TMetadata,
     public override ISpecDescription Description => specDescription;
 
     public override bool Matches(IEnumerable<TModel> models) =>
-        EvaluateModels(models).IsSatisfied;
+        shortCircuit is { } sc
+            ? sc.Evaluate(models, resultResolver, static (m, r) => r(m).Satisfied)
+            : EvaluateModels(models).IsSatisfied;
 
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(IEnumerable<TModel> models)
     {
