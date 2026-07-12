@@ -126,4 +126,47 @@ public class HigherOrderShortCircuitTests
         HigherOrderShortCircuit.Exactly(1).Evaluate(new[] { 1, 2, 3, 4 }, counter, Positive).ShouldBeFalse();
         counter.Count.ShouldBe(2);
     }
+
+    [Fact]
+    public void Evaluate_throws_for_null_source()
+    {
+        Should.Throw<ArgumentNullException>(() =>
+            HigherOrderShortCircuit.All.Evaluate<int, Counter>(null!, new Counter(), Positive));
+    }
+
+    [Fact]
+    public void Evaluate_over_list_completes_without_early_exit_and_reaches_FinalDecision()
+    {
+        // All-true over a List<T> never satisfies the early-exit condition (only a false triggers it), so
+        // iteration runs to completion (covering the list branch's trailing `break`) and falls through to
+        // FinalDecision.
+        var counter = new Counter();
+        HigherOrderShortCircuit.All.Evaluate(new List<int> { 1, 2, 3 }, counter, Positive).ShouldBeTrue();
+        counter.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Evaluate_over_lazy_enumerable_completes_without_early_exit_and_reaches_FinalDecision()
+    {
+        // Any-false over a lazy, non-array/non-IReadOnlyList enumerable never satisfies the early-exit
+        // condition (only a true triggers it), so iteration runs to completion (covering the default/foreach
+        // branch's trailing `break`) and falls through to FinalDecision.
+        var counter = new Counter();
+        IEnumerable<int> lazy = Enumerable.Range(-3, 3).Where(static _ => true);
+        HigherOrderShortCircuit.Any.Evaluate(lazy, counter, Positive).ShouldBeFalse();
+        counter.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Evaluate_with_unrecognized_op_never_decides_early_and_FinalDecision_defaults_to_false()
+    {
+        // HigherOrderOp only has six defined members, all handled explicitly by name; the `default` arms in
+        // both TryDecide and FinalDecision are unreachable through the public factory methods. Reinterpreting
+        // an out-of-range int as HigherOrderOp exercises those defensive default arms directly.
+        var invalidOp = new HigherOrderShortCircuit((HigherOrderOp)(-1), 0);
+
+        var counter = new Counter();
+        invalidOp.Evaluate(new[] { 1, 2, 3 }, counter, Positive).ShouldBeFalse();
+        counter.Count.ShouldBe(3); // never short-circuited; iterated every element before FinalDecision ran
+    }
 }
