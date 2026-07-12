@@ -1,5 +1,4 @@
 using Converj.Attributes;
-using Motiv.HigherOrderProposition;
 
 namespace Motiv.HigherOrderProposition.PropositionBuilders;
 

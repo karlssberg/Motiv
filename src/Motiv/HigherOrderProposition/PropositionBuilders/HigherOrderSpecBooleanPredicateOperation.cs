@@ -1,5 +1,3 @@
-using Motiv.HigherOrderProposition;
-
 namespace Motiv.HigherOrderProposition.PropositionBuilders;
 
 /// <summary>
