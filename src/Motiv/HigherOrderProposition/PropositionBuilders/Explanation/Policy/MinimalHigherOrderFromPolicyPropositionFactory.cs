@@ -29,7 +29,8 @@ public readonly partial struct MinimalHigherOrderFromPolicyPropositionFactory<TM
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
                 policy.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
 
     internal SpecBase<IEnumerable<TModel>, TMetadata> Create(Expression statement) =>
         new MinimalHigherOrderFromPolicyResultProposition<TModel, TMetadata>(
@@ -38,5 +39,6 @@ public readonly partial struct MinimalHigherOrderFromPolicyPropositionFactory<TM
             new ExpressionDescription(
                 statement,
                 policy.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
 }

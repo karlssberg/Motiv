@@ -36,6 +36,7 @@ public readonly struct MultiAssertionFromPolicyHigherOrderPropositionFactory<TMo
             whenTrue,
             whenFalse,
             new SpecDescription(statement, policy.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

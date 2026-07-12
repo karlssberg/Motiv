@@ -32,6 +32,7 @@ public readonly partial struct TrueHigherOrderFromPolicyResultPredicatePropositi
             eval => eval.Values,
             eval => eval.Values,
             new SpecDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

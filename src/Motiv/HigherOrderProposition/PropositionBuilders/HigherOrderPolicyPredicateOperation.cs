@@ -13,13 +13,28 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders;
 /// A function that takes a boolean and an enumerable of policy results, and returns an enumerable
 /// of policy results based on the cause selection logic.
 /// </param>
-public readonly struct HigherOrderPolicyPredicateOperation<TModel, TUnderlyingMetadata>(
-    Func<IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<bool, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>> causeSelector)
+public readonly struct HigherOrderPolicyPredicateOperation<TModel, TUnderlyingMetadata>
 {
-    internal Func<IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, bool> HigherOrderPredicate { get; } =
-        higherOrderPredicate;
+    internal HigherOrderPolicyPredicateOperation(
+        Func<IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
+        Func<bool, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>> causeSelector)
+        : this(higherOrderPredicate, causeSelector, null)
+    {
+    }
 
-    internal Func<bool, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>> CauseSelector { get; } =
-        causeSelector;
+    internal HigherOrderPolicyPredicateOperation(
+        Func<IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
+        Func<bool, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>> causeSelector,
+        HigherOrderShortCircuit? shortCircuit)
+    {
+        HigherOrderPredicate = higherOrderPredicate;
+        CauseSelector = causeSelector;
+        ShortCircuit = shortCircuit;
+    }
+
+    internal Func<IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, bool> HigherOrderPredicate { get; }
+
+    internal Func<bool, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>> CauseSelector { get; }
+
+    internal HigherOrderShortCircuit? ShortCircuit { get; }
 }

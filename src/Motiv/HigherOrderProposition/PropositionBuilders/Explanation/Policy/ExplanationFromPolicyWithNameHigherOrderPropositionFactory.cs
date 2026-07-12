@@ -38,7 +38,8 @@ public readonly struct ExplanationFromPolicyWithNameHigherOrderPropositionFactor
             trueBecause.ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string>(),
             falseBecause,
             new SpecDescription(statement, policy.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 
     /// <summary>
@@ -56,6 +57,7 @@ public readonly struct ExplanationFromPolicyWithNameHigherOrderPropositionFactor
             trueBecause.ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, string>(),
             falseBecause,
             new SpecDescription(trueBecause, policy.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

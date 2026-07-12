@@ -37,6 +37,7 @@ public readonly struct MultiMetadataFromPolicyHigherOrderPropositionFactory<TMod
             whenTrue,
             whenFalse,
             new SpecDescription(statement, policy.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

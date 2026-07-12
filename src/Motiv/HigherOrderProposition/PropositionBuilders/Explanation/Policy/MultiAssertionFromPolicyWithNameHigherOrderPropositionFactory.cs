@@ -40,7 +40,8 @@ public readonly struct MultiAssertionFromPolicyWithNameHigherOrderPropositionFac
                 .ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>>(),
             falseBecause,
             new SpecDescription(statement, policy.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 
     /// <summary>
@@ -60,6 +61,7 @@ public readonly struct MultiAssertionFromPolicyWithNameHigherOrderPropositionFac
                 .ToFunc<HigherOrderPolicyResultEvaluation<TModel, TMetadata>, IEnumerable<string>>(),
             falseBecause,
             new SpecDescription(trueBecause, policy.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }
