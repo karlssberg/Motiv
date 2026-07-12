@@ -10,7 +10,8 @@ internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, string> falseBecause,
     ISpecDescription description,
     Func<bool, IEnumerable<BooleanResult<TModel, string>>,
-        IEnumerable<BooleanResult<TModel, string>>> causeSelector)
+        IEnumerable<BooleanResult<TModel, string>>> causeSelector,
+    HigherOrderShortCircuit? shortCircuit = null)
     : PolicyBase<IEnumerable<TModel>, string>
 {
     private readonly ExpressionPredicate<TModel, TPredicateResult> _predicate = new(expression);
@@ -20,7 +21,9 @@ internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel
     public override ISpecDescription Description => description;
 
     public override bool Matches(IEnumerable<TModel> models) =>
-        EvaluateModels(models).IsSatisfied;
+        shortCircuit is { } sc
+            ? sc.Evaluate(models, _predicate, static (m, p) => p.Execute(m).Satisfied)
+            : EvaluateModels(models).IsSatisfied;
 
     protected override PolicyResultBase<string> EvaluatePolicy(IEnumerable<TModel> models)
     {

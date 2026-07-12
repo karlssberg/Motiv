@@ -83,4 +83,13 @@ public class HigherOrderMatchesShortCircuitTests
         spec.Matches([1, -2, -3, -4]).ShouldBeTrue();
         calls.ShouldBe(1);
     }
+
+    [Fact]
+    public void ExpressionTree_AllSatisfied_Matches_equals_Evaluate_Satisfied()
+    {
+        var spec = Spec.From((int n) => n > 0).AsAllSatisfied().Create("all positive");
+
+        foreach (var data in new int[][] { [], [1, 2, 3], [1, -2, 3] })
+            spec.Matches(data).ShouldBe(spec.Evaluate(data).Satisfied);
+    }
 }

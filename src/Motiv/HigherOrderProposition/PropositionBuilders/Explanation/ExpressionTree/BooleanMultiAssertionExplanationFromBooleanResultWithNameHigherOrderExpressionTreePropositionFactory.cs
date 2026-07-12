@@ -51,7 +51,8 @@ public readonly struct BooleanMultiAssertionExplanationFromBooleanResultWithName
             TrueBecauseFunc,
             falseBecause,
             new SpecDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 
     /// <summary>
@@ -69,6 +70,7 @@ public readonly struct BooleanMultiAssertionExplanationFromBooleanResultWithName
             TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

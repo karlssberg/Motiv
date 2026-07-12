@@ -47,6 +47,7 @@ public readonly struct BooleanExplanationHigherOrderExpressionTreePropositionFac
             trueBecause,
             falseBecause,
             new SpecDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

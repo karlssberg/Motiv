@@ -39,7 +39,8 @@ public readonly struct MetadataHigherOrderExpressionTreePropositionFactory<TMode
             whenTrue,
             whenFalse,
             new SpecDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 
     /// <summary>Creates a specification.</summary>
@@ -52,6 +53,7 @@ public readonly struct MetadataHigherOrderExpressionTreePropositionFactory<TMode
             whenTrue,
             whenFalse,
             new ExpressionTreeDescription<TModel, TPredicateResult>(expression),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

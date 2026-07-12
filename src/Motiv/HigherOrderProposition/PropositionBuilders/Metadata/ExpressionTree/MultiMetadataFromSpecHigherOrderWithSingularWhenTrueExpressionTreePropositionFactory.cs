@@ -38,6 +38,7 @@ public readonly struct MultiMetadataFromSpecHigherOrderWithSingularWhenTrueExpre
             whenTrue.ToEnumerableReturn(),
             whenFalse,
             new SpecDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

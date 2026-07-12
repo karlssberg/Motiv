@@ -7,7 +7,8 @@ internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TP
     Expression<Func<TModel, TPredicateResult>> expression,
     Func<IEnumerable<BooleanResult<TModel, string>>, bool> higherOrderPredicate,
     ISpecDescription description,
-    Func<bool, IEnumerable<BooleanResult<TModel, string>>, IEnumerable<BooleanResult<TModel, string>>> causeSelector)
+    Func<bool, IEnumerable<BooleanResult<TModel, string>>, IEnumerable<BooleanResult<TModel, string>>> causeSelector,
+    HigherOrderShortCircuit? shortCircuit = null)
     : SpecBase<IEnumerable<TModel>, string>
 {
     private readonly ExpressionPredicate<TModel, TPredicateResult> _predicate = new(expression);
@@ -17,7 +18,9 @@ internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TP
     public override ISpecDescription Description => description;
 
     public override bool Matches(IEnumerable<TModel> models) =>
-        EvaluateModels(models).IsSatisfied;
+        shortCircuit is { } sc
+            ? sc.Evaluate(models, _predicate, static (m, p) => p.Execute(m).Satisfied)
+            : EvaluateModels(models).IsSatisfied;
 
     protected override BooleanResultBase<string> EvaluateSpec(IEnumerable<TModel> models)
     {
