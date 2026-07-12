@@ -15,7 +15,8 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders;
 /// </param>
 public readonly struct HigherOrderPolicyPredicateOperation<TModel, TUnderlyingMetadata>
 {
-    internal HigherOrderPolicyPredicateOperation(
+    /// <summary>Initializes a new operation with a higher-order predicate and cause selector.</summary>
+    public HigherOrderPolicyPredicateOperation(
         Func<IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
         Func<bool, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>, IEnumerable<PolicyResult<TModel, TUnderlyingMetadata>>> causeSelector)
         : this(higherOrderPredicate, causeSelector, null)

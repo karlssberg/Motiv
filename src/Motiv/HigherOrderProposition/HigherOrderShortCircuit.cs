@@ -38,6 +38,10 @@ internal readonly struct HigherOrderShortCircuit(HigherOrderOp op, int n)
         if (source is null)
             throw new ArgumentNullException(nameof(source));
 
+        // "At least n" with n <= 0 is vacuously satisfied, so decide without evaluating any element.
+        if (op == HigherOrderOp.AtLeast && n <= 0)
+            return true;
+
         var trueCount = 0;
 
         switch (source)

@@ -6,7 +6,8 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders;
 /// <typeparam name="TModel">The type of the model.</typeparam>
 public readonly struct HigherOrderSpecBooleanPredicateOperation<TModel>
 {
-    internal HigherOrderSpecBooleanPredicateOperation(
+    /// <summary>Initializes a new operation with a higher-order predicate and cause selector.</summary>
+    public HigherOrderSpecBooleanPredicateOperation(
         Func<IEnumerable<ModelResult<TModel>>, bool> higherOrderPredicate,
         Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
         : this(higherOrderPredicate, causeSelector, null)

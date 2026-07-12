@@ -96,6 +96,14 @@ public class HigherOrderShortCircuitTests
     }
 
     [Fact]
+    public void AtLeast_zero_is_satisfied_without_evaluating_any_element()
+    {
+        var counter = new Counter();
+        HigherOrderShortCircuit.AtLeast(0).Evaluate(new[] { -1, -2, -3 }, counter, Positive).ShouldBeTrue();
+        counter.Count.ShouldBe(0); // outcome is predetermined; no projection is invoked
+    }
+
+    [Fact]
     public void None_short_circuits_on_first_true()
     {
         var counter = new Counter();
