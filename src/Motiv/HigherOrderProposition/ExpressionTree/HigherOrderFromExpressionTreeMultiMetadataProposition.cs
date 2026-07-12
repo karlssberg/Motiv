@@ -21,7 +21,7 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
 
     public override bool Matches(IEnumerable<TModel> models) =>
         shortCircuit is { } sc
-            ? sc.Evaluate(models, _predicate, static (m, p) => p.Execute(m).Satisfied)
+            ? sc.Evaluate(models, _predicate, static (m, p) => p.Match(m))
             : EvaluateModels(models).IsSatisfied;
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(IEnumerable<TModel> models)

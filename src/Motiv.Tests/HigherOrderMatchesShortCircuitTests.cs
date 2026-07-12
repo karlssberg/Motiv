@@ -92,4 +92,22 @@ public class HigherOrderMatchesShortCircuitTests
         foreach (var data in new int[][] { [], [1, 2, 3], [1, -2, 3] })
             spec.Matches(data).ShouldBe(spec.Evaluate(data).Satisfied);
     }
+
+    [Theory]
+    [InlineData("All")]
+    [InlineData("Any")]
+    [InlineData("None")]
+    public void ExpressionTree_Matches_equals_Evaluate_Satisfied(string op)
+    {
+        SpecBase<IEnumerable<int>, string> spec = op switch
+        {
+            "All" => Spec.From((int n) => n > 0).AsAllSatisfied().Create("all positive"),
+            "Any" => Spec.From((int n) => n > 0).AsAnySatisfied().Create("any positive"),
+            "None" => Spec.From((int n) => n > 0).AsNoneSatisfied().Create("none positive"),
+            _ => throw new ArgumentOutOfRangeException(nameof(op))
+        };
+
+        foreach (var data in new int[][] { [], [1, 2, 3], [-1, -2, -3], [1, -2, 3] })
+            spec.Matches(data).ShouldBe(spec.Evaluate(data).Satisfied);
+    }
 }

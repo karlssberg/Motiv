@@ -22,7 +22,7 @@ internal sealed class HigherOrderFromExpressionTreeExplanationProposition<TModel
 
     public override bool Matches(IEnumerable<TModel> models) =>
         shortCircuit is { } sc
-            ? sc.Evaluate(models, _predicate, static (m, p) => p.Execute(m).Satisfied)
+            ? sc.Evaluate(models, _predicate, static (m, p) => p.Match(m))
             : EvaluateModels(models).IsSatisfied;
 
     protected override PolicyResultBase<string> EvaluatePolicy(IEnumerable<TModel> models)

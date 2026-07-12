@@ -21,7 +21,7 @@ internal sealed class HigherOrderFromExpressionTreeMultiAssertionExplanationProp
 
     public override bool Matches(IEnumerable<TModel> models) =>
         shortCircuit is { } sc
-            ? sc.Evaluate(models, _predicate, static (m, p) => p.Execute(m).Satisfied)
+            ? sc.Evaluate(models, _predicate, static (m, p) => p.Match(m))
             : EvaluateModels(models).IsSatisfied;
 
     protected override BooleanResultBase<string> EvaluateSpec(IEnumerable<TModel> models)
