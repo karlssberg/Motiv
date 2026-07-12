@@ -42,4 +42,12 @@ public class HigherOrderResultsTests
         Multiply([], 10).ShouldBeEmpty();
         Multiply(Enumerable.Empty<int>().Where(_ => true), 10).ShouldBeEmpty();
     }
+
+    [Fact]
+    public void Should_throw_argument_null_exception_for_a_null_source()
+    {
+        // Preserves the ArgumentNullException semantics of the prior source.Select(...).ToArray().
+        Should.Throw<ArgumentNullException>(() => Multiply(null!, 10))
+            .ParamName!.ShouldBe("source");
+    }
 }

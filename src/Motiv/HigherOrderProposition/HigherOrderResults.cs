@@ -19,6 +19,9 @@ internal static class HigherOrderResults
         TState state,
         Func<TSource, TState, TResult> project)
     {
+        if (source is null)
+            throw new ArgumentNullException(nameof(source));
+
         if (source is TSource[] array)
         {
             var results = new TResult[array.Length];
@@ -30,8 +33,9 @@ internal static class HigherOrderResults
 
         if (source is IReadOnlyList<TSource> list)
         {
-            var results = new TResult[list.Count];
-            for (var i = 0; i < list.Count; i++)
+            var count = list.Count;
+            var results = new TResult[count];
+            for (var i = 0; i < count; i++)
                 results[i] = project(list[i], state);
 
             return results;
