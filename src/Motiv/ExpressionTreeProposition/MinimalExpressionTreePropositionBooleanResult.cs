@@ -29,7 +29,7 @@ internal sealed class MinimalExpressionTreePropositionBooleanResult<TModel, TPre
 {
     private BooleanResultBase<string>[] ResultArray => field ??= [result];
 
-    private IEnumerable<string> MetadataResults => field ??= assertionsResolver(model, result);
+    private IEnumerable<string> MetadataResults => field ??= assertionsResolver(model, result)?.ToArray()!;
 
     /// <summary>
     ///     Gets the metadata tier of the result.

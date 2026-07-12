@@ -111,4 +111,14 @@ public class MinimalExpressionTreePropositionBooleanResultTests
 
         result.Explanation.Assertions.ShouldBe(underlying.Assertions);
     }
+
+    [Theory]
+    [InlineAutoData(true)]
+    [InlineAutoData(false)]
+    public void Values_ShouldBeEmpty_WhenResolverReturnsNull(bool satisfied)
+    {
+        var result = Create(satisfied, (_, _) => null!);
+
+        result.Values.ShouldBeEmpty();
+    }
 }

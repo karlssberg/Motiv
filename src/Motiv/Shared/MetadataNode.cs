@@ -41,13 +41,13 @@ public class MetadataNode<TMetadata>
     }
 
     /// <summary>Gets the underlying metadata nodes.</summary>
-    public IEnumerable<MetadataNode<TMetadata>> Underlying => field ??= ResolveUnderlying(_metadataSource!, _causes!);
+    public IEnumerable<MetadataNode<TMetadata>> Underlying => field ??= ResolveUnderlying(_metadataSource ?? [], _causes!);
 
     /// <summary>Gets the metadata associated with this node.</summary>
     public IEnumerable<TMetadata> Metadata => _metadataSet ??= _metadataSource switch
     {
         ISet<TMetadata> metadataTier => metadataTier,
-        _ => new HashSet<TMetadata>(_metadataSource!)
+        _ => new HashSet<TMetadata>(_metadataSource ?? [])
     };
 
     /// <summary>Returns a string that represents the current object.</summary>
@@ -78,7 +78,7 @@ public class MetadataNode<TMetadata>
         var doesParentEqualChildAssertion = underlyingMetadata.SequenceEqual(metadata);
 
         return doesParentEqualChildAssertion
-            ? underlying.SelectMany(result => result.Underlying)
+            ? underlying.SelectMany(result => result.Underlying).ToArray()
             : underlying;
     }
 
