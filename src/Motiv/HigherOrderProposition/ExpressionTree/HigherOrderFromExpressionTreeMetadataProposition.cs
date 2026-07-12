@@ -37,7 +37,8 @@ internal sealed class HigherOrderFromExpressionTreeMetadataProposition<TModel, T
 
     private (BooleanResult<TModel, string>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
     {
-        var results = models.Select(model => new BooleanResult<TModel, string>(model, _predicate.Execute(model))).ToArray();
+        var results = HigherOrderResults.Materialize(models, _predicate,
+            static (model, predicate) => new BooleanResult<TModel, string>(model, predicate.Execute(model)));
         return (results, higherOrderPredicate(results));
     }
 }
