@@ -41,7 +41,8 @@ public readonly struct ExplanationWithNameHigherOrderExpressionTreePropositionFa
             TrueBecauseFunc,
             falseBecause,
             new SpecDescription(trueBecause),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 
     /// <summary>
@@ -61,6 +62,7 @@ public readonly struct ExplanationWithNameHigherOrderExpressionTreePropositionFa
             TrueBecauseFunc,
             falseBecause,
             new SpecDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

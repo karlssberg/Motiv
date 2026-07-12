@@ -39,7 +39,8 @@ public readonly struct ExplanationFromSpecWithNameHigherOrderPropositionFactory<
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string>(),
             falseBecause,
             new SpecDescription(statement, spec.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 
     /// <summary>
@@ -58,6 +59,7 @@ public readonly struct ExplanationFromSpecWithNameHigherOrderPropositionFactory<
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string>(),
             falseBecause,
             new SpecDescription(trueBecause, spec.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

@@ -9,7 +9,8 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenTrue,
     Func<HigherOrderBooleanResultEvaluation<TModel, string>, IEnumerable<TMetadata>> whenFalse,
     ISpecDescription description,
-    Func<bool, IEnumerable<BooleanResult<TModel, string>>, IEnumerable<BooleanResult<TModel, string>>> causeSelector)
+    Func<bool, IEnumerable<BooleanResult<TModel, string>>, IEnumerable<BooleanResult<TModel, string>>> causeSelector,
+    HigherOrderShortCircuit? shortCircuit = null)
     : SpecBase<IEnumerable<TModel>, TMetadata>
 {
     private readonly ExpressionPredicate<TModel, TPredicateResult> _predicate = new(expression);
@@ -19,7 +20,9 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataProposition<TMod
     public override ISpecDescription Description => description;
 
     public override bool Matches(IEnumerable<TModel> models) =>
-        EvaluateModels(models).IsSatisfied;
+        shortCircuit is { } sc
+            ? sc.Evaluate(models, _predicate, static (m, p) => p.Match(m))
+            : EvaluateModels(models).IsSatisfied;
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(IEnumerable<TModel> models)
     {

@@ -47,7 +47,8 @@ public readonly struct BooleanMetadataHigherOrderExpressionTreePropositionFactor
             whenTrue,
             whenFalse,
             new SpecDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 
     /// <summary>Creates a specification.</summary>
@@ -60,6 +61,7 @@ public readonly struct BooleanMetadataHigherOrderExpressionTreePropositionFactor
             whenTrue,
             whenFalse,
             new ExpressionTreeDescription<TModel, bool>(expression),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

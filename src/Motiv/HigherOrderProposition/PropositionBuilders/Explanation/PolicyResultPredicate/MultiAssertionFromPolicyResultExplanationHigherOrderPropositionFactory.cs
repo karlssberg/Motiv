@@ -36,6 +36,7 @@ public readonly struct MultiAssertionExplanationFromPolicyResultHigherOrderPropo
             trueBecause,
             falseBecause,
             new SpecDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

@@ -30,7 +30,8 @@ public readonly partial struct TrueExpressionTreeHigherOrderFromSpecPropositionF
             expression,
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(statement.ThrowIfNullOrWhitespace(nameof(statement))),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
 
     /// <summary>Creates a proposition.</summary>
     /// <returns>A specification for the model.</returns>
@@ -39,5 +40,6 @@ public readonly partial struct TrueExpressionTreeHigherOrderFromSpecPropositionF
             expression,
             higherOrderOperation.HigherOrderPredicate,
             new ExpressionAsStatementDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
 }

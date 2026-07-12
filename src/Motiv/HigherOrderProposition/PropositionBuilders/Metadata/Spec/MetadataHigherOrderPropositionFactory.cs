@@ -37,6 +37,7 @@ public readonly struct MetadataHigherOrderPropositionFactory<TModel, TReplacemen
             whenTrue,
             whenFalse,
             new SpecDescription(statement, spec.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

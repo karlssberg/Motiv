@@ -38,6 +38,7 @@ public readonly struct MultiMetadataFromSpecHigherOrderExpressionTreeProposition
             whenTrue,
             whenFalse,
             new SpecDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

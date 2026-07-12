@@ -36,6 +36,7 @@ public readonly struct MultiAssertionExplanationFromPolicyResultHigherOrderWithS
             trueBecause.ToEnumerableReturn(),
             falseBecause,
             new SpecDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }

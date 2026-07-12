@@ -33,7 +33,8 @@ internal static class HigherOrderBooleanPredicateSpecMethods
     {
         return new HigherOrderSpecBooleanPredicateOperation<TModel>(
             modelResult => modelResult.AllTrue(),
-            (isSatisfied, results) => isSatisfied ? results : results.WhereFalse());
+            (isSatisfied, results) => isSatisfied ? results : results.WhereFalse(),
+            HigherOrderShortCircuit.All);
     }
 
     /// <summary>
@@ -46,7 +47,8 @@ internal static class HigherOrderBooleanPredicateSpecMethods
     {
         return new HigherOrderSpecBooleanPredicateOperation<TModel>(
             modelResults => modelResults.AnyTrue(),
-            (isSatisfied, results) => isSatisfied ? results.WhereTrue() : results);
+            (isSatisfied, results) => isSatisfied ? results.WhereTrue() : results,
+            HigherOrderShortCircuit.Any);
     }
 
     /// <summary>
@@ -62,7 +64,8 @@ internal static class HigherOrderBooleanPredicateSpecMethods
 
         return new HigherOrderSpecBooleanPredicateOperation<TModel>(
             HigherOrderPredicate,
-            (_, results) => Causes.SatisfiedElseAll(results));
+            (_, results) => Causes.SatisfiedElseAll(results),
+            HigherOrderShortCircuit.AtLeast(n));
 
         bool HigherOrderPredicate(IEnumerable<ModelResult<TModel>> modelResults) =>
             modelResults.CountTrue() >= n;    }
@@ -80,7 +83,8 @@ internal static class HigherOrderBooleanPredicateSpecMethods
 
         return new HigherOrderSpecBooleanPredicateOperation<TModel>(
             HigherOrderPredicate,
-            (_, results) => Causes.SatisfiedElseAll(results));
+            (_, results) => Causes.SatisfiedElseAll(results),
+            HigherOrderShortCircuit.AtMost(n));
 
         bool HigherOrderPredicate(IEnumerable<ModelResult<TModel>> modelResults) =>
             modelResults.CountTrue() <= n;    }
@@ -95,7 +99,8 @@ internal static class HigherOrderBooleanPredicateSpecMethods
     {
         return new HigherOrderSpecBooleanPredicateOperation<TModel>(
             modelResults => modelResults.AllFalse(),
-            (isSatisfied, results) => isSatisfied ? results : results.WhereTrue());
+            (isSatisfied, results) => isSatisfied ? results : results.WhereTrue(),
+            HigherOrderShortCircuit.None);
     }
 
     /// <summary>
@@ -111,7 +116,8 @@ internal static class HigherOrderBooleanPredicateSpecMethods
 
         return new HigherOrderSpecBooleanPredicateOperation<TModel>(
             HigherOrderPredicate,
-            (_, results) => Causes.SatisfiedElseAll(results));
+            (_, results) => Causes.SatisfiedElseAll(results),
+            HigherOrderShortCircuit.Exactly(n));
 
         bool HigherOrderPredicate(IEnumerable<ModelResult<TModel>> modelResults) =>
             modelResults.CountTrue() == n;    }

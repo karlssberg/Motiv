@@ -13,13 +13,29 @@ namespace Motiv.HigherOrderProposition.PropositionBuilders;
 /// A function that takes a boolean and an enumerable of boolean results, and returns an enumerable
 /// of boolean results based on the cause selection logic.
 /// </param>
-public readonly struct HigherOrderSpecPredicateOperation<TModel, TUnderlyingMetadata>(
-    Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
-    Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
+public readonly struct HigherOrderSpecPredicateOperation<TModel, TUnderlyingMetadata>
 {
-    internal Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> HigherOrderPredicate { get; } =
-        higherOrderPredicate;
+    /// <summary>Initializes a new operation with a higher-order predicate and cause selector.</summary>
+    public HigherOrderSpecPredicateOperation(
+        Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
+        Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector)
+        : this(higherOrderPredicate, causeSelector, null)
+    {
+    }
 
-    internal Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> CauseSelector { get; } =
-        causeSelector;
+    internal HigherOrderSpecPredicateOperation(
+        Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> higherOrderPredicate,
+        Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> causeSelector,
+        HigherOrderShortCircuit? shortCircuit)
+    {
+        HigherOrderPredicate = higherOrderPredicate;
+        CauseSelector = causeSelector;
+        ShortCircuit = shortCircuit;
+    }
+
+    internal Func<IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, bool> HigherOrderPredicate { get; }
+
+    internal Func<bool, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>, IEnumerable<BooleanResult<TModel, TUnderlyingMetadata>>> CauseSelector { get; }
+
+    internal HigherOrderShortCircuit? ShortCircuit { get; }
 }

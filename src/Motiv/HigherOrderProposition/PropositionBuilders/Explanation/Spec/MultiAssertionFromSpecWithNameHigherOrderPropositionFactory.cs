@@ -40,7 +40,8 @@ public readonly struct MultiAssertionFromSpecWithNameHigherOrderPropositionFacto
                 .ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, IEnumerable<string>>(),
             falseBecause,
             new SpecDescription(statement, spec.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 
     /// <summary>
@@ -60,6 +61,7 @@ public readonly struct MultiAssertionFromSpecWithNameHigherOrderPropositionFacto
                 .ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, IEnumerable<string>>(),
             falseBecause,
             new SpecDescription(trueBecause, spec.Description),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }
