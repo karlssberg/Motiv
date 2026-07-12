@@ -54,6 +54,7 @@ public readonly struct MultiAssertionExplanationHigherOrderPropositionFactory<TM
             _whenTrue,
             _whenFalse,
             new SpecDescription(statement),
-            _higherOrderOperation.CauseSelector);
+            _higherOrderOperation.CauseSelector,
+            _higherOrderOperation.ShortCircuit);
     }
 }

@@ -1,0 +1,42 @@
+namespace Motiv.Tests;
+
+public class HigherOrderMatchesShortCircuitTests
+{
+    [Fact]
+    public void AllSatisfied_Matches_short_circuits_on_first_false()
+    {
+        var calls = 0;
+        var spec = Spec
+            .Build((int n) => { calls++; return n > 0; })
+            .AsAllSatisfied()
+            .Create("all positive");
+
+        spec.Matches([-1, 2, 3, 4, 5]).ShouldBeFalse();
+        calls.ShouldBe(1); // stopped at the first (false) model
+    }
+
+    [Fact]
+    public void AnySatisfied_Matches_short_circuits_on_first_true()
+    {
+        var calls = 0;
+        var spec = Spec
+            .Build((int n) => { calls++; return n > 0; })
+            .AsAnySatisfied()
+            .Create("any positive");
+
+        spec.Matches([1, -2, -3, -4]).ShouldBeTrue();
+        calls.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(new[] { 1, 2, 3 }, true)]
+    [InlineData(new[] { 1, -2, 3 }, false)]
+    [InlineData(new int[0], true)]
+    public void AllSatisfied_Matches_equals_Evaluate_Satisfied(int[] models, bool expected)
+    {
+        var spec = Spec.Build((int n) => n > 0).AsAllSatisfied().Create("all positive");
+
+        spec.Matches(models).ShouldBe(expected);
+        spec.Matches(models).ShouldBe(spec.Evaluate(models).Satisfied);
+    }
+}

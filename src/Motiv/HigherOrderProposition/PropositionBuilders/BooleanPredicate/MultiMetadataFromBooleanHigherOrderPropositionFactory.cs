@@ -36,6 +36,7 @@ public readonly struct MultiMetadataFromBooleanHigherOrderPropositionFactory<TMo
             whenTrue,
             whenFalse,
             new SpecDescription(statement),
-            higherOrderOperation.CauseSelector);
+            higherOrderOperation.CauseSelector,
+            higherOrderOperation.ShortCircuit);
     }
 }
