@@ -44,6 +44,11 @@ public class HigherOrderShortCircuitTests
     [InlineData("Exactly", 2, new[] { 1, 2, -3 }, true)]
     [InlineData("Exactly", 2, new[] { 1, 2, 3 }, false)]
     [InlineData("Exactly", 0, new int[0], true)]
+    [InlineData("AtLeast", 3, new[] { 1, 2, 3 }, true)]
+    [InlineData("AtLeast", 3, new[] { 1, 2, -3 }, false)]
+    [InlineData("AtMost", 3, new[] { 1, 2, 3 }, true)]
+    [InlineData("Exactly", 3, new[] { 1, 2, 3 }, true)]
+    [InlineData("Exactly", 3, new[] { 1, 2, -3 }, false)]
     public void Evaluate_over_array_matches_reference(string op, int n, int[] data, bool expected)
     {
         Descriptor(op, n).Evaluate(data, new Counter(), Positive).ShouldBe(expected);
@@ -87,6 +92,30 @@ public class HigherOrderShortCircuitTests
     {
         var counter = new Counter();
         HigherOrderShortCircuit.AtLeast(2).Evaluate(new[] { 1, 2, 3, 4, 5 }, counter, Positive).ShouldBeTrue();
+        counter.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void None_short_circuits_on_first_true()
+    {
+        var counter = new Counter();
+        HigherOrderShortCircuit.None.Evaluate(new[] { 1, -2, -3, -4 }, counter, Positive).ShouldBeFalse();
+        counter.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void AtMost_short_circuits_once_exceeded()
+    {
+        var counter = new Counter();
+        HigherOrderShortCircuit.AtMost(1).Evaluate(new[] { 1, 2, 3, 4 }, counter, Positive).ShouldBeFalse();
+        counter.Count.ShouldBe(2); // stops when the 2nd satisfied element pushes the count past 1
+    }
+
+    [Fact]
+    public void Exactly_short_circuits_once_exceeded()
+    {
+        var counter = new Counter();
+        HigherOrderShortCircuit.Exactly(1).Evaluate(new[] { 1, 2, 3, 4 }, counter, Positive).ShouldBeFalse();
         counter.Count.ShouldBe(2);
     }
 }
