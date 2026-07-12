@@ -42,6 +42,20 @@ public class EvaluationBenchmarks
             .AsAllSatisfied()
             .Create("all are positive");
 
+    private readonly SpecBase<IEnumerable<int>, string> _allPositiveFromSpec =
+        Spec.Build(
+                Spec.Build((int n) => n > 0)
+                    .WhenTrue("is positive")
+                    .WhenFalse("is not positive")
+                    .Create())
+            .AsAllSatisfied()
+            .Create("all are positive");
+
+    private readonly SpecBase<IEnumerable<int>, string> _allPositiveFromExpression =
+        Spec.From((int n) => n > 0)
+            .AsAllSatisfied()
+            .Create("all are positive");
+
     private readonly int[] _models = [1, -2, 3, -4, 5, 6, -7, 8, 9, 10];
 
     public EvaluationBenchmarks()
@@ -112,4 +126,16 @@ public class EvaluationBenchmarks
 
     [Benchmark]
     public int HigherOrder_Assertions() => _allPositive.Evaluate(_models).Assertions.Count();
+
+    [Benchmark]
+    public bool HigherOrderFromSpec_Satisfied() => _allPositiveFromSpec.Evaluate(_models).Satisfied;
+
+    [Benchmark]
+    public bool HigherOrderFromSpec_Matches() => _allPositiveFromSpec.Matches(_models);
+
+    [Benchmark]
+    public bool HigherOrderFromExpression_Satisfied() => _allPositiveFromExpression.Evaluate(_models).Satisfied;
+
+    [Benchmark]
+    public bool HigherOrderFromExpression_Matches() => _allPositiveFromExpression.Matches(_models);
 }
