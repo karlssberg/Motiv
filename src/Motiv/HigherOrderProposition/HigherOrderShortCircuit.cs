@@ -1,6 +1,6 @@
 namespace Motiv.HigherOrderProposition;
 
-internal enum HigherOrderOp
+public enum HigherOrderOp
 {
     All,
     Any,
@@ -15,7 +15,7 @@ internal enum HigherOrderOp
 /// projection with array/list fast-paths and per-operation short-circuit. This is the allocation-free,
 /// boolean-only counterpart to the result-materializing higher-order predicate used by the full evaluation path.
 /// </summary>
-internal readonly struct HigherOrderShortCircuit(HigherOrderOp op, int n)
+public readonly struct HigherOrderShortCircuit(HigherOrderOp op, int n)
 {
     internal static HigherOrderShortCircuit All { get; } = new(HigherOrderOp.All, 0);
     internal static HigherOrderShortCircuit Any { get; } = new(HigherOrderOp.Any, 0);
