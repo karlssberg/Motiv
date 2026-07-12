@@ -1,9 +1,10 @@
 namespace Motiv.HigherOrderProposition;
 
 /// <summary>
-///     Materializes a sequence of models into an array of per-model results in a single pass. When the source is
-///     an <see cref="IReadOnlyList{T}" /> (arrays, <see cref="List{T}" />) the result array is pre-sized and filled
-///     via an indexed loop, avoiding the LINQ iterator, buffer-doubling, and boxed-enumerator allocations of
+///     Materializes a sequence of models into an array of per-model results in a single pass. Arrays (the type the
+///     internal hot path always supplies) are indexed directly to avoid per-element interface dispatch; other
+///     <see cref="IReadOnlyList{T}" /> sources (e.g. <see cref="List{T}" />) are pre-sized and filled via an indexed
+///     loop. Either way this avoids the LINQ iterator, buffer-doubling, and boxed-enumerator allocations of
 ///     <c>models.Select(...).ToArray()</c> on the higher-order evaluation hot path.
 /// </summary>
 /// <remarks>
@@ -18,6 +19,15 @@ internal static class HigherOrderResults
         TState state,
         Func<TSource, TState, TResult> project)
     {
+        if (source is TSource[] array)
+        {
+            var results = new TResult[array.Length];
+            for (var i = 0; i < array.Length; i++)
+                results[i] = project(array[i], state);
+
+            return results;
+        }
+
         if (source is IReadOnlyList<TSource> list)
         {
             var results = new TResult[list.Count];
