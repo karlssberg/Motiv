@@ -41,17 +41,30 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
         CancellationToken cancellationToken)
     {
         var scope = EvaluationScope.Start(Description.Statement);
+        PolicyResultBase<TMetadata> result;
         try
         {
-            var result = await EvaluatePolicyAsync(model, cancellationToken).ConfigureAwait(false);
-            scope.Complete(result);
-            return result;
+            result = await EvaluatePolicyAsync(model, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
             scope.Fail(exception);
             throw;
         }
+
+        try
+        {
+            scope.Complete(result);
+        }
+        catch
+        {
+            // A listener or exporter failing while consuming the completed scope (e.g. a throwing
+            // ActivityStopped callback invoked synchronously by Activity.Dispose()) belongs to telemetry, not
+            // the evaluation: this call already succeeded, so that failure must not be attributed to it as an
+            // error, nor allowed to escape — deliberately not scope.Fail(...).
+        }
+
+        return result;
     }
 
     /// <summary>

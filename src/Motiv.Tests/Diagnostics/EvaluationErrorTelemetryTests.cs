@@ -96,6 +96,10 @@ public class EvaluationErrorTelemetryTests
         var result = proposition.Evaluate(1);
 
         result.Satisfied.ShouldBeFalse();
-        harness.SingleActivity().Status.ShouldBe(ActivityStatusCode.Unset);
+        var activity = harness.SingleActivity();
+        activity.Status.ShouldBe(ActivityStatusCode.Unset);
+        activity.GetTagItem("motiv.satisfied").ShouldBe(false);
+        activity.GetTagItem("motiv.reason").ShouldBeNull();
+        activity.GetTagItem("motiv.assertions").ShouldBeNull();
     }
 }

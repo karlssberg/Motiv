@@ -122,6 +122,12 @@ entirely your application's choice whether and how to collect what Motiv emits.
 With nothing listening, instrumentation costs nothing measurable: across all 22 benchmarks shared between the
 pre-telemetry baseline and this instrumentation, the allocation delta is zero, byte for byte.
 
+Enabling tracing (an `ActivityListener` subscribed to `"Motiv"`) forces `motiv.reason` and `motiv.assertions` to be
+resolved on every evaluation, which for an unnamed explanation proposition means its `WhenTrue`/`WhenFalse`
+delegates run. Keep those delegates pure: one that counts calls, writes a log line, or populates a cache runs zero
+times with only metrics attached (or nothing attached at all), and once per evaluation the moment a tracing
+listener is added.
+
 ## Next Steps
 
 - Read about [building propositions](../builder/index.md) and [`EvaluateAsync()`](../async/EvaluateAsync.md), the

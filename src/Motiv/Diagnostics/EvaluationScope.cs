@@ -27,14 +27,22 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
     /// <param name="result">The result produced by the evaluation.</param>
     internal void Complete(BooleanResultBase result)
     {
+        // Taken before any tagging so the duration measures the evaluation, not telemetry's own cost of
+        // resolving Reason/Assertions or dispatching to listeners/exporters via activity.Dispose().
+        var endTimestamp = Stopwatch.GetTimestamp();
+
+        // Recorded before the activity is touched: activity.Dispose() below synchronously runs every
+        // ActivityStopped listener, which can throw (a misbehaving listener or exporter). The metrics for an
+        // evaluation that already succeeded must not be lost because of that — see the caller, which isolates
+        // that same failure from the evaluation's own result.
+        Record(result.Satisfied, errorType: null, endTimestamp);
+
         if (activity is not null)
         {
             activity.SetTag("motiv.satisfied", result.Satisfied);
             TrySetExplanationTags(activity, result);
             activity.Dispose();
         }
-
-        Record(result.Satisfied, errorType: null);
     }
 
     /// <summary>
@@ -62,7 +70,13 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
     /// <param name="exception">The exception that escaped the evaluation.</param>
     internal void Fail(Exception exception)
     {
+        // Taken before any tagging so the duration measures the evaluation, not telemetry's own cost — see
+        // the equivalent remark on Complete.
+        var endTimestamp = Stopwatch.GetTimestamp();
         var errorType = exception.GetType().FullName;
+
+        // Recorded before the activity is touched — see the equivalent remark in Complete.
+        Record(satisfied: null, errorType, endTimestamp);
 
         if (activity is not null)
         {
@@ -78,11 +92,9 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
                 }));
             activity.Dispose();
         }
-
-        Record(satisfied: null, errorType);
     }
 
-    private void Record(bool? satisfied, string? errorType)
+    private void Record(bool? satisfied, string? errorType, long endTimestamp)
     {
         var countEnabled = MotivTelemetry.Evaluations.Enabled;
         var durationEnabled = MotivTelemetry.Duration.Enabled;
@@ -104,9 +116,9 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
         // A duration measured from that point would span from the Stopwatch epoch, not the evaluation,
         // so only record when the scope was actually timed.
         if (durationEnabled && startTimestamp != 0)
-            MotivTelemetry.Duration.Record(ElapsedSeconds(startTimestamp), tags);
+            MotivTelemetry.Duration.Record(ElapsedSeconds(startTimestamp, endTimestamp), tags);
     }
 
-    private static double ElapsedSeconds(long startTimestamp) =>
-        (Stopwatch.GetTimestamp() - startTimestamp) / (double)Stopwatch.Frequency;
+    private static double ElapsedSeconds(long startTimestamp, long endTimestamp) =>
+        (endTimestamp - startTimestamp) / (double)Stopwatch.Frequency;
 }

@@ -211,17 +211,30 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     private BooleanResultBase<TMetadata> EvaluateSpecInstrumented(TModel model)
     {
         var scope = EvaluationScope.Start(Description.Statement);
+        BooleanResultBase<TMetadata> result;
         try
         {
-            var result = EvaluateSpec(model);
-            scope.Complete(result);
-            return result;
+            result = EvaluateSpec(model);
         }
         catch (Exception exception)
         {
             scope.Fail(exception);
             throw;
         }
+
+        try
+        {
+            scope.Complete(result);
+        }
+        catch
+        {
+            // A listener or exporter failing while consuming the completed scope (e.g. a throwing
+            // ActivityStopped callback invoked synchronously by Activity.Dispose()) belongs to telemetry, not
+            // the evaluation: this call already succeeded, so that failure must not be attributed to it as an
+            // error, nor allowed to escape — deliberately not scope.Fail(...).
+        }
+
+        return result;
     }
 
     /// <summary>

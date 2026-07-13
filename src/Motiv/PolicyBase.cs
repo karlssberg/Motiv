@@ -33,17 +33,30 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     private PolicyResultBase<TMetadata> EvaluatePolicyInstrumented(TModel model)
     {
         var scope = EvaluationScope.Start(Description.Statement);
+        PolicyResultBase<TMetadata> result;
         try
         {
-            var result = EvaluatePolicy(model);
-            scope.Complete(result);
-            return result;
+            result = EvaluatePolicy(model);
         }
         catch (Exception exception)
         {
             scope.Fail(exception);
             throw;
         }
+
+        try
+        {
+            scope.Complete(result);
+        }
+        catch
+        {
+            // A listener or exporter failing while consuming the completed scope (e.g. a throwing
+            // ActivityStopped callback invoked synchronously by Activity.Dispose()) belongs to telemetry, not
+            // the evaluation: this call already succeeded, so that failure must not be attributed to it as an
+            // error, nor allowed to escape — deliberately not scope.Fail(...).
+        }
+
+        return result;
     }
 
     /// <summary>

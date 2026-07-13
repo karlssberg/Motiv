@@ -110,6 +110,29 @@ public class SyncEvaluationTelemetryTests
     }
 
     [Fact]
+    public void Should_emit_exactly_one_span_when_composing_specs_with_differing_metadata_types()
+    {
+        using var harness = new TelemetryHarness();
+
+        SpecBase<int> isEven = Spec
+            .Build((int n) => n % 2 == 0)
+            .WhenTrue(1)
+            .WhenFalse(0)
+            .Create("is even");
+        SpecBase<int> isPositive = Spec
+            .Build((int n) => n > 0)
+            .WhenTrue(Guid.NewGuid())
+            .WhenFalse(Guid.Empty)
+            .Create("is positive");
+
+        var composed = isEven & isPositive;
+
+        composed.Evaluate(4);
+
+        harness.Activities.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public void Should_emit_exactly_one_span_for_an_expression_tree_proposition()
     {
         using var harness = new TelemetryHarness();
