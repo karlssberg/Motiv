@@ -15,7 +15,7 @@ public class EvaluationErrorTelemetryTests
 
         var exception = Should.Throw<InvalidOperationException>(() => throws.Evaluate(1));
         exception.Message.ShouldBe("boom");
-        ReferenceEquals(exception, original).ShouldBeTrue();
+        exception.ShouldBeSameAs(original);
 
         var activity = harness.SingleActivity();
         activity.Status.ShouldBe(ActivityStatusCode.Error);

@@ -29,6 +29,7 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
     {
         if (activity is not null)
         {
+            activity.SetTag("motiv.satisfied", result.Satisfied);
             TrySetExplanationTags(activity, result);
             activity.Dispose();
         }
@@ -40,14 +41,14 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
     /// Tags the span with the result's own explanation. <see cref="BooleanResultBase.Reason" /> and
     /// <see cref="BooleanResultBase.Assertions" /> are lazily resolved, and that resolution can run a user's
     /// WhenTrue/WhenFalse delegate — which can throw. Since this only happens because a tracing listener is
-    /// attached, that throw must never escape and turn an otherwise-succeeding evaluation into a failing one; if
-    /// resolution throws, the span simply goes untagged.
+    /// attached, that throw must never escape and turn an otherwise-succeeding evaluation into a failing one: if
+    /// resolution throws, the span still carries the outcome (tagged by the caller beforehand) but no explanation
+    /// text.
     /// </summary>
     private static void TrySetExplanationTags(Activity activity, BooleanResultBase result)
     {
         try
         {
-            activity.SetTag("motiv.satisfied", result.Satisfied);
             activity.SetTag("motiv.reason", result.Reason);
             activity.SetTag("motiv.assertions", result.Assertions.ToArray());
         }
