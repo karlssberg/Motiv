@@ -94,4 +94,24 @@ public class EvaluationErrorTelemetryTests
             .GetTagItem("motiv.proposition")
             .ShouldBe(composed.Description.Statement);
     }
+
+    [Fact]
+    public void Should_add_an_exception_event_with_type_and_message_tags()
+    {
+        using var harness = new TelemetryHarness();
+
+        var throws = Spec
+            .Build((int _) => throw new InvalidOperationException("boom"))
+            .Create("throws");
+
+        Should.Throw<InvalidOperationException>(() => throws.Evaluate(1));
+
+        var activity = harness.SingleActivity();
+        var exceptionEvent = activity.Events
+            .FirstOrDefault(e => e.Name == "exception");
+
+        exceptionEvent.Name.ShouldBe("exception");
+        exceptionEvent.Tags["exception.type"].ShouldBe("System.InvalidOperationException");
+        exceptionEvent.Tags["exception.message"].ShouldBe("boom");
+    }
 }
