@@ -5,6 +5,7 @@ using Motiv.MetadataToExplanationAdapter;
 using Motiv.Not;
 using Motiv.Or;
 using Motiv.OrElse;
+using Motiv.SyncToAsyncAdapter;
 using Motiv.XOr;
 
 namespace Motiv;
@@ -183,6 +184,7 @@ public abstract class SpecBase<TModel> : SpecBase
 public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
 {
     private SpecBase<TModel, string>? _explanationSpec;
+    private AsyncSpecBase<TModel, TMetadata>? _asyncSpec;
 
     /// <summary>Prevents the external instantiation of the <see cref="SpecBase{TModel,TMetadata}" /> class.</summary>
     internal SpecBase()
@@ -291,6 +293,19 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
             SpecBase<TModel, string> explanationSpec => explanationSpec,
             _ => _explanationSpec ??= new MetadataToExplanationAdapterSpec<TModel, TMetadata>(this)
         };
+
+    /// <summary>
+    /// Lifts this synchronous specification into the asynchronous specification hierarchy so that it can be
+    /// composed with asynchronous specifications. Evaluation remains fully synchronous internally; results
+    /// are identical to those produced by <see cref="Evaluate(TModel)" />.
+    /// </summary>
+    /// <returns>An asynchronous view over this specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> ToAsyncSpec() => _asyncSpec ??= CreateAsyncAdapter();
+
+    /// <summary>Creates the adapter used by <see cref="ToAsyncSpec" />. Policies override this to preserve policy semantics.</summary>
+    /// <returns>An asynchronous adapter for this specification.</returns>
+    private protected virtual AsyncSpecBase<TModel, TMetadata> CreateAsyncAdapter() =>
+        new SyncSpecAsyncAdapter<TModel, TMetadata>(this);
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
     /// <returns>A string that represents the logical hierarchy of the specification.</returns>

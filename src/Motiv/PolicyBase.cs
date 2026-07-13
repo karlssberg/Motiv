@@ -1,6 +1,7 @@
 using Motiv.ChangeModelType;
 using Motiv.Not;
 using Motiv.OrElse;
+using Motiv.SyncToAsyncAdapter;
 
 namespace Motiv;
 
@@ -83,4 +84,15 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// <param name="policy">The policy to negate</param>
     /// <returns>A new <see cref="PolicyBase{TModel,TMetadata}" /> that will perform the "Not" operation when evaluated.</returns>
     public static PolicyBase<TModel, TMetadata> operator !(PolicyBase<TModel, TMetadata> policy) => policy.Not();
+
+    /// <summary>
+    /// Lifts this synchronous policy into the asynchronous hierarchy, preserving the single-value policy
+    /// guarantee. Evaluation remains fully synchronous internally.
+    /// </summary>
+    /// <returns>An asynchronous view over this policy.</returns>
+    public new AsyncPolicyBase<TModel, TMetadata> ToAsyncSpec() =>
+        (AsyncPolicyBase<TModel, TMetadata>)base.ToAsyncSpec();
+
+    private protected override AsyncSpecBase<TModel, TMetadata> CreateAsyncAdapter() =>
+        new SyncPolicyAsyncAdapter<TModel, TMetadata>(this);
 }
