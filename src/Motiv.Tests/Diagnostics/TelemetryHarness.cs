@@ -9,6 +9,7 @@ internal sealed class TelemetryHarness : IDisposable
     private readonly MeterListener _meterListener;
     private readonly List<Activity> _activities = [];
     private readonly List<Measurement> _measurements = [];
+    private readonly List<Instrument> _enabledInstruments = [];
 
     public TelemetryHarness()
     {
@@ -28,8 +29,10 @@ internal sealed class TelemetryHarness : IDisposable
         {
             InstrumentPublished = (instrument, listener) =>
             {
-                if (instrument.Meter.Name == "Motiv")
-                    listener.EnableMeasurementEvents(instrument);
+                if (instrument.Meter.Name != "Motiv") return;
+
+                listener.EnableMeasurementEvents(instrument);
+                _enabledInstruments.Add(instrument);
             }
         };
 
@@ -65,11 +68,24 @@ internal sealed class TelemetryHarness : IDisposable
     public void Dispose()
     {
         _activityListener.Dispose();
+
+        // .NET 8's Meter implementation doesn't reliably flip Instrument.Enabled back to false when a
+        // MeterListener is disposed while still subscribed (fixed in .NET 9+). Explicitly disabling each
+        // instrument this listener enabled works around that, so IsEnabled correctly reports false again
+        // once this harness is gone, on every target framework.
+        foreach (var instrument in _enabledInstruments)
+            _meterListener.DisableMeasurementEvents(instrument);
+
         _meterListener.Dispose();
     }
 
     internal sealed record Measurement(
         string Instrument,
         double Value,
-        IReadOnlyDictionary<string, object?> Tags);
+        IReadOnlyDictionary<string, object?> Tags)
+    {
+        public string Instrument { get; } = Instrument;
+        public double Value { get; } = Value;
+        public IReadOnlyDictionary<string, object?> Tags { get; } = Tags;
+    }
 }

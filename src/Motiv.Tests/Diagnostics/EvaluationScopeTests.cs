@@ -63,7 +63,7 @@ public class EvaluationScopeTests
         count.Value.ShouldBe(1);
         count.Tags["motiv.proposition"].ShouldBe("is even");
         count.Tags["motiv.satisfied"].ShouldBe(true);
-        count.Tags.ShouldNotContainKey("error.type");
+        count.Tags.ContainsKey("error.type").ShouldBeFalse();
 
         var duration = harness.SingleMeasurement("motiv.evaluation.duration");
         duration.Value.ShouldBeGreaterThanOrEqualTo(0);
@@ -86,7 +86,7 @@ public class EvaluationScopeTests
 
         var count = harness.SingleMeasurement("motiv.evaluations");
         count.Tags["error.type"].ShouldBe("System.InvalidOperationException");
-        count.Tags.ShouldNotContainKey("motiv.satisfied");
+        count.Tags.ContainsKey("motiv.satisfied").ShouldBeFalse();
     }
 
     [Fact]
