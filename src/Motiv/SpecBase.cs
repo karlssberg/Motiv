@@ -201,10 +201,15 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// </summary>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    public new BooleanResultBase<TMetadata> Evaluate(TModel model)
-    {
-        if (!MotivTelemetry.IsEnabled) return EvaluateSpec(model);
+    public new BooleanResultBase<TMetadata> Evaluate(TModel model) =>
+        MotivTelemetry.IsEnabled ? EvaluateSpecInstrumented(model) : EvaluateSpec(model);
 
+    /// <summary>
+    /// Kept separate from <see cref="Evaluate(TModel)" /> so that the public boundary remains a small, inlineable
+    /// method when telemetry is disabled — a method containing a try/catch cannot be inlined by the JIT.
+    /// </summary>
+    private BooleanResultBase<TMetadata> EvaluateSpecInstrumented(TModel model)
+    {
         var scope = EvaluationScope.Start(Description.Statement);
         try
         {

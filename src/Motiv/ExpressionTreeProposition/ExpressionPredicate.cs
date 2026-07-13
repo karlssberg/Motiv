@@ -10,7 +10,7 @@ internal class ExpressionPredicate<TModel, TPredicateResult>
         {
             case Expression<Func<TModel, bool>> expr:
                 var spec = expr.ToSpec();
-                Execute = spec.Evaluate;
+                Execute = spec.EvaluateInternal;
                 Match = spec.Matches;
                 break;
             case Expression<Func<TModel, BooleanResultBase<string>>> expr:

@@ -23,10 +23,15 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// </summary>
     /// <param name="model">The model to evaluate</param>
     /// <returns>A <see cref="PolicyResultBase{TMetadata}" /> containing the metadata instance and the boolean result.</returns>
-    public new PolicyResultBase<TMetadata> Evaluate(TModel model)
-    {
-        if (!MotivTelemetry.IsEnabled) return EvaluatePolicy(model);
+    public new PolicyResultBase<TMetadata> Evaluate(TModel model) =>
+        MotivTelemetry.IsEnabled ? EvaluatePolicyInstrumented(model) : EvaluatePolicy(model);
 
+    /// <summary>
+    /// Kept separate from <see cref="Evaluate(TModel)" /> so that the public boundary remains a small, inlineable
+    /// method when telemetry is disabled — a method containing a try/catch cannot be inlined by the JIT.
+    /// </summary>
+    private PolicyResultBase<TMetadata> EvaluatePolicyInstrumented(TModel model)
+    {
         var scope = EvaluationScope.Start(Description.Statement);
         try
         {
