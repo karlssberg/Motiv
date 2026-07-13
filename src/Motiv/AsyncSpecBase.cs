@@ -1,6 +1,8 @@
 using Motiv.And;
 using Motiv.AndAlso;
 using Motiv.MetadataToExplanationAdapter;
+using Motiv.Or;
+using Motiv.OrElse;
 
 namespace Motiv;
 
@@ -129,4 +131,30 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
         AsyncSpecBase<TModel, TMetadata> left,
         AsyncSpecBase<TModel, TMetadata> right) =>
         left.And(right);
+
+    /// <summary>Combines this specification with another specification using the logical OR operator.</summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical OR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> Or(AsyncSpecBase<TModel, TMetadata> spec) =>
+        new AsyncOrSpec<TModel, TMetadata>(this, spec);
+
+    /// <summary>
+    /// Combines this specification with another specification using the conditional OR operator. The right
+    /// operand is only evaluated if the left operand resolves to <c>false</c>, since a <c>true</c> left
+    /// operand means the OR operation is already satisfied — for asynchronous specifications this means the
+    /// right operand's work (including any I/O) is never started.
+    /// </summary>
+    /// <param name="spec">The right operand.</param>
+    /// <returns>A new specification that represents the conditional OR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> OrElse(AsyncSpecBase<TModel, TMetadata> spec) =>
+        new AsyncOrElseSpec<TModel, TMetadata>(this, spec);
+
+    /// <summary>Combines two asynchronous specifications using the logical OR operator.</summary>
+    /// <param name="left">The left operand of the OR operation.</param>
+    /// <param name="right">The right operand of the OR operation.</param>
+    /// <returns>A new specification that represents the logical OR of the two specifications.</returns>
+    public static AsyncSpecBase<TModel, TMetadata> operator |(
+        AsyncSpecBase<TModel, TMetadata> left,
+        AsyncSpecBase<TModel, TMetadata> right) =>
+        left.Or(right);
 }
