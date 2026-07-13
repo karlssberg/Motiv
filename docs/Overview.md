@@ -90,3 +90,7 @@ Propositions built from an async predicate via [`Spec.BuildAsync()`](./async/Bui
 | [EvaluateAsync()](./async/EvaluateAsync.md)               | Asynchronously evaluates a proposition, returning the same result types as synchronous evaluation. |
 | [ToAsyncSpec()](./async/ToAsyncSpec.md)                   | Lifts a synchronous specification into the asynchronous hierarchy so it can compose with async operands. |
 | [Concurrent Operators](./async/ConcurrentOperators.md)    | `AndConcurrently()`, `OrConcurrently()`, `XOrConcurrently()` — opt-in concurrent evaluation with results identical to the sequential form. |
+
+## Observability
+
+Motiv reports every top-level evaluation via OpenTelemetry &mdash; a `motiv.evaluate` span per `Evaluate()`/`EvaluateAsync()` call plus `motiv.evaluations`/`motiv.evaluation.duration` metrics &mdash; but emits nothing unless your application subscribes to the `"Motiv"` activity source and meter. See [Observability](./observability/index.md) for the full tag/metric reference, the `Matches`/`Where()` emission rules, and sensitive-data guidance.

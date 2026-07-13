@@ -16,4 +16,6 @@ items:
     href: expression-composition/toc.yml
   - name: Asynchronous Propositions
     href: async/toc.yml
+  - name: Observability
+    href: observability/toc.yml
 
