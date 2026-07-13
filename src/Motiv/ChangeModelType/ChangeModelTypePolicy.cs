@@ -15,7 +15,7 @@ internal sealed class ChangeModelTypePolicy<TParentModel, TModel, TMetadata>(
         EvaluatePolicy(model);
 
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TParentModel model) =>
-        policy.Evaluate(modelSelector(model));
+        policy.EvaluatePolicyInternal(modelSelector(model));
 
     public override string ToString() => policy.ToString();
 }

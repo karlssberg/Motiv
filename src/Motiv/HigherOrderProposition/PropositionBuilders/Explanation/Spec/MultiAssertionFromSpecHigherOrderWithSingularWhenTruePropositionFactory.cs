@@ -31,7 +31,7 @@ public readonly struct MultiAssertionFromSpecHigherOrderWithSingularWhenTrueProp
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, string, TMetadata>(
-            spec.Evaluate,
+            spec.EvaluateInternal,
             higherOrderOperation.HigherOrderPredicate,
             whenTrue.ToEnumerableReturn(),
             whenFalse,

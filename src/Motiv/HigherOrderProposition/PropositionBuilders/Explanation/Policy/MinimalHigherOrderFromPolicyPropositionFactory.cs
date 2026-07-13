@@ -24,7 +24,7 @@ public readonly partial struct MinimalHigherOrderFromPolicyPropositionFactory<TM
     /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<IEnumerable<TModel>, TMetadata> Create(string statement) =>
         new MinimalHigherOrderFromPolicyResultProposition<TModel, TMetadata>(
-            policy.Evaluate,
+            policy.EvaluatePolicyInternal,
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
@@ -34,7 +34,7 @@ public readonly partial struct MinimalHigherOrderFromPolicyPropositionFactory<TM
 
     internal SpecBase<IEnumerable<TModel>, TMetadata> Create(Expression statement) =>
         new MinimalHigherOrderFromPolicyResultProposition<TModel, TMetadata>(
-            policy.Evaluate,
+            policy.EvaluatePolicyInternal,
             higherOrderOperation.HigherOrderPredicate,
             new ExpressionDescription(
                 statement,

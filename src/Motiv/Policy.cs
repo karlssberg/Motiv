@@ -49,7 +49,7 @@ public class Policy<TModel, TMetadata> : PolicyBase<TModel, TMetadata>
 
     /// <inheritdoc/>
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model) =>
-        _policy.Evaluate(model);
+        _policy.EvaluatePolicyInternal(model);
 
     /// <inheritdoc/>
     public override IEnumerable<SpecBase> Underlying => _policy.Underlying;

@@ -51,7 +51,7 @@ internal sealed class SyncPolicyAsyncAdapter<TModel, TMetadata>(
     {
         try
         {
-            return Task.FromResult(policy.Evaluate(model));
+            return Task.FromResult(policy.EvaluatePolicyInternal(model));
         }
         catch (Exception ex)
         {

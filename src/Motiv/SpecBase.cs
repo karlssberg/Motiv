@@ -1,6 +1,7 @@
 using Motiv.And;
 using Motiv.AndAlso;
 using Motiv.ChangeModelType;
+using Motiv.Diagnostics;
 using Motiv.MetadataToExplanationAdapter;
 using Motiv.Not;
 using Motiv.Or;
@@ -200,7 +201,32 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// </summary>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    public new BooleanResultBase<TMetadata> Evaluate(TModel model) => EvaluateSpec(model);
+    public new BooleanResultBase<TMetadata> Evaluate(TModel model)
+    {
+        if (!MotivTelemetry.IsEnabled) return EvaluateSpec(model);
+
+        var scope = EvaluationScope.Start(Description.Statement);
+        try
+        {
+            var result = EvaluateSpec(model);
+            scope.Complete(result);
+            return result;
+        }
+        catch (Exception exception)
+        {
+            scope.Fail(exception);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Evaluates the proposition without emitting telemetry. Used by composite, decorator and higher-order
+    /// propositions when evaluating their operands, so that a composed proposition emits a single span at its
+    /// root rather than one per node.
+    /// </summary>
+    /// <param name="model">The model to evaluate the specification against.</param>
+    /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
+    internal BooleanResultBase<TMetadata> EvaluateInternal(TModel model) => EvaluateSpec(model);
 
     /// <inheritdoc cref="Evaluate(TModel)"/>
     [Obsolete("Use Evaluate instead.")]

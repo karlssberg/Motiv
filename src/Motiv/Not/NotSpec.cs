@@ -23,7 +23,7 @@ internal sealed class NotSpec<TModel, TMetadata>(
     public override bool Matches(TModel model) => !operand.Matches(model);
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model) =>
-        operand.Evaluate(model).Not();
+        operand.EvaluateInternal(model).Not();
 
     public SpecBase<TModel, TMetadata> Operand => operand;
 

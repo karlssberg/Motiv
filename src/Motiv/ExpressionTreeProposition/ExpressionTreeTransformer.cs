@@ -203,10 +203,10 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         var spec = new BooleanResultPredicateMultiAssertionExplanationProposition<TModel, string>(
             model =>
             {
-                var antecedent = test.Evaluate(model);
-                if (antecedent) return antecedent & ifTrue.Evaluate(model);
+                var antecedent = test.EvaluateInternal(model);
+                if (antecedent) return antecedent & ifTrue.EvaluateInternal(model);
 
-                var consequent = ifFalse.Evaluate(model);
+                var consequent = ifFalse.EvaluateInternal(model);
                 return (antecedent & consequent) | (antecedent & !consequent);
             },
             (_, result) => result.Assertions,

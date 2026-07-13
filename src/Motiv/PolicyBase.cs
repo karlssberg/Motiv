@@ -1,4 +1,5 @@
 using Motiv.ChangeModelType;
+using Motiv.Diagnostics;
 using Motiv.Not;
 using Motiv.OrElse;
 using Motiv.SyncToAsyncAdapter;
@@ -22,7 +23,32 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// </summary>
     /// <param name="model">The model to evaluate</param>
     /// <returns>A <see cref="PolicyResultBase{TMetadata}" /> containing the metadata instance and the boolean result.</returns>
-    public new PolicyResultBase<TMetadata> Evaluate(TModel model) => EvaluatePolicy(model);
+    public new PolicyResultBase<TMetadata> Evaluate(TModel model)
+    {
+        if (!MotivTelemetry.IsEnabled) return EvaluatePolicy(model);
+
+        var scope = EvaluationScope.Start(Description.Statement);
+        try
+        {
+            var result = EvaluatePolicy(model);
+            scope.Complete(result);
+            return result;
+        }
+        catch (Exception exception)
+        {
+            scope.Fail(exception);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Evaluates the policy without emitting telemetry. Used by composite, decorator and higher-order
+    /// propositions when evaluating their operands, so that a composed proposition emits a single span at its
+    /// root rather than one per node.
+    /// </summary>
+    /// <param name="model">The model to evaluate the policy against.</param>
+    /// <returns>A result containing the metadata instance and the boolean result.</returns>
+    internal PolicyResultBase<TMetadata> EvaluatePolicyInternal(TModel model) => EvaluatePolicy(model);
 
     /// <inheritdoc cref="Evaluate(TModel)"/>
     [Obsolete("Use Evaluate instead.")]

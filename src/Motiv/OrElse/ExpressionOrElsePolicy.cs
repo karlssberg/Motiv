@@ -38,11 +38,11 @@ internal sealed class ExpressionOrElsePolicy<TModel, TMetadata>(
 
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
-        var leftResult = left.Evaluate(model);
+        var leftResult = left.EvaluatePolicyInternal(model);
         return leftResult.Satisfied switch
         {
             true => new OrElsePolicyResult<TMetadata>(leftResult),
-            false => new OrElsePolicyResult<TMetadata>(leftResult, right.Evaluate(model))
+            false => new OrElsePolicyResult<TMetadata>(leftResult, right.EvaluatePolicyInternal(model))
         };
     }
 

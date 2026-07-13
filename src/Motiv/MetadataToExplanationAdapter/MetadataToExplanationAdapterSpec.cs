@@ -14,7 +14,7 @@ internal sealed class MetadataToExplanationAdapterSpec<TModel, TUnderlyingMetada
 
     protected override BooleanResultBase<string> EvaluateSpec(TModel model)
     {
-        var result = spec.Evaluate(model);
+        var result = spec.EvaluateInternal(model);
 
         return new MetadataToExplanationAdapterBooleanResult<TUnderlyingMetadata>(result, spec.Description);
     }

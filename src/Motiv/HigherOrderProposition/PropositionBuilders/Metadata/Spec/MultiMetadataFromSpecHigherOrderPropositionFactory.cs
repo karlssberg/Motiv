@@ -32,7 +32,7 @@ public readonly struct MultiMetadataFromSpecHigherOrderPropositionFactory<TModel
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanResultMultiMetadataProposition<TModel, TReplacementMetadata, TMetadata>(
-            spec.Evaluate,
+            spec.EvaluateInternal,
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,
             whenFalse,

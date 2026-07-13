@@ -31,7 +31,7 @@ public readonly struct MultiAssertionFromPolicyHigherOrderWithSingularWhenTruePr
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, string, TMetadata>(
-            policy.Evaluate,
+            policy.EvaluatePolicyInternal,
             higherOrderOperation.HigherOrderPredicate,
             whenTrue.ToEnumerableReturn(),
             whenFalse,

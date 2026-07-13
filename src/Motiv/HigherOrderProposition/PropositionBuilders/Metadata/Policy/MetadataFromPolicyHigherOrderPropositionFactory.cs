@@ -32,7 +32,7 @@ public readonly struct MetadataFromPolicyHigherOrderPropositionFactory<TModel, T
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromPolicyResultMetadataProposition<TModel, TReplacementMetadata, TMetadata>(
-            policy.Evaluate,
+            policy.EvaluatePolicyInternal,
             higherOrderOperation.HigherOrderPredicate,
             whenTrue,
             whenFalse,

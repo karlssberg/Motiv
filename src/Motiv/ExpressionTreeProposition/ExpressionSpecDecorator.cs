@@ -16,5 +16,5 @@ internal sealed class ExpressionSpecDecorator<TModel, TMetadata>(
     public override bool Matches(TModel model) => underlyingSpec.Matches(model);
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model) =>
-        underlyingSpec.Evaluate(model);
+        underlyingSpec.EvaluateInternal(model);
 }

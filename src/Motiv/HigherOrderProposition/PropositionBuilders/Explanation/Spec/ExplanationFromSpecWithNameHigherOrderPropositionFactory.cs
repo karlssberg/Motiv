@@ -34,7 +34,7 @@ public readonly struct ExplanationFromSpecWithNameHigherOrderPropositionFactory<
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanResultProposition<TModel, string, TMetadata>(
-            spec.Evaluate,
+            spec.EvaluateInternal,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string>(),
             falseBecause,
@@ -54,7 +54,7 @@ public readonly struct ExplanationFromSpecWithNameHigherOrderPropositionFactory<
     {
         trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
         return new HigherOrderFromBooleanResultExplanationProposition<TModel, TMetadata>(
-            spec.Evaluate,
+            spec.EvaluateInternal,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause.ToFunc<HigherOrderBooleanResultEvaluation<TModel, TMetadata>, string>(),
             falseBecause,

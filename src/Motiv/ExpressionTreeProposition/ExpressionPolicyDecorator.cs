@@ -16,5 +16,5 @@ internal sealed class ExpressionPolicyDecorator<TModel, TMetadata>(
     public override bool Matches(TModel model) => underlyingPolicy.Matches(model);
 
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model) =>
-        underlyingPolicy.Evaluate(model);
+        underlyingPolicy.EvaluatePolicyInternal(model);
 }
