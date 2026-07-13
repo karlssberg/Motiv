@@ -41,12 +41,12 @@ internal sealed class AsyncAndAlsoSpec<TModel, TMetadata>(
         TModel model,
         CancellationToken cancellationToken)
     {
-        var leftResult = await left.EvaluateAsync(model, cancellationToken).ConfigureAwait(false);
+        var leftResult = await left.EvaluateSpecAsyncInternal(model, cancellationToken).ConfigureAwait(false);
         return leftResult.Satisfied switch
         {
             true => new AndAlsoBooleanResult<TMetadata>(
                 leftResult,
-                await right.EvaluateAsync(model, cancellationToken).ConfigureAwait(false)),
+                await right.EvaluateSpecAsyncInternal(model, cancellationToken).ConfigureAwait(false)),
             false => new AndAlsoBooleanResult<TMetadata>(leftResult)
         };
     }

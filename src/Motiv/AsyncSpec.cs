@@ -42,7 +42,7 @@ public class AsyncSpec<TModel, TMetadata> : AsyncSpecBase<TModel, TMetadata>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A BooleanResultBase containing the result of the proposition check and the associated metadata.</returns>
     protected override Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(TModel model, CancellationToken cancellationToken) =>
-        _spec.EvaluateAsync(model, cancellationToken);
+        _spec.EvaluateSpecAsyncInternal(model, cancellationToken);
 }
 
 /// <summary>
@@ -89,5 +89,5 @@ public class AsyncSpec<TModel> : AsyncSpecBase<TModel, string>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A BooleanResultBase containing the result of the proposition being applied to a model.</returns>
     protected override Task<BooleanResultBase<string>> EvaluateSpecAsync(TModel model, CancellationToken cancellationToken) =>
-        _spec.EvaluateAsync(model, cancellationToken);
+        _spec.EvaluateSpecAsyncInternal(model, cancellationToken);
 }

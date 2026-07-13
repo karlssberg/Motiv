@@ -58,13 +58,13 @@ internal sealed class AsyncOrElsePolicy<TModel, TMetadata>(
         TModel model,
         CancellationToken cancellationToken)
     {
-        var leftResult = await left.EvaluateAsync(model, cancellationToken).ConfigureAwait(false);
+        var leftResult = await left.EvaluatePolicyAsyncInternal(model, cancellationToken).ConfigureAwait(false);
         return leftResult.Satisfied switch
         {
             true => new OrElsePolicyResult<TMetadata>(leftResult),
             false => new OrElsePolicyResult<TMetadata>(
                 leftResult,
-                await right.EvaluateAsync(model, cancellationToken).ConfigureAwait(false))
+                await right.EvaluatePolicyAsyncInternal(model, cancellationToken).ConfigureAwait(false))
         };
     }
 }

@@ -1,3 +1,4 @@
+using Motiv.Diagnostics;
 using Motiv.Not;
 using Motiv.OrElse;
 
@@ -24,7 +25,46 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     /// <param name="model">The model to evaluate the policy against.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    public new Task<PolicyResultBase<TMetadata>> EvaluateAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public new Task<PolicyResultBase<TMetadata>> EvaluateAsync(
+        TModel model,
+        CancellationToken cancellationToken = default) =>
+        MotivTelemetry.IsEnabled
+            ? EvaluatePolicyInstrumentedAsync(model, cancellationToken)
+            : EvaluatePolicyAsync(model, cancellationToken);
+
+    /// <summary>
+    /// Kept separate from <see cref="EvaluateAsync(TModel,CancellationToken)" /> so that the public boundary
+    /// remains free of an async state machine when telemetry is disabled.
+    /// </summary>
+    private async Task<PolicyResultBase<TMetadata>> EvaluatePolicyInstrumentedAsync(
+        TModel model,
+        CancellationToken cancellationToken)
+    {
+        var scope = EvaluationScope.Start(Description.Statement);
+        try
+        {
+            var result = await EvaluatePolicyAsync(model, cancellationToken).ConfigureAwait(false);
+            scope.Complete(result);
+            return result;
+        }
+        catch (Exception exception)
+        {
+            scope.Fail(exception);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously evaluates the policy without emitting telemetry. Used by composite and adapter
+    /// propositions when evaluating their operands, so that a composed proposition emits a single span at its
+    /// root rather than one per node.
+    /// </summary>
+    /// <param name="model">The model to evaluate the policy against.</param>
+    /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
+    /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
+    internal Task<PolicyResultBase<TMetadata>> EvaluatePolicyAsyncInternal(
+        TModel model,
+        CancellationToken cancellationToken) =>
         EvaluatePolicyAsync(model, cancellationToken);
 
     /// <summary>

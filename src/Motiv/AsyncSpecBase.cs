@@ -1,5 +1,6 @@
 using Motiv.And;
 using Motiv.AndAlso;
+using Motiv.Diagnostics;
 using Motiv.MetadataToExplanationAdapter;
 using Motiv.Not;
 using Motiv.Or;
@@ -287,7 +288,46 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    public new Task<BooleanResultBase<TMetadata>> EvaluateAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public new Task<BooleanResultBase<TMetadata>> EvaluateAsync(
+        TModel model,
+        CancellationToken cancellationToken = default) =>
+        MotivTelemetry.IsEnabled
+            ? EvaluateSpecInstrumentedAsync(model, cancellationToken)
+            : EvaluateSpecAsync(model, cancellationToken);
+
+    /// <summary>
+    /// Kept separate from <see cref="EvaluateAsync(TModel,CancellationToken)" /> so that the public boundary
+    /// remains free of an async state machine when telemetry is disabled.
+    /// </summary>
+    private async Task<BooleanResultBase<TMetadata>> EvaluateSpecInstrumentedAsync(
+        TModel model,
+        CancellationToken cancellationToken)
+    {
+        var scope = EvaluationScope.Start(Description.Statement);
+        try
+        {
+            var result = await EvaluateSpecAsync(model, cancellationToken).ConfigureAwait(false);
+            scope.Complete(result);
+            return result;
+        }
+        catch (Exception exception)
+        {
+            scope.Fail(exception);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously evaluates the specification without emitting telemetry. Used by composite and adapter
+    /// propositions when evaluating their operands, so that a composed proposition emits a single span at its
+    /// root rather than one per node.
+    /// </summary>
+    /// <param name="model">The model to evaluate the specification against.</param>
+    /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
+    /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
+    internal Task<BooleanResultBase<TMetadata>> EvaluateSpecAsyncInternal(
+        TModel model,
+        CancellationToken cancellationToken) =>
         EvaluateSpecAsync(model, cancellationToken);
 
     /// <inheritdoc />
