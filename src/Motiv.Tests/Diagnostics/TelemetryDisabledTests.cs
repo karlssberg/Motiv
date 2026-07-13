@@ -27,18 +27,31 @@ public class TelemetryDisabledTests
     }
 
     [Fact]
-    public void Should_start_emitting_as_soon_as_a_listener_attaches_and_stop_when_it_detaches()
+    public void Should_start_emitting_as_soon_as_a_listener_attaches()
     {
         var isEven = Spec.Build((int n) => n % 2 == 0).Create("is even");
 
-        using (var harness = new TelemetryHarness())
-        {
-            isEven.Evaluate(2);
-            harness.Activities.Count.ShouldBe(1);
-        }
-
-        using var second = new TelemetryHarness();
+        using var harness = new TelemetryHarness();
         isEven.Evaluate(2);
-        second.Activities.Count.ShouldBe(1);
+
+        harness.Activities.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Should_stop_emitting_once_the_listener_detaches()
+    {
+        var isEven = Spec.Build((int n) => n % 2 == 0).Create("is even");
+
+        var harness = new TelemetryHarness();
+        isEven.Evaluate(2);
+        harness.Activities.Count.ShouldBe(1);
+
+        harness.Dispose();
+
+        // Evaluate again in the gap where the (now-disposed) harness must no longer be listening.
+        isEven.Evaluate(2);
+
+        Activity.Current.ShouldBeNull();
+        harness.Activities.Count.ShouldBe(1);
     }
 }

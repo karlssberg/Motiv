@@ -215,7 +215,7 @@ Install-Package Motiv
 
 ## Technical Notes
 
-- Zero additional dependencies
+- Zero additional dependencies on .NET 8+ (the legacy `netstandard2.0` target pulls in `System.Diagnostics.DiagnosticSource` for telemetry)
 - Metadata lazily evaluated
 - .NET & .NET Framework compatible
 - Performance optimized
