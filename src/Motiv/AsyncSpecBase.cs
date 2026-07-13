@@ -3,6 +3,7 @@ using Motiv.AndAlso;
 using Motiv.MetadataToExplanationAdapter;
 using Motiv.Or;
 using Motiv.OrElse;
+using Motiv.XOr;
 
 namespace Motiv;
 
@@ -157,4 +158,22 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
         AsyncSpecBase<TModel, TMetadata> left,
         AsyncSpecBase<TModel, TMetadata> right) =>
         left.Or(right);
+
+    /// <summary>
+    /// Combines this specification with another asynchronous specification using the logical XOR operator.
+    /// Both operands are evaluated sequentially (left, then right), regardless of the outcome.
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical XOR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> XOr(AsyncSpecBase<TModel, TMetadata> spec) =>
+        new AsyncXOrSpec<TModel, TMetadata>(this, spec);
+
+    /// <summary>Combines two asynchronous specifications using the logical XOR operator.</summary>
+    /// <param name="left">The left operand of the XOR operation.</param>
+    /// <param name="right">The right operand of the XOR operation.</param>
+    /// <returns>A new specification that represents the logical XOR of the two specifications.</returns>
+    public static AsyncSpecBase<TModel, TMetadata> operator ^(
+        AsyncSpecBase<TModel, TMetadata> left,
+        AsyncSpecBase<TModel, TMetadata> right) =>
+        left.XOr(right);
 }
