@@ -106,4 +106,27 @@ public class AsyncEvaluationErrorTelemetryTests
         activity.Status.ShouldBe(ActivityStatusCode.Error);
         activity.GetTagItem("error.type").ShouldBe("System.InvalidOperationException");
     }
+
+    [Fact]
+    public async Task Should_record_cancellation_as_an_error()
+    {
+        using var harness = new TelemetryHarness();
+        using var cancellation = new CancellationTokenSource();
+
+        Func<int, CancellationToken, Task<bool>> slowPredicate = (_, token) =>
+        {
+            cancellation.Cancel();
+            token.ThrowIfCancellationRequested();
+            return Task.FromResult(true);
+        };
+        var slow = Spec.BuildAsync(slowPredicate).Create("slow");
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            async () => await slow.EvaluateAsync(1, cancellation.Token));
+
+        var activity = harness.SingleActivity();
+        activity.Status.ShouldBe(ActivityStatusCode.Error);
+        // TaskCanceledException derives from OperationCanceledException; either is correct here.
+        activity.GetTagItem("error.type")!.ToString()!.ShouldContain("CanceledException");
+    }
 }

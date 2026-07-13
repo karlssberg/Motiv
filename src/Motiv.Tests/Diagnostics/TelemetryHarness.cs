@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using Motiv.Diagnostics;
 
 namespace Motiv.Tests.Diagnostics;
 
@@ -15,7 +16,7 @@ internal sealed class TelemetryHarness : IDisposable
     {
         _activityListener = new ActivityListener
         {
-            ShouldListenTo = source => source.Name == "Motiv",
+            ShouldListenTo = source => source.Name == MotivTelemetry.SourceName,
             Sample = (ref ActivityCreationOptions<ActivityContext> _) =>
                 ActivitySamplingResult.AllDataAndRecorded,
             SampleUsingParentId = (ref ActivityCreationOptions<string> _) =>
@@ -29,7 +30,7 @@ internal sealed class TelemetryHarness : IDisposable
         {
             InstrumentPublished = (instrument, listener) =>
             {
-                if (instrument.Meter.Name != "Motiv") return;
+                if (instrument.Meter.Name != MotivTelemetry.SourceName) return;
 
                 listener.EnableMeasurementEvents(instrument);
                 _enabledInstruments.Add(instrument);

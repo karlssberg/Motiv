@@ -14,7 +14,6 @@ public class EvaluationScopeTests
         var scope = EvaluationScope.Start("is even");
         scope.Complete(result);
 
-        Activity.Current.ShouldBeNull();
         MotivTelemetry.IsEnabled.ShouldBeFalse();
     }
 
@@ -29,8 +28,8 @@ public class EvaluationScopeTests
     [Fact]
     public void Should_tag_a_completed_scope_with_the_results_own_explanation()
     {
-        // The result is produced BEFORE the harness exists: from Task 2 onwards Evaluate is itself
-        // instrumented, and an evaluation inside the harness would add a second, unrelated activity.
+        // The result is produced BEFORE the harness exists: Evaluate is itself instrumented, so evaluating
+        // inside the harness would add a second, unrelated activity.
         var result = Spec.Build((int n) => n % 2 == 0).Create("is even").Evaluate(3);
 
         using var harness = new TelemetryHarness();

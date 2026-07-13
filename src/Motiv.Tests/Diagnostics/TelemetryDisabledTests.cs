@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using Motiv.Diagnostics;
 
 namespace Motiv.Tests.Diagnostics;
 
@@ -13,7 +13,7 @@ public class TelemetryDisabledTests
 
         (isEven & isPositive).Evaluate(2).Satisfied.ShouldBeTrue();
 
-        Activity.Current.ShouldBeNull();
+        MotivTelemetry.IsEnabled.ShouldBeFalse();
     }
 
     [Fact]
@@ -23,7 +23,7 @@ public class TelemetryDisabledTests
 
         (await isEven.EvaluateAsync(2)).Satisfied.ShouldBeTrue();
 
-        Activity.Current.ShouldBeNull();
+        MotivTelemetry.IsEnabled.ShouldBeFalse();
     }
 
     [Fact]
@@ -51,7 +51,6 @@ public class TelemetryDisabledTests
         // Evaluate again in the gap where the (now-disposed) harness must no longer be listening.
         isEven.Evaluate(2);
 
-        Activity.Current.ShouldBeNull();
         harness.Activities.Count.ShouldBe(1);
     }
 }

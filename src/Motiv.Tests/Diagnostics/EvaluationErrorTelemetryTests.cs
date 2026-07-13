@@ -6,25 +6,7 @@ namespace Motiv.Tests.Diagnostics;
 public class EvaluationErrorTelemetryTests
 {
     [Fact]
-    public void Should_mark_the_span_as_errored_and_rethrow_the_original_exception()
-    {
-        using var harness = new TelemetryHarness();
-
-        var throws = Spec
-            .Build((int _) => throw new InvalidOperationException("boom"))
-            .Create("throws");
-
-        var exception = Should.Throw<InvalidOperationException>(() => throws.Evaluate(1));
-        exception.Message.ShouldBe("boom");
-
-        var activity = harness.SingleActivity();
-        activity.Status.ShouldBe(ActivityStatusCode.Error);
-        activity.GetTagItem("error.type").ShouldBe("System.InvalidOperationException");
-        activity.GetTagItem("motiv.satisfied").ShouldBeNull();
-    }
-
-    [Fact]
-    public void Should_rethrow_the_original_exception_instance_unwrapped()
+    public void Should_mark_the_span_as_errored_and_rethrow_the_original_exception_unwrapped()
     {
         using var harness = new TelemetryHarness();
         var original = new InvalidOperationException("boom");
@@ -32,8 +14,13 @@ public class EvaluationErrorTelemetryTests
         var throws = Spec.Build((int _) => throw original).Create("throws");
 
         var exception = Should.Throw<InvalidOperationException>(() => throws.Evaluate(1));
-
+        exception.Message.ShouldBe("boom");
         ReferenceEquals(exception, original).ShouldBeTrue();
+
+        var activity = harness.SingleActivity();
+        activity.Status.ShouldBe(ActivityStatusCode.Error);
+        activity.GetTagItem("error.type").ShouldBe("System.InvalidOperationException");
+        activity.GetTagItem("motiv.satisfied").ShouldBeNull();
     }
 
     [Fact]
@@ -51,29 +38,6 @@ public class EvaluationErrorTelemetryTests
             .Tags["error.type"].ShouldBe("System.InvalidOperationException");
         harness.SingleMeasurement("motiv.evaluation.duration")
             .Tags["error.type"].ShouldBe("System.InvalidOperationException");
-    }
-
-    [Fact]
-    public async Task Should_record_cancellation_as_an_error()
-    {
-        using var harness = new TelemetryHarness();
-        using var cancellation = new CancellationTokenSource();
-
-        Func<int, CancellationToken, Task<bool>> slowPredicate = (_, token) =>
-        {
-            cancellation.Cancel();
-            token.ThrowIfCancellationRequested();
-            return Task.FromResult(true);
-        };
-        var slow = Spec.BuildAsync(slowPredicate).Create("slow");
-
-        await Should.ThrowAsync<OperationCanceledException>(
-            async () => await slow.EvaluateAsync(1, cancellation.Token));
-
-        var activity = harness.SingleActivity();
-        activity.Status.ShouldBe(ActivityStatusCode.Error);
-        // TaskCanceledException derives from OperationCanceledException; either is correct here.
-        activity.GetTagItem("error.type")!.ToString()!.ShouldContain("CanceledException");
     }
 
     [Fact]
@@ -113,5 +77,25 @@ public class EvaluationErrorTelemetryTests
         tags["exception.type"].ShouldBe("System.InvalidOperationException");
         tags["exception.message"].ShouldBe("boom");
         tags.ShouldContainKey("exception.stacktrace");
+    }
+
+    [Fact]
+    public void Should_return_the_result_normally_when_resolving_its_explanation_text_throws()
+    {
+        using var harness = new TelemetryHarness();
+
+        // WhenFalse is a delegate, so its string is resolved lazily when Reason/Assertions are read — exactly
+        // what a tracing listener's span-tagging does. A succeeding evaluation must not become a throwing one
+        // just because something started listening.
+        var proposition = Spec
+            .Build((int _) => false)
+            .WhenTrue("value")
+            .WhenFalse((int _) => throw new InvalidOperationException("explanation boom"))
+            .Create();
+
+        var result = proposition.Evaluate(1);
+
+        result.Satisfied.ShouldBeFalse();
+        harness.SingleActivity().Status.ShouldBe(ActivityStatusCode.Unset);
     }
 }

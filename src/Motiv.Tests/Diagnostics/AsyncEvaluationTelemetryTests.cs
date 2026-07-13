@@ -50,20 +50,13 @@ public class AsyncEvaluationTelemetryTests
             sequentialAssertions = sequential.GetTagItem("motiv.assertions");
         }
 
-        var sequentialTags = new
-        {
-            Satisfied = sequentialSatisfied,
-            Reason = sequentialReason,
-            Assertions = sequentialAssertions
-        };
-
         using var concurrentHarness = new TelemetryHarness();
         await isEven.AndConcurrently(isPositive).EvaluateAsync(4);
         var concurrent = concurrentHarness.SingleActivity();
 
-        concurrent.GetTagItem("motiv.satisfied").ShouldBe(sequentialTags.Satisfied);
-        concurrent.GetTagItem("motiv.reason").ShouldBe(sequentialTags.Reason);
-        concurrent.GetTagItem("motiv.assertions").ShouldBe(sequentialTags.Assertions);
+        concurrent.GetTagItem("motiv.satisfied").ShouldBe(sequentialSatisfied);
+        concurrent.GetTagItem("motiv.reason").ShouldBe(sequentialReason);
+        concurrent.GetTagItem("motiv.assertions").ShouldBe(sequentialAssertions);
     }
 
     [Fact]

@@ -29,13 +29,32 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
     {
         if (activity is not null)
         {
-            activity.SetTag("motiv.satisfied", result.Satisfied);
-            activity.SetTag("motiv.reason", result.Reason);
-            activity.SetTag("motiv.assertions", result.Assertions.ToArray());
+            TrySetExplanationTags(activity, result);
             activity.Dispose();
         }
 
         Record(result.Satisfied, errorType: null);
+    }
+
+    /// <summary>
+    /// Tags the span with the result's own explanation. <see cref="BooleanResultBase.Reason" /> and
+    /// <see cref="BooleanResultBase.Assertions" /> are lazily resolved, and that resolution can run a user's
+    /// WhenTrue/WhenFalse delegate — which can throw. Since this only happens because a tracing listener is
+    /// attached, that throw must never escape and turn an otherwise-succeeding evaluation into a failing one; if
+    /// resolution throws, the span simply goes untagged.
+    /// </summary>
+    private static void TrySetExplanationTags(Activity activity, BooleanResultBase result)
+    {
+        try
+        {
+            activity.SetTag("motiv.satisfied", result.Satisfied);
+            activity.SetTag("motiv.reason", result.Reason);
+            activity.SetTag("motiv.assertions", result.Assertions.ToArray());
+        }
+        catch
+        {
+            // Explanation resolution failing must not affect the evaluation's own outcome — see remarks above.
+        }
     }
 
     /// <summary>Terminates the scope with a failed evaluation. The exception itself is rethrown by the caller.</summary>
