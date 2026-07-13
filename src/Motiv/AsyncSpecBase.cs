@@ -1,3 +1,4 @@
+using Motiv.And;
 using Motiv.MetadataToExplanationAdapter;
 
 namespace Motiv;
@@ -99,4 +100,22 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
     protected abstract Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(TModel model, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Combines this specification with another asynchronous specification using the logical AND operator.
+    /// Both operands are evaluated sequentially (left, then right), regardless of the left operand's outcome.
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> And(AsyncSpecBase<TModel, TMetadata> spec) =>
+        new AsyncAndSpec<TModel, TMetadata>(this, spec);
+
+    /// <summary>Combines two asynchronous specifications using the logical AND operator.</summary>
+    /// <param name="left">The left operand of the AND operation.</param>
+    /// <param name="right">The right operand of the AND operation.</param>
+    /// <returns>A new specification that represents the logical AND of the two specifications.</returns>
+    public static AsyncSpecBase<TModel, TMetadata> operator &(
+        AsyncSpecBase<TModel, TMetadata> left,
+        AsyncSpecBase<TModel, TMetadata> right) =>
+        left.And(right);
 }
