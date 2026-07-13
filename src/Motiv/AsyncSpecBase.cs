@@ -1,6 +1,7 @@
 using Motiv.And;
 using Motiv.AndAlso;
 using Motiv.MetadataToExplanationAdapter;
+using Motiv.Not;
 using Motiv.Or;
 using Motiv.OrElse;
 using Motiv.XOr;
@@ -176,4 +177,16 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
         AsyncSpecBase<TModel, TMetadata> left,
         AsyncSpecBase<TModel, TMetadata> right) =>
         left.XOr(right);
+
+    /// <summary>Negates this specification.</summary>
+    /// <returns>A new specification that represents the logical NOT of this specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> Not() =>
+        new AsyncNotSpec<TModel, TMetadata>(this);
+
+    /// <summary>Negates a specification.</summary>
+    /// <param name="spec">The specification to negate.</param>
+    /// <returns>A new specification that represents the logical NOT of the specification.</returns>
+    public static AsyncSpecBase<TModel, TMetadata> operator !(
+        AsyncSpecBase<TModel, TMetadata> spec) =>
+        spec.Not();
 }

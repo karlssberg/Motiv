@@ -27,8 +27,8 @@ internal sealed class AsyncOrSpec<TModel, TMetadata>(
     /// <inheritdoc />
     public override ISpecDescription Description => field ??=
         new AsyncBinarySpecDescription<TModel, TMetadata>(left, right, "|", Operator.Or,
-            // TODO(Task 10): add AsyncOrElsePolicy<TModel, TMetadata> to this family pattern.
             operand => operand is AsyncOrSpec<TModel, TMetadata> or AsyncOrElseSpec<TModel, TMetadata>
+                or AsyncOrElsePolicy<TModel, TMetadata>
                 or OrSpec<TModel, TMetadata> or OrElseSpec<TModel, TMetadata> or OrElsePolicy<TModel, TMetadata>
                 or ExpressionOrSpec<TModel, TMetadata> or ExpressionOrElseSpec<TModel, TMetadata>
                 or ExpressionOrElsePolicy<TModel, TMetadata>);

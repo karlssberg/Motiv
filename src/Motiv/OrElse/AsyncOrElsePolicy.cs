@@ -5,19 +5,18 @@ using Motiv.Traversal;
 namespace Motiv.OrElse;
 
 /// <summary>
-/// An asynchronous specification that represents the conditional OR of two asynchronous specifications. The
-/// right operand is only evaluated if the left operand resolves to <c>false</c> — for asynchronous
-/// specifications this means the right operand's work (including any I/O) is never started when the left
-/// operand is satisfied.
+/// An asynchronous policy that represents the conditional OR of two asynchronous policies, preserving the
+/// policy guarantee. The right operand is only evaluated if the left operand resolves to <c>false</c> — for
+/// asynchronous policies this means the right operand's work (including any I/O) is never started when the
+/// left operand is satisfied.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-internal sealed class AsyncOrElseSpec<TModel, TMetadata>(
-    AsyncSpecBase<TModel, TMetadata> left,
-    AsyncSpecBase<TModel, TMetadata> right)
-    : AsyncSpecBase<TModel, TMetadata>,
-        IAsyncBinaryOperationSpec<TModel, TMetadata>,
-        IAsyncBinaryOperationSpec
+internal sealed class AsyncOrElsePolicy<TModel, TMetadata>(
+    AsyncPolicyBase<TModel, TMetadata> left,
+    AsyncPolicyBase<TModel, TMetadata> right)
+    : AsyncPolicyBase<TModel, TMetadata>,
+        IAsyncBinaryOperationSpec<TModel, TMetadata>
 {
     private readonly SpecBase[] _underlying = [left, right];
 
@@ -55,15 +54,15 @@ internal sealed class AsyncOrElseSpec<TModel, TMetadata>(
         || await right.MatchesAsync(model, cancellationToken).ConfigureAwait(false);
 
     /// <inheritdoc />
-    protected override async Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
+    protected override async Task<PolicyResultBase<TMetadata>> EvaluatePolicyAsync(
         TModel model,
         CancellationToken cancellationToken)
     {
         var leftResult = await left.EvaluateAsync(model, cancellationToken).ConfigureAwait(false);
         return leftResult.Satisfied switch
         {
-            true => new OrElseBooleanResult<TMetadata>(leftResult),
-            false => new OrElseBooleanResult<TMetadata>(
+            true => new OrElsePolicyResult<TMetadata>(leftResult),
+            false => new OrElsePolicyResult<TMetadata>(
                 leftResult,
                 await right.EvaluateAsync(model, cancellationToken).ConfigureAwait(false))
         };
