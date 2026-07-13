@@ -80,7 +80,10 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
         if (countEnabled)
             MotivTelemetry.Evaluations.Add(1, tags);
 
-        if (durationEnabled)
+        // startTimestamp is 0 when Start() ran before any listener attached (see Start()'s sentinel).
+        // A duration measured from that point would span from the Stopwatch epoch, not the evaluation,
+        // so only record when the scope was actually timed.
+        if (durationEnabled && startTimestamp != 0)
             MotivTelemetry.Duration.Record(ElapsedSeconds(startTimestamp), tags);
     }
 

@@ -3,6 +3,7 @@ using Motiv.Diagnostics;
 
 namespace Motiv.Tests.Diagnostics;
 
+[Collection(TelemetryTestCollection.Name)]
 public class EvaluationScopeTests
 {
     [Fact]
@@ -86,5 +87,23 @@ public class EvaluationScopeTests
         var count = harness.SingleMeasurement("motiv.evaluations");
         count.Tags["error.type"].ShouldBe("System.InvalidOperationException");
         count.Tags.ShouldNotContainKey("motiv.satisfied");
+    }
+
+    [Fact]
+    public void Should_not_record_a_duration_for_a_scope_that_started_before_any_listener_attached()
+    {
+        var result = Spec.Build((int n) => n % 2 == 0).Create("is even").Evaluate(2);
+
+        var scope = EvaluationScope.Start("is even");
+
+        using var harness = new TelemetryHarness();
+
+        scope.Complete(result);
+
+        harness.Measurements.ShouldNotContain(
+            measurement => measurement.Instrument == "motiv.evaluation.duration");
+
+        var count = harness.SingleMeasurement("motiv.evaluations");
+        count.Value.ShouldBe(1);
     }
 }
