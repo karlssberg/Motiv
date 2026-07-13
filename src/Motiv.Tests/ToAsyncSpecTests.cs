@@ -70,4 +70,19 @@ public class ToAsyncSpecTests
         // Act & Assert
         (await sync.ToAsyncSpec().MatchesAsync(model)).ShouldBe(sync.Matches(model));
     }
+
+    [Fact]
+    public async Task Should_surface_sync_predicate_exceptions_as_faulted_tasks()
+    {
+        // Arrange
+        var sync = Spec.Build((bool _) => ThrowBoom()).Create("throws");
+
+        // Act — the call itself must NOT throw; the returned task must be faulted
+        var task = sync.ToAsyncSpec().EvaluateAsync(true);
+
+        // Assert
+        (await task.ShouldThrowAsync<InvalidOperationException>()).Message.ShouldBe("boom");
+
+        static bool ThrowBoom() => throw new InvalidOperationException("boom");
+    }
 }

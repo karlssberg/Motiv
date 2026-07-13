@@ -23,8 +23,17 @@ internal sealed class SyncSpecAsyncAdapter<TModel, TMetadata>(
     public override ISpecDescription Description => spec.Description;
 
     /// <inheritdoc />
-    public override Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
-        Task.FromResult(spec.Matches(model));
+    public override Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return Task.FromResult(spec.Matches(model));
+        }
+        catch (Exception ex)
+        {
+            return Task.FromException<bool>(ex);
+        }
+    }
 
     /// <inheritdoc />
     public override AsyncSpecBase<TModel, string> ToAsyncExplanationSpec() =>
@@ -37,6 +46,15 @@ internal sealed class SyncSpecAsyncAdapter<TModel, TMetadata>(
     /// <inheritdoc />
     protected override Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
         TModel model,
-        CancellationToken cancellationToken) =>
-        Task.FromResult(spec.Evaluate(model));
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Task.FromResult(spec.Evaluate(model));
+        }
+        catch (Exception ex)
+        {
+            return Task.FromException<BooleanResultBase<TMetadata>>(ex);
+        }
+    }
 }
