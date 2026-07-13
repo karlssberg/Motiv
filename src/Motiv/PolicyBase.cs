@@ -1,6 +1,7 @@
 using Motiv.ChangeModelType;
 using Motiv.Not;
 using Motiv.OrElse;
+using Motiv.SyncToAsyncAdapter;
 
 namespace Motiv;
 
@@ -75,6 +76,20 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     public PolicyBase<TModel, TMetadata> OrElse(PolicyBase<TModel, TMetadata> alternative) =>
         new OrElsePolicy<TModel, TMetadata>(this, alternative);
 
+    /// <summary>
+    /// Creates a new asynchronous policy that is equivalent to a conditional "OR" of the current policy and
+    /// the asynchronous alternative policy, preserving the single-value policy guarantee. This policy is
+    /// lifted into the asynchronous hierarchy via <see cref="ToAsyncSpec" />. In the event that neither policy
+    /// is satisfied, the alternative policy's "WhenFalse" metadata is selected as the policy value.
+    /// </summary>
+    /// <param name="alternative">The asynchronous policy to evaluate in the event that <c>this</c> policy is unsatisfied</param>
+    /// <returns>
+    /// A new <see cref="AsyncPolicyBase{TModel,TMetadata}" /> that will perform the "Else" operation between
+    /// <c>this</c> and <paramref name="alternative" /> when the policy is eventually evaluated.
+    /// </returns>
+    public AsyncPolicyBase<TModel, TMetadata> OrElse(AsyncPolicyBase<TModel, TMetadata> alternative) =>
+        ToAsyncSpec().OrElse(alternative);
+
     /// <summary>Creates a new policy that is equivalent to a logical "NOT" of the current policy.</summary>
     /// <returns>A new <see cref="PolicyBase{TModel,TMetadata}" /> that will perform the "Not" operation when evaluated.</returns>
     public new PolicyBase<TModel, TMetadata> Not() => new NotPolicy<TModel, TMetadata>(this);
@@ -83,4 +98,15 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// <param name="policy">The policy to negate</param>
     /// <returns>A new <see cref="PolicyBase{TModel,TMetadata}" /> that will perform the "Not" operation when evaluated.</returns>
     public static PolicyBase<TModel, TMetadata> operator !(PolicyBase<TModel, TMetadata> policy) => policy.Not();
+
+    /// <summary>
+    /// Lifts this synchronous policy into the asynchronous hierarchy, preserving the single-value policy
+    /// guarantee. Evaluation remains fully synchronous internally.
+    /// </summary>
+    /// <returns>An asynchronous view over this policy.</returns>
+    public new AsyncPolicyBase<TModel, TMetadata> ToAsyncSpec() =>
+        (AsyncPolicyBase<TModel, TMetadata>)base.ToAsyncSpec();
+
+    private protected override AsyncSpecBase<TModel, TMetadata> CreateAsyncAdapter() =>
+        new SyncPolicyAsyncAdapter<TModel, TMetadata>(this);
 }

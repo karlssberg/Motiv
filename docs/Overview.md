@@ -79,3 +79,14 @@ Propositions built from a boolean predicate lambda via [`Spec.From()`](./builder
 |----------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
 | [ToExpression()](./expression-composition/ToExpression.md)           | Recovers the composed `Expression<Func<TModel, bool>>` behind an expression-backed proposition.  |
 | [Where()](./expression-composition/Where.md)                         | Filters an `IQueryable<TModel>` using an expression-backed proposition's predicate expression.   |
+
+## Asynchronous Propositions
+
+Propositions built from an async predicate via [`Spec.BuildAsync()`](./async/BuildAsync.md) compose rules that depend on I/O — databases, APIs, feature flags — with the same explainable results as synchronous propositions, and true short-circuiting of asynchronous work. Sync and async propositions compose freely in both directions, sequential evaluation is the default for thread-safety, and independent operands can opt into concurrent evaluation. See [Asynchronous Propositions](./async/index.md) for the full type hierarchy, composition rules, and cancellation semantics.
+
+| Method                                                   | Description                                                                                       |
+|-----------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| [BuildAsync()](./async/BuildAsync.md)                     | Initiates asynchronous proposition construction from an async predicate.                          |
+| [EvaluateAsync()](./async/EvaluateAsync.md)               | Asynchronously evaluates a proposition, returning the same result types as synchronous evaluation. |
+| [ToAsyncSpec()](./async/ToAsyncSpec.md)                   | Lifts a synchronous specification into the asynchronous hierarchy so it can compose with async operands. |
+| [Concurrent Operators](./async/ConcurrentOperators.md)    | `AndConcurrently()`, `OrConcurrently()`, `XOrConcurrently()` — opt-in concurrent evaluation with results identical to the sequential form. |

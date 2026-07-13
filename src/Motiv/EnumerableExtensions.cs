@@ -84,34 +84,6 @@ public static class EnumerableExtensions
         return true;
     }
 
-    internal static IEnumerable<IEnumerable<T>> GroupAdjacentBy<T>(
-        this IEnumerable<T> source, Func<T, T, bool> predicate)
-    {
-        using var enumerator = source.GetEnumerator();
-        if (!enumerator.MoveNext())
-            yield break;
-
-        List<T> currentGroup = [enumerator.Current];
-        var prev = enumerator.Current;
-
-        while (enumerator.MoveNext())
-        {
-            if (predicate(prev, enumerator.Current))
-            {
-                currentGroup.Add(enumerator.Current);
-            }
-            else
-            {
-                yield return currentGroup;
-                currentGroup = [enumerator.Current];
-            }
-
-            prev = enumerator.Current;
-        }
-
-        yield return currentGroup;
-    }
-
     internal static IEnumerable<T> DistinctWithOrderPreserved<T>(this IEnumerable<T> source)
     {
         return DistinctWithOrderPreservedInternal(source, x => x);

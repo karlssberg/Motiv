@@ -21,3 +21,6 @@ BenchmarkDotNet.Artifacts/
 .fake
 .vs/
 .worktrees/
+
+# Test coverage output
+[Tt]est[Rr]esults/

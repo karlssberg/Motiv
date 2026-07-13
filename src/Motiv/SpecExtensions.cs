@@ -53,90 +53,34 @@ public static class SpecExtensions
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec.OrElse(rightSpec));
 
 
+    /// <summary>
+    /// Builds the justification lines for a binary composition, flattening operands that belong to the same
+    /// collapsible operation into a single group beneath one operation heading.
+    /// </summary>
+    /// <param name="specs">The operands to render. Assumed to be non-empty, as every binary composition has two operands.</param>
+    /// <param name="operation">The name of the operation being rendered (e.g. <see cref="Operator.And" />).</param>
     internal static IEnumerable<string> GetBinaryJustificationAsLines<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> specs,
-        string operation,
-        int level  = 0)
-    {
-        var adjacentLineGroups = specs
-            .IdentifyCollapsible(operation)
-            .Select(GetJustificationAsTuple)
-            .GroupAdjacentBy((prev, next) => prev.op == next.op)
-            .SelectMany(group =>
-            {
-                var groupArray = group.ToArray();
-                if (groupArray.Length == 0)
-                    return [];
+        string operation) =>
+        operation
+            .ToEnumerable()
+            .Concat(specs
+                .FlattenCollapsible(operation)
+                .SelectMany(spec => spec.Description.GetDetailsAsLines())
+                .Select(line => line.Indent()));
 
-                var op = groupArray.First().op;
-                var detailsAsLines = groupArray.SelectMany(tuple => tuple.detailsAsLines);
-                return (op, detailsAsLines).ToEnumerable();
-            });
-
-
-        foreach (var group in adjacentLineGroups)
-        {
-            if (group.op != OperationGroup.Collapsible && level == 0)
-            {
-                yield return operation;
-            }
-
-            foreach (var line in group.detailsAsLines)
-                yield return line.Indent();
-        }
-
-        yield break;
-
-        (OperationGroup op, IEnumerable<string> detailsAsLines) GetJustificationAsTuple((OperationGroup, SpecBase<TModel, TMetadata>) tuple)
-        {
-            var (op, spec) = tuple;
-            var detailsAsLines = spec switch
-            {
-                IBinaryOperationSpec<TModel, TMetadata> binaryOperationSpec
-                    when binaryOperationSpec.Operation == operation
-                         && binaryOperationSpec.IsCollapsable =>
-                    spec.ToEnumerable().GetBinaryJustificationAsLines(operation, level + 1),
-                _ =>
-                    spec.Description.GetDetailsAsLines()
-            };
-
-            return (op, detailsAsLines);
-        }
-    }
-
-    private static IEnumerable<(OperationGroup, SpecBase<TModel, TMetadata>)> IdentifyCollapsible<TModel, TMetadata>(
-        this IBinaryOperationSpec<TModel, TMetadata> spec,
-        string operation)
-    {
-        var underlyingSpecs = spec.Left.ToEnumerable().Append(spec.Right);
-
-        return underlyingSpecs
-            .SelectMany(underlyingSpec =>
-                underlyingSpec switch
-                {
-                    IBinaryOperationSpec<TModel, TMetadata> binaryOperationSpec
-                        when binaryOperationSpec.Operation == operation
-                             && binaryOperationSpec.IsCollapsable =>
-                        binaryOperationSpec.GetUnderlyingSpecs().IdentifyCollapsible(operation),
-                    _ => (OtherSpecs: OperationGroup.Other, underlyingSpec).ToEnumerable()
-                });
-    }
-
-    private static IEnumerable<(OperationGroup, SpecBase<TModel, TMetadata>)> IdentifyCollapsible<TModel, TMetadata>(
+    private static IEnumerable<SpecBase<TModel, TMetadata>> FlattenCollapsible<TModel, TMetadata>(
         this IEnumerable<SpecBase<TModel, TMetadata>> specs,
-        string operation)
-    {
-        return specs.SelectMany(spec =>
+        string operation) =>
+        specs.SelectMany(spec =>
             spec switch
             {
                 IBinaryOperationSpec<TModel, TMetadata> binaryOperationSpec
                     when binaryOperationSpec.Operation == operation
                          && binaryOperationSpec.IsCollapsable =>
-                    IdentifyCollapsible(binaryOperationSpec, operation),
-                _ =>
-                    (OtherSpecs: OperationGroup.Other, spec).ToEnumerable()
+                    binaryOperationSpec.GetUnderlyingSpecs().FlattenCollapsible(operation),
+                _ => spec.ToEnumerable()
             });
-    }
 
     private static IEnumerable<SpecBase<TModel, TMetadata>> GetUnderlyingSpecs<TModel, TMetadata>(
         this IBinaryOperationSpec<TModel, TMetadata> binaryOperationSpec) =>

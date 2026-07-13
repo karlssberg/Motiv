@@ -5,6 +5,7 @@ using Motiv.MetadataToExplanationAdapter;
 using Motiv.Not;
 using Motiv.Or;
 using Motiv.OrElse;
+using Motiv.SyncToAsyncAdapter;
 using Motiv.XOr;
 
 namespace Motiv;
@@ -183,6 +184,7 @@ public abstract class SpecBase<TModel> : SpecBase
 public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
 {
     private SpecBase<TModel, string>? _explanationSpec;
+    private AsyncSpecBase<TModel, TMetadata>? _asyncSpec;
 
     /// <summary>Prevents the external instantiation of the <see cref="SpecBase{TModel,TMetadata}" /> class.</summary>
     internal SpecBase()
@@ -291,6 +293,102 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
             SpecBase<TModel, string> explanationSpec => explanationSpec,
             _ => _explanationSpec ??= new MetadataToExplanationAdapterSpec<TModel, TMetadata>(this)
         };
+
+    /// <summary>
+    /// Lifts this synchronous specification into the asynchronous specification hierarchy so that it can be
+    /// composed with asynchronous specifications. Evaluation remains fully synchronous internally; results
+    /// are identical to those produced by <see cref="Evaluate(TModel)" />.
+    /// </summary>
+    /// <returns>An asynchronous view over this specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> ToAsyncSpec() => _asyncSpec ??= CreateAsyncAdapter();
+
+    /// <summary>Creates the adapter used by <see cref="ToAsyncSpec" />. Policies override this to preserve policy semantics.</summary>
+    /// <returns>An asynchronous adapter for this specification.</returns>
+    private protected virtual AsyncSpecBase<TModel, TMetadata> CreateAsyncAdapter() =>
+        new SyncSpecAsyncAdapter<TModel, TMetadata>(this);
+
+    /// <summary>
+    /// Combines this specification with an asynchronous specification using the logical AND operator. This
+    /// specification is lifted into the asynchronous hierarchy via <see cref="ToAsyncSpec" />. Both operands
+    /// are evaluated sequentially (left, then right), regardless of the left operand's outcome.
+    /// </summary>
+    /// <param name="spec">The asynchronous specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> And(AsyncSpecBase<TModel, TMetadata> spec) => ToAsyncSpec().And(spec);
+
+    /// <summary>
+    /// Combines this specification with an asynchronous specification using the conditional AND operator. This
+    /// specification is lifted into the asynchronous hierarchy via <see cref="ToAsyncSpec" />. The right
+    /// operand is only evaluated if the left operand resolves to <c>true</c> — for asynchronous specifications
+    /// this means the right operand's work (including any I/O) is never started.
+    /// </summary>
+    /// <param name="spec">The asynchronous specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the conditional AND of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> AndAlso(AsyncSpecBase<TModel, TMetadata> spec) => ToAsyncSpec().AndAlso(spec);
+
+    /// <summary>
+    /// Combines this specification with an asynchronous specification using the logical OR operator. This
+    /// specification is lifted into the asynchronous hierarchy via <see cref="ToAsyncSpec" />.
+    /// </summary>
+    /// <param name="spec">The asynchronous specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical OR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> Or(AsyncSpecBase<TModel, TMetadata> spec) => ToAsyncSpec().Or(spec);
+
+    /// <summary>
+    /// Combines this specification with an asynchronous specification using the conditional OR operator. This
+    /// specification is lifted into the asynchronous hierarchy via <see cref="ToAsyncSpec" />. The right
+    /// operand is only evaluated if the left operand resolves to <c>false</c>, since a <c>true</c> left
+    /// operand means the OR operation is already satisfied — for asynchronous specifications this means the
+    /// right operand's work (including any I/O) is never started.
+    /// </summary>
+    /// <param name="spec">The asynchronous right operand.</param>
+    /// <returns>A new specification that represents the conditional OR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> OrElse(AsyncSpecBase<TModel, TMetadata> spec) => ToAsyncSpec().OrElse(spec);
+
+    /// <summary>
+    /// Combines this specification with an asynchronous specification using the logical XOR operator. This
+    /// specification is lifted into the asynchronous hierarchy via <see cref="ToAsyncSpec" />. Both operands
+    /// are evaluated sequentially (left, then right), regardless of the outcome.
+    /// </summary>
+    /// <param name="spec">The asynchronous specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical XOR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> XOr(AsyncSpecBase<TModel, TMetadata> spec) => ToAsyncSpec().XOr(spec);
+
+    /// <summary>
+    /// Combines this specification with an asynchronous specification using the logical AND operator,
+    /// evaluating both operands concurrently. This specification is lifted into the asynchronous hierarchy via
+    /// <see cref="ToAsyncSpec" />. The result is indistinguishable from <see cref="And(AsyncSpecBase{TModel,TMetadata})" /> —
+    /// the reason, assertions, and justification are identical; only the evaluation strategy differs. Only use
+    /// this when both operands' predicates are safe to execute concurrently (e.g. they do not share a
+    /// non-thread-safe dependency such as an EF Core DbContext).
+    /// </summary>
+    /// <param name="spec">The asynchronous specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> AndConcurrently(AsyncSpecBase<TModel, TMetadata> spec) => ToAsyncSpec().AndConcurrently(spec);
+
+    /// <summary>
+    /// Combines this specification with an asynchronous specification using the logical OR operator,
+    /// evaluating both operands concurrently. This specification is lifted into the asynchronous hierarchy via
+    /// <see cref="ToAsyncSpec" />. The result is indistinguishable from <see cref="Or(AsyncSpecBase{TModel,TMetadata})" /> —
+    /// the reason, assertions, and justification are identical; only the evaluation strategy differs. Only use
+    /// this when both operands' predicates are safe to execute concurrently (e.g. they do not share a
+    /// non-thread-safe dependency such as an EF Core DbContext).
+    /// </summary>
+    /// <param name="spec">The asynchronous specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical OR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> OrConcurrently(AsyncSpecBase<TModel, TMetadata> spec) => ToAsyncSpec().OrConcurrently(spec);
+
+    /// <summary>
+    /// Combines this specification with an asynchronous specification using the logical XOR operator,
+    /// evaluating both operands concurrently. This specification is lifted into the asynchronous hierarchy via
+    /// <see cref="ToAsyncSpec" />. The result is indistinguishable from <see cref="XOr(AsyncSpecBase{TModel,TMetadata})" /> —
+    /// the reason, assertions, and justification are identical; only the evaluation strategy differs. Only use
+    /// this when both operands' predicates are safe to execute concurrently (e.g. they do not share a
+    /// non-thread-safe dependency such as an EF Core DbContext).
+    /// </summary>
+    /// <param name="spec">The asynchronous specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical XOR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> XOrConcurrently(AsyncSpecBase<TModel, TMetadata> spec) => ToAsyncSpec().XOrConcurrently(spec);
 
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
     /// <returns>A string that represents the logical hierarchy of the specification.</returns>

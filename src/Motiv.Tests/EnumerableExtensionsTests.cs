@@ -48,36 +48,6 @@ public class EnumerableExtensionsTests
         act.ShouldBe((IEnumerable<int>)[1, 2]);
     }
 
-    [Fact]
-    public void Should_group_by_adjacent_even_numbers()
-    {
-        // Arrange
-        IEnumerable<int> numbers = [11, 22, 44, 66, 77, 88, 99, 111, 122, 178, 201];
-        IEnumerable<IEnumerable<int>> expected = [[11], [22, 44, 66], [77], [88], [99], [111], [122, 178], [201]];
-
-        // Act
-        var act = numbers.GroupAdjacentBy((left, right) =>
-            left % 2 == 0 && right % 2 == 0);
-
-        // Assert
-        act.ShouldBe(expected);
-    }
-
-    [Fact]
-    public void Should_handle_empty_collection_when_grouping_by_adjacent_even_numbers()
-    {
-        // Arrange
-        IEnumerable<int> numbers = [];
-        IEnumerable<IEnumerable<int>> expected = [];
-
-        // Act
-        var act = numbers.GroupAdjacentBy((left, right) =>
-            left % 2 == 0 && right % 2 == 0);
-
-        // Assert
-        act.ShouldBe(expected);
-    }
-
     [Theory]
     [InlineData(0, 0, true)]
     [InlineData(1, 0, true)]
