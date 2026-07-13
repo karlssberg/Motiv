@@ -23,7 +23,7 @@ public class AsyncEvaluationErrorTelemetryTests
 
         var exception = await Should.ThrowAsync<InvalidOperationException>(() => throws.EvaluateAsync(1));
         exception.Message.ShouldBe("async boom");
-        ReferenceEquals(exception, original).ShouldBeTrue();
+        exception.ShouldBeSameAs(original);
 
         var activity = harness.SingleActivity();
         activity.Status.ShouldBe(ActivityStatusCode.Error);
