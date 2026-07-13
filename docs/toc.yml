@@ -14,4 +14,6 @@ items:
     href: collections/toc.yml
   - name: Expression Composition
     href: expression-composition/toc.yml
+  - name: Asynchronous Propositions
+    href: async/toc.yml
 

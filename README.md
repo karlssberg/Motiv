@@ -96,6 +96,34 @@ result.Satisfied;  // true
 result.Assertions; // ["good credit == true", "sufficient income == true"]
 ```
 
+### Asynchronous Propositions
+
+Compose rules that touch databases, APIs, or feature flags — with the same
+explainable results and true short-circuiting of asynchronous work:
+
+```csharp
+var isAdult = Spec
+    .Build((User u) => u.Age >= 18)
+    .Create("is adult");
+
+var hasCredit = Spec
+    .BuildAsync(async (User u, CancellationToken ct) =>
+        await creditApi.CheckAsync(u.Id, ct))
+    .WhenTrue("has credit")
+    .WhenFalse("no credit")
+    .Create();
+
+var canBuy = isAdult.AndAlso(hasCredit);   // credit API never called for minors
+
+var result = await canBuy.EvaluateAsync(user, cancellationToken);
+result.Satisfied;  // false
+result.Assertions; // ["is adult == false"]
+```
+
+Async and sync propositions compose freely (sync operands are lifted
+automatically), and independent async operands can opt into concurrent
+evaluation with `AndConcurrently`/`OrConcurrently`/`XOrConcurrently`.
+
 ### Custom Assertions
 
 Add readable explanations to your logic:

@@ -1,0 +1,10 @@
+### YamlMime:ManagedReference
+items:
+  - name: BuildAsync()
+    href: BuildAsync.md
+  - name: EvaluateAsync()
+    href: EvaluateAsync.md
+  - name: ToAsyncSpec()
+    href: ToAsyncSpec.md
+  - name: Concurrent Operators
+    href: ConcurrentOperators.md
