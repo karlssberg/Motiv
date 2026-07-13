@@ -180,56 +180,25 @@ public static class BooleanResultExtensions
         return false;
     }
 
+    /// <summary>
+    /// Builds the justification lines for a binary composition, flattening causal results that belong to the
+    /// same collapsible operation into a single group beneath one conjunction heading.
+    /// </summary>
+    /// <param name="causalResults">The causal results to render. Assumed to be non-empty, as every binary composition has two operands.</param>
+    /// <param name="conjunction">The name of the operation being rendered (e.g. <see cref="Operator.And" />).</param>
+    /// <param name="withoutCausalCount">Whether to omit the causal count from each rendered result.</param>
     internal static IEnumerable<string> GetBinaryJustificationAsLines(
         this IEnumerable<BooleanResultBase> causalResults,
         string conjunction,
-        int level = 0,
-        bool withoutCausalCount = false)
-    {
-        var adjacentLineGroups = causalResults
-            .IdentifyCollapsible(conjunction)
-            .Select(GetJustificationAsTuple)
-            .GroupAdjacentBy((prev, next) => prev.op == next.op)
-            .SelectMany(group =>
-            {
-                var groupArray = group.ToArray();
-                if (groupArray.Length == 0)
-                    return [];
-
-                var op = groupArray.First().op;
-                var detailsAsLines = groupArray.SelectMany(tuple => tuple.detailsAsLines);
-                return (op, detailsAsLines).ToEnumerable();
-            });
-
-        foreach (var group in adjacentLineGroups)
-        {
-            if (group.op != OperationGroup.Collapsible && level == 0)
-                yield return conjunction;
-
-            foreach (var line in group.detailsAsLines)
-                yield return line.Indent();
-        }
-
-        yield break;
-
-        (OperationGroup op, IEnumerable<string> detailsAsLines) GetJustificationAsTuple((OperationGroup, BooleanResultBase) tuple)
-        {
-            var (op, result) = tuple;
-            var detailsAsLines = result switch
-            {
-                IBinaryBooleanOperationResult binaryOperationResult
-                    when binaryOperationResult.Operation == conjunction
-                         && binaryOperationResult.IsCollapsable =>
-                    result.ToEnumerable().GetBinaryJustificationAsLines(conjunction, level + 1, withoutCausalCount),
-                _ when withoutCausalCount =>
-                    result.Description.GetJustificationAsLinesWithoutCausalCount(),
-                _ =>
-                    result.Description.GetJustificationAsLines()
-            };
-
-            return (op, detailsAsLines);
-        }
-    }
+        bool withoutCausalCount = false) =>
+        conjunction
+            .ToEnumerable()
+            .Concat(causalResults
+                .FlattenCollapsible(conjunction)
+                .SelectMany(result => withoutCausalCount
+                    ? result.Description.GetJustificationAsLinesWithoutCausalCount()
+                    : result.Description.GetJustificationAsLines())
+                .Select(line => line.Indent()));
 
     private static IEnumerable<BooleanResultBase> AggregateUnderlyingCauses(
         this BooleanResultBase result,
@@ -246,37 +215,16 @@ public static class BooleanResultExtensions
         int atDepth = 0) =>
         underlyingResult.SelectMany(result => AggregateUnderlyingCauses(result,atDepth));
 
-    private static IEnumerable<(OperationGroup, BooleanResultBase)> IdentifyCollapsible(
+    private static IEnumerable<BooleanResultBase> FlattenCollapsible(
         this IEnumerable<BooleanResultBase> results,
-        string operation)
-    {
-        return results.SelectMany(result =>
+        string operation) =>
+        results.SelectMany(result =>
             result switch
             {
-                IBinaryBooleanOperationResult binaryOperationResults
-                    when binaryOperationResults.Operation == operation
-                         && binaryOperationResults.IsCollapsable => binaryOperationResults.IdentifyCollapsible(operation),
-                _ =>
-                    (otherResults: OperationGroup.Other, result).ToEnumerable()
+                IBinaryBooleanOperationResult binaryOperationResult
+                    when binaryOperationResult.Operation == operation
+                         && binaryOperationResult.IsCollapsable =>
+                    binaryOperationResult.Causes.FlattenCollapsible(operation),
+                _ => result.ToEnumerable()
             });
-    }
-
-    private static IEnumerable<(OperationGroup, BooleanResultBase)> IdentifyCollapsible(
-        this IBooleanOperationResult binaryResult,
-        string operation)
-    {
-        var underlyingResults = binaryResult.Causes;
-
-        return underlyingResults
-            .SelectMany(underlyingResult =>
-                underlyingResult switch
-                {
-                    IBinaryBooleanOperationResult binaryOperationResult
-                        when binaryOperationResult.Operation == operation
-                             && binaryOperationResult.IsCollapsable =>
-                        binaryOperationResult.Causes.IdentifyCollapsible(operation),
-                    _ =>
-                        (otherResults: OperationGroup.Other, underlyingResult).ToEnumerable()
-                });
-    }
 }
