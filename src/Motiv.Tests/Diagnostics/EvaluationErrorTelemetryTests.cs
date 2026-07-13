@@ -107,11 +107,11 @@ public class EvaluationErrorTelemetryTests
         Should.Throw<InvalidOperationException>(() => throws.Evaluate(1));
 
         var activity = harness.SingleActivity();
-        var exceptionEvent = activity.Events
-            .FirstOrDefault(e => e.Name == "exception");
+        var exceptionEvent = activity.Events.Single(activityEvent => activityEvent.Name == "exception");
+        var tags = exceptionEvent.Tags.ToDictionary(tag => tag.Key, tag => tag.Value);
 
-        exceptionEvent.Name.ShouldBe("exception");
-        exceptionEvent.Tags["exception.type"].ShouldBe("System.InvalidOperationException");
-        exceptionEvent.Tags["exception.message"].ShouldBe("boom");
+        tags["exception.type"].ShouldBe("System.InvalidOperationException");
+        tags["exception.message"].ShouldBe("boom");
+        tags.ShouldContainKey("exception.stacktrace");
     }
 }
