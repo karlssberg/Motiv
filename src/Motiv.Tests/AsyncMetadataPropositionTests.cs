@@ -2,7 +2,10 @@ namespace Motiv.Tests;
 
 public class AsyncMetadataPropositionTests
 {
-    public record Message(string Text);
+    public record Message(string Text)
+    {
+        public string Text { get; } = Text;
+    }
 
     [Theory]
     [InlineAutoData(true, "granted")]
