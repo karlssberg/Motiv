@@ -178,6 +178,42 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
         AsyncSpecBase<TModel, TMetadata> right) =>
         left.XOr(right);
 
+    /// <summary>
+    /// Combines this specification with another asynchronous specification using the logical AND operator,
+    /// evaluating both operands concurrently. The result is indistinguishable from <see cref="And" /> — the
+    /// reason, assertions, and justification are identical; only the evaluation strategy differs. Only use
+    /// this when both operands' predicates are safe to execute concurrently (e.g. they do not share a
+    /// non-thread-safe dependency such as an EF Core DbContext).
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> AndConcurrently(AsyncSpecBase<TModel, TMetadata> spec) =>
+        new AsyncAndSpec<TModel, TMetadata>(this, spec, concurrent: true);
+
+    /// <summary>
+    /// Combines this specification with another asynchronous specification using the logical OR operator,
+    /// evaluating both operands concurrently. The result is indistinguishable from <see cref="Or" /> — the
+    /// reason, assertions, and justification are identical; only the evaluation strategy differs. Only use
+    /// this when both operands' predicates are safe to execute concurrently (e.g. they do not share a
+    /// non-thread-safe dependency such as an EF Core DbContext).
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical OR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> OrConcurrently(AsyncSpecBase<TModel, TMetadata> spec) =>
+        new AsyncOrSpec<TModel, TMetadata>(this, spec, concurrent: true);
+
+    /// <summary>
+    /// Combines this specification with another asynchronous specification using the logical XOR operator,
+    /// evaluating both operands concurrently. The result is indistinguishable from <see cref="XOr" /> — the
+    /// reason, assertions, and justification are identical; only the evaluation strategy differs. Only use
+    /// this when both operands' predicates are safe to execute concurrently (e.g. they do not share a
+    /// non-thread-safe dependency such as an EF Core DbContext).
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical XOR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> XOrConcurrently(AsyncSpecBase<TModel, TMetadata> spec) =>
+        new AsyncXOrSpec<TModel, TMetadata>(this, spec, concurrent: true);
+
     /// <summary>Negates this specification.</summary>
     /// <returns>A new specification that represents the logical NOT of this specification.</returns>
     public AsyncSpecBase<TModel, TMetadata> Not() =>
