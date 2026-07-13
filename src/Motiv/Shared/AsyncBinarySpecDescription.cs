@@ -34,8 +34,7 @@ internal sealed class AsyncBinarySpecDescription<TModel, TMetadata>(
         return subject switch
         {
             _ when isSameFamily(subject) => operand.Name,
-            IBinaryOperationSpec<TModel> => $"({operand.Description.Statement})",
-            IAsyncBinaryOperationSpec => $"({operand.Description.Statement})",
+            IBinaryOperationSpec<TModel> or IAsyncBinaryOperationSpec => $"({operand.Description.Statement})",
             _ => operand.Name
         };
     }

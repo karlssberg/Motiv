@@ -70,13 +70,8 @@ internal static class AsyncSpecExtensions
             var (op, spec) = tuple;
             var detailsAsLines = spec.Unwrap() switch
             {
-                IAsyncBinaryOperationSpec<TModel, TMetadata> asyncBinary
-                    when asyncBinary.Operation == operation
-                         && asyncBinary.IsCollapsable =>
-                    spec.ToEnumerable().GetMixedBinaryJustificationAsLines<TModel, TMetadata>(operation, level + 1),
-                IBinaryOperationSpec<TModel, TMetadata> syncBinary
-                    when syncBinary.Operation == operation
-                         && syncBinary.IsCollapsable =>
+                (IAsyncBinaryOperationSpec<TModel, TMetadata> or IBinaryOperationSpec<TModel, TMetadata>) and IBooleanOperationSpec binaryOp
+                    when binaryOp.Operation == operation && binaryOp.IsCollapsable =>
                     spec.ToEnumerable().GetMixedBinaryJustificationAsLines<TModel, TMetadata>(operation, level + 1),
                 _ =>
                     spec.Description.GetDetailsAsLines()
