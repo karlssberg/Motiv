@@ -54,9 +54,210 @@ public abstract class AsyncSpecBase<TModel> : SpecBase
     /// <returns>An equivalent specification that uses assertions as its metadata.</returns>
     public abstract AsyncSpecBase<TModel, string> ToAsyncExplanationSpec();
 
+    /// <summary>
+    /// Combines this specification with another asynchronous specification using the logical AND operator. Both
+    /// operands are lowered to their explanation form via <see cref="ToAsyncExplanationSpec" /> so that
+    /// specifications with differing metadata types can be composed. Both operands will be evaluated, regardless
+    /// of whether the left operand evaluated to <c>false</c>.
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, string> And(AsyncSpecBase<TModel> spec) =>
+        new AsyncAndSpec<TModel, string>(ToAsyncExplanationSpec(), spec.ToAsyncExplanationSpec());
+
+    /// <summary>
+    /// Combines this specification with a synchronous specification using the logical AND operator. Both
+    /// operands are lowered to their explanation form; the synchronous operand is then lifted into the
+    /// asynchronous hierarchy via <see cref="SpecBase{TModel,TMetadata}.ToAsyncSpec" />. Both operands will be
+    /// evaluated, regardless of whether the left operand evaluated to <c>false</c>.
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, string> And(SpecBase<TModel> spec) =>
+        new AsyncAndSpec<TModel, string>(ToAsyncExplanationSpec(), spec.ToExplanationSpec().ToAsyncSpec());
+
+    /// <summary>
+    /// Combines this specification with another asynchronous specification using the conditional AND operator.
+    /// Both operands are lowered to their explanation form via <see cref="ToAsyncExplanationSpec" /> so that
+    /// specifications with differing metadata types can be composed. The right operand is only evaluated if the
+    /// left operand evaluates to <c>true</c>. This is commonly referred to as "short-circuiting".
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the conditional AND of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, string> AndAlso(AsyncSpecBase<TModel> spec) =>
+        new AsyncAndAlsoSpec<TModel, string>(ToAsyncExplanationSpec(), spec.ToAsyncExplanationSpec());
+
+    /// <summary>
+    /// Combines this specification with a synchronous specification using the conditional AND operator. Both
+    /// operands are lowered to their explanation form; the synchronous operand is then lifted into the
+    /// asynchronous hierarchy via <see cref="SpecBase{TModel,TMetadata}.ToAsyncSpec" />. The right operand is
+    /// only evaluated if the left operand evaluates to <c>true</c>. This is commonly referred to as
+    /// "short-circuiting".
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the conditional AND of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, string> AndAlso(SpecBase<TModel> spec) =>
+        new AsyncAndAlsoSpec<TModel, string>(ToAsyncExplanationSpec(), spec.ToExplanationSpec().ToAsyncSpec());
+
+    /// <summary>
+    /// Combines this specification with another asynchronous specification using the logical OR operator. Both
+    /// operands are lowered to their explanation form via <see cref="ToAsyncExplanationSpec" /> so that
+    /// specifications with differing metadata types can be composed.
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical OR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, string> Or(AsyncSpecBase<TModel> spec) =>
+        new AsyncOrSpec<TModel, string>(ToAsyncExplanationSpec(), spec.ToAsyncExplanationSpec());
+
+    /// <summary>
+    /// Combines this specification with a synchronous specification using the logical OR operator. Both operands
+    /// are lowered to their explanation form; the synchronous operand is then lifted into the asynchronous
+    /// hierarchy via <see cref="SpecBase{TModel,TMetadata}.ToAsyncSpec" />.
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical OR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, string> Or(SpecBase<TModel> spec) =>
+        new AsyncOrSpec<TModel, string>(ToAsyncExplanationSpec(), spec.ToExplanationSpec().ToAsyncSpec());
+
+    /// <summary>
+    /// Combines this specification with another asynchronous specification using the conditional OR operator.
+    /// Both operands are lowered to their explanation form via <see cref="ToAsyncExplanationSpec" /> so that
+    /// specifications with differing metadata types can be composed. The right operand is only evaluated if the
+    /// left operand evaluates to <c>false</c>. This is commonly referred to as "short-circuiting".
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the conditional OR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, string> OrElse(AsyncSpecBase<TModel> spec) =>
+        new AsyncOrElseSpec<TModel, string>(ToAsyncExplanationSpec(), spec.ToAsyncExplanationSpec());
+
+    /// <summary>
+    /// Combines this specification with a synchronous specification using the conditional OR operator. Both
+    /// operands are lowered to their explanation form; the synchronous operand is then lifted into the
+    /// asynchronous hierarchy via <see cref="SpecBase{TModel,TMetadata}.ToAsyncSpec" />. The right operand is
+    /// only evaluated if the left operand evaluates to <c>false</c>. This is commonly referred to as
+    /// "short-circuiting".
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the conditional OR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, string> OrElse(SpecBase<TModel> spec) =>
+        new AsyncOrElseSpec<TModel, string>(ToAsyncExplanationSpec(), spec.ToExplanationSpec().ToAsyncSpec());
+
+    /// <summary>
+    /// Combines this specification with another asynchronous specification using the logical XOR operator. Both
+    /// operands are lowered to their explanation form via <see cref="ToAsyncExplanationSpec" /> so that
+    /// specifications with differing metadata types can be composed.
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical XOR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, string> XOr(AsyncSpecBase<TModel> spec) =>
+        new AsyncXOrSpec<TModel, string>(ToAsyncExplanationSpec(), spec.ToAsyncExplanationSpec());
+
+    /// <summary>
+    /// Combines this specification with a synchronous specification using the logical XOR operator. Both
+    /// operands are lowered to their explanation form; the synchronous operand is then lifted into the
+    /// asynchronous hierarchy via <see cref="SpecBase{TModel,TMetadata}.ToAsyncSpec" />.
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the logical XOR of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, string> XOr(SpecBase<TModel> spec) =>
+        new AsyncXOrSpec<TModel, string>(ToAsyncExplanationSpec(), spec.ToExplanationSpec().ToAsyncSpec());
+
+    /// <summary>Negates this specification.</summary>
+    /// <returns>A new specification that represents the logical NOT of this specification.</returns>
+    public AsyncSpecBase<TModel, string> Not() =>
+        new AsyncNotSpec<TModel, string>(ToAsyncExplanationSpec());
+
     /// <summary>Serializes the logical hierarchy of the specification to a string.</summary>
     /// <returns>A string that represents the logical hierarchy of the specification.</returns>
     public override string ToString() => Description.Statement;
+
+    /// <summary>Combines two asynchronous specifications using the logical AND operator.</summary>
+    /// <param name="left">The left operand of the AND operation.</param>
+    /// <param name="right">The right operand of the AND operation.</param>
+    /// <returns>A new specification that represents the logical AND of the two specifications.</returns>
+    public static AsyncSpecBase<TModel, string> operator &(
+        AsyncSpecBase<TModel> left,
+        AsyncSpecBase<TModel> right) =>
+        left.And(right);
+
+    /// <summary>Combines an asynchronous specification with a synchronous specification using the logical AND operator.</summary>
+    /// <param name="left">The asynchronous left operand of the AND operation.</param>
+    /// <param name="right">The synchronous right operand of the AND operation.</param>
+    /// <returns>A new specification that represents the logical AND of the two specifications.</returns>
+    public static AsyncSpecBase<TModel, string> operator &(
+        AsyncSpecBase<TModel> left,
+        SpecBase<TModel> right) =>
+        left.And(right);
+
+    /// <summary>Combines a synchronous specification with an asynchronous specification using the logical AND operator.</summary>
+    /// <param name="left">The synchronous left operand of the AND operation.</param>
+    /// <param name="right">The asynchronous right operand of the AND operation.</param>
+    /// <returns>A new specification that represents the logical AND of the two specifications.</returns>
+    public static AsyncSpecBase<TModel, string> operator &(
+        SpecBase<TModel> left,
+        AsyncSpecBase<TModel> right) =>
+        new AsyncAndSpec<TModel, string>(left.ToExplanationSpec().ToAsyncSpec(), right.ToAsyncExplanationSpec());
+
+    /// <summary>Combines two asynchronous specifications using the logical OR operator.</summary>
+    /// <param name="left">The left operand of the OR operation.</param>
+    /// <param name="right">The right operand of the OR operation.</param>
+    /// <returns>A new specification that represents the logical OR of the two specifications.</returns>
+    public static AsyncSpecBase<TModel, string> operator |(
+        AsyncSpecBase<TModel> left,
+        AsyncSpecBase<TModel> right) =>
+        left.Or(right);
+
+    /// <summary>Combines an asynchronous specification with a synchronous specification using the logical OR operator.</summary>
+    /// <param name="left">The asynchronous left operand of the OR operation.</param>
+    /// <param name="right">The synchronous right operand of the OR operation.</param>
+    /// <returns>A new specification that represents the logical OR of the two specifications.</returns>
+    public static AsyncSpecBase<TModel, string> operator |(
+        AsyncSpecBase<TModel> left,
+        SpecBase<TModel> right) =>
+        left.Or(right);
+
+    /// <summary>Combines a synchronous specification with an asynchronous specification using the logical OR operator.</summary>
+    /// <param name="left">The synchronous left operand of the OR operation.</param>
+    /// <param name="right">The asynchronous right operand of the OR operation.</param>
+    /// <returns>A new specification that represents the logical OR of the two specifications.</returns>
+    public static AsyncSpecBase<TModel, string> operator |(
+        SpecBase<TModel> left,
+        AsyncSpecBase<TModel> right) =>
+        new AsyncOrSpec<TModel, string>(left.ToExplanationSpec().ToAsyncSpec(), right.ToAsyncExplanationSpec());
+
+    /// <summary>Combines two asynchronous specifications using the logical XOR operator.</summary>
+    /// <param name="left">The left operand of the XOR operation.</param>
+    /// <param name="right">The right operand of the XOR operation.</param>
+    /// <returns>A new specification that represents the logical XOR of the two specifications.</returns>
+    public static AsyncSpecBase<TModel, string> operator ^(
+        AsyncSpecBase<TModel> left,
+        AsyncSpecBase<TModel> right) =>
+        left.XOr(right);
+
+    /// <summary>Combines an asynchronous specification with a synchronous specification using the logical XOR operator.</summary>
+    /// <param name="left">The asynchronous left operand of the XOR operation.</param>
+    /// <param name="right">The synchronous right operand of the XOR operation.</param>
+    /// <returns>A new specification that represents the logical XOR of the two specifications.</returns>
+    public static AsyncSpecBase<TModel, string> operator ^(
+        AsyncSpecBase<TModel> left,
+        SpecBase<TModel> right) =>
+        left.XOr(right);
+
+    /// <summary>Combines a synchronous specification with an asynchronous specification using the logical XOR operator.</summary>
+    /// <param name="left">The synchronous left operand of the XOR operation.</param>
+    /// <param name="right">The asynchronous right operand of the XOR operation.</param>
+    /// <returns>A new specification that represents the logical XOR of the two specifications.</returns>
+    public static AsyncSpecBase<TModel, string> operator ^(
+        SpecBase<TModel> left,
+        AsyncSpecBase<TModel> right) =>
+        new AsyncXOrSpec<TModel, string>(left.ToExplanationSpec().ToAsyncSpec(), right.ToAsyncExplanationSpec());
+
+    /// <summary>Negates a specification.</summary>
+    /// <param name="spec">The specification to negate.</param>
+    /// <returns>A new specification that represents the logical NOT of the specification.</returns>
+    public static AsyncSpecBase<TModel> operator !(
+        AsyncSpecBase<TModel> spec) =>
+        spec.Not();
 }
 
 /// <summary>
@@ -216,7 +417,7 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
 
     /// <summary>Negates this specification.</summary>
     /// <returns>A new specification that represents the logical NOT of this specification.</returns>
-    public AsyncSpecBase<TModel, TMetadata> Not() =>
+    public new AsyncSpecBase<TModel, TMetadata> Not() =>
         new AsyncNotSpec<TModel, TMetadata>(this);
 
     /// <summary>Negates a specification.</summary>
