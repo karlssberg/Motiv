@@ -1,3 +1,5 @@
+using Motiv.MetadataToExplanationAdapter;
+
 namespace Motiv;
 
 /// <summary>
@@ -60,6 +62,8 @@ public abstract class AsyncSpecBase<TModel> : SpecBase
 /// <typeparam name="TMetadata">The type of the metadata to associate with the predicate</typeparam>
 public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
 {
+    private AsyncSpecBase<TModel, string>? _explanationSpec;
+
     /// <summary>Prevents the external instantiation of the <see cref="AsyncSpecBase{TModel,TMetadata}" /> class.</summary>
     internal AsyncSpecBase()
     {
@@ -84,7 +88,7 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
         this switch
         {
             AsyncSpecBase<TModel, string> explanationSpec => explanationSpec,
-            _ => throw new NotSupportedException("Metadata-to-explanation adaptation is implemented in a later task.")
+            _ => _explanationSpec ??= new AsyncMetadataToExplanationAdapterSpec<TModel, TMetadata>(this)
         };
 
     /// <summary>
