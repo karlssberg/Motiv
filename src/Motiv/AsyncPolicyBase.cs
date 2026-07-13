@@ -44,6 +44,17 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     public AsyncPolicyBase<TModel, TMetadata> OrElse(AsyncPolicyBase<TModel, TMetadata> alternative) =>
         new AsyncOrElsePolicy<TModel, TMetadata>(this, alternative);
 
+    /// <summary>
+    /// Combines this policy with a synchronous policy using the conditional OR operator, preserving the
+    /// policy guarantee. The synchronous alternative is lifted into the asynchronous hierarchy via
+    /// <see cref="PolicyBase{TModel,TMetadata}.ToAsyncSpec" />. The right operand is only evaluated if the
+    /// left operand resolves to <c>false</c>.
+    /// </summary>
+    /// <param name="alternative">The synchronous fallback policy.</param>
+    /// <returns>A new policy that represents the conditional OR of this policy and the alternative.</returns>
+    public AsyncPolicyBase<TModel, TMetadata> OrElse(PolicyBase<TModel, TMetadata> alternative) =>
+        OrElse(alternative.ToAsyncSpec());
+
     /// <summary>Negates this policy.</summary>
     /// <returns>A new policy that represents the logical NOT of this policy.</returns>
     public new AsyncPolicyBase<TModel, TMetadata> Not() => new AsyncNotPolicy<TModel, TMetadata>(this);
