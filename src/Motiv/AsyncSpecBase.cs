@@ -1,4 +1,5 @@
 using Motiv.And;
+using Motiv.AndAlso;
 using Motiv.MetadataToExplanationAdapter;
 
 namespace Motiv;
@@ -109,6 +110,16 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
     /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
     public AsyncSpecBase<TModel, TMetadata> And(AsyncSpecBase<TModel, TMetadata> spec) =>
         new AsyncAndSpec<TModel, TMetadata>(this, spec);
+
+    /// <summary>
+    /// Combines this specification with another asynchronous specification using the conditional AND
+    /// operator. The right operand is only evaluated if the left operand resolves to <c>true</c> — for
+    /// asynchronous specifications this means the right operand's work (including any I/O) is never started.
+    /// </summary>
+    /// <param name="spec">The specification to combine with this specification.</param>
+    /// <returns>A new specification that represents the conditional AND of this specification and the other specification.</returns>
+    public AsyncSpecBase<TModel, TMetadata> AndAlso(AsyncSpecBase<TModel, TMetadata> spec) =>
+        new AsyncAndAlsoSpec<TModel, TMetadata>(this, spec);
 
     /// <summary>Combines two asynchronous specifications using the logical AND operator.</summary>
     /// <param name="left">The left operand of the AND operation.</param>

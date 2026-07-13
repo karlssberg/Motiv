@@ -27,8 +27,7 @@ internal sealed class AsyncAndSpec<TModel, TMetadata>(
     /// <inheritdoc />
     public override ISpecDescription Description => field ??=
         new AsyncBinarySpecDescription<TModel, TMetadata>(left, right, "&", Operator.And,
-            // TODO(Task 7): add AsyncAndAlsoSpec<TModel, TMetadata> to this pattern once it exists.
-            operand => operand is AsyncAndSpec<TModel, TMetadata>
+            operand => operand is AsyncAndSpec<TModel, TMetadata> or AsyncAndAlsoSpec<TModel, TMetadata>
                 or AndSpec<TModel, TMetadata> or AndAlsoSpec<TModel, TMetadata>
                 or ExpressionAndSpec<TModel, TMetadata> or ExpressionAndAlsoSpec<TModel, TMetadata>);
 
