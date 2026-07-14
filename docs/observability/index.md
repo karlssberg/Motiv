@@ -64,6 +64,26 @@ On failure, the span status is set to `Error` and an `exception` event is added 
 `exception.message`, `exception.stacktrace`), then the original exception is rethrown unchanged; `motiv.satisfied`,
 `motiv.reason`, and `motiv.assertions` are not set for a failed evaluation.
 
+### Cancellation Is Not an Error
+
+`EvaluateAsync()` accepts a `CancellationToken`. Per the OpenTelemetry semantic conventions, a cancellation that
+instrumentation can attribute to the caller's own intent should not be reported as an error:
+
+- If `OperationCanceledException` escapes evaluation **and the caller's own token is signalled**
+  (`cancellationToken.IsCancellationRequested`), Motiv treats it as an intentional cancellation, not a failure:
+  the span status is left `Unset`, no `error.type` tag or `exception` event is added, but the evaluation is still
+  counted &mdash; both `motiv.evaluations` and `motiv.evaluation.duration` record a `motiv.cancelled` = `true`
+  dimension instead, so cancellations stay queryable without inflating the error rate. `motiv.satisfied` is not
+  set, since there is no outcome.
+- If `OperationCanceledException` escapes evaluation **without** the caller's own token being signalled (an
+  internal timeout, a foreign token, a bug), it cannot be attributed to caller intent and is reported exactly like
+  any other failure: span status `Error`, `error.type` set, `exception` event added.
+- The synchronous boundaries (`SpecBase<TModel,TMetadata>.Evaluate`, `PolicyBase<TModel,TMetadata>.Evaluate`) take
+  no `CancellationToken`, so intent can never be established there &mdash; an `OperationCanceledException` from a
+  synchronous predicate is always reported as an error.
+- The original exception is always rethrown unwrapped, whichever shape is recorded &mdash; telemetry never changes
+  propagation semantics.
+
 ### Collections: One Span Per Model
 
 Filtering a collection with [`Where()`](../collections/generic/Where.md) evaluates the proposition once per model,
@@ -87,8 +107,8 @@ Alongside the span, every evaluation (again: `Matches`/`MatchesAsync` excluded) 
 
 | Instrument                  | Type              | Unit          | Tags |
 |-------------------------------|-------------------|---------------|------|
-| `motiv.evaluations`          | `Counter<long>`   | `{evaluation}` | `motiv.proposition`, `motiv.satisfied` (success only), `error.type` (failure only) |
-| `motiv.evaluation.duration`  | `Histogram<double>` | `s`         | `motiv.proposition`, `motiv.satisfied` (success only), `error.type` (failure only) |
+| `motiv.evaluations`          | `Counter<long>`   | `{evaluation}` | `motiv.proposition`, `motiv.satisfied` (success only), `error.type` (failure only), `motiv.cancelled` (intentional cancellation only) |
+| `motiv.evaluation.duration`  | `Histogram<double>` | `s`         | `motiv.proposition`, `motiv.satisfied` (success only), `error.type` (failure only), `motiv.cancelled` (intentional cancellation only) |
 
 Both instruments are gated the same way as the span: recording is skipped entirely unless something is listening.
 

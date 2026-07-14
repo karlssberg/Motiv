@@ -99,8 +99,8 @@ exposes no configuration for this (see *Opt-in* above).
 
 | Instrument | Type | Unit | Tags |
 |---|---|---|---|
-| `motiv.evaluations` | `Counter<long>` | `{evaluation}` | `motiv.proposition`, `motiv.satisfied`, `error.type` (on failure) |
-| `motiv.evaluation.duration` | `Histogram<double>` | `s` | `motiv.proposition`, `motiv.satisfied`, `error.type` (on failure) |
+| `motiv.evaluations` | `Counter<long>` | `{evaluation}` | `motiv.proposition`, `motiv.satisfied`, `error.type` (on failure), `motiv.cancelled` (on intentional cancellation) |
+| `motiv.evaluation.duration` | `Histogram<double>` | `s` | `motiv.proposition`, `motiv.satisfied`, `error.type` (on failure), `motiv.cancelled` (on intentional cancellation) |
 
 Cardinality is bounded by the propositions declared in code; statements are
 static text, including composed ones (`"(a & b) | !c"`).
@@ -113,8 +113,16 @@ static text, including composed ones (`"(a & b) | !c"`).
 - The exception is **rethrown unwrapped** — telemetry never changes propagation
   semantics. This matches the async design's "predicate exceptions propagate
   exactly as sync predicate exceptions propagate — no additional wrapping".
-- A cancelled `EvaluateAsync` surfaces `OperationCanceledException` and is
-  recorded like any other failure (`error.type=System.OperationCanceledException`).
+- A cancelled `EvaluateAsync` surfaces `OperationCanceledException`. Per the OpenTelemetry semantic conventions,
+  a cancellation the instrumentation can attribute to the caller's own intent is **not** reported as an error: if
+  the caller's own `CancellationToken` is signalled (`cancellationToken.IsCancellationRequested`), the span status
+  is left `Unset` and no `error.type` tag or exception event is added — but the evaluation is still counted, via a
+  distinguishing `motiv.cancelled=true` dimension on both instruments, so cancellations remain queryable without
+  inflating the error rate. If `OperationCanceledException` escapes without the caller's own token being
+  signalled (an internal timeout, a foreign token, a bug), it cannot be attributed to caller intent and is
+  recorded like any other failure (`error.type=System.OperationCanceledException`). The synchronous boundaries
+  take no `CancellationToken`, so intent can never be established there — a synchronous
+  `OperationCanceledException` is always an error. Either way, the exception is rethrown unwrapped.
 
 ## Cost When Nobody Is Listening
 
@@ -144,8 +152,14 @@ baseline.
 - **Async parity:** async, lifted-sync, and `*Concurrently` compositions produce
   telemetry identical to their sync equivalents, mirroring the async equivalence
   matrix. Concurrency is an evaluation detail, never a telemetry one.
-- **Errors:** predicate exceptions and cancellation set span status `Error`,
-  tag `error.type`, record both instruments, and rethrow unwrapped.
+- **Errors:** predicate exceptions set span status `Error`, tag `error.type`,
+  record both instruments, and rethrow unwrapped.
+- **Cancellation:** a caller-signalled `CancellationToken` producing
+  `OperationCanceledException` leaves span status `Unset`, sets no `error.type`,
+  and records both instruments with `motiv.cancelled=true` instead; an
+  `OperationCanceledException` without the caller's own token signalled is still
+  an error. Either way the exception rethrows unwrapped, and a composed async
+  proposition's cancellation still attributes to exactly one span at the root.
 - **Perf:** no-listener benchmark shows no allocation or throughput regression.
 - Full solution suite green, including example projects; `netstandard2.0` builds
   with the conditioned dependency and all other TFMs gain none.

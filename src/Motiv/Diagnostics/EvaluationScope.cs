@@ -4,13 +4,17 @@ namespace Motiv.Diagnostics;
 
 /// <summary>
 /// Spans a single top-level evaluation. Created by <see cref="Start" />, then terminated by exactly one of
-/// <see cref="Complete" /> or <see cref="Fail" />. A struct so that an unobserved evaluation allocates nothing.
+/// <see cref="Complete" />, <see cref="Fail" />, or <see cref="Cancel" />. A struct so that an unobserved
+/// evaluation allocates nothing.
 /// </summary>
 internal readonly struct EvaluationScope(Activity? activity, long startTimestamp, string proposition)
 {
     /// <summary>Starts a scope, opening an activity if (and only if) something is listening.</summary>
     /// <param name="proposition">The propositional statement being evaluated.</param>
-    /// <returns>A scope that must be terminated with <see cref="Complete" /> or <see cref="Fail" />.</returns>
+    /// <returns>
+    /// A scope that must be terminated with exactly one of <see cref="Complete" />, <see cref="Fail" />, or
+    /// <see cref="Cancel" />.
+    /// </returns>
     internal static EvaluationScope Start(string proposition)
     {
         var activity = MotivTelemetry.ActivitySource
@@ -94,7 +98,25 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
         }
     }
 
-    private void Record(bool? satisfied, string? errorType, long endTimestamp)
+    /// <summary>
+    /// Terminates the scope for an evaluation that was cancelled via the caller's own <see cref="CancellationToken" />.
+    /// Per OpenTelemetry semantic conventions, a cancellation the instrumentation can attribute to the caller's
+    /// own intent is not an error: the span status is left unset and no <c>error.type</c> tag or exception event
+    /// is added. The evaluation is still counted — via a distinguishing <c>motiv.cancelled</c> dimension on both
+    /// instruments — so cancellations remain queryable without inflating the error rate.
+    /// </summary>
+    internal void Cancel()
+    {
+        // Taken before any tagging — see the equivalent remark on Complete.
+        var endTimestamp = Stopwatch.GetTimestamp();
+
+        // Recorded before the activity is touched — see the equivalent remark in Complete.
+        Record(satisfied: null, errorType: null, endTimestamp, cancelled: true);
+
+        activity?.Dispose();
+    }
+
+    private void Record(bool? satisfied, string? errorType, long endTimestamp, bool cancelled = false)
     {
         var countEnabled = MotivTelemetry.Evaluations.Enabled;
         var durationEnabled = MotivTelemetry.Duration.Enabled;
@@ -108,6 +130,9 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
 
         if (errorType is not null)
             tags.Add("error.type", errorType);
+
+        if (cancelled)
+            tags.Add("motiv.cancelled", true);
 
         if (countEnabled)
             MotivTelemetry.Evaluations.Add(1, tags);

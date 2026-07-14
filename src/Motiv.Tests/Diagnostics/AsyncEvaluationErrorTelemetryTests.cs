@@ -108,7 +108,7 @@ public class AsyncEvaluationErrorTelemetryTests
     }
 
     [Fact]
-    public async Task Should_record_cancellation_as_an_error()
+    public async Task Should_record_a_callers_own_cancellation_as_not_an_error()
     {
         using var harness = new TelemetryHarness();
         using var cancellation = new CancellationTokenSource();
@@ -125,8 +125,65 @@ public class AsyncEvaluationErrorTelemetryTests
             async () => await slow.EvaluateAsync(1, cancellation.Token));
 
         var activity = harness.SingleActivity();
+        activity.Status.ShouldBe(ActivityStatusCode.Unset);
+        activity.GetTagItem("error.type").ShouldBeNull();
+        activity.Events.ShouldNotContain(activityEvent => activityEvent.Name == "exception");
+
+        harness.Measurements.Count(measurement => measurement.Instrument == "motiv.evaluations").ShouldBe(1);
+        var count = harness.SingleMeasurement("motiv.evaluations");
+        count.Tags["motiv.cancelled"].ShouldBe(true);
+        count.Tags.ContainsKey("error.type").ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Should_record_cancellation_as_an_error_when_the_callers_token_was_never_signalled()
+    {
+        using var harness = new TelemetryHarness();
+
+        // The caller's own token (default, never cancelled) is not signalled, so this OperationCanceledException
+        // cannot be attributed to caller intent — it must be reported as a genuine failure, exactly like any
+        // other exception.
+        var throws = Spec
+            .BuildAsync((int _) => throw new OperationCanceledException("boom"))
+            .Create("throws");
+
+        await Should.ThrowAsync<OperationCanceledException>(() => throws.EvaluateAsync(1));
+
+        var activity = harness.SingleActivity();
         activity.Status.ShouldBe(ActivityStatusCode.Error);
-        // TaskCanceledException derives from OperationCanceledException; either is correct here.
-        activity.GetTagItem("error.type")!.ToString()!.ShouldContain("CanceledException");
+        activity.GetTagItem("error.type").ShouldBe("System.OperationCanceledException");
+        activity.GetTagItem("motiv.cancelled").ShouldBeNull();
+
+        var count = harness.SingleMeasurement("motiv.evaluations");
+        count.Tags["error.type"].ShouldBe("System.OperationCanceledException");
+        count.Tags.ContainsKey("motiv.cancelled").ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Should_attribute_a_composed_async_propositions_cancellation_to_the_root_with_a_cancelled_not_errored_shape()
+    {
+        using var harness = new TelemetryHarness();
+        using var cancellation = new CancellationTokenSource();
+
+        Func<int, CancellationToken, Task<bool>> slowPredicate = (_, token) =>
+        {
+            cancellation.Cancel();
+            token.ThrowIfCancellationRequested();
+            return Task.FromResult(true);
+        };
+        var slow = Spec.BuildAsync(slowPredicate).Create("slow");
+        var isEven = Spec.BuildAsync((int n) => Task.FromResult(n % 2 == 0)).Create("is even");
+        var composed = isEven.And(slow);
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            async () => await composed.EvaluateAsync(2, cancellation.Token));
+
+        harness.Activities.Count.ShouldBe(1);
+        var activity = harness.SingleActivity();
+        activity.GetTagItem("motiv.proposition").ShouldBe(composed.Description.Statement);
+        activity.Status.ShouldBe(ActivityStatusCode.Unset);
+        activity.GetTagItem("error.type").ShouldBeNull();
+
+        harness.SingleMeasurement("motiv.evaluations").Tags["motiv.cancelled"].ShouldBe(true);
     }
 }

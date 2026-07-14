@@ -309,6 +309,14 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
         {
             result = await EvaluateSpecAsync(model, cancellationToken).ConfigureAwait(false);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The caller's own token was signalled, so this cancellation is intentional, not a failure — see
+            // EvaluationScope.Cancel. An OperationCanceledException without the caller's token signalled (an
+            // internal timeout, a foreign token, a bug) falls through to the catch below and is still an error.
+            scope.Cancel();
+            throw;
+        }
         catch (Exception exception)
         {
             scope.Fail(exception);
