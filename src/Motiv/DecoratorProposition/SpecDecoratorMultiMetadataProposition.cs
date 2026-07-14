@@ -17,7 +17,7 @@ internal sealed class SpecDecoratorMultiMetadataProposition<TModel, TMetadata, T
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
-        var booleanResult = underlyingSpec.Evaluate(model);
+        var booleanResult = underlyingSpec.EvaluateInternal(model);
 
         var metadataResolver =
             booleanResult.Satisfied switch

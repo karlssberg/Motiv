@@ -171,6 +171,17 @@ var observed = isEligible
 var result = observed.Evaluate(customer);
 ```
 
+### Observability
+
+Every top-level evaluation reports through OpenTelemetry &mdash; a span plus counter/histogram metrics &mdash;
+with no Motiv configuration required. Nothing is emitted until your application subscribes:
+
+```csharp
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing => tracing.AddSource(MotivTelemetry.SourceName))
+    .WithMetrics(metrics => metrics.AddMeter(MotivTelemetry.MeterName));
+```
+
 ### Collection Logic
 
 Make assertions about collections of items (also known as higher-order logic):
@@ -204,7 +215,7 @@ Install-Package Motiv
 
 ## Technical Notes
 
-- Zero additional dependencies
+- Zero additional dependencies on .NET 8+ (the legacy `netstandard2.0` target pulls in `System.Diagnostics.DiagnosticSource` for telemetry)
 - Metadata lazily evaluated
 - .NET & .NET Framework compatible
 - Performance optimized

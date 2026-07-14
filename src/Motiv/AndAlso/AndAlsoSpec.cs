@@ -29,12 +29,12 @@ internal sealed class AndAlsoSpec<TModel, TMetadata>(
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
-        var leftResult = left.Evaluate(model);
+        var leftResult = left.EvaluateInternal(model);
         return leftResult.Satisfied switch
         {
             true =>  new AndAlsoBooleanResult<TMetadata>(
                 leftResult,
-                right.Evaluate(model)),
+                right.EvaluateInternal(model)),
             false => new AndAlsoBooleanResult<TMetadata>(leftResult)
         };
     }

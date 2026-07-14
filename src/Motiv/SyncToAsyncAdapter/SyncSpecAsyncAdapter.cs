@@ -50,7 +50,7 @@ internal sealed class SyncSpecAsyncAdapter<TModel, TMetadata>(
     {
         try
         {
-            return Task.FromResult(spec.Evaluate(model));
+            return Task.FromResult(spec.EvaluateInternal(model));
         }
         catch (Exception ex)
         {

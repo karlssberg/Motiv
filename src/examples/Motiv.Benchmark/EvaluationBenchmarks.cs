@@ -138,4 +138,11 @@ public class EvaluationBenchmarks
 
     [Benchmark]
     public bool HigherOrderFromExpression_Matches() => _allPositiveFromExpression.Matches(_models);
+
+    /// <summary>
+    /// Evaluates a composed proposition with no OpenTelemetry listener attached, proving the unobserved
+    /// path costs nothing beyond the <c>IsEnabled</c> checks — no Activity allocated, no timestamp taken.
+    /// </summary>
+    [Benchmark]
+    public bool EvaluateComposed_NoListener() => _composed.Evaluate(6).Satisfied;
 }

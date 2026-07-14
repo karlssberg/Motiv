@@ -1,6 +1,7 @@
 using Motiv.And;
 using Motiv.AndAlso;
 using Motiv.ChangeModelType;
+using Motiv.Diagnostics;
 using Motiv.MetadataToExplanationAdapter;
 using Motiv.Not;
 using Motiv.Or;
@@ -200,7 +201,52 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// </summary>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    public new BooleanResultBase<TMetadata> Evaluate(TModel model) => EvaluateSpec(model);
+    public new BooleanResultBase<TMetadata> Evaluate(TModel model) =>
+        MotivTelemetry.IsEnabled ? EvaluateSpecInstrumented(model) : EvaluateSpec(model);
+
+    /// <summary>
+    /// Kept separate from <see cref="Evaluate(TModel)" /> so that the public boundary remains a small, inlineable
+    /// method when telemetry is disabled — a method containing a try/catch cannot be inlined by the JIT.
+    /// </summary>
+    private BooleanResultBase<TMetadata> EvaluateSpecInstrumented(TModel model)
+    {
+        var scope = EvaluationScope.Start(Description.Statement);
+        BooleanResultBase<TMetadata> result;
+        try
+        {
+            result = EvaluateSpec(model);
+        }
+        catch (Exception exception)
+        {
+            // Guarded for the same reason as Complete below: Fail disposes the activity, which synchronously
+            // runs listener callbacks — a throwing listener must not replace the evaluation's own exception.
+            try { scope.Fail(exception); } catch { }
+            throw;
+        }
+
+        try
+        {
+            scope.Complete(result);
+        }
+        catch
+        {
+            // A listener or exporter failing while consuming the completed scope (e.g. a throwing
+            // ActivityStopped callback invoked synchronously by Activity.Dispose()) belongs to telemetry, not
+            // the evaluation: this call already succeeded, so that failure must not be attributed to it as an
+            // error, nor allowed to escape — deliberately not scope.Fail(...).
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Evaluates the proposition without emitting telemetry. Used by composite, decorator and higher-order
+    /// propositions when evaluating their operands, so that a composed proposition emits a single span at its
+    /// root rather than one per node.
+    /// </summary>
+    /// <param name="model">The model to evaluate the specification against.</param>
+    /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
+    internal BooleanResultBase<TMetadata> EvaluateInternal(TModel model) => EvaluateSpec(model);
 
     /// <inheritdoc cref="Evaluate(TModel)"/>
     [Obsolete("Use Evaluate instead.")]

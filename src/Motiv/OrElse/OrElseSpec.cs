@@ -42,13 +42,13 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
-        var leftResult = left.Evaluate(model);
+        var leftResult = left.EvaluateInternal(model);
         return leftResult.Satisfied switch
         {
             true => new OrElseBooleanResult<TMetadata>(leftResult),
             false => new OrElseBooleanResult<TMetadata>(
                 leftResult,
-                right.Evaluate(model))
+                right.EvaluateInternal(model))
         };
     }
 }

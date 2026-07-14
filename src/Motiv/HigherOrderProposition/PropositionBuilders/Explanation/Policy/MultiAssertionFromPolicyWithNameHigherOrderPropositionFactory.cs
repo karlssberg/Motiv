@@ -33,7 +33,7 @@ public readonly struct MultiAssertionFromPolicyWithNameHigherOrderPropositionFac
     {
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromPolicyResultMultiMetadataProposition<TModel, string, TMetadata>(
-            policy.Evaluate,
+            policy.EvaluatePolicyInternal,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause
                 .ToEnumerable()
@@ -54,7 +54,7 @@ public readonly struct MultiAssertionFromPolicyWithNameHigherOrderPropositionFac
     {
         trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
         return new HigherOrderFromPolicyResultMultiAssertionExplanationProposition<TModel, TMetadata>(
-            policy.Evaluate,
+            policy.EvaluatePolicyInternal,
             higherOrderOperation.HigherOrderPredicate,
             trueBecause
                 .ToEnumerable()

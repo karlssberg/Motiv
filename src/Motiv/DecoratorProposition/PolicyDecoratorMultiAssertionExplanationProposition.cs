@@ -22,7 +22,7 @@ internal sealed class PolicyDecoratorMultiAssertionExplanationProposition<TModel
 
     protected override BooleanResultBase<string> EvaluateSpec(TModel model)
     {
-        var policyResult = underlyingSpec.Evaluate(model);
+        var policyResult = underlyingSpec.EvaluatePolicyInternal(model);
 
         var assertionsResolver =
             policyResult.Satisfied switch

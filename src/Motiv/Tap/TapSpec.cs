@@ -15,7 +15,7 @@ internal sealed class TapSpec<TModel, TMetadata>(
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
-        var result = operand.Evaluate(model);
+        var result = operand.EvaluateInternal(model);
         callback(model, result);
         return result;
     }

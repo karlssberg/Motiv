@@ -17,7 +17,7 @@ internal sealed class PolicyDecoratorMultiMetadataProposition<TModel, TMetadata,
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
-        var policyResult = underlyingSpec.Evaluate(model);
+        var policyResult = underlyingSpec.EvaluatePolicyInternal(model);
 
         var metadataResolver =
             policyResult.Satisfied switch

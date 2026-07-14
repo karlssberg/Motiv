@@ -15,7 +15,7 @@ internal sealed class TapWhenTrueSpec<TModel, TMetadata>(
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
-        var result = operand.Evaluate(model);
+        var result = operand.EvaluateInternal(model);
         if (result.Satisfied)
             callback(model, result);
         return result;

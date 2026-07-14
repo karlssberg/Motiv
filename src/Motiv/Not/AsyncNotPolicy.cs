@@ -24,7 +24,7 @@ internal sealed class AsyncNotPolicy<TModel, TMetadata>(
     protected override async Task<PolicyResultBase<TMetadata>> EvaluatePolicyAsync(
         TModel model,
         CancellationToken cancellationToken) =>
-        (await operand.EvaluateAsync(model, cancellationToken).ConfigureAwait(false)).Not();
+        (await operand.EvaluatePolicyAsyncInternal(model, cancellationToken).ConfigureAwait(false)).Not();
 
     public SpecBase Operand => operand;
 }

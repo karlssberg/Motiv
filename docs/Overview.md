@@ -35,6 +35,7 @@ Propositions can be combined using logical operators to form new, more complex p
 | [OrElse()](./operators/OrElse.md)   | `left.OrElse(right)` |`left \|\| right`<br>([results](xref:Motiv.BooleanResultBase`1) and expression trees only) | Performs a logical OR operation with short-circuiting behavior. The `\|\|` operator overload is available only for proposition results and within expression trees.     |
 | [XOr()](./operators/XOr.md)         | `left.XOr(right)`|`left ^ right`                                                                              | Performs a logical XOR (exclusive OR) operation on two propositions or their results.                                                 |
 | [Not()](./operators/Not.md)         | `proposition.Not()`|`!proposition`                                                                            | Performs a logical NOT (negation) operation on a proposition or its result.                                                             |
+| [ChangeModelTo()](./operators/ChangeModelTo.md) | `proposition.ChangeModelTo(selector)` | _(none)_                                                          | Re-points an existing proposition at a different model type, so propositions over differing models can be composed as a single proposition. |
 
 ## Tap
 
@@ -90,3 +91,7 @@ Propositions built from an async predicate via [`Spec.BuildAsync()`](./async/Bui
 | [EvaluateAsync()](./async/EvaluateAsync.md)               | Asynchronously evaluates a proposition, returning the same result types as synchronous evaluation. |
 | [ToAsyncSpec()](./async/ToAsyncSpec.md)                   | Lifts a synchronous specification into the asynchronous hierarchy so it can compose with async operands. |
 | [Concurrent Operators](./async/ConcurrentOperators.md)    | `AndConcurrently()`, `OrConcurrently()`, `XOrConcurrently()` — opt-in concurrent evaluation with results identical to the sequential form. |
+
+## Observability
+
+Motiv reports every top-level evaluation via OpenTelemetry &mdash; a `motiv.evaluate` span per `Evaluate()`/`EvaluateAsync()` call plus `motiv.evaluations`/`motiv.evaluation.duration` metrics &mdash; but emits nothing unless your application subscribes to the `"Motiv"` activity source and meter. See [Observability](./observability/index.md) for the full tag/metric reference, the `Matches`/`Where()` emission rules, and sensitive-data guidance.

@@ -1,3 +1,4 @@
+using Motiv.Diagnostics;
 using Motiv.Not;
 using Motiv.OrElse;
 
@@ -24,7 +25,70 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     /// <param name="model">The model to evaluate the policy against.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    public new Task<PolicyResultBase<TMetadata>> EvaluateAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public new Task<PolicyResultBase<TMetadata>> EvaluateAsync(
+        TModel model,
+        CancellationToken cancellationToken = default) =>
+        MotivTelemetry.IsEnabled
+            ? EvaluatePolicyInstrumentedAsync(model, cancellationToken)
+            : EvaluatePolicyAsync(model, cancellationToken);
+
+    /// <summary>
+    /// Kept separate from <see cref="EvaluateAsync(TModel,CancellationToken)" /> so that the public boundary
+    /// remains free of an async state machine when telemetry is disabled.
+    /// </summary>
+    private async Task<PolicyResultBase<TMetadata>> EvaluatePolicyInstrumentedAsync(
+        TModel model,
+        CancellationToken cancellationToken)
+    {
+        var scope = EvaluationScope.Start(Description.Statement);
+        PolicyResultBase<TMetadata> result;
+        try
+        {
+            result = await EvaluatePolicyAsync(model, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The caller's own token was signalled, so this cancellation is intentional, not a failure — see
+            // EvaluationScope.Cancel. An OperationCanceledException without the caller's token signalled (an
+            // internal timeout, a foreign token, a bug) falls through to the catch below and is still an error.
+            // Guarded like Complete below: a throwing listener must not replace the cancellation exception.
+            try { scope.Cancel(); } catch { }
+            throw;
+        }
+        catch (Exception exception)
+        {
+            // Guarded for the same reason as Complete below: Fail disposes the activity, which synchronously
+            // runs listener callbacks — a throwing listener must not replace the evaluation's own exception.
+            try { scope.Fail(exception); } catch { }
+            throw;
+        }
+
+        try
+        {
+            scope.Complete(result);
+        }
+        catch
+        {
+            // A listener or exporter failing while consuming the completed scope (e.g. a throwing
+            // ActivityStopped callback invoked synchronously by Activity.Dispose()) belongs to telemetry, not
+            // the evaluation: this call already succeeded, so that failure must not be attributed to it as an
+            // error, nor allowed to escape — deliberately not scope.Fail(...).
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Asynchronously evaluates the policy without emitting telemetry. Used by composite and adapter
+    /// propositions when evaluating their operands, so that a composed proposition emits a single span at its
+    /// root rather than one per node.
+    /// </summary>
+    /// <param name="model">The model to evaluate the policy against.</param>
+    /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
+    /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
+    internal Task<PolicyResultBase<TMetadata>> EvaluatePolicyAsyncInternal(
+        TModel model,
+        CancellationToken cancellationToken) =>
         EvaluatePolicyAsync(model, cancellationToken);
 
     /// <summary>

@@ -12,7 +12,7 @@ internal sealed class ChangeModelTypeSpec<TParentModel, TModel, TMetadata>(
     public override bool Matches(TParentModel model) => spec.Matches(modelSelector(model));
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TParentModel model) =>
-        spec.Evaluate(modelSelector(model));
+        spec.EvaluateInternal(modelSelector(model));
 
     public override string ToString() => spec.ToString();
 }

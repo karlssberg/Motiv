@@ -67,14 +67,14 @@ internal sealed class AsyncXOrSpec<TModel, TMetadata>(
     {
         if (concurrent)
         {
-            var leftTask = left.EvaluateAsync(model, cancellationToken);
-            var rightTask = right.EvaluateAsync(model, cancellationToken);
+            var leftTask = left.EvaluateSpecAsyncInternal(model, cancellationToken);
+            var rightTask = right.EvaluateSpecAsyncInternal(model, cancellationToken);
             await Task.WhenAll(leftTask, rightTask).ConfigureAwait(false);
             return (await leftTask.ConfigureAwait(false)).XOr(await rightTask.ConfigureAwait(false));
         }
 
-        var leftResult = await left.EvaluateAsync(model, cancellationToken).ConfigureAwait(false);
-        var rightResult = await right.EvaluateAsync(model, cancellationToken).ConfigureAwait(false);
+        var leftResult = await left.EvaluateSpecAsyncInternal(model, cancellationToken).ConfigureAwait(false);
+        var rightResult = await right.EvaluateSpecAsyncInternal(model, cancellationToken).ConfigureAwait(false);
 
         return leftResult.XOr(rightResult);
     }

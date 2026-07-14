@@ -15,7 +15,7 @@ internal sealed class MinimalSpecDecoratorProposition<TModel, TMetadata>(
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
-        var predicateResult = underlyingSpec.Evaluate(model);
+        var predicateResult = underlyingSpec.EvaluateInternal(model);
 
         return new MinimalSpecDecoratorBooleanResult<TMetadata>(predicateResult, description);
     }

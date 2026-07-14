@@ -17,7 +17,7 @@ internal sealed class PolicyDecoratorProposition<TModel, TMetadata, TUnderlyingM
 
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
-        var policyResult = underlyingSpec.Evaluate(model);
+        var policyResult = underlyingSpec.EvaluatePolicyInternal(model);
 
         var valueResolver =
             policyResult.Satisfied switch

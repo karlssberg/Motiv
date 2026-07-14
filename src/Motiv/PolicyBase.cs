@@ -1,4 +1,5 @@
 using Motiv.ChangeModelType;
+using Motiv.Diagnostics;
 using Motiv.Not;
 using Motiv.OrElse;
 using Motiv.SyncToAsyncAdapter;
@@ -22,7 +23,52 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// </summary>
     /// <param name="model">The model to evaluate</param>
     /// <returns>A <see cref="PolicyResultBase{TMetadata}" /> containing the metadata instance and the boolean result.</returns>
-    public new PolicyResultBase<TMetadata> Evaluate(TModel model) => EvaluatePolicy(model);
+    public new PolicyResultBase<TMetadata> Evaluate(TModel model) =>
+        MotivTelemetry.IsEnabled ? EvaluatePolicyInstrumented(model) : EvaluatePolicy(model);
+
+    /// <summary>
+    /// Kept separate from <see cref="Evaluate(TModel)" /> so that the public boundary remains a small, inlineable
+    /// method when telemetry is disabled — a method containing a try/catch cannot be inlined by the JIT.
+    /// </summary>
+    private PolicyResultBase<TMetadata> EvaluatePolicyInstrumented(TModel model)
+    {
+        var scope = EvaluationScope.Start(Description.Statement);
+        PolicyResultBase<TMetadata> result;
+        try
+        {
+            result = EvaluatePolicy(model);
+        }
+        catch (Exception exception)
+        {
+            // Guarded for the same reason as Complete below: Fail disposes the activity, which synchronously
+            // runs listener callbacks — a throwing listener must not replace the evaluation's own exception.
+            try { scope.Fail(exception); } catch { }
+            throw;
+        }
+
+        try
+        {
+            scope.Complete(result);
+        }
+        catch
+        {
+            // A listener or exporter failing while consuming the completed scope (e.g. a throwing
+            // ActivityStopped callback invoked synchronously by Activity.Dispose()) belongs to telemetry, not
+            // the evaluation: this call already succeeded, so that failure must not be attributed to it as an
+            // error, nor allowed to escape — deliberately not scope.Fail(...).
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Evaluates the policy without emitting telemetry. Used by composite, decorator and higher-order
+    /// propositions when evaluating their operands, so that a composed proposition emits a single span at its
+    /// root rather than one per node.
+    /// </summary>
+    /// <param name="model">The model to evaluate the policy against.</param>
+    /// <returns>A result containing the metadata instance and the boolean result.</returns>
+    internal PolicyResultBase<TMetadata> EvaluatePolicyInternal(TModel model) => EvaluatePolicy(model);
 
     /// <inheritdoc cref="Evaluate(TModel)"/>
     [Obsolete("Use Evaluate instead.")]

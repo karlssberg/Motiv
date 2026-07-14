@@ -26,5 +26,5 @@ internal sealed class AsyncNotSpec<TModel, TMetadata>(
     protected override async Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
         TModel model,
         CancellationToken cancellationToken) =>
-        (await operand.EvaluateAsync(model, cancellationToken).ConfigureAwait(false)).Not();
+        (await operand.EvaluateSpecAsyncInternal(model, cancellationToken).ConfigureAwait(false)).Not();
 }

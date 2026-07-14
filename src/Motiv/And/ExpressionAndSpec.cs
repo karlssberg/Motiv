@@ -51,8 +51,8 @@ internal sealed class ExpressionAndSpec<TModel, TMetadata>(
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
     {
-        var leftResult = left.Evaluate(model);
-        var rightResult = right.Evaluate(model);
+        var leftResult = left.EvaluateInternal(model);
+        var rightResult = right.EvaluateInternal(model);
 
         return leftResult.And(rightResult);
     }

@@ -42,7 +42,7 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     /// <param name="model">The model to be checked against the proposition.</param>
     /// <returns>A BooleanResultBase containing the result of the proposition check and the associated metadata.</returns>
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model) =>
-        _spec.Evaluate(model);
+        _spec.EvaluateInternal(model);
 }
 
 /// <summary>
@@ -89,7 +89,7 @@ public class Spec<TModel> : SpecBase<TModel, string>
     /// A BooleanResultBase containing the result of the proposition being applied to a model and the associated
     /// metadata.
     /// </returns>
-    protected override BooleanResultBase<string> EvaluateSpec(TModel model) => _spec.Evaluate(model);
+    protected override BooleanResultBase<string> EvaluateSpec(TModel model) => _spec.EvaluateInternal(model);
 }
 
 /// <summary>Creates propositions using a fluent API.</summary>

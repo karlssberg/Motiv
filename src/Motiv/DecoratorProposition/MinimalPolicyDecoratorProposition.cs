@@ -15,7 +15,7 @@ internal sealed class MinimalPolicyDecoratorProposition<TModel, TMetadata>(
 
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
-        var predicateResult = underlyingPolicy.Evaluate(model);
+        var predicateResult = underlyingPolicy.EvaluatePolicyInternal(model);
 
         return new MinimalPolicyDecoratorPolicyResult<TMetadata>(predicateResult, description);
     }

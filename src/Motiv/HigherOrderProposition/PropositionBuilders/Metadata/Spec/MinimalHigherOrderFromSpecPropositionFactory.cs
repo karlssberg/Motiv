@@ -24,7 +24,7 @@ public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TMod
     /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<IEnumerable<TModel>, TMetadata> Create(string statement) =>
         new MinimalHigherOrderFromBooleanResultProposition<TModel, TMetadata>(
-            spec.Evaluate,
+            spec.EvaluateInternal,
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
@@ -34,7 +34,7 @@ public readonly partial struct MinimalHigherOrderFromSpecPropositionFactory<TMod
 
     internal SpecBase<IEnumerable<TModel>, TMetadata> Create(Expression statement) =>
         new MinimalHigherOrderFromBooleanResultProposition<TModel, TMetadata>(
-            spec.Evaluate,
+            spec.EvaluateInternal,
             higherOrderOperation.HigherOrderPredicate,
             new ExpressionDescription(
                 statement,
@@ -61,7 +61,7 @@ public readonly struct MinimalHigherOrderFromSpecPropositionFactory<TModel>(
     /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<IEnumerable<TModel>, string> Create(string statement) =>
         new MinimalHigherOrderFromBooleanResultProposition<TModel, string>(
-            spec.Evaluate,
+            spec.EvaluateInternal,
             higherOrderOperation.HigherOrderPredicate,
             new SpecDescription(
                 statement.ThrowIfNullOrWhitespace(nameof(statement)),
@@ -71,7 +71,7 @@ public readonly struct MinimalHigherOrderFromSpecPropositionFactory<TModel>(
 
     internal SpecBase<IEnumerable<TModel>, string> Create(Expression statement) =>
         new MinimalHigherOrderFromBooleanResultProposition<TModel, string>(
-            spec.Evaluate,
+            spec.EvaluateInternal,
             higherOrderOperation.HigherOrderPredicate,
             new ExpressionDescription(
                 statement,

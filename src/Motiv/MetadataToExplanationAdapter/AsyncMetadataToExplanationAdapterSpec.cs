@@ -17,7 +17,7 @@ internal sealed class AsyncMetadataToExplanationAdapterSpec<TModel, TUnderlyingM
         TModel model,
         CancellationToken cancellationToken)
     {
-        var result = await spec.EvaluateAsync(model, cancellationToken).ConfigureAwait(false);
+        var result = await spec.EvaluateSpecAsyncInternal(model, cancellationToken).ConfigureAwait(false);
 
         return new MetadataToExplanationAdapterBooleanResult<TUnderlyingMetadata>(result, spec.Description);
     }

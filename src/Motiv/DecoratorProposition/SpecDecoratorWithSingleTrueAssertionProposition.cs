@@ -17,7 +17,7 @@ internal sealed class SpecDecoratorWithSingleTrueAssertionProposition<TModel, TU
 
     protected override PolicyResultBase<string> EvaluatePolicy(TModel model)
     {
-        var underlyingResult = underlyingSpec.Evaluate(model);
+        var underlyingResult = underlyingSpec.EvaluateInternal(model);
 
         return new SpecDecoratorWithSingleTrueAssertionPolicyResult<TModel, TUnderlyingMetadata>(
             underlyingResult,

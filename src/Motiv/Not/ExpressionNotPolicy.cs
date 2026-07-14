@@ -30,7 +30,7 @@ internal sealed class ExpressionNotPolicy<TModel, TMetadata>(
     public override bool Matches(TModel model) => !operand.Matches(model);
 
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model) =>
-        operand.Evaluate(model).Not();
+        operand.EvaluatePolicyInternal(model).Not();
 
     public PolicyBase<TModel, TMetadata> Operand => operand;
 
