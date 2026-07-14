@@ -5,25 +5,30 @@ description: Documentation for Motiv's OpenTelemetry integration — the motiv.e
 
 Motiv owns an `ActivitySource` and a `Meter`, both named `Motiv`, that report what every top-level evaluation
 decided and why. Nothing is emitted unless something subscribes to them &mdash; there is no Motiv configuration
-API to turn this on or off. Enabling it is entirely a matter of registering `"Motiv"` with your own OpenTelemetry
-setup.
+API to turn this on or off. Enabling it is entirely a matter of registering those names with your own
+OpenTelemetry setup.
 
 ## Enabling
 
-Add `.AddSource("Motiv")` to tracing and `.AddMeter("Motiv")` to metrics wherever you configure OpenTelemetry:
+Register the source with tracing and the meter with metrics wherever you configure OpenTelemetry. Use the
+`MotivTelemetry.SourceName` and `MotivTelemetry.MeterName` constants rather than string literals &mdash; a
+mistyped name is not an error, it is silence:
 
 ```csharp
+using Motiv.Diagnostics;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing
-        .AddSource("Motiv")
+        .AddSource(MotivTelemetry.SourceName)
         .AddOtlpExporter())
     .WithMetrics(metrics => metrics
-        .AddMeter("Motiv")
+        .AddMeter(MotivTelemetry.MeterName)
         .AddOtlpExporter());
 ```
+
+(Both constants resolve to `"Motiv"`; they are the only public API this feature adds.)
 
 (Requires the `OpenTelemetry.Extensions.Hosting` and `OpenTelemetry.Exporter.OpenTelemetryProtocol` packages, or
 swap `AddOtlpExporter()` for `AddConsoleExporter()` during local development.) Until something subscribes, Motiv

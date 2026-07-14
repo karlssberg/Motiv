@@ -178,8 +178,8 @@ with no Motiv configuration required. Nothing is emitted until your application 
 
 ```csharp
 builder.Services.AddOpenTelemetry()
-    .WithTracing(tracing => tracing.AddSource("Motiv"))
-    .WithMetrics(metrics => metrics.AddMeter("Motiv"));
+    .WithTracing(tracing => tracing.AddSource(MotivTelemetry.SourceName))
+    .WithMetrics(metrics => metrics.AddMeter(MotivTelemetry.MeterName));
 ```
 
 ### Collection Logic
