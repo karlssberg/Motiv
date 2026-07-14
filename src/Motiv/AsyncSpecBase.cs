@@ -314,12 +314,15 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
             // The caller's own token was signalled, so this cancellation is intentional, not a failure — see
             // EvaluationScope.Cancel. An OperationCanceledException without the caller's token signalled (an
             // internal timeout, a foreign token, a bug) falls through to the catch below and is still an error.
-            scope.Cancel();
+            // Guarded like Complete below: a throwing listener must not replace the cancellation exception.
+            try { scope.Cancel(); } catch { }
             throw;
         }
         catch (Exception exception)
         {
-            scope.Fail(exception);
+            // Guarded for the same reason as Complete below: Fail disposes the activity, which synchronously
+            // runs listener callbacks — a throwing listener must not replace the evaluation's own exception.
+            try { scope.Fail(exception); } catch { }
             throw;
         }
 

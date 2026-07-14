@@ -218,7 +218,9 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
         }
         catch (Exception exception)
         {
-            scope.Fail(exception);
+            // Guarded for the same reason as Complete below: Fail disposes the activity, which synchronously
+            // runs listener callbacks — a throwing listener must not replace the evaluation's own exception.
+            try { scope.Fail(exception); } catch { }
             throw;
         }
 
