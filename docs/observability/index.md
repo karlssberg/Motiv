@@ -101,6 +101,25 @@ var evens = new[] { 1, 2, 3 }.Where(isEven).ToList(); // three "motiv.evaluate" 
 with &mdash; so they emit no span and record no metric. A caller who chose the boolean-only fast path has already
 opted out of the explanation this telemetry reports.
 
+### Composing Results Emits Nothing
+
+Results can be composed directly (`resultA & resultB`), which is how propositions over *different* model types are
+combined. Such a composition emits no span of its own: telemetry reports evaluations, and combining
+already-computed results runs no predicate. Each operand's own `Evaluate()` is traced, so you will see a span per
+operand and none for the combined verdict.
+
+```csharp
+var creditResult = hasGoodCredit.Evaluate(customer);   // one span
+var stockResult = isInStock.Evaluate(product);         // one span
+var canFulfil = creditResult & stockResult;            // no span — no predicate ran
+```
+
+If you want the combined decision traced *as one decision*, model it as a proposition rather than a result
+composition &mdash; either over a model that aggregates both inputs, or by bringing the operands to a common model
+with `ChangeModelTo()`. Evaluating that proposition emits a single span carrying the combined outcome, exactly like
+any other composition. Result composition is a convenience for differing model types, not something telemetry
+requires you to give up.
+
 ## Metrics
 
 Alongside the span, every evaluation (again: `Matches`/`MatchesAsync` excluded) records to two instruments:
