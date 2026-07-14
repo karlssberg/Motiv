@@ -12,3 +12,5 @@ items:
     href: XOR.md
   - name: Not()
     href: Not.md
+  - name: ChangeModelTo()
+    href: ChangeModelTo.md

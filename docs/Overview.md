@@ -35,6 +35,7 @@ Propositions can be combined using logical operators to form new, more complex p
 | [OrElse()](./operators/OrElse.md)   | `left.OrElse(right)` |`left \|\| right`<br>([results](xref:Motiv.BooleanResultBase`1) and expression trees only) | Performs a logical OR operation with short-circuiting behavior. The `\|\|` operator overload is available only for proposition results and within expression trees.     |
 | [XOr()](./operators/XOr.md)         | `left.XOr(right)`|`left ^ right`                                                                              | Performs a logical XOR (exclusive OR) operation on two propositions or their results.                                                 |
 | [Not()](./operators/Not.md)         | `proposition.Not()`|`!proposition`                                                                            | Performs a logical NOT (negation) operation on a proposition or its result.                                                             |
+| [ChangeModelTo()](./operators/ChangeModelTo.md) | `proposition.ChangeModelTo(selector)` | _(none)_                                                          | Re-points an existing proposition at a different model type, so propositions over differing models can be composed as a single proposition. |
 
 ## Tap
 

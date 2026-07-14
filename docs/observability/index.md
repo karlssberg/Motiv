@@ -116,9 +116,9 @@ var canFulfil = creditResult & stockResult;            // no span — no predica
 
 If you want the combined decision traced *as one decision*, model it as a proposition rather than a result
 composition &mdash; either over a model that aggregates both inputs, or by bringing the operands to a common model
-with `ChangeModelTo()`. Evaluating that proposition emits a single span carrying the combined outcome, exactly like
-any other composition. Result composition is a convenience for differing model types, not something telemetry
-requires you to give up.
+with [`ChangeModelTo()`](../operators/ChangeModelTo.md). Evaluating that proposition emits a single span carrying
+the combined outcome, exactly like any other composition. Result composition is a convenience for differing model
+types, not something telemetry requires you to give up.
 
 ## Metrics
 
