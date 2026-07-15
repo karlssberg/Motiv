@@ -19,7 +19,12 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         JsonDocument document;
         try
         {
-            document = JsonDocument.Parse(json);
+            // Binary-operator nesting costs 2 JSON levels per rule level, so the reader's depth
+            // ceiling must be raised beyond STJ's default of 64 to admit any document that is
+            // legal under MaxDocumentDepth. The parser's own recursion stays bounded by
+            // ExceedsLimits, so raising the reader limit here is safe.
+            var readerOptions = new JsonDocumentOptions { MaxDepth = checked(options.MaxDocumentDepth * 2 + 4) };
+            document = JsonDocument.Parse(json, readerOptions);
         }
         catch (JsonException exception)
         {

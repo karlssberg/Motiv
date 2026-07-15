@@ -291,4 +291,24 @@ public class RuleSerializerValidateTests
         // Assert
         errors.Count.ShouldBe(3);
     }
+
+    [Fact]
+    public void Should_accept_documents_deeper_than_the_default_json_reader_limit()
+    {
+        // Arrange: 35 nested "and" levels is legal under the default MaxDocumentDepth of 64,
+        // but costs ~70 JSON levels, which exceeds System.Text.Json's default reader depth of 64.
+        var json = """{ "rule": """;
+        for (var i = 0; i < 35; i++)
+            json += """{ "and": [ { "spec": "a" }, """;
+        json += """{ "spec": "a" }""";
+        for (var i = 0; i < 35; i++)
+            json += "] }";
+        json += "}";
+
+        // Act
+        var errors = Validate(json);
+
+        // Assert
+        errors.ShouldBeEmpty();
+    }
 }
