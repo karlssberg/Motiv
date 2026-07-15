@@ -27,7 +27,21 @@ internal static class RuleBinder
             _ => BindComposition<TModel>(node, registry, errors)
         };
 
-        return spec is null ? null : Decorate(node, spec, errors);
+        // Reported independently of leaf/composition success, mirroring the parser's approach
+        // of surfacing payload errors even when the operator subtree fails.
+        var hasObjectPayloadError = ReportObjectPayloadError(node, errors);
+
+        return spec is null || hasObjectPayloadError ? null : Decorate(node, spec);
+    }
+
+    private static bool ReportObjectPayloadError(RuleNode node, List<RuleError> errors)
+    {
+        if (!node.HasObjectPayloads)
+            return false;
+
+        errors.Add(new RuleError(node.Path, RuleErrorCode.MetadataTypeMismatch,
+            "object 'whenTrue'/'whenFalse' payloads require a metadata load; this is an explanation load"));
+        return true;
     }
 
     private static SpecBase<TModel, string>? BindSpecLeaf<TModel>(
@@ -72,16 +86,8 @@ internal static class RuleBinder
 
     private static SpecBase<TModel, string>? Decorate<TModel>(
         RuleNode node,
-        SpecBase<TModel, string> spec,
-        List<RuleError> errors)
+        SpecBase<TModel, string> spec)
     {
-        if (node.HasObjectPayloads)
-        {
-            errors.Add(new RuleError(node.Path, RuleErrorCode.MetadataTypeMismatch,
-                "object 'whenTrue'/'whenFalse' payloads require a metadata load; this is an explanation load"));
-            return null;
-        }
-
         if (node.WhenTrueText is not null)
         {
             var builder = Spec.Build(spec).WhenTrue(node.WhenTrueText).WhenFalse(node.WhenFalseText!);

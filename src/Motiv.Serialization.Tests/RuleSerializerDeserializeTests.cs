@@ -261,4 +261,21 @@ public class RuleSerializerDeserializeTests
         var exception = act.ShouldThrow<RuleSerializationException>();
         exception.Errors.ShouldHaveSingleItem().Code.ShouldBe(RuleErrorCode.InvalidNode);
     }
+
+    [Fact]
+    public void Should_report_object_payload_errors_even_when_the_leaf_fails()
+    {
+        // Arrange
+        const string json =
+            """{ "rule": { "spec": "missing", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 } } }""";
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<int>(json);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        exception.Errors.Count.ShouldBe(2);
+        exception.Errors.ShouldContain(error => error.Code == RuleErrorCode.UnknownSpec);
+        exception.Errors.ShouldContain(error => error.Code == RuleErrorCode.MetadataTypeMismatch);
+    }
 }
