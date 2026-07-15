@@ -163,6 +163,19 @@ public class RuleSerializerDeserializeTests
     }
 
     [Fact]
+    public void Should_bind_a_not_node_to_the_fluent_negation()
+    {
+        // Arrange
+        const string json = """{ "rule": { "not": { "spec": "is-positive" } } }""";
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, IsPositive.Not(), 5, -5);
+    }
+
+    [Fact]
     public void Should_throw_for_an_unknown_spec_name()
     {
         // Arrange
