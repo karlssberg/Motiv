@@ -8,8 +8,11 @@ public class RuleSchemaTests
     private static readonly JsonSchema Schema = JsonSchema.FromFile(
         Path.Combine(AppContext.BaseDirectory, "schemas", "rule.v1.json"));
 
-    private static bool IsValid(string json) =>
-        Schema.Evaluate(JsonDocument.Parse(json).RootElement).IsValid;
+    private static bool IsValid(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        return Schema.Evaluate(document.RootElement).IsValid;
+    }
 
     public static TheoryData<string> ValidDocuments => new()
     {
