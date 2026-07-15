@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/karlssberg/Motiv/main/schemas/rule.v1.json",
+  "title": "Motiv rule document",
+  "description": "An externalized Motiv rule: a tree of registry references, expressions, and logical composition, with optional explanation or metadata payloads. See https://karlssberg.github.io/Motiv",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": { "$ref": "#/$defs/nonEmptyString" },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/parameterDeclaration" }
+    },
+    "rule": { "$ref": "#/$defs/node" }
+  },
+  "required": ["rule"],
+  "additionalProperties": false,
+  "$defs": {
+    "nonEmptyString": { "type": "string", "pattern": "\\S" },
+    "parameterDeclaration": {
+      "type": "object",
+      "properties": {
+        "type": { "enum": ["integer", "number", "string", "boolean"] },
+        "default": { "type": ["integer", "number", "string", "boolean"] }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "payload": {
+      "anyOf": [{ "$ref": "#/$defs/nonEmptyString" }, { "type": "object" }]
+    },
+    "countable": {
+      "anyOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "string", "pattern": "^@[A-Za-z_][A-Za-z0-9_]*$" }
+      ]
+    },
+    "propertyPath": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+    },
+    "nodeArray": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/node" },
+      "minItems": 2
+    },
+    "sameKindPayloads": {
+      "dependentRequired": {
+        "whenTrue": ["whenFalse"],
+        "whenFalse": ["whenTrue"]
+      },
+      "anyOf": [
+        { "not": { "required": ["whenTrue"] } },
+        {
+          "properties": {
+            "whenTrue": { "type": "string" },
+            "whenFalse": { "type": "string" }
+          }
+        },
+        {
+          "properties": {
+            "whenTrue": { "type": "object" },
+            "whenFalse": { "type": "object" }
+          }
+        }
+      ]
+    },
+    "node": {
+      "type": "object",
+      "allOf": [{ "$ref": "#/$defs/sameKindPayloads" }],
+      "oneOf": [
+        { "$ref": "#/$defs/specNode" },
+        { "$ref": "#/$defs/expressionNode" },
+        { "$ref": "#/$defs/notNode" },
+        { "$ref": "#/$defs/andNode" },
+        { "$ref": "#/$defs/orNode" },
+        { "$ref": "#/$defs/xorNode" },
+        { "$ref": "#/$defs/andAlsoNode" },
+        { "$ref": "#/$defs/orElseNode" },
+        { "$ref": "#/$defs/asAllSatisfiedNode" },
+        { "$ref": "#/$defs/asAnySatisfiedNode" },
+        { "$ref": "#/$defs/asNSatisfiedNode" },
+        { "$ref": "#/$defs/asAtLeastNSatisfiedNode" },
+        { "$ref": "#/$defs/asAtMostNSatisfiedNode" }
+      ]
+    },
+    "specNode": {
+      "properties": {
+        "spec": { "$ref": "#/$defs/nonEmptyString" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["spec"],
+      "additionalProperties": false
+    },
+    "expressionNode": {
+      "properties": {
+        "expression": { "$ref": "#/$defs/nonEmptyString" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["expression"],
+      "additionalProperties": false
+    },
+    "notNode": {
+      "properties": {
+        "not": { "$ref": "#/$defs/node" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["not"],
+      "additionalProperties": false
+    },
+    "andNode": {
+      "properties": {
+        "and": { "$ref": "#/$defs/nodeArray" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["and"],
+      "additionalProperties": false
+    },
+    "orNode": {
+      "properties": {
+        "or": { "$ref": "#/$defs/nodeArray" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["or"],
+      "additionalProperties": false
+    },
+    "xorNode": {
+      "properties": {
+        "xor": { "$ref": "#/$defs/nodeArray" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["xor"],
+      "additionalProperties": false
+    },
+    "andAlsoNode": {
+      "properties": {
+        "andAlso": { "$ref": "#/$defs/nodeArray" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["andAlso"],
+      "additionalProperties": false
+    },
+    "orElseNode": {
+      "properties": {
+        "orElse": { "$ref": "#/$defs/nodeArray" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["orElse"],
+      "additionalProperties": false
+    },
+    "asAllSatisfiedNode": {
+      "properties": {
+        "asAllSatisfied": { "$ref": "#/$defs/node" },
+        "path": { "$ref": "#/$defs/propertyPath" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["asAllSatisfied"],
+      "additionalProperties": false
+    },
+    "asAnySatisfiedNode": {
+      "properties": {
+        "asAnySatisfied": { "$ref": "#/$defs/node" },
+        "path": { "$ref": "#/$defs/propertyPath" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["asAnySatisfied"],
+      "additionalProperties": false
+    },
+    "asNSatisfiedNode": {
+      "properties": {
+        "asNSatisfied": { "$ref": "#/$defs/node" },
+        "n": { "$ref": "#/$defs/countable" },
+        "path": { "$ref": "#/$defs/propertyPath" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["asNSatisfied", "n"],
+      "additionalProperties": false
+    },
+    "asAtLeastNSatisfiedNode": {
+      "properties": {
+        "asAtLeastNSatisfied": { "$ref": "#/$defs/node" },
+        "n": { "$ref": "#/$defs/countable" },
+        "path": { "$ref": "#/$defs/propertyPath" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["asAtLeastNSatisfied", "n"],
+      "additionalProperties": false
+    },
+    "asAtMostNSatisfiedNode": {
+      "properties": {
+        "asAtMostNSatisfied": { "$ref": "#/$defs/node" },
+        "n": { "$ref": "#/$defs/countable" },
+        "path": { "$ref": "#/$defs/propertyPath" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["asAtMostNSatisfied", "n"],
+      "additionalProperties": false
+    }
+  }
+}
