@@ -29,18 +29,8 @@ public class RuleCompositionTests
 
     private static void ShouldBehaveIdentically(
         SpecBase<int, string> loaded,
-        SpecBase<int, string> expected)
-    {
-        foreach (var model in Models)
-        {
-            var expectedResult = expected.Evaluate(model);
-            var actualResult = loaded.Evaluate(model);
-            actualResult.Satisfied.ShouldBe(expectedResult.Satisfied);
-            actualResult.Reason.ShouldBe(expectedResult.Reason);
-            actualResult.Assertions.ShouldBe(expectedResult.Assertions);
-            actualResult.Justification.ShouldBe(expectedResult.Justification);
-        }
-    }
+        SpecBase<int, string> expected) =>
+        SpecAssertions.ShouldBehaveIdentically(loaded, expected, Models);
 
     public static TheoryData<string, string> BinaryOperators => new()
     {
