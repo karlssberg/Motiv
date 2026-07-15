@@ -246,6 +246,30 @@ public class RuleSerializerValidateTests
     }
 
     [Fact]
+    public void Should_report_payload_errors_even_when_the_operator_subtree_fails()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "and": [ { "spec": "a" }, { "spec": "" } ], "whenTrue": "x" } }""");
+
+        // Assert
+        errors.Count.ShouldBe(2);
+        errors.ShouldContain(error => error.Path == "$.rule.and[1].spec");
+        errors.ShouldContain(error => error.Path == "$.rule" && error.Message.Contains("together"));
+    }
+
+    [Fact]
+    public void Should_report_payload_errors_on_a_node_with_no_operator()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "whenTrue": "x" } }""");
+
+        // Assert
+        errors.Count.ShouldBe(2);
+        errors.ShouldContain(error => error.Code == RuleErrorCode.InvalidNode && error.Message.Contains("exactly one"));
+        errors.ShouldContain(error => error.Path == "$.rule" && error.Message.Contains("together"));
+    }
+
+    [Fact]
     public void Should_report_multiple_errors_in_one_pass()
     {
         // Act

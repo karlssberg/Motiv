@@ -120,15 +120,16 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
             errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
                 "rule node must contain exactly one of 'spec', 'expression', 'not', 'and', 'or', 'xor', " +
                 "'andAlso' or 'orElse'"));
+            ParsePayloads(node: null, whenTrue, whenFalse, path, errors);
             return null;
         }
 
         var node = ParseOperator(operators[0], path, depth, errors);
+        ParsePayloads(node, whenTrue, whenFalse, path, errors);
         if (node is null)
             return null;
 
         node.Name = name;
-        ParsePayloads(node, whenTrue, whenFalse, path, errors);
         return node;
     }
 
@@ -195,7 +196,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
     }
 
     private static void ParsePayloads(
-        RuleNode node,
+        RuleNode? node,
         JsonElement? whenTrue,
         JsonElement? whenFalse,
         string path,
@@ -222,6 +223,9 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                 "'whenTrue' and 'whenFalse' must be the same kind: both strings or both objects"));
             return;
         }
+
+        if (node is null)
+            return;
 
         if (trueKind == JsonValueKind.String)
         {
