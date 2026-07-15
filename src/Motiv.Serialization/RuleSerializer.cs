@@ -30,4 +30,29 @@ public sealed class RuleSerializer
         new RuleDocumentParser(_options).Parse(json, errors);
         return errors;
     }
+
+    /// <summary>
+    /// Loads a rule document into an explanation spec, resolving spec references against the
+    /// registry. Throws when the document is invalid.
+    /// </summary>
+    /// <typeparam name="TModel">The model type the document's spec references were registered for.</typeparam>
+    /// <param name="json">The rule document to load.</param>
+    /// <returns>The composed spec, behaviorally identical to its fluent-built equivalent.</returns>
+    /// <exception cref="RuleSerializationException">The document is structurally or semantically invalid.</exception>
+    public SpecBase<TModel, string> Deserialize<TModel>(string json)
+    {
+        var errors = new List<RuleError>();
+        var document = new RuleDocumentParser(_options).Parse(json, errors);
+        ThrowIfInvalid(errors);
+
+        var spec = RuleBinder.Bind<TModel>(document!, _registry, errors);
+        ThrowIfInvalid(errors);
+        return spec!;
+    }
+
+    private static void ThrowIfInvalid(List<RuleError> errors)
+    {
+        if (errors.Count > 0)
+            throw new RuleSerializationException(errors);
+    }
 }
