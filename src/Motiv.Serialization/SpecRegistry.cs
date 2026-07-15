@@ -4,6 +4,12 @@ namespace Motiv.Serialization;
 /// A catalog of specs registered under stable names. Names are the contract between compiled
 /// code and externalized rule documents: documents reference and compose registered specs by name.
 /// </summary>
+/// <remarks>
+/// Registration is intended to happen once at startup, before any documents are loaded. The
+/// underlying dictionary is not synchronized: the registry is safe for concurrent reads (e.g.
+/// concurrent <see cref="Find"/> calls) once population has finished, but <see cref="Register{TModel,TMetadata}(string,SpecBase{TModel,TMetadata})"/>
+/// and its overload must not run concurrently with reads or with other registrations.
+/// </remarks>
 public sealed class SpecRegistry
 {
     private readonly Dictionary<string, SpecRegistryEntry> _entries = new(StringComparer.Ordinal);
