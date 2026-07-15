@@ -24,7 +24,7 @@ internal static class RuleBinder
             RuleOperator.Spec => BindSpecLeaf<TModel>(node, registry, errors),
             RuleOperator.Expression => BindExpressionLeaf<TModel>(node, errors),
             RuleOperator.Not => BindNode<TModel>(node.Children[0], registry, errors)?.Not(),
-            _ => throw new NotSupportedException($"Unsupported rule operator '{node.Operator}'.")
+            _ => BindComposition<TModel>(node, registry, errors)
         };
 
         return spec is null ? null : Decorate(node, spec, errors);
@@ -89,5 +89,27 @@ internal static class RuleBinder
         }
 
         return node.Name is null ? spec : Spec.Build(spec).Create(node.Name);
+    }
+
+    private static SpecBase<TModel, string>? BindComposition<TModel>(
+        RuleNode node,
+        SpecRegistry registry,
+        List<RuleError> errors)
+    {
+        var children = node.Children
+            .Select(child => BindNode<TModel>(child, registry, errors))
+            .ToArray();
+
+        if (children.Any(child => child is null))
+            return null;
+
+        return children.Aggregate((left, right) => node.Operator switch
+        {
+            RuleOperator.And => left!.And(right!),
+            RuleOperator.Or => left!.Or(right!),
+            RuleOperator.XOr => left!.XOr(right!),
+            RuleOperator.AndAlso => left!.AndAlso(right!),
+            _ => left!.OrElse(right!)
+        });
     }
 }
