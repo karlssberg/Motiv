@@ -19,6 +19,8 @@
   <Project Path="src/Motiv.Analyzer/Motiv.Analyzer.csproj" />
   <Project Path="src/Motiv.CodeFix.Tests/Motiv.CodeFix.Tests.csproj" />
   <Project Path="src/Motiv.CodeFix/Motiv.CodeFix.csproj" />
+  <Project Path="src/Motiv.Serialization.Tests/Motiv.Serialization.Tests.csproj" />
+  <Project Path="src/Motiv.Serialization/Motiv.Serialization.csproj" />
   <Project Path="src/Motiv.Tests/Motiv.Tests.csproj" />
   <Project Path="src/Motiv/Motiv.csproj" />
 </Solution>
