@@ -28,7 +28,9 @@ jobs:
     - name: Test
       run: dotnet test --configuration Release --verbosity normal --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
     - name: Pack (validation only — not published)
-      run: dotnet pack src/Motiv/Motiv.csproj --configuration Release --output ./nupkgs
+      run: |
+        dotnet pack src/Motiv/Motiv.csproj --configuration Release --output ./nupkgs
+        dotnet pack src/Motiv.Serialization/Motiv.Serialization.csproj --configuration Release --output ./nupkgs
     - name: List NuGet Packages
       run: Get-ChildItem -Path .\nupkgs\ -Recurse -Name
     - name: Upload coverage reports to Codecov

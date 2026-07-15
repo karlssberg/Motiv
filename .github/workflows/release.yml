@@ -36,7 +36,9 @@ jobs:
       run: dotnet test --configuration Release --verbosity normal
 
     - name: Pack (version stamped from the tag by MinVer)
-      run: dotnet pack src/Motiv/Motiv.csproj --configuration Release --output ./nupkgs
+      run: |
+        dotnet pack src/Motiv/Motiv.csproj --configuration Release --output ./nupkgs
+        dotnet pack src/Motiv.Serialization/Motiv.Serialization.csproj --configuration Release --output ./nupkgs
 
     - name: List NuGet Packages
       run: Get-ChildItem -Path .\nupkgs\ -Recurse -Name
