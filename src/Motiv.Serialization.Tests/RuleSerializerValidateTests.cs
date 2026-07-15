@@ -270,6 +270,18 @@ public class RuleSerializerValidateTests
     }
 
     [Fact]
+    public void Should_not_report_a_payload_error_when_valid_payloads_sit_on_a_failed_operator()
+    {
+        // Act: the node has no operator, but its whenTrue/whenFalse pair is well-formed
+        var errors = Validate("""{ "rule": { "name": "x", "whenTrue": "yes", "whenFalse": "no" } }""");
+
+        // Assert: only the missing-operator error is reported; the valid payloads add nothing
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Message.ShouldContain("exactly one");
+    }
+
+    [Fact]
     public void Should_report_multiple_errors_in_one_pass()
     {
         // Act
