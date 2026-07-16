@@ -25,5 +25,14 @@ public enum RuleErrorCode
     AsyncSpecInSyncLoad,
 
     /// <summary>The document exceeds the configured depth or node-count limits.</summary>
-    DocumentTooLarge
+    DocumentTooLarge,
+
+    /// <summary>A required parameter was not supplied and has no default.</summary>
+    MissingParameter,
+
+    /// <summary>A supplied parameter is not declared by the document.</summary>
+    SurplusParameter,
+
+    /// <summary>A supplied parameter value does not match the declared parameter type.</summary>
+    ParameterTypeMismatch
 }

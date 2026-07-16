@@ -39,15 +39,55 @@ public sealed class RuleSerializer
     /// <param name="json">The rule document to load.</param>
     /// <returns>The composed spec, behaviorally identical to its fluent-built equivalent.</returns>
     /// <exception cref="RuleSerializationException">The document is structurally or semantically invalid.</exception>
-    public SpecBase<TModel, string> Deserialize<TModel>(string json)
+    public SpecBase<TModel, string> Deserialize<TModel>(string json) =>
+        Deserialize<TModel>(json, (IReadOnlyDictionary<string, object?>?)null);
+
+    /// <summary>
+    /// Loads a rule document into an explanation spec, resolving spec references against the
+    /// registry and supplying parameter values from an anonymous object. Throws when the document is invalid.
+    /// </summary>
+    /// <typeparam name="TModel">The model type the document's spec references were registered for.</typeparam>
+    /// <param name="json">The rule document to load.</param>
+    /// <param name="parameters">An object whose public properties supply parameter values, or <c>null</c>.</param>
+    /// <returns>The composed spec, behaviorally identical to its fluent-built equivalent.</returns>
+    /// <exception cref="RuleSerializationException">The document is structurally or semantically invalid.</exception>
+    public SpecBase<TModel, string> Deserialize<TModel>(string json, object? parameters) =>
+        Deserialize<TModel>(json, RuleParameterResolver.ToDictionary(parameters));
+
+    /// <summary>
+    /// Loads a rule document into an explanation spec, resolving spec references against the
+    /// registry and supplying parameter values from a dictionary. Throws when the document is invalid.
+    /// </summary>
+    /// <typeparam name="TModel">The model type the document's spec references were registered for.</typeparam>
+    /// <param name="json">The rule document to load.</param>
+    /// <param name="parameters">Parameter values keyed by declared parameter name, or <c>null</c>.</param>
+    /// <returns>The composed spec, behaviorally identical to its fluent-built equivalent.</returns>
+    /// <exception cref="RuleSerializationException">The document is structurally or semantically invalid.</exception>
+    public SpecBase<TModel, string> Deserialize<TModel>(
+        string json,
+        IReadOnlyDictionary<string, object?>? parameters)
     {
         var errors = new List<RuleError>();
-        var document = new RuleDocumentParser(_options).Parse(json, errors);
+        var document = Prepare(json, parameters, errors);
         ThrowIfInvalid(errors);
 
         var spec = RuleBinder.Bind<TModel>(document!, _registry, errors);
         ThrowIfInvalid(errors);
         return spec!;
+    }
+
+    private RuleDocument? Prepare(
+        string json,
+        IReadOnlyDictionary<string, object?>? parameters,
+        List<RuleError> errors)
+    {
+        var document = new RuleDocumentParser(_options).Parse(json, errors);
+        if (document is null)
+            return null;
+
+        var values = RuleParameterResolver.Resolve(document.Parameters, parameters, errors);
+        _ = values; // Task 4 replaces this discard with RuleParameterSubstituter.Apply.
+        return document;
     }
 
     private static void ThrowIfInvalid(List<RuleError> errors)

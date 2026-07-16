@@ -2,6 +2,15 @@ namespace Motiv.Serialization.Tests;
 
 public class RuleParameterTests
 {
+    private static SpecBase<int, string> IsPositive { get; } =
+        Spec.Build((int n) => n > 0)
+            .WhenTrue("is positive")
+            .WhenFalse("is not positive")
+            .Create();
+
+    private static RuleSerializer CreateSerializer() =>
+        new(new SpecRegistry().Register("is-positive", IsPositive));
+
     private static IReadOnlyList<RuleError> Validate(string json) =>
         new RuleSerializer(new SpecRegistry()).Validate(json);
 
@@ -47,5 +56,84 @@ public class RuleParameterTests
 
         // Assert
         errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Should_throw_when_a_required_parameter_is_not_supplied()
+    {
+        // Arrange
+        const string json =
+            """{ "parameters": { "minOrders": { "type": "integer" } }, "rule": { "spec": "is-positive" } }""";
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<int>(json);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.MissingParameter);
+        error.Path.ShouldBe("$.parameters.minOrders");
+    }
+
+    [Fact]
+    public void Should_throw_when_a_surplus_parameter_is_supplied()
+    {
+        // Arrange
+        const string json = """{ "rule": { "spec": "is-positive" } }""";
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<int>(json, new { extra = 1 });
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.SurplusParameter);
+        error.Path.ShouldBe("$.parameters.extra");
+    }
+
+    [Fact]
+    public void Should_throw_when_a_supplied_parameter_does_not_match_the_declared_type()
+    {
+        // Arrange
+        const string json =
+            """{ "parameters": { "minOrders": { "type": "integer" } }, "rule": { "spec": "is-positive" } }""";
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<int>(json, new { minOrders = "three" });
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.ParameterTypeMismatch);
+        error.Path.ShouldBe("$.parameters.minOrders");
+    }
+
+    [Fact]
+    public void Should_accept_required_parameters_from_an_anonymous_object()
+    {
+        // Arrange
+        const string json =
+            """{ "parameters": { "minOrders": { "type": "integer" } }, "rule": { "spec": "is-positive" } }""";
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json, new { minOrders = 3 });
+
+        // Assert
+        loaded.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Should_accept_required_parameters_from_a_dictionary()
+    {
+        // Arrange
+        const string json =
+            """{ "parameters": { "minOrders": { "type": "integer" } }, "rule": { "spec": "is-positive" } }""";
+        var parameters = new Dictionary<string, object?> { ["minOrders"] = 3L };
+
+        // Act — a long that fits in 32 bits coerces to an integer parameter
+        var loaded = CreateSerializer().Deserialize<int>(json, parameters);
+
+        // Assert
+        loaded.ShouldNotBeNull();
     }
 }
