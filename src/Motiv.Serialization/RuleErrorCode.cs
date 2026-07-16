@@ -34,5 +34,8 @@ public enum RuleErrorCode
     SurplusParameter,
 
     /// <summary>A supplied parameter value does not match the declared parameter type.</summary>
-    ParameterTypeMismatch
+    ParameterTypeMismatch,
+
+    /// <summary>A payload string or 'n' slot references a parameter that is not declared.</summary>
+    UnknownParameterReference
 }

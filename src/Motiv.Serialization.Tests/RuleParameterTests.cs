@@ -1,5 +1,7 @@
 namespace Motiv.Serialization.Tests;
 
+using static SpecAssertions;
+
 public class RuleParameterTests
 {
     private static SpecBase<int, string> IsPositive { get; } =
@@ -135,5 +137,158 @@ public class RuleParameterTests
 
         // Assert
         loaded.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Should_interpolate_default_parameter_values_into_payload_strings()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "minAge": { "type": "integer", "default": 18 } },
+              "rule": { "spec": "is-positive", "whenTrue": "at least {minAge}", "whenFalse": "under {minAge}" }
+            }
+            """;
+        var expected = Spec
+            .Build(IsPositive)
+            .WhenTrue("at least 18")
+            .WhenFalse("under 18")
+            .Create();
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, 5, -5);
+    }
+
+    [Fact]
+    public void Should_interpolate_supplied_values_over_defaults()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "minAge": { "type": "integer", "default": 18 } },
+              "rule": { "spec": "is-positive", "whenTrue": "at least {minAge}", "whenFalse": "under {minAge}" }
+            }
+            """;
+        var expected = Spec
+            .Build(IsPositive)
+            .WhenTrue("at least 21")
+            .WhenFalse("under 21")
+            .Create();
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json, new { minAge = 21 });
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, 5, -5);
+    }
+
+    [Fact]
+    public void Should_format_number_and_boolean_parameters_invariantly()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": {
+                "rate": { "type": "number", "default": 1.5 },
+                "strict": { "type": "boolean", "default": true }
+              },
+              "rule": { "spec": "is-positive", "whenTrue": "rate {rate} strict {strict}", "whenFalse": "no" }
+            }
+            """;
+        var expected = Spec
+            .Build(IsPositive)
+            .WhenTrue("rate 1.5 strict true")
+            .WhenFalse("no")
+            .Create();
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, 5, -5);
+    }
+
+    [Fact]
+    public void Should_unescape_doubled_braces_as_literals()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "minAge": { "type": "integer", "default": 18 } },
+              "rule": { "spec": "is-positive", "whenTrue": "{{age}} >= {minAge}", "whenFalse": "no" }
+            }
+            """;
+        var expected = Spec
+            .Build(IsPositive)
+            .WhenTrue("{age} >= 18")
+            .WhenFalse("no")
+            .Create();
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, 5, -5);
+    }
+
+    [Fact]
+    public void Should_report_an_unknown_parameter_reference_in_a_payload_string()
+    {
+        // Arrange
+        const string json =
+            """{ "rule": { "spec": "is-positive", "whenTrue": "at least {minAge}", "whenFalse": "no" } }""";
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<int>(json);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.UnknownParameterReference);
+        error.Path.ShouldBe("$.rule.whenTrue");
+    }
+
+    [Theory]
+    [InlineData("""{ "rule": { "spec": "is-positive", "whenTrue": "broken {", "whenFalse": "no" } }""")]
+    [InlineData("""{ "rule": { "spec": "is-positive", "whenTrue": "broken }", "whenFalse": "no" } }""")]
+    public void Should_report_unmatched_braces_in_a_payload_string(string json)
+    {
+        // Act
+        var act = () => CreateSerializer().Deserialize<int>(json);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.whenTrue");
+    }
+
+    [Fact]
+    public void Should_report_a_payload_that_interpolates_to_whitespace()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "label": { "type": "string", "default": " " } },
+              "rule": { "spec": "is-positive", "whenTrue": "{label}", "whenFalse": "no" }
+            }
+            """;
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<int>(json);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.whenTrue");
     }
 }

@@ -86,7 +86,8 @@ public sealed class RuleSerializer
             return null;
 
         var values = RuleParameterResolver.Resolve(document.Parameters, parameters, errors);
-        _ = values; // Task 4 replaces this discard with RuleParameterSubstituter.Apply.
+        if (document.Root is not null)
+            RuleParameterSubstituter.Apply(document.Root, values, errors);
         return document;
     }
 
