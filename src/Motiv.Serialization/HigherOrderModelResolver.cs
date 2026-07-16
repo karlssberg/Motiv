@@ -52,4 +52,17 @@ internal static class HigherOrderModelResolver
 
     private static bool IsEnumerableInterface(Type type) =>
         type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>);
+
+    public static SpecBase<TModel, TMetadata> Reanchor<TModel, TElement, TMetadata>(
+        SpecBase<IEnumerable<TElement>, TMetadata> higherOrder,
+        HigherOrderModelResolution resolution)
+    {
+        if (resolution.Properties.Length > 0)
+            return higherOrder.ChangeModelTo<TModel>(model =>
+                (IEnumerable<TElement>)resolution.GetCollection(model!));
+
+        return typeof(TModel) == typeof(IEnumerable<TElement>)
+            ? (SpecBase<TModel, TMetadata>)(object)higherOrder
+            : higherOrder.ChangeModelTo<TModel>(model => (IEnumerable<TElement>)(object)model!);
+    }
 }

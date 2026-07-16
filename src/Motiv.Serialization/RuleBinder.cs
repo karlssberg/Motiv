@@ -19,19 +19,12 @@ internal static class RuleBinder
         return document.Name is null ? root : Spec.Build(root).Create(document.Name);
     }
 
-    private static SpecBase<TModel, string>? BindNode<TModel>(
+    public static SpecBase<TModel, string>? BindNode<TModel>(
         RuleNode node,
         SpecRegistry registry,
         List<RuleError> errors)
     {
-        var spec = node.Operator switch
-        {
-            RuleOperator.Spec => BindSpecLeaf<TModel>(node, registry, errors),
-            RuleOperator.Expression => BindExpressionLeaf<TModel>(node, errors),
-            RuleOperator.Not => BindNode<TModel>(node.Children[0], registry, errors)?.Not(),
-            _ when node.Operator.IsHigherOrder() => BindHigherOrder<TModel>(node, registry, errors),
-            _ => BindComposition<TModel>(node, registry, errors)
-        };
+        var spec = BindOperator<TModel>(node, registry, errors);
 
         // Reported independently of leaf/composition success, mirroring the parser's approach
         // of surfacing payload errors even when the operator subtree fails.
@@ -42,6 +35,19 @@ internal static class RuleBinder
 
         return node.Operator.IsHigherOrder() ? spec : Decorate(node, spec);
     }
+
+    public static SpecBase<TModel, string>? BindOperator<TModel>(
+        RuleNode node,
+        SpecRegistry registry,
+        List<RuleError> errors) =>
+        node.Operator switch
+        {
+            RuleOperator.Spec => BindSpecLeaf<TModel>(node, registry, errors),
+            RuleOperator.Expression => BindExpressionLeaf<TModel>(node, errors),
+            RuleOperator.Not => BindNode<TModel>(node.Children[0], registry, errors)?.Not(),
+            _ when node.Operator.IsHigherOrder() => BindHigherOrder<TModel>(node, registry, errors),
+            _ => BindComposition<TModel>(node, registry, errors)
+        };
 
     private static bool ReportObjectPayloadError(RuleNode node, List<RuleError> errors)
     {
@@ -153,7 +159,8 @@ internal static class RuleBinder
         if (inner is null)
             return null;
 
-        return ReanchorToModel<TModel, TElement>(CreateHigherOrder(node, inner), resolution);
+        return HigherOrderModelResolver.Reanchor<TModel, TElement, string>(
+            CreateHigherOrder(node, inner), resolution);
     }
 
     private static SpecBase<IEnumerable<TElement>, string> CreateHigherOrder<TElement>(
@@ -201,16 +208,4 @@ internal static class RuleBinder
         };
     }
 
-    private static SpecBase<TModel, string> ReanchorToModel<TModel, TElement>(
-        SpecBase<IEnumerable<TElement>, string> higherOrder,
-        HigherOrderModelResolution resolution)
-    {
-        if (resolution.Properties.Length > 0)
-            return higherOrder.ChangeModelTo<TModel>(model =>
-                (IEnumerable<TElement>)resolution.GetCollection(model!));
-
-        return typeof(TModel) == typeof(IEnumerable<TElement>)
-            ? (SpecBase<TModel, string>)(object)higherOrder
-            : higherOrder.ChangeModelTo<TModel>(model => (IEnumerable<TElement>)(object)model!);
-    }
 }

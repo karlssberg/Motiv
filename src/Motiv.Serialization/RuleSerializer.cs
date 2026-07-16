@@ -76,6 +76,57 @@ public sealed class RuleSerializer
         return spec!;
     }
 
+    /// <summary>
+    /// Loads a rule document into a typed metadata spec, resolving spec references against the
+    /// registry. Throws when the document is invalid.
+    /// </summary>
+    /// <typeparam name="TModel">The model type the document's spec references were registered for.</typeparam>
+    /// <typeparam name="TMetadata">The metadata type object payloads deserialize to and registry entries must yield.</typeparam>
+    /// <param name="json">The rule document to load.</param>
+    /// <returns>The composed spec, behaviorally identical to its fluent-built equivalent.</returns>
+    /// <exception cref="RuleSerializationException">The document is structurally or semantically invalid.</exception>
+    public SpecBase<TModel, TMetadata> Deserialize<TModel, TMetadata>(string json) =>
+        Deserialize<TModel, TMetadata>(json, (IReadOnlyDictionary<string, object?>?)null);
+
+    /// <summary>
+    /// Loads a rule document into a typed metadata spec, resolving spec references against the
+    /// registry and supplying parameter values from an anonymous object. Throws when the document is invalid.
+    /// </summary>
+    /// <typeparam name="TModel">The model type the document's spec references were registered for.</typeparam>
+    /// <typeparam name="TMetadata">The metadata type object payloads deserialize to and registry entries must yield.</typeparam>
+    /// <param name="json">The rule document to load.</param>
+    /// <param name="parameters">An object whose public properties supply parameter values, or <c>null</c>.</param>
+    /// <returns>The composed spec, behaviorally identical to its fluent-built equivalent.</returns>
+    /// <exception cref="RuleSerializationException">The document is structurally or semantically invalid.</exception>
+    public SpecBase<TModel, TMetadata> Deserialize<TModel, TMetadata>(string json, object? parameters) =>
+        Deserialize<TModel, TMetadata>(json, RuleParameterResolver.ToDictionary(parameters));
+
+    /// <summary>
+    /// Loads a rule document into a typed metadata spec, resolving spec references against the
+    /// registry and supplying parameter values from a dictionary. Throws when the document is invalid.
+    /// </summary>
+    /// <typeparam name="TModel">The model type the document's spec references were registered for.</typeparam>
+    /// <typeparam name="TMetadata">The metadata type object payloads deserialize to and registry entries must yield.</typeparam>
+    /// <param name="json">The rule document to load.</param>
+    /// <param name="parameters">Parameter values keyed by declared parameter name, or <c>null</c>.</param>
+    /// <returns>The composed spec, behaviorally identical to its fluent-built equivalent.</returns>
+    /// <exception cref="RuleSerializationException">The document is structurally or semantically invalid.</exception>
+    public SpecBase<TModel, TMetadata> Deserialize<TModel, TMetadata>(
+        string json,
+        IReadOnlyDictionary<string, object?>? parameters)
+    {
+        if (typeof(TMetadata) == typeof(string))
+            return (SpecBase<TModel, TMetadata>)(object)Deserialize<TModel>(json, parameters);
+
+        var errors = new List<RuleError>();
+        var document = Prepare(json, parameters, errors);
+        ThrowIfInvalid(errors);
+
+        var spec = new MetadataRuleBinder<TMetadata>(_registry, _options).Bind<TModel>(document!, errors);
+        ThrowIfInvalid(errors);
+        return spec!;
+    }
+
     private RuleDocument? Prepare(
         string json,
         IReadOnlyDictionary<string, object?>? parameters,

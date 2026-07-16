@@ -21,4 +21,25 @@ internal static class SpecAssertions
             actualResult.Justification.ShouldBe(expectedResult.Justification);
         }
     }
+
+    /// <summary>
+    /// Asserts that a loaded metadata spec evaluates identically to its expected fluent-built
+    /// equivalent, additionally comparing the metadata values surfaced by the evaluation.
+    /// </summary>
+    public static void ShouldBehaveIdentically<TModel, TMetadata>(
+        SpecBase<TModel, TMetadata> loaded,
+        SpecBase<TModel, TMetadata> expected,
+        params TModel[] models)
+    {
+        foreach (var model in models)
+        {
+            var expectedResult = expected.Evaluate(model);
+            var actualResult = loaded.Evaluate(model);
+            actualResult.Satisfied.ShouldBe(expectedResult.Satisfied);
+            actualResult.Reason.ShouldBe(expectedResult.Reason);
+            actualResult.Assertions.ShouldBe(expectedResult.Assertions);
+            actualResult.Justification.ShouldBe(expectedResult.Justification);
+            actualResult.Values.ShouldBe(expectedResult.Values);
+        }
+    }
 }
