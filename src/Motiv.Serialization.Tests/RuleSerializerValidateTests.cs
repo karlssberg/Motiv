@@ -200,7 +200,7 @@ public class RuleSerializerValidateTests
     [Theory]
     [InlineData("""{ "parameters": [ "minAge" ], "rule": { "spec": "a" } }""", "$.parameters")]
     [InlineData("""{ "parameters": { "minAge": { "default": 18 } }, "rule": { "spec": "a" } }""", "$.parameters.minAge")]
-    [InlineData("""{ "parameters": { "minAge": { "type": "decimal" } }, "rule": { "spec": "a" } }""", "$.parameters.minAge.type")]
+    [InlineData("""{ "parameters": { "minAge": { "type": "decimal" } }, "rule": { "spec": "a" } }""", "$.parameters.minAge")]
     [InlineData("""{ "parameters": { "minAge": { "type": "integer", "frobnicate": 1 } }, "rule": { "spec": "a" } }""", "$.parameters.minAge.frobnicate")]
     public void Should_validate_parameter_declarations(string json, string expectedPath)
     {

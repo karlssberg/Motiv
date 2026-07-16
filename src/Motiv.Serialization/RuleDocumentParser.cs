@@ -9,8 +9,6 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         "asAllSatisfied", "asAnySatisfied", "asNSatisfied", "asAtLeastNSatisfied", "asAtMostNSatisfied", "n", "path"
     ];
 
-    private static readonly string[] ParameterTypes = ["integer", "number", "string", "boolean"];
-
     private int _nodeCount;
     private bool _tooLargeReported;
 
@@ -49,6 +47,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         string? name = null;
         RuleNode? rule = null;
         var hasRule = false;
+        var parameters = new List<RuleParameterDeclaration>();
 
         foreach (var property in root.EnumerateObject())
         {
@@ -63,7 +62,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                     name = ReadNonEmptyString(property.Value, "$.name", errors);
                     break;
                 case "parameters":
-                    ValidateParameterDeclarations(property.Value, errors);
+                    parameters = ParseParameterDeclarations(property.Value, errors);
                     break;
                 case "rule":
                     hasRule = true;
@@ -79,7 +78,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         if (!hasRule)
             errors.Add(new RuleError("$", RuleErrorCode.InvalidNode, "missing required property 'rule'"));
 
-        return new RuleDocument(name, rule);
+        return new RuleDocument(name, rule, parameters);
     }
 
     private RuleNode? ParseNode(JsonElement element, string path, int depth, List<RuleError> errors)
@@ -265,52 +264,109 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         }
     }
 
-    private static void ValidateParameterDeclarations(JsonElement element, List<RuleError> errors)
+    private static List<RuleParameterDeclaration> ParseParameterDeclarations(
+        JsonElement element,
+        List<RuleError> errors)
     {
+        var declarations = new List<RuleParameterDeclaration>();
         if (element.ValueKind != JsonValueKind.Object)
         {
             errors.Add(new RuleError("$.parameters", RuleErrorCode.InvalidNode,
                 "'parameters' must be a JSON object"));
-            return;
+            return declarations;
         }
 
         foreach (var parameter in element.EnumerateObject())
         {
-            var path = $"$.parameters.{parameter.Name}";
-            if (parameter.Value.ValueKind != JsonValueKind.Object)
+            var declaration = ParseParameterDeclaration(parameter, errors);
+            if (declaration is not null)
+                declarations.Add(declaration);
+        }
+
+        return declarations;
+    }
+
+    private static RuleParameterDeclaration? ParseParameterDeclaration(
+        JsonProperty parameter,
+        List<RuleError> errors)
+    {
+        var path = $"$.parameters.{parameter.Name}";
+        if (parameter.Value.ValueKind != JsonValueKind.Object)
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                "parameter declaration must be a JSON object"));
+            return null;
+        }
+
+        string? typeName = null;
+        JsonElement? defaultElement = null;
+        foreach (var property in parameter.Value.EnumerateObject())
+        {
+            switch (property.Name)
             {
-                errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
-                    "parameter declaration must be a JSON object"));
-                continue;
+                case "type":
+                    typeName = property.Value.ValueKind == JsonValueKind.String
+                        ? property.Value.GetString()
+                        : null;
+                    break;
+                case "default":
+                    defaultElement = property.Value;
+                    break;
+                default:
+                    errors.Add(new RuleError($"{path}.{property.Name}", RuleErrorCode.InvalidNode,
+                        $"unknown property '{property.Name}'"));
+                    break;
             }
+        }
 
-            var hasType = false;
-            foreach (var property in parameter.Value.EnumerateObject())
-            {
-                switch (property.Name)
-                {
-                    case "type":
-                        hasType = true;
-                        if (property.Value.ValueKind != JsonValueKind.String ||
-                            !ParameterTypes.Contains(property.Value.GetString()))
-                        {
-                            errors.Add(new RuleError($"{path}.type", RuleErrorCode.InvalidNode,
-                                "parameter type must be one of 'integer', 'number', 'string' or 'boolean'"));
-                        }
+        RuleParameterType? type = typeName switch
+        {
+            "integer" => RuleParameterType.Integer,
+            "number" => RuleParameterType.Number,
+            "string" => RuleParameterType.String,
+            "boolean" => RuleParameterType.Boolean,
+            _ => null
+        };
+        if (type is null)
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                "parameter declaration must declare a 'type' of 'integer', 'number', 'string' or 'boolean'"));
+            return null;
+        }
 
-                        break;
-                    case "default":
-                        break;
-                    default:
-                        errors.Add(new RuleError($"{path}.{property.Name}", RuleErrorCode.InvalidNode,
-                            $"unknown property '{property.Name}'"));
-                        break;
-                }
-            }
+        if (defaultElement is null)
+            return new RuleParameterDeclaration(parameter.Name, type.Value, hasDefault: false, defaultValue: null);
 
-            if (!hasType)
+        var defaultValue = ParseDefault(type.Value, defaultElement.Value, $"{path}.default", errors);
+        return defaultValue is null
+            ? null
+            : new RuleParameterDeclaration(parameter.Name, type.Value, hasDefault: true, defaultValue);
+    }
+
+    private static object? ParseDefault(
+        RuleParameterType type,
+        JsonElement element,
+        string path,
+        List<RuleError> errors)
+    {
+        switch (type)
+        {
+            case RuleParameterType.Integer when element.ValueKind == JsonValueKind.Number:
+                if (element.TryGetInt32(out var integer))
+                    return integer;
                 errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
-                    "parameter declaration must declare a 'type'"));
+                    "integer parameter default must fit in a 32-bit integer"));
+                return null;
+            case RuleParameterType.Number when element.ValueKind == JsonValueKind.Number:
+                return element.GetDouble();
+            case RuleParameterType.String when element.ValueKind == JsonValueKind.String:
+                return element.GetString();
+            case RuleParameterType.Boolean when element.ValueKind is JsonValueKind.True or JsonValueKind.False:
+                return element.GetBoolean();
+            default:
+                errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                    $"parameter default must match the declared type '{type.ToString().ToLowerInvariant()}'"));
+                return null;
         }
     }
 
