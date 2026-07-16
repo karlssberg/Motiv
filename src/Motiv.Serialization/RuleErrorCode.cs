@@ -37,5 +37,8 @@ public enum RuleErrorCode
     ParameterTypeMismatch,
 
     /// <summary>A payload string or 'n' slot references a parameter that is not declared.</summary>
-    UnknownParameterReference
+    UnknownParameterReference,
+
+    /// <summary>A higher-order node's model or 'path' does not resolve to a collection.</summary>
+    InvalidHigherOrderPath
 }

@@ -12,9 +12,32 @@ internal static class RuleParameterSubstituter
     {
         node.WhenTrueText = Interpolate(node.WhenTrueText, $"{node.Path}.whenTrue", values, errors);
         node.WhenFalseText = Interpolate(node.WhenFalseText, $"{node.Path}.whenFalse", values, errors);
+        ResolveN(node, values, errors);
 
         foreach (var child in node.Children)
             Apply(child, values, errors);
+    }
+
+    private static void ResolveN(
+        RuleNode node,
+        IReadOnlyDictionary<string, object?> values,
+        List<RuleError> errors)
+    {
+        if (node.NParameterName is not { } parameterName)
+            return;
+
+        if (!values.TryGetValue(parameterName, out var value))
+        {
+            errors.Add(new RuleError($"{node.Path}.n", RuleErrorCode.UnknownParameterReference,
+                $"unknown parameter '{parameterName}'"));
+            return;
+        }
+
+        if (value is int n and >= 0)
+            node.N = n;
+        else
+            errors.Add(new RuleError($"{node.Path}.n", RuleErrorCode.ParameterTypeMismatch,
+                $"'n' requires a non-negative 'integer' parameter; '{parameterName}' does not qualify"));
     }
 
     private static string? Interpolate(
