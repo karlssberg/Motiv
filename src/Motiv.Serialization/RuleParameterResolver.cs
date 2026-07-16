@@ -4,15 +4,28 @@ namespace Motiv.Serialization;
 
 internal static class RuleParameterResolver
 {
-    public static IReadOnlyDictionary<string, object?>? ToDictionary(object? parameters) =>
-        parameters switch
+    public static IReadOnlyDictionary<string, object?>? ToDictionary(object? parameters)
+    {
+        switch (parameters)
         {
-            null => null,
-            IReadOnlyDictionary<string, object?> dictionary => dictionary,
-            _ => (IReadOnlyDictionary<string, object?>)parameters.GetType()
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .ToDictionary(property => property.Name, property => property.GetValue(parameters))
-        };
+            case null:
+                return null;
+            case IReadOnlyDictionary<string, object?> dictionary:
+                return dictionary;
+            default:
+                var values = new Dictionary<string, object?>(StringComparer.Ordinal);
+                foreach (var property in parameters.GetType()
+                             .GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    if (property.GetIndexParameters().Length != 0)
+                        continue;
+
+                    values[property.Name] = property.GetValue(parameters);
+                }
+
+                return values;
+        }
+    }
 
     public static Dictionary<string, object?> Resolve(
         IReadOnlyList<RuleParameterDeclaration> declarations,
@@ -35,11 +48,14 @@ internal static class RuleParameterResolver
     }
 
     public static Dictionary<string, object?> ResolveForValidation(
-        IReadOnlyList<RuleParameterDeclaration> declarations) =>
-        declarations.ToDictionary(
-            declaration => declaration.Name,
-            declaration => declaration.HasDefault ? declaration.DefaultValue : Placeholder(declaration),
-            StringComparer.Ordinal);
+        IReadOnlyList<RuleParameterDeclaration> declarations)
+    {
+        var values = new Dictionary<string, object?>(StringComparer.Ordinal);
+        foreach (var declaration in declarations)
+            values[declaration.Name] = declaration.HasDefault ? declaration.DefaultValue : Placeholder(declaration);
+
+        return values;
+    }
 
     private static object? ResolveValue(
         RuleParameterDeclaration declaration,

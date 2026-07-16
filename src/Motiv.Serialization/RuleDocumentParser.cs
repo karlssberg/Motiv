@@ -318,8 +318,16 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
             return declarations;
         }
 
+        var seenNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var parameter in element.EnumerateObject())
         {
+            if (!seenNames.Add(parameter.Name))
+            {
+                errors.Add(new RuleError($"$.parameters.{parameter.Name}", RuleErrorCode.InvalidNode,
+                    $"duplicate parameter declaration '{parameter.Name}'"));
+                continue;
+            }
+
             var declaration = ParseParameterDeclaration(parameter, errors);
             if (declaration is not null)
                 declarations.Add(declaration);

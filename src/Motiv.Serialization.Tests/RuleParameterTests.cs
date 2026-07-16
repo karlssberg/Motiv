@@ -291,4 +291,88 @@ public class RuleParameterTests
         error.Code.ShouldBe(RuleErrorCode.InvalidNode);
         error.Path.ShouldBe("$.rule.whenTrue");
     }
+
+    private const string DuplicateParameterJson =
+        """
+        {
+          "parameters": {
+            "p": { "type": "integer", "default": 1 },
+            "p": { "type": "integer", "default": 2 }
+          },
+          "rule": { "spec": "a" }
+        }
+        """;
+
+    [Fact]
+    public void Should_report_a_duplicate_parameter_declaration_structurally()
+    {
+        // Act
+        var errors = Validate(DuplicateParameterJson);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.parameters.p");
+        error.Message.ShouldContain("duplicate");
+    }
+
+    [Fact]
+    public void Should_report_a_duplicate_parameter_declaration_semantically_without_throwing()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": {
+                "p": { "type": "integer", "default": 1 },
+                "p": { "type": "integer", "default": 2 }
+              },
+              "rule": { "spec": "is-positive" }
+            }
+            """;
+
+        // Act
+        var errors = CreateSerializer().Validate<int>(json);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.parameters.p");
+        error.Message.ShouldContain("duplicate");
+    }
+
+    [Fact]
+    public void Should_throw_a_rule_serialization_exception_for_a_duplicate_parameter_declaration()
+    {
+        // Act
+        var act = () => CreateSerializer().Deserialize<int>(DuplicateParameterJson);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.parameters.p");
+        error.Message.ShouldContain("duplicate");
+    }
+
+    [Fact]
+    public void Should_not_crash_when_supplied_parameters_are_a_value_typed_dictionary()
+    {
+        // Arrange
+        const string json =
+            """{ "parameters": { "minOrders": { "type": "integer" } }, "rule": { "spec": "is-positive" } }""";
+
+        // A Dictionary<string, int> does not match the IReadOnlyDictionary<string, object?> overload
+        // (TValue is invariant), so it falls through to property reflection instead. It degrades to
+        // ordinary Missing/Surplus parameter errors rather than crashing on the reflected Item indexer.
+        var parameters = new Dictionary<string, int> { ["minOrders"] = 3 };
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<int>(json, parameters);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        exception.Errors.ShouldContain(error =>
+            error.Code == RuleErrorCode.MissingParameter && error.Path == "$.parameters.minOrders");
+    }
 }
