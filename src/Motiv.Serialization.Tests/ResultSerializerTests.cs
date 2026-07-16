@@ -32,4 +32,27 @@ public class ResultSerializerTests
         dto.Values.ShouldBe(result.Values.ToArray());
         dto.Justification.ShouldBe(result.Justification);
     }
+
+    [Fact]
+    public void Should_map_the_denoised_causal_explanation_tree()
+    {
+        // Arrange
+        var result = IsPositive.And(IsEven).Evaluate(4);
+
+        // Act
+        var dto = new ResultSerializer().ToEvaluationResult(result);
+
+        // Assert
+        ShouldMirror(dto.Explanation, result.Explanation);
+    }
+
+    private static void ShouldMirror(ExplanationNode node, Motiv.Shared.Explanation explanation)
+    {
+        node.Assertions.ShouldBe(explanation.Assertions.ToArray());
+
+        var underlying = explanation.Underlying.ToArray();
+        node.Underlying.Count.ShouldBe(underlying.Length);
+        for (var i = 0; i < underlying.Length; i++)
+            ShouldMirror(node.Underlying[i], underlying[i]);
+    }
 }

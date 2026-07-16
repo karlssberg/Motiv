@@ -38,6 +38,11 @@ public sealed class ResultSerializer
             result.Assertions.ToArray(),
             result.Values.ToArray(),
             result.Justification,
-            new ExplanationNode([], []));
+            MapExplanation(result.Explanation));
     }
+
+    private static ExplanationNode MapExplanation(Explanation explanation) =>
+        new(
+            explanation.Assertions.ToArray(),
+            explanation.Underlying.Select(MapExplanation).ToArray());
 }
