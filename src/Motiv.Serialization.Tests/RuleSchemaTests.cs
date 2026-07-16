@@ -27,11 +27,11 @@ public class RuleSchemaTests
         """{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 }, "name": "coded" } }""",
         """{ "rule": { "expression": "Age >= @minAge" } }""",
         """{ "parameters": { "minAge": { "type": "integer", "default": 18 } }, "rule": { "spec": "a" } }""",
-        """{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "Orders" } }""",
-        """{ "rule": { "asAnySatisfied": { "spec": "a" } } }""",
-        """{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 3 } }""",
-        """{ "rule": { "asAtLeastNSatisfied": { "spec": "a" }, "n": "@minOrders", "path": "Account.Orders" } }""",
-        """{ "rule": { "asAtMostNSatisfied": { "spec": "a" }, "n": 2 } }"""
+        """{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "Orders", "name": "all" } }""",
+        """{ "rule": { "asAnySatisfied": { "spec": "a" }, "whenTrue": "some", "whenFalse": "none" } }""",
+        """{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 3, "name": "exactly three" } }""",
+        """{ "rule": { "asAtLeastNSatisfied": { "spec": "a" }, "n": "@minOrders", "path": "Account.Orders", "name": "quota" } }""",
+        """{ "rule": { "asAtMostNSatisfied": { "spec": "a" }, "n": 2, "name": "at most two" } }"""
     };
 
     [Theory]
@@ -59,7 +59,10 @@ public class RuleSchemaTests
         """{ "rule": { "asNSatisfied": { "spec": "a" } } }""",
         """{ "rule": { "asAllSatisfied": { "spec": "a" }, "n": 3 } }""",
         """{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "Orders..Items" } }""",
-        """{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "minOrders" } }"""
+        """{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "minOrders" } }""",
+        """{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 } } }""",
+        """{ "rule": { "asAllSatisfied": { "spec": "a" } } }""",
+        """{ "rule": { "asAtLeastNSatisfied": { "spec": "a" }, "n": 2, "path": "Orders" } }"""
     };
 
     [Theory]
