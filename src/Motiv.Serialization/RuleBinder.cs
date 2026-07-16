@@ -24,6 +24,8 @@ internal static class RuleBinder
             RuleOperator.Spec => BindSpecLeaf<TModel>(node, registry, errors),
             RuleOperator.Expression => BindExpressionLeaf<TModel>(node, errors),
             RuleOperator.Not => BindNode<TModel>(node.Children[0], registry, errors)?.Not(),
+            _ when node.Operator.IsHigherOrder() =>
+                throw new NotSupportedException("higher-order binding lands in the next task"),
             _ => BindComposition<TModel>(node, registry, errors)
         };
 

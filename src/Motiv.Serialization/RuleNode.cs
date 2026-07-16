@@ -20,4 +20,10 @@ internal sealed class RuleNode(RuleOperator @operator, string path)
     public bool HasObjectPayloads { get; set; }
 
     public string? Name { get; set; }
+
+    public int? N { get; set; }
+
+    public string? NParameterName { get; set; }
+
+    public string? PathText { get; set; }
 }

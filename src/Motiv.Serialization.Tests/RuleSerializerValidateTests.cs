@@ -102,17 +102,99 @@ public class RuleSerializerValidateTests
         error.Message.ShouldContain("unknown property");
     }
 
+    [Theory]
+    [InlineData("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "name": "all" } }""")]
+    [InlineData("""{ "rule": { "asAnySatisfied": { "spec": "a" }, "whenTrue": "some", "whenFalse": "none" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 3, "name": "exactly three" } }""")]
+    [InlineData("""{ "rule": { "asAtLeastNSatisfied": { "spec": "a" }, "n": "@minOrders", "name": "quota" } }""")]
+    [InlineData("""{ "rule": { "asAtMostNSatisfied": { "spec": "a" }, "n": 0, "path": "Orders", "name": "none" } }""")]
+    public void Should_accept_well_formed_higher_order_nodes(string json)
+    {
+        // Act
+        var errors = Validate(json);
+
+        // Assert
+        errors.ShouldBeEmpty();
+    }
+
     [Fact]
-    public void Should_explain_that_higher_order_properties_are_not_yet_supported()
+    public void Should_require_n_on_counted_higher_order_nodes()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "asNSatisfied": { "spec": "a" }, "name": "x" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule");
+        error.Message.ShouldContain("'n'");
+    }
+
+    [Fact]
+    public void Should_reject_n_on_uncounted_higher_order_nodes()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "n": 3, "name": "x" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.n");
+    }
+
+    [Theory]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": -1, "name": "x" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 2.5, "name": "x" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "minOrders", "name": "x" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "@1bad", "name": "x" } }""")]
+    public void Should_reject_malformed_n_values(string json)
+    {
+        // Act
+        var errors = Validate(json);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.n");
+    }
+
+    [Theory]
+    [InlineData("""{ "rule": { "spec": "a", "n": 3 } }""", "$.rule.n")]
+    [InlineData("""{ "rule": { "spec": "a", "path": "Orders" } }""", "$.rule.path")]
+    public void Should_reject_higher_order_properties_on_other_nodes(string json, string path)
+    {
+        // Act
+        var errors = Validate(json);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe(path);
+    }
+
+    [Fact]
+    public void Should_require_a_name_or_payloads_on_higher_order_nodes()
     {
         // Act
         var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" } } }""");
 
         // Assert
-        errors.ShouldContain(error =>
-            error.Code == RuleErrorCode.InvalidNode &&
-            error.Path == "$.rule.asAllSatisfied" &&
-            error.Message.Contains("not yet supported"));
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule");
+        error.Message.ShouldContain("name");
+    }
+
+    [Fact]
+    public void Should_reject_an_empty_higher_order_path()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "", "name": "x" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.path");
     }
 
     [Theory]

@@ -4,11 +4,6 @@ namespace Motiv.Serialization;
 
 internal sealed class RuleDocumentParser(RuleSerializerOptions options)
 {
-    private static readonly string[] HigherOrderProperties =
-    [
-        "asAllSatisfied", "asAnySatisfied", "asNSatisfied", "asAtLeastNSatisfied", "asAtMostNSatisfied", "n", "path"
-    ];
-
     private int _nodeCount;
     private bool _tooLargeReported;
 
@@ -95,14 +90,24 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         var operators = new List<JsonProperty>();
         JsonElement? whenTrue = null;
         JsonElement? whenFalse = null;
+        JsonElement? nElement = null;
+        JsonElement? pathElement = null;
         string? name = null;
 
         foreach (var property in element.EnumerateObject())
         {
             switch (property.Name)
             {
-                case "spec" or "expression" or "not" or "and" or "or" or "xor" or "andAlso" or "orElse":
+                case "spec" or "expression" or "not" or "and" or "or" or "xor" or "andAlso" or "orElse"
+                    or "asAllSatisfied" or "asAnySatisfied" or "asNSatisfied"
+                    or "asAtLeastNSatisfied" or "asAtMostNSatisfied":
                     operators.Add(property);
+                    break;
+                case "n":
+                    nElement = property.Value;
+                    break;
+                case "path":
+                    pathElement = property.Value;
                     break;
                 case "whenTrue":
                     whenTrue = property.Value;
@@ -114,10 +119,8 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                     name = ReadNonEmptyString(property.Value, $"{path}.name", errors);
                     break;
                 default:
-                    var message = HigherOrderProperties.Contains(property.Name)
-                        ? $"'{property.Name}' is part of the rule format but is not yet supported by this loader"
-                        : $"unknown property '{property.Name}'";
-                    errors.Add(new RuleError($"{path}.{property.Name}", RuleErrorCode.InvalidNode, message));
+                    errors.Add(new RuleError($"{path}.{property.Name}", RuleErrorCode.InvalidNode,
+                        $"unknown property '{property.Name}'"));
                     break;
             }
         }
@@ -126,7 +129,8 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         {
             errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
                 "rule node must contain exactly one of 'spec', 'expression', 'not', 'and', 'or', 'xor', " +
-                "'andAlso' or 'orElse'"));
+                "'andAlso', 'orElse', 'asAllSatisfied', 'asAnySatisfied', 'asNSatisfied', " +
+                "'asAtLeastNSatisfied' or 'asAtMostNSatisfied'"));
             ParsePayloads(node: null, whenTrue, whenFalse, path, errors);
             return null;
         }
@@ -136,7 +140,17 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         if (node is null)
             return null;
 
+        ApplyHigherOrderProperties(node, nElement, pathElement, path, errors);
         node.Name = name;
+
+        if (node.Operator.IsHigherOrder() && node.Name is null
+            && node.WhenTrueText is null && !node.HasObjectPayloads)
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                "higher-order nodes must declare a 'name' or 'whenTrue'/'whenFalse' payloads"));
+            return null;
+        }
+
         return node;
     }
 
@@ -163,6 +177,26 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                     return null;
 
                 var node = new RuleNode(RuleOperator.Not, path);
+                node.Children.Add(child);
+                return node;
+            }
+            case "asAllSatisfied" or "asAnySatisfied" or "asNSatisfied"
+                or "asAtLeastNSatisfied" or "asAtMostNSatisfied":
+            {
+                var @operator = property.Name switch
+                {
+                    "asAllSatisfied" => RuleOperator.AsAllSatisfied,
+                    "asAnySatisfied" => RuleOperator.AsAnySatisfied,
+                    "asNSatisfied" => RuleOperator.AsNSatisfied,
+                    "asAtLeastNSatisfied" => RuleOperator.AsAtLeastNSatisfied,
+                    _ => RuleOperator.AsAtMostNSatisfied
+                };
+
+                var child = ParseNode(property.Value, $"{path}.{property.Name}", depth + 1, errors);
+                if (child is null)
+                    return null;
+
+                var node = new RuleNode(@operator, path);
                 node.Children.Add(child);
                 return node;
             }
@@ -368,6 +402,65 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                     $"parameter default must match the declared type '{type.ToString().ToLowerInvariant()}'"));
                 return null;
         }
+    }
+
+    private static void ApplyHigherOrderProperties(
+        RuleNode node,
+        JsonElement? nElement,
+        JsonElement? pathElement,
+        string path,
+        List<RuleError> errors)
+    {
+        if (nElement is { } n)
+        {
+            if (node.Operator.RequiresN())
+                ParseN(n, node, $"{path}.n", errors);
+            else
+                errors.Add(new RuleError($"{path}.n", RuleErrorCode.InvalidNode,
+                    "'n' is only valid on 'asNSatisfied', 'asAtLeastNSatisfied' and 'asAtMostNSatisfied' nodes"));
+        }
+        else if (node.Operator.RequiresN())
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                "this node requires 'n' (a non-negative integer or a '@parameter' reference)"));
+        }
+
+        if (pathElement is { } pathValue)
+        {
+            if (node.Operator.IsHigherOrder())
+                node.PathText = ReadNonEmptyString(pathValue, $"{path}.path", errors);
+            else
+                errors.Add(new RuleError($"{path}.path", RuleErrorCode.InvalidNode,
+                    "'path' is only valid on higher-order nodes"));
+        }
+    }
+
+    private static void ParseN(JsonElement element, RuleNode node, string path, List<RuleError> errors)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Number when element.TryGetInt32(out var n) && n >= 0:
+                node.N = n;
+                return;
+            case JsonValueKind.String when IsParameterReference(element.GetString()):
+                node.NParameterName = element.GetString()!.Substring(1);
+                return;
+            default:
+                errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                    "'n' must be a non-negative integer or a '@parameter' reference"));
+                return;
+        }
+    }
+
+    private static bool IsParameterReference(string? text)
+    {
+        if (text is null || text.Length < 2 || text[0] != '@')
+            return false;
+
+        return IsIdentifierStart(text[1]) && text.Skip(2).All(IsIdentifierPart);
+
+        static bool IsIdentifierStart(char ch) => ch is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or '_';
+        static bool IsIdentifierPart(char ch) => IsIdentifierStart(ch) || ch is >= '0' and <= '9';
     }
 
     private bool ExceedsLimits(string path, int depth, List<RuleError> errors)
