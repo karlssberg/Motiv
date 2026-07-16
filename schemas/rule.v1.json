@@ -61,7 +61,8 @@
           "properties": {
             "whenTrue": { "type": "object" },
             "whenFalse": { "type": "object" }
-          }
+          },
+          "required": ["name"]
         }
       ]
     },
@@ -173,6 +174,7 @@
         "name": { "$ref": "#/$defs/nonEmptyString" }
       },
       "required": ["asAllSatisfied"],
+      "anyOf": [{ "required": ["name"] }, { "required": ["whenTrue"] }],
       "additionalProperties": false
     },
     "asAnySatisfiedNode": {
@@ -184,6 +186,7 @@
         "name": { "$ref": "#/$defs/nonEmptyString" }
       },
       "required": ["asAnySatisfied"],
+      "anyOf": [{ "required": ["name"] }, { "required": ["whenTrue"] }],
       "additionalProperties": false
     },
     "asNSatisfiedNode": {
@@ -196,6 +199,7 @@
         "name": { "$ref": "#/$defs/nonEmptyString" }
       },
       "required": ["asNSatisfied", "n"],
+      "anyOf": [{ "required": ["name"] }, { "required": ["whenTrue"] }],
       "additionalProperties": false
     },
     "asAtLeastNSatisfiedNode": {
@@ -208,6 +212,7 @@
         "name": { "$ref": "#/$defs/nonEmptyString" }
       },
       "required": ["asAtLeastNSatisfied", "n"],
+      "anyOf": [{ "required": ["name"] }, { "required": ["whenTrue"] }],
       "additionalProperties": false
     },
     "asAtMostNSatisfiedNode": {
@@ -220,6 +225,7 @@
         "name": { "$ref": "#/$defs/nonEmptyString" }
       },
       "required": ["asAtMostNSatisfied", "n"],
+      "anyOf": [{ "required": ["name"] }, { "required": ["whenTrue"] }],
       "additionalProperties": false
     }
   }

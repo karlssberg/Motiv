@@ -4,13 +4,6 @@ namespace Motiv.Serialization;
 
 internal sealed class RuleDocumentParser(RuleSerializerOptions options)
 {
-    private static readonly string[] HigherOrderProperties =
-    [
-        "asAllSatisfied", "asAnySatisfied", "asNSatisfied", "asAtLeastNSatisfied", "asAtMostNSatisfied", "n", "path"
-    ];
-
-    private static readonly string[] ParameterTypes = ["integer", "number", "string", "boolean"];
-
     private int _nodeCount;
     private bool _tooLargeReported;
 
@@ -21,9 +14,9 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         {
             // Binary-operator nesting costs 2 JSON levels per rule level, so the reader's depth
             // ceiling must be raised beyond STJ's default of 64 to admit any document that is
-            // legal under MaxDocumentDepth. The parser's own recursion stays bounded by
-            // ExceedsLimits, so raising the reader limit here is safe.
-            var readerOptions = new JsonDocumentOptions { MaxDepth = checked(options.MaxDocumentDepth * 2 + 4) };
+            // legal under MaxDocumentDepth. Clamped so extreme option values cannot overflow.
+            var maxDepth = (int)Math.Min((long)options.MaxDocumentDepth * 2 + 4, int.MaxValue);
+            var readerOptions = new JsonDocumentOptions { MaxDepth = maxDepth };
             document = JsonDocument.Parse(json, readerOptions);
         }
         catch (JsonException exception)
@@ -49,18 +42,22 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         string? name = null;
         RuleNode? rule = null;
         var hasRule = false;
+        var parameters = new List<RuleParameterDeclaration>();
 
         foreach (var property in root.EnumerateObject())
         {
             switch (property.Name)
             {
                 case "$schema":
+                    if (property.Value.ValueKind != JsonValueKind.String)
+                        errors.Add(new RuleError("$.$schema", RuleErrorCode.InvalidNode,
+                            "'$schema' must be a string"));
                     break;
                 case "name":
                     name = ReadNonEmptyString(property.Value, "$.name", errors);
                     break;
                 case "parameters":
-                    ValidateParameterDeclarations(property.Value, errors);
+                    parameters = ParseParameterDeclarations(property.Value, errors);
                     break;
                 case "rule":
                     hasRule = true;
@@ -76,7 +73,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         if (!hasRule)
             errors.Add(new RuleError("$", RuleErrorCode.InvalidNode, "missing required property 'rule'"));
 
-        return new RuleDocument(name, rule);
+        return new RuleDocument(name, rule, parameters);
     }
 
     private RuleNode? ParseNode(JsonElement element, string path, int depth, List<RuleError> errors)
@@ -93,14 +90,24 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         var operators = new List<JsonProperty>();
         JsonElement? whenTrue = null;
         JsonElement? whenFalse = null;
+        JsonElement? nElement = null;
+        JsonElement? pathElement = null;
         string? name = null;
 
         foreach (var property in element.EnumerateObject())
         {
             switch (property.Name)
             {
-                case "spec" or "expression" or "not" or "and" or "or" or "xor" or "andAlso" or "orElse":
+                case "spec" or "expression" or "not" or "and" or "or" or "xor" or "andAlso" or "orElse"
+                    or "asAllSatisfied" or "asAnySatisfied" or "asNSatisfied"
+                    or "asAtLeastNSatisfied" or "asAtMostNSatisfied":
                     operators.Add(property);
+                    break;
+                case "n":
+                    nElement = property.Value;
+                    break;
+                case "path":
+                    pathElement = property.Value;
                     break;
                 case "whenTrue":
                     whenTrue = property.Value;
@@ -112,10 +119,8 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                     name = ReadNonEmptyString(property.Value, $"{path}.name", errors);
                     break;
                 default:
-                    var message = HigherOrderProperties.Contains(property.Name)
-                        ? $"'{property.Name}' is part of the rule format but is not yet supported by this loader"
-                        : $"unknown property '{property.Name}'";
-                    errors.Add(new RuleError($"{path}.{property.Name}", RuleErrorCode.InvalidNode, message));
+                    errors.Add(new RuleError($"{path}.{property.Name}", RuleErrorCode.InvalidNode,
+                        $"unknown property '{property.Name}'"));
                     break;
             }
         }
@@ -124,7 +129,8 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         {
             errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
                 "rule node must contain exactly one of 'spec', 'expression', 'not', 'and', 'or', 'xor', " +
-                "'andAlso' or 'orElse'"));
+                "'andAlso', 'orElse', 'asAllSatisfied', 'asAnySatisfied', 'asNSatisfied', " +
+                "'asAtLeastNSatisfied' or 'asAtMostNSatisfied'"));
             ParsePayloads(node: null, whenTrue, whenFalse, path, errors);
             return null;
         }
@@ -134,7 +140,24 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         if (node is null)
             return null;
 
+        ApplyHigherOrderProperties(node, nElement, pathElement, path, errors);
         node.Name = name;
+
+        if (node.HasObjectPayloads && node.Name is null)
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                "nodes with object 'whenTrue'/'whenFalse' payloads must also declare a 'name'"));
+            return null;
+        }
+
+        if (node.Operator.IsHigherOrder() && node.Name is null
+            && node.WhenTrueText is null && !node.HasObjectPayloads)
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                "higher-order nodes must declare a 'name' or 'whenTrue'/'whenFalse' payloads"));
+            return null;
+        }
+
         return node;
     }
 
@@ -161,6 +184,26 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                     return null;
 
                 var node = new RuleNode(RuleOperator.Not, path);
+                node.Children.Add(child);
+                return node;
+            }
+            case "asAllSatisfied" or "asAnySatisfied" or "asNSatisfied"
+                or "asAtLeastNSatisfied" or "asAtMostNSatisfied":
+            {
+                var @operator = property.Name switch
+                {
+                    "asAllSatisfied" => RuleOperator.AsAllSatisfied,
+                    "asAnySatisfied" => RuleOperator.AsAnySatisfied,
+                    "asNSatisfied" => RuleOperator.AsNSatisfied,
+                    "asAtLeastNSatisfied" => RuleOperator.AsAtLeastNSatisfied,
+                    _ => RuleOperator.AsAtMostNSatisfied
+                };
+
+                var child = ParseNode(property.Value, $"{path}.{property.Name}", depth + 1, errors);
+                if (child is null)
+                    return null;
+
+                var node = new RuleNode(@operator, path);
                 node.Children.Add(child);
                 return node;
             }
@@ -239,7 +282,8 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         }
         else
         {
-            node.HasObjectPayloads = true;
+            node.WhenTrueElement = whenTrue.Value.Clone();
+            node.WhenFalseElement = whenFalse.Value.Clone();
         }
     }
 
@@ -262,53 +306,177 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         }
     }
 
-    private static void ValidateParameterDeclarations(JsonElement element, List<RuleError> errors)
+    private static List<RuleParameterDeclaration> ParseParameterDeclarations(
+        JsonElement element,
+        List<RuleError> errors)
     {
+        var declarations = new List<RuleParameterDeclaration>();
         if (element.ValueKind != JsonValueKind.Object)
         {
             errors.Add(new RuleError("$.parameters", RuleErrorCode.InvalidNode,
                 "'parameters' must be a JSON object"));
-            return;
+            return declarations;
         }
 
+        var seenNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var parameter in element.EnumerateObject())
         {
-            var path = $"$.parameters.{parameter.Name}";
-            if (parameter.Value.ValueKind != JsonValueKind.Object)
+            if (!seenNames.Add(parameter.Name))
             {
-                errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
-                    "parameter declaration must be a JSON object"));
+                errors.Add(new RuleError($"$.parameters.{parameter.Name}", RuleErrorCode.InvalidNode,
+                    $"duplicate parameter declaration '{parameter.Name}'"));
                 continue;
             }
 
-            var hasType = false;
-            foreach (var property in parameter.Value.EnumerateObject())
-            {
-                switch (property.Name)
-                {
-                    case "type":
-                        hasType = true;
-                        if (property.Value.ValueKind != JsonValueKind.String ||
-                            !ParameterTypes.Contains(property.Value.GetString()))
-                        {
-                            errors.Add(new RuleError($"{path}.type", RuleErrorCode.InvalidNode,
-                                "parameter type must be one of 'integer', 'number', 'string' or 'boolean'"));
-                        }
-
-                        break;
-                    case "default":
-                        break;
-                    default:
-                        errors.Add(new RuleError($"{path}.{property.Name}", RuleErrorCode.InvalidNode,
-                            $"unknown property '{property.Name}'"));
-                        break;
-                }
-            }
-
-            if (!hasType)
-                errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
-                    "parameter declaration must declare a 'type'"));
+            var declaration = ParseParameterDeclaration(parameter, errors);
+            if (declaration is not null)
+                declarations.Add(declaration);
         }
+
+        return declarations;
+    }
+
+    private static RuleParameterDeclaration? ParseParameterDeclaration(
+        JsonProperty parameter,
+        List<RuleError> errors)
+    {
+        var path = $"$.parameters.{parameter.Name}";
+        if (parameter.Value.ValueKind != JsonValueKind.Object)
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                "parameter declaration must be a JSON object"));
+            return null;
+        }
+
+        string? typeName = null;
+        JsonElement? defaultElement = null;
+        foreach (var property in parameter.Value.EnumerateObject())
+        {
+            switch (property.Name)
+            {
+                case "type":
+                    typeName = property.Value.ValueKind == JsonValueKind.String
+                        ? property.Value.GetString()
+                        : null;
+                    break;
+                case "default":
+                    defaultElement = property.Value;
+                    break;
+                default:
+                    errors.Add(new RuleError($"{path}.{property.Name}", RuleErrorCode.InvalidNode,
+                        $"unknown property '{property.Name}'"));
+                    break;
+            }
+        }
+
+        RuleParameterType? type = typeName switch
+        {
+            "integer" => RuleParameterType.Integer,
+            "number" => RuleParameterType.Number,
+            "string" => RuleParameterType.String,
+            "boolean" => RuleParameterType.Boolean,
+            _ => null
+        };
+        if (type is null)
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                "parameter declaration must declare a 'type' of 'integer', 'number', 'string' or 'boolean'"));
+            return null;
+        }
+
+        if (defaultElement is null)
+            return new RuleParameterDeclaration(parameter.Name, type.Value, hasDefault: false, defaultValue: null);
+
+        var defaultValue = ParseDefault(type.Value, defaultElement.Value, $"{path}.default", errors);
+        return defaultValue is null
+            ? null
+            : new RuleParameterDeclaration(parameter.Name, type.Value, hasDefault: true, defaultValue);
+    }
+
+    private static object? ParseDefault(
+        RuleParameterType type,
+        JsonElement element,
+        string path,
+        List<RuleError> errors)
+    {
+        switch (type)
+        {
+            case RuleParameterType.Integer when element.ValueKind == JsonValueKind.Number:
+                if (element.TryGetInt32(out var integer))
+                    return integer;
+                errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                    "integer parameter default must fit in a 32-bit integer"));
+                return null;
+            case RuleParameterType.Number when element.ValueKind == JsonValueKind.Number:
+                return element.GetDouble();
+            case RuleParameterType.String when element.ValueKind == JsonValueKind.String:
+                return element.GetString();
+            case RuleParameterType.Boolean when element.ValueKind is JsonValueKind.True or JsonValueKind.False:
+                return element.GetBoolean();
+            default:
+                errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                    $"parameter default must match the declared type '{type.ToString().ToLowerInvariant()}'"));
+                return null;
+        }
+    }
+
+    private static void ApplyHigherOrderProperties(
+        RuleNode node,
+        JsonElement? nElement,
+        JsonElement? pathElement,
+        string path,
+        List<RuleError> errors)
+    {
+        if (nElement is { } n)
+        {
+            if (node.Operator.RequiresN())
+                ParseN(n, node, $"{path}.n", errors);
+            else
+                errors.Add(new RuleError($"{path}.n", RuleErrorCode.InvalidNode,
+                    "'n' is only valid on 'asNSatisfied', 'asAtLeastNSatisfied' and 'asAtMostNSatisfied' nodes"));
+        }
+        else if (node.Operator.RequiresN())
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                "this node requires 'n' (a non-negative integer or a '@parameter' reference)"));
+        }
+
+        if (pathElement is { } pathValue)
+        {
+            if (node.Operator.IsHigherOrder())
+                node.PathText = ReadNonEmptyString(pathValue, $"{path}.path", errors);
+            else
+                errors.Add(new RuleError($"{path}.path", RuleErrorCode.InvalidNode,
+                    "'path' is only valid on higher-order nodes"));
+        }
+    }
+
+    private static void ParseN(JsonElement element, RuleNode node, string path, List<RuleError> errors)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Number when element.TryGetInt32(out var n) && n >= 0:
+                node.N = n;
+                return;
+            case JsonValueKind.String when IsParameterReference(element.GetString()):
+                node.NParameterName = element.GetString()!.Substring(1);
+                return;
+            default:
+                errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                    "'n' must be a non-negative integer or a '@parameter' reference"));
+                return;
+        }
+    }
+
+    private static bool IsParameterReference(string? text)
+    {
+        if (text is null || text.Length < 2 || text[0] != '@')
+            return false;
+
+        return IsIdentifierStart(text[1]) && text.Skip(2).All(IsIdentifierPart);
+
+        static bool IsIdentifierStart(char ch) => ch is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or '_';
+        static bool IsIdentifierPart(char ch) => IsIdentifierStart(ch) || ch is >= '0' and <= '9';
     }
 
     private bool ExceedsLimits(string path, int depth, List<RuleError> errors)

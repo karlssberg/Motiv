@@ -13,7 +13,7 @@ public class RuleSerializerValidateTests
     [InlineData("""{ "rule": { "and": [ { "spec": "a" }, { "not": { "spec": "b" } } ] } }""")]
     [InlineData("""{ "rule": { "spec": "a", "whenTrue": "yes", "whenFalse": "no", "name": "n" } }""")]
     [InlineData("""{ "rule": { "expression": "Age >= 18" } }""")]
-    [InlineData("""{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 } } }""")]
+    [InlineData("""{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 }, "name": "coded" } }""")]
     [InlineData("""{ "parameters": { "minAge": { "type": "integer", "default": 18 } }, "rule": { "spec": "a" } }""")]
     public void Should_report_no_errors_for_structurally_valid_documents(string json)
     {
@@ -102,17 +102,99 @@ public class RuleSerializerValidateTests
         error.Message.ShouldContain("unknown property");
     }
 
+    [Theory]
+    [InlineData("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "name": "all" } }""")]
+    [InlineData("""{ "rule": { "asAnySatisfied": { "spec": "a" }, "whenTrue": "some", "whenFalse": "none" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 3, "name": "exactly three" } }""")]
+    [InlineData("""{ "rule": { "asAtLeastNSatisfied": { "spec": "a" }, "n": "@minOrders", "name": "quota" } }""")]
+    [InlineData("""{ "rule": { "asAtMostNSatisfied": { "spec": "a" }, "n": 0, "path": "Orders", "name": "none" } }""")]
+    public void Should_accept_well_formed_higher_order_nodes(string json)
+    {
+        // Act
+        var errors = Validate(json);
+
+        // Assert
+        errors.ShouldBeEmpty();
+    }
+
     [Fact]
-    public void Should_explain_that_higher_order_properties_are_not_yet_supported()
+    public void Should_require_n_on_counted_higher_order_nodes()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "asNSatisfied": { "spec": "a" }, "name": "x" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule");
+        error.Message.ShouldContain("'n'");
+    }
+
+    [Fact]
+    public void Should_reject_n_on_uncounted_higher_order_nodes()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "n": 3, "name": "x" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.n");
+    }
+
+    [Theory]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": -1, "name": "x" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 2.5, "name": "x" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "minOrders", "name": "x" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "@1bad", "name": "x" } }""")]
+    public void Should_reject_malformed_n_values(string json)
+    {
+        // Act
+        var errors = Validate(json);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.n");
+    }
+
+    [Theory]
+    [InlineData("""{ "rule": { "spec": "a", "n": 3 } }""", "$.rule.n")]
+    [InlineData("""{ "rule": { "spec": "a", "path": "Orders" } }""", "$.rule.path")]
+    public void Should_reject_higher_order_properties_on_other_nodes(string json, string path)
+    {
+        // Act
+        var errors = Validate(json);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe(path);
+    }
+
+    [Fact]
+    public void Should_require_a_name_or_payloads_on_higher_order_nodes()
     {
         // Act
         var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" } } }""");
 
         // Assert
-        errors.ShouldContain(error =>
-            error.Code == RuleErrorCode.InvalidNode &&
-            error.Path == "$.rule.asAllSatisfied" &&
-            error.Message.Contains("not yet supported"));
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule");
+        error.Message.ShouldContain("name");
+    }
+
+    [Fact]
+    public void Should_reject_an_empty_higher_order_path()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "", "name": "x" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.path");
     }
 
     [Theory]
@@ -200,7 +282,7 @@ public class RuleSerializerValidateTests
     [Theory]
     [InlineData("""{ "parameters": [ "minAge" ], "rule": { "spec": "a" } }""", "$.parameters")]
     [InlineData("""{ "parameters": { "minAge": { "default": 18 } }, "rule": { "spec": "a" } }""", "$.parameters.minAge")]
-    [InlineData("""{ "parameters": { "minAge": { "type": "decimal" } }, "rule": { "spec": "a" } }""", "$.parameters.minAge.type")]
+    [InlineData("""{ "parameters": { "minAge": { "type": "decimal" } }, "rule": { "spec": "a" } }""", "$.parameters.minAge")]
     [InlineData("""{ "parameters": { "minAge": { "type": "integer", "frobnicate": 1 } }, "rule": { "spec": "a" } }""", "$.parameters.minAge.frobnicate")]
     public void Should_validate_parameter_declarations(string json, string expectedPath)
     {
@@ -307,6 +389,132 @@ public class RuleSerializerValidateTests
 
         // Act
         var errors = Validate(json);
+
+        // Assert
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Should_report_a_non_string_schema_reference()
+    {
+        // Act
+        var errors = Validate("""{ "$schema": 1, "rule": { "spec": "a" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.$schema");
+        error.Message.ShouldContain("string");
+    }
+
+    [Fact]
+    public void Should_require_a_name_on_nodes_with_object_payloads()
+    {
+        // Act
+        var errors = Validate(
+            """{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 } } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule");
+        error.Message.ShouldContain("name");
+    }
+
+    [Fact]
+    public void Should_accept_named_nodes_with_object_payloads()
+    {
+        // Act
+        var errors = Validate(
+            """{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 }, "name": "coded" } }""");
+
+        // Assert
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Should_reject_an_empty_expression_string()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "expression": "" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.expression");
+    }
+
+    [Fact]
+    public void Should_propagate_a_structurally_invalid_child_through_a_higher_order_node()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "asAllSatisfied": { "frobnicate": true } } }""");
+
+        // Assert
+        errors.ShouldContain(error =>
+            error.Code == RuleErrorCode.InvalidNode && error.Path == "$.rule.asAllSatisfied.frobnicate");
+    }
+
+    [Fact]
+    public void Should_reject_whenFalse_without_whenTrue()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "spec": "a", "whenFalse": "no" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule");
+        error.Message.ShouldContain("together");
+    }
+
+    [Fact]
+    public void Should_reject_a_parameter_declaration_that_is_not_an_object()
+    {
+        // Act
+        var errors = Validate("""{ "parameters": { "p": "oops" }, "rule": { "spec": "a" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.parameters.p");
+    }
+
+    [Fact]
+    public void Should_reject_a_non_string_parameter_type()
+    {
+        // Act
+        var errors = Validate("""{ "parameters": { "p": { "type": 123 } }, "rule": { "spec": "a" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.parameters.p");
+    }
+
+    [Fact]
+    public void Should_reject_a_bare_at_sign_as_an_n_parameter_reference()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "@", "name": "x" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.n");
+    }
+
+    [Fact]
+    public void Should_accept_a_parameter_reference_with_underscores_and_digits()
+    {
+        // Act
+        var errors = Validate(
+            """
+            {
+              "parameters": { "Min_Age2": { "type": "integer", "default": 1 } },
+              "rule": { "asNSatisfied": { "spec": "a" }, "n": "@Min_Age2", "name": "x" }
+            }
+            """);
 
         // Assert
         errors.ShouldBeEmpty();

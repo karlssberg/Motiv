@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Motiv.Serialization;
 
 internal sealed class RuleNode(RuleOperator @operator, string path)
@@ -16,8 +18,19 @@ internal sealed class RuleNode(RuleOperator @operator, string path)
 
     public string? WhenFalseText { get; set; }
 
-    // Plan 2 replaces this flag with retained JsonElement payloads for typed metadata binding.
-    public bool HasObjectPayloads { get; set; }
+    // Cloned out of the parsed JsonDocument so they survive its disposal; deserialized to the
+    // caller's TMetadata during a metadata load.
+    public JsonElement? WhenTrueElement { get; set; }
+
+    public JsonElement? WhenFalseElement { get; set; }
+
+    public bool HasObjectPayloads => WhenTrueElement is not null;
 
     public string? Name { get; set; }
+
+    public int? N { get; set; }
+
+    public string? NParameterName { get; set; }
+
+    public string? PathText { get; set; }
 }
