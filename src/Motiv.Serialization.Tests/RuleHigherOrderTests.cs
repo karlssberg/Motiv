@@ -332,6 +332,199 @@ public class RuleHigherOrderTests
         error.Path.ShouldBe("$.rule.path");
     }
 
+    [Fact]
+    public void Should_propagate_a_failed_inner_spec_through_a_bare_higher_order_node()
+    {
+        // Arrange
+        const string json =
+            """{ "rule": { "asAllSatisfied": { "spec": "missing" }, "name": "all positive" } }""";
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<IEnumerable<int>>(json);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.UnknownSpec);
+    }
+
+    [Fact]
+    public void Should_load_a_decorated_named_n_satisfied_node_like_its_fluent_equivalent()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "rule": {
+                "asNSatisfied": { "spec": "is-positive" },
+                "n": 2,
+                "whenTrue": "exactly two positive",
+                "whenFalse": "not exactly two positive",
+                "name": "two positive"
+              }
+            }
+            """;
+        var expected = Spec
+            .Build(IsPositive)
+            .AsNSatisfied(2)
+            .WhenTrue("exactly two positive")
+            .WhenFalse("not exactly two positive")
+            .Create("two positive");
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { -1, -2 });
+    }
+
+    [Fact]
+    public void Should_load_a_decorated_unnamed_n_satisfied_node_like_its_fluent_equivalent()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "rule": {
+                "asNSatisfied": { "spec": "is-positive" },
+                "n": 2,
+                "whenTrue": "exactly two positive",
+                "whenFalse": "not exactly two positive"
+              }
+            }
+            """;
+        var expected = Spec
+            .Build(IsPositive)
+            .AsNSatisfied(2)
+            .WhenTrue("exactly two positive")
+            .WhenFalse("not exactly two positive")
+            .Create();
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { -1, -2 });
+    }
+
+    [Fact]
+    public void Should_load_a_decorated_named_at_least_n_satisfied_node_like_its_fluent_equivalent()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "rule": {
+                "asAtLeastNSatisfied": { "spec": "is-positive" },
+                "n": 2,
+                "whenTrue": "quota met",
+                "whenFalse": "quota not met",
+                "name": "quota"
+              }
+            }
+            """;
+        var expected = Spec
+            .Build(IsPositive)
+            .AsAtLeastNSatisfied(2)
+            .WhenTrue("quota met")
+            .WhenFalse("quota not met")
+            .Create("quota");
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { 1, -2, -3 });
+    }
+
+    [Fact]
+    public void Should_load_a_decorated_unnamed_at_least_n_satisfied_node_like_its_fluent_equivalent()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "rule": {
+                "asAtLeastNSatisfied": { "spec": "is-positive" },
+                "n": 2,
+                "whenTrue": "quota met",
+                "whenFalse": "quota not met"
+              }
+            }
+            """;
+        var expected = Spec
+            .Build(IsPositive)
+            .AsAtLeastNSatisfied(2)
+            .WhenTrue("quota met")
+            .WhenFalse("quota not met")
+            .Create();
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { 1, -2, -3 });
+    }
+
+    [Fact]
+    public void Should_load_a_decorated_named_at_most_n_satisfied_node_like_its_fluent_equivalent()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "rule": {
+                "asAtMostNSatisfied": { "spec": "is-positive" },
+                "n": 1,
+                "whenTrue": "within bounds",
+                "whenFalse": "over bounds",
+                "name": "bounded"
+              }
+            }
+            """;
+        var expected = Spec
+            .Build(IsPositive)
+            .AsAtMostNSatisfied(1)
+            .WhenTrue("within bounds")
+            .WhenFalse("over bounds")
+            .Create("bounded");
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, new[] { 1, -2 }, new[] { 1, 2 });
+    }
+
+    [Fact]
+    public void Should_load_a_decorated_unnamed_at_most_n_satisfied_node_like_its_fluent_equivalent()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "rule": {
+                "asAtMostNSatisfied": { "spec": "is-positive" },
+                "n": 1,
+                "whenTrue": "within bounds",
+                "whenFalse": "over bounds"
+              }
+            }
+            """;
+        var expected = Spec
+            .Build(IsPositive)
+            .AsAtMostNSatisfied(1)
+            .WhenTrue("within bounds")
+            .WhenFalse("over bounds")
+            .Create();
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, new[] { 1, -2 }, new[] { 1, 2 });
+    }
+
     private class Customer
     {
         public List<int> Orders { get; set; } = [];

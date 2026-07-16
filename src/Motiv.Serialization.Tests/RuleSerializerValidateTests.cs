@@ -431,4 +431,92 @@ public class RuleSerializerValidateTests
         // Assert
         errors.ShouldBeEmpty();
     }
+
+    [Fact]
+    public void Should_reject_an_empty_expression_string()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "expression": "" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.expression");
+    }
+
+    [Fact]
+    public void Should_propagate_a_structurally_invalid_child_through_a_higher_order_node()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "asAllSatisfied": { "frobnicate": true } } }""");
+
+        // Assert
+        errors.ShouldContain(error =>
+            error.Code == RuleErrorCode.InvalidNode && error.Path == "$.rule.asAllSatisfied.frobnicate");
+    }
+
+    [Fact]
+    public void Should_reject_whenFalse_without_whenTrue()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "spec": "a", "whenFalse": "no" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule");
+        error.Message.ShouldContain("together");
+    }
+
+    [Fact]
+    public void Should_reject_a_parameter_declaration_that_is_not_an_object()
+    {
+        // Act
+        var errors = Validate("""{ "parameters": { "p": "oops" }, "rule": { "spec": "a" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.parameters.p");
+    }
+
+    [Fact]
+    public void Should_reject_a_non_string_parameter_type()
+    {
+        // Act
+        var errors = Validate("""{ "parameters": { "p": { "type": 123 } }, "rule": { "spec": "a" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.parameters.p");
+    }
+
+    [Fact]
+    public void Should_reject_a_bare_at_sign_as_an_n_parameter_reference()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "@", "name": "x" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.n");
+    }
+
+    [Fact]
+    public void Should_accept_a_parameter_reference_with_underscores_and_digits()
+    {
+        // Act
+        var errors = Validate(
+            """
+            {
+              "parameters": { "Min_Age2": { "type": "integer", "default": 1 } },
+              "rule": { "asNSatisfied": { "spec": "a" }, "n": "@Min_Age2", "name": "x" }
+            }
+            """);
+
+        // Assert
+        errors.ShouldBeEmpty();
+    }
 }

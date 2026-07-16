@@ -263,6 +263,19 @@ public class RuleSerializerDeserializeTests
     }
 
     [Fact]
+    public void Should_throw_when_the_document_is_not_valid_json_at_all()
+    {
+        // Act
+        var act = () => CreateSerializer().Deserialize<int>("not json at all");
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$");
+    }
+
+    [Fact]
     public void Should_report_object_payload_errors_even_when_the_leaf_fails()
     {
         // Arrange

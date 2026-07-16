@@ -45,4 +45,14 @@ public class RuleSerializerOptionsTests
         // Assert
         errors.ShouldBeEmpty();
     }
+
+    [Fact]
+    public void Should_reject_a_null_registry()
+    {
+        // Act
+        var act = () => new RuleSerializer(null!);
+
+        // Assert
+        act.ShouldThrow<ArgumentNullException>();
+    }
 }

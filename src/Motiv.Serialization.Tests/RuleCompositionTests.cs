@@ -199,4 +199,19 @@ public class RuleCompositionTests
         exception.Errors.Count.ShouldBe(2);
         exception.Errors.ShouldAllBe(error => error.Code == RuleErrorCode.UnknownSpec);
     }
+
+    [Fact]
+    public void Should_propagate_a_failed_operand_through_not()
+    {
+        // Arrange
+        const string json = """{ "rule": { "not": { "spec": "missing" } } }""";
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<int>(json);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.UnknownSpec);
+    }
 }

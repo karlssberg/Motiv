@@ -102,4 +102,59 @@ public class RuleSemanticValidateTests
         // Assert
         errors.ShouldAllBe(error => error.Code == RuleErrorCode.InvalidNode);
     }
+
+    [Fact]
+    public void Should_not_crash_when_the_document_is_not_valid_json_at_all()
+    {
+        // Act
+        var errors = CreateSerializer().Validate<int>("not json at all");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$");
+    }
+
+    [Fact]
+    public void Should_not_bind_when_envelope_errors_accompany_an_otherwise_valid_rule()
+    {
+        // Arrange — the envelope error alone must suppress the registry lookup that would
+        // otherwise also report the unregistered spec name
+        const string json = """{ "frobnicate": 1, "rule": { "spec": "totally-unregistered" } }""";
+
+        // Act
+        var errors = CreateSerializer().Validate<int>(json);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.frobnicate");
+    }
+
+    [Fact]
+    public void Should_not_crash_when_the_document_is_not_valid_json_at_all_for_a_metadata_validation()
+    {
+        // Act
+        var errors = CreateSerializer().Validate<int, RuleMetadataTests.RuleOutcome>("not json at all");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$");
+    }
+
+    [Fact]
+    public void Should_not_bind_when_envelope_errors_accompany_an_otherwise_valid_rule_for_a_metadata_validation()
+    {
+        // Arrange
+        const string json = """{ "frobnicate": 1, "rule": { "spec": "totally-unregistered" } }""";
+
+        // Act
+        var errors = CreateSerializer().Validate<int, RuleMetadataTests.RuleOutcome>(json);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.frobnicate");
+    }
 }

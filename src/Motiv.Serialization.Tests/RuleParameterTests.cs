@@ -375,4 +375,224 @@ public class RuleParameterTests
         exception.Errors.ShouldContain(error =>
             error.Code == RuleErrorCode.MissingParameter && error.Path == "$.parameters.minOrders");
     }
+
+    [Fact]
+    public void Should_treat_a_null_parameters_object_as_no_parameters()
+    {
+        // Arrange
+        const string json = """{ "rule": { "spec": "is-positive" } }""";
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json, (object?)null);
+
+        // Assert
+        loaded.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Should_reject_a_supplied_long_integer_value_outside_32_bit_range()
+    {
+        // Arrange
+        const string json = """{ "parameters": { "big": { "type": "integer" } }, "rule": { "spec": "is-positive" } }""";
+        var parameters = new Dictionary<string, object?> { ["big"] = 5_000_000_000L };
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<int>(json, parameters);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.ParameterTypeMismatch);
+        error.Path.ShouldBe("$.parameters.big");
+    }
+
+    [Fact]
+    public void Should_coerce_a_supplied_double_value_for_a_number_parameter()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "rate": { "type": "number" } },
+              "rule": { "spec": "is-positive", "whenTrue": "rate {rate}", "whenFalse": "no" }
+            }
+            """;
+        var expected = Spec.Build(IsPositive).WhenTrue("rate 1.25").WhenFalse("no").Create();
+        var parameters = new Dictionary<string, object?> { ["rate"] = 1.25d };
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json, parameters);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, 5, -5);
+    }
+
+    [Fact]
+    public void Should_coerce_a_supplied_float_value_for_a_number_parameter()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "rate": { "type": "number" } },
+              "rule": { "spec": "is-positive", "whenTrue": "rate {rate}", "whenFalse": "no" }
+            }
+            """;
+        var expected = Spec.Build(IsPositive).WhenTrue("rate 1.5").WhenFalse("no").Create();
+        var parameters = new Dictionary<string, object?> { ["rate"] = 1.5f };
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json, parameters);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, 5, -5);
+    }
+
+    [Fact]
+    public void Should_coerce_a_supplied_int_value_for_a_number_parameter()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "rate": { "type": "number" } },
+              "rule": { "spec": "is-positive", "whenTrue": "rate {rate}", "whenFalse": "no" }
+            }
+            """;
+        var expected = Spec.Build(IsPositive).WhenTrue("rate 3").WhenFalse("no").Create();
+        var parameters = new Dictionary<string, object?> { ["rate"] = 3 };
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json, parameters);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, 5, -5);
+    }
+
+    [Fact]
+    public void Should_coerce_a_supplied_long_value_for_a_number_parameter()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "rate": { "type": "number" } },
+              "rule": { "spec": "is-positive", "whenTrue": "rate {rate}", "whenFalse": "no" }
+            }
+            """;
+        var expected = Spec.Build(IsPositive).WhenTrue("rate 4000000000").WhenFalse("no").Create();
+        var parameters = new Dictionary<string, object?> { ["rate"] = 4_000_000_000L };
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json, parameters);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, 5, -5);
+    }
+
+    [Fact]
+    public void Should_coerce_a_supplied_decimal_value_for_a_number_parameter()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "rate": { "type": "number" } },
+              "rule": { "spec": "is-positive", "whenTrue": "rate {rate}", "whenFalse": "no" }
+            }
+            """;
+        var expected = Spec.Build(IsPositive).WhenTrue("rate 2.5").WhenFalse("no").Create();
+        var parameters = new Dictionary<string, object?> { ["rate"] = 2.5m };
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json, parameters);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, 5, -5);
+    }
+
+    [Fact]
+    public void Should_coerce_a_supplied_string_value_for_a_string_parameter()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "label": { "type": "string" } },
+              "rule": { "spec": "is-positive", "whenTrue": "{label}", "whenFalse": "no" }
+            }
+            """;
+        var expected = Spec.Build(IsPositive).WhenTrue("VIP").WhenFalse("no").Create();
+        var parameters = new Dictionary<string, object?> { ["label"] = "VIP" };
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json, parameters);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, 5, -5);
+    }
+
+    [Fact]
+    public void Should_coerce_a_supplied_boolean_value_for_a_boolean_parameter()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "strict": { "type": "boolean" } },
+              "rule": { "spec": "is-positive", "whenTrue": "strict {strict}", "whenFalse": "no" }
+            }
+            """;
+        var expected = Spec.Build(IsPositive).WhenTrue("strict false").WhenFalse("no").Create();
+        var parameters = new Dictionary<string, object?> { ["strict"] = false };
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json, parameters);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, 5, -5);
+    }
+
+    [Fact]
+    public void Should_format_a_false_boolean_default_parameter_invariantly()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "strict": { "type": "boolean", "default": false } },
+              "rule": { "spec": "is-positive", "whenTrue": "strict {strict}", "whenFalse": "no" }
+            }
+            """;
+        var expected = Spec.Build(IsPositive).WhenTrue("strict false").WhenFalse("no").Create();
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<int>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, 5, -5);
+    }
+
+    [Fact]
+    public void Should_not_report_unsupplied_required_parameters_of_every_type_during_validation()
+    {
+        // Arrange — validation stands in type-shaped placeholders for every declared type
+        const string json =
+            """
+            {
+              "parameters": {
+                "rate": { "type": "number" },
+                "strict": { "type": "boolean" },
+                "label": { "type": "string" }
+              },
+              "rule": { "spec": "is-positive", "whenTrue": "{rate} {strict} {label}", "whenFalse": "no" }
+            }
+            """;
+
+        // Act
+        var errors = CreateSerializer().Validate<int>(json);
+
+        // Assert
+        errors.ShouldBeEmpty();
+    }
 }
