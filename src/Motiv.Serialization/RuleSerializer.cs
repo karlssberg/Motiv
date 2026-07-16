@@ -127,6 +127,46 @@ public sealed class RuleSerializer
         return spec!;
     }
 
+    /// <summary>
+    /// Checks a rule document structurally and semantically against the registry for an
+    /// explanation load, accumulating every error instead of throwing. Parameter values are not
+    /// taken: required parameters are stood in by type-shaped placeholders, so supply errors are
+    /// only reported by <see cref="Deserialize{TModel}(string)" />.
+    /// </summary>
+    /// <typeparam name="TModel">The model type the document's spec references were registered for.</typeparam>
+    /// <param name="json">The rule document to validate.</param>
+    /// <returns>All errors found, or an empty list when the document would load.</returns>
+    public IReadOnlyList<RuleError> Validate<TModel>(string json)
+    {
+        var errors = new List<RuleError>();
+        var document = PrepareForValidation(json, errors);
+        if (document?.Root is not null && errors.Count == 0)
+            RuleBinder.Bind<TModel>(document, _registry, errors);
+        return errors;
+    }
+
+    /// <summary>
+    /// Checks a rule document structurally and semantically against the registry for a metadata
+    /// load, accumulating every error instead of throwing. Parameter values are not taken:
+    /// required parameters are stood in by type-shaped placeholders, so supply errors are only
+    /// reported by <see cref="Deserialize{TModel, TMetadata}(string)" />.
+    /// </summary>
+    /// <typeparam name="TModel">The model type the document's spec references were registered for.</typeparam>
+    /// <typeparam name="TMetadata">The metadata type object payloads deserialize to and registry entries must yield.</typeparam>
+    /// <param name="json">The rule document to validate.</param>
+    /// <returns>All errors found, or an empty list when the document would load.</returns>
+    public IReadOnlyList<RuleError> Validate<TModel, TMetadata>(string json)
+    {
+        if (typeof(TMetadata) == typeof(string))
+            return Validate<TModel>(json);
+
+        var errors = new List<RuleError>();
+        var document = PrepareForValidation(json, errors);
+        if (document?.Root is not null && errors.Count == 0)
+            new MetadataRuleBinder<TMetadata>(_registry, _options).Bind<TModel>(document, errors);
+        return errors;
+    }
+
     private RuleDocument? Prepare(
         string json,
         IReadOnlyDictionary<string, object?>? parameters,
@@ -137,6 +177,18 @@ public sealed class RuleSerializer
             return null;
 
         var values = RuleParameterResolver.Resolve(document.Parameters, parameters, errors);
+        if (document.Root is not null)
+            RuleParameterSubstituter.Apply(document.Root, values, errors);
+        return document;
+    }
+
+    private RuleDocument? PrepareForValidation(string json, List<RuleError> errors)
+    {
+        var document = new RuleDocumentParser(_options).Parse(json, errors);
+        if (document is null)
+            return null;
+
+        var values = RuleParameterResolver.ResolveForValidation(document.Parameters);
         if (document.Root is not null)
             RuleParameterSubstituter.Apply(document.Root, values, errors);
         return document;
