@@ -75,4 +75,27 @@ public class ResultSerializerTests
         root.GetProperty("justification").GetString().ShouldNotBeNullOrWhiteSpace();
         root.GetProperty("explanation").GetProperty("assertions")[0].GetString()!.ShouldBe("is positive");
     }
+
+    private static SpecBase<int, int> HasFlag { get; } =
+        Spec.Build((int n) => n != 0)
+            .WhenTrue(1)
+            .WhenFalse(0)
+            .Create("has flag");
+
+    [Fact]
+    public void Should_serialize_typed_metadata_values_as_their_real_type()
+    {
+        // Arrange
+        var result = HasFlag.Evaluate(5);
+        var serializer = new ResultSerializer();
+
+        // Act
+        var dto = serializer.ToEvaluationResult(result);
+        var json = serializer.Serialize(result);
+
+        // Assert
+        dto.Values.ShouldBe(new[] { 1 });
+        using var doc = JsonDocument.Parse(json);
+        doc.RootElement.GetProperty("values")[0].GetInt32().ShouldBe(1);
+    }
 }
