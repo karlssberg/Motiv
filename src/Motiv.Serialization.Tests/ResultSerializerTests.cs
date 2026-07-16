@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Motiv.Serialization;
 
 namespace Motiv.Serialization.Tests;
@@ -54,5 +55,24 @@ public class ResultSerializerTests
         node.Underlying.Count.ShouldBe(underlying.Length);
         for (var i = 0; i < underlying.Length; i++)
             ShouldMirror(node.Underlying[i], underlying[i]);
+    }
+
+    [Fact]
+    public void Should_serialize_to_camelcase_json_with_the_expected_shape()
+    {
+        // Arrange
+        var result = IsPositive.Evaluate(5);
+
+        // Act
+        var json = new ResultSerializer().Serialize(result);
+
+        // Assert
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+        root.GetProperty("satisfied").GetBoolean().ShouldBeTrue();
+        root.GetProperty("reason").GetString()!.ShouldBe("is positive");
+        root.GetProperty("assertions")[0].GetString()!.ShouldBe("is positive");
+        root.GetProperty("justification").GetString().ShouldNotBeNullOrWhiteSpace();
+        root.GetProperty("explanation").GetProperty("assertions")[0].GetString()!.ShouldBe("is positive");
     }
 }

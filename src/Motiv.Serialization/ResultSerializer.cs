@@ -41,6 +41,13 @@ public sealed class ResultSerializer
             MapExplanation(result.Explanation));
     }
 
+    /// <summary>Projects an evaluation result and renders it to a JSON string.</summary>
+    /// <typeparam name="TMetadata">The metadata type carried by the result.</typeparam>
+    /// <param name="result">The evaluated result to serialize.</param>
+    /// <returns>The JSON representation of the projected result.</returns>
+    public string Serialize<TMetadata>(BooleanResultBase<TMetadata> result) =>
+        JsonSerializer.Serialize(ToEvaluationResult(result), _jsonOptions);
+
     private static ExplanationNode MapExplanation(Explanation explanation) =>
         new(
             explanation.Assertions.ToArray(),
