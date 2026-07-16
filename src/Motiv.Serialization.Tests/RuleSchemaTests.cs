@@ -24,7 +24,7 @@ public class RuleSchemaTests
         """{ "rule": { "andAlso": [ { "spec": "a" }, { "spec": "b" } ] } }""",
         """{ "rule": { "orElse": [ { "spec": "a" }, { "spec": "b" } ] } }""",
         """{ "rule": { "spec": "a", "whenTrue": "yes", "whenFalse": "no", "name": "n" } }""",
-        """{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 } } }""",
+        """{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 }, "name": "coded" } }""",
         """{ "rule": { "expression": "Age >= @minAge" } }""",
         """{ "parameters": { "minAge": { "type": "integer", "default": 18 } }, "rule": { "spec": "a" } }""",
         """{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "Orders" } }""",

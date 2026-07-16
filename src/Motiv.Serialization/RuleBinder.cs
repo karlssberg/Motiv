@@ -49,7 +49,8 @@ internal static class RuleBinder
             return false;
 
         errors.Add(new RuleError(node.Path, RuleErrorCode.MetadataTypeMismatch,
-            "object 'whenTrue'/'whenFalse' payloads require a metadata load; this is an explanation load"));
+            "object 'whenTrue'/'whenFalse' payloads cannot be bound with explanation (string) semantics; " +
+            "use a metadata load (Deserialize<TModel, TMetadata>)"));
         return true;
     }
 

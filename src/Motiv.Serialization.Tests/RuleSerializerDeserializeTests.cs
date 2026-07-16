@@ -236,7 +236,7 @@ public class RuleSerializerDeserializeTests
     {
         // Arrange
         const string json =
-            """{ "rule": { "spec": "is-positive", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 } } }""";
+            """{ "rule": { "spec": "is-positive", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 }, "name": "coded" } }""";
 
         // Act
         var act = () => CreateSerializer().Deserialize<int>(json);
@@ -267,7 +267,7 @@ public class RuleSerializerDeserializeTests
     {
         // Arrange
         const string json =
-            """{ "rule": { "spec": "missing", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 } } }""";
+            """{ "rule": { "spec": "missing", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 }, "name": "coded" } }""";
 
         // Act
         var act = () => CreateSerializer().Deserialize<int>(json);

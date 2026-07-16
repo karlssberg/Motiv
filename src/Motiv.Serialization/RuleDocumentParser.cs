@@ -143,6 +143,13 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         ApplyHigherOrderProperties(node, nElement, pathElement, path, errors);
         node.Name = name;
 
+        if (node.HasObjectPayloads && node.Name is null)
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                "nodes with object 'whenTrue'/'whenFalse' payloads must also declare a 'name'"));
+            return null;
+        }
+
         if (node.Operator.IsHigherOrder() && node.Name is null
             && node.WhenTrueText is null && !node.HasObjectPayloads)
         {
@@ -275,7 +282,8 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         }
         else
         {
-            node.HasObjectPayloads = true;
+            node.WhenTrueElement = whenTrue.Value.Clone();
+            node.WhenFalseElement = whenFalse.Value.Clone();
         }
     }
 

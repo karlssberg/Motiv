@@ -13,7 +13,7 @@ public class RuleSerializerValidateTests
     [InlineData("""{ "rule": { "and": [ { "spec": "a" }, { "not": { "spec": "b" } } ] } }""")]
     [InlineData("""{ "rule": { "spec": "a", "whenTrue": "yes", "whenFalse": "no", "name": "n" } }""")]
     [InlineData("""{ "rule": { "expression": "Age >= 18" } }""")]
-    [InlineData("""{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 } } }""")]
+    [InlineData("""{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 }, "name": "coded" } }""")]
     [InlineData("""{ "parameters": { "minAge": { "type": "integer", "default": 18 } }, "rule": { "spec": "a" } }""")]
     public void Should_report_no_errors_for_structurally_valid_documents(string json)
     {
@@ -405,5 +405,30 @@ public class RuleSerializerValidateTests
         error.Code.ShouldBe(RuleErrorCode.InvalidNode);
         error.Path.ShouldBe("$.$schema");
         error.Message.ShouldContain("string");
+    }
+
+    [Fact]
+    public void Should_require_a_name_on_nodes_with_object_payloads()
+    {
+        // Act
+        var errors = Validate(
+            """{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 } } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule");
+        error.Message.ShouldContain("name");
+    }
+
+    [Fact]
+    public void Should_accept_named_nodes_with_object_payloads()
+    {
+        // Act
+        var errors = Validate(
+            """{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 }, "name": "coded" } }""");
+
+        // Assert
+        errors.ShouldBeEmpty();
     }
 }
