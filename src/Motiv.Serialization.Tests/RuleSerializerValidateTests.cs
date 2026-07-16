@@ -311,4 +311,17 @@ public class RuleSerializerValidateTests
         // Assert
         errors.ShouldBeEmpty();
     }
+
+    [Fact]
+    public void Should_report_a_non_string_schema_reference()
+    {
+        // Act
+        var errors = Validate("""{ "$schema": 1, "rule": { "spec": "a" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.$schema");
+        error.Message.ShouldContain("string");
+    }
 }

@@ -21,9 +21,9 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         {
             // Binary-operator nesting costs 2 JSON levels per rule level, so the reader's depth
             // ceiling must be raised beyond STJ's default of 64 to admit any document that is
-            // legal under MaxDocumentDepth. The parser's own recursion stays bounded by
-            // ExceedsLimits, so raising the reader limit here is safe.
-            var readerOptions = new JsonDocumentOptions { MaxDepth = checked(options.MaxDocumentDepth * 2 + 4) };
+            // legal under MaxDocumentDepth. Clamped so extreme option values cannot overflow.
+            var maxDepth = (int)Math.Min((long)options.MaxDocumentDepth * 2 + 4, int.MaxValue);
+            var readerOptions = new JsonDocumentOptions { MaxDepth = maxDepth };
             document = JsonDocument.Parse(json, readerOptions);
         }
         catch (JsonException exception)
@@ -55,6 +55,9 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
             switch (property.Name)
             {
                 case "$schema":
+                    if (property.Value.ValueKind != JsonValueKind.String)
+                        errors.Add(new RuleError("$.$schema", RuleErrorCode.InvalidNode,
+                            "'$schema' must be a string"));
                     break;
                 case "name":
                     name = ReadNonEmptyString(property.Value, "$.name", errors);
