@@ -246,4 +246,103 @@ public class RuleHigherOrderTests
         error.Code.ShouldBe(RuleErrorCode.ParameterTypeMismatch);
         error.Path.ShouldBe("$.rule.n");
     }
+
+    [Fact]
+    public void Should_select_the_collection_through_a_single_segment_path()
+    {
+        // Arrange
+        const string json =
+            """{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "path": "Orders", "name": "all orders positive" } }""";
+        var expected = Spec
+            .Build(IsPositive)
+            .AsAllSatisfied()
+            .Create("all orders positive")
+            .ChangeModelTo<Customer>(customer => customer.Orders);
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected,
+            new Customer { Orders = [1, 2] },
+            new Customer { Orders = [1, -2] });
+    }
+
+    [Fact]
+    public void Should_select_the_collection_through_a_nested_path()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "rule": {
+                "asAnySatisfied": { "spec": "is-positive" },
+                "path": "Account.Orders",
+                "name": "an account order is positive"
+              }
+            }
+            """;
+        var expected = Spec
+            .Build(IsPositive)
+            .AsAnySatisfied()
+            .Create("an account order is positive")
+            .ChangeModelTo<Customer>(customer => customer.Account.Orders);
+
+        // Act
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected,
+            new Customer { Account = new Account { Orders = [-1, 2] } },
+            new Customer { Account = new Account { Orders = [-1, -2] } });
+    }
+
+    [Fact]
+    public void Should_report_a_path_segment_that_is_not_a_public_property()
+    {
+        // Arrange
+        const string json =
+            """{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "path": "Nope", "name": "x" } }""";
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<Customer>(json);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidHigherOrderPath);
+        error.Path.ShouldBe("$.rule.path");
+        error.Message.ShouldContain("Nope");
+    }
+
+    [Fact]
+    public void Should_report_a_path_that_selects_a_non_collection()
+    {
+        // Arrange
+        const string json =
+            """{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "path": "Age", "name": "x" } }""";
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<Customer>(json);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidHigherOrderPath);
+        error.Path.ShouldBe("$.rule.path");
+    }
+
+    private class Customer
+    {
+        public List<int> Orders { get; set; } = [];
+
+        public Account Account { get; set; } = new();
+
+        public int Age { get; set; }
+    }
+
+    private class Account
+    {
+        public List<int> Orders { get; set; } = [];
+    }
 }
