@@ -44,8 +44,7 @@ public static class MotivRulesEndpoints
         group.MapPost("/validate", (ValidateRequest request) =>
         {
             if (!options.TryGetBinding(request.ModelType, out var binding))
-                return Results.Json(
-                    new ErrorResponse($"Unknown model type '{request.ModelType}'."), json, statusCode: 400);
+                return UnknownModelType(request.ModelType, json);
 
             var errors = binding.Validate(serializer, request.Document.GetRawText());
             return Results.Json(new ValidationResponse(errors), json);
@@ -54,8 +53,7 @@ public static class MotivRulesEndpoints
         group.MapPost("/evaluate", (EvaluateRequest request) =>
         {
             if (!options.TryGetBinding(request.ModelType, out var binding))
-                return Results.Json(
-                    new ErrorResponse($"Unknown model type '{request.ModelType}'."), json, statusCode: 400);
+                return UnknownModelType(request.ModelType, json);
 
             try
             {
@@ -75,4 +73,7 @@ public static class MotivRulesEndpoints
 
         return endpoints;
     }
+
+    private static IResult UnknownModelType(string modelType, JsonSerializerOptions json) =>
+        Results.Json(new ErrorResponse($"Unknown model type '{modelType}'."), json, statusCode: 400);
 }
