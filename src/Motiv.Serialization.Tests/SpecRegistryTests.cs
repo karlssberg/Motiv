@@ -116,4 +116,26 @@ public class SpecRegistryTests
         // Act & Assert
         registry.Count.ShouldBe(2);
     }
+
+    [Fact]
+    public void Should_expose_registered_entries_with_their_descriptions()
+    {
+        // Arrange
+        var isPositive = Spec.Build((int n) => n > 0).WhenTrue("yes").WhenFalse("no").Create();
+        var isEven = Spec.Build((int n) => n % 2 == 0).WhenTrue("yes").WhenFalse("no").Create();
+
+        var registry = new SpecRegistry()
+            .Register("is-positive", isPositive, "Whether the number is positive")
+            .Register("is-even", isEven);
+
+        // Act
+        var entries = registry.Entries.OrderBy(e => e.Name).ToArray();
+
+        // Assert
+        entries.Length.ShouldBe(2);
+        entries[0].Name.ShouldBe("is-even");
+        entries[0].Description.ShouldBeNull();
+        entries[1].Name.ShouldBe("is-positive");
+        entries[1].Description!.ShouldBe("Whether the number is positive");
+    }
 }

@@ -17,23 +17,28 @@ public sealed class SpecRegistry
     /// <summary>The number of registered specs.</summary>
     public int Count => _entries.Count;
 
+    /// <summary>All registered entries. Intended for read-only catalog enumeration after population.</summary>
+    public IReadOnlyCollection<SpecRegistryEntry> Entries => _entries.Values;
+
     /// <summary>Registers a synchronous spec under the given name.</summary>
     /// <typeparam name="TModel">The model type the spec evaluates against.</typeparam>
     /// <typeparam name="TMetadata">The metadata type the spec yields.</typeparam>
     /// <param name="name">The stable name that rule documents use to reference the spec.</param>
     /// <param name="spec">The spec to register.</param>
+    /// <param name="description">An optional human-readable description surfaced in a catalog UI.</param>
     /// <returns>This registry, to allow chained registration.</returns>
-    public SpecRegistry Register<TModel, TMetadata>(string name, SpecBase<TModel, TMetadata> spec) =>
-        Add(name, spec, typeof(TModel), typeof(TMetadata), isAsync: false);
+    public SpecRegistry Register<TModel, TMetadata>(string name, SpecBase<TModel, TMetadata> spec, string? description = null) =>
+        Add(name, spec, typeof(TModel), typeof(TMetadata), isAsync: false, description);
 
     /// <summary>Registers an asynchronous spec under the given name.</summary>
     /// <typeparam name="TModel">The model type the spec evaluates against.</typeparam>
     /// <typeparam name="TMetadata">The metadata type the spec yields.</typeparam>
     /// <param name="name">The stable name that rule documents use to reference the spec.</param>
     /// <param name="spec">The spec to register.</param>
+    /// <param name="description">An optional human-readable description surfaced in a catalog UI.</param>
     /// <returns>This registry, to allow chained registration.</returns>
-    public SpecRegistry Register<TModel, TMetadata>(string name, AsyncSpecBase<TModel, TMetadata> spec) =>
-        Add(name, spec, typeof(TModel), typeof(TMetadata), isAsync: true);
+    public SpecRegistry Register<TModel, TMetadata>(string name, AsyncSpecBase<TModel, TMetadata> spec, string? description = null) =>
+        Add(name, spec, typeof(TModel), typeof(TMetadata), isAsync: true, description);
 
     /// <summary>Looks up a registered spec by name.</summary>
     /// <param name="name">The name the spec was registered under.</param>
@@ -41,7 +46,7 @@ public sealed class SpecRegistry
     public SpecRegistryEntry? Find(string name) =>
         _entries.TryGetValue(name, out var entry) ? entry : null;
 
-    private SpecRegistry Add(string name, object? spec, Type modelType, Type metadataType, bool isAsync)
+    private SpecRegistry Add(string name, object? spec, Type modelType, Type metadataType, bool isAsync, string? description)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("A registered spec name must not be empty or whitespace.", nameof(name));
@@ -50,7 +55,7 @@ public sealed class SpecRegistry
         if (_entries.ContainsKey(name))
             throw new ArgumentException($"A spec is already registered under the name '{name}'.", nameof(name));
 
-        _entries[name] = new SpecRegistryEntry(name, modelType, metadataType, isAsync, spec);
+        _entries[name] = new SpecRegistryEntry(name, modelType, metadataType, isAsync, spec, description);
         return this;
     }
 }
