@@ -1,0 +1,132 @@
+openapi: 3.1.0
+info:
+  title: Motiv Rules API
+  version: 1.0.0
+  description: >-
+    Transport-agnostic contract for a Motiv-backed rules-engine frontend.
+    A backend exposes a catalog of registered specifications, validates rule
+    documents (see rule.v1.json), and evaluates them against sample models.
+    Paths are relative to the base path the host mounts the API under
+    (e.g. /api/rules).
+paths:
+  /catalog:
+    get:
+      operationId: getCatalog
+      summary: List registered specifications.
+      responses:
+        '200':
+          description: The catalog of registered specifications.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CatalogEntry' }
+  /validate:
+    post:
+      operationId: validateRule
+      summary: Validate a rule document against a registered model type.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ValidateRequest' }
+      responses:
+        '200':
+          description: Validation completed; errors is empty when the document is valid.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationResponse' }
+        '400':
+          description: The model type is not registered.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /evaluate:
+    post:
+      operationId: evaluateRule
+      summary: Evaluate a rule document against a sample model.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EvaluateRequest' }
+      responses:
+        '200':
+          description: The evaluation result.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EvaluationResult' }
+        '400':
+          description: >-
+            The model type is not registered, the rule document is invalid, or
+            the sample model could not be bound. A ValidationResponse is returned
+            when the rule document is invalid; otherwise an ErrorResponse.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ValidationResponse'
+                  - $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    CatalogEntry:
+      type: object
+      required: [name, modelType, metadataType, isAsync]
+      properties:
+        name: { type: string, description: The stable name documents reference the spec by. }
+        modelType: { type: string, description: The registered model-type id, or the CLR type name when not registered for evaluation. }
+        metadataType: { type: string, description: The metadata type name (e.g. String). }
+        isAsync: { type: boolean }
+        description: { type: [string, 'null'] }
+    ValidateRequest:
+      type: object
+      required: [modelType, document]
+      properties:
+        modelType: { type: string, description: A model-type id registered on the server. }
+        document: { type: object, description: 'A rule document; see rule.v1.json.' }
+    EvaluateRequest:
+      type: object
+      required: [modelType, document, model]
+      properties:
+        modelType: { type: string }
+        document: { type: object, description: 'A rule document; see rule.v1.json.' }
+        model: { description: A sample model instance to evaluate the rule against (any JSON shaped like the model type). }
+    RuleError:
+      type: object
+      required: [path, code, message]
+      properties:
+        path: { type: string, description: 'JSON path of the offending node, e.g. $.rule.and[1].whenTrue.' }
+        code:
+          type: string
+          enum: [InvalidNode, UnknownSpec, ModelTypeMismatch, MetadataTypeMismatch, MixedWhenTrueFalseKinds, ExpressionsNotEnabled, AsyncSpecInSyncLoad, DocumentTooLarge]
+        message: { type: string }
+    ValidationResponse:
+      type: object
+      required: [errors]
+      properties:
+        errors:
+          type: array
+          items: { $ref: '#/components/schemas/RuleError' }
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+    ExplanationNode:
+      type: object
+      required: [assertions, underlying]
+      properties:
+        assertions: { type: array, items: { type: string } }
+        underlying:
+          type: array
+          items: { $ref: '#/components/schemas/ExplanationNode' }
+    EvaluationResult:
+      type: object
+      required: [satisfied, reason, assertions, values, justification, explanation]
+      properties:
+        satisfied: { type: boolean }
+        reason: { type: string }
+        assertions: { type: array, items: { type: string } }
+        values: { type: array, items: { type: string } }
+        justification: { type: string }
+        explanation: { $ref: '#/components/schemas/ExplanationNode' }
