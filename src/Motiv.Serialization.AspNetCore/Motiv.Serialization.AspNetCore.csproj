@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>Motiv.Serialization.AspNetCore</PackageId>
+        <Title>Motiv.Serialization.AspNetCore</Title>
+        <Description>ASP.NET Core minimal-API endpoints (catalog, validate, evaluate) that expose a Motiv SpecRegistry to a rules-engine frontend.</Description>
+        <PackageTags>Motiv, Rules Engine, ASP.NET Core, JSON, Specification Pattern</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>icon.png</PackageIcon>
+        <TargetFramework>net10.0</TargetFramework>
+        <MinVerTagPrefix>v</MinVerTagPrefix>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MinVer" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="$(AssemblyName).Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Motiv.Serialization\Motiv.Serialization.csproj" />
+    </ItemGroup>
+
+</Project>
