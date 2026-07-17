@@ -41,6 +41,16 @@ public static class MotivRulesEndpoints
             return Results.Json(entries, json);
         });
 
+        group.MapPost("/validate", (ValidateRequest request) =>
+        {
+            if (!options.TryGetBinding(request.ModelType, out var binding))
+                return Results.Json(
+                    new ErrorResponse($"Unknown model type '{request.ModelType}'."), json, statusCode: 400);
+
+            var errors = binding.Validate(serializer, request.Document.GetRawText());
+            return Results.Json(new ValidationResponse(errors), json);
+        });
+
         return endpoints;
     }
 }
