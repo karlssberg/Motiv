@@ -67,6 +67,11 @@ export function setNode(document: RuleDocument, path: string, replacement: RuleN
   }
   let parent: Record<string, unknown> = clone.rule as unknown as Record<string, unknown>;
   for (const { key, index } of steps.slice(0, -1)) {
+    // parseSteps already rejects these; repeated inline so the traversal below provably
+    // cannot step onto Object.prototype and feed it to the final assignment.
+    if (key === '__proto__' || key === 'prototype' || key === 'constructor') {
+      throw new Error(`Forbidden path key: ${key}`);
+    }
     const child = parent[key];
     parent = (index === undefined ? child : (child as unknown[])[index]) as Record<string, unknown>;
   }
