@@ -51,8 +51,17 @@ public sealed class MotivRulesOptions
             Evaluate = static (serializer, resultSerializer, jsonOptions, documentJson, modelElement) =>
             {
                 var spec = serializer.Deserialize<TModel>(documentJson);
-                var model = modelElement.Deserialize<TModel>(jsonOptions)
-                            ?? throw new InvalidModelException(typeof(TModel).Name);
+                TModel? model;
+                try
+                {
+                    model = modelElement.Deserialize<TModel>(jsonOptions);
+                }
+                catch (JsonException)
+                {
+                    // A shape mismatch is a caller error, not a server fault.
+                    throw new InvalidModelException(typeof(TModel).Name);
+                }
+                if (model is null) throw new InvalidModelException(typeof(TModel).Name);
                 var result = spec.Evaluate(model);
                 return resultSerializer.ToEvaluationResult(result);
             }
