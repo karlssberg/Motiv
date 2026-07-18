@@ -5,6 +5,9 @@ import {
 
 const ROOT = '$.rule';
 
+// Keys that would mutate the prototype chain if used as a dynamic property target.
+const FORBIDDEN_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+
 interface Step { key: string; index?: number }
 
 function parseSteps(path: string): Step[] {
@@ -14,6 +17,9 @@ function parseSteps(path: string): Step[] {
   const rest = path.slice(ROOT.length);
   if (rest === '') return [];
   return rest.split('.').filter(Boolean).map((token) => {
+    // Reject prototype-polluting keys before any dynamic property access.
+    const keyCandidate = token.split('[')[0]!;
+    if (FORBIDDEN_KEYS.has(keyCandidate)) throw new Error(`Forbidden path key: ${keyCandidate}`);
     const match = token.match(/^([A-Za-z]+)(?:\[(\d+)\])?$/);
     if (!match) throw new Error(`Invalid path token: ${token}`);
     return match[2] === undefined
