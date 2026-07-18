@@ -1,3 +1,0 @@
-# Built SPA assets are produced by `pnpm -C apps/demo build`; do not commit them.
-*
-!.gitignore
