@@ -70,14 +70,14 @@ export function setNode(document: RuleDocument, path: string, replacement: RuleN
     const child = parent[key];
     parent = (index === undefined ? child : (child as unknown[])[index]) as Record<string, unknown>;
   }
-  const last = steps.at(-1)!;
-  // parseSteps already rejects these; repeated inline so the dynamic assignment below is
-  // locally provably safe (recognized as a sanitizer by static analyzers).
-  if (last.key === '__proto__' || last.key === 'prototype' || last.key === 'constructor') {
-    throw new Error(`Forbidden path key: ${last.key}`);
+  // parseSteps already rejects these; repeated inline on a local so the dynamic assignment
+  // below is locally provably safe (recognized as a sanitizer by static analyzers).
+  const { key, index } = steps.at(-1)!;
+  if (key === '__proto__' || key === 'prototype' || key === 'constructor') {
+    throw new Error(`Forbidden path key: ${key}`);
   }
-  if (last.index === undefined) parent[last.key] = replacement;
-  else (parent[last.key] as RuleNode[])[last.index] = replacement;
+  if (index === undefined) parent[key] = replacement;
+  else (parent[key] as RuleNode[])[index] = replacement;
   return clone;
 }
 
