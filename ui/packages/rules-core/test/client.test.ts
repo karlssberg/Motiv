@@ -61,4 +61,20 @@ describe('RulesApiClient', () => {
     await expect(client.evaluate({ modelType: 'number', document: { rule: { spec: 'x' } }, model: 5 }))
       .rejects.toBeInstanceOf(RulesApiError);
   });
+
+  it('calls the global fetch with the correct this-binding when none is injected', async () => {
+    // Browsers throw "Illegal invocation" if fetch is called detached from the global object;
+    // simulate that check to guard against passing an unbound globalThis.fetch to the client.
+    const original = globalThis.fetch;
+    globalThis.fetch = function boundOnlyFetch(this: unknown): Promise<Response> {
+      if (this !== globalThis) throw new TypeError('Failed to execute \'fetch\': Illegal invocation');
+      return Promise.resolve(jsonResponse([]));
+    } as typeof fetch;
+    try {
+      const client = new RulesApiClient({ baseUrl: '/api/rules' });
+      await expect(client.getCatalog()).resolves.toEqual([]);
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
 });

@@ -32,7 +32,7 @@ export class RulesApiClient {
 
   constructor(options: RulesApiClientOptions) {
     this.#baseUrl = options.baseUrl.replace(/\/$/, '');
-    this.#fetch = options.fetch ?? globalThis.fetch;
+    this.#fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
   }
 
   /** GET {baseUrl}/catalog */
