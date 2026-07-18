@@ -28,18 +28,16 @@ public static class MotivRulesEndpoints
         var json = options.JsonSerializerOptions;
         var group = endpoints.MapGroup(basePath);
 
-        group.MapGet("/catalog", () =>
-        {
-            var entries = registry.Entries
-                .Select(entry => new CatalogEntry(
-                    entry.Name,
-                    options.ResolveModelId(entry.ModelType),
-                    entry.MetadataType.Name,
-                    entry.IsAsync,
-                    entry.Description))
-                .ToArray();
-            return Results.Json(entries, json);
-        });
+        var entries = registry.Entries
+            .Select(entry => new CatalogEntry(
+                entry.Name,
+                options.ResolveModelId(entry.ModelType),
+                entry.MetadataType.Name,
+                entry.IsAsync,
+                entry.Description))
+            .ToArray();
+
+        group.MapGet("/catalog", () => Results.Json(entries, json));
 
         group.MapPost("/validate", (ValidateRequest request) =>
         {
