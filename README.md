@@ -55,26 +55,9 @@ result.Assertions; // ["c.CreditScore > 600", "c.Income > 100000"]
 
 This takes a lambda expression tree (`Expression<Func<T, bool>>`) and transforms it into a hierarchy of propositions that mirror the expression's logic.
 
-### Query Provider Integration
-
-Propositions built from `Spec.From()` also retain a recoverable expression tree, so they compose into a single predicate that a query provider can translate directly:
-
-```csharp
-var isAdult  = Spec.From((Customer c) => c.Age >= 18).Create("is adult");
-var isActive = Spec.From((Customer c) => c.IsActive).Create("is active");
-
-var eligible = isAdult & isActive;
-
-// Translate to SQL via any IQueryable provider (e.g. EF Core)
-var customers = dbContext.Customers.Where(eligible);
-
-// Or take the raw expression anywhere expressions are accepted
-Expression<Func<Customer, bool>> predicate = eligible.ToExpression();
-```
-
 ### Manual Composition
 
-Alternatively, if you want full control, you can do this yourself:
+Alternatively, if you want full control, you can do this yourself without using expression trees:
 
 ```csharp
 var hasGoodCredit = Spec
@@ -94,6 +77,24 @@ var isEligible = hasGoodCredit.And(hasIncome);
 var result = isEligible.Evaluate(eligibleCustomer);
 result.Satisfied;  // true
 result.Assertions; // ["good credit == true", "sufficient income == true"]
+```
+
+### Query Provider Integration
+
+Propositions built from `Spec.From()` retain a recoverable expression tree,
+so they compose into a single predicate that a query provider can translate directly:
+
+```csharp
+var isAdult  = Spec.From((Customer c) => c.Age >= 18).Create("is adult");
+var isActive = Spec.From((Customer c) => c.IsActive).Create("is active");
+
+var eligible = isAdult & isActive;
+
+// Translate to SQL via any IQueryable provider (e.g. EF Core)
+var customers = dbContext.Customers.Where(eligible);
+
+// Or take the raw expression anywhere expressions are accepted
+Expression<Func<Customer, bool>> predicate = eligible.ToExpression();
 ```
 
 ### Asynchronous Propositions
