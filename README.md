@@ -18,7 +18,11 @@ if (user.Age >= 18 &&
     (user.Country == "US" || user.HasInternationalPermit) &&
     !user.IsRestricted)
 {
-    // Which condition failed? How do I debug this in production?
+    // Access granted
+}
+else
+{
+    // Access denied — but which condition failed?
 }
 ```
 
@@ -39,7 +43,10 @@ result.Satisfied;  // false
 result.Assertions; // ["user.Age < 18", "user.HasValidId == false"]
 ```
 
-Motiv overloads `&`, `|`, `^`, and `!` so the same operators compose propositions and their results. (The short-circuiting `&&` / `||` are reserved for evaluated results — use `.AndAlso()` / `.OrElse()` on propositions.) Notice too that each failing clause is rendered in its own terms — `user.Age < 18` for the comparison, `user.HasValidId == false` for the boolean — and passing clauses are dropped from the result.
+Motiv overloads `&`, `|`, `^`, and `!` so the same operators compose propositions and their results.
+The short-circuiting `&&` / `||` are reserved for evaluated results — use `.AndAlso()` / `.OrElse()` on propositions.
+Notice too that each failing clause is rendered in its own terms — `user.Age < 18` for the comparison,
+`user.HasValidId == false` for the boolean — and passing clauses are dropped from the result.
 
 ## Core Features
 
