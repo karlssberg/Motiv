@@ -98,4 +98,14 @@ public class ResultSerializerTests
         using var doc = JsonDocument.Parse(json);
         doc.RootElement.GetProperty("values")[0].GetInt32().ShouldBe(1);
     }
+
+    [Fact]
+    public void Should_throw_when_projecting_a_null_result()
+    {
+        // Arrange
+        var serializer = new ResultSerializer();
+
+        // Act & Assert
+        Should.Throw<ArgumentNullException>(() => serializer.ToEvaluationResult<string>(null!));
+    }
 }

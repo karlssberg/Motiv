@@ -107,4 +107,33 @@ public class EvaluateEndpointTests
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
         body.GetProperty("error").GetString()!.ShouldContain("nope");
     }
+
+    private sealed record Widget(bool Enabled);
+
+    private static SpecBase<Widget, string> IsEnabled { get; } =
+        Spec.Build((Widget w) => w.Enabled).WhenTrue("enabled").WhenFalse("disabled").Create();
+
+    [Fact]
+    public async Task Should_return_400_when_the_sample_model_cannot_be_bound()
+    {
+        // Arrange
+        var registry = new SpecRegistry().Register("is-enabled", IsEnabled);
+        var options = new MotivRulesOptions().AddModel<Widget>("widget");
+        await using var app = await TestApp.StartAsync(registry, options);
+        var client = app.GetTestClient();
+        var request = new
+        {
+            modelType = "widget",
+            document = JsonDocument.Parse("""{ "rule": { "spec": "is-enabled" } }""").RootElement,
+            model = (object?)null,
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/rules/evaluate", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("error").GetString()!.ShouldNotBeNullOrWhiteSpace();
+    }
 }

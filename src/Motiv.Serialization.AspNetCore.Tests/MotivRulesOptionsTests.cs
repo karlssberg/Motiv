@@ -22,4 +22,14 @@ public class MotivRulesOptionsTests
         // Act & Assert
         Should.Throw<ArgumentException>(() => options.AddModel<long>("number"));
     }
+
+    [Fact]
+    public void Should_reject_an_empty_model_id()
+    {
+        // Arrange
+        var options = new MotivRulesOptions();
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() => options.AddModel<int>("  "));
+    }
 }
