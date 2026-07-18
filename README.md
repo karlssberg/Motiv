@@ -4,6 +4,8 @@
 
 ![Build Status](https://github.com/karlssberg/Motiv/actions/workflows/dotnet.yml/badge.svg) [![NuGet](https://img.shields.io/nuget/v/Motiv.svg)](https://www.nuget.org/packages/Motiv/) [![codecov](https://codecov.io/gh/karlssberg/Motiv/graph/badge.svg?token=XNN34D2JIP)](https://codecov.io/gh/karlssberg/Motiv)
 
+Motiv is a .NET library for building composable, explainable boolean logic — so you never lose the _why_ behind a true or false.
+
 The boolean type has a problem: once evaluated,
 you lose all context about _why_ the value is true or false.
 
@@ -20,7 +22,7 @@ if (user.Age >= 18 &&
 }
 ```
 
-Motiv addresses this by preserving the structure of boolean expressions, allowing you to identify the underlying causes when needed:
+Motiv addresses this by preserving the structure of boolean expressions, so you can recover the underlying causes when you need them:
 
 ```csharp
 // With Motiv
@@ -28,7 +30,7 @@ var canAccess = Spec
     .From((User user) =>
         user.Age >= 18 &
         user.HasValidId &
-        (user.Country == "US" || user.HasInternationalPermit) &
+        (user.Country == "US" | user.HasInternationalPermit) &
         !user.IsRestricted)
     .Create("can access");
 
@@ -36,6 +38,8 @@ var result = canAccess.Evaluate(user);
 result.Satisfied;  // false
 result.Assertions; // ["user.Age < 18", "user.HasValidId == false"]
 ```
+
+Motiv overloads `&`, `|`, `^`, and `!` so the same operators compose propositions and their results. (The short-circuiting `&&` / `||` are reserved for evaluated results — use `.AndAlso()` / `.OrElse()` on propositions.) Notice too that each failing clause is rendered in its own terms — `user.Age < 18` for the comparison, `user.HasValidId == false` for the boolean — and passing clauses are dropped from the result.
 
 ## Core Features
 
@@ -57,7 +61,7 @@ This takes a lambda expression tree (`Expression<Func<T, bool>>`) and transforms
 
 ### Manual Composition
 
-Alternatively, if you want full control, you can do this yourself without using expression trees:
+For full control, compose propositions manually — no expression trees:
 
 ```csharp
 var hasGoodCredit = Spec
@@ -77,6 +81,39 @@ var isEligible = hasGoodCredit.And(hasIncome);
 var result = isEligible.Evaluate(eligibleCustomer);
 result.Satisfied;  // true
 result.Assertions; // ["good credit == true", "sufficient income == true"]
+                   // a bare name gets a == true / == false suffix to show the outcome
+```
+
+### Custom Assertions
+
+Add readable explanations to your logic:
+
+```csharp
+var hasGoodCredit = Spec
+    .Build((Customer c) => c.CreditScore > 600)
+    .WhenTrue("has good credit score")
+    .WhenFalse("credit score too low")
+    .Create();
+
+var result = hasGoodCredit.Evaluate(eligibleCustomer);
+result.Satisfied;  // true
+result.Assertions; // ["has good credit score"]
+```
+
+Supplying an explicit name via `Create("name")` instead of parameterless `Create()` changes the semantics: the name plus
+a `== true`/`== false` suffix becomes the assertion, and the custom strings become metadata, available via `Values`:
+
+```csharp
+var hasGoodCredit = Spec
+    .Build((Customer c) => c.CreditScore > 600)
+    .WhenTrue("has good credit score")
+    .WhenFalse("credit score too low")
+    .Create("good credit");
+
+var result = hasGoodCredit.Evaluate(eligibleCustomer);
+result.Satisfied;  // true
+result.Assertions; // ["good credit == true"]
+result.Values;     // ["has good credit score"]
 ```
 
 ### Query Provider Integration
@@ -125,38 +162,6 @@ Async and sync propositions compose freely (sync operands are lifted
 automatically), and independent async operands can opt into concurrent
 evaluation with `AndConcurrently`/`OrConcurrently`/`XOrConcurrently`.
 
-### Custom Assertions
-
-Add readable explanations to your logic:
-
-```csharp
-var hasGoodCredit = Spec
-    .Build((Customer c) => c.CreditScore > 600)
-    .WhenTrue("has good credit score")
-    .WhenFalse("credit score too low")
-    .Create();
-
-var result = hasGoodCredit.Evaluate(eligibleCustomer);
-result.Satisfied;  // true
-result.Assertions; // ["has good credit score"]
-```
-
-Supplying an explicit name via `Create("name")` instead of parameterless `Create()` changes the semantics: the name plus
-a `== true`/`== false` suffix becomes the assertion, and the custom strings become metadata, available via `Values`:
-
-```csharp
-var hasGoodCredit = Spec
-    .Build((Customer c) => c.CreditScore > 600)
-    .WhenTrue("has good credit score")
-    .WhenFalse("credit score too low")
-    .Create("good credit");
-
-var result = hasGoodCredit.Evaluate(eligibleCustomer);
-result.Satisfied;  // true
-result.Assertions; // ["good credit == true"]
-result.Values;     // ["has good credit score"]
-```
-
 ### Side-Effect Observers
 
 Attach logging, metrics, or other side-effects without altering a proposition's behavior:
@@ -174,7 +179,7 @@ var result = observed.Evaluate(customer);
 
 ### Observability
 
-Every top-level evaluation reports through OpenTelemetry &mdash; a span plus counter/histogram metrics &mdash;
+Every top-level evaluation reports through OpenTelemetry — a span plus counter/histogram metrics —
 with no Motiv configuration required. Nothing is emitted until your application subscribes:
 
 ```csharp
@@ -202,7 +207,7 @@ result.Assertions; // ["2 is not negative", "3 is not negative"]
 
 ## Quick Start
 
-Installation involves adding the Motiv NuGet package to your project:
+Install the Motiv NuGet package:
 
 ```bash
 dotnet add package Motiv
@@ -216,10 +221,11 @@ Install-Package Motiv
 
 ## Technical Notes
 
-- Zero additional dependencies on .NET 8+ (the legacy `netstandard2.0` target pulls in `System.Diagnostics.DiagnosticSource` for telemetry)
-- Metadata lazily evaluated
-- .NET & .NET Framework compatible
-- Performance optimized
+- Zero additional dependencies on .NET 8+
+  - The legacy `netstandard2.0` target pulls in `System.Diagnostics.DiagnosticSource` for telemetry
+- Metadata is evaluated lazily
+- Compatible with both .NET and .NET Framework
+- Zero-allocation fast paths for boolean-only evaluation
 - MIT licensed
 
 ## Learn More
