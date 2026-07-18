@@ -29,11 +29,14 @@ export function RuleTree(props: { children: (item: RuleTreeItem) => ReactNode })
 
   return (
     <div role="tree">
-      {listPaths(state.document).map(({ path, node }) => (
-        <div key={path} role="treeitem" aria-level={depthOf(path) + 1}>
-          {props.children({ path, node, level: depthOf(path) + 1, errors: errorsForNode(state.errors, path) })}
-        </div>
-      ))}
+      {listPaths(state.document).map(({ path, node }) => {
+        const level = depthOf(path) + 1;
+        return (
+          <div key={path} role="treeitem" aria-level={level}>
+            {props.children({ path, node, level, errors: errorsForNode(state.errors, path) })}
+          </div>
+        );
+      })}
     </div>
   );
 }
