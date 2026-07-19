@@ -103,10 +103,10 @@ public class RuleSerializerValidateTests
     }
 
     [Theory]
-    [InlineData("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "name": "all" } }""")]
-    [InlineData("""{ "rule": { "asAnySatisfied": { "spec": "a" }, "whenTrue": "some", "whenFalse": "none" } }""")]
-    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 3, "name": "exactly three" } }""")]
-    [InlineData("""{ "rule": { "asAtLeastNSatisfied": { "spec": "a" }, "n": "@minOrders", "name": "quota" } }""")]
+    [InlineData("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "orders", "name": "all" } }""")]
+    [InlineData("""{ "rule": { "asAnySatisfied": { "spec": "a" }, "path": "orders", "whenTrue": "some", "whenFalse": "none" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 3, "path": "orders", "name": "exactly three" } }""")]
+    [InlineData("""{ "rule": { "asAtLeastNSatisfied": { "spec": "a" }, "n": "@minOrders", "path": "orders", "name": "quota" } }""")]
     [InlineData("""{ "rule": { "asAtMostNSatisfied": { "spec": "a" }, "n": 0, "path": "Orders", "name": "none" } }""")]
     public void Should_accept_well_formed_higher_order_nodes(string json)
     {
@@ -121,7 +121,7 @@ public class RuleSerializerValidateTests
     public void Should_require_n_on_counted_higher_order_nodes()
     {
         // Act
-        var errors = Validate("""{ "rule": { "asNSatisfied": { "spec": "a" }, "name": "x" } }""");
+        var errors = Validate("""{ "rule": { "asNSatisfied": { "spec": "a" }, "path": "orders", "name": "x" } }""");
 
         // Assert
         var error = errors.ShouldHaveSingleItem();
@@ -134,7 +134,7 @@ public class RuleSerializerValidateTests
     public void Should_reject_n_on_uncounted_higher_order_nodes()
     {
         // Act
-        var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "n": 3, "name": "x" } }""");
+        var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "n": 3, "path": "orders", "name": "x" } }""");
 
         // Assert
         var error = errors.ShouldHaveSingleItem();
@@ -143,10 +143,10 @@ public class RuleSerializerValidateTests
     }
 
     [Theory]
-    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": -1, "name": "x" } }""")]
-    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 2.5, "name": "x" } }""")]
-    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "minOrders", "name": "x" } }""")]
-    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "@1bad", "name": "x" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": -1, "path": "orders", "name": "x" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 2.5, "path": "orders", "name": "x" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "minOrders", "path": "orders", "name": "x" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "@1bad", "path": "orders", "name": "x" } }""")]
     public void Should_reject_malformed_n_values(string json)
     {
         // Act
@@ -170,19 +170,6 @@ public class RuleSerializerValidateTests
         var error = errors.ShouldHaveSingleItem();
         error.Code.ShouldBe(RuleErrorCode.InvalidNode);
         error.Path.ShouldBe(path);
-    }
-
-    [Fact]
-    public void Should_require_a_name_or_payloads_on_higher_order_nodes()
-    {
-        // Act
-        var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" } } }""");
-
-        // Assert
-        var error = errors.ShouldHaveSingleItem();
-        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
-        error.Path.ShouldBe("$.rule");
-        error.Message.ShouldContain("name");
     }
 
     [Fact]
@@ -372,6 +359,69 @@ public class RuleSerializerValidateTests
 
         // Assert
         errors.Count.ShouldBe(3);
+    }
+
+    [Theory]
+    [InlineData("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "xs" } }""")]
+    [InlineData("""{ "rule": { "asAnySatisfied": { "spec": "a" }, "path": "xs" } }""")]
+    [InlineData("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 2, "path": "xs" } }""")]
+    [InlineData("""{ "rule": { "asAtLeastNSatisfied": { "spec": "a" }, "n": 1, "path": "xs" } }""")]
+    [InlineData("""{ "rule": { "asAtMostNSatisfied": { "spec": "a" }, "n": 3, "path": "xs" } }""")]
+    [InlineData("""{ "rule": { "asAllSatisfied": { "and": [ { "spec": "a" }, { "spec": "b" } ] }, "path": "xs" } }""")]
+    public void Should_accept_valid_higher_order_nodes(string json) =>
+        Validate(json).ShouldBeEmpty();
+
+    [Fact]
+    public void Should_reject_a_count_on_a_quantifier_that_takes_none()
+    {
+        var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "n": 2, "path": "xs" } }""");
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.n");
+        error.Message.ShouldContain("'n'");
+    }
+
+    [Fact]
+    public void Should_reject_a_count_on_a_quantifier_that_takes_none_even_when_it_is_a_string()
+    {
+        var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "n": "@x", "path": "xs" } }""");
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.rule.n");
+        error.Message.ShouldContain("only valid on");
+    }
+
+    [Fact]
+    public void Should_reject_a_missing_count_on_an_n_quantifier()
+    {
+        var errors = Validate("""{ "rule": { "asNSatisfied": { "spec": "a" }, "path": "xs" } }""");
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Message.ShouldContain("'n'");
+    }
+
+    [Fact]
+    public void Should_reject_a_missing_path()
+    {
+        var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" } } }""");
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Message.ShouldContain("'path'");
+    }
+
+    [Fact]
+    public void Should_reject_an_empty_path()
+    {
+        var errors = Validate("""{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": " " } }""");
+        errors.ShouldContain(e => e.Code == RuleErrorCode.InvalidNode && e.Path == "$.rule.path");
+    }
+
+    [Fact]
+    public void Should_accept_a_parameter_reference_as_a_higher_order_count()
+    {
+        // '@param' counts are resolved later by RuleParameterSubstituter; structurally valid here.
+        var errors = Validate("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "@minLarge", "path": "xs" } }""");
+        errors.ShouldBeEmpty();
     }
 
     [Fact]
