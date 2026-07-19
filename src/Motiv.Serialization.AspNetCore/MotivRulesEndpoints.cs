@@ -28,7 +28,7 @@ public static class MotivRulesEndpoints
         var json = options.JsonSerializerOptions;
         var group = endpoints.MapGroup(basePath);
 
-        var entries = registry.Entries
+        var specs = registry.Entries
             .Select(entry => new CatalogEntry(
                 entry.Name,
                 options.ResolveModelId(entry.ModelType),
@@ -37,7 +37,16 @@ public static class MotivRulesEndpoints
                 entry.Description))
             .ToArray();
 
-        group.MapGet("/catalog", () => Results.Json(entries, json));
+        var collections = registry.Collections
+            .Select(collection => new CatalogCollection(
+                collection.Path,
+                options.ResolveModelId(collection.ParentType),
+                options.ResolveModelId(collection.ElementType)))
+            .ToArray();
+
+        var catalog = new CatalogResponse(specs, collections);
+
+        group.MapGet("/catalog", () => Results.Json(catalog, json));
 
         group.MapPost("/validate", (ValidateRequest request) =>
         {

@@ -10,12 +10,13 @@ public class CatalogEndpointTests
         Spec.Build((int n) => n > 0).WhenTrue("is positive").WhenFalse("is not positive").Create();
 
     [Fact]
-    public async Task Should_list_registered_specs_with_model_id_and_description()
+    public async Task Should_list_specs_and_collections()
     {
         // Arrange
         var registry = new SpecRegistry()
-            .Register("is-positive", IsPositive, "Whether the number is positive");
-        var options = new MotivRulesOptions().AddModel<int>("number");
+            .Register("is-positive", IsPositive, "Whether the number is positive")
+            .RegisterCollection<Basket, int>("items", b => b.Items);
+        var options = new MotivRulesOptions().AddModel<int>("number").AddModel<Basket>("basket");
         await using var app = await TestApp.StartAsync(registry, options);
         var client = app.GetTestClient();
 
@@ -24,13 +25,22 @@ public class CatalogEndpointTests
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var entries = await response.Content.ReadFromJsonAsync<JsonElement>();
-        entries.GetArrayLength().ShouldBe(1);
-        var entry = entries[0];
-        entry.GetProperty("name").GetString()!.ShouldBe("is-positive");
-        entry.GetProperty("modelType").GetString()!.ShouldBe("number");
-        entry.GetProperty("metadataType").GetString()!.ShouldBe("String");
-        entry.GetProperty("isAsync").GetBoolean().ShouldBeFalse();
-        entry.GetProperty("description").GetString()!.ShouldBe("Whether the number is positive");
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        var spec = body.GetProperty("specs")[0];
+        spec.GetProperty("name").GetString()!.ShouldBe("is-positive");
+        spec.GetProperty("modelType").GetString()!.ShouldBe("number");
+        spec.GetProperty("description").GetString()!.ShouldBe("Whether the number is positive");
+
+        var collection = body.GetProperty("collections")[0];
+        collection.GetProperty("path").GetString()!.ShouldBe("items");
+        collection.GetProperty("parentModelType").GetString()!.ShouldBe("basket");
+        collection.GetProperty("elementModelType").GetString()!.ShouldBe("number");
+    }
+
+    private sealed class Basket
+    {
+        public IReadOnlyList<int> Items { get; }
+        public Basket(IReadOnlyList<int> items) => Items = items;
     }
 }

@@ -12,15 +12,13 @@ paths:
   /catalog:
     get:
       operationId: getCatalog
-      summary: List registered specifications.
+      summary: List registered specifications and collections.
       responses:
         '200':
-          description: The catalog of registered specifications.
+          description: The catalog of registered specifications and collections.
           content:
             application/json:
-              schema:
-                type: array
-                items: { $ref: '#/components/schemas/CatalogEntry' }
+              schema: { $ref: '#/components/schemas/CatalogResponse' }
   /validate:
     post:
       operationId: validateRule
@@ -78,6 +76,23 @@ components:
         metadataType: { type: string, description: The metadata type name (e.g. String). }
         isAsync: { type: boolean }
         description: { type: [string, 'null'] }
+    CatalogCollection:
+      type: object
+      required: [path, parentModelType, elementModelType]
+      properties:
+        path: { type: string, description: The path higher-order nodes reference the collection by. }
+        parentModelType: { type: string, description: The registered model-type id the collection is selected from. }
+        elementModelType: { type: string, description: The registered model-type id of the collection's elements. }
+    CatalogResponse:
+      type: object
+      required: [specs, collections]
+      properties:
+        specs:
+          type: array
+          items: { $ref: '#/components/schemas/CatalogEntry' }
+        collections:
+          type: array
+          items: { $ref: '#/components/schemas/CatalogCollection' }
     ValidateRequest:
       type: object
       required: [modelType, document]

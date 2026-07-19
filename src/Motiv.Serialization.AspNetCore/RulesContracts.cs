@@ -10,6 +10,15 @@ namespace Motiv.Serialization.AspNetCore;
 /// <param name="Description">An optional human-readable description.</param>
 public sealed record CatalogEntry(string Name, string ModelType, string MetadataType, bool IsAsync, string? Description);
 
+/// <summary>A catalog listing for one registered collection projection.</summary>
+/// <param name="Path">The path higher-order nodes reference the collection by.</param>
+/// <param name="ParentModelType">The registered model-type id the collection is selected from.</param>
+/// <param name="ElementModelType">The registered model-type id of the collection's elements.</param>
+public sealed record CatalogCollection(string Path, string ParentModelType, string ElementModelType);
+
+/// <summary>The full catalog: registered specs and collections.</summary>
+public sealed record CatalogResponse(IReadOnlyList<CatalogEntry> Specs, IReadOnlyList<CatalogCollection> Collections);
+
 /// <summary>A request to validate a rule document against a registered model type.</summary>
 /// <param name="ModelType">A model-type id registered on the server.</param>
 /// <param name="Document">A rule document (see rule.v1.json).</param>
