@@ -13,10 +13,20 @@ internal abstract class CollectionBinding<TParent>
         RuleNode node, SpecRegistry registry, List<RuleError> errors);
 }
 
+/// <summary>Non-generic view of a registered collection, for enumeration.</summary>
+internal interface ICollectionBindingInfo
+{
+    Type ParentType { get; }
+    Type ElementType { get; }
+}
+
 internal sealed class CollectionBinding<TParent, TElement>(Func<TParent, IEnumerable<TElement>> selector)
-    : CollectionBinding<TParent>
+    : CollectionBinding<TParent>, ICollectionBindingInfo
 {
     public override Type ElementType => typeof(TElement);
+
+    Type ICollectionBindingInfo.ParentType => typeof(TParent);
+    Type ICollectionBindingInfo.ElementType => typeof(TElement);
 
     public override SpecBase<TParent, string>? BindHigherOrder(
         RuleNode node, SpecRegistry registry, List<RuleError> errors)

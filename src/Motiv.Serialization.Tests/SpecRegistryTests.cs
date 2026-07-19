@@ -188,4 +188,17 @@ public class SpecRegistryTests
         Should.Throw<ArgumentException>(() =>
             new SpecRegistry().RegisterCollection<Cart, Order>(" ", c => c.Orders));
     }
+
+    [Fact]
+    public void Should_enumerate_registered_collections_with_parent_and_element_types()
+    {
+        var registry = new SpecRegistry().RegisterCollection<Cart, Order>("orders", c => c.Orders);
+
+        var collections = registry.Collections;
+
+        var entry = collections.ShouldHaveSingleItem();
+        entry.ParentType.ShouldBe(typeof(Cart));
+        entry.Path.ShouldBe("orders");
+        entry.ElementType.ShouldBe(typeof(Order));
+    }
 }

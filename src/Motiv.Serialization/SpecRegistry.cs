@@ -21,6 +21,12 @@ public sealed class SpecRegistry
     /// <summary>All registered entries. Intended for read-only catalog enumeration after population.</summary>
     public IReadOnlyCollection<SpecRegistryEntry> Entries => _entries.Values;
 
+    /// <summary>All registered collection projections. Intended for read-only enumeration after population.</summary>
+    public IReadOnlyCollection<CollectionRegistryEntry> Collections =>
+        _collections
+            .Select(kv => new CollectionRegistryEntry(kv.Key.Parent, kv.Key.Path, ((ICollectionBindingInfo)kv.Value).ElementType))
+            .ToArray();
+
     /// <summary>Registers a synchronous spec under the given name.</summary>
     /// <typeparam name="TModel">The model type the spec evaluates against.</typeparam>
     /// <typeparam name="TMetadata">The metadata type the spec yields.</typeparam>
