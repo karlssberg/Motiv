@@ -6,13 +6,13 @@ export function JsonPane() {
   const state = useRuleEditor(store);
 
   return (
-    <section aria-label="Document">
+    <section aria-label="Document" className="pane">
       <h2>Document</h2>
-      <pre aria-label="rule document">{JSON.stringify(state.document, null, 2)}</pre>
+      <pre aria-label="rule document" className="json">{JSON.stringify(state.document, null, 2)}</pre>
       {state.errors.length > 0 && (
-        <ul aria-label="validation errors">
+        <ul aria-label="validation errors" className="errors">
           {state.errors.map((error, i) => (
-            <li key={`${error.path}-${i}`} role="alert">{error.code} at {error.path}: {error.message}</li>
+            <li key={`${error.path}-${i}`} role="alert" className="error">{error.code} at {error.path}: {error.message}</li>
           ))}
         </ul>
       )}

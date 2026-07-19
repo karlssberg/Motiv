@@ -12,7 +12,7 @@ function firstSpecName(catalog: CatalogEntry[]): string {
 export function BuilderPane(props: { client: RulesApiClient }) {
   const store = useRuleEditorStore();
   const catalogState = useCatalog(props.client);
-  const catalog = catalogState.status === 'ready' ? catalogState.data : [];
+  const catalog = catalogState.status === 'ready' ? catalogState.data.specs : [];
 
   return (
     <section aria-label="Builder">

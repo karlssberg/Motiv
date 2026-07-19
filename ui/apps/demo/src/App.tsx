@@ -25,7 +25,7 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
 
   return (
     <RuleEditorProvider store={store}>
-      <main style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', padding: '1rem' }}>
+      <main className="app">
         <BuilderPane client={client} />
         <JsonPane />
         <EvaluatePane client={client} />

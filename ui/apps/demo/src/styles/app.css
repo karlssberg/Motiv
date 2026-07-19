@@ -1,0 +1,163 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Shell layout: three panes side by side, collapsing to one column on narrow viewports. */
+.app {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: calc(var(--space) * 2);
+  padding: calc(var(--space) * 2);
+  max-width: 1400px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Pane card */
+.pane {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: calc(var(--space) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+.pane h2 {
+  margin: 0 0 var(--space);
+  padding-bottom: var(--space);
+  border-bottom: 1px solid var(--border);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+/* Field: a label + control stack */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 2);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* Shared control styling for selects, inputs, textareas */
+.control {
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: calc(var(--space) * 0.75) var(--space);
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.control:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+/* Buttons */
+.btn {
+  appearance: none;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--bg);
+  padding: calc(var(--space) * 0.75) calc(var(--space) * 1.5);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.05s ease;
+}
+
+.btn:hover {
+  background: color-mix(in srgb, var(--accent) 85%, black);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--bg);
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--danger) 85%, black);
+}
+
+/* Document JSON pane */
+.json {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* Validation errors */
+.errors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 2);
+}
+
+.error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  padding: calc(var(--space) / 2) var(--space);
+}
+
+/* Evaluate outcome */
+.outcome {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+/* Justification tree row, indented by depth */
+.assertion {
+  padding-left: calc(var(--depth, 0) * var(--space) * 2);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+}

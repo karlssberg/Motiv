@@ -10,7 +10,9 @@ const catalog: CatalogEntry[] = [
 ];
 
 function client(): RulesApiClient {
-  return { getCatalog: vi.fn().mockResolvedValue(catalog) } as unknown as RulesApiClient;
+  return {
+    getCatalog: vi.fn().mockResolvedValue({ specs: catalog, collections: [] }),
+  } as unknown as RulesApiClient;
 }
 
 function renderWith(store: RuleEditorStore) {
