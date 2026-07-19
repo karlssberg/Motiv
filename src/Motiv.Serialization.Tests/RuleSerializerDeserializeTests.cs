@@ -292,8 +292,16 @@ public class RuleSerializerDeserializeTests
         exception.Errors.ShouldContain(error => error.Code == RuleErrorCode.MetadataTypeMismatch);
     }
 
-    private sealed record Order(decimal Total);
-    private sealed record Customer(IReadOnlyList<Order> Orders);
+    // Plain classes (not records) so the net472 target compiles without an IsExternalInit polyfill.
+    private sealed class Order(decimal total)
+    {
+        public decimal Total { get; } = total;
+    }
+
+    private sealed class Customer(IReadOnlyList<Order> orders)
+    {
+        public IReadOnlyList<Order> Orders { get; } = orders;
+    }
 
     private static SpecBase<Order, string> IsLargeOrder { get; } =
         Spec.Build((Order o) => o.Total >= 100m).WhenTrue("large order").WhenFalse("small order").Create();

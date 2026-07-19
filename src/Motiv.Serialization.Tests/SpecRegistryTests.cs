@@ -139,8 +139,16 @@ public class SpecRegistryTests
         entries[1].Description!.ShouldBe("Whether the number is positive");
     }
 
-    private sealed record Order(decimal Total);
-    private sealed record Cart(IReadOnlyList<Order> Orders);
+    // Plain classes (not records) so the net472 target compiles without an IsExternalInit polyfill.
+    private sealed class Order(decimal total)
+    {
+        public decimal Total { get; } = total;
+    }
+
+    private sealed class Cart(IReadOnlyList<Order> orders)
+    {
+        public IReadOnlyList<Order> Orders { get; } = orders;
+    }
 
     [Fact]
     public void Should_find_a_registered_collection_and_report_its_element_type()
