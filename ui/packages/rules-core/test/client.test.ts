@@ -15,13 +15,13 @@ describe('RulesApiClient', () => {
       specs: [{ name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: null }],
       collections: [{ path: 'orders', parentModelType: 'customer', elementModelType: 'order' }],
     };
-    const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify(catalog), { status: 200 }));
-    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch });
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(catalog));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
 
     const result = await client.getCatalog();
 
     expect(result).toEqual(catalog);
-    expect(fetch).toHaveBeenCalledWith('/api/rules/catalog', { method: 'GET' });
+    expect(fetchMock).toHaveBeenCalledWith('/api/rules/catalog', { method: 'GET' });
   });
 
   it('posts a validate request and returns the errors', async () => {
