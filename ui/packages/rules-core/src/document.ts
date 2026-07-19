@@ -19,11 +19,11 @@ export interface OrNode extends Decoration { or: RuleNode[] }
 export interface XorNode extends Decoration { xor: RuleNode[] }
 export interface AndAlsoNode extends Decoration { andAlso: RuleNode[] }
 export interface OrElseNode extends Decoration { orElse: RuleNode[] }
-export interface AsAllSatisfiedNode extends Decoration { asAllSatisfied: RuleNode; path?: string }
-export interface AsAnySatisfiedNode extends Decoration { asAnySatisfied: RuleNode; path?: string }
-export interface AsNSatisfiedNode extends Decoration { asNSatisfied: RuleNode; n: Countable; path?: string }
-export interface AsAtLeastNSatisfiedNode extends Decoration { asAtLeastNSatisfied: RuleNode; n: Countable; path?: string }
-export interface AsAtMostNSatisfiedNode extends Decoration { asAtMostNSatisfied: RuleNode; n: Countable; path?: string }
+export interface AsAllSatisfiedNode extends Decoration { asAllSatisfied: RuleNode; path: string }
+export interface AsAnySatisfiedNode extends Decoration { asAnySatisfied: RuleNode; path: string }
+export interface AsNSatisfiedNode extends Decoration { asNSatisfied: RuleNode; n: Countable; path: string }
+export interface AsAtLeastNSatisfiedNode extends Decoration { asAtLeastNSatisfied: RuleNode; n: Countable; path: string }
+export interface AsAtMostNSatisfiedNode extends Decoration { asAtMostNSatisfied: RuleNode; n: Countable; path: string }
 
 export type BinaryNode = AndNode | OrNode | XorNode | AndAlsoNode | OrElseNode;
 export type HigherOrderNode =
