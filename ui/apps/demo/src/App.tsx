@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { RuleEditorStore, RulesApiClient, createValidationController } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
-import { BuilderPane } from './BuilderPane.js';
-import { JsonPane } from './JsonPane.js';
-import { EvaluatePane } from './EvaluatePane.js';
+import { BuilderPane } from './panes/BuilderPane.js';
+import { JsonPane } from './panes/JsonPane.js';
+import { EvaluatePane } from './panes/EvaluatePane.js';
 
 const MODEL_TYPE = 'customer';
 

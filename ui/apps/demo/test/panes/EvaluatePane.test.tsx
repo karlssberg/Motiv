@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RuleEditorStore, type EvaluationResult, type RulesApiClient } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
-import { EvaluatePane } from '../src/EvaluatePane.js';
+import { EvaluatePane } from '../../src/panes/EvaluatePane.js';
 
 const evaluation: EvaluationResult = {
   satisfied: true,

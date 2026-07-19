@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import { RuleEditorStore } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
-import { JsonPane } from '../src/JsonPane.js';
+import { JsonPane } from '../../src/panes/JsonPane.js';
 
 function renderWith(store: RuleEditorStore) {
   return render(

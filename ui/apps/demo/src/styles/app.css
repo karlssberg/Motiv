@@ -147,6 +147,56 @@ body {
   padding: calc(var(--space) / 2) var(--space);
 }
 
+/* Builder: recursive accordion node */
+.node {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space);
+  margin-left: calc(var(--depth, 0) * var(--space));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+  background: var(--surface);
+}
+
+.node-header.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+}
+
+.node-kids {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+.decoration {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 2);
+  padding: var(--space);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.btn-icon {
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  padding: calc(var(--space) / 4) calc(var(--space) / 2);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn-icon:hover {
+  background: var(--bg);
+}
+
 /* Evaluate outcome */
 .outcome {
   font-weight: 700;

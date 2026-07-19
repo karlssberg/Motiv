@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import type { RulesApiClient } from '@motiv/rules-core';
 import { JustificationTree, useEvaluation, useRuleEditor, useRuleEditorStore } from '@motiv/rules-react';
-import { MODEL_TYPE } from './App.js';
+import { MODEL_TYPE } from '../App.js';
 
 const SAMPLE_MODEL = '{\n  "age": 30,\n  "isActive": true,\n  "orderCount": 2\n}';
 
