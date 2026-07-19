@@ -34,7 +34,9 @@ var registry = new SpecRegistry()
 
 registry.RegisterCollection<Customer, Order>("orders", c => c.Orders ?? []);
 
-var options = new MotivRulesOptions().AddModel<Customer>("customer");
+var options = new MotivRulesOptions()
+    .AddModel<Customer>("customer")
+    .AddModel<Order>("order");
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
