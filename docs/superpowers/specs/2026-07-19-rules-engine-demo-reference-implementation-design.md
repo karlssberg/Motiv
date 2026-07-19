@@ -41,8 +41,9 @@ changes** to `rules-core`, `rules-react`, `Motiv.Serialization`,
 | Content scope | Full: onboarding wrapper **+** presentable styled UI **+** fuller grammar |
 | Styling | Vanilla CSS + design tokens (zero new deps), honouring the "agnostic" ethos |
 | Builder UX | Inline node toolbar with a **single-open accordion** tree |
-| Accordion default | Root fully expanded to a **max depth of 3**; deeper nodes start collapsed |
-| Grammar surfaced | spec, AND/OR/XOR, NOT, deep nesting, name + whenTrue/whenFalse decoration |
+| Accordion default | Root fully expanded to a **max depth of 5**; deeper nodes start collapsed |
+| Grammar surfaced | **All node kinds**: spec, expression, AND/OR/XOR, andAlso/orElse, NOT, all five higher-order nodes, name + whenTrue/whenFalse decoration, and document parameters |
+| Sample host | Enriched so every surfaced grammar feature is evaluable end-to-end (a collection for higher-order, an expression-enabled model, a declared parameter) — example-host only, no library changes |
 | Onboarding artifacts | One-command run script, Docker/compose, wiring code comments (**not** a walkthrough README) |
 | `run-demo.sh` location | Repo root |
 | `toggleNot` helper | Lives in the demo (not promoted to the store) |
@@ -58,16 +59,28 @@ purpose and communicates through the existing `RuleEditorStore` interface.
   (when the node is expanded) its `DecorationEditor` and/or its children. Owns no
   document state; reads its node via the store/path and calls store mutations.
 - **`NodeToolbar`** — the inline action row for a node:
-  - Leaf (spec) nodes: spec picker (`<select>` over the catalog), `¬` NOT toggle,
-    `×` remove.
-  - Operator nodes: `¬` NOT toggle, `⌵` wrap (→ AND / OR / XOR), `＋` add operand,
-    `×` remove.
+  - Leaf nodes: a **type toggle** between *spec reference* (`<select>` over the
+    catalog) and *expression* (a text input for a lambda string), plus `¬` NOT
+    toggle and `×` remove.
+  - Operator nodes: `¬` NOT toggle, `⌵` wrap, `＋` add operand, `×` remove.
+  - The **wrap menu** (`⌵`) offers every combinator: the binary operators
+    AND / OR / XOR / AndAlso / OrElse, and the five higher-order forms
+    (AsAllSatisfied, AsAnySatisfied, AsNSatisfied, AsAtLeastNSatisfied,
+    AsAtMostNSatisfied).
 - **`DecorationEditor`** — `name`, `whenTrue`, `whenFalse` inputs, shown when a
   node is expanded. Writes through `setName` / `setDecoration`.
+- **`HigherOrderFields`** — for higher-order nodes, an inline editor for the
+  count `n` (the three N-variants) as either a literal number or a `@param`
+  reference (a dropdown of declared parameters), and the optional `path`
+  (advanced text input, commented as a pointer to the collection sub-path).
+- **`ParametersEditor`** — a document-level panel (above the tree) to declare
+  `RuleDocument.parameters`: name, type (`integer` / `number` / `string` /
+  `boolean`), and optional default. Declared parameters populate the `@param`
+  dropdown in `HigherOrderFields`.
 - **Accordion state** — owned by the builder (demo-local UI state, not document
   state). **Single-open:** expanding a node collapses its siblings, preserving
   the holistic view. Initial state: expanded from the root down to
-  `MAX_EXPAND_DEPTH = 3`; deeper nodes start collapsed.
+  `MAX_EXPAND_DEPTH = 5`; deeper nodes start collapsed.
 - **Collapsed affordances** — a collapsed node still shows its `¬` NOT badge and,
   for operators, an operand count, so structure is scannable without expanding.
 - **`toggleNot(path)`** — the only net-new mutation. Built from existing store
@@ -75,13 +88,17 @@ purpose and communicates through the existing `RuleEditorStore` interface.
   a `NotNode` uses `unwrap`. Lives in the demo (`builder/mutations.ts` or
   colocated), with a comment noting it could be promoted to the store.
 
-**Grammar surfaced now:** `spec`, `and`, `or`, `xor`, `not`, arbitrary nesting,
-and `name` / `whenTrue` / `whenFalse` decoration.
+**Grammar surfaced:** the complete document grammar — `spec`, `expression`,
+`and` / `or` / `xor` / `andAlso` / `orElse`, `not`, arbitrary nesting, all five
+higher-order nodes (`asAllSatisfied`, `asAnySatisfied`, `asNSatisfied`,
+`asAtLeastNSatisfied`, `asAtMostNSatisfied`) with their `n` / `path`, document
+`parameters`, and `name` / `whenTrue` / `whenFalse` decoration on every node.
 
-**Deliberately not surfaced (extension points):** `andAlso` / `orElse`,
-higher-order nodes, `expression` nodes, and `parameters` editing. The model and
-store already support them; a comment at the node-kind switch marks where a
-forker adds their UI.
+Some store mutations may need thin demo-local helpers alongside `toggleNot`
+(e.g. wrapping a node in a higher-order form, or converting a leaf between spec
+and expression). Any such helper is built from existing store ops
+(`replaceNode` / `wrapInOperator` / `unwrap`) and lives in the demo; none require
+changes to `rules-core`.
 
 ### Styling (new: `ui/apps/demo/src/styles/`)
 
@@ -97,7 +114,8 @@ forker adds their UI.
 
 ```
 src/
-  builder/        RuleNodeEditor, NodeToolbar, DecorationEditor, mutations
+  builder/        RuleNodeEditor, NodeToolbar, DecorationEditor,
+                  HigherOrderFields, ParametersEditor, mutations
   panes/          BuilderPane, EvaluatePane, JsonPane shells
   styles/         tokens.css, app.css
   App.tsx, main.tsx
@@ -109,6 +127,31 @@ understand, not narration):
   `Program.cs`.
 - `RulesApiClient` construction.
 - `RuleEditorProvider` / store hookup.
+
+### Sample host domain (make all grammar evaluable)
+
+The current host registers three scalar specs over a flat `Customer`. That
+cannot exercise higher-order (which needs a collection) or expression nodes
+(which need an expression-enabled model), so the builder could construct nodes
+that fail on evaluate. The reference must let a developer build **and run** every
+grammar feature. The sample domain is enriched accordingly — **example-host code
+only, no library or endpoint changes:**
+
+- Add an **`Order`** type and give `Customer` a collection of orders, plus an
+  order-level spec (e.g. `is-large-order`) so the higher-order nodes have a
+  collection to operate over via `path`.
+- Ensure an **expression-enabled** registration path so `expression` nodes
+  compile against the model (configured through `RuleSerializerOptions` /
+  `MotivRulesOptions`). The first plan task **verifies** expression evaluation
+  end-to-end and adjusts host configuration if required.
+- Seed the demo document with a **declared parameter** (e.g. an `integer`
+  threshold) referenced by an N-variant higher-order node, so `@param` wiring is
+  demonstrable out of the box.
+
+If the end-to-end verification surfaces a genuine gap in the serialization layer
+(rather than host configuration), that is treated as a separate finding and
+raised before expanding scope — this design assumes the wire contract already
+supports every kind, consistent with `RuleNode.cs` and `RuleDocumentParser`.
 
 ### Run ergonomics
 
@@ -133,36 +176,46 @@ catalog comes from `GET /catalog`. The JSON pane reflects the live document.
 ## Error Handling
 
 Semantics unchanged. The new builder surfaces per-node errors inline using the
-store's existing `errorsForNode(errors, path)`. NOT-toggling and decoration edits
-re-validate through the same debounced controller. Invalid-model handling
-(400 on shape mismatch) is already in place server-side and is untouched.
+store's existing `errorsForNode(errors, path)`. NOT-toggling, higher-order/`n`
+edits, expression edits, and decoration edits all re-validate through the same
+debounced controller. Invalid-model handling (400 on shape mismatch) is already
+in place server-side and is untouched.
 
 ## Testing
 
 - **Vitest + Testing Library** (`ui/apps/demo/test/`):
   - `RuleNodeEditor`: single-open expand/collapse (opening a node collapses
     siblings), NOT toggle round-trips (`toggleNot` → `NotNode` → back), decoration
-    edits reach the document, add/remove operand, max-depth initial expansion.
+    edits reach the document, add/remove operand, max-depth (5) initial expansion.
+  - Combinators: wrap into each binary operator (AND/OR/XOR/AndAlso/OrElse) and
+    each higher-order form; the `n` editor accepts a literal and a `@param`; the
+    leaf type toggle switches a node between `spec` and `expression`.
+  - `ParametersEditor`: declaring a parameter reaches `RuleDocument.parameters`
+    and populates the `@param` dropdown.
   - Rendering with vanilla CSS classes (no inline-style assertions).
-- **Playwright E2E** (extend the existing spec): build the reference rule via the
-  accordion — wrap into an operator, add a `NOT`, name a node — then evaluate and
-  assert the resulting justification.
+- **Playwright E2E** (extend the existing spec): build a rule that exercises the
+  full grammar — declare a parameter, wrap operands in a higher-order node using
+  that `@param`, add a `NOT`, name a node — then evaluate against the enriched
+  model and assert the resulting justification.
 - The existing test suite must stay green.
 
 ## Out of Scope
 
-- Editing UI for `andAlso` / `orElse`, higher-order nodes, `expression` nodes,
-  and `parameters` (model-supported; left as documented extension points).
-- A long annotated walkthrough README.
-- Any change to `rules-core` / `rules-react` internals, serialization, or
-  endpoints. `toggleNot` is a demo-local helper, not a store change.
+- A long annotated walkthrough README (source teaches via the seam comments).
+- Any change to `rules-core` / `rules-react` internals, `Motiv.Serialization`,
+  `Motiv.Serialization.AspNetCore`, or the wire contract. All new mutation
+  helpers (`toggleNot` and any wrap/convert helpers) are demo-local and built on
+  existing store ops. Sample-host domain enrichment is example code, not a
+  library change.
 
 ## Success Criteria
 
 1. `git clone` → `./run-demo.sh` (or `docker compose up`) → a styled demo running
    at `http://localhost:5100` in one command.
-2. The builder can construct `is-adult AND (is-active OR NOT has-orders)` — and
-   name/decorate a node — entirely through the accordion UI.
+2. The builder can construct **and evaluate** rules using every grammar feature —
+   binary operators, short-circuit operators, NOT, all five higher-order forms
+   (with a `@param` count), expression leaves, and per-node name/whenTrue/whenFalse
+   decoration — entirely through the accordion UI.
 3. No inline styles remain in the demo; the whole UI restyles by editing
    `tokens.css`.
 4. A developer can locate every load-bearing seam from the code comments alone.
