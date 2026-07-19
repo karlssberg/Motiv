@@ -160,4 +160,63 @@ public class EvaluateEndpointTests
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
         body.GetProperty("error").GetString()!.ShouldNotBeNullOrWhiteSpace();
     }
+
+    private sealed record Item(decimal Price);
+    private sealed record Cart(IReadOnlyList<Item> Items);
+
+    private static async Task<WebApplication> StartCartAppAsync()
+    {
+        var isPricey = Spec.Build((Item i) => i.Price >= 100m)
+            .WhenTrue("pricey").WhenFalse("cheap").Create();
+        var registry = new SpecRegistry()
+            .Register("is-pricey", isPricey)
+            .RegisterCollection<Cart, Item>("items", c => c.Items);
+        var options = new MotivRulesOptions().AddModel<Cart>("cart");
+        return await TestApp.StartAsync(registry, options);
+    }
+
+    [Fact]
+    public async Task Should_evaluate_a_higher_order_document_over_a_collection()
+    {
+        // Arrange
+        await using var app = await StartCartAppAsync();
+        var client = app.GetTestClient();
+        var request = new
+        {
+            modelType = "cart",
+            document = JsonDocument.Parse(
+                """{ "rule": { "asAtLeastNSatisfied": { "spec": "is-pricey" }, "n": 2, "path": "items" } }""").RootElement,
+            model = JsonDocument.Parse("""{ "items": [ { "price": 150 }, { "price": 200 }, { "price": 20 } ] }""").RootElement
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/rules/evaluate", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("satisfied").GetBoolean().ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_report_an_unknown_collection_path_as_a_validation_error()
+    {
+        // Arrange
+        await using var app = await StartCartAppAsync();
+        var client = app.GetTestClient();
+        var request = new
+        {
+            modelType = "cart",
+            document = JsonDocument.Parse(
+                """{ "rule": { "asAllSatisfied": { "spec": "is-pricey" }, "path": "widgets" } }""").RootElement
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/rules/validate", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("errors")[0].GetProperty("code").GetString()!.ShouldBe("UnknownCollection");
+    }
 }
