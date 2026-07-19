@@ -39,6 +39,6 @@ public enum RuleErrorCode
     /// <summary>A payload string or 'n' slot references a parameter that is not declared.</summary>
     UnknownParameterReference,
 
-    /// <summary>A higher-order node's model or 'path' does not resolve to a collection.</summary>
-    InvalidHigherOrderPath
+    /// <summary>A higher-order node references a collection path that is not registered.</summary>
+    UnknownCollection
 }

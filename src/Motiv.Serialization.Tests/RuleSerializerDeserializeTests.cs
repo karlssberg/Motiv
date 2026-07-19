@@ -291,4 +291,83 @@ public class RuleSerializerDeserializeTests
         exception.Errors.ShouldContain(error => error.Code == RuleErrorCode.UnknownSpec);
         exception.Errors.ShouldContain(error => error.Code == RuleErrorCode.MetadataTypeMismatch);
     }
+
+    private sealed record Order(decimal Total);
+    private sealed record Customer(IReadOnlyList<Order> Orders);
+
+    private static SpecBase<Order, string> IsLargeOrder { get; } =
+        Spec.Build((Order o) => o.Total >= 100m).WhenTrue("large order").WhenFalse("small order").Create();
+
+    private static RuleSerializer CustomerSerializer() =>
+        new(new SpecRegistry()
+            .Register("is-large-order", IsLargeOrder)
+            .RegisterCollection<Customer, Order>("orders", c => c.Orders));
+
+    private static Customer TwoLarge => new([new Order(150m), new Order(200m), new Order(50m)]);
+    private static Customer OneLarge => new([new Order(150m), new Order(50m)]);
+
+    [Fact]
+    public void Should_load_at_least_n_satisfied_like_the_fluent_equivalent()
+    {
+        const string json =
+            """{ "rule": { "asAtLeastNSatisfied": { "spec": "is-large-order" }, "n": 2, "path": "orders" } }""";
+        var expected = Spec.Build(IsLargeOrder).AsAtLeastNSatisfied(2)
+            .WhenTrue("at least 2 satisfied").WhenFalse("fewer than 2 satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+
+        var loaded = CustomerSerializer().Deserialize<Customer>(json);
+
+        ShouldBehaveIdentically(loaded, expected, TwoLarge, OneLarge);
+    }
+
+    [Fact]
+    public void Should_load_all_satisfied_like_the_fluent_equivalent()
+    {
+        const string json = """{ "rule": { "asAllSatisfied": { "spec": "is-large-order" }, "path": "orders" } }""";
+        var expected = Spec.Build(IsLargeOrder).AsAllSatisfied()
+            .WhenTrue("all satisfied").WhenFalse("not all satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+
+        var loaded = CustomerSerializer().Deserialize<Customer>(json);
+
+        ShouldBehaveIdentically(loaded, expected, TwoLarge, OneLarge);
+    }
+
+    [Fact]
+    public void Should_decorate_a_higher_order_node_like_every_other_node()
+    {
+        const string json =
+            """{ "rule": { "asAllSatisfied": { "spec": "is-large-order" }, "path": "orders", "whenTrue": "all big", "whenFalse": "not all big" } }""";
+        var inner = Spec.Build(IsLargeOrder).AsAllSatisfied()
+            .WhenTrue("all satisfied").WhenFalse("not all satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner).WhenTrue("all big").WhenFalse("not all big").Create();
+
+        var loaded = CustomerSerializer().Deserialize<Customer>(json);
+
+        ShouldBehaveIdentically(loaded, expected, TwoLarge, OneLarge);
+    }
+
+    [Fact]
+    public void Should_reject_an_unregistered_collection_path()
+    {
+        const string json = """{ "rule": { "asAllSatisfied": { "spec": "is-large-order" }, "path": "items" } }""";
+
+        var ex = Should.Throw<RuleSerializationException>(() => CustomerSerializer().Deserialize<Customer>(json));
+
+        ex.Errors.ShouldContain(e => e.Code == RuleErrorCode.UnknownCollection && e.Path == "$.rule");
+    }
+
+    [Fact]
+    public void Should_reject_a_child_spec_whose_model_type_is_wrong()
+    {
+        var serializer = new RuleSerializer(new SpecRegistry()
+            .Register("is-positive", IsPositive)
+            .RegisterCollection<Customer, Order>("orders", c => c.Orders));
+        const string json = """{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "path": "orders" } }""";
+
+        var ex = Should.Throw<RuleSerializationException>(() => serializer.Deserialize<Customer>(json));
+
+        ex.Errors.ShouldContain(e => e.Code == RuleErrorCode.ModelTypeMismatch);
+    }
 }

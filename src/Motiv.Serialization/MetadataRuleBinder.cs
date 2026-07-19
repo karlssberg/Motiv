@@ -130,20 +130,37 @@ internal sealed class MetadataRuleBinder<TMetadata>(SpecRegistry registry, RuleS
 
     private SpecBase<TModel, TMetadata>? BindHigherOrder<TModel>(RuleNode node, List<RuleError> errors)
     {
-        var resolution = HigherOrderModelResolver.Resolve(typeof(TModel), node, errors);
-        if (resolution is null)
+        // Unlike the string/explanation loader, a metadata load cannot synthesize a default
+        // WhenTrue/WhenFalse for an arbitrary TMetadata, so Create(node.Name!) below requires a
+        // name whenever there is no object payload to re-metadatize with instead.
+        if (!node.HasObjectPayloads && node.Name is null)
+        {
+            errors.Add(new RuleError(node.Path, RuleErrorCode.MetadataTypeMismatch,
+                "a higher-order node used in a metadata load must declare a 'name' or object " +
+                "'whenTrue'/'whenFalse' payloads"));
             return null;
+        }
+
+        var binding = registry.FindCollection<TModel>(node.PathText!);
+        if (binding is null)
+        {
+            errors.Add(new RuleError(node.Path, RuleErrorCode.UnknownCollection,
+                $"no collection is registered at path '{node.PathText}' for model '{typeof(TModel).Name}'"));
+            return null;
+        }
 
         return (SpecBase<TModel, TMetadata>?)BindHigherOrderCoreMethod
-            .MakeGenericMethod(typeof(TModel), resolution.ElementType)
-            .Invoke(this, [node, resolution, errors]);
+            .MakeGenericMethod(typeof(TModel), binding.ElementType)
+            .Invoke(this, [node, binding, errors]);
     }
 
     private SpecBase<TModel, TMetadata>? BindHigherOrderCore<TModel, TElement>(
         RuleNode node,
-        HigherOrderModelResolution resolution,
+        CollectionBinding<TModel> binding,
         List<RuleError> errors)
     {
+        var typedBinding = (CollectionBinding<TModel, TElement>)binding;
+
         if (node.HasObjectPayloads)
         {
             var errorCountBefore = errors.Count;
@@ -154,16 +171,14 @@ internal sealed class MetadataRuleBinder<TMetadata>(SpecRegistry registry, RuleS
             if (inner is null || errors.Count > errorCountBefore)
                 return null;
 
-            return HigherOrderModelResolver.Reanchor<TModel, TElement, TMetadata>(
-                CreateRemetadatizedHigherOrder(node, inner, whenTrue!, whenFalse!), resolution);
+            return typedBinding.Reanchor(CreateRemetadatizedHigherOrder(node, inner, whenTrue!, whenFalse!));
         }
 
         var innerTyped = BindNode<TElement>(node.Children[0], errors);
         if (innerTyped is null)
             return null;
 
-        return HigherOrderModelResolver.Reanchor<TModel, TElement, TMetadata>(
-            CreateHigherOrder(node, innerTyped), resolution);
+        return typedBinding.Reanchor(CreateHigherOrder(node, innerTyped));
     }
 
     private static SpecBase<IEnumerable<TElement>, TMetadata> CreateRemetadatizedHigherOrder<TElement>(

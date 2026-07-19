@@ -25,7 +25,14 @@ internal sealed class CollectionBinding<TParent, TElement>(Func<TParent, IEnumer
         if (child is null)
             return null;
 
-        var higherOrder = HigherOrder.Build(child, node.Operator, node.N);
-        return higherOrder.ChangeModelTo<TParent>(selector);
+        return Reanchor(HigherOrder.Build(child, node.Operator, node.N));
     }
+
+    /// <summary>
+    /// Projects an already-built higher-order spec over the collection's elements onto the parent
+    /// model, for any metadata type. Shared by the explanation loader's <see cref="BindHigherOrder"/>
+    /// and by <see cref="MetadataRuleBinder{TMetadata}"/>'s typed-metadata higher-order binding.
+    /// </summary>
+    public SpecBase<TParent, TMetadata> Reanchor<TMetadata>(SpecBase<IEnumerable<TElement>, TMetadata> higherOrder) =>
+        higherOrder.ChangeModelTo<TParent>(selector);
 }
