@@ -12,7 +12,8 @@ export interface CatalogEntry {
 /** Stable machine-readable rule-document error codes. */
 export type RuleErrorCode =
   | 'InvalidNode' | 'UnknownSpec' | 'ModelTypeMismatch' | 'MetadataTypeMismatch'
-  | 'MixedWhenTrueFalseKinds' | 'ExpressionsNotEnabled' | 'AsyncSpecInSyncLoad' | 'DocumentTooLarge';
+  | 'MixedWhenTrueFalseKinds' | 'ExpressionsNotEnabled' | 'AsyncSpecInSyncLoad'
+  | 'DocumentTooLarge' | 'UnknownCollection';
 
 /** A single validation or load error. */
 export interface RuleError {
