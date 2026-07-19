@@ -138,4 +138,46 @@ public class SpecRegistryTests
         entries[1].Name.ShouldBe("is-positive");
         entries[1].Description!.ShouldBe("Whether the number is positive");
     }
+
+    private sealed record Order(decimal Total);
+    private sealed record Cart(IReadOnlyList<Order> Orders);
+
+    [Fact]
+    public void Should_find_a_registered_collection_and_report_its_element_type()
+    {
+        var registry = new SpecRegistry().RegisterCollection<Cart, Order>("orders", c => c.Orders);
+
+        var binding = registry.FindCollection<Cart>("orders");
+
+        binding.ShouldNotBeNull();
+        binding.ElementType.ShouldBe(typeof(Order));
+    }
+
+    [Fact]
+    public void Should_return_null_for_an_unregistered_collection_path()
+    {
+        var registry = new SpecRegistry().RegisterCollection<Cart, Order>("orders", c => c.Orders);
+        registry.FindCollection<Cart>("items").ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_scope_collections_by_parent_type()
+    {
+        var registry = new SpecRegistry().RegisterCollection<Cart, Order>("orders", c => c.Orders);
+        registry.FindCollection<Order>("orders").ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_reject_a_duplicate_collection_registration()
+    {
+        var registry = new SpecRegistry().RegisterCollection<Cart, Order>("orders", c => c.Orders);
+        Should.Throw<ArgumentException>(() => registry.RegisterCollection<Cart, Order>("orders", c => c.Orders));
+    }
+
+    [Fact]
+    public void Should_reject_an_empty_collection_path()
+    {
+        Should.Throw<ArgumentException>(() =>
+            new SpecRegistry().RegisterCollection<Cart, Order>(" ", c => c.Orders));
+    }
 }

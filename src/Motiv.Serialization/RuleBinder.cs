@@ -19,6 +19,11 @@ internal static class RuleBinder
         return document.Name is null ? root : Spec.Build(root).Create(document.Name);
     }
 
+    /// <summary>Binds a rule subtree against an element model type (used by higher-order collection binding).</summary>
+    internal static SpecBase<TElement, string>? BindElement<TElement>(
+        RuleNode node, SpecRegistry registry, List<RuleError> errors) =>
+        BindNode<TElement>(node, registry, errors);
+
     public static SpecBase<TModel, string>? BindNode<TModel>(
         RuleNode node,
         SpecRegistry registry,

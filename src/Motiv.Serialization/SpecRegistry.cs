@@ -13,6 +13,7 @@ namespace Motiv.Serialization;
 public sealed class SpecRegistry
 {
     private readonly Dictionary<string, SpecRegistryEntry> _entries = new(StringComparer.Ordinal);
+    private readonly Dictionary<(Type Parent, string Path), object> _collections = new();
 
     /// <summary>The number of registered specs.</summary>
     public int Count => _entries.Count;
@@ -45,6 +46,33 @@ public sealed class SpecRegistry
     /// <returns>The matching entry, or <c>null</c> when no spec is registered under the name.</returns>
     public SpecRegistryEntry? Find(string name) =>
         _entries.TryGetValue(name, out var entry) ? entry : null;
+
+    /// <summary>
+    /// Registers a projection from <typeparamref name="TParent"/> to a collection of
+    /// <typeparamref name="TElement"/>, referenced by higher-order rule nodes via their <c>path</c>.
+    /// </summary>
+    public SpecRegistry RegisterCollection<TParent, TElement>(
+        string path, Func<TParent, IEnumerable<TElement>> selector)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentException("A collection path must not be empty or whitespace.", nameof(path));
+        if (selector is null)
+            throw new ArgumentNullException(nameof(selector));
+
+        var key = (typeof(TParent), path);
+        if (_collections.ContainsKey(key))
+            throw new ArgumentException(
+                $"A collection is already registered at path '{path}' for model '{typeof(TParent).Name}'.", nameof(path));
+
+        _collections[key] = new CollectionBinding<TParent, TElement>(selector);
+        return this;
+    }
+
+    /// <summary>Resolves the collection registered for <typeparamref name="TParent"/> at a path, or null.</summary>
+    internal CollectionBinding<TParent>? FindCollection<TParent>(string path) =>
+        _collections.TryGetValue((typeof(TParent), path), out var binding)
+            ? (CollectionBinding<TParent>)binding
+            : null;
 
     private SpecRegistry Add(string name, object? spec, Type modelType, Type metadataType, bool isAsync, string? description)
     {
