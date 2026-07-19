@@ -1,5 +1,5 @@
 import type {
-  CatalogEntry, ErrorResponse, EvaluateRequest, EvaluationResult,
+  Catalog, ErrorResponse, EvaluateRequest, EvaluationResult,
   RuleError, ValidateRequest, ValidationResponse,
 } from './contracts.js';
 
@@ -36,9 +36,9 @@ export class RulesApiClient {
   }
 
   /** GET {baseUrl}/catalog */
-  async getCatalog(): Promise<CatalogEntry[]> {
+  async getCatalog(): Promise<Catalog> {
     const response = await this.#fetch(`${this.#baseUrl}/catalog`, { method: 'GET' });
-    return this.#read<CatalogEntry[]>(response);
+    return this.#read<Catalog>(response);
   }
 
   /** POST {baseUrl}/validate */

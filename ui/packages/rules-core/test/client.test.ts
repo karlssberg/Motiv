@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { RulesApiClient, RulesApiError } from '../src/client.js';
-import type { CatalogEntry, EvaluationResult, ValidationResponse } from '../src/contracts.js';
+import type { EvaluationResult, ValidationResponse } from '../src/contracts.js';
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -10,17 +10,18 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 describe('RulesApiClient', () => {
-  it('fetches the catalog from {baseUrl}/catalog', async () => {
-    const entries: CatalogEntry[] = [
-      { name: 'is-positive', modelType: 'number', metadataType: 'String', isAsync: false, description: null },
-    ];
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(entries));
-    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+  it('gets the folded catalog of specs and collections', async () => {
+    const catalog = {
+      specs: [{ name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: null }],
+      collections: [{ path: 'orders', parentModelType: 'customer', elementModelType: 'order' }],
+    };
+    const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify(catalog), { status: 200 }));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch });
 
     const result = await client.getCatalog();
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/rules/catalog', expect.objectContaining({ method: 'GET' }));
-    expect(result).toEqual(entries);
+    expect(result).toEqual(catalog);
+    expect(fetch).toHaveBeenCalledWith('/api/rules/catalog', { method: 'GET' });
   });
 
   it('posts a validate request and returns the errors', async () => {

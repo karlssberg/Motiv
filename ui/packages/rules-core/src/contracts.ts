@@ -9,6 +9,19 @@ export interface CatalogEntry {
   description?: string | null;
 }
 
+/** One catalog listing for a registered collection projection. */
+export interface CatalogCollection {
+  path: string;
+  parentModelType: string;
+  elementModelType: string;
+}
+
+/** The full catalog: registered specs and collections. */
+export interface Catalog {
+  specs: CatalogEntry[];
+  collections: CatalogCollection[];
+}
+
 /** Stable machine-readable rule-document error codes. */
 export type RuleErrorCode =
   | 'InvalidNode' | 'UnknownSpec' | 'ModelTypeMismatch' | 'MetadataTypeMismatch'
