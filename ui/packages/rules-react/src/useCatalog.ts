@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import type { CatalogEntry, RulesApiClient } from '@motiv/rules-core';
+import type { Catalog, RulesApiClient } from '@motiv/rules-core';
 
 /** The state of an async catalog load. */
 export type CatalogState =
   | { status: 'loading' }
-  | { status: 'ready'; data: CatalogEntry[] }
+  | { status: 'ready'; data: Catalog }
   | { status: 'error'; error: unknown };
 
 /** Loads the spec catalog once per client and tracks its async state. */
