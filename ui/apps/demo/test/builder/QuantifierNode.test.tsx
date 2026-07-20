@@ -45,4 +45,14 @@ describe('QuantifierNode', () => {
     const options = Array.from(childSelect.options).map((o) => o.value);
     expect(options).toEqual(['is-large-order']);
   });
+
+  it('preserves decoration when the quantifier kind changes', async () => {
+    const store = new RuleEditorStore({ rule: { asAllSatisfied: { spec: 'is-large-order' }, path: 'orders', name: 'big spender' } });
+    renderWith(store);
+    fireEvent.change(await screen.findByLabelText('quantifier kind at $.rule'), { target: { value: 'asAnySatisfied' } });
+    const rule = store.getState().document.rule as unknown as Record<string, unknown>;
+    expect(rule).toMatchObject({ asAnySatisfied: { spec: 'is-large-order' }, path: 'orders', name: 'big spender' });
+    expect('asAllSatisfied' in rule).toBe(false);
+    expect('n' in rule).toBe(false);
+  });
 });

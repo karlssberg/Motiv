@@ -87,6 +87,7 @@ export function QuantifierNode(props: {
               <span hidden>quantifier n at {path}</span>
               <input
                 type="number"
+                min={0}
                 aria-label={`quantifier n at ${path}`}
                 className="control"
                 value={typeof quantNode.n === 'number' ? quantNode.n : 1}

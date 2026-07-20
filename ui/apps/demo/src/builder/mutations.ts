@@ -39,11 +39,17 @@ export function insertQuantifier(store: RuleEditorStore, operatorPath: string, c
   store.addOperand(operatorPath, { asAllSatisfied: { spec: childSpec }, path: col.path } as unknown as RuleNode);
 }
 
-/** Rebuilds a quantifier node under a new kind, preserving its child, collection path, and `n` where relevant. */
+/**
+ * Rebuilds a quantifier node under a new kind, preserving its child, collection path, decoration
+ * (`name`/`whenTrue`/`whenFalse`), and `n` only for N-kinds. The old kind key and any stale `n` are dropped.
+ */
 export function setQuantifierKind(store: RuleEditorStore, path: string, node: QuantifierLike, kind: QuantifierKind): void {
+  const oldKind = quantifierKindOf(node);
+  const child = quantifierChild(node);
+  const { [oldKind]: _oldChild, n: _oldN, ...rest } = node; // rest keeps path, name, whenTrue, whenFalse
   const rebuilt: Record<string, unknown> = {
-    [kind]: quantifierChild(node),
-    path: node.path,
+    ...rest,
+    [kind]: child,
     ...(N_KINDS.includes(kind) ? { n: typeof node.n === 'number' ? node.n : 1 } : {}),
   };
   store.replaceNode(path, rebuilt as unknown as RuleNode);
@@ -54,7 +60,8 @@ export function setQuantifierCollection(store: RuleEditorStore, path: string, no
   store.replaceNode(path, { ...node, path: collectionPath } as unknown as RuleNode);
 }
 
-/** Updates the `n` count on an N-kind quantifier node. */
+/** Updates the `n` count on an N-kind quantifier node, ignoring non-finite values. */
 export function setQuantifierN(store: RuleEditorStore, path: string, node: QuantifierLike, n: number): void {
-  store.replaceNode(path, { ...node, n } as unknown as RuleNode);
+  const safeN = Number.isFinite(n) ? n : typeof node.n === 'number' ? node.n : 1;
+  store.replaceNode(path, { ...node, n: safeN } as unknown as RuleNode);
 }
