@@ -53,7 +53,7 @@ export function QuantifierNode(props: {
       >
         {expanded ? '▾' : '▸'}
       </button>
-      {!expanded && <span className="badge">{badgeFor(kind, path, quantNode.n)}</span>}
+      {!expanded && <span className="badge">{badgeFor(kind, String(quantNode.path), quantNode.n)}</span>}
       {expanded && (
         <>
           <label className="field">
