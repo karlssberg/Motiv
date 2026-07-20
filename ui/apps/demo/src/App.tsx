@@ -13,17 +13,24 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
     () => props.store ?? new RuleEditorStore({ rule: { spec: 'is-active' } }),
     [props.store],
   );
+  // Seam: the transport. A RulesApiClient is the only thing that talks to the
+  // backend (GET /catalog, POST /validate, POST /evaluate). Swap baseUrl or inject
+  // a custom `fetch` to point at your own host.
   const client = useMemo(
     () => props.client ?? new RulesApiClient({ baseUrl: '/api/rules' }),
     [props.client],
   );
 
+  // Seam: live validation. Debounces edits to the store and pushes the document to
+  // /validate, writing errors back onto the store for the panes to render.
   useEffect(
     () => createValidationController(store, client, { modelType: MODEL_TYPE, debounceMs: 300 }),
     [store, client],
   );
 
   return (
+    // Seam: the store hookup. RuleEditorProvider exposes the single RuleEditorStore
+    // to every builder component (useRuleEditorStore / useRuleNode) below it.
     <RuleEditorProvider store={store}>
       <main className="app">
         <BuilderPane client={client} />

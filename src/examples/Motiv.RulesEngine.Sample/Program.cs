@@ -2,6 +2,8 @@ using Motiv;
 using Motiv.Serialization;
 using Motiv.Serialization.AspNetCore;
 
+// Seam: the spec catalog. Register each spec under a stable name — rule documents
+// reference specs by these names. Descriptions surface in the /catalog response.
 var registry = new SpecRegistry()
     .Register(
         "is-active",
@@ -32,8 +34,13 @@ var registry = new SpecRegistry()
             .Create(),
         "Whether an individual order total is 100 or more");
 
+// Seam: collections for higher-order rules. Registering a parent→collection selector
+// lets a rule document quantify (asAllSatisfied / asAtLeastNSatisfied / …) over the
+// elements at "orders". The selector is the only place the collection is resolved.
 registry.RegisterCollection<Customer, Order>("orders", c => c.Orders ?? []);
 
+// Seam: evaluable models. Each AddModel maps a CLR type to the stable id clients pass
+// as `modelType` (and that surfaces in the catalog for specs and collections).
 var options = new MotivRulesOptions()
     .AddModel<Customer>("customer")
     .AddModel<Order>("order");
@@ -44,6 +51,8 @@ var app = builder.Build();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+// Seam: the endpoints. Mounts GET /catalog, POST /validate, POST /evaluate under
+// /api/rules, backed by the registry (specs + collections) and the model registrations.
 app.MapMotivRules("/api/rules", registry, options);
 app.MapFallbackToFile("index.html");
 
