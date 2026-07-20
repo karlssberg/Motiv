@@ -50,4 +50,21 @@ describe('BuilderPane accordion (boolean)', () => {
     fireEvent.change(select, { target: { value: 'is-adult' } });
     expect(store.getState().document.rule).toEqual({ spec: 'is-adult' });
   });
+
+  it('re-expanding a child does not collapse the root subtree', async () => {
+    const store = new RuleEditorStore({ rule: { and: [ { or: [ { spec: 'is-active' }, { spec: 'is-adult' } ] }, { spec: 'is-active' } ] } });
+    renderWith(store);
+    await screen.findByLabelText('spec at $.rule.and[1]');
+    fireEvent.click(screen.getByRole('button', { name: 'collapse $.rule.and[0]' }));
+    fireEvent.click(screen.getByRole('button', { name: 'expand $.rule.and[0]' }));
+    // root must still be expanded → its second operand's header still rendered
+    expect(screen.getByLabelText('spec at $.rule.and[1]')).toBeDefined();
+  });
+
+  it('offers remove only on operand elements, not on a NOT child', async () => {
+    const store = new RuleEditorStore({ rule: { not: { spec: 'is-active' } } });
+    renderWith(store);
+    await screen.findByLabelText('spec at $.rule.not');
+    expect(screen.queryByRole('button', { name: 'remove $.rule.not' })).toBeNull();
+  });
 });

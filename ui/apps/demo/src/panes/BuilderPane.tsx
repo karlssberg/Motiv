@@ -14,9 +14,12 @@ function depthOf(path: string): number {
   return path.slice(ROOT.length).split('.').filter(Boolean).length;
 }
 
-/** The prefix identifying a node's sibling group: its parent path, or itself for the root. */
-function parentPrefixOf(path: string): string {
-  if (path === ROOT) return path;
+/**
+ * The prefix identifying a node's sibling group: its parent path, or `null` for the root.
+ * The root has no siblings, so it never collides with (nor is collapsed by) any real path.
+ */
+function parentPrefixOf(path: string): string | null {
+  if (path === ROOT) return null;
   return splitLast(path).parentPath;
 }
 
@@ -45,8 +48,10 @@ export function BuilderPane(props: { client: RulesApiClient }) {
         return next;
       }
       const prefix = parentPrefixOf(path);
-      for (const candidate of next) {
-        if (candidate !== path && parentPrefixOf(candidate) === prefix) next.delete(candidate);
+      if (prefix !== null) {
+        for (const candidate of next) {
+          if (candidate !== path && parentPrefixOf(candidate) === prefix) next.delete(candidate);
+        }
       }
       next.add(path);
       return next;

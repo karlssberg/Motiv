@@ -79,7 +79,7 @@ export function NodeToolbar(props: {
           + operand
         </button>
       )}
-      {path !== '$.rule' && (
+      {path.endsWith(']') && (
         <button type="button" className="btn-danger" aria-label={`remove ${path}`} onClick={() => store.removeOperand(path)}>
           Remove
         </button>
