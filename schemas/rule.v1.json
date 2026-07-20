@@ -35,10 +35,6 @@
         { "type": "string", "pattern": "^@[A-Za-z_][A-Za-z0-9_]*$" }
       ]
     },
-    "propertyPath": {
-      "type": "string",
-      "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$"
-    },
     "nodeArray": {
       "type": "array",
       "items": { "$ref": "#/$defs/node" },
@@ -168,64 +164,59 @@
     "asAllSatisfiedNode": {
       "properties": {
         "asAllSatisfied": { "$ref": "#/$defs/node" },
-        "path": { "$ref": "#/$defs/propertyPath" },
+        "path": { "$ref": "#/$defs/nonEmptyString" },
         "whenTrue": { "$ref": "#/$defs/payload" },
         "whenFalse": { "$ref": "#/$defs/payload" },
         "name": { "$ref": "#/$defs/nonEmptyString" }
       },
-      "required": ["asAllSatisfied"],
-      "anyOf": [{ "required": ["name"] }, { "required": ["whenTrue"] }],
+      "required": ["asAllSatisfied", "path"],
       "additionalProperties": false
     },
     "asAnySatisfiedNode": {
       "properties": {
         "asAnySatisfied": { "$ref": "#/$defs/node" },
-        "path": { "$ref": "#/$defs/propertyPath" },
+        "path": { "$ref": "#/$defs/nonEmptyString" },
         "whenTrue": { "$ref": "#/$defs/payload" },
         "whenFalse": { "$ref": "#/$defs/payload" },
         "name": { "$ref": "#/$defs/nonEmptyString" }
       },
-      "required": ["asAnySatisfied"],
-      "anyOf": [{ "required": ["name"] }, { "required": ["whenTrue"] }],
+      "required": ["asAnySatisfied", "path"],
       "additionalProperties": false
     },
     "asNSatisfiedNode": {
       "properties": {
         "asNSatisfied": { "$ref": "#/$defs/node" },
         "n": { "$ref": "#/$defs/countable" },
-        "path": { "$ref": "#/$defs/propertyPath" },
+        "path": { "$ref": "#/$defs/nonEmptyString" },
         "whenTrue": { "$ref": "#/$defs/payload" },
         "whenFalse": { "$ref": "#/$defs/payload" },
         "name": { "$ref": "#/$defs/nonEmptyString" }
       },
-      "required": ["asNSatisfied", "n"],
-      "anyOf": [{ "required": ["name"] }, { "required": ["whenTrue"] }],
+      "required": ["asNSatisfied", "n", "path"],
       "additionalProperties": false
     },
     "asAtLeastNSatisfiedNode": {
       "properties": {
         "asAtLeastNSatisfied": { "$ref": "#/$defs/node" },
         "n": { "$ref": "#/$defs/countable" },
-        "path": { "$ref": "#/$defs/propertyPath" },
+        "path": { "$ref": "#/$defs/nonEmptyString" },
         "whenTrue": { "$ref": "#/$defs/payload" },
         "whenFalse": { "$ref": "#/$defs/payload" },
         "name": { "$ref": "#/$defs/nonEmptyString" }
       },
-      "required": ["asAtLeastNSatisfied", "n"],
-      "anyOf": [{ "required": ["name"] }, { "required": ["whenTrue"] }],
+      "required": ["asAtLeastNSatisfied", "n", "path"],
       "additionalProperties": false
     },
     "asAtMostNSatisfiedNode": {
       "properties": {
         "asAtMostNSatisfied": { "$ref": "#/$defs/node" },
         "n": { "$ref": "#/$defs/countable" },
-        "path": { "$ref": "#/$defs/propertyPath" },
+        "path": { "$ref": "#/$defs/nonEmptyString" },
         "whenTrue": { "$ref": "#/$defs/payload" },
         "whenFalse": { "$ref": "#/$defs/payload" },
         "name": { "$ref": "#/$defs/nonEmptyString" }
       },
-      "required": ["asAtMostNSatisfied", "n"],
-      "anyOf": [{ "required": ["name"] }, { "required": ["whenTrue"] }],
+      "required": ["asAtMostNSatisfied", "n", "path"],
       "additionalProperties": false
     }
   }

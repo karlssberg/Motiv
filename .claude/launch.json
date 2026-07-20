@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "rules-demo",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/examples/Motiv.RulesEngine.Sample", "--urls", "http://localhost:5100"],
+      "port": 5100
+    }
+  ]
+}

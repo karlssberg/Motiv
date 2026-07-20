@@ -6,6 +6,7 @@
     <Project Path="src/examples/Motiv.EntityFramework.Tests/Motiv.EntityFramework.Tests.csproj" />
     <Project Path="src/examples/Motiv.Poker.Tests/Motiv.Poker.Tests.csproj" />
     <Project Path="src/examples/Motiv.Poker/Motiv.Poker.csproj" />
+    <Project Path="src/examples/Motiv.RulesEngine.Sample/Motiv.RulesEngine.Sample.csproj" />
     <Project Path="src/examples/Motiv.SmartHome.Tests/Motiv.SmartHome.Tests.csproj" />
     <Project Path="src/examples/Motiv.SmartHome/Motiv.SmartHome.csproj" />
   </Folder>
@@ -19,6 +20,8 @@
   <Project Path="src/Motiv.Analyzer/Motiv.Analyzer.csproj" />
   <Project Path="src/Motiv.CodeFix.Tests/Motiv.CodeFix.Tests.csproj" />
   <Project Path="src/Motiv.CodeFix/Motiv.CodeFix.csproj" />
+  <Project Path="src/Motiv.Serialization.AspNetCore.Tests/Motiv.Serialization.AspNetCore.Tests.csproj" />
+  <Project Path="src/Motiv.Serialization.AspNetCore/Motiv.Serialization.AspNetCore.csproj" />
   <Project Path="src/Motiv.Serialization.Tests/Motiv.Serialization.Tests.csproj" />
   <Project Path="src/Motiv.Serialization/Motiv.Serialization.csproj" />
   <Project Path="src/Motiv.Tests/Motiv.Tests.csproj" />

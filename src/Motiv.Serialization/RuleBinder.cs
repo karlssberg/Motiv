@@ -1,12 +1,7 @@
-using System.Reflection;
-
 namespace Motiv.Serialization;
 
 internal static class RuleBinder
 {
-    private static readonly MethodInfo BindHigherOrderCoreMethod = typeof(RuleBinder)
-        .GetMethod(nameof(BindHigherOrderCore), BindingFlags.NonPublic | BindingFlags.Static)!;
-
     public static SpecBase<TModel, string>? Bind<TModel>(
         RuleDocument document,
         SpecRegistry registry,
@@ -18,6 +13,11 @@ internal static class RuleBinder
 
         return document.Name is null ? root : Spec.Build(root).Create(document.Name);
     }
+
+    /// <summary>Binds a rule subtree against an element model type (used by higher-order collection binding).</summary>
+    internal static SpecBase<TElement, string>? BindElement<TElement>(
+        RuleNode node, SpecRegistry registry, List<RuleError> errors) =>
+        BindNode<TElement>(node, registry, errors);
 
     public static SpecBase<TModel, string>? BindNode<TModel>(
         RuleNode node,
@@ -33,7 +33,7 @@ internal static class RuleBinder
         if (spec is null || hasObjectPayloadError)
             return null;
 
-        return node.Operator.IsHigherOrder() ? spec : Decorate(node, spec);
+        return Decorate(node, spec);
     }
 
     public static SpecBase<TModel, string>? BindOperator<TModel>(
@@ -136,76 +136,16 @@ internal static class RuleBinder
     }
 
     private static SpecBase<TModel, string>? BindHigherOrder<TModel>(
-        RuleNode node,
-        SpecRegistry registry,
-        List<RuleError> errors)
+        RuleNode node, SpecRegistry registry, List<RuleError> errors)
     {
-        var resolution = HigherOrderModelResolver.Resolve(typeof(TModel), node, errors);
-        if (resolution is null)
-            return null;
-
-        return (SpecBase<TModel, string>?)BindHigherOrderCoreMethod
-            .MakeGenericMethod(typeof(TModel), resolution.ElementType)
-            .Invoke(null, [node, resolution, registry, errors]);
-    }
-
-    private static SpecBase<TModel, string>? BindHigherOrderCore<TModel, TElement>(
-        RuleNode node,
-        HigherOrderModelResolution resolution,
-        SpecRegistry registry,
-        List<RuleError> errors)
-    {
-        var inner = BindNode<TElement>(node.Children[0], registry, errors);
-        if (inner is null)
-            return null;
-
-        return HigherOrderModelResolver.Reanchor<TModel, TElement, string>(
-            CreateHigherOrder(node, inner), resolution);
-    }
-
-    private static SpecBase<IEnumerable<TElement>, string> CreateHigherOrder<TElement>(
-        RuleNode node,
-        SpecBase<TElement, string> inner)
-    {
-        // Parse guarantees: string payloads arrive as a pair, bare nodes carry a name, and
-        // N-forms have a resolved N by the time binding runs.
-        if (node.WhenTrueText is { } whenTrue)
+        var binding = registry.FindCollection<TModel>(node.PathText!);
+        if (binding is null)
         {
-            var whenFalse = node.WhenFalseText!;
-            return (node.Operator, node.Name) switch
-            {
-                (RuleOperator.AsAllSatisfied, { } name) =>
-                    Spec.Build(inner).AsAllSatisfied().WhenTrue(whenTrue).WhenFalse(whenFalse).Create(name),
-                (RuleOperator.AsAllSatisfied, _) =>
-                    Spec.Build(inner).AsAllSatisfied().WhenTrue(whenTrue).WhenFalse(whenFalse).Create(),
-                (RuleOperator.AsAnySatisfied, { } name) =>
-                    Spec.Build(inner).AsAnySatisfied().WhenTrue(whenTrue).WhenFalse(whenFalse).Create(name),
-                (RuleOperator.AsAnySatisfied, _) =>
-                    Spec.Build(inner).AsAnySatisfied().WhenTrue(whenTrue).WhenFalse(whenFalse).Create(),
-                (RuleOperator.AsNSatisfied, { } name) =>
-                    Spec.Build(inner).AsNSatisfied(node.N!.Value).WhenTrue(whenTrue).WhenFalse(whenFalse).Create(name),
-                (RuleOperator.AsNSatisfied, _) =>
-                    Spec.Build(inner).AsNSatisfied(node.N!.Value).WhenTrue(whenTrue).WhenFalse(whenFalse).Create(),
-                (RuleOperator.AsAtLeastNSatisfied, { } name) =>
-                    Spec.Build(inner).AsAtLeastNSatisfied(node.N!.Value).WhenTrue(whenTrue).WhenFalse(whenFalse).Create(name),
-                (RuleOperator.AsAtLeastNSatisfied, _) =>
-                    Spec.Build(inner).AsAtLeastNSatisfied(node.N!.Value).WhenTrue(whenTrue).WhenFalse(whenFalse).Create(),
-                (RuleOperator.AsAtMostNSatisfied, { } name) =>
-                    Spec.Build(inner).AsAtMostNSatisfied(node.N!.Value).WhenTrue(whenTrue).WhenFalse(whenFalse).Create(name),
-                _ =>
-                    Spec.Build(inner).AsAtMostNSatisfied(node.N!.Value).WhenTrue(whenTrue).WhenFalse(whenFalse).Create()
-            };
+            errors.Add(new RuleError(node.Path, RuleErrorCode.UnknownCollection,
+                $"no collection is registered at path '{node.PathText}' for model '{typeof(TModel).Name}'"));
+            return null;
         }
 
-        return node.Operator switch
-        {
-            RuleOperator.AsAllSatisfied => Spec.Build(inner).AsAllSatisfied().Create(node.Name!),
-            RuleOperator.AsAnySatisfied => Spec.Build(inner).AsAnySatisfied().Create(node.Name!),
-            RuleOperator.AsNSatisfied => Spec.Build(inner).AsNSatisfied(node.N!.Value).Create(node.Name!),
-            RuleOperator.AsAtLeastNSatisfied =>
-                Spec.Build(inner).AsAtLeastNSatisfied(node.N!.Value).Create(node.Name!),
-            _ => Spec.Build(inner).AsAtMostNSatisfied(node.N!.Value).Create(node.Name!)
-        };
+        return binding.BindHigherOrder(node, registry, errors);
     }
-
 }

@@ -116,4 +116,89 @@ public class SpecRegistryTests
         // Act & Assert
         registry.Count.ShouldBe(2);
     }
+
+    [Fact]
+    public void Should_expose_registered_entries_with_their_descriptions()
+    {
+        // Arrange
+        var isPositive = Spec.Build((int n) => n > 0).WhenTrue("yes").WhenFalse("no").Create();
+        var isEven = Spec.Build((int n) => n % 2 == 0).WhenTrue("yes").WhenFalse("no").Create();
+
+        var registry = new SpecRegistry()
+            .Register("is-positive", isPositive, "Whether the number is positive")
+            .Register("is-even", isEven);
+
+        // Act
+        var entries = registry.Entries.OrderBy(e => e.Name).ToArray();
+
+        // Assert
+        entries.Length.ShouldBe(2);
+        entries[0].Name.ShouldBe("is-even");
+        entries[0].Description.ShouldBeNull();
+        entries[1].Name.ShouldBe("is-positive");
+        entries[1].Description!.ShouldBe("Whether the number is positive");
+    }
+
+    // Plain classes (not records) so the net472 target compiles without an IsExternalInit polyfill.
+    private sealed class Order(decimal total)
+    {
+        public decimal Total { get; } = total;
+    }
+
+    private sealed class Cart(IReadOnlyList<Order> orders)
+    {
+        public IReadOnlyList<Order> Orders { get; } = orders;
+    }
+
+    [Fact]
+    public void Should_find_a_registered_collection_and_report_its_element_type()
+    {
+        var registry = new SpecRegistry().RegisterCollection<Cart, Order>("orders", c => c.Orders);
+
+        var binding = registry.FindCollection<Cart>("orders");
+
+        binding.ShouldNotBeNull();
+        binding.ElementType.ShouldBe(typeof(Order));
+    }
+
+    [Fact]
+    public void Should_return_null_for_an_unregistered_collection_path()
+    {
+        var registry = new SpecRegistry().RegisterCollection<Cart, Order>("orders", c => c.Orders);
+        registry.FindCollection<Cart>("items").ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_scope_collections_by_parent_type()
+    {
+        var registry = new SpecRegistry().RegisterCollection<Cart, Order>("orders", c => c.Orders);
+        registry.FindCollection<Order>("orders").ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_reject_a_duplicate_collection_registration()
+    {
+        var registry = new SpecRegistry().RegisterCollection<Cart, Order>("orders", c => c.Orders);
+        Should.Throw<ArgumentException>(() => registry.RegisterCollection<Cart, Order>("orders", c => c.Orders));
+    }
+
+    [Fact]
+    public void Should_reject_an_empty_collection_path()
+    {
+        Should.Throw<ArgumentException>(() =>
+            new SpecRegistry().RegisterCollection<Cart, Order>(" ", c => c.Orders));
+    }
+
+    [Fact]
+    public void Should_enumerate_registered_collections_with_parent_and_element_types()
+    {
+        var registry = new SpecRegistry().RegisterCollection<Cart, Order>("orders", c => c.Orders);
+
+        var collections = registry.Collections;
+
+        var entry = collections.ShouldHaveSingleItem();
+        entry.ParentType.ShouldBe(typeof(Cart));
+        entry.Path.ShouldBe("orders");
+        entry.ElementType.ShouldBe(typeof(Order));
+    }
 }

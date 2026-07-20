@@ -24,3 +24,5 @@ BenchmarkDotNet.Artifacts/
 
 # Test coverage output
 [Tt]est[Rr]esults/
+
+.superpowers/

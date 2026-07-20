@@ -150,14 +150,6 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
             return null;
         }
 
-        if (node.Operator.IsHigherOrder() && node.Name is null
-            && node.WhenTrueText is null && !node.HasObjectPayloads)
-        {
-            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
-                "higher-order nodes must declare a 'name' or 'whenTrue'/'whenFalse' payloads"));
-            return null;
-        }
-
         return node;
     }
 
@@ -448,6 +440,11 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
             else
                 errors.Add(new RuleError($"{path}.path", RuleErrorCode.InvalidNode,
                     "'path' is only valid on higher-order nodes"));
+        }
+        else if (node.Operator.IsHigherOrder())
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                "higher-order nodes require a 'path' to the collection"));
         }
     }
 
