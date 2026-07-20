@@ -8,7 +8,7 @@ test('build a rule, then evaluate it end to end', async ({ page }) => {
   await expect(rootSelect).toBeVisible();
 
   // Build a composite: wrap the root in AND (adds a second operand).
-  await page.getByRole('button', { name: 'AND at $.rule' }).click();
+  await page.getByRole('button', { name: 'wrap $.rule in AND', exact: true }).click();
 
   // The JSON pane reflects the composite document.
   await expect(page.getByLabel('rule document')).toContainText('"and"');
