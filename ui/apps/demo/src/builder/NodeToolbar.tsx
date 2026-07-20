@@ -2,7 +2,7 @@ import {
   isBinaryNode, isSpecNode, type BinaryOperator, type Catalog, type RuleNode,
 } from '@motiv/rules-core';
 import { useRuleEditorStore } from '@motiv/rules-react';
-import { toggleNot } from './mutations.js';
+import { insertQuantifier, toggleNot } from './mutations.js';
 import { childPaths } from './childPaths.js';
 
 const WRAP_OPTIONS: Array<{ label: string; op: BinaryOperator }> = [
@@ -77,6 +77,16 @@ export function NodeToolbar(props: {
           onClick={() => store.addOperand(path, { spec: fallbackSpec })}
         >
           + operand
+        </button>
+      )}
+      {isBinaryNode(node) && (
+        <button
+          type="button"
+          className="btn"
+          aria-label={`add quantifier to ${path}`}
+          onClick={() => insertQuantifier(store, path, catalog)}
+        >
+          + quantifier
         </button>
       )}
       {path.endsWith(']') && (

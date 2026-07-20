@@ -1,7 +1,8 @@
 import { createContext, useContext, type CSSProperties } from 'react';
-import type { Catalog } from '@motiv/rules-core';
+import { isHigherOrderNode, type Catalog } from '@motiv/rules-core';
 import { useRuleNode } from '@motiv/rules-react';
 import { NodeToolbar } from './NodeToolbar.js';
+import { QuantifierNode } from './QuantifierNode.js';
 import { DecorationEditor } from './DecorationEditor.js';
 import { childPaths } from './childPaths.js';
 
@@ -31,16 +32,31 @@ export function RuleNodeEditor(props: { path: string; depth: number; modelType: 
   const expanded = isExpanded(path);
   const kids = childPaths(node, path);
 
+  // A quantifier's single child is scoped to the collection's element model type, not the parent's.
+  const childModelType = isHigherOrderNode(node)
+    ? (catalog.collections.find((c) => c.path === node.path)?.elementModelType ?? modelType)
+    : modelType;
+
   return (
     <div className="node" style={{ '--depth': depth } as CSSProperties}>
-      <NodeToolbar
-        path={path}
-        node={node}
-        modelType={modelType}
-        catalog={catalog}
-        expanded={expanded}
-        onToggleExpand={() => toggle(path)}
-      />
+      {isHigherOrderNode(node) ? (
+        <QuantifierNode
+          path={path}
+          node={node}
+          catalog={catalog}
+          expanded={expanded}
+          onToggleExpand={() => toggle(path)}
+        />
+      ) : (
+        <NodeToolbar
+          path={path}
+          node={node}
+          modelType={modelType}
+          catalog={catalog}
+          expanded={expanded}
+          onToggleExpand={() => toggle(path)}
+        />
+      )}
       {errors.length > 0 && (
         <span role="alert" className="error">{errors.map((e) => e.message).join('; ')}</span>
       )}
@@ -50,7 +66,7 @@ export function RuleNodeEditor(props: { path: string; depth: number; modelType: 
           {kids.length > 0 && (
             <div className="node-kids">
               {kids.map((childPath) => (
-                <RuleNodeEditor key={childPath} path={childPath} depth={depth + 1} modelType={modelType} />
+                <RuleNodeEditor key={childPath} path={childPath} depth={depth + 1} modelType={childModelType} />
               ))}
             </div>
           )}
