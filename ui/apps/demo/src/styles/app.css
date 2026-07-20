@@ -56,6 +56,23 @@ body {
   color: var(--text);
 }
 
+/* Pane header row: title plus optional trailing controls (e.g. extension-point affordances) */
+.pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  margin-bottom: var(--space);
+  padding-bottom: var(--space);
+  border-bottom: 1px solid var(--border);
+}
+
+.pane-header h2 {
+  margin: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
 /* Field: a label + control stack */
 .field {
   display: flex;
@@ -114,6 +131,18 @@ body {
 
 .btn-danger:hover {
   background: color-mix(in srgb, var(--danger) 85%, black);
+}
+
+/* Extension points: inert affordances for not-yet-evaluable node kinds */
+.ext-point {
+  background: transparent;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  cursor: not-allowed;
+}
+
+.ext-point:hover {
+  background: transparent;
 }
 
 /* Document JSON pane */

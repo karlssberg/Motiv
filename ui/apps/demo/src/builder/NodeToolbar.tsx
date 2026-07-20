@@ -55,6 +55,16 @@ export function NodeToolbar(props: {
           </select>
         </label>
       )}
+      {isSpecNode(node) && (
+        <button
+          type="button"
+          className="btn ext-point"
+          disabled
+          title="requires backend (coming)"
+        >
+          expression — coming
+        </button>
+      )}
       <button type="button" className="btn" aria-label={`toggle NOT at ${path}`} onClick={() => toggleNot(store, path, node)}>
         NOT
       </button>

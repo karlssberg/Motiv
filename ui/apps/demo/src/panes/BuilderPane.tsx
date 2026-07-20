@@ -60,7 +60,17 @@ export function BuilderPane(props: { client: RulesApiClient }) {
 
   return (
     <section className="pane" aria-label="Builder">
-      <h2>Builder</h2>
+      <div className="pane-header">
+        <h2>Builder</h2>
+        <button
+          type="button"
+          className="btn ext-point"
+          disabled
+          title="requires backend (coming)"
+        >
+          parameters — coming
+        </button>
+      </div>
       {catalogState.status === 'loading' && <p>Loading catalog…</p>}
       {catalogState.status === 'error' && <p role="alert">Failed to load catalog.</p>}
       <AccordionContext.Provider value={{ isExpanded: (path) => expanded.has(path), toggle, catalog }}>
