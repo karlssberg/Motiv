@@ -31,9 +31,9 @@ export function quantifierChild(node: QuantifierLike): RuleNode {
   return node[quantifierKindOf(node)] as RuleNode;
 }
 
-/** Adds a new `asAllSatisfied` quantifier operand over the catalog's first registered collection. */
-export function insertQuantifier(store: RuleEditorStore, operatorPath: string, catalog: Catalog): void {
-  const col = catalog.collections[0];
+/** Adds a new `asAllSatisfied` quantifier operand over the first collection scoped to `modelType`. */
+export function insertQuantifier(store: RuleEditorStore, operatorPath: string, catalog: Catalog, modelType: string): void {
+  const col = catalog.collections.find((c) => c.parentModelType === modelType);
   if (!col) return;
   const childSpec = catalog.specs.find((s) => s.modelType === col.elementModelType)?.name ?? 'spec';
   store.addOperand(operatorPath, { asAllSatisfied: { spec: childSpec }, path: col.path } as unknown as RuleNode);

@@ -44,6 +44,7 @@ export function RuleNodeEditor(props: { path: string; depth: number; modelType: 
           path={path}
           node={node}
           catalog={catalog}
+          modelType={modelType}
           expanded={expanded}
           onToggleExpand={() => toggle(path)}
         />

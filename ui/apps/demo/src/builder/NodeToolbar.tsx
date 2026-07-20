@@ -94,7 +94,7 @@ export function NodeToolbar(props: {
           type="button"
           className="btn"
           aria-label={`add quantifier to ${path}`}
-          onClick={() => insertQuantifier(store, path, catalog)}
+          onClick={() => insertQuantifier(store, path, catalog, modelType)}
         >
           + quantifier
         </button>

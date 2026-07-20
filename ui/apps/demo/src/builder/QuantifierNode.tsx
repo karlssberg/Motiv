@@ -33,15 +33,17 @@ export function QuantifierNode(props: {
   path: string;
   node: HigherOrderNode;
   catalog: Catalog;
+  modelType: string;
   expanded: boolean;
   onToggleExpand: () => void;
 }) {
-  const { path, node, catalog, expanded, onToggleExpand } = props;
+  const { path, node, catalog, modelType, expanded, onToggleExpand } = props;
   const store = useRuleEditorStore();
   const quantNode = node as unknown as QuantifierLike;
   const kind = quantifierKindOf(quantNode);
   const isNKind = N_KINDS.includes(kind);
   const collection = catalog.collections.find((c) => c.path === quantNode.path);
+  const availableCollections = catalog.collections.filter((c) => c.parentModelType === modelType);
 
   return (
     <div className="node-header toolbar">
@@ -77,7 +79,7 @@ export function QuantifierNode(props: {
               value={quantNode.path}
               onChange={(e) => setQuantifierCollection(store, path, quantNode, e.target.value)}
             >
-              {catalog.collections.map((c) => (
+              {availableCollections.map((c) => (
                 <option key={c.path} value={c.path}>{c.path}</option>
               ))}
             </select>
