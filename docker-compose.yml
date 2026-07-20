@@ -1,0 +1,7 @@
+services:
+  demo:
+    build:
+      context: .
+      dockerfile: src/examples/Motiv.RulesEngine.Sample/Dockerfile
+    ports:
+      - "5100:5100"

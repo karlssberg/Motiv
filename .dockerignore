@@ -1,0 +1,10 @@
+**/bin
+**/obj
+**/node_modules
+**/dist
+.git
+.claude
+.superpowers
+.memsearch
+**/TestResults
+**/test-results
