@@ -19,7 +19,7 @@ describe('nodeKind', () => {
   });
   it('identifies not and higher-order nodes', () => {
     expect(nodeKind({ not: { spec: 'a' } })).toBe('not');
-    expect(nodeKind({ asAllSatisfied: { spec: 'a' } })).toBe('asAllSatisfied');
+    expect(nodeKind({ asAllSatisfied: { spec: 'a' }, path: 'items' })).toBe('asAllSatisfied');
   });
 });
 
