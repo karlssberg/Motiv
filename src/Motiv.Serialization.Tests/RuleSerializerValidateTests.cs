@@ -546,7 +546,7 @@ public class RuleSerializerValidateTests
     public void Should_reject_a_bare_at_sign_as_an_n_parameter_reference()
     {
         // Act
-        var errors = Validate("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "@", "name": "x" } }""");
+        var errors = Validate("""{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "@", "path": "orders", "name": "x" } }""");
 
         // Assert
         var error = errors.ShouldHaveSingleItem();
@@ -562,7 +562,7 @@ public class RuleSerializerValidateTests
             """
             {
               "parameters": { "Min_Age2": { "type": "integer", "default": 1 } },
-              "rule": { "asNSatisfied": { "spec": "a" }, "n": "@Min_Age2", "name": "x" }
+              "rule": { "asNSatisfied": { "spec": "a" }, "n": "@Min_Age2", "path": "orders", "name": "x" }
             }
             """);
 

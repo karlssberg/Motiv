@@ -31,8 +31,14 @@ public class RuleMetadataTests
     private static RuleSerializer CreateSerializer(RuleSerializerOptions? options = null) =>
         new(new SpecRegistry()
                 .Register("is-positive", IsPositive)
-                .Register("has-outcome", HasOutcome),
+                .Register("has-outcome", HasOutcome)
+                .RegisterCollection<Customer, int>("orders", c => c.Orders),
             options);
+
+    private sealed class Customer
+    {
+        public List<int> Orders { get; set; } = [];
+    }
 
     [Fact]
     public void Should_load_a_typed_registry_leaf_with_its_metadata_intact()
@@ -202,17 +208,18 @@ public class RuleMetadataTests
     {
         // Arrange
         const string json =
-            """{ "rule": { "asAllSatisfied": { "spec": "has-outcome" }, "name": "all coded" } }""";
+            """{ "rule": { "asAllSatisfied": { "spec": "has-outcome" }, "path": "orders", "name": "all coded" } }""";
         var expected = Spec
             .Build(HasOutcome)
             .AsAllSatisfied()
-            .Create("all coded");
+            .Create("all coded")
+            .ChangeModelTo<Customer>(c => c.Orders);
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>, RuleOutcome>(json);
+        var loaded = CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2 }, new[] { 1, -2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2] }, new Customer { Orders = [1, -2] });
     }
 
     [Fact]
@@ -224,6 +231,7 @@ public class RuleMetadataTests
             {
               "rule": {
                 "asAnySatisfied": { "spec": "is-positive" },
+                "path": "orders",
                 "whenTrue": { "Code": "SOME" },
                 "whenFalse": { "Code": "NONE" },
                 "name": "any positive"
@@ -235,13 +243,32 @@ public class RuleMetadataTests
             .AsAnySatisfied()
             .WhenTrue(new RuleOutcome { Code = "SOME" })
             .WhenFalse(new RuleOutcome { Code = "NONE" })
-            .Create("any positive");
+            .Create("any positive")
+            .ChangeModelTo<Customer>(c => c.Orders);
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>, RuleOutcome>(json);
+        var loaded = CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, -2 }, new[] { -1, -2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, -2] }, new Customer { Orders = [-1, -2] });
+    }
+
+    [Fact]
+    public void Should_reject_a_bare_higher_order_node_with_no_name_or_payload_in_a_metadata_load()
+    {
+        // Arrange: unlike the string/explanation loader, a metadata load cannot synthesize a
+        // default WhenTrue/WhenFalse for an arbitrary metadata type, so this must fail cleanly
+        // rather than crash.
+        const string json = """{ "rule": { "asAllSatisfied": { "spec": "has-outcome" }, "path": "orders" } }""";
+
+        // Act
+        var act = () => CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.MetadataTypeMismatch);
+        error.Path.ShouldBe("$.rule");
     }
 
     [Fact]
@@ -488,19 +515,19 @@ public class RuleMetadataTests
     }
 
     [Fact]
-    public void Should_report_a_higher_order_node_over_a_non_collection_model_in_a_metadata_load()
+    public void Should_report_a_higher_order_node_with_an_unregistered_collection_path_in_a_metadata_load()
     {
         // Arrange
         const string json =
-            """{ "rule": { "asAllSatisfied": { "spec": "has-outcome" }, "name": "all coded" } }""";
+            """{ "rule": { "asAllSatisfied": { "spec": "has-outcome" }, "path": "missing", "name": "all coded" } }""";
 
         // Act
-        var act = () => CreateSerializer().Deserialize<int, RuleOutcome>(json);
+        var act = () => CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
         var exception = act.ShouldThrow<RuleSerializationException>();
         var error = exception.Errors.ShouldHaveSingleItem();
-        error.Code.ShouldBe(RuleErrorCode.InvalidHigherOrderPath);
+        error.Code.ShouldBe(RuleErrorCode.UnknownCollection);
     }
 
     [Fact]
@@ -512,6 +539,7 @@ public class RuleMetadataTests
             {
               "rule": {
                 "asAnySatisfied": { "spec": "missing" },
+                "path": "orders",
                 "whenTrue": { "Code": "SOME" },
                 "whenFalse": { "Code": "NONE" },
                 "name": "any positive"
@@ -520,7 +548,7 @@ public class RuleMetadataTests
             """;
 
         // Act
-        var act = () => CreateSerializer().Deserialize<IEnumerable<int>, RuleOutcome>(json);
+        var act = () => CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
         var exception = act.ShouldThrow<RuleSerializationException>();
@@ -533,10 +561,10 @@ public class RuleMetadataTests
     {
         // Arrange
         const string json =
-            """{ "rule": { "asAllSatisfied": { "spec": "missing" }, "name": "all coded" } }""";
+            """{ "rule": { "asAllSatisfied": { "spec": "missing" }, "path": "orders", "name": "all coded" } }""";
 
         // Act
-        var act = () => CreateSerializer().Deserialize<IEnumerable<int>, RuleOutcome>(json);
+        var act = () => CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
         var exception = act.ShouldThrow<RuleSerializationException>();
@@ -553,6 +581,7 @@ public class RuleMetadataTests
             {
               "rule": {
                 "asAllSatisfied": { "spec": "is-positive" },
+                "path": "orders",
                 "whenTrue": { "Code": "ALL" },
                 "whenFalse": { "Code": "NOT-ALL" },
                 "name": "all positive"
@@ -564,13 +593,14 @@ public class RuleMetadataTests
             .AsAllSatisfied()
             .WhenTrue(new RuleOutcome { Code = "ALL" })
             .WhenFalse(new RuleOutcome { Code = "NOT-ALL" })
-            .Create("all positive");
+            .Create("all positive")
+            .ChangeModelTo<Customer>(c => c.Orders);
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>, RuleOutcome>(json);
+        var loaded = CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2 }, new[] { 1, -2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2] }, new Customer { Orders = [1, -2] });
     }
 
     [Fact]
@@ -583,6 +613,7 @@ public class RuleMetadataTests
               "rule": {
                 "asNSatisfied": { "spec": "is-positive" },
                 "n": 2,
+                "path": "orders",
                 "whenTrue": { "Code": "TWO" },
                 "whenFalse": { "Code": "NOT-TWO" },
                 "name": "exactly two"
@@ -594,13 +625,14 @@ public class RuleMetadataTests
             .AsNSatisfied(2)
             .WhenTrue(new RuleOutcome { Code = "TWO" })
             .WhenFalse(new RuleOutcome { Code = "NOT-TWO" })
-            .Create("exactly two");
+            .Create("exactly two")
+            .ChangeModelTo<Customer>(c => c.Orders);
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>, RuleOutcome>(json);
+        var loaded = CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { -1, -2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2, -3] }, new Customer { Orders = [-1, -2] });
     }
 
     [Fact]
@@ -613,6 +645,7 @@ public class RuleMetadataTests
               "rule": {
                 "asAtLeastNSatisfied": { "spec": "is-positive" },
                 "n": 2,
+                "path": "orders",
                 "whenTrue": { "Code": "QUOTA" },
                 "whenFalse": { "Code": "SHORT" },
                 "name": "quota"
@@ -624,13 +657,14 @@ public class RuleMetadataTests
             .AsAtLeastNSatisfied(2)
             .WhenTrue(new RuleOutcome { Code = "QUOTA" })
             .WhenFalse(new RuleOutcome { Code = "SHORT" })
-            .Create("quota");
+            .Create("quota")
+            .ChangeModelTo<Customer>(c => c.Orders);
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>, RuleOutcome>(json);
+        var loaded = CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { 1, -2, -3 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2, -3] }, new Customer { Orders = [1, -2, -3] });
     }
 
     [Fact]
@@ -643,6 +677,7 @@ public class RuleMetadataTests
               "rule": {
                 "asAtMostNSatisfied": { "spec": "is-positive" },
                 "n": 1,
+                "path": "orders",
                 "whenTrue": { "Code": "OK" },
                 "whenFalse": { "Code": "TOO-MANY" },
                 "name": "at most one"
@@ -654,13 +689,14 @@ public class RuleMetadataTests
             .AsAtMostNSatisfied(1)
             .WhenTrue(new RuleOutcome { Code = "OK" })
             .WhenFalse(new RuleOutcome { Code = "TOO-MANY" })
-            .Create("at most one");
+            .Create("at most one")
+            .ChangeModelTo<Customer>(c => c.Orders);
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>, RuleOutcome>(json);
+        var loaded = CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, -2 }, new[] { 1, 2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, -2] }, new Customer { Orders = [1, 2] });
     }
 
     [Fact]
@@ -668,14 +704,14 @@ public class RuleMetadataTests
     {
         // Arrange
         const string json =
-            """{ "rule": { "asAnySatisfied": { "spec": "has-outcome" }, "name": "any coded" } }""";
-        var expected = Spec.Build(HasOutcome).AsAnySatisfied().Create("any coded");
+            """{ "rule": { "asAnySatisfied": { "spec": "has-outcome" }, "path": "orders", "name": "any coded" } }""";
+        var expected = Spec.Build(HasOutcome).AsAnySatisfied().Create("any coded").ChangeModelTo<Customer>(c => c.Orders);
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>, RuleOutcome>(json);
+        var loaded = CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, -2 }, new[] { -1, -2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, -2] }, new Customer { Orders = [-1, -2] });
     }
 
     [Fact]
@@ -683,14 +719,14 @@ public class RuleMetadataTests
     {
         // Arrange
         const string json =
-            """{ "rule": { "asNSatisfied": { "spec": "has-outcome" }, "n": 2, "name": "two coded" } }""";
-        var expected = Spec.Build(HasOutcome).AsNSatisfied(2).Create("two coded");
+            """{ "rule": { "asNSatisfied": { "spec": "has-outcome" }, "n": 2, "path": "orders", "name": "two coded" } }""";
+        var expected = Spec.Build(HasOutcome).AsNSatisfied(2).Create("two coded").ChangeModelTo<Customer>(c => c.Orders);
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>, RuleOutcome>(json);
+        var loaded = CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { -1, -2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2, -3] }, new Customer { Orders = [-1, -2] });
     }
 
     [Fact]
@@ -698,14 +734,14 @@ public class RuleMetadataTests
     {
         // Arrange
         const string json =
-            """{ "rule": { "asAtLeastNSatisfied": { "spec": "has-outcome" }, "n": 2, "name": "quota coded" } }""";
-        var expected = Spec.Build(HasOutcome).AsAtLeastNSatisfied(2).Create("quota coded");
+            """{ "rule": { "asAtLeastNSatisfied": { "spec": "has-outcome" }, "n": 2, "path": "orders", "name": "quota coded" } }""";
+        var expected = Spec.Build(HasOutcome).AsAtLeastNSatisfied(2).Create("quota coded").ChangeModelTo<Customer>(c => c.Orders);
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>, RuleOutcome>(json);
+        var loaded = CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { 1, -2, -3 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2, -3] }, new Customer { Orders = [1, -2, -3] });
     }
 
     [Fact]
@@ -713,13 +749,13 @@ public class RuleMetadataTests
     {
         // Arrange
         const string json =
-            """{ "rule": { "asAtMostNSatisfied": { "spec": "has-outcome" }, "n": 1, "name": "at most coded" } }""";
-        var expected = Spec.Build(HasOutcome).AsAtMostNSatisfied(1).Create("at most coded");
+            """{ "rule": { "asAtMostNSatisfied": { "spec": "has-outcome" }, "n": 1, "path": "orders", "name": "at most coded" } }""";
+        var expected = Spec.Build(HasOutcome).AsAtMostNSatisfied(1).Create("at most coded").ChangeModelTo<Customer>(c => c.Orders);
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>, RuleOutcome>(json);
+        var loaded = CreateSerializer().Deserialize<Customer, RuleOutcome>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, -2 }, new[] { 1, 2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, -2] }, new Customer { Orders = [1, 2] });
     }
 }

@@ -11,24 +11,28 @@ public class RuleHigherOrderTests
             .Create();
 
     private static RuleSerializer CreateSerializer() =>
-        new(new SpecRegistry().Register("is-positive", IsPositive));
+        new(new SpecRegistry()
+            .Register("is-positive", IsPositive)
+            .RegisterCollection<Customer, int>("orders", c => c.Orders)
+            .RegisterCollection<Customer, int>("account-orders", c => c.Account.Orders));
 
     [Fact]
     public void Should_load_a_named_all_satisfied_node_like_its_fluent_equivalent()
     {
         // Arrange
         const string json =
-            """{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "name": "all positive" } }""";
-        var expected = Spec
-            .Build(IsPositive)
-            .AsAllSatisfied()
-            .Create("all positive");
+            """{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "path": "orders", "name": "all positive" } }""";
+        var inner = Spec.Build(IsPositive).AsAllSatisfied()
+            .WhenTrue("all satisfied").WhenFalse("not all satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner).Create("all positive");
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2 }, new[] { 1, -2 }, new[] { -1, -2 });
+        ShouldBehaveIdentically(loaded, expected,
+            new Customer { Orders = [1, 2] }, new Customer { Orders = [1, -2] }, new Customer { Orders = [-1, -2] });
     }
 
     [Fact]
@@ -40,23 +44,22 @@ public class RuleHigherOrderTests
             {
               "rule": {
                 "asAnySatisfied": { "spec": "is-positive" },
+                "path": "orders",
                 "whenTrue": "some are positive",
                 "whenFalse": "none are positive"
               }
             }
             """;
-        var expected = Spec
-            .Build(IsPositive)
-            .AsAnySatisfied()
-            .WhenTrue("some are positive")
-            .WhenFalse("none are positive")
-            .Create();
+        var inner = Spec.Build(IsPositive).AsAnySatisfied()
+            .WhenTrue("any satisfied").WhenFalse("none satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner).WhenTrue("some are positive").WhenFalse("none are positive").Create();
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, -2 }, new[] { -1, -2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, -2] }, new Customer { Orders = [-1, -2] });
     }
 
     [Fact]
@@ -68,24 +71,23 @@ public class RuleHigherOrderTests
             {
               "rule": {
                 "asAllSatisfied": { "spec": "is-positive" },
+                "path": "orders",
                 "whenTrue": "all positive",
                 "whenFalse": "some are not positive",
                 "name": "positivity"
               }
             }
             """;
-        var expected = Spec
-            .Build(IsPositive)
-            .AsAllSatisfied()
-            .WhenTrue("all positive")
-            .WhenFalse("some are not positive")
-            .Create("positivity");
+        var inner = Spec.Build(IsPositive).AsAllSatisfied()
+            .WhenTrue("all satisfied").WhenFalse("not all satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner).WhenTrue("all positive").WhenFalse("some are not positive").Create("positivity");
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2 }, new[] { 1, -2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2] }, new Customer { Orders = [1, -2] });
     }
 
     [Fact]
@@ -93,17 +95,18 @@ public class RuleHigherOrderTests
     {
         // Arrange
         const string json =
-            """{ "rule": { "asNSatisfied": { "spec": "is-positive" }, "n": 2, "name": "exactly two" } }""";
-        var expected = Spec
-            .Build(IsPositive)
-            .AsNSatisfied(2)
-            .Create("exactly two");
+            """{ "rule": { "asNSatisfied": { "spec": "is-positive" }, "n": 2, "path": "orders", "name": "exactly two" } }""";
+        var inner = Spec.Build(IsPositive).AsNSatisfied(2)
+            .WhenTrue("exactly 2 satisfied").WhenFalse("not exactly 2 satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner).Create("exactly two");
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { 1, 2, 3 }, new[] { -1, -2 });
+        ShouldBehaveIdentically(loaded, expected,
+            new Customer { Orders = [1, 2, -3] }, new Customer { Orders = [1, 2, 3] }, new Customer { Orders = [-1, -2] });
     }
 
     [Fact]
@@ -114,19 +117,21 @@ public class RuleHigherOrderTests
             """
             {
               "parameters": { "minOrders": { "type": "integer" } },
-              "rule": { "asAtLeastNSatisfied": { "spec": "is-positive" }, "n": "@minOrders", "name": "quota" }
+              "rule": {
+                "asAtLeastNSatisfied": { "spec": "is-positive" }, "n": "@minOrders", "path": "orders", "name": "quota"
+              }
             }
             """;
-        var expected = Spec
-            .Build(IsPositive)
-            .AsAtLeastNSatisfied(2)
-            .Create("quota");
+        var inner = Spec.Build(IsPositive).AsAtLeastNSatisfied(2)
+            .WhenTrue("at least 2 satisfied").WhenFalse("fewer than 2 satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner).Create("quota");
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json, new { minOrders = 2 });
+        var loaded = CreateSerializer().Deserialize<Customer>(json, new { minOrders = 2 });
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { 1, -2, -3 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2, -3] }, new Customer { Orders = [1, -2, -3] });
     }
 
     [Fact]
@@ -134,17 +139,17 @@ public class RuleHigherOrderTests
     {
         // Arrange
         const string json =
-            """{ "rule": { "asAtMostNSatisfied": { "spec": "is-positive" }, "n": 1, "name": "at most one" } }""";
-        var expected = Spec
-            .Build(IsPositive)
-            .AsAtMostNSatisfied(1)
-            .Create("at most one");
+            """{ "rule": { "asAtMostNSatisfied": { "spec": "is-positive" }, "n": 1, "path": "orders", "name": "at most one" } }""";
+        var inner = Spec.Build(IsPositive).AsAtMostNSatisfied(1)
+            .WhenTrue("at most 1 satisfied").WhenFalse("more than 1 satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner).Create("at most one");
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, -2 }, new[] { 1, 2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, -2] }, new Customer { Orders = [1, 2] });
     }
 
     [Fact]
@@ -156,55 +161,37 @@ public class RuleHigherOrderTests
             {
               "rule": {
                 "asAllSatisfied": { "and": [ { "spec": "is-positive" }, { "not": { "spec": "is-positive" } } ] },
+                "path": "orders",
                 "name": "contradiction everywhere"
               }
             }
             """;
-        var expected = Spec
-            .Build(IsPositive.And(IsPositive.Not()))
-            .AsAllSatisfied()
-            .Create("contradiction everywhere");
+        var inner = Spec.Build(IsPositive.And(IsPositive.Not())).AsAllSatisfied()
+            .WhenTrue("all satisfied").WhenFalse("not all satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner).Create("contradiction everywhere");
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2 }, new[] { -1 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2] }, new Customer { Orders = [-1] });
     }
 
     [Fact]
-    public void Should_reanchor_to_a_concrete_collection_model_type()
+    public void Should_report_an_unregistered_collection_path()
     {
         // Arrange
         const string json =
-            """{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "name": "all positive" } }""";
-        var expected = Spec
-            .Build(IsPositive)
-            .AsAllSatisfied()
-            .Create("all positive")
-            .ChangeModelTo<int[]>(models => models);
+            """{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "path": "missing", "name": "all positive" } }""";
 
         // Act
-        var loaded = CreateSerializer().Deserialize<int[]>(json);
-
-        // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2 }, new[] { 1, -2 });
-    }
-
-    [Fact]
-    public void Should_report_a_model_that_is_not_a_collection()
-    {
-        // Arrange
-        const string json =
-            """{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "name": "all positive" } }""";
-
-        // Act
-        var act = () => CreateSerializer().Deserialize<int>(json);
+        var act = () => CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
         var exception = act.ShouldThrow<RuleSerializationException>();
         var error = exception.Errors.ShouldHaveSingleItem();
-        error.Code.ShouldBe(RuleErrorCode.InvalidHigherOrderPath);
+        error.Code.ShouldBe(RuleErrorCode.UnknownCollection);
         error.Path.ShouldBe("$.rule");
     }
 
@@ -213,10 +200,10 @@ public class RuleHigherOrderTests
     {
         // Arrange
         const string json =
-            """{ "rule": { "asNSatisfied": { "spec": "is-positive" }, "n": "@missing", "name": "x" } }""";
+            """{ "rule": { "asNSatisfied": { "spec": "is-positive" }, "n": "@missing", "path": "orders", "name": "x" } }""";
 
         // Act
-        var act = () => CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var act = () => CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
         var exception = act.ShouldThrow<RuleSerializationException>();
@@ -233,12 +220,12 @@ public class RuleHigherOrderTests
             """
             {
               "parameters": { "label": { "type": "string", "default": "x" } },
-              "rule": { "asNSatisfied": { "spec": "is-positive" }, "n": "@label", "name": "x" }
+              "rule": { "asNSatisfied": { "spec": "is-positive" }, "n": "@label", "path": "orders", "name": "x" }
             }
             """;
 
         // Act
-        var act = () => CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var act = () => CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
         var exception = act.ShouldThrow<RuleSerializationException>();
@@ -248,45 +235,24 @@ public class RuleHigherOrderTests
     }
 
     [Fact]
-    public void Should_select_the_collection_through_a_single_segment_path()
+    public void Should_select_a_registered_collection_and_reanchor_to_the_parent_model()
     {
-        // Arrange
-        const string json =
-            """{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "path": "Orders", "name": "all orders positive" } }""";
-        var expected = Spec
-            .Build(IsPositive)
-            .AsAllSatisfied()
-            .Create("all orders positive")
-            .ChangeModelTo<Customer>(customer => customer.Orders);
-
-        // Act
-        var loaded = CreateSerializer().Deserialize<Customer>(json);
-
-        // Assert
-        ShouldBehaveIdentically(loaded, expected,
-            new Customer { Orders = [1, 2] },
-            new Customer { Orders = [1, -2] });
-    }
-
-    [Fact]
-    public void Should_select_the_collection_through_a_nested_path()
-    {
-        // Arrange
+        // Arrange: the selector can be an arbitrary C# expression (here reaching through a nested
+        // Account property) since paths are host-registered rather than reflected from the string.
         const string json =
             """
             {
               "rule": {
                 "asAnySatisfied": { "spec": "is-positive" },
-                "path": "Account.Orders",
+                "path": "account-orders",
                 "name": "an account order is positive"
               }
             }
             """;
-        var expected = Spec
-            .Build(IsPositive)
-            .AsAnySatisfied()
-            .Create("an account order is positive")
-            .ChangeModelTo<Customer>(customer => customer.Account.Orders);
+        var inner = Spec.Build(IsPositive).AsAnySatisfied()
+            .WhenTrue("any satisfied").WhenFalse("none satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Account.Orders);
+        var expected = Spec.Build(inner).Create("an account order is positive");
 
         // Act
         var loaded = CreateSerializer().Deserialize<Customer>(json);
@@ -298,49 +264,14 @@ public class RuleHigherOrderTests
     }
 
     [Fact]
-    public void Should_report_a_path_segment_that_is_not_a_public_property()
-    {
-        // Arrange
-        const string json =
-            """{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "path": "Nope", "name": "x" } }""";
-
-        // Act
-        var act = () => CreateSerializer().Deserialize<Customer>(json);
-
-        // Assert
-        var exception = act.ShouldThrow<RuleSerializationException>();
-        var error = exception.Errors.ShouldHaveSingleItem();
-        error.Code.ShouldBe(RuleErrorCode.InvalidHigherOrderPath);
-        error.Path.ShouldBe("$.rule.path");
-        error.Message.ShouldContain("Nope");
-    }
-
-    [Fact]
-    public void Should_report_a_path_that_selects_a_non_collection()
-    {
-        // Arrange
-        const string json =
-            """{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "path": "Age", "name": "x" } }""";
-
-        // Act
-        var act = () => CreateSerializer().Deserialize<Customer>(json);
-
-        // Assert
-        var exception = act.ShouldThrow<RuleSerializationException>();
-        var error = exception.Errors.ShouldHaveSingleItem();
-        error.Code.ShouldBe(RuleErrorCode.InvalidHigherOrderPath);
-        error.Path.ShouldBe("$.rule.path");
-    }
-
-    [Fact]
     public void Should_propagate_a_failed_inner_spec_through_a_bare_higher_order_node()
     {
         // Arrange
         const string json =
-            """{ "rule": { "asAllSatisfied": { "spec": "missing" }, "name": "all positive" } }""";
+            """{ "rule": { "asAllSatisfied": { "spec": "missing" }, "path": "orders", "name": "all positive" } }""";
 
         // Act
-        var act = () => CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var act = () => CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
         var exception = act.ShouldThrow<RuleSerializationException>();
@@ -358,24 +289,24 @@ public class RuleHigherOrderTests
               "rule": {
                 "asNSatisfied": { "spec": "is-positive" },
                 "n": 2,
+                "path": "orders",
                 "whenTrue": "exactly two positive",
                 "whenFalse": "not exactly two positive",
                 "name": "two positive"
               }
             }
             """;
-        var expected = Spec
-            .Build(IsPositive)
-            .AsNSatisfied(2)
-            .WhenTrue("exactly two positive")
-            .WhenFalse("not exactly two positive")
-            .Create("two positive");
+        var inner = Spec.Build(IsPositive).AsNSatisfied(2)
+            .WhenTrue("exactly 2 satisfied").WhenFalse("not exactly 2 satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner)
+            .WhenTrue("exactly two positive").WhenFalse("not exactly two positive").Create("two positive");
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { -1, -2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2, -3] }, new Customer { Orders = [-1, -2] });
     }
 
     [Fact]
@@ -388,23 +319,23 @@ public class RuleHigherOrderTests
               "rule": {
                 "asNSatisfied": { "spec": "is-positive" },
                 "n": 2,
+                "path": "orders",
                 "whenTrue": "exactly two positive",
                 "whenFalse": "not exactly two positive"
               }
             }
             """;
-        var expected = Spec
-            .Build(IsPositive)
-            .AsNSatisfied(2)
-            .WhenTrue("exactly two positive")
-            .WhenFalse("not exactly two positive")
-            .Create();
+        var inner = Spec.Build(IsPositive).AsNSatisfied(2)
+            .WhenTrue("exactly 2 satisfied").WhenFalse("not exactly 2 satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner)
+            .WhenTrue("exactly two positive").WhenFalse("not exactly two positive").Create();
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { -1, -2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2, -3] }, new Customer { Orders = [-1, -2] });
     }
 
     [Fact]
@@ -417,24 +348,23 @@ public class RuleHigherOrderTests
               "rule": {
                 "asAtLeastNSatisfied": { "spec": "is-positive" },
                 "n": 2,
+                "path": "orders",
                 "whenTrue": "quota met",
                 "whenFalse": "quota not met",
                 "name": "quota"
               }
             }
             """;
-        var expected = Spec
-            .Build(IsPositive)
-            .AsAtLeastNSatisfied(2)
-            .WhenTrue("quota met")
-            .WhenFalse("quota not met")
-            .Create("quota");
+        var inner = Spec.Build(IsPositive).AsAtLeastNSatisfied(2)
+            .WhenTrue("at least 2 satisfied").WhenFalse("fewer than 2 satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner).WhenTrue("quota met").WhenFalse("quota not met").Create("quota");
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { 1, -2, -3 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2, -3] }, new Customer { Orders = [1, -2, -3] });
     }
 
     [Fact]
@@ -447,23 +377,22 @@ public class RuleHigherOrderTests
               "rule": {
                 "asAtLeastNSatisfied": { "spec": "is-positive" },
                 "n": 2,
+                "path": "orders",
                 "whenTrue": "quota met",
                 "whenFalse": "quota not met"
               }
             }
             """;
-        var expected = Spec
-            .Build(IsPositive)
-            .AsAtLeastNSatisfied(2)
-            .WhenTrue("quota met")
-            .WhenFalse("quota not met")
-            .Create();
+        var inner = Spec.Build(IsPositive).AsAtLeastNSatisfied(2)
+            .WhenTrue("at least 2 satisfied").WhenFalse("fewer than 2 satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner).WhenTrue("quota met").WhenFalse("quota not met").Create();
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, 2, -3 }, new[] { 1, -2, -3 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, 2, -3] }, new Customer { Orders = [1, -2, -3] });
     }
 
     [Fact]
@@ -476,24 +405,23 @@ public class RuleHigherOrderTests
               "rule": {
                 "asAtMostNSatisfied": { "spec": "is-positive" },
                 "n": 1,
+                "path": "orders",
                 "whenTrue": "within bounds",
                 "whenFalse": "over bounds",
                 "name": "bounded"
               }
             }
             """;
-        var expected = Spec
-            .Build(IsPositive)
-            .AsAtMostNSatisfied(1)
-            .WhenTrue("within bounds")
-            .WhenFalse("over bounds")
-            .Create("bounded");
+        var inner = Spec.Build(IsPositive).AsAtMostNSatisfied(1)
+            .WhenTrue("at most 1 satisfied").WhenFalse("more than 1 satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner).WhenTrue("within bounds").WhenFalse("over bounds").Create("bounded");
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, -2 }, new[] { 1, 2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, -2] }, new Customer { Orders = [1, 2] });
     }
 
     [Fact]
@@ -506,26 +434,25 @@ public class RuleHigherOrderTests
               "rule": {
                 "asAtMostNSatisfied": { "spec": "is-positive" },
                 "n": 1,
+                "path": "orders",
                 "whenTrue": "within bounds",
                 "whenFalse": "over bounds"
               }
             }
             """;
-        var expected = Spec
-            .Build(IsPositive)
-            .AsAtMostNSatisfied(1)
-            .WhenTrue("within bounds")
-            .WhenFalse("over bounds")
-            .Create();
+        var inner = Spec.Build(IsPositive).AsAtMostNSatisfied(1)
+            .WhenTrue("at most 1 satisfied").WhenFalse("more than 1 satisfied").Create()
+            .ChangeModelTo<Customer>(c => c.Orders);
+        var expected = Spec.Build(inner).WhenTrue("within bounds").WhenFalse("over bounds").Create();
 
         // Act
-        var loaded = CreateSerializer().Deserialize<IEnumerable<int>>(json);
+        var loaded = CreateSerializer().Deserialize<Customer>(json);
 
         // Assert
-        ShouldBehaveIdentically(loaded, expected, new[] { 1, -2 }, new[] { 1, 2 });
+        ShouldBehaveIdentically(loaded, expected, new Customer { Orders = [1, -2] }, new Customer { Orders = [1, 2] });
     }
 
-    private class Customer
+    private sealed class Customer
     {
         public List<int> Orders { get; set; } = [];
 
@@ -534,7 +461,7 @@ public class RuleHigherOrderTests
         public int Age { get; set; }
     }
 
-    private class Account
+    private sealed class Account
     {
         public List<int> Orders { get; set; } = [];
     }

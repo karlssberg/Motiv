@@ -28,10 +28,11 @@ public class RuleSchemaTests
         """{ "rule": { "expression": "Age >= @minAge" } }""",
         """{ "parameters": { "minAge": { "type": "integer", "default": 18 } }, "rule": { "spec": "a" } }""",
         """{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "Orders", "name": "all" } }""",
-        """{ "rule": { "asAnySatisfied": { "spec": "a" }, "whenTrue": "some", "whenFalse": "none" } }""",
-        """{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 3, "name": "exactly three" } }""",
-        """{ "rule": { "asAtLeastNSatisfied": { "spec": "a" }, "n": "@minOrders", "path": "Account.Orders", "name": "quota" } }""",
-        """{ "rule": { "asAtMostNSatisfied": { "spec": "a" }, "n": 2, "name": "at most two" } }"""
+        """{ "rule": { "asAnySatisfied": { "spec": "a" }, "path": "orders", "whenTrue": "some", "whenFalse": "none" } }""",
+        """{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 3, "path": "orders", "name": "exactly three" } }""",
+        """{ "rule": { "asAtLeastNSatisfied": { "spec": "a" }, "n": "@minOrders", "path": "account-orders", "name": "quota" } }""",
+        """{ "rule": { "asAtMostNSatisfied": { "spec": "a" }, "n": 2, "path": "orders", "name": "at most two" } }""",
+        """{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "orders" } }"""
     };
 
     [Theory]
@@ -56,13 +57,12 @@ public class RuleSchemaTests
         """{ "rule": { "spec": "a", "whenTrue": 1, "whenFalse": 2 } }""",
         """{ "parameters": { "minAge": { "default": 18 } }, "rule": { "spec": "a" } }""",
         """{ "parameters": { "minAge": { "type": "decimal" } }, "rule": { "spec": "a" } }""",
-        """{ "rule": { "asNSatisfied": { "spec": "a" } } }""",
-        """{ "rule": { "asAllSatisfied": { "spec": "a" }, "n": 3 } }""",
-        """{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "Orders..Items" } }""",
-        """{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "minOrders" } }""",
+        """{ "rule": { "asNSatisfied": { "spec": "a" }, "path": "orders" } }""",
+        """{ "rule": { "asAllSatisfied": { "spec": "a" }, "n": 3, "path": "orders" } }""",
+        """{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "" } }""",
+        """{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "minOrders", "path": "orders" } }""",
         """{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 } } }""",
-        """{ "rule": { "asAllSatisfied": { "spec": "a" } } }""",
-        """{ "rule": { "asAtLeastNSatisfied": { "spec": "a" }, "n": 2, "path": "Orders" } }"""
+        """{ "rule": { "asAllSatisfied": { "spec": "a" }, "name": "x" } }"""
     };
 
     [Theory]
