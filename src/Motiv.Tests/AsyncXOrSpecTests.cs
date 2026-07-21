@@ -13,8 +13,8 @@ public class AsyncXOrSpecTests
         // Arrange
         var syncSpec = Spec.Build((object _) => leftValue).Create("left")
             ^ Spec.Build((object _) => rightValue).Create("right");
-        var asyncSpec = Spec.BuildAsync((object _) => Task.FromResult(leftValue)).Create("left")
-            ^ Spec.BuildAsync((object _) => Task.FromResult(rightValue)).Create("right");
+        var asyncSpec = Spec.BuildAsync((object _) => new ValueTask<bool>(leftValue)).Create("left")
+            ^ Spec.BuildAsync((object _) => new ValueTask<bool>(rightValue)).Create("right");
 
         // Act
         var syncResult = syncSpec.Evaluate(model);
@@ -31,8 +31,8 @@ public class AsyncXOrSpecTests
     public async Task Should_always_surface_both_operand_assertions()
     {
         // Arrange
-        var asyncSpec = Spec.BuildAsync((object _) => Task.FromResult(true)).Create("left")
-            ^ Spec.BuildAsync((object _) => Task.FromResult(false)).Create("right");
+        var asyncSpec = Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create("left")
+            ^ Spec.BuildAsync((object _) => new ValueTask<bool>(false)).Create("right");
 
         // Act
         var result = await asyncSpec.EvaluateAsync(new object());

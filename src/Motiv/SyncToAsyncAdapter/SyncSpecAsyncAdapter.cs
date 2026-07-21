@@ -2,8 +2,8 @@ namespace Motiv.SyncToAsyncAdapter;
 
 /// <summary>
 /// Adapts a synchronous <see cref="SpecBase{TModel,TMetadata}" /> into the asynchronous specification
-/// hierarchy. Evaluation remains fully synchronous internally; results are wrapped in already-completed
-/// tasks so that the adapter can be composed with genuinely asynchronous specifications.
+/// hierarchy. Evaluation remains fully synchronous internally; results are surfaced as already-completed
+/// ValueTasks so that the adapter can be composed with genuinely asynchronous specifications.
 /// </summary>
 /// <typeparam name="TModel">The model type that the specification will evaluate against.</typeparam>
 /// <typeparam name="TMetadata">The type of the metadata to associate with the predicate.</typeparam>
@@ -23,15 +23,15 @@ internal sealed class SyncSpecAsyncAdapter<TModel, TMetadata>(
     public override ISpecDescription Description => spec.Description;
 
     /// <inheritdoc />
-    public override Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default)
+    public override ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default)
     {
         try
         {
-            return Task.FromResult(spec.Matches(model));
+            return new ValueTask<bool>(spec.Matches(model));
         }
         catch (Exception ex)
         {
-            return Task.FromException<bool>(ex);
+            return new ValueTask<bool>(Task.FromException<bool>(ex));
         }
     }
 
@@ -44,17 +44,17 @@ internal sealed class SyncSpecAsyncAdapter<TModel, TMetadata>(
         };
 
     /// <inheritdoc />
-    protected override Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
+    protected override ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
         TModel model,
         CancellationToken cancellationToken)
     {
         try
         {
-            return Task.FromResult(spec.EvaluateInternal(model));
+            return new ValueTask<BooleanResultBase<TMetadata>>(spec.EvaluateInternal(model));
         }
         catch (Exception ex)
         {
-            return Task.FromException<BooleanResultBase<TMetadata>>(ex);
+            return new ValueTask<BooleanResultBase<TMetadata>>(Task.FromException<BooleanResultBase<TMetadata>>(ex));
         }
     }
 }

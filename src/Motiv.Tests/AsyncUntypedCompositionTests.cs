@@ -10,9 +10,9 @@ public class AsyncUntypedCompositionTests
         bool leftValue, bool rightValue, bool expected, object model)
     {
         // Arrange — int metadata composed with string metadata forces the untyped level
-        AsyncSpecBase<object> left = Spec.BuildAsync((object _) => Task.FromResult(leftValue))
+        AsyncSpecBase<object> left = Spec.BuildAsync((object _) => new ValueTask<bool>(leftValue))
             .WhenTrue(1).WhenFalse(0).Create("left");
-        AsyncSpecBase<object> right = Spec.BuildAsync((object _) => Task.FromResult(rightValue))
+        AsyncSpecBase<object> right = Spec.BuildAsync((object _) => new ValueTask<bool>(rightValue))
             .WhenTrue("yes").WhenFalse("no").Create("right");
 
         // Act
@@ -33,9 +33,9 @@ public class AsyncUntypedCompositionTests
             .WhenTrue(1).WhenFalse(0).Create("left");
         SpecBase<object> syncRight = Spec.Build((object _) => rightValue)
             .WhenTrue("yes").WhenFalse("no").Create("right");
-        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => Task.FromResult(leftValue))
+        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => new ValueTask<bool>(leftValue))
             .WhenTrue(1).WhenFalse(0).Create("left");
-        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => Task.FromResult(rightValue))
+        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => new ValueTask<bool>(rightValue))
             .WhenTrue("yes").WhenFalse("no").Create("right");
 
         // Act
@@ -55,7 +55,7 @@ public class AsyncUntypedCompositionTests
         // Arrange
         SpecBase<object> sync = Spec.Build((object _) => true)
             .WhenTrue(1).WhenFalse(0).Create("sync");
-        AsyncSpecBase<object> async = Spec.BuildAsync((object _) => Task.FromResult(true))
+        AsyncSpecBase<object> async = Spec.BuildAsync((object _) => new ValueTask<bool>(true))
             .WhenTrue("yes").WhenFalse("no").Create("async");
 
         // Act & Assert

@@ -9,7 +9,7 @@ public class AsyncExplanationPropositionTests
     {
         // Arrange
         var spec = Spec
-            .BuildAsync((bool b) => Task.FromResult(b))
+            .BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue("user is active")
             .WhenFalse("user is not active")
             .Create();
@@ -29,7 +29,7 @@ public class AsyncExplanationPropositionTests
     {
         // Arrange
         var spec = Spec
-            .BuildAsync((bool b) => Task.FromResult(b))
+            .BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue("user is active")
             .WhenFalse("user is not active")
             .Create("is active");
@@ -50,7 +50,7 @@ public class AsyncExplanationPropositionTests
         // Arrange
         var sync = Spec.Build((bool b) => b)
             .WhenTrue("yes").WhenFalse("no").Create();
-        var async = Spec.BuildAsync((bool b) => Task.FromResult(b))
+        var async = Spec.BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue("yes").WhenFalse("no").Create();
 
         // Act
@@ -69,7 +69,7 @@ public class AsyncExplanationPropositionTests
     {
         // Act
         var act = () => Spec
-            .BuildAsync((bool b) => Task.FromResult(b))
+            .BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue("  ")
             .WhenFalse("no")
             .Create();

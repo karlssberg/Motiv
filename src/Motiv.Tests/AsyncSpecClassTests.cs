@@ -3,13 +3,13 @@ namespace Motiv.Tests;
 public class AsyncSpecClassTests
 {
     private sealed class IsPositiveAsync() : AsyncSpec<int>(
-        Spec.BuildAsync((int n) => Task.FromResult(n > 0))
+        Spec.BuildAsync((int n) => new ValueTask<bool>(n > 0))
             .WhenTrue("is positive")
             .WhenFalse("is not positive")
             .Create());
 
     private sealed class GradeAsync() : AsyncSpec<int, char>(() =>
-        Spec.BuildAsync((int n) => Task.FromResult(n >= 50))
+        Spec.BuildAsync((int n) => new ValueTask<bool>(n >= 50))
             .WhenTrue('P')
             .WhenFalse('F')
             .Create("passing grade"));

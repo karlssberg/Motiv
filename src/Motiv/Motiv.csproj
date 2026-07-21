@@ -38,6 +38,7 @@
 
     <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
         <PackageReference Include="System.Diagnostics.DiagnosticSource" />
+        <PackageReference Include="System.Threading.Tasks.Extensions" />
     </ItemGroup>
 
 </Project>

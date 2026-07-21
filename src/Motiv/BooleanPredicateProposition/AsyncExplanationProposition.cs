@@ -6,7 +6,7 @@ namespace Motiv.BooleanPredicateProposition;
 /// statement-derived reason.
 /// </summary>
 internal sealed class AsyncExplanationProposition<TModel>(
-    Func<TModel, CancellationToken, Task<bool>> predicate,
+    Func<TModel, CancellationToken, ValueTask<bool>> predicate,
     Func<TModel, string> trueBecause,
     Func<TModel, string> falseBecause,
     ISpecDescription specDescription)
@@ -16,10 +16,10 @@ internal sealed class AsyncExplanationProposition<TModel>(
 
     public override ISpecDescription Description => specDescription;
 
-    public override async Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         await predicate(model, cancellationToken).ConfigureAwait(false);
 
-    protected override async Task<PolicyResultBase<string>> EvaluatePolicyAsync(
+    protected override async ValueTask<PolicyResultBase<string>> EvaluatePolicyAsync(
         TModel model,
         CancellationToken cancellationToken)
     {

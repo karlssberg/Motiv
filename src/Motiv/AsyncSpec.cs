@@ -34,14 +34,14 @@ public class AsyncSpec<TModel, TMetadata> : AsyncSpecBase<TModel, TMetadata>
     public override ISpecDescription Description { get; }
 
     /// <inheritdoc />
-    public override Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public override ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         _spec.MatchesAsync(model, cancellationToken);
 
     /// <summary>Asynchronously determines whether the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be checked against the proposition.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A BooleanResultBase containing the result of the proposition check and the associated metadata.</returns>
-    protected override Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(TModel model, CancellationToken cancellationToken) =>
+    protected override ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(TModel model, CancellationToken cancellationToken) =>
         _spec.EvaluateSpecAsyncInternal(model, cancellationToken);
 }
 
@@ -81,13 +81,13 @@ public class AsyncSpec<TModel> : AsyncSpecBase<TModel, string>
     public override IEnumerable<SpecBase> Underlying => _spec.Underlying;
 
     /// <inheritdoc />
-    public override Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public override ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         _spec.MatchesAsync(model, cancellationToken);
 
     /// <summary>Asynchronously determines whether the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be checked against the proposition.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A BooleanResultBase containing the result of the proposition being applied to a model.</returns>
-    protected override Task<BooleanResultBase<string>> EvaluateSpecAsync(TModel model, CancellationToken cancellationToken) =>
+    protected override ValueTask<BooleanResultBase<string>> EvaluateSpecAsync(TModel model, CancellationToken cancellationToken) =>
         _spec.EvaluateSpecAsyncInternal(model, cancellationToken);
 }

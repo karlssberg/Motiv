@@ -50,7 +50,7 @@ public class SpecRegistryTests
     {
         // Arrange
         var isPositiveAsync = Spec
-            .BuildAsync((int n) => Task.FromResult(n > 0))
+            .BuildAsync((int n) => new ValueTask<bool>(n > 0))
             .Create("is positive async");
 
         var registry = new SpecRegistry().Register("is-positive-async", isPositiveAsync);

@@ -11,7 +11,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 [FluentTarget(typeof(Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct AsyncExplanationWithNamePropositionFactory<TModel>(
-    [MultipleFluentMethods(typeof(BuildAsyncOverloads))]Func<TModel, CancellationToken, Task<bool>> predicate,
+    [MultipleFluentMethods(typeof(BuildAsyncOverloads))]Func<TModel, CancellationToken, ValueTask<bool>> predicate,
     [FluentMethod("WhenTrue")]string trueBecause,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, string> falseBecause)
 {

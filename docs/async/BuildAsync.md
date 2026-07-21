@@ -9,9 +9,9 @@ identical, including the v8 named-metadata rules described under
 [Custom Assertions](../../README.md#custom-assertions).
 
 ```csharp
-BuildAsync<TModel>(Func<TModel, CancellationToken, Task<bool>> predicate)
+BuildAsync<TModel>(Func<TModel, CancellationToken, ValueTask<bool>> predicate)
 
-BuildAsync<TModel>(Func<TModel, Task<bool>> predicate)
+BuildAsync<TModel>(Func<TModel, ValueTask<bool>> predicate)
 ```
 
 Two overloads are available: one whose predicate accepts a `CancellationToken`, and one that doesn't. Both
@@ -51,7 +51,7 @@ result.Assertions; // ["is even == true"]
 
 ```csharp
 var isActive = Spec
-    .BuildAsync((bool b) => Task.FromResult(b))
+    .BuildAsync((bool b) => new ValueTask<bool>(b))
     .WhenTrue("user is active")
     .WhenFalse("user is not active")
     .Create();
@@ -65,7 +65,7 @@ does for the synchronous builder:
 
 ```csharp
 var isActive = Spec
-    .BuildAsync((bool b) => Task.FromResult(b))
+    .BuildAsync((bool b) => new ValueTask<bool>(b))
     .WhenTrue("user is active")
     .WhenFalse("user is not active")
     .Create("is active");

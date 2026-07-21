@@ -3,7 +3,7 @@ namespace Motiv.SyncToAsyncAdapter;
 /// <summary>
 /// Adapts a synchronous <see cref="PolicyBase{TModel,TMetadata}" /> into the asynchronous policy hierarchy,
 /// preserving the single-value policy guarantee. Evaluation remains fully synchronous internally; results
-/// are wrapped in already-completed tasks so that the adapter can be composed with genuinely asynchronous
+/// are surfaced as already-completed ValueTasks so that the adapter can be composed with genuinely asynchronous
 /// policies.
 /// </summary>
 /// <typeparam name="TModel">The model type that the policy will evaluate against.</typeparam>
@@ -24,15 +24,15 @@ internal sealed class SyncPolicyAsyncAdapter<TModel, TMetadata>(
     public override ISpecDescription Description => policy.Description;
 
     /// <inheritdoc />
-    public override Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default)
+    public override ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default)
     {
         try
         {
-            return Task.FromResult(policy.Matches(model));
+            return new ValueTask<bool>(policy.Matches(model));
         }
         catch (Exception ex)
         {
-            return Task.FromException<bool>(ex);
+            return new ValueTask<bool>(Task.FromException<bool>(ex));
         }
     }
 
@@ -45,17 +45,17 @@ internal sealed class SyncPolicyAsyncAdapter<TModel, TMetadata>(
         };
 
     /// <inheritdoc />
-    protected override Task<PolicyResultBase<TMetadata>> EvaluatePolicyAsync(
+    protected override ValueTask<PolicyResultBase<TMetadata>> EvaluatePolicyAsync(
         TModel model,
         CancellationToken cancellationToken)
     {
         try
         {
-            return Task.FromResult(policy.EvaluatePolicyInternal(model));
+            return new ValueTask<PolicyResultBase<TMetadata>>(policy.EvaluatePolicyInternal(model));
         }
         catch (Exception ex)
         {
-            return Task.FromException<PolicyResultBase<TMetadata>>(ex);
+            return new ValueTask<PolicyResultBase<TMetadata>>(Task.FromException<PolicyResultBase<TMetadata>>(ex));
         }
     }
 }

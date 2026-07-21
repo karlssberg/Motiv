@@ -9,7 +9,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 [FluentTarget(typeof(Spec), TerminalMethod = TerminalMethod.None)]
 public readonly partial struct AsyncMinimalBooleanPredicatePropositionFactory<TModel>(
-    [MultipleFluentMethods(typeof(BuildAsyncOverloads))]Func<TModel, CancellationToken, Task<bool>> predicate)
+    [MultipleFluentMethods(typeof(BuildAsyncOverloads))]Func<TModel, CancellationToken, ValueTask<bool>> predicate)
 {
     /// <summary>Creates an asynchronous proposition and names it with the propositional statement provided.</summary>
     /// <param name="statement">The proposition statement of what the proposition represents.</param>

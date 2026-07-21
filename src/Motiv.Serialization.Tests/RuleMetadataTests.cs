@@ -413,7 +413,7 @@ public class RuleMetadataTests
     {
         // Arrange
         var isReadyAsync = Spec
-            .BuildAsync((int n) => Task.FromResult(n > 0))
+            .BuildAsync((int n) => new ValueTask<bool>(n > 0))
             .Create("is ready");
         var registry = new SpecRegistry().Register("is-ready", isReadyAsync);
         var serializer = new RuleSerializer(registry);

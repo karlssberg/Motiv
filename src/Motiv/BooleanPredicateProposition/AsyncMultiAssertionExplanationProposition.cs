@@ -11,7 +11,7 @@ namespace Motiv.BooleanPredicateProposition;
 /// <param name="specDescription">The description of the proposition.</param>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 internal sealed class AsyncMultiAssertionExplanationProposition<TModel>(
-    Func<TModel, CancellationToken, Task<bool>> predicate,
+    Func<TModel, CancellationToken, ValueTask<bool>> predicate,
     Func<TModel, IEnumerable<string>> whenTrue,
     Func<TModel, IEnumerable<string>> whenFalse,
     ISpecDescription specDescription)
@@ -22,14 +22,14 @@ internal sealed class AsyncMultiAssertionExplanationProposition<TModel>(
     /// <summary>Gets or sets the description of the proposition.</summary>
     public override ISpecDescription Description => specDescription;
 
-    public override async Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         await predicate(model, cancellationToken).ConfigureAwait(false);
 
     /// <summary>Determines if the specified model satisfies the proposition.</summary>
     /// <param name="model">The model to be evaluated.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A BooleanResultBase object containing the result of the evaluation.</returns>
-    protected override async Task<BooleanResultBase<string>> EvaluateSpecAsync(
+    protected override async ValueTask<BooleanResultBase<string>> EvaluateSpecAsync(
         TModel model,
         CancellationToken cancellationToken)
     {

@@ -81,7 +81,7 @@ public class ToAsyncSpecTests
         var task = sync.ToAsyncSpec().EvaluateAsync(true);
 
         // Assert
-        (await task.ShouldThrowAsync<InvalidOperationException>()).Message.ShouldBe("boom");
+        (await task.AsTask().ShouldThrowAsync<InvalidOperationException>()).Message.ShouldBe("boom");
 
         static bool ThrowBoom() => throw new InvalidOperationException("boom");
     }

@@ -21,7 +21,7 @@ public class AsyncEvaluationErrorTelemetryTests
 
         var throws = Spec.BuildAsync((int _) => throw original).Create("throws");
 
-        var exception = await Should.ThrowAsync<InvalidOperationException>(() => throws.EvaluateAsync(1));
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() => throws.EvaluateAsync(1).AsTask());
         exception.Message.ShouldBe("async boom");
         exception.ShouldBeSameAs(original);
 
@@ -40,7 +40,7 @@ public class AsyncEvaluationErrorTelemetryTests
             .BuildAsync((int _) => throw new InvalidOperationException("boom"))
             .Create("throws");
 
-        await Should.ThrowAsync<InvalidOperationException>(() => throws.EvaluateAsync(1));
+        await Should.ThrowAsync<InvalidOperationException>(() => throws.EvaluateAsync(1).AsTask());
 
         harness.SingleMeasurement("motiv.evaluations")
             .Tags["error.type"].ShouldBe("System.InvalidOperationException");
@@ -56,10 +56,10 @@ public class AsyncEvaluationErrorTelemetryTests
         var throws = Spec
             .BuildAsync((int _) => throw new InvalidOperationException("boom"))
             .Create("throws");
-        var isEven = Spec.BuildAsync((int n) => Task.FromResult(n % 2 == 0)).Create("is even");
+        var isEven = Spec.BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0)).Create("is even");
         var composed = isEven.And(throws);
 
-        await Should.ThrowAsync<InvalidOperationException>(() => composed.EvaluateAsync(2));
+        await Should.ThrowAsync<InvalidOperationException>(() => composed.EvaluateAsync(2).AsTask());
 
         harness.Activities.Count.ShouldBe(1);
         harness.SingleActivity()
@@ -75,10 +75,10 @@ public class AsyncEvaluationErrorTelemetryTests
         var throws = Spec
             .BuildAsync((int _) => throw new InvalidOperationException("concurrent boom"))
             .Create("throws");
-        var isEven = Spec.BuildAsync((int n) => Task.FromResult(n % 2 == 0)).Create("is even");
+        var isEven = Spec.BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0)).Create("is even");
         var composed = isEven.AndConcurrently(throws);
 
-        var exception = await Should.ThrowAsync<InvalidOperationException>(() => composed.EvaluateAsync(2));
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() => composed.EvaluateAsync(2).AsTask());
         exception.Message.ShouldBe("concurrent boom");
 
         harness.Activities.Count.ShouldBe(1);
@@ -95,10 +95,10 @@ public class AsyncEvaluationErrorTelemetryTests
         var throwsSync = Spec
             .Build((int _) => throw new InvalidOperationException("sync boom"))
             .Create("throws sync");
-        var isEven = Spec.BuildAsync((int n) => Task.FromResult(n % 2 == 0)).Create("is even");
+        var isEven = Spec.BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0)).Create("is even");
         var composed = isEven.And(throwsSync);
 
-        var exception = await Should.ThrowAsync<InvalidOperationException>(() => composed.EvaluateAsync(2));
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() => composed.EvaluateAsync(2).AsTask());
         exception.Message.ShouldBe("sync boom");
 
         harness.Activities.Count.ShouldBe(1);
@@ -113,11 +113,11 @@ public class AsyncEvaluationErrorTelemetryTests
         using var harness = new TelemetryHarness();
         using var cancellation = new CancellationTokenSource();
 
-        Func<int, CancellationToken, Task<bool>> slowPredicate = (_, token) =>
+        Func<int, CancellationToken, ValueTask<bool>> slowPredicate = (_, token) =>
         {
             cancellation.Cancel();
             token.ThrowIfCancellationRequested();
-            return Task.FromResult(true);
+            return new ValueTask<bool>(true);
         };
         var slow = Spec.BuildAsync(slowPredicate).Create("slow");
 
@@ -147,7 +147,7 @@ public class AsyncEvaluationErrorTelemetryTests
             .BuildAsync((int _) => throw new OperationCanceledException("boom"))
             .Create("throws");
 
-        await Should.ThrowAsync<OperationCanceledException>(() => throws.EvaluateAsync(1));
+        await Should.ThrowAsync<OperationCanceledException>(() => throws.EvaluateAsync(1).AsTask());
 
         var activity = harness.SingleActivity();
         activity.Status.ShouldBe(ActivityStatusCode.Error);
@@ -165,14 +165,14 @@ public class AsyncEvaluationErrorTelemetryTests
         using var harness = new TelemetryHarness();
         using var cancellation = new CancellationTokenSource();
 
-        Func<int, CancellationToken, Task<bool>> slowPredicate = (_, token) =>
+        Func<int, CancellationToken, ValueTask<bool>> slowPredicate = (_, token) =>
         {
             cancellation.Cancel();
             token.ThrowIfCancellationRequested();
-            return Task.FromResult(true);
+            return new ValueTask<bool>(true);
         };
         var slow = Spec.BuildAsync(slowPredicate).Create("slow");
-        var isEven = Spec.BuildAsync((int n) => Task.FromResult(n % 2 == 0)).Create("is even");
+        var isEven = Spec.BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0)).Create("is even");
         var composed = isEven.And(slow);
 
         await Should.ThrowAsync<OperationCanceledException>(

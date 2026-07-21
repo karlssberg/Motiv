@@ -3,7 +3,7 @@ namespace Motiv.Tests;
 public class AsyncAndSpecTests
 {
     private static AsyncPolicyBase<object, string> Async(string name, bool value) =>
-        Spec.BuildAsync((object _) => Task.FromResult(value))
+        Spec.BuildAsync((object _) => new ValueTask<bool>(value))
             .WhenTrue(true.ToString()).WhenFalse(false.ToString())
             .Create(name);
 

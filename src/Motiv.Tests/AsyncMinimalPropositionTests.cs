@@ -30,7 +30,7 @@ public class AsyncMinimalPropositionTests
     {
         // Arrange
         var isEven = Spec
-            .BuildAsync((int n) => Task.FromResult(n % 2 == 0))
+            .BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0))
             .Create("is even");
 
         // Act
@@ -47,7 +47,7 @@ public class AsyncMinimalPropositionTests
     {
         // Arrange
         var isEven = Spec
-            .BuildAsync((int n) => Task.FromResult(n % 2 == 0))
+            .BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0))
             .Create("is even");
 
         // Act
@@ -67,7 +67,7 @@ public class AsyncMinimalPropositionTests
             .BuildAsync((int _, CancellationToken ct) =>
             {
                 observed = ct;
-                return Task.FromResult(true);
+                return new ValueTask<bool>(true);
             })
             .Create("observes token");
 
@@ -83,7 +83,7 @@ public class AsyncMinimalPropositionTests
     {
         // Arrange
         var sync = Spec.Build((int n) => n > 0).Create("is positive");
-        var async = Spec.BuildAsync((int n) => Task.FromResult(n > 0)).Create("is positive");
+        var async = Spec.BuildAsync((int n) => new ValueTask<bool>(n > 0)).Create("is positive");
 
         foreach (var model in new[] { 1, -1 })
         {

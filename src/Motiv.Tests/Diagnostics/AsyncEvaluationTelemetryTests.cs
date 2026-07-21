@@ -8,8 +8,8 @@ public class AsyncEvaluationTelemetryTests
     {
         using var harness = new TelemetryHarness();
 
-        var isEven = Spec.BuildAsync((int n) => Task.FromResult(n % 2 == 0)).Create("is even");
-        var isPositive = Spec.BuildAsync((int n) => Task.FromResult(n > 0)).Create("is positive");
+        var isEven = Spec.BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0)).Create("is even");
+        var isPositive = Spec.BuildAsync((int n) => new ValueTask<bool>(n > 0)).Create("is positive");
         var composed = isEven.AndAlso(isPositive);
 
         await composed.EvaluateAsync(4);
@@ -24,7 +24,7 @@ public class AsyncEvaluationTelemetryTests
         using var harness = new TelemetryHarness();
 
         var isEven = Spec.Build((int n) => n % 2 == 0).Create("is even");
-        var isPositive = Spec.BuildAsync((int n) => Task.FromResult(n > 0)).Create("is positive");
+        var isPositive = Spec.BuildAsync((int n) => new ValueTask<bool>(n > 0)).Create("is positive");
         var composed = isPositive.And(isEven);
 
         await composed.EvaluateAsync(4);
@@ -35,8 +35,8 @@ public class AsyncEvaluationTelemetryTests
     [Fact]
     public async Task Should_emit_the_same_telemetry_for_concurrent_and_sequential_composition()
     {
-        var isEven = Spec.BuildAsync((int n) => Task.FromResult(n % 2 == 0)).Create("is even");
-        var isPositive = Spec.BuildAsync((int n) => Task.FromResult(n > 0)).Create("is positive");
+        var isEven = Spec.BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0)).Create("is even");
+        var isPositive = Spec.BuildAsync((int n) => new ValueTask<bool>(n > 0)).Create("is positive");
 
         object? sequentialSatisfied;
         object? sequentialReason;
@@ -65,7 +65,7 @@ public class AsyncEvaluationTelemetryTests
         using var harness = new TelemetryHarness();
 
         var policy = Spec
-            .BuildAsync((int n) => Task.FromResult(n % 2 == 0))
+            .BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0))
             .WhenTrue(1)
             .WhenFalse(0)
             .Create("is even");
@@ -81,7 +81,7 @@ public class AsyncEvaluationTelemetryTests
     {
         using var harness = new TelemetryHarness();
 
-        var isEven = Spec.BuildAsync((int n) => Task.FromResult(n % 2 == 0)).Create("is even");
+        var isEven = Spec.BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0)).Create("is even");
 
         (await isEven.MatchesAsync(2)).ShouldBeTrue();
 
@@ -94,8 +94,8 @@ public class AsyncEvaluationTelemetryTests
     {
         using var harness = new TelemetryHarness();
 
-        var left = Spec.BuildAsync((int _) => Task.FromResult(true)).WhenTrue(1).WhenFalse(0).Create("left");
-        var right = Spec.BuildAsync((int _) => Task.FromResult(true)).WhenTrue(2).WhenFalse(0).Create("right");
+        var left = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).WhenTrue(1).WhenFalse(0).Create("left");
+        var right = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).WhenTrue(2).WhenFalse(0).Create("right");
         var composed = left.OrElse(right);
 
         var result = await composed.EvaluateAsync(0);
@@ -109,8 +109,8 @@ public class AsyncEvaluationTelemetryTests
     {
         using var harness = new TelemetryHarness();
 
-        var left = Spec.BuildAsync((int _) => Task.FromResult(false)).WhenTrue(1).WhenFalse(0).Create("left");
-        var right = Spec.BuildAsync((int _) => Task.FromResult(true)).WhenTrue(2).WhenFalse(0).Create("right");
+        var left = Spec.BuildAsync((int _) => new ValueTask<bool>(false)).WhenTrue(1).WhenFalse(0).Create("left");
+        var right = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).WhenTrue(2).WhenFalse(0).Create("right");
         var composed = left.OrElse(right);
 
         var result = await composed.EvaluateAsync(0);
@@ -125,7 +125,7 @@ public class AsyncEvaluationTelemetryTests
         using var harness = new TelemetryHarness();
 
         var policy = Spec
-            .BuildAsync((int n) => Task.FromResult(n % 2 == 0))
+            .BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0))
             .WhenTrue(1)
             .WhenFalse(0)
             .Create("is even");
@@ -143,12 +143,12 @@ public class AsyncEvaluationTelemetryTests
         using var harness = new TelemetryHarness();
 
         AsyncSpecBase<int> isEven = Spec
-            .BuildAsync((int n) => Task.FromResult(n % 2 == 0))
+            .BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0))
             .WhenTrue(1)
             .WhenFalse(0)
             .Create("is even");
         AsyncSpecBase<int> isPositive = Spec
-            .BuildAsync((int n) => Task.FromResult(n > 0))
+            .BuildAsync((int n) => new ValueTask<bool>(n > 0))
             .WhenTrue(Guid.NewGuid())
             .WhenFalse(Guid.Empty)
             .Create("is positive");
@@ -161,13 +161,13 @@ public class AsyncEvaluationTelemetryTests
     }
 
     private sealed class IsPositiveAsync() : AsyncSpec<int>(
-        Spec.BuildAsync((int n) => Task.FromResult(n > 0))
+        Spec.BuildAsync((int n) => new ValueTask<bool>(n > 0))
             .WhenTrue("is positive")
             .WhenFalse("is not positive")
             .Create());
 
     private sealed class GradeAsync() : AsyncSpec<int, char>(() =>
-        Spec.BuildAsync((int n) => Task.FromResult(n >= 50))
+        Spec.BuildAsync((int n) => new ValueTask<bool>(n >= 50))
             .WhenTrue('P')
             .WhenFalse('F')
             .Create("passing grade"));

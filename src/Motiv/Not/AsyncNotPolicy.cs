@@ -18,10 +18,10 @@ internal sealed class AsyncNotPolicy<TModel, TMetadata>(
 
     bool IBooleanOperationSpec.IsCollapsable => false;
 
-    public override async Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         !await operand.MatchesAsync(model, cancellationToken).ConfigureAwait(false);
 
-    protected override async Task<PolicyResultBase<TMetadata>> EvaluatePolicyAsync(
+    protected override async ValueTask<PolicyResultBase<TMetadata>> EvaluatePolicyAsync(
         TModel model,
         CancellationToken cancellationToken) =>
         (await operand.EvaluatePolicyAsyncInternal(model, cancellationToken).ConfigureAwait(false)).Not();

@@ -35,7 +35,7 @@ public class AsyncCancellationTests
             .BuildAsync((object _, CancellationToken ct) =>
             {
                 observed.Add(ct);
-                return Task.FromResult(true);
+                return new ValueTask<bool>(true);
             })
             .Create(name);
 
@@ -59,14 +59,14 @@ public class AsyncCancellationTests
         var left = Spec.BuildAsync((object _, CancellationToken _) =>
         {
             cts.Cancel();
-            return Task.FromResult(true);
+            return new ValueTask<bool>(true);
         }).Create("left");
 
         var right = Spec.BuildAsync((object _, CancellationToken ct) =>
         {
             rightCalls++;
             ct.ThrowIfCancellationRequested();
-            return Task.FromResult(true);
+            return new ValueTask<bool>(true);
         }).Create("right");
 
         // Act
@@ -86,7 +86,7 @@ public class AsyncCancellationTests
             .BuildAsync((object _, CancellationToken ct) =>
             {
                 observed = ct;
-                return Task.FromResult(true);
+                return new ValueTask<bool>(true);
             })
             .Create("default token");
 
