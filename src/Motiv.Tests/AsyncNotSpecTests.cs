@@ -9,7 +9,7 @@ public class AsyncNotSpecTests
     {
         // Arrange
         var syncSpec = !Spec.Build((object _) => value).Create("flag");
-        var asyncSpec = !Spec.BuildAsync((object _) => Task.FromResult(value)).Create("flag");
+        var asyncSpec = !Spec.BuildAsync((object _) => new ValueTask<bool>(value)).Create("flag");
 
         // Act
         var syncResult = syncSpec.Evaluate(model);
@@ -29,8 +29,8 @@ public class AsyncNotSpecTests
         // Arrange
         var syncSpec = !(Spec.Build((object _) => true).Create("a")
             & Spec.Build((object _) => true).Create("b"));
-        var asyncSpec = !(Spec.BuildAsync((object _) => Task.FromResult(true)).Create("a")
-            & Spec.BuildAsync((object _) => Task.FromResult(true)).Create("b"));
+        var asyncSpec = !(Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create("a")
+            & Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create("b"));
 
         // Act & Assert
         asyncSpec.Description.Statement.ShouldBe(syncSpec.Description.Statement); // "!(a & b)"
@@ -41,7 +41,7 @@ public class AsyncNotSpecTests
     {
         // Arrange
         AsyncPolicyBase<object, string> policy =
-            Spec.BuildAsync((object _) => Task.FromResult(true)).Create("flag");
+            Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create("flag");
 
         // Act
         AsyncPolicyBase<object, string> negated = !policy;   // must compile as a policy
@@ -59,9 +59,9 @@ public class AsyncNotSpecTests
     {
         // Arrange
         AsyncPolicyBase<object, string> left =
-            Spec.BuildAsync((object _) => Task.FromResult(leftValue)).Create("left");
+            Spec.BuildAsync((object _) => new ValueTask<bool>(leftValue)).Create("left");
         AsyncPolicyBase<object, string> right =
-            Spec.BuildAsync((object _) => Task.FromResult(rightValue)).Create("right");
+            Spec.BuildAsync((object _) => new ValueTask<bool>(rightValue)).Create("right");
 
         var syncLeft = Spec.Build((object _) => leftValue).Create("left");
         var syncRight = Spec.Build((object _) => rightValue).Create("right");
@@ -83,12 +83,12 @@ public class AsyncNotSpecTests
         // Arrange
         var rightCalls = 0;
         AsyncPolicyBase<object, string> left =
-            Spec.BuildAsync((object _) => Task.FromResult(true)).Create("left");
+            Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create("left");
         AsyncPolicyBase<object, string> right =
             Spec.BuildAsync((object _) =>
             {
                 rightCalls++;
-                return Task.FromResult(false);
+                return new ValueTask<bool>(false);
             }).Create("right");
 
         // Act

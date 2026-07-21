@@ -30,7 +30,7 @@ public abstract class AsyncSpecBase<TModel> : SpecBase
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns><c>true</c> if the model satisfies the proposition; otherwise, <c>false</c>.</returns>
-    public virtual async Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public virtual async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         (await EvaluateAsync(model, cancellationToken).ConfigureAwait(false)).Satisfied;
 
     /// <summary>
@@ -40,7 +40,7 @@ public abstract class AsyncSpecBase<TModel> : SpecBase
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A result that contains the Boolean result of the predicate and an explanation of the result.</returns>
-    public Task<BooleanResultBase<string>> EvaluateAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public ValueTask<BooleanResultBase<string>> EvaluateAsync(TModel model, CancellationToken cancellationToken = default) =>
         this switch
         {
             AsyncSpecBase<TModel, string> explanationSpec => explanationSpec.EvaluateAsync(model, cancellationToken),
@@ -278,7 +278,7 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
     }
 
     /// <inheritdoc />
-    public override async Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         (await EvaluateSpecAsync(model, cancellationToken).ConfigureAwait(false)).Satisfied;
 
     /// <summary>
@@ -288,7 +288,7 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    public new Task<BooleanResultBase<TMetadata>> EvaluateAsync(
+    public new ValueTask<BooleanResultBase<TMetadata>> EvaluateAsync(
         TModel model,
         CancellationToken cancellationToken = default) =>
         MotivTelemetry.IsEnabled
@@ -299,7 +299,7 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
     /// Kept separate from <see cref="EvaluateAsync(TModel,CancellationToken)" /> so that the public boundary
     /// remains free of an async state machine when telemetry is disabled.
     /// </summary>
-    private async Task<BooleanResultBase<TMetadata>> EvaluateSpecInstrumentedAsync(
+    private async ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecInstrumentedAsync(
         TModel model,
         CancellationToken cancellationToken)
     {
@@ -349,7 +349,7 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    internal Task<BooleanResultBase<TMetadata>> EvaluateSpecAsyncInternal(
+    internal ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsyncInternal(
         TModel model,
         CancellationToken cancellationToken) =>
         EvaluateSpecAsync(model, cancellationToken);
@@ -369,7 +369,7 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
     /// <param name="model">The model to evaluate the specification against.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    protected abstract Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(TModel model, CancellationToken cancellationToken);
+    protected abstract ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(TModel model, CancellationToken cancellationToken);
 
     /// <summary>
     /// Combines this specification with another asynchronous specification using the logical AND operator.

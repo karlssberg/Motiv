@@ -13,9 +13,9 @@ public class AsyncCompositionSurfaceWalkTests
     public async Task Should_invoke_untyped_AndAlso_method_overloads()
     {
         // Arrange — int metadata composed with string metadata forces the untyped level
-        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => Task.FromResult(true))
+        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => new ValueTask<bool>(true))
             .WhenTrue(1).WhenFalse(0).Create("left");
-        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => Task.FromResult(true))
+        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => new ValueTask<bool>(true))
             .WhenTrue("yes").WhenFalse("no").Create("right");
         SpecBase<object> syncRight = Spec.Build((object _) => true)
             .WhenTrue("yes").WhenFalse("no").Create("right");
@@ -33,9 +33,9 @@ public class AsyncCompositionSurfaceWalkTests
     public async Task Should_invoke_untyped_Or_method_overloads()
     {
         // Arrange
-        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => Task.FromResult(false))
+        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => new ValueTask<bool>(false))
             .WhenTrue(1).WhenFalse(0).Create("left");
-        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => Task.FromResult(true))
+        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => new ValueTask<bool>(true))
             .WhenTrue("yes").WhenFalse("no").Create("right");
         SpecBase<object> syncRight = Spec.Build((object _) => true)
             .WhenTrue("yes").WhenFalse("no").Create("right");
@@ -53,9 +53,9 @@ public class AsyncCompositionSurfaceWalkTests
     public async Task Should_invoke_untyped_OrElse_method_overloads()
     {
         // Arrange
-        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => Task.FromResult(false))
+        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => new ValueTask<bool>(false))
             .WhenTrue(1).WhenFalse(0).Create("left");
-        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => Task.FromResult(true))
+        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => new ValueTask<bool>(true))
             .WhenTrue("yes").WhenFalse("no").Create("right");
         SpecBase<object> syncRight = Spec.Build((object _) => true)
             .WhenTrue("yes").WhenFalse("no").Create("right");
@@ -73,9 +73,9 @@ public class AsyncCompositionSurfaceWalkTests
     public async Task Should_invoke_untyped_XOr_method_overloads()
     {
         // Arrange
-        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => Task.FromResult(true))
+        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => new ValueTask<bool>(true))
             .WhenTrue(1).WhenFalse(0).Create("left");
-        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => Task.FromResult(false))
+        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => new ValueTask<bool>(false))
             .WhenTrue("yes").WhenFalse("no").Create("right");
         SpecBase<object> syncRight = Spec.Build((object _) => false)
             .WhenTrue("yes").WhenFalse("no").Create("right");
@@ -93,9 +93,9 @@ public class AsyncCompositionSurfaceWalkTests
     public async Task Should_invoke_untyped_pipe_operator_in_all_operand_directions()
     {
         // Arrange
-        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => Task.FromResult(false))
+        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => new ValueTask<bool>(false))
             .WhenTrue(1).WhenFalse(0).Create("asyncLeft");
-        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => Task.FromResult(true))
+        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => new ValueTask<bool>(true))
             .WhenTrue("yes").WhenFalse("no").Create("asyncRight");
         SpecBase<object> syncLeft = Spec.Build((object _) => false)
             .WhenTrue(1).WhenFalse(0).Create("syncLeft");
@@ -117,9 +117,9 @@ public class AsyncCompositionSurfaceWalkTests
     public async Task Should_invoke_untyped_caret_operator_in_all_operand_directions()
     {
         // Arrange
-        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => Task.FromResult(true))
+        AsyncSpecBase<object> asyncLeft = Spec.BuildAsync((object _) => new ValueTask<bool>(true))
             .WhenTrue(1).WhenFalse(0).Create("asyncLeft");
-        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => Task.FromResult(false))
+        AsyncSpecBase<object> asyncRight = Spec.BuildAsync((object _) => new ValueTask<bool>(false))
             .WhenTrue("yes").WhenFalse("no").Create("asyncRight");
         SpecBase<object> syncLeft = Spec.Build((object _) => true)
             .WhenTrue(1).WhenFalse(0).Create("syncLeft");
@@ -141,7 +141,7 @@ public class AsyncCompositionSurfaceWalkTests
     public async Task Should_invoke_typed_mixed_pipe_and_caret_operators()
     {
         // Arrange — same metadata type on both sides so the typed overloads (not the untyped fallback) bind
-        AsyncSpecBase<object, string> asyncLeft = Spec.BuildAsync((object _) => Task.FromResult(false))
+        AsyncSpecBase<object, string> asyncLeft = Spec.BuildAsync((object _) => new ValueTask<bool>(false))
             .WhenTrue("yes").WhenFalse("no").Create("asyncLeft");
         SpecBase<object, string> syncRight = Spec.Build((object _) => true)
             .WhenTrue("yes").WhenFalse("no").Create("syncRight");

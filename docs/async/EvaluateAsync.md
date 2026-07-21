@@ -7,13 +7,13 @@ immutable result types produced by the synchronous `Evaluate()`. `MatchesAsync()
 counterpart of `Matches()` &mdash; a boolean-only evaluation for callers that don't need the explanation.
 
 ```csharp
-Task<BooleanResultBase<TMetadata>> EvaluateAsync(TModel model, CancellationToken cancellationToken = default);
+ValueTask<BooleanResultBase<TMetadata>> EvaluateAsync(TModel model, CancellationToken cancellationToken = default);
 
-Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default);
+ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default);
 ```
 
 `AsyncPolicyBase<TModel, TMetadata>` narrows the return type of `EvaluateAsync()` to
-`Task<PolicyResultBase<TMetadata>>`, mirroring how `PolicyBase<TModel, TMetadata>.Evaluate()` narrows to
+`ValueTask<PolicyResultBase<TMetadata>>`, mirroring how `PolicyBase<TModel, TMetadata>.Evaluate()` narrows to
 `PolicyResultBase<TMetadata>` &mdash; a policy still guarantees exactly one assertion or metadata value per
 evaluation.
 
@@ -30,12 +30,17 @@ evaluation.
   the full explanation, mirroring the synchronous `Matches()`.
 - **No sync-over-async bridge.** There is no blocking `Evaluate()` on an asynchronous specification &mdash;
   callers must `await` `EvaluateAsync()`/`MatchesAsync()` all the way up the call stack.
+- **Results are `ValueTask`-based.** Evaluations that complete synchronously (sync specs lifted via
+  `ToAsyncSpec()`, or async predicates that finish without yielding) resolve without allocating a `Task` per
+  node in the composition tree. The usual `ValueTask` rules apply: await the result exactly once, and call
+  `.AsTask()` first if it needs to be awaited multiple times or passed to `Task`-based combinators such as
+  `Task.WhenAll`.
 
 ## Basic Example
 
 ```csharp
 var isEven = Spec
-    .BuildAsync((int n) => Task.FromResult(n % 2 == 0))
+    .BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0))
     .Create("is even");
 
 var result = await isEven.EvaluateAsync(3);
@@ -52,7 +57,7 @@ matched; // false
 using var cts = new CancellationTokenSource();
 
 AsyncPolicyBase<object, string> Leaf(string name, bool value) =>
-    Spec.BuildAsync((object _, CancellationToken ct) => Task.FromResult(value))
+    Spec.BuildAsync((object _, CancellationToken ct) => new ValueTask<bool>(value))
         .Create(name);
 
 var isEligible = Leaf("has stock", true).AndAlso(Leaf("is paid", true));

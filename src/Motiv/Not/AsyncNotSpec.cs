@@ -20,10 +20,10 @@ internal sealed class AsyncNotSpec<TModel, TMetadata>(
 
     public SpecBase Operand => operand;
 
-    public override async Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         !await operand.MatchesAsync(model, cancellationToken).ConfigureAwait(false);
 
-    protected override async Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
+    protected override async ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
         TModel model,
         CancellationToken cancellationToken) =>
         (await operand.EvaluateSpecAsyncInternal(model, cancellationToken).ConfigureAwait(false)).Not();

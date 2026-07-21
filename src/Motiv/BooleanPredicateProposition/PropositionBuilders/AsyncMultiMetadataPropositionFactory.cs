@@ -14,7 +14,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
 [FluentTarget(typeof(Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct AsyncMultiMetadataPropositionFactory<TModel, TMetadata>(
-    [MultipleFluentMethods(typeof(BuildAsyncOverloads))]Func<TModel, CancellationToken, Task<bool>> predicate,
+    [MultipleFluentMethods(typeof(BuildAsyncOverloads))]Func<TModel, CancellationToken, ValueTask<bool>> predicate,
     [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenTrue,
     [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))] Func<TModel, IEnumerable<TMetadata>> whenFalse)
 {

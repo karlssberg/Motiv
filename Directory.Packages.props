@@ -31,6 +31,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0" />
     <!-- System packages -->
     <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="10.0.2" />
+    <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.6.0" />
     <PackageVersion Include="System.Collections.Immutable" Version="10.0.2" />
     <PackageVersion Include="System.Composition" Version="10.0.2" />
     <PackageVersion Include="System.Net.Http" Version="4.3.4" />

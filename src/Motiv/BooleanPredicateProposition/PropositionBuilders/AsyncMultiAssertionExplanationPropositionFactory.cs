@@ -10,7 +10,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// <typeparam name="TModel">The type of the model the proposition is for.</typeparam>
 public readonly struct AsyncMultiAssertionExplanationPropositionFactory<TModel>
 {
-    private readonly Func<TModel, CancellationToken, Task<bool>> _predicate;
+    private readonly Func<TModel, CancellationToken, ValueTask<bool>> _predicate;
     private readonly Func<TModel, IEnumerable<string>> _whenTrue;
     private readonly Func<TModel, IEnumerable<string>> _whenFalse;
 
@@ -22,7 +22,7 @@ public readonly struct AsyncMultiAssertionExplanationPropositionFactory<TModel>
     /// <param name="whenFalse">The metadata factory for the proposition when the predicate is false.</param>
     [FluentTarget(typeof(Spec), TerminalMethod = TerminalMethod.None)]
     public AsyncMultiAssertionExplanationPropositionFactory(
-        [MultipleFluentMethods(typeof(BuildAsyncOverloads))]Func<TModel, CancellationToken, Task<bool>> predicate,
+        [MultipleFluentMethods(typeof(BuildAsyncOverloads))]Func<TModel, CancellationToken, ValueTask<bool>> predicate,
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))] Func<TModel, IEnumerable<string>> whenTrue,
         [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))] Func<TModel, IEnumerable<string>> whenFalse)
     {

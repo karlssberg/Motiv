@@ -46,12 +46,12 @@ internal sealed class AsyncXOrSpec<TModel, TMetadata>(
     SpecBase IAsyncBinaryOperationSpec.Left => Left;
 
     /// <inheritdoc />
-    public override async Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default)
+    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default)
     {
         if (concurrent)
         {
-            var leftTask = left.MatchesAsync(model, cancellationToken);
-            var rightTask = right.MatchesAsync(model, cancellationToken);
+            var leftTask = left.MatchesAsync(model, cancellationToken).AsTask();
+            var rightTask = right.MatchesAsync(model, cancellationToken).AsTask();
             await Task.WhenAll(leftTask, rightTask).ConfigureAwait(false);
             return await leftTask.ConfigureAwait(false) ^ await rightTask.ConfigureAwait(false);
         }
@@ -61,14 +61,14 @@ internal sealed class AsyncXOrSpec<TModel, TMetadata>(
     }
 
     /// <inheritdoc />
-    protected override async Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
+    protected override async ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
         TModel model,
         CancellationToken cancellationToken)
     {
         if (concurrent)
         {
-            var leftTask = left.EvaluateSpecAsyncInternal(model, cancellationToken);
-            var rightTask = right.EvaluateSpecAsyncInternal(model, cancellationToken);
+            var leftTask = left.EvaluateSpecAsyncInternal(model, cancellationToken).AsTask();
+            var rightTask = right.EvaluateSpecAsyncInternal(model, cancellationToken).AsTask();
             await Task.WhenAll(leftTask, rightTask).ConfigureAwait(false);
             return (await leftTask.ConfigureAwait(false)).XOr(await rightTask.ConfigureAwait(false));
         }

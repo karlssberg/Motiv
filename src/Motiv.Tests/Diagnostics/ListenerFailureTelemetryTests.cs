@@ -54,7 +54,7 @@ public class ListenerFailureTelemetryTests
 
         var throws = Spec.BuildAsync((int _) => throw original).Create("throws");
 
-        var exception = await Should.ThrowAsync<ArgumentException>(() => throws.EvaluateAsync(1));
+        var exception = await Should.ThrowAsync<ArgumentException>(() => throws.EvaluateAsync(1).AsTask());
         exception.ShouldBeSameAs(original);
     }
 
@@ -64,11 +64,11 @@ public class ListenerFailureTelemetryTests
         using var harness = new ThrowingListenerTelemetryHarness();
         using var cancellation = new CancellationTokenSource();
 
-        Func<int, CancellationToken, Task<bool>> slowPredicate = (_, token) =>
+        Func<int, CancellationToken, ValueTask<bool>> slowPredicate = (_, token) =>
         {
             cancellation.Cancel();
             token.ThrowIfCancellationRequested();
-            return Task.FromResult(true);
+            return new ValueTask<bool>(true);
         };
         var slow = Spec.BuildAsync(slowPredicate).Create("slow");
 

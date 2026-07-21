@@ -26,3 +26,4 @@ BenchmarkDotNet.Artifacts/
 [Tt]est[Rr]esults/
 
 .superpowers/
+.memsearch/

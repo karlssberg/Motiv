@@ -50,8 +50,8 @@ public class AsyncSyncEquivalenceMatrixTests
             Spec.Build((object _) => leftValue).WhenTrue("lt").WhenFalse("lf").Create("left"),
             Spec.Build((object _) => rightValue).WhenTrue("rt").WhenFalse("rf").Create("right"));
         var asyncSpec = ComposeAsync(op,
-            Spec.BuildAsync((object _) => Task.FromResult(leftValue)).WhenTrue("lt").WhenFalse("lf").Create("left"),
-            Spec.BuildAsync((object _) => Task.FromResult(rightValue)).WhenTrue("rt").WhenFalse("rf").Create("right"));
+            Spec.BuildAsync((object _) => new ValueTask<bool>(leftValue)).WhenTrue("lt").WhenFalse("lf").Create("left"),
+            Spec.BuildAsync((object _) => new ValueTask<bool>(rightValue)).WhenTrue("rt").WhenFalse("rf").Create("right"));
         var liftedSpec = ComposeAsync(op,
             Spec.Build((object _) => leftValue).WhenTrue("lt").WhenFalse("lf").Create("left").ToAsyncSpec(),
             Spec.Build((object _) => rightValue).WhenTrue("rt").WhenFalse("rf").Create("right").ToAsyncSpec());
@@ -85,7 +85,7 @@ public class AsyncSyncEquivalenceMatrixTests
     {
         // Arrange
         var syncSpec = !Spec.Build((object _) => value).Create("flag");
-        var asyncSpec = !Spec.BuildAsync((object _) => Task.FromResult(value)).Create("flag");
+        var asyncSpec = !Spec.BuildAsync((object _) => new ValueTask<bool>(value)).Create("flag");
         var model = new object();
 
         // Act

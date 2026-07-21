@@ -12,9 +12,9 @@ public class ConcurrentOperatorTests
     {
         // Arrange
         AsyncPolicyBase<object, string> L() =>
-            Spec.BuildAsync((object _) => Task.FromResult(leftValue)).Create("left");
+            Spec.BuildAsync((object _) => new ValueTask<bool>(leftValue)).Create("left");
         AsyncPolicyBase<object, string> R() =>
-            Spec.BuildAsync((object _) => Task.FromResult(rightValue)).Create("right");
+            Spec.BuildAsync((object _) => new ValueTask<bool>(rightValue)).Create("right");
 
         var sequential = L() & R();
         var concurrent = L().AndConcurrently(R());
@@ -85,9 +85,9 @@ public class ConcurrentOperatorTests
     {
         // Arrange
         AsyncPolicyBase<object, string> L() =>
-            Spec.BuildAsync((object _) => Task.FromResult(leftValue)).Create("left");
+            Spec.BuildAsync((object _) => new ValueTask<bool>(leftValue)).Create("left");
         AsyncPolicyBase<object, string> R() =>
-            Spec.BuildAsync((object _) => Task.FromResult(rightValue)).Create("right");
+            Spec.BuildAsync((object _) => new ValueTask<bool>(rightValue)).Create("right");
 
         // Act
         var orSequential = await (L() | R()).EvaluateAsync(model);
@@ -107,8 +107,8 @@ public class ConcurrentOperatorTests
     {
         // Arrange
         var left = Spec.BuildAsync((object _) =>
-            Task.FromException<bool>(new InvalidOperationException("left failed"))).Create("left");
-        var right = Spec.BuildAsync((object _) => Task.FromResult(true)).Create("right");
+            new ValueTask<bool>(Task.FromException<bool>(new InvalidOperationException("left failed")))).Create("left");
+        var right = Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create("right");
 
         // Act
         var act = async () => await left.AndConcurrently(right).EvaluateAsync(new object());

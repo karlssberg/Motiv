@@ -49,12 +49,12 @@ internal sealed class AsyncOrElsePolicy<TModel, TMetadata>(
     SpecBase IAsyncBinaryOperationSpec.Left => Left;
 
     /// <inheritdoc />
-    public override async Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         await left.MatchesAsync(model, cancellationToken).ConfigureAwait(false)
         || await right.MatchesAsync(model, cancellationToken).ConfigureAwait(false);
 
     /// <inheritdoc />
-    protected override async Task<PolicyResultBase<TMetadata>> EvaluatePolicyAsync(
+    protected override async ValueTask<PolicyResultBase<TMetadata>> EvaluatePolicyAsync(
         TModel model,
         CancellationToken cancellationToken)
     {

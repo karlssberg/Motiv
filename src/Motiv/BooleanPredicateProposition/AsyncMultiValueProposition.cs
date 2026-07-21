@@ -7,7 +7,7 @@ namespace Motiv.BooleanPredicateProposition;
 /// <typeparam name="TModel">The type of the input parameter.</typeparam>
 /// <typeparam name="TMetadata">The type of the return value.</typeparam>
 internal sealed class AsyncMultiValueProposition<TModel, TMetadata>(
-    Func<TModel, CancellationToken, Task<bool>> predicate,
+    Func<TModel, CancellationToken, ValueTask<bool>> predicate,
     Func<TModel, IEnumerable<TMetadata>> whenTrue,
     Func<TModel, IEnumerable<TMetadata>> whenFalse,
     ISpecDescription specDescription)
@@ -17,10 +17,10 @@ internal sealed class AsyncMultiValueProposition<TModel, TMetadata>(
 
     public override ISpecDescription Description => specDescription;
 
-    public override async Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         await predicate(model, cancellationToken).ConfigureAwait(false);
 
-    protected override async Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
+    protected override async ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
         TModel model,
         CancellationToken cancellationToken)
     {

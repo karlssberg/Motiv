@@ -18,8 +18,8 @@ where the lifted type is needed explicitly, e.g. assigning to an `AsyncSpecBase<
 ## Remarks
 
 - **Evaluation remains fully synchronous internally.** `ToAsyncSpec()` wraps the existing synchronous
-  evaluation in a completed `Task` &mdash; it does not introduce any actual asynchrony, thread hops, or
-  I/O. Results are identical to calling `Evaluate()` directly.
+  evaluation in an already-completed `ValueTask` &mdash; it does not introduce any actual asynchrony, thread
+  hops, I/O, or per-evaluation `Task` allocation. Results are identical to calling `Evaluate()` directly.
 - **Policies stay policies.** `PolicyBase<TModel, TMetadata>.ToAsyncSpec()` returns an
   `AsyncPolicyBase<TModel, TMetadata>`, preserving the single-value guarantee &mdash; the same way `!policy`
   and `policy.OrElse(policy)` preserve policy-ness elsewhere in Motiv.
@@ -43,7 +43,7 @@ result.Assertions; // ["is adult == true"]
 
 ```csharp
 var isAdult = Spec.Build((int age) => age >= 18).Create("is adult");
-var hasCredit = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("has credit");
+var hasCredit = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("has credit");
 
 // sync.AndAlso(async) — the sync left operand is lifted automatically
 var canBuy = isAdult.AndAlso(hasCredit);

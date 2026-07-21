@@ -14,7 +14,7 @@ public class AsyncMetadataPropositionTests
     {
         // Arrange
         var spec = Spec
-            .BuildAsync((bool b) => Task.FromResult(b))
+            .BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue(new Message("granted"))
             .WhenFalse(new Message("denied"))
             .Create("is granted");
@@ -37,7 +37,7 @@ public class AsyncMetadataPropositionTests
             .WhenTrueYield(_ => ["a1", "a2"])
             .WhenFalse("f")
             .Create("multi");
-        var async = Spec.BuildAsync((bool b) => Task.FromResult(b))
+        var async = Spec.BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrueYield(_ => ["a1", "a2"])
             .WhenFalse("f")
             .Create("multi");
@@ -63,7 +63,7 @@ public class AsyncMetadataPropositionTests
             .WhenTrueYield(_ => new[] {1, 2})
             .WhenFalseYield(_ => new[] {3})
             .Create("numbers");
-        var async = Spec.BuildAsync((bool b) => Task.FromResult(b))
+        var async = Spec.BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrueYield(_ => new[] {1, 2})
             .WhenFalseYield(_ => new[] {3})
             .Create("numbers");
@@ -87,7 +87,7 @@ public class AsyncMetadataPropositionTests
             .WhenTrue("all good")
             .WhenFalseYield(_ => ["bad one", "bad two"])
             .Create();
-        var async = Spec.BuildAsync((bool b) => Task.FromResult(b))
+        var async = Spec.BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue("all good")
             .WhenFalseYield(_ => ["bad one", "bad two"])
             .Create();

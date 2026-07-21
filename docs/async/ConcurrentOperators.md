@@ -35,9 +35,9 @@ Each is declared on `AsyncSpecBase<TModel, TMetadata>`, with an overload accepti
 
 ```csharp
 AsyncPolicyBase<object, string> Left() =>
-    Spec.BuildAsync((object _) => Task.FromResult(true)).Create("left");
+    Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create("left");
 AsyncPolicyBase<object, string> Right() =>
-    Spec.BuildAsync((object _) => Task.FromResult(true)).Create("right");
+    Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create("right");
 
 var sequential = Left() & Right();
 var concurrent = Left().AndConcurrently(Right());

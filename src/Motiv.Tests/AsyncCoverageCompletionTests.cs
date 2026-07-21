@@ -29,7 +29,7 @@ public class AsyncCoverageCompletionTests
     public async Task Should_construct_typed_AsyncSpec_via_the_direct_spec_constructor()
     {
         // Arrange
-        var underlying = Spec.BuildAsync((int n) => Task.FromResult(n >= 50))
+        var underlying = Spec.BuildAsync((int n) => new ValueTask<bool>(n >= 50))
             .WhenTrue('P').WhenFalse('F').Create("passing grade");
 
         // Act
@@ -57,7 +57,7 @@ public class AsyncCoverageCompletionTests
     public async Task Should_construct_untyped_AsyncSpec_via_the_factory_constructor()
     {
         // Arrange
-        AsyncSpecBase<int, string> Factory() => Spec.BuildAsync((int n) => Task.FromResult(n > 0))
+        AsyncSpecBase<int, string> Factory() => Spec.BuildAsync((int n) => new ValueTask<bool>(n > 0))
             .WhenTrue("is positive").WhenFalse("is not positive").Create();
 
         // Act
@@ -107,7 +107,7 @@ public class AsyncCoverageCompletionTests
         public override IEnumerable<SpecBase> Underlying => inner.Underlying;
         public override ISpecDescription Description => inner.Description;
 
-        protected override Task<BooleanResultBase<string>> EvaluateSpecAsync(
+        protected override ValueTask<BooleanResultBase<string>> EvaluateSpecAsync(
             int model, CancellationToken cancellationToken) =>
             inner.EvaluateAsync(model, cancellationToken);
     }
@@ -116,7 +116,7 @@ public class AsyncCoverageCompletionTests
     public async Task Should_use_the_default_untyped_MatchesAsync_implementation()
     {
         // Arrange
-        var inner = Spec.BuildAsync((int n) => Task.FromResult(n > 0))
+        var inner = Spec.BuildAsync((int n) => new ValueTask<bool>(n > 0))
             .WhenTrue("positive").WhenFalse("not positive").Create();
         AsyncSpecBase<int> spec = new UntypedPassthrough(inner);
 
@@ -131,7 +131,7 @@ public class AsyncCoverageCompletionTests
     public async Task Should_use_the_default_typed_MatchesAsync_implementation()
     {
         // Arrange
-        var inner = Spec.BuildAsync((int n) => Task.FromResult(n > 0))
+        var inner = Spec.BuildAsync((int n) => new ValueTask<bool>(n > 0))
             .WhenTrue("positive").WhenFalse("not positive").Create();
         AsyncSpecBase<int, string> spec = new TypedPassthrough(inner);
 
@@ -146,9 +146,9 @@ public class AsyncCoverageCompletionTests
     public async Task Should_invoke_typed_mixed_operand_overloads_on_AsyncSpecBase()
     {
         // Arrange — same TMetadata on both sides so the typed (not untyped) overloads bind
-        AsyncSpecBase<int, string> asyncLeftTrue = Spec.BuildAsync((int _) => Task.FromResult(true))
+        AsyncSpecBase<int, string> asyncLeftTrue = Spec.BuildAsync((int _) => new ValueTask<bool>(true))
             .WhenTrue("yes").WhenFalse("no").Create("left-true");
-        AsyncSpecBase<int, string> asyncLeftFalse = Spec.BuildAsync((int _) => Task.FromResult(false))
+        AsyncSpecBase<int, string> asyncLeftFalse = Spec.BuildAsync((int _) => new ValueTask<bool>(false))
             .WhenTrue("yes").WhenFalse("no").Create("left-false");
         SpecBase<int, string> syncRight = Spec.Build((int _) => true)
             .WhenTrue("yes").WhenFalse("no").Create("right");
@@ -179,7 +179,7 @@ public class AsyncCoverageCompletionTests
         var syncA = Spec.Build((int _) => true).Create("syncA");
         var syncB = Spec.Build((int _) => true).Create("syncB");
         var syncComposite = syncA.And(syncB);
-        var asyncLeft = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("asyncLeft");
+        var asyncLeft = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("asyncLeft");
 
         // Act — the composite's own description drives the collapsing traversal via GetMixedBinaryJustificationAsLines
         var composed = asyncLeft.And(syncComposite);
@@ -200,8 +200,8 @@ public class AsyncCoverageCompletionTests
     public void Should_expose_the_binary_traversal_surface_on_AsyncXOrSpec()
     {
         // Arrange
-        var left = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("left");
-        var right = Spec.BuildAsync((int _) => Task.FromResult(false)).Create("right");
+        var left = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("left");
+        var right = Spec.BuildAsync((int _) => new ValueTask<bool>(false)).Create("right");
 
         // Act
         var spec = (AsyncXOrSpec<int, string>)left.XOr(right);
@@ -222,8 +222,8 @@ public class AsyncCoverageCompletionTests
     public void Should_expose_the_binary_traversal_surface_on_AsyncAndSpec()
     {
         // Arrange
-        var left = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("left");
-        var right = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("right");
+        var left = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("left");
+        var right = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("right");
 
         // Act
         var spec = (AsyncAndSpec<int, string>)left.And(right);
@@ -239,8 +239,8 @@ public class AsyncCoverageCompletionTests
     public void Should_expose_the_binary_traversal_surface_on_AsyncOrSpec()
     {
         // Arrange
-        var left = Spec.BuildAsync((int _) => Task.FromResult(false)).Create("left");
-        var right = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("right");
+        var left = Spec.BuildAsync((int _) => new ValueTask<bool>(false)).Create("left");
+        var right = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("right");
 
         // Act
         var spec = (AsyncOrSpec<int, string>)left.Or(right);
@@ -256,8 +256,8 @@ public class AsyncCoverageCompletionTests
     public void Should_expose_the_binary_traversal_surface_on_AsyncAndAlsoSpec()
     {
         // Arrange
-        var left = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("left");
-        var right = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("right");
+        var left = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("left");
+        var right = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("right");
 
         // Act
         var spec = (AsyncAndAlsoSpec<int, string>)left.AndAlso(right);
@@ -279,8 +279,8 @@ public class AsyncCoverageCompletionTests
     {
         // Arrange — explicitly typed as AsyncSpecBase (not AsyncPolicyBase) so OrElse resolves to the
         // Spec-producing overload rather than the policy-preserving one
-        AsyncSpecBase<int, string> left = Spec.BuildAsync((int _) => Task.FromResult(false)).Create("left");
-        AsyncSpecBase<int, string> right = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("right");
+        AsyncSpecBase<int, string> left = Spec.BuildAsync((int _) => new ValueTask<bool>(false)).Create("left");
+        AsyncSpecBase<int, string> right = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("right");
 
         // Act
         var spec = (AsyncOrElseSpec<int, string>)left.OrElse(right);
@@ -305,9 +305,9 @@ public class AsyncCoverageCompletionTests
     public async Task Should_expose_the_full_surface_of_AsyncOrElsePolicy()
     {
         // Arrange
-        AsyncPolicyBase<int, string> primary = Spec.BuildAsync((int _) => Task.FromResult(false))
+        AsyncPolicyBase<int, string> primary = Spec.BuildAsync((int _) => new ValueTask<bool>(false))
             .WhenTrue("yes").WhenFalse("no").Create("primary");
-        AsyncPolicyBase<int, string> fallback = Spec.BuildAsync((int _) => Task.FromResult(true))
+        AsyncPolicyBase<int, string> fallback = Spec.BuildAsync((int _) => new ValueTask<bool>(true))
             .WhenTrue("yes").WhenFalse("no").Create("fallback");
 
         // Act
@@ -339,7 +339,7 @@ public class AsyncCoverageCompletionTests
     {
         // Arrange — explicitly typed as AsyncSpecBase (not AsyncPolicyBase) so Not() resolves to the
         // Spec-producing overload rather than the policy-preserving one
-        AsyncSpecBase<int, string> operand = Spec.BuildAsync((int _) => Task.FromResult(true))
+        AsyncSpecBase<int, string> operand = Spec.BuildAsync((int _) => new ValueTask<bool>(true))
             .WhenTrue("yes").WhenFalse("no").Create("operand");
 
         // Act
@@ -359,7 +359,7 @@ public class AsyncCoverageCompletionTests
     public async Task Should_expose_the_unary_traversal_surface_on_AsyncNotPolicy()
     {
         // Arrange
-        AsyncPolicyBase<int, string> operand = Spec.BuildAsync((int _) => Task.FromResult(true))
+        AsyncPolicyBase<int, string> operand = Spec.BuildAsync((int _) => new ValueTask<bool>(true))
             .WhenTrue("yes").WhenFalse("no").Create("operand");
 
         // Act
@@ -385,7 +385,7 @@ public class AsyncCoverageCompletionTests
         // Arrange — explicitly typed as AsyncSpecBase (not AsyncPolicyBase) so Not() resolves to the
         // Spec-producing overload: spec.Not() ("!x") .Not() (strips to "x", still typed AsyncNotSpec)
         // .Not() (re-adds "!")
-        AsyncSpecBase<int, string> spec = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("x");
+        AsyncSpecBase<int, string> spec = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("x");
 
         // Act
         var tripleNegated = spec.Not().Not().Not();
@@ -406,7 +406,7 @@ public class AsyncCoverageCompletionTests
     public void Should_strip_a_leading_bang_and_detect_a_nested_AsyncNotPolicy_operand()
     {
         // Arrange
-        AsyncPolicyBase<int, string> policy = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("x");
+        AsyncPolicyBase<int, string> policy = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("x");
 
         // Act
         var tripleNegated = policy.Not().Not().Not();
@@ -473,8 +473,8 @@ public class AsyncCoverageCompletionTests
     public void Should_render_ToReason_and_ToString_on_an_async_binary_description()
     {
         // Arrange
-        var left = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("left");
-        var right = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("right");
+        var left = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("left");
+        var right = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("right");
         var composed = left.And(right);
 
         // Act
@@ -522,8 +522,8 @@ public class AsyncCoverageCompletionTests
         var evaluateTask = adapter.EvaluateAsync(1);
 
         // Assert
-        await matchesTask.ShouldThrowAsync<InvalidOperationException>();
-        await evaluateTask.ShouldThrowAsync<InvalidOperationException>();
+        await matchesTask.AsTask().ShouldThrowAsync<InvalidOperationException>();
+        await evaluateTask.AsTask().ShouldThrowAsync<InvalidOperationException>();
         return;
 
         static bool Throw() => throw new InvalidOperationException("boom");
@@ -583,7 +583,7 @@ public class AsyncCoverageCompletionTests
 
         // Assert
         adapter.Underlying.ShouldBe([throwingPolicy]);
-        await matchesTask.ShouldThrowAsync<InvalidOperationException>();
+        await matchesTask.AsTask().ShouldThrowAsync<InvalidOperationException>();
         return;
 
         static bool Throw() => throw new InvalidOperationException("boom");
@@ -627,7 +627,7 @@ public class AsyncCoverageCompletionTests
     public async Task Should_forward_Underlying_Description_and_MatchesAsync_through_the_metadata_adapter()
     {
         // Arrange — a genuine async metadata proposition (non-string) forces the adapter into existence
-        AsyncSpecBase<int, char> metadataSpec = Spec.BuildAsync((int _) => Task.FromResult(true))
+        AsyncSpecBase<int, char> metadataSpec = Spec.BuildAsync((int _) => new ValueTask<bool>(true))
             .WhenTrue('P').WhenFalse('F').Create("grade");
 
         // Act — go through the untyped base reference so MatchesAsync forwards via the adapter
@@ -648,7 +648,7 @@ public class AsyncCoverageCompletionTests
     public async Task Should_directly_invoke_MatchesAsync_on_an_unnamed_async_explanation_proposition()
     {
         // Arrange
-        var spec = Spec.BuildAsync((bool b) => Task.FromResult(b))
+        var spec = Spec.BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue("user is active")
             .WhenFalse("user is not active")
             .Create();
@@ -665,7 +665,7 @@ public class AsyncCoverageCompletionTests
     public async Task Should_directly_invoke_MatchesAsync_on_a_named_async_metadata_proposition()
     {
         // Arrange
-        var spec = Spec.BuildAsync((bool b) => Task.FromResult(b))
+        var spec = Spec.BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue('P').WhenFalse('F')
             .Create("grade");
 
@@ -680,7 +680,7 @@ public class AsyncCoverageCompletionTests
     public async Task Should_directly_invoke_MatchesAsync_on_an_unnamed_multi_assertion_explanation_proposition()
     {
         // Arrange
-        var spec = Spec.BuildAsync((bool b) => Task.FromResult(b))
+        var spec = Spec.BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue("all good")
             .WhenFalseYield(_ => ["bad one", "bad two"])
             .Create();
@@ -698,7 +698,7 @@ public class AsyncCoverageCompletionTests
     public async Task Should_directly_invoke_MatchesAsync_on_a_named_multi_metadata_proposition()
     {
         // Arrange
-        var spec = Spec.BuildAsync((bool b) => Task.FromResult(b))
+        var spec = Spec.BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrueYield(_ => new[] { 1, 2 })
             .WhenFalseYield(_ => new[] { 3 })
             .Create("numbers");
@@ -720,7 +720,7 @@ public class AsyncCoverageCompletionTests
     public async Task Should_support_the_named_Create_overload_on_the_multi_assertion_explanation_factory()
     {
         // Arrange — WhenTrue(string).WhenFalseYield(...).Create("name") is the factory's untested named path
-        var spec = Spec.BuildAsync((bool b) => Task.FromResult(b))
+        var spec = Spec.BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue("all good")
             .WhenFalseYield(_ => ["bad one", "bad two"])
             .Create("all good check");
@@ -740,7 +740,7 @@ public class AsyncCoverageCompletionTests
     public async Task Should_support_the_singular_WhenTrue_with_WhenFalseYield_metadata_factory()
     {
         // Arrange — WhenTrue(value).WhenFalseYield(...).Create("name") is never exercised elsewhere
-        var spec = Spec.BuildAsync((bool b) => Task.FromResult(b))
+        var spec = Spec.BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue(1)
             .WhenFalseYield(_ => new[] { 2, 3 })
             .Create("numbers");

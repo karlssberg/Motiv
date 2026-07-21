@@ -13,8 +13,8 @@ public class AsyncOrSpecTests
         // Arrange
         var syncSpec = Spec.Build((object _) => leftValue).Create("left")
             | Spec.Build((object _) => rightValue).Create("right");
-        var asyncSpec = Spec.BuildAsync((object _) => Task.FromResult(leftValue)).Create("left")
-            | Spec.BuildAsync((object _) => Task.FromResult(rightValue)).Create("right");
+        var asyncSpec = Spec.BuildAsync((object _) => new ValueTask<bool>(leftValue)).Create("left")
+            | Spec.BuildAsync((object _) => new ValueTask<bool>(rightValue)).Create("right");
 
         // Act
         var syncResult = syncSpec.Evaluate(model);
@@ -38,8 +38,8 @@ public class AsyncOrSpecTests
         // Arrange
         var syncSpec = Spec.Build((object _) => leftValue).Create("left")
             .OrElse(Spec.Build((object _) => rightValue).Create("right"));
-        var asyncSpec = Spec.BuildAsync((object _) => Task.FromResult(leftValue)).Create("left")
-            .OrElse(Spec.BuildAsync((object _) => Task.FromResult(rightValue)).Create("right"));
+        var asyncSpec = Spec.BuildAsync((object _) => new ValueTask<bool>(leftValue)).Create("left")
+            .OrElse(Spec.BuildAsync((object _) => new ValueTask<bool>(rightValue)).Create("right"));
 
         // Act
         var syncResult = syncSpec.Evaluate(model);
@@ -56,11 +56,11 @@ public class AsyncOrSpecTests
     {
         // Arrange
         var rightCalls = 0;
-        var left = Spec.BuildAsync((object _) => Task.FromResult(true)).Create("left");
+        var left = Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create("left");
         var right = Spec.BuildAsync((object _) =>
         {
             rightCalls++;
-            return Task.FromResult(false);
+            return new ValueTask<bool>(false);
         }).Create("right");
 
         // Act
@@ -77,7 +77,7 @@ public class AsyncOrSpecTests
         // Arrange
         PolicyBase<object, string> S(string name) => Spec.Build((object _) => true).Create(name);
         AsyncPolicyBase<object, string> A(string name) =>
-            Spec.BuildAsync((object _) => Task.FromResult(true)).Create(name);
+            Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create(name);
 
         var syncSpec = (S("a") | S("b")) | S("c");
         var asyncSpec = (A("a") | A("b")) | A("c");

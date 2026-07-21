@@ -13,7 +13,7 @@ namespace Motiv;
 public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel, TMetadata>
 {
     /// <inheritdoc />
-    protected override async Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
+    protected override async ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
         TModel model,
         CancellationToken cancellationToken) =>
         await EvaluatePolicyAsync(model, cancellationToken).ConfigureAwait(false);
@@ -25,7 +25,7 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     /// <param name="model">The model to evaluate the policy against.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    public new Task<PolicyResultBase<TMetadata>> EvaluateAsync(
+    public new ValueTask<PolicyResultBase<TMetadata>> EvaluateAsync(
         TModel model,
         CancellationToken cancellationToken = default) =>
         MotivTelemetry.IsEnabled
@@ -36,7 +36,7 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     /// Kept separate from <see cref="EvaluateAsync(TModel,CancellationToken)" /> so that the public boundary
     /// remains free of an async state machine when telemetry is disabled.
     /// </summary>
-    private async Task<PolicyResultBase<TMetadata>> EvaluatePolicyInstrumentedAsync(
+    private async ValueTask<PolicyResultBase<TMetadata>> EvaluatePolicyInstrumentedAsync(
         TModel model,
         CancellationToken cancellationToken)
     {
@@ -86,7 +86,7 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     /// <param name="model">The model to evaluate the policy against.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    internal Task<PolicyResultBase<TMetadata>> EvaluatePolicyAsyncInternal(
+    internal ValueTask<PolicyResultBase<TMetadata>> EvaluatePolicyAsyncInternal(
         TModel model,
         CancellationToken cancellationToken) =>
         EvaluatePolicyAsync(model, cancellationToken);
@@ -97,7 +97,7 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     /// <param name="model">The model to evaluate the policy against.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
-    protected abstract Task<PolicyResultBase<TMetadata>> EvaluatePolicyAsync(TModel model, CancellationToken cancellationToken);
+    protected abstract ValueTask<PolicyResultBase<TMetadata>> EvaluatePolicyAsync(TModel model, CancellationToken cancellationToken);
 
     /// <summary>
     /// Combines this policy with another policy using the conditional OR operator, preserving the policy

@@ -70,11 +70,11 @@ in to `Task.WhenAll`-based evaluation. The result is indistinguishable from the 
 
 Synchronous and asynchronous propositions compose freely in both directions. A synchronous operand is lifted
 into the asynchronous hierarchy via [`ToAsyncSpec()`](ToAsyncSpec.md) (evaluation remains fully synchronous
-internally; only the outer `Task` wrapping is added):
+internally; only the outer `ValueTask` wrapping is added, without allocating a `Task` per evaluation):
 
 ```csharp
 var isAdult = Spec.Build((int age) => age >= 18).Create("is adult");
-var hasCredit = Spec.BuildAsync((int _) => Task.FromResult(true)).Create("has credit");
+var hasCredit = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("has credit");
 
 var canBuy = isAdult.AndAlso(hasCredit);   // AsyncSpecBase<int, string> — sync operand lifted automatically
 var reversed = hasCredit.AndAlso(isAdult); // also legal — either order works

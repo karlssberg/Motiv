@@ -10,7 +10,7 @@ public class AsyncMetadataToExplanationAdapterTests
         // Arrange
         var sync = Spec.Build((bool b) => b)
             .WhenTrue(1).WhenFalse(0).Create("has value");
-        var async = Spec.BuildAsync((bool b) => Task.FromResult(b))
+        var async = Spec.BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue(1).WhenFalse(0).Create("has value");
 
         // Act — untyped EvaluateAsync goes through ToAsyncExplanationSpec
@@ -28,7 +28,7 @@ public class AsyncMetadataToExplanationAdapterTests
     public async Task Should_cache_the_explanation_spec_adapter()
     {
         // Arrange
-        var spec = Spec.BuildAsync((bool b) => Task.FromResult(b))
+        var spec = Spec.BuildAsync((bool b) => new ValueTask<bool>(b))
             .WhenTrue(1).WhenFalse(0).Create("has value");
 
         // Act

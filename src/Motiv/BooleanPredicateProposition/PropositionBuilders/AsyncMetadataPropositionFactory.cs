@@ -14,7 +14,7 @@ namespace Motiv.BooleanPredicateProposition.PropositionBuilders;
 /// <typeparam name="TMetadata">The type of the metadata associated with the proposition.</typeparam>
 [FluentTarget(typeof(Spec), TerminalMethod = TerminalMethod.None)]
 public readonly struct AsyncMetadataPropositionFactory<TModel, TMetadata>(
-    [MultipleFluentMethods(typeof(BuildAsyncOverloads))]Func<TModel, CancellationToken, Task<bool>> predicate,
+    [MultipleFluentMethods(typeof(BuildAsyncOverloads))]Func<TModel, CancellationToken, ValueTask<bool>> predicate,
     [MultipleFluentMethods(typeof(WhenTrueOverloads))]Func<TModel, TMetadata> whenTrue,
     [MultipleFluentMethods(typeof(WhenFalseOverloads))]Func<TModel, TMetadata> whenFalse)
 {

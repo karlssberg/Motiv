@@ -33,11 +33,11 @@ internal sealed class AsyncAndAlsoSpec<TModel, TMetadata>(
 
     SpecBase IAsyncBinaryOperationSpec.Left => Left;
 
-    public override async Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         await left.MatchesAsync(model, cancellationToken).ConfigureAwait(false)
         && await right.MatchesAsync(model, cancellationToken).ConfigureAwait(false);
 
-    protected override async Task<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
+    protected override async ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
         TModel model,
         CancellationToken cancellationToken)
     {

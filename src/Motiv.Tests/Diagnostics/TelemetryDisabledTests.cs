@@ -19,7 +19,7 @@ public class TelemetryDisabledTests
     [Fact]
     public async Task Should_not_start_an_activity_asynchronously_when_nothing_is_listening()
     {
-        var isEven = Spec.BuildAsync((int n) => Task.FromResult(n % 2 == 0)).Create("is even");
+        var isEven = Spec.BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0)).Create("is even");
 
         (await isEven.EvaluateAsync(2)).Satisfied.ShouldBeTrue();
 

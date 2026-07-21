@@ -13,8 +13,8 @@ public class AsyncAndAlsoSpecTests
         // Arrange
         var syncSpec = Spec.Build((object _) => leftValue).Create("left")
             .AndAlso(Spec.Build((object _) => rightValue).Create("right"));
-        var asyncSpec = Spec.BuildAsync((object _) => Task.FromResult(leftValue)).Create("left")
-            .AndAlso(Spec.BuildAsync((object _) => Task.FromResult(rightValue)).Create("right"));
+        var asyncSpec = Spec.BuildAsync((object _) => new ValueTask<bool>(leftValue)).Create("left")
+            .AndAlso(Spec.BuildAsync((object _) => new ValueTask<bool>(rightValue)).Create("right"));
 
         // Act
         var syncResult = syncSpec.Evaluate(model);
@@ -32,11 +32,11 @@ public class AsyncAndAlsoSpecTests
     {
         // Arrange
         var rightCalls = 0;
-        var left = Spec.BuildAsync((object _) => Task.FromResult(false)).Create("left");
+        var left = Spec.BuildAsync((object _) => new ValueTask<bool>(false)).Create("left");
         var right = Spec.BuildAsync((object _) =>
         {
             rightCalls++;
-            return Task.FromResult(true);
+            return new ValueTask<bool>(true);
         }).Create("right");
 
         // Act
@@ -54,11 +54,11 @@ public class AsyncAndAlsoSpecTests
     {
         // Arrange
         var rightCalls = 0;
-        var left = Spec.BuildAsync((object _) => Task.FromResult(true)).Create("left");
+        var left = Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create("left");
         var right = Spec.BuildAsync((object _) =>
         {
             rightCalls++;
-            return Task.FromResult(true);
+            return new ValueTask<bool>(true);
         }).Create("right");
 
         // Act

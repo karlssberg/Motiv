@@ -10,10 +10,10 @@ internal sealed class AsyncMetadataToExplanationAdapterSpec<TModel, TUnderlyingM
 
     public override ISpecDescription Description => spec.Description;
 
-    public override Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public override ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         spec.MatchesAsync(model, cancellationToken);
 
-    protected override async Task<BooleanResultBase<string>> EvaluateSpecAsync(
+    protected override async ValueTask<BooleanResultBase<string>> EvaluateSpecAsync(
         TModel model,
         CancellationToken cancellationToken)
     {

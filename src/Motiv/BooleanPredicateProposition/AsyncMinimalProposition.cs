@@ -1,7 +1,7 @@
 namespace Motiv.BooleanPredicateProposition;
 
 internal sealed class AsyncMinimalProposition<TModel>(
-    Func<TModel, CancellationToken, Task<bool>> predicate,
+    Func<TModel, CancellationToken, ValueTask<bool>> predicate,
     ISpecDescription specDescription)
     : AsyncPolicyBase<TModel, string>
 {
@@ -12,10 +12,10 @@ internal sealed class AsyncMinimalProposition<TModel>(
 
     public override ISpecDescription Description => specDescription;
 
-    public override async Task<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
         await predicate(model, cancellationToken).ConfigureAwait(false);
 
-    protected override async Task<PolicyResultBase<string>> EvaluatePolicyAsync(
+    protected override async ValueTask<PolicyResultBase<string>> EvaluatePolicyAsync(
         TModel model,
         CancellationToken cancellationToken)
     {

@@ -11,7 +11,7 @@ public class MixedSyncAsyncCompositionTests
     {
         // Arrange — the design-spec headline example shape
         var isAdult = Spec.Build((object _) => isAdultValue).Create("is adult");
-        var hasCredit = Spec.BuildAsync((object _) => Task.FromResult(hasCreditValue)).Create("has credit");
+        var hasCredit = Spec.BuildAsync((object _) => new ValueTask<bool>(hasCreditValue)).Create("has credit");
 
         // Act
         var canBuy = isAdult.AndAlso(hasCredit);          // AsyncSpecBase
@@ -30,7 +30,7 @@ public class MixedSyncAsyncCompositionTests
         var hasCredit = Spec.BuildAsync((object _) =>
         {
             apiCalls++;
-            return Task.FromResult(true);
+            return new ValueTask<bool>(true);
         }).Create("has credit");
 
         // Act
@@ -53,7 +53,7 @@ public class MixedSyncAsyncCompositionTests
         // below (which have different Values semantics)
         var syncLeft = Spec.Build((object _) => leftValue).Create("left");
         var syncRight = Spec.Build((object _) => rightValue).Create("right");
-        var asyncRight = Spec.BuildAsync((object _) => Task.FromResult(rightValue)).Create("right");
+        var asyncRight = Spec.BuildAsync((object _) => new ValueTask<bool>(rightValue)).Create("right");
 
         // Act
         var allSync = (syncLeft & syncRight).Evaluate(model);
@@ -72,7 +72,7 @@ public class MixedSyncAsyncCompositionTests
         // Arrange
         PolicyBase<object, string> syncPolicy = Spec.Build((object _) => false).Create("primary");
         AsyncPolicyBase<object, string> asyncPolicy =
-            Spec.BuildAsync((object _) => Task.FromResult(true)).Create("fallback");
+            Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create("fallback");
 
         // Act — both directions must compile as policies
         AsyncPolicyBase<object, string> a = syncPolicy.OrElse(asyncPolicy);
@@ -145,7 +145,7 @@ public class MixedSyncAsyncCompositionTests
         SpecBase<object, string> syncRight =
             Spec.Build((object _) => rightValue).WhenTrue("rt").WhenFalse("rf").Create("right");
         AsyncSpecBase<object, string> asyncRight =
-            Spec.BuildAsync((object _) => Task.FromResult(rightValue)).WhenTrue("rt").WhenFalse("rf").Create("right");
+            Spec.BuildAsync((object _) => new ValueTask<bool>(rightValue)).WhenTrue("rt").WhenFalse("rf").Create("right");
 
         var allSync = ComposeSync(op, syncLeft, syncRight);
         var mixed = ComposeMixed(op, syncLeft, asyncRight);
@@ -170,7 +170,7 @@ public class MixedSyncAsyncCompositionTests
     {
         // Arrange
         var sync = Spec.Build((object _) => true).Create("sync");
-        var async = Spec.BuildAsync((object _) => Task.FromResult(true)).Create("async");
+        var async = Spec.BuildAsync((object _) => new ValueTask<bool>(true)).Create("async");
 
         // Act & Assert — compile-time direction checks + evaluation sanity
         (await (sync & async).EvaluateAsync(new object())).Satisfied.ShouldBeTrue();
