@@ -8,6 +8,7 @@ function testClient(): RulesApiClient {
     getCatalog: vi.fn().mockResolvedValue([]),
     validate: vi.fn().mockResolvedValue({ errors: [] }),
     evaluate: vi.fn(),
+    listRules: vi.fn().mockResolvedValue([]),
   } as unknown as RulesApiClient;
 }
 

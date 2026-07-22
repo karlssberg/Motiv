@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { RuleEditorStore, RulesApiClient, createValidationController } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
+import { RuleHeader } from './panes/RuleHeader.js';
 import { BuilderPane } from './panes/BuilderPane.js';
 import { JsonPane } from './panes/JsonPane.js';
 import { EvaluatePane } from './panes/EvaluatePane.js';
@@ -33,6 +34,7 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
     // to every builder component (useRuleEditorStore / useRuleNode) below it.
     <RuleEditorProvider store={store}>
       <main className="app">
+        <RuleHeader client={client} />
         <BuilderPane client={client} />
         <JsonPane />
         <EvaluatePane client={client} />
