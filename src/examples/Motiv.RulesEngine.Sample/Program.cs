@@ -32,7 +32,13 @@ var registry = new SpecRegistry()
             .WhenTrue("order is large")
             .WhenFalse("order is small")
             .Create(),
-        "Whether an individual order total is 100 or more");
+        "Whether an individual order total is 100 or more")
+    // Seam: async specs register like sync ones; documents referencing them load via async
+    // rules. The same spec instance also serves as FraudScreeningRule's compiled default.
+    .Register(
+        "passes-credit-check",
+        DefaultSpecs.PassesCreditCheck,
+        "Simulated async credit-bureau check");
 
 // Seam: collections for higher-order rules. Registering a parent→collection selector
 // lets a rule document quantify (asAllSatisfied / asAtLeastNSatisfied / …) over the
@@ -46,14 +52,42 @@ var options = new MotivRulesOptions()
     .AddModel<Order>("order");
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Seam: live rules. Each AddRule enrolls a sealed rule class as a DI singleton and in the
+// RuleSet behind GET/PUT/DELETE /api/rules/rules — the app executes the same instances the
+// UI hot-swaps, with optimistic-concurrency protection on writes.
+builder.Services.AddMotivRules(registry, options)
+    .AddRule<CanCheckoutRule>()
+    .AddRule<FraudScreeningRule>()
+    .AddRule<LoyaltyDiscountRule>();
+
 var app = builder.Build();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// Seam: the endpoints. Mounts GET /catalog, POST /validate, POST /evaluate under
-// /api/rules, backed by the registry (specs + collections) and the model registrations.
-app.MapMotivRules("/api/rules", registry, options);
+// Seam: the endpoints. Mounts GET /catalog, POST /validate, POST /evaluate — plus the rule
+// endpoints under /api/rules/rules — backed by the registry, options, and RuleSet from DI.
+app.MapMotivRules("/api/rules");
+
+// Seam: a rule being *used*. Handles arrive by type via DI — no name strings, and each
+// Evaluate/EvaluateAsync reads an immutable snapshot, so a concurrent PUT never tears a result.
+var resultSerializer = new ResultSerializer();
+app.MapPost("/api/checkout", async (
+    CanCheckoutRule canCheckout,
+    FraudScreeningRule fraudScreening,
+    Customer customer,
+    CancellationToken cancellationToken) =>
+{
+    var eligibility = canCheckout.Evaluate(customer);
+    var screening = await fraudScreening.EvaluateAsync(customer, cancellationToken);
+    return Results.Json(new CheckoutResponse(
+        eligibility.Satisfied && screening.Satisfied,
+        resultSerializer.ToEvaluationResult(eligibility),
+        resultSerializer.ToEvaluationResult(screening)),
+        options.JsonSerializerOptions);
+});
+
 app.MapFallbackToFile("index.html");
 
 app.Run();
@@ -63,3 +97,12 @@ public sealed record Customer(int Age, bool IsActive, int OrderCount, IReadOnlyL
 
 /// <summary>An individual order placed by a <see cref="Customer"/>, used for higher-order collection rules.</summary>
 public sealed record Order(decimal Total);
+
+/// <summary>The outcome of a checkout attempt: both live rules and the combined verdict.</summary>
+public sealed record CheckoutResponse(
+    bool Approved,
+    RuleEvaluationResult<string> Eligibility,
+    RuleEvaluationResult<string> Screening);
+
+/// <summary>Exposes the entry point to WebApplicationFactory-based integration tests.</summary>
+public partial class Program;
