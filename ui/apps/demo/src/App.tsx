@@ -5,6 +5,7 @@ import { RuleHeader } from './panes/RuleHeader.js';
 import { BuilderPane } from './panes/BuilderPane.js';
 import { JsonPane } from './panes/JsonPane.js';
 import { EvaluatePane } from './panes/EvaluatePane.js';
+import { CheckoutPane } from './panes/CheckoutPane.js';
 
 const MODEL_TYPE = 'customer';
 
@@ -38,6 +39,7 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
         <BuilderPane client={client} />
         <JsonPane />
         <EvaluatePane client={client} />
+        <CheckoutPane />
       </main>
     </RuleEditorProvider>
   );
