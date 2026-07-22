@@ -138,7 +138,7 @@ public class SpecRegistryTests
         var act = () => registry.Register(name, IsPositive);
 
         // Assert — names are referenced from rule documents and DSL text, so the
-        // allowed alphabet is pinned: a letter followed by letters, digits, '-' or '_'.
+        // allowed alphabet is pinned: an ASCII letter followed by ASCII letters, digits, '-' or '_'.
         var message = act.ShouldThrow<ArgumentException>().Message;
         message.ShouldContain(name);
         message.ShouldContain("letter");
