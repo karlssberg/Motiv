@@ -85,7 +85,9 @@ internal static class AsyncRuleBinder
                 return null;
             }
 
-            return ToExplanation(asyncSpec, entry);
+            return entry.MetadataType == typeof(string)
+                ? (AsyncSpecBase<TModel, string>)asyncSpec
+                : asyncSpec.ToAsyncExplanationSpec();
         }
 
         if (entry.Spec is not SpecBase<TModel> spec)
@@ -101,12 +103,6 @@ internal static class AsyncRuleBinder
             : spec.ToExplanationSpec();
         return explanation.ToAsyncSpec();
     }
-
-    private static AsyncSpecBase<TModel, string> ToExplanation<TModel>(
-        AsyncSpecBase<TModel> asyncSpec, SpecRegistryEntry entry) =>
-        entry.MetadataType == typeof(string)
-            ? (AsyncSpecBase<TModel, string>)asyncSpec
-            : asyncSpec.ToAsyncExplanationSpec();
 
     private static AsyncSpecBase<TModel, string>? BindExpressionLeaf<TModel>(RuleNode node, List<RuleError> errors)
     {

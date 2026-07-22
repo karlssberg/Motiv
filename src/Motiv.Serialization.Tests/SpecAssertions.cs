@@ -12,14 +12,7 @@ internal static class SpecAssertions
         params TModel[] models)
     {
         foreach (var model in models)
-        {
-            var expectedResult = expected.Evaluate(model);
-            var actualResult = loaded.Evaluate(model);
-            actualResult.Satisfied.ShouldBe(expectedResult.Satisfied);
-            actualResult.Reason.ShouldBe(expectedResult.Reason);
-            actualResult.Assertions.ShouldBe(expectedResult.Assertions);
-            actualResult.Justification.ShouldBe(expectedResult.Justification);
-        }
+            AssertSameOutcome(loaded.Evaluate(model), expected.Evaluate(model));
     }
 
     /// <summary>
@@ -32,14 +25,7 @@ internal static class SpecAssertions
         params TModel[] models)
     {
         foreach (var model in models)
-        {
-            var expectedResult = await expected.EvaluateAsync(model);
-            var actualResult = await loaded.EvaluateAsync(model);
-            actualResult.Satisfied.ShouldBe(expectedResult.Satisfied);
-            actualResult.Reason.ShouldBe(expectedResult.Reason);
-            actualResult.Assertions.ShouldBe(expectedResult.Assertions);
-            actualResult.Justification.ShouldBe(expectedResult.Justification);
-        }
+            AssertSameOutcome(await loaded.EvaluateAsync(model), await expected.EvaluateAsync(model));
     }
 
     /// <summary>
@@ -53,14 +39,7 @@ internal static class SpecAssertions
         params TModel[] models)
     {
         foreach (var model in models)
-        {
-            var expectedResult = expected.Evaluate(model);
-            var actualResult = await loaded.EvaluateAsync(model);
-            actualResult.Satisfied.ShouldBe(expectedResult.Satisfied);
-            actualResult.Reason.ShouldBe(expectedResult.Reason);
-            actualResult.Assertions.ShouldBe(expectedResult.Assertions);
-            actualResult.Justification.ShouldBe(expectedResult.Justification);
-        }
+            AssertSameOutcome(await loaded.EvaluateAsync(model), expected.Evaluate(model));
     }
 
     /// <summary>
@@ -74,15 +53,7 @@ internal static class SpecAssertions
         params TModel[] models)
     {
         foreach (var model in models)
-        {
-            var expectedResult = await expected.EvaluateAsync(model);
-            var actualResult = await loaded.EvaluateAsync(model);
-            actualResult.Satisfied.ShouldBe(expectedResult.Satisfied);
-            actualResult.Reason.ShouldBe(expectedResult.Reason);
-            actualResult.Assertions.ShouldBe(expectedResult.Assertions);
-            actualResult.Justification.ShouldBe(expectedResult.Justification);
-            actualResult.Values.ShouldBe(expectedResult.Values);
-        }
+            AssertSameOutcomeAndValues(await loaded.EvaluateAsync(model), await expected.EvaluateAsync(model));
     }
 
     /// <summary>
@@ -96,15 +67,7 @@ internal static class SpecAssertions
         params TModel[] models)
     {
         foreach (var model in models)
-        {
-            var expectedResult = expected.Evaluate(model);
-            var actualResult = await loaded.EvaluateAsync(model);
-            actualResult.Satisfied.ShouldBe(expectedResult.Satisfied);
-            actualResult.Reason.ShouldBe(expectedResult.Reason);
-            actualResult.Assertions.ShouldBe(expectedResult.Assertions);
-            actualResult.Justification.ShouldBe(expectedResult.Justification);
-            actualResult.Values.ShouldBe(expectedResult.Values);
-        }
+            AssertSameOutcomeAndValues(await loaded.EvaluateAsync(model), expected.Evaluate(model));
     }
 
     /// <summary>
@@ -117,14 +80,24 @@ internal static class SpecAssertions
         params TModel[] models)
     {
         foreach (var model in models)
-        {
-            var expectedResult = expected.Evaluate(model);
-            var actualResult = loaded.Evaluate(model);
-            actualResult.Satisfied.ShouldBe(expectedResult.Satisfied);
-            actualResult.Reason.ShouldBe(expectedResult.Reason);
-            actualResult.Assertions.ShouldBe(expectedResult.Assertions);
-            actualResult.Justification.ShouldBe(expectedResult.Justification);
-            actualResult.Values.ShouldBe(expectedResult.Values);
-        }
+            AssertSameOutcomeAndValues(loaded.Evaluate(model), expected.Evaluate(model));
+    }
+
+    private static void AssertSameOutcome<TMetadata>(
+        BooleanResultBase<TMetadata> actualResult,
+        BooleanResultBase<TMetadata> expectedResult)
+    {
+        actualResult.Satisfied.ShouldBe(expectedResult.Satisfied);
+        actualResult.Reason.ShouldBe(expectedResult.Reason);
+        actualResult.Assertions.ShouldBe(expectedResult.Assertions);
+        actualResult.Justification.ShouldBe(expectedResult.Justification);
+    }
+
+    private static void AssertSameOutcomeAndValues<TMetadata>(
+        BooleanResultBase<TMetadata> actualResult,
+        BooleanResultBase<TMetadata> expectedResult)
+    {
+        AssertSameOutcome(actualResult, expectedResult);
+        actualResult.Values.ShouldBe(expectedResult.Values);
     }
 }
