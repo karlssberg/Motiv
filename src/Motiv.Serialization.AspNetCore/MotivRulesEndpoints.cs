@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Text.Json.Schema;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -52,7 +54,22 @@ public static class MotivRulesEndpoints
                 options.ResolveModelId(collection.ElementType)))
             .ToArray();
 
-        var catalog = new CatalogResponse(specs, collections);
+        // Each schema is generated with the options its type is actually deserialized with —
+        // metadata payloads bind with the metadata options, models with the response options —
+        // so schema property names match real binding behavior by construction.
+        var metadataJson = options.SerializerOptions?.MetadataJsonOptions ?? JsonSerializerOptions.Default;
+
+        var metadataTypes = registry.Entries.Select(entry => entry.MetadataType)
+            .Concat(rules?.Rules.Select(rule => rule.MetadataType) ?? [])
+            .Distinct()
+            .OrderBy(type => type.Name, StringComparer.Ordinal)
+            .ToDictionary(type => type.Name, type => ToSchema(metadataJson, type));
+
+        var modelTypes = options.ModelBindings
+            .OrderBy(binding => binding.Id, StringComparer.Ordinal)
+            .ToDictionary(binding => binding.Id, binding => ToSchema(json, binding.ModelType));
+
+        var catalog = new CatalogResponse(specs, collections, metadataTypes, modelTypes);
 
         group.MapGet("/catalog", () => Results.Json(catalog, json));
 
@@ -183,6 +200,17 @@ public static class MotivRulesEndpoints
             RuleUpdateOutcome.Invalid => Results.Json(new ValidationResponse(outcome.Errors), json, statusCode: 400),
             _ => Results.Json(new ErrorResponse($"Unknown rule '{name}'."), json, statusCode: 404)
         };
+
+    private static JsonElement ToSchema(JsonSerializerOptions options, Type type)
+    {
+        // The schema exporter refuses to populate a missing resolver, so export from a copy
+        // carrying the same reflection-based default the serializer itself populates at first
+        // use — every other setting is copied, keeping schema and binding behavior aligned.
+        var schemaOptions = options.TypeInfoResolver is null
+            ? new JsonSerializerOptions(options) { TypeInfoResolver = new DefaultJsonTypeInfoResolver() }
+            : options;
+        return JsonSerializer.SerializeToElement(schemaOptions.GetJsonSchemaAsNode(type));
+    }
 
     private static IResult UnknownModelType(string modelType, JsonSerializerOptions json) =>
         Results.Json(new ErrorResponse($"Unknown model type '{modelType}'."), json, statusCode: 400);

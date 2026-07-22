@@ -73,6 +73,10 @@ public sealed class MotivRulesOptions
     internal bool TryGetBinding(string id, out ModelBinding binding) =>
         _bindings.TryGetValue(id, out binding!);
 
+    /// <summary>All registered model bindings, as (id, model type) pairs.</summary>
+    internal IEnumerable<(string Id, Type ModelType)> ModelBindings =>
+        _bindings.Values.Select(binding => (binding.Id, binding.ModelType));
+
     /// <summary>Resolves a spec's model type to its registered id, falling back to the CLR type name.</summary>
     internal string ResolveModelId(Type modelType) =>
         _idByType.TryGetValue(modelType, out var id) ? id : modelType.Name;

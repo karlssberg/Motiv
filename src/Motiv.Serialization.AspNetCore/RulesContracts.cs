@@ -16,8 +16,25 @@ public sealed record CatalogEntry(string Name, string ModelType, string Metadata
 /// <param name="ElementModelType">The registered model-type id of the collection's elements.</param>
 public sealed record CatalogCollection(string Path, string ParentModelType, string ElementModelType);
 
-/// <summary>The full catalog: registered specs and collections.</summary>
-public sealed record CatalogResponse(IReadOnlyList<CatalogEntry> Specs, IReadOnlyList<CatalogCollection> Collections);
+/// <summary>The full catalog: registered specs, collections, and the JSON Schemas of their types.</summary>
+/// <param name="Specs">The registered specifications.</param>
+/// <param name="Collections">The registered collection projections.</param>
+/// <param name="MetadataTypes">
+/// JSON Schemas keyed by metadata type name (matching <see cref="CatalogEntry.MetadataType"/> and
+/// <see cref="RuleListEntry.MetadataType"/>), covering every metadata type reachable from the
+/// registry entries and any mounted rules. Generated with the same serializer options that bind
+/// <c>whenTrue</c>/<c>whenFalse</c> payloads, so property names match real binding behavior.
+/// </param>
+/// <param name="ModelTypes">
+/// JSON Schemas keyed by registered model-type id (the ids clients pass as <c>modelType</c>).
+/// Generated with the same serializer options that read sample models, so property names match
+/// real binding behavior.
+/// </param>
+public sealed record CatalogResponse(
+    IReadOnlyList<CatalogEntry> Specs,
+    IReadOnlyList<CatalogCollection> Collections,
+    IReadOnlyDictionary<string, JsonElement> MetadataTypes,
+    IReadOnlyDictionary<string, JsonElement> ModelTypes);
 
 /// <summary>A request to validate a rule document against a registered model type.</summary>
 /// <param name="ModelType">A model-type id registered on the server.</param>
