@@ -1,5 +1,12 @@
-import { useState } from 'react';
-import type { EvaluationResult } from '@motiv/rules-core';
+import { useEffect, useState } from 'react';
+import {
+  validateAgainstSchema,
+  type EvaluationResult,
+  type JsonSchema,
+  type RulesApiClient,
+  type SchemaViolation,
+} from '@motiv/rules-core';
+import { MODEL_TYPE } from '../App.js';
 
 interface CheckoutResponse {
   approved: boolean;
@@ -13,14 +20,50 @@ const SAMPLE_CUSTOMER = '{\n  "age": 30,\n  "isActive": true,\n  "orderCount": 3
  * Seam: the rule being *used*. POST /api/checkout executes the live CanCheckoutRule (sync)
  * and FraudScreeningRule (async) on the server — save a rule change and the very next
  * checkout reflects it, no restart.
+ *
+ * The pane deliberately talks raw HTTP (no RulesApiClient) to show the consuming side.
+ * The optional client exists only to fetch the catalog's `customer` model schema so
+ * obviously malformed customers are caught before the POST; without it (or without
+ * `modelTypes` in the catalog) enforcement simply doesn't run.
  */
-export function CheckoutPane() {
+export function CheckoutPane(props: { client?: RulesApiClient }) {
   const [customerJson, setCustomerJson] = useState(SAMPLE_CUSTOMER);
   const [outcome, setOutcome] = useState<CheckoutResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [violations, setViolations] = useState<SchemaViolation[]>([]);
+  const [customerSchema, setCustomerSchema] = useState<JsonSchema | undefined>(undefined);
+
+  const client = props.client;
+  useEffect(() => {
+    if (!client) return;
+    let active = true;
+    client.getCatalog()
+      .then((catalog) => { if (active) setCustomerSchema(catalog.modelTypes?.[MODEL_TYPE]); })
+      .catch(() => { /* no catalog → no enforcement */ });
+    return () => { active = false; };
+  }, [client]);
 
   const tryCheckout = async (): Promise<void> => {
     setError(null);
+    // Enforce the catalog's model schema when we have one and the text parses;
+    // unparseable text still goes to the server, which answers with a bare 400.
+    if (customerSchema) {
+      let customer: unknown;
+      try {
+        customer = JSON.parse(customerJson);
+      } catch {
+        customer = undefined;
+      }
+      if (customer !== undefined) {
+        const found = validateAgainstSchema(customer, customerSchema);
+        setViolations(found);
+        if (found.length > 0) {
+          setOutcome(null);
+          return;
+        }
+      }
+    }
+    setViolations([]);
     try {
       const response = await fetch('/api/checkout', {
         method: 'POST',
@@ -53,6 +96,15 @@ export function CheckoutPane() {
         Try checkout
       </button>
       {error && <p role="alert">{error}</p>}
+      {violations.length > 0 && (
+        <ul aria-label="schema violations" className="errors">
+          {violations.map((violation, i) => (
+            <li key={`${violation.path}-${i}`} role="alert" className="error">
+              {violation.path}: {violation.message}
+            </li>
+          ))}
+        </ul>
+      )}
       {outcome && (
         <div className="checkout-outcome">
           <strong className="outcome">{outcome.approved ? 'Approved' : 'Rejected'}</strong>

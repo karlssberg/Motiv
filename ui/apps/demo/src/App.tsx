@@ -39,7 +39,7 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
         <BuilderPane client={client} />
         <JsonPane />
         <EvaluatePane client={client} />
-        <CheckoutPane />
+        <CheckoutPane client={client} />
       </main>
     </RuleEditorProvider>
   );

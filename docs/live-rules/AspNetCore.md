@@ -65,6 +65,40 @@ app.MapPost("/api/checkout", async (
 retrying. A `400` carries the document's binding errors (path, code, message) and leaves the live
 rule untouched.
 
+## Catalog type schemas
+
+`GET {basePath}/catalog` also carries two JSON Schema maps, generated once at `MapMotivRules` time:
+
+```json
+{
+  "specs": [...],
+  "collections": [...],
+  "metadataTypes": { "String": { "type": ["string", "null"] }, "Verdict": { ... } },
+  "modelTypes": { "customer": { "type": ["object", "null"], "properties": { "age": ... } } }
+}
+```
+
+- **Keying.** `metadataTypes` is keyed by the same `metadataType` strings the spec and rule listings
+  already carry (the CLR type's simple name, e.g. `"String"`, `"Verdict"`); its keys are the union
+  of the registry entries' and the mounted rules' metadata types. `modelTypes` is keyed by the
+  registered model id (e.g. `"customer"`) &mdash; the same string `validate`/`evaluate` take as
+  `modelType`.
+- **Options parity.** Each schema is exported with the exact `JsonSerializerOptions` that kind is
+  deserialized with: metadata payloads (`whenTrue`/`whenFalse`) use
+  `MotivRulesOptions.SerializerOptions.MetadataJsonOptions` (STJ defaults: exact-case property
+  names), models use `MotivRulesOptions.JsonSerializerOptions` (web defaults: camelCase). Property
+  names in the schemas therefore match real binding behavior by construction &mdash; a value that
+  conforms to the schema binds, and there is no second naming convention to keep in sync.
+- **Numbers may be typed `["string", "integer"]`.** The web-default options allow numbers to be
+  read from JSON strings, so the exporter describes numeric model properties as a
+  string-or-number union with a `pattern` constraining the string form (e.g.
+  `{"type": ["string", "integer"], "pattern": "^-?(?:0|[1-9]\\d*)$"}`). `"30"` is genuinely
+  accepted by the binder; a frontend validator should honor the union rather than flag it.
+
+Frontends can enforce these client-side before submitting &mdash; `@motiv/rules-core` ships a
+matching structural validator (`validateAgainstSchema`). Both maps are additive; clients written
+against older hosts should treat them as optional and skip enforcement when absent.
+
 ## Remarks
 
 - **Invalid defaults fail at startup.** `MapMotivRules(basePath)` resolves the `RuleSet` eagerly,

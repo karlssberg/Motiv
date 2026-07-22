@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { EvaluationResult } from '@motiv/rules-core';
+import type { Catalog, EvaluationResult, RulesApiClient } from '@motiv/rules-core';
 import { CheckoutPane } from '../../src/panes/CheckoutPane.js';
 
 const eligibility: EvaluationResult = {
@@ -23,6 +23,28 @@ const screening: EvaluationResult = {
 };
 
 const approval = { approved: true, eligibility, screening };
+
+const catalog: Catalog = {
+  specs: [],
+  collections: [],
+  metadataTypes: {},
+  modelTypes: {
+    customer: {
+      type: ['object', 'null'],
+      properties: {
+        age: { type: 'integer' },
+        isActive: { type: 'boolean' },
+        orderCount: { type: 'integer' },
+      },
+    },
+  },
+};
+
+const clientWith = (data: Catalog): RulesApiClient =>
+  ({ getCatalog: vi.fn().mockResolvedValue(data) }) as unknown as RulesApiClient;
+
+/** Flushes the mocked getCatalog resolution into the pane's state. */
+const settleCatalog = () => act(async () => {});
 
 describe('CheckoutPane', () => {
   afterEach(() => vi.restoreAllMocks());
@@ -83,5 +105,55 @@ describe('CheckoutPane', () => {
     expect(await screen.findByRole('alert')).toBeDefined();
     expect(screen.getByText(/network down/)).toBeDefined();
     expect(screen.queryByText('Approved')).toBeNull();
+  });
+
+  it('blocks the checkout and shows the violations when the customer breaks the model schema', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    render(<CheckoutPane client={clientWith(catalog)} />);
+    await settleCatalog();
+
+    fireEvent.change(screen.getByLabelText(/customer/i), {
+      target: { value: '{ "age": "thirty", "isActive": true, "orderCount": 3 }' },
+    });
+    await userEvent.click(screen.getByRole('button', { name: /try checkout/i }));
+
+    expect(await screen.findByText('$.age: expected integer, got string')).toBeDefined();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('posts a schema-conforming customer and clears earlier violations', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(JSON.stringify(approval), { status: 200 }));
+    render(<CheckoutPane client={clientWith(catalog)} />);
+    await settleCatalog();
+
+    const input = screen.getByLabelText(/customer/i);
+    fireEvent.change(input, { target: { value: '{ "age": "thirty" }' } });
+    await userEvent.click(screen.getByRole('button', { name: /try checkout/i }));
+    await screen.findByText('$.age: expected integer, got string');
+
+    fireEvent.change(input, { target: { value: '{ "age": 30, "isActive": true, "orderCount": 3 }' } });
+    await userEvent.click(screen.getByRole('button', { name: /try checkout/i }));
+
+    expect(await screen.findByText('Approved')).toBeDefined();
+    expect(fetchSpy).toHaveBeenCalledWith('/api/checkout', expect.objectContaining({ method: 'POST' }));
+    expect(screen.queryByText('$.age: expected integer, got string')).toBeNull();
+  });
+
+  it('does not enforce schemas when the catalog carries no model type map', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(JSON.stringify(approval), { status: 200 }));
+    render(<CheckoutPane client={clientWith({ specs: [], collections: [] })} />);
+    await settleCatalog();
+
+    fireEvent.change(screen.getByLabelText(/customer/i), {
+      target: { value: '{ "age": "thirty" }' },
+    });
+    await userEvent.click(screen.getByRole('button', { name: /try checkout/i }));
+
+    expect(await screen.findByText('Approved')).toBeDefined();
+    expect(fetchSpy).toHaveBeenCalled();
   });
 });

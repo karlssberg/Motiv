@@ -22,6 +22,15 @@ the live rules the server executes — without a restart.
   `FraudScreeningRule` (async) on the server. Save a rule change and the very
   next checkout reflects it.
 
+Both JSON textareas (Evaluate's sample model and Checkout's customer) are
+schema-enforced: the catalog's `modelTypes` map carries a JSON Schema for the
+`customer` model, exported with the same serializer options the backend binds
+with, and the panes run `validateAgainstSchema` from `@motiv/rules-core` before
+posting. A mismatch (say `"age": "thirty"` where a number is expected — note
+numeric *strings* like `"30"` are legal, matching the web binder) renders as
+path-plus-message violations (`$.age: …`) and blocks the request. When the
+catalog has no `modelTypes` (an older backend), enforcement simply doesn't run.
+
 ## Run it
 
 From the repo root:
