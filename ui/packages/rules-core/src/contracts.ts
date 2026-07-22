@@ -22,11 +22,13 @@ export interface Catalog {
   collections: CatalogCollection[];
 }
 
-/** Stable machine-readable rule-document error codes. */
+/** Stable machine-readable rule-document error codes (mirrors Motiv.Serialization.RuleErrorCode). */
 export type RuleErrorCode =
   | 'InvalidNode' | 'UnknownSpec' | 'ModelTypeMismatch' | 'MetadataTypeMismatch'
   | 'MixedWhenTrueFalseKinds' | 'ExpressionsNotEnabled' | 'AsyncSpecInSyncLoad'
-  | 'DocumentTooLarge' | 'UnknownCollection';
+  | 'DocumentTooLarge' | 'MissingParameter' | 'SurplusParameter'
+  | 'ParameterTypeMismatch' | 'UnknownParameterReference' | 'UnknownCollection'
+  | 'AsyncSpecInHigherOrder' | 'PolicyRequired';
 
 /** A single validation or load error. */
 export interface RuleError {
@@ -73,3 +75,26 @@ export interface EvaluateRequest {
   document: RuleDocument;
   model: unknown;
 }
+
+/** One live-rule listing from GET /rules. */
+export interface RuleListEntry {
+  name: string;
+  modelType: string;
+  metadataType: string;
+  isAsync: boolean;
+  isPolicy: boolean;
+  version: number;
+  description?: string | null;
+}
+
+/** A rule's current document (null while on a code-defined default) and version. */
+export interface RuleGetResponse {
+  document: RuleDocument | null;
+  version: number;
+}
+
+/** The outcome of a save or revert: updated, a version conflict, or validation errors. */
+export type RuleSaveResult =
+  | { outcome: 'updated'; version: number }
+  | { outcome: 'conflict'; currentVersion: number }
+  | { outcome: 'invalid'; errors: RuleError[] };
