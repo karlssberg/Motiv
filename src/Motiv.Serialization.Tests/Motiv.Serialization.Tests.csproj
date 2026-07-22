@@ -30,4 +30,11 @@
         <Content Include="..\..\schemas\rule.v1.json" Link="schemas\rule.v1.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
+    <ItemGroup>
+        <EmbeddedResource Include="Rules\test-rule.json" />
+        <EmbeddedResource Include="Rules\extra-test-rule.json" />
+        <EmbeddedResource Include="Rules\dup\shared-rule.json" />
+        <EmbeddedResource Include="Rules\other\shared-rule.json" />
+    </ItemGroup>
+
 </Project>
