@@ -45,7 +45,16 @@ public sealed class RuleSet
         if (_rules.ContainsKey(rule.Name))
             throw new ArgumentException($"A rule is already registered under the name '{rule.Name}'.", nameof(rule));
 
-        rule.Attach(_serializer);
+        try
+        {
+            rule.Attach(_serializer);
+        }
+        catch (RuleSerializationException ex)
+        {
+            // Name the failing rule — a startup failure over many rules is otherwise anonymous.
+            throw new RuleSerializationException($"Rule '{rule.Name}': {ex.Message}", ex.Errors);
+        }
+
         _rules[rule.Name] = rule;
         return this;
     }

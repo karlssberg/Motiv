@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Motiv.Serialization.AspNetCore;
 
@@ -19,7 +20,9 @@ public static class MotivRulesEndpoints
     /// <param name="basePath">The base path to mount under, e.g. <c>/api/rules</c>.</param>
     /// <param name="registry">The registry of specs documents may reference.</param>
     /// <param name="options">The endpoint options, including evaluable model registrations.</param>
-    /// <param name="rules">The live rule set to manage, or null to omit the rule endpoints.</param>
+    /// <param name="rules">The live rule set to manage, or null to omit the rule endpoints.
+    /// Construct it with the same registry and <see cref="MotivRulesOptions.SerializerOptions"/>
+    /// passed here, so validate/evaluate and rule updates agree on how documents bind.</param>
     /// <returns>The endpoint route builder, for chaining.</returns>
     public static IEndpointRouteBuilder MapMotivRules(
         this IEndpointRouteBuilder endpoints,
@@ -97,6 +100,32 @@ public static class MotivRulesEndpoints
             MapRuleEndpoints(group, rules, options, json);
 
         return endpoints;
+    }
+
+    /// <summary>
+    /// Maps the rules endpoints using the registry, options, and <see cref="RuleSet"/> registered
+    /// via <see cref="MotivRulesServiceCollectionExtensions.AddMotivRules"/> — the RuleSet is
+    /// guaranteed to share that registry and serializer options, so validate/evaluate and rule
+    /// updates cannot diverge. Resolves the RuleSet eagerly so an invalid rule default fails
+    /// here, at startup, rather than at first request.
+    /// </summary>
+    /// <param name="endpoints">The endpoint route builder to map onto.</param>
+    /// <param name="basePath">The base path to mount under, e.g. <c>/api/rules</c>.</param>
+    /// <returns>The endpoint route builder, for chaining.</returns>
+    public static IEndpointRouteBuilder MapMotivRules(this IEndpointRouteBuilder endpoints, string basePath)
+    {
+        var services = endpoints.ServiceProvider;
+        if (services.GetService<SpecRegistry>() is not { } registry
+            || services.GetService<MotivRulesOptions>() is not { } options)
+        {
+            throw new InvalidOperationException(
+                "The Motiv rules services are not registered. " +
+                "Call services.AddMotivRules(registry, options) before MapMotivRules(basePath).");
+        }
+
+        // Resolving the RuleSet binds every enrolled rule's default — an invalid default
+        // fails here, at startup, rather than at first request.
+        return endpoints.MapMotivRules(basePath, registry, options, services.GetRequiredService<RuleSet>());
     }
 
     private static void MapRuleEndpoints(RouteGroupBuilder group, RuleSet rules, MotivRulesOptions options, JsonSerializerOptions json)

@@ -11,6 +11,15 @@ public sealed class RuleSerializationException : Exception
         Errors = errors;
     }
 
+    /// <summary>Creates the exception with an explicit message, preserving the errors.</summary>
+    /// <param name="message">The exception message.</param>
+    /// <param name="errors">The errors found in the document.</param>
+    public RuleSerializationException(string message, IReadOnlyList<RuleError> errors)
+        : base(message)
+    {
+        Errors = errors;
+    }
+
     /// <summary>All errors found in the document.</summary>
     public IReadOnlyList<RuleError> Errors { get; }
 

@@ -373,8 +373,13 @@ public class RuleTests
     [Fact]
     public void Should_fail_fast_at_add_for_an_invalid_document_default()
     {
-        // Act & Assert
-        Should.Throw<RuleSerializationException>(() => new RuleSet(Registry()).Add(new BrokenDocumentRule()));
+        // Act
+        var exception = Should.Throw<RuleSerializationException>(() =>
+            new RuleSet(Registry()).Add(new BrokenDocumentRule()));
+
+        // Assert — the failure names the rule and preserves the document errors
+        exception.Message.ShouldContain("broken-rule");
+        exception.Errors.ShouldContain(error => error.Code == RuleErrorCode.UnknownSpec);
     }
 
     [Fact]
