@@ -56,7 +56,14 @@ IReadOnlyList<RuleError>         ValidateAsyncSpec<TModel, TMetadata>(string jso
 - Sync spec leaves are lifted with `ToAsyncSpec()`; async leaves are used directly (the
   `AsyncSpecInSyncLoad` rejection applies only to the existing sync binders).
 - Compositions use the existing `AsyncSpecBase` operators (`And`, `AndAlso`, `Or`, `OrElse`,
-  `XOr`, `Not`); decorations use the async builder equivalents.
+  `XOr`, `Not`).
+- **Correction (found during planning):** core has no decorator builders over *existing* async
+  specs — `Spec.Build(asyncSpec).WhenTrue(...)`/`.Create(name)` does not exist (only
+  predicate-built `Spec.BuildAsync(...)` supports decoration). Binding named/decorated nodes in
+  an async load therefore requires a **core prerequisite**: async decorator propositions
+  (minimal `Create(name)`, explanation `WhenTrue`/`WhenFalse` strings, and metadata
+  `WhenTrue`/`WhenFalse` payloads over an `AsyncSpecBase`), mirroring the sync
+  `DecoratorProposition` fluent surface and reusing its result types. This is Plan 1.
 - **Boundary:** core Motiv has no async higher-order propositions (`AsyncSpecBase` has no
   quantifiers). A higher-order subtree must therefore be **fully synchronous**: it binds via
   the existing sync path and the resulting spec is lifted with `ToAsyncSpec()`. An async spec
@@ -237,13 +244,16 @@ TDD throughout; full solution suite (`dotnet test`) plus `ui` vitest and Playwri
 
 ## 7. Phasing
 
-Three plans, mirroring how the vertical slice was built:
+Four plans (the core decorator prerequisite surfaced during planning):
 
-1. **Async binding** — `AsyncRuleBinder` (+ metadata variant), `DeserializeAsyncSpec` /
+1. **Async decorator propositions (core)** — `Spec.Build(asyncSpec)` fluent surface: minimal
+   `Create(name)`, explanation strings, metadata payloads; async proposition classes reusing
+   the sync decorator result types.
+2. **Async binding** — `AsyncRuleBinder` (+ metadata variant), `DeserializeAsyncSpec` /
    `ValidateAsyncSpec`, new error codes.
-2. **Handles + endpoints** — `Rule`/`PolicyRule`/`AsyncRule`/`AsyncPolicyRule`, `RuleState`
+3. **Handles + endpoints** — `Rule`/`PolicyRule`/`AsyncRule`/`AsyncPolicyRule`, `RuleState`
    swap machinery, `RuleSet`, `RuleDocuments`, DI extensions, rule endpoints.
-3. **Sample + UI** — sample rules + `/api/checkout`, rules-core client methods, demo picker /
+4. **Sample + UI** — sample rules + `/api/checkout`, rules-core client methods, demo picker /
    save / conflict / checkout pane, e2e.
 
 ## Non-Goals
