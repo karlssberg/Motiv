@@ -43,5 +43,8 @@ public enum RuleErrorCode
     UnknownCollection,
 
     /// <summary>An async spec was referenced inside a higher-order subtree, which must be fully synchronous.</summary>
-    AsyncSpecInHigherOrder
+    AsyncSpecInHigherOrder,
+
+    /// <summary>A policy rule was updated with a document whose bound root is not a policy.</summary>
+    PolicyRequired
 }
