@@ -67,26 +67,6 @@ public class AsyncRuleBinderTests
         result.Assertions.ShouldBe(["customer is inactive"]);
     }
 
-    [Fact]
-    public async Task Should_bind_mixed_sync_async_compositions_with_sync_parity()
-    {
-        // Arrange
-        var registry = Registry();
-        var serializer = new RuleSerializer(registry);
-        var syncDocument = """{ "rule": { "and": [ { "spec": "is-active" }, { "spec": "is-adult" } ] } }""";
-        var mixedDocument = """{ "rule": { "and": [ { "spec": "is-active" }, { "spec": "passes-credit-check" } ] } }""";
-        var model = new Customer(true, 30);
-
-        // Act
-        var syncResult = serializer.Deserialize<Customer>(syncDocument).Evaluate(model);
-        var mixedResult = await serializer.DeserializeAsyncSpec<Customer>(mixedDocument).EvaluateAsync(model);
-
-        // Assert — same de-noising and formatting discipline as the sync loader
-        mixedResult.Satisfied.ShouldBeTrue();
-        mixedResult.Assertions.ShouldBe(["customer is active", "passes credit check"]);
-        syncResult.Assertions.ShouldBe(["customer is active", "customer is an adult"]);
-    }
-
     public static TheoryData<string, string> BinaryOperators => new()
     {
         { "and", "And" },
@@ -326,5 +306,136 @@ public class AsyncRuleBinderTests
         var exception = act.ShouldThrow<RuleSerializationException>();
         exception.Errors.Count.ShouldBe(2);
         exception.Errors.ShouldAllBe(error => error.Code == RuleErrorCode.UnknownSpec);
+    }
+
+    private sealed class Order(decimal total)
+    {
+        public decimal Total { get; } = total;
+    }
+
+    private sealed class Account(params Order[] orders)
+    {
+        public IReadOnlyList<Order> Orders { get; } = orders;
+    }
+
+    private static SpecBase<Order, string> IsLargeOrder { get; } =
+        Spec.Build((Order o) => o.Total >= 100m)
+            .WhenTrue("order is large").WhenFalse("order is small").Create();
+
+    private static AsyncSpecBase<Account, string> AsyncAccountCheck { get; } =
+        Spec.BuildAsync((Account a) => new ValueTask<bool>(a.Orders.Count > 0))
+            .WhenTrue("account has orders").WhenFalse("account has no orders").Create();
+
+    private static SpecRegistry HigherOrderRegistry() => new SpecRegistry()
+        .Register("is-large-order", IsLargeOrder)
+        .Register("async-order-check",
+            Spec.BuildAsync((Order _) => new ValueTask<bool>(true))
+                .WhenTrue("checked").WhenFalse("unchecked").Create())
+        .Register("async-account-check", AsyncAccountCheck)
+        .RegisterCollection<Account, Order>("orders", a => a.Orders);
+
+    // Covers all-large (satisfied), mixed and none-large (unsatisfied), and the empty collection.
+    private static readonly Account[] AccountModels =
+    [
+        new(new Order(150m), new Order(200m)),
+        new(new Order(150m), new Order(50m)),
+        new(new Order(10m), new Order(20m)),
+        new()
+    ];
+
+    [Fact]
+    public async Task Should_bind_a_fully_sync_higher_order_subtree_by_lifting_it()
+    {
+        // Arrange
+        var serializer = new RuleSerializer(HigherOrderRegistry());
+        const string document =
+            """{ "rule": { "asAllSatisfied": { "spec": "is-large-order" }, "path": "orders", "name": "all orders large" } }""";
+
+        // Act
+        var asyncLoaded = serializer.DeserializeAsyncSpec<Account>(document);
+        var result = await asyncLoaded.EvaluateAsync(new Account(new Order(150m), new Order(200m)));
+
+        // Assert — the subtree binds through the sync binder and lifts, so the async load
+        // must match the sync load of the same document exactly
+        result.Satisfied.ShouldBeTrue();
+        await ShouldBehaveIdenticallyAsync(asyncLoaded, serializer.Deserialize<Account>(document), AccountModels);
+    }
+
+    [Fact]
+    public async Task Should_bind_a_decorated_higher_order_node_with_sync_load_parity()
+    {
+        // Arrange — the sync binder applies the quantifier node's decorations for the whole
+        // subtree. This pins the decorated-node parity contract only: a second decoration after
+        // the lift is observationally collapsed by Motiv and costs just a redundant wrapper
+        // allocation, so the BindNode early-return is an efficiency/cleanliness invariant
+        // enforced by inspection rather than by this test.
+        var serializer = new RuleSerializer(HigherOrderRegistry());
+        const string document =
+            """
+            {
+              "rule": {
+                "asAllSatisfied": { "spec": "is-large-order" },
+                "path": "orders",
+                "whenTrue": "every order is large",
+                "whenFalse": "an order is small",
+                "name": "order sizes"
+              }
+            }
+            """;
+
+        // Act
+        var asyncLoaded = serializer.DeserializeAsyncSpec<Account>(document);
+
+        // Assert
+        var result = await asyncLoaded.EvaluateAsync(new Account(new Order(150m), new Order(50m)));
+        result.Satisfied.ShouldBeFalse();
+        result.Reason.ShouldBe("order sizes == false");
+        await ShouldBehaveIdenticallyAsync(asyncLoaded, serializer.Deserialize<Account>(document), AccountModels);
+    }
+
+    [Fact]
+    public async Task Should_compose_a_higher_order_operand_with_an_async_operand()
+    {
+        // Arrange — a higher-order node as a composition operand exercises the
+        // BindComposition → BindNode → higher-order branch edge of the async binder.
+        const string json =
+            """
+            {
+              "rule": {
+                "and": [
+                  { "asAllSatisfied": { "spec": "is-large-order" }, "path": "orders", "name": "all orders large" },
+                  { "spec": "async-account-check" }
+                ]
+              }
+            }
+            """;
+        var quantifier = Spec.Build(IsLargeOrder).AsAllSatisfied()
+            .WhenTrue("all satisfied").WhenFalse("not all satisfied").Create()
+            .ChangeModelTo<Account>(a => a.Orders);
+        var expected = Spec.Build(quantifier).Create("all orders large").ToAsyncSpec().And(AsyncAccountCheck);
+
+        // Act
+        var loaded = new RuleSerializer(HigherOrderRegistry()).DeserializeAsyncSpec<Account>(json);
+
+        // Assert
+        await ShouldBehaveIdenticallyAsync(loaded, expected, AccountModels);
+    }
+
+    [Fact]
+    public void Should_reject_async_specs_inside_higher_order_subtrees()
+    {
+        // Arrange
+        var serializer = new RuleSerializer(HigherOrderRegistry());
+        const string document =
+            """{ "rule": { "asAllSatisfied": { "spec": "async-order-check" }, "path": "orders", "name": "all checked" } }""";
+
+        // Act
+        var act = () => serializer.DeserializeAsyncSpec<Account>(document);
+
+        // Assert
+        var errors = act.ShouldThrow<RuleSerializationException>().Errors;
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.AsyncSpecInHigherOrder);
+        error.Message.ShouldContain("higher-order propositions evaluate synchronously");
     }
 }

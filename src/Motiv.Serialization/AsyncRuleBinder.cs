@@ -19,6 +19,13 @@ internal static class AsyncRuleBinder
         SpecRegistry registry,
         List<RuleError> errors)
     {
+        // Higher-order subtrees bind (and decorate) entirely through the sync binder, then lift.
+        // Returning before Decorate avoids re-wrapping with an identical decoration layer — Motiv
+        // collapses the duplicate, so this is an allocation/cleanliness invariant, not a behavioral
+        // one, and is intentionally not test-enforced.
+        if (node.Operator.IsHigherOrder())
+            return BindHigherOrder<TModel>(node, registry, errors);
+
         var spec = BindOperator<TModel>(node, registry, errors);
 
         // Reported independently of leaf/composition success, mirroring the parser's approach
@@ -40,7 +47,6 @@ internal static class AsyncRuleBinder
             RuleOperator.Spec => BindSpecLeaf<TModel>(node, registry, errors),
             RuleOperator.Expression => BindExpressionLeaf<TModel>(node, errors),
             RuleOperator.Not => BindNode<TModel>(node.Children[0], registry, errors)?.Not(),
-            _ when node.Operator.IsHigherOrder() => BindHigherOrder<TModel>(node, registry, errors),
             _ => BindComposition<TModel>(node, registry, errors)
         };
 
@@ -144,6 +150,21 @@ internal static class AsyncRuleBinder
     }
 
     private static AsyncSpecBase<TModel, string>? BindHigherOrder<TModel>(
-        RuleNode node, SpecRegistry registry, List<RuleError> errors) =>
-        throw new NotImplementedException("Task 3");
+        RuleNode node, SpecRegistry registry, List<RuleError> errors)
+    {
+        // Core has no async quantifiers: the whole higher-order subtree binds synchronously
+        // and lifts. An async leaf inside it is therefore a distinct, actionable error.
+        var errorCountBefore = errors.Count;
+        var spec = RuleBinder.BindNode<TModel>(node, registry, errors);
+
+        for (var i = errorCountBefore; i < errors.Count; i++)
+        {
+            if (errors[i].Code == RuleErrorCode.AsyncSpecInSyncLoad)
+                errors[i] = new RuleError(errors[i].Path, RuleErrorCode.AsyncSpecInHigherOrder,
+                    "async specs cannot be used inside a higher-order subtree; " +
+                    "higher-order propositions evaluate synchronously");
+        }
+
+        return spec?.ToAsyncSpec();
+    }
 }
