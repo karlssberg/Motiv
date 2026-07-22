@@ -55,15 +55,13 @@ public class CheckoutEndpointTests : IClassFixture<WebApplicationFactory<Program
         await using var factory = new WebApplicationFactory<Program>();   // isolated host: mutates rule state
         var client = factory.CreateClient();
         var customer = new { age = 30, isActive = true, orderCount = 0 };
-        (await (await client.PostAsJsonAsync("/api/checkout", customer))
-            .Content.ReadFromJsonAsync<JsonElement>()).GetProperty("approved").GetBoolean().ShouldBeTrue();
+        (await CheckoutAsync(client, customer)).GetProperty("approved").GetBoolean().ShouldBeTrue();
         var document = JsonDocument.Parse(
             """{ "rule": { "and": [ { "spec": "is-active" }, { "spec": "has-orders" } ] } }""").RootElement;
 
         // Act
         var put = await client.PutAsJsonAsync("/api/rules/rules/can-checkout", new { document, baseVersion = 1 });
-        var after = await (await client.PostAsJsonAsync("/api/checkout", customer))
-            .Content.ReadFromJsonAsync<JsonElement>();
+        var after = await CheckoutAsync(client, customer);
 
         // Assert — no restart, next call sees the new rule
         put.EnsureSuccessStatusCode();
@@ -102,5 +100,11 @@ public class CheckoutEndpointTests : IClassFixture<WebApplicationFactory<Program
         // Assert
         var names = body.EnumerateArray().Select(r => r.GetProperty("name").GetString()).ToArray();
         names.ShouldBe(["can-checkout", "fraud-screening", "loyalty-discount"], ignoreOrder: true);
+    }
+
+    private static async Task<JsonElement> CheckoutAsync(HttpClient client, object customer)
+    {
+        var response = await client.PostAsJsonAsync("/api/checkout", customer);
+        return await response.Content.ReadFromJsonAsync<JsonElement>();
     }
 }
