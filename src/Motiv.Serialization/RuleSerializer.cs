@@ -148,6 +148,30 @@ public sealed class RuleSerializer
     }
 
     /// <summary>
+    /// Loads a rule document into an asynchronous typed-metadata spec, resolving spec references
+    /// against the registry. Sync references are lifted; async references are used directly.
+    /// Throws when the document is invalid.
+    /// </summary>
+    /// <typeparam name="TModel">The model type the document's spec references were registered for.</typeparam>
+    /// <typeparam name="TMetadata">The metadata type object payloads deserialize to and registry entries must yield.</typeparam>
+    /// <param name="json">The rule document to load.</param>
+    /// <returns>The composed async spec.</returns>
+    /// <exception cref="RuleSerializationException">The document is structurally or semantically invalid.</exception>
+    public AsyncSpecBase<TModel, TMetadata> DeserializeAsyncSpec<TModel, TMetadata>(string json)
+    {
+        if (typeof(TMetadata) == typeof(string))
+            return (AsyncSpecBase<TModel, TMetadata>)(object)DeserializeAsyncSpec<TModel>(json);
+
+        var errors = new List<RuleError>();
+        var document = Prepare(json, null, errors);
+        ThrowIfInvalid(errors);
+
+        var spec = new AsyncMetadataRuleBinder<TMetadata>(_registry, _options).Bind<TModel>(document!, errors);
+        ThrowIfInvalid(errors);
+        return spec!;
+    }
+
+    /// <summary>
     /// Checks a rule document structurally and semantically against the registry for an
     /// explanation load, accumulating every error instead of throwing. Parameter values are not
     /// taken: required parameters are stood in by type-shaped placeholders, so supply errors are

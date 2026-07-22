@@ -47,6 +47,7 @@ internal static class AsyncRuleBinder
             RuleOperator.Spec => BindSpecLeaf<TModel>(node, registry, errors),
             RuleOperator.Expression => BindExpressionLeaf<TModel>(node, errors),
             RuleOperator.Not => BindNode<TModel>(node.Children[0], registry, errors)?.Not(),
+            _ when node.Operator.IsHigherOrder() => BindHigherOrder<TModel>(node, registry, errors),
             _ => BindComposition<TModel>(node, registry, errors)
         };
 
