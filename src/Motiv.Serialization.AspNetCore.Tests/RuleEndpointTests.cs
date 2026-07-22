@@ -13,20 +13,19 @@ public class RuleEndpointTests
 
     private sealed class ActiveRule() : Rule<Customer, string>("active-rule", IsActive, "the demo rule");
 
-    private static (SpecRegistry, MotivRulesOptions, RuleSet) Fixture()
+    private static async Task<WebApplication> StartAsync()
     {
         var registry = new SpecRegistry().Register("is-active", IsActive);
         var options = new MotivRulesOptions().AddModel<Customer>("customer");
         var rules = new RuleSet(registry).Add(new ActiveRule());
-        return (registry, options, rules);
+        return await TestApp.StartAsync(registry, options, rules);
     }
 
     [Fact]
     public async Task Should_list_rules()
     {
         // Arrange
-        var (registry, options, rules) = Fixture();
-        await using var app = await TestApp.StartAsync(registry, options, rules);
+        await using var app = await StartAsync();
         var client = app.GetTestClient();
 
         // Act
@@ -47,8 +46,7 @@ public class RuleEndpointTests
     public async Task Should_get_a_rule_with_a_null_document_while_on_a_compiled_default()
     {
         // Arrange
-        var (registry, options, rules) = Fixture();
-        await using var app = await TestApp.StartAsync(registry, options, rules);
+        await using var app = await StartAsync();
         var client = app.GetTestClient();
 
         // Act
@@ -63,8 +61,7 @@ public class RuleEndpointTests
     public async Task Should_put_a_document_and_serve_it_back()
     {
         // Arrange
-        var (registry, options, rules) = Fixture();
-        await using var app = await TestApp.StartAsync(registry, options, rules);
+        await using var app = await StartAsync();
         var client = app.GetTestClient();
         var document = JsonDocument.Parse("""{ "rule": { "not": { "spec": "is-active" } } }""").RootElement;
 
@@ -86,8 +83,7 @@ public class RuleEndpointTests
     public async Task Should_409_with_the_current_version_on_a_stale_base_version()
     {
         // Arrange
-        var (registry, options, rules) = Fixture();
-        await using var app = await TestApp.StartAsync(registry, options, rules);
+        await using var app = await StartAsync();
         var client = app.GetTestClient();
         var document = JsonDocument.Parse("""{ "rule": { "spec": "is-active" } }""").RootElement;
         await client.PutAsJsonAsync("/api/rules/rules/active-rule", new { document, baseVersion = 1 });
@@ -104,8 +100,7 @@ public class RuleEndpointTests
     public async Task Should_400_with_structured_errors_for_an_invalid_document()
     {
         // Arrange
-        var (registry, options, rules) = Fixture();
-        await using var app = await TestApp.StartAsync(registry, options, rules);
+        await using var app = await StartAsync();
         var client = app.GetTestClient();
         var document = JsonDocument.Parse("""{ "rule": { "spec": "missing" } }""").RootElement;
 
@@ -124,8 +119,7 @@ public class RuleEndpointTests
     public async Task Should_400_for_a_put_without_a_document()
     {
         // Arrange
-        var (registry, options, rules) = Fixture();
-        await using var app = await TestApp.StartAsync(registry, options, rules);
+        await using var app = await StartAsync();
         var client = app.GetTestClient();
 
         // Act — no document property at all
@@ -141,8 +135,7 @@ public class RuleEndpointTests
     public async Task Should_400_for_a_put_with_a_non_positive_base_version()
     {
         // Arrange
-        var (registry, options, rules) = Fixture();
-        await using var app = await TestApp.StartAsync(registry, options, rules);
+        await using var app = await StartAsync();
         var client = app.GetTestClient();
         var document = JsonDocument.Parse("""{ "rule": { "spec": "is-active" } }""").RootElement;
 
@@ -159,8 +152,7 @@ public class RuleEndpointTests
     public async Task Should_400_for_a_delete_with_a_non_positive_base_version()
     {
         // Arrange
-        var (registry, options, rules) = Fixture();
-        await using var app = await TestApp.StartAsync(registry, options, rules);
+        await using var app = await StartAsync();
         var client = app.GetTestClient();
 
         // Act — versions start at 1, so 0 can never be a real observed version
@@ -176,8 +168,7 @@ public class RuleEndpointTests
     public async Task Should_404_for_unknown_rules()
     {
         // Arrange
-        var (registry, options, rules) = Fixture();
-        await using var app = await TestApp.StartAsync(registry, options, rules);
+        await using var app = await StartAsync();
         var client = app.GetTestClient();
 
         // Act & Assert
@@ -188,8 +179,7 @@ public class RuleEndpointTests
     public async Task Should_404_for_a_put_or_delete_on_an_unknown_rule()
     {
         // Arrange
-        var (registry, options, rules) = Fixture();
-        await using var app = await TestApp.StartAsync(registry, options, rules);
+        await using var app = await StartAsync();
         var client = app.GetTestClient();
         var document = JsonDocument.Parse("""{ "rule": { "spec": "is-active" } }""").RootElement;
 
@@ -206,8 +196,7 @@ public class RuleEndpointTests
     public async Task Should_409_for_a_delete_with_a_stale_base_version()
     {
         // Arrange
-        var (registry, options, rules) = Fixture();
-        await using var app = await TestApp.StartAsync(registry, options, rules);
+        await using var app = await StartAsync();
         var client = app.GetTestClient();
 
         // Act — the rule is at version 1, not 2
@@ -222,8 +211,7 @@ public class RuleEndpointTests
     public async Task Should_revert_via_delete_and_bump_the_version()
     {
         // Arrange
-        var (registry, options, rules) = Fixture();
-        await using var app = await TestApp.StartAsync(registry, options, rules);
+        await using var app = await StartAsync();
         var client = app.GetTestClient();
         var document = JsonDocument.Parse("""{ "rule": { "not": { "spec": "is-active" } } }""").RootElement;
         await client.PutAsJsonAsync("/api/rules/rules/active-rule", new { document, baseVersion = 1 });

@@ -7,17 +7,7 @@ namespace Motiv.Serialization.AspNetCore.Tests;
 /// <summary>Spins up an in-memory host that mounts the rules endpoints under /api/rules.</summary>
 internal static class TestApp
 {
-    public static async Task<WebApplication> StartAsync(SpecRegistry registry, MotivRulesOptions options)
-    {
-        var builder = WebApplication.CreateSlimBuilder();
-        builder.WebHost.UseTestServer();
-        var app = builder.Build();
-        app.MapMotivRules("/api/rules", registry, options);
-        await app.StartAsync();
-        return app;
-    }
-
-    public static async Task<WebApplication> StartAsync(SpecRegistry registry, MotivRulesOptions options, RuleSet rules)
+    public static async Task<WebApplication> StartAsync(SpecRegistry registry, MotivRulesOptions options, RuleSet? rules = null)
     {
         var builder = WebApplication.CreateSlimBuilder();
         builder.WebHost.UseTestServer();
