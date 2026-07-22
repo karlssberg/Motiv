@@ -2,7 +2,9 @@ namespace Motiv.Serialization;
 
 /// <summary>
 /// The non-generic identity of a rule: a named, versioned, hot-swappable decision handle.
-/// Concrete rules derive from <see cref="Rule{TModel,TMetadata}"/>.
+/// Concrete rules derive from <see cref="Rule{TModel,TMetadata}"/>,
+/// <see cref="PolicyRule{TModel,TMetadata}"/>, <see cref="AsyncRule{TModel,TMetadata}"/>, or
+/// <see cref="AsyncPolicyRule{TModel,TMetadata}"/>.
 /// </summary>
 public abstract class RuleBase
 {
