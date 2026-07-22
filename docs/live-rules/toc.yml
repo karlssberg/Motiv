@@ -1,0 +1,12 @@
+### YamlMime:ManagedReference
+items:
+  - name: Rule Classes
+    href: Rules.md
+  - name: RuleSet
+    href: RuleSet.md
+  - name: RuleDocuments
+    href: RuleDocuments.md
+  - name: ASP.NET Core Integration
+    href: AspNetCore.md
+  - name: DeserializeAsyncSpec()
+    href: DeserializeAsyncSpec.md
