@@ -30,15 +30,7 @@ public sealed class RuleSet
 
     /// <summary>Read-only listings of every registered rule, reflecting live versions.</summary>
     public IReadOnlyCollection<RuleSetEntry> Rules =>
-        _rules.Values
-            .Select(rule =>
-            {
-                var (version, documentJson) = rule.VersionedDocument();
-                return new RuleSetEntry(
-                    rule.Name, rule.ModelType, rule.MetadataType, rule.IsAsync, rule.IsPolicy,
-                    version, rule.Description, documentJson);
-            })
-            .ToArray();
+        _rules.Values.Select(ToEntry).ToArray();
 
     /// <summary>
     /// Registers a rule and binds its default immediately — an invalid default document throws
@@ -62,6 +54,23 @@ public sealed class RuleSet
     /// <param name="name">The rule name.</param>
     /// <returns>The rule, or null when none is registered under the name.</returns>
     public RuleBase? Find(string name) => _rules.TryGetValue(name, out var rule) ? rule : null;
+
+    /// <summary>
+    /// Looks up one rule's listing by name. The entry's version and document come from a single
+    /// snapshot, so they are always coherent even while the rule is being replaced.
+    /// </summary>
+    /// <param name="name">The rule name.</param>
+    /// <returns>The entry, or null when no rule is registered under the name.</returns>
+    public RuleSetEntry? FindEntry(string name) =>
+        Find(name) is { } rule ? ToEntry(rule) : null;
+
+    private static RuleSetEntry ToEntry(RuleBase rule)
+    {
+        var (version, documentJson) = rule.VersionedDocument();
+        return new RuleSetEntry(
+            rule.Name, rule.ModelType, rule.MetadataType, rule.IsAsync, rule.IsPolicy,
+            version, rule.Description, documentJson);
+    }
 
     /// <summary>
     /// Replaces a rule's implementation with a document: validate → bind → atomic publish.

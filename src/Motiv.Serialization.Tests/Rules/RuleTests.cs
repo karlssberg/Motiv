@@ -298,6 +298,57 @@ public class RuleTests
         rules.Revert("nope", 1).Outcome.ShouldBe(RuleUpdateOutcome.NotFound);
     }
 
+    [Fact]
+    public void Should_find_a_single_entry_by_name()
+    {
+        // Arrange
+        var rule = new ActiveRule();
+        var rules = new RuleSet(Registry()).Add(rule);
+        rules.Update("is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1);
+
+        // Act
+        var entry = rules.FindEntry("is-active-rule").ShouldNotBeNull();
+
+        // Assert
+        entry.Name.ShouldBe("is-active-rule");
+        entry.ModelType.ShouldBe(typeof(Customer));
+        entry.MetadataType.ShouldBe(typeof(string));
+        entry.IsAsync.ShouldBeFalse();
+        entry.IsPolicy.ShouldBeFalse();
+        entry.Version.ShouldBe(2);
+        entry.Description.ShouldNotBeNull().ShouldBe("demo rule");
+        entry.DocumentJson.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Should_return_null_from_find_entry_for_an_unknown_rule_name()
+    {
+        // Arrange
+        var rules = new RuleSet(Registry());
+
+        // Act & Assert
+        rules.FindEntry("nope").ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_serve_a_coherent_version_and_document_from_find_entry()
+    {
+        // Arrange
+        var rule = new ActiveRule();
+        var rules = new RuleSet(Registry()).Add(rule);
+
+        // Act & Assert — compiled default: version 1 with no document
+        var initial = rules.FindEntry("is-active-rule").ShouldNotBeNull();
+        initial.Version.ShouldBe(1);
+        initial.DocumentJson.ShouldBeNull();
+
+        // Act & Assert — after an update, both fields move together
+        rules.Update("is-active-rule", """{ "rule": { "not": { "spec": "is-active" } } }""", 1);
+        var updated = rules.FindEntry("is-active-rule").ShouldNotBeNull();
+        updated.Version.ShouldBe(2);
+        updated.DocumentJson.ShouldNotBeNull();
+    }
+
     private sealed class DocumentRule() : Rule<Customer, string>(
         "doc-rule", RuleDocuments.FromJson("""{ "rule": { "spec": "is-active" } }"""));
 

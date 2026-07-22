@@ -16,4 +16,14 @@ internal static class TestApp
         await app.StartAsync();
         return app;
     }
+
+    public static async Task<WebApplication> StartAsync(SpecRegistry registry, MotivRulesOptions options, RuleSet rules)
+    {
+        var builder = WebApplication.CreateSlimBuilder();
+        builder.WebHost.UseTestServer();
+        var app = builder.Build();
+        app.MapMotivRules("/api/rules", registry, options, rules);
+        await app.StartAsync();
+        return app;
+    }
 }
