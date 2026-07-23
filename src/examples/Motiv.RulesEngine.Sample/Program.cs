@@ -63,8 +63,20 @@ builder.Services.AddMotivRules(registry, options)
 
 var app = builder.Build();
 
+// index.html references content-hashed bundles, so a stale cached shell points at assets that no
+// longer exist after a redeploy — force revalidation on the shell while the hashed assets stay
+// cacheable. Applied to both the static middleware (/, /index.html) and the SPA fallback below.
+var staticFiles = new StaticFileOptions
+{
+    OnPrepareResponse = context =>
+    {
+        if (string.Equals(context.File.Name, "index.html", StringComparison.OrdinalIgnoreCase))
+            context.Context.Response.Headers.CacheControl = "no-cache";
+    }
+};
+
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(staticFiles);
 
 // Seam: the endpoints. Mounts GET /catalog, POST /validate, POST /evaluate — plus the rule
 // endpoints under /api/rules/rules — backed by the registry, options, and RuleSet from DI.
@@ -88,7 +100,7 @@ app.MapPost("/api/checkout", async (
         options.JsonSerializerOptions);
 });
 
-app.MapFallbackToFile("index.html");
+app.MapFallbackToFile("index.html", staticFiles);
 
 app.Run();
 
