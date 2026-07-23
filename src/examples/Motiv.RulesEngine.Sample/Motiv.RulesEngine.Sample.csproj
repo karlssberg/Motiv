@@ -10,4 +10,8 @@
         <ProjectReference Include="..\..\Motiv.Serialization.AspNetCore\Motiv.Serialization.AspNetCore.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <EmbeddedResource Include="Rules\loyalty-discount.json" />
+    </ItemGroup>
+
 </Project>

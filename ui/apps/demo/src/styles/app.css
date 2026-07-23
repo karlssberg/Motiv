@@ -56,6 +56,42 @@ body {
   color: var(--text);
 }
 
+/* Rule header: picker + version + save spanning the full grid width */
+.rule-header {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.rule-header .field {
+  flex-direction: row;
+  align-items: center;
+}
+
+.rule-header .control {
+  width: auto;
+}
+
+.rule-version {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* Conflict banner: another writer saved a newer version */
+.conflict-banner {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  color: var(--danger);
+  font-size: 0.875rem;
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  padding: calc(var(--space) / 2) var(--space);
+}
+
 /* Pane header row: title plus optional trailing controls (e.g. extension-point affordances) */
 .pane-header {
   display: flex;
@@ -239,4 +275,22 @@ body {
   display: flex;
   align-items: center;
   gap: calc(var(--space) / 2);
+}
+
+/* Checkout outcome: Approved/Rejected plus the two rule verdicts */
+.checkout-outcome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+.verdict h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.verdict ul {
+  margin: calc(var(--space) / 2) 0 0;
+  padding-left: calc(var(--space) * 2.5);
+  font-size: 0.9rem;
 }

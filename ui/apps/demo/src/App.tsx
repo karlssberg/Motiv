@@ -1,9 +1,11 @@
 import { useEffect, useMemo } from 'react';
 import { RuleEditorStore, RulesApiClient, createValidationController } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
+import { RuleHeader } from './panes/RuleHeader.js';
 import { BuilderPane } from './panes/BuilderPane.js';
 import { JsonPane } from './panes/JsonPane.js';
 import { EvaluatePane } from './panes/EvaluatePane.js';
+import { CheckoutPane } from './panes/CheckoutPane.js';
 
 const MODEL_TYPE = 'customer';
 
@@ -33,9 +35,18 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
     // to every builder component (useRuleEditorStore / useRuleNode) below it.
     <RuleEditorProvider store={store}>
       <main className="app">
+        <RuleHeader client={client} />
+        {/*
+          Each pane below fetches GET /catalog on mount (BuilderPane and EvaluatePane
+          via useCatalog, CheckoutPane directly) — up to three requests for the same
+          static payload. Deduping would mean lifting the catalog here and passing it
+          down, but each pane's self-contained wiring is a deliberate seam this demo
+          exists to show, so the duplicate requests are accepted.
+        */}
         <BuilderPane client={client} />
         <JsonPane />
         <EvaluatePane client={client} />
+        <CheckoutPane client={client} />
       </main>
     </RuleEditorProvider>
   );
