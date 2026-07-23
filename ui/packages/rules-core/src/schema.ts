@@ -12,13 +12,13 @@ export interface SchemaViolation {
   message: string;
 }
 
-const jsonTypeOf = (value: unknown): string => {
+function jsonTypeOf(value: unknown): string {
   if (value === null) return 'null';
   if (Array.isArray(value)) return 'array';
   const t = typeof value;
   if (t === 'number') return Number.isInteger(value) ? 'integer' : 'number';
   return t;
-};
+}
 
 function matchesType(value: unknown, type: string): boolean {
   switch (type) {
@@ -42,11 +42,12 @@ function compileSafely(pattern: string): RegExp | undefined {
 }
 
 function validate(value: unknown, schema: JsonSchema, path: string, out: SchemaViolation[]): void {
-  const types = schema.type === undefined ? undefined
-    : Array.isArray(schema.type) ? schema.type : [schema.type];
-  if (types && !types.some((t) => matchesType(value, t))) {
-    out.push({ path, message: `expected ${types.join(' | ')}, got ${jsonTypeOf(value)}` });
-    return;
+  if (schema.type !== undefined) {
+    const types = Array.isArray(schema.type) ? schema.type : [schema.type];
+    if (!types.some((t) => matchesType(value, t))) {
+      out.push({ path, message: `expected ${types.join(' | ')}, got ${jsonTypeOf(value)}` });
+      return;
+    }
   }
 
   // Web-binder parity: a schema like {"type":["string","integer"],"pattern":"^-?\d+$"}
