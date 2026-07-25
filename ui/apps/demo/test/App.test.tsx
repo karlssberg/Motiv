@@ -15,7 +15,7 @@ function testClient(): RulesApiClient {
 describe('App', () => {
   it('renders the three panes', () => {
     render(<App client={testClient()} store={new RuleEditorStore({ rule: { spec: 'is-active' } })} />);
-    expect(screen.getByRole('region', { name: 'Builder' })).toBeDefined();
+    expect(screen.getByRole('region', { name: 'Editor' })).toBeDefined();
     expect(screen.getByRole('region', { name: 'Document' })).toBeDefined();
     expect(screen.getByRole('region', { name: 'Evaluate' })).toBeDefined();
   });

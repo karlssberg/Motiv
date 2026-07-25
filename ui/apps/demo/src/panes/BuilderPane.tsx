@@ -6,7 +6,8 @@ import { MODEL_TYPE } from '../App.js';
 
 const ROOT = '$.rule';
 const MAX_EXPAND_DEPTH = 5;
-const EMPTY_CATALOG: Catalog = { specs: [], collections: [] };
+/** What a pane renders against until (or unless) the real catalog arrives. */
+export const EMPTY_CATALOG: Catalog = { specs: [], collections: [] };
 
 /** Depth of a node path: the number of dot-segments after the root. */
 function depthOf(path: string): number {
@@ -32,8 +33,12 @@ function initialExpanded(document: RuleDocument): Set<string> {
   return expanded;
 }
 
-/** The recursive single-open-accordion rule builder over the boolean grammar. */
-export function BuilderPane(props: { client: RulesApiClient }) {
+/**
+ * The recursive single-open-accordion rule builder over the boolean grammar, without any
+ * surrounding pane chrome — so it can be hosted either by {@link BuilderPane} or as one
+ * surface of a pane that toggles between the builder and the DSL text editor.
+ */
+export function BuilderBody(props: { client: RulesApiClient }) {
   const store = useRuleEditorStore();
   const catalogState = useCatalog(props.client);
   const catalog = catalogState.status === 'ready' ? catalogState.data : EMPTY_CATALOG;
@@ -59,6 +64,19 @@ export function BuilderPane(props: { client: RulesApiClient }) {
   };
 
   return (
+    <>
+      {catalogState.status === 'loading' && <p>Loading catalog…</p>}
+      {catalogState.status === 'error' && <p role="alert">Failed to load catalog.</p>}
+      <AccordionContext.Provider value={{ isExpanded: (path) => expanded.has(path), toggle, catalog }}>
+        <RuleNodeEditor path={ROOT} depth={0} modelType={MODEL_TYPE} />
+      </AccordionContext.Provider>
+    </>
+  );
+}
+
+/** The builder as a standalone pane, for hosts that show it on its own. */
+export function BuilderPane(props: { client: RulesApiClient }) {
+  return (
     <section className="pane" aria-label="Builder">
       <div className="pane-header">
         <h2>Builder</h2>
@@ -71,11 +89,7 @@ export function BuilderPane(props: { client: RulesApiClient }) {
           parameters — coming
         </button>
       </div>
-      {catalogState.status === 'loading' && <p>Loading catalog…</p>}
-      {catalogState.status === 'error' && <p role="alert">Failed to load catalog.</p>}
-      <AccordionContext.Provider value={{ isExpanded: (path) => expanded.has(path), toggle, catalog }}>
-        <RuleNodeEditor path={ROOT} depth={0} modelType={MODEL_TYPE} />
-      </AccordionContext.Provider>
+      <BuilderBody client={props.client} />
     </section>
   );
 }
