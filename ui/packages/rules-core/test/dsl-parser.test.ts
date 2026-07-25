@@ -256,3 +256,13 @@ describe('parse — prototype-unsafe parameter names', () => {
     expect(Object.getPrototypeOf(parameters ?? {})).toBe(Object.prototype);
   });
 });
+
+describe('parse — negative parameter defaults', () => {
+  it('parses a negative integer and a negative number default', () => {
+    const document = parse('param a: integer = -1\nparam b: number = -2\n\nis-active').document;
+    expect(document?.parameters).toEqual({
+      a: { type: 'integer', default: -1 },
+      b: { type: 'number', default: -2 },
+    });
+  });
+});

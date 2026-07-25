@@ -66,3 +66,39 @@ describe('parse — errors', () => {
     expect(parse('(is-active').spans.length).toBeGreaterThan(0);
   });
 });
+
+describe('parse — unterminated literals', () => {
+  it('reports an unterminated name string over the opening quote to end-of-input', () => {
+    const result = parse('is-active as "x');
+    expect(result.document).toBeUndefined();
+    expect(result.errors[0]).toMatchObject({ code: 'UnterminatedString', from: 13, to: 15 });
+  });
+
+  it('reports a lone opening quote', () => {
+    expect(parse('is-active as "').errors[0]).toMatchObject({
+      code: 'UnterminatedString', from: 13, to: 14,
+    });
+  });
+
+  it('reports an unterminated backtick expression', () => {
+    const result = parse('`n > 0');
+    expect(result.document).toBeUndefined();
+    expect(result.errors[0]).toMatchObject({ code: 'UnterminatedExpression', from: 0, to: 6 });
+  });
+
+  it('reports a lone opening backtick', () => {
+    expect(parse('`').errors[0]).toMatchObject({
+      code: 'UnterminatedExpression', from: 0, to: 1,
+    });
+  });
+
+  it('reports an unterminated parameter default string', () => {
+    const result = parse('param a: string = "gold\n\nis-active');
+    expect(result.document).toBeUndefined();
+    expect(result.errors[0]).toMatchObject({ code: 'UnterminatedString', from: 18 });
+  });
+
+  it('rejects a negative count, which the schema forbids', () => {
+    expect(parse('atLeast(-1) in orders { a }').errors[0]).toMatchObject({ code: 'ExpectedCount' });
+  });
+});

@@ -56,8 +56,11 @@ export function tokenize(text: string): Token[] {
       push('paramRef', i, j); i = j; continue;
     }
 
-    if (/[0-9]/.test(char)) {
-      let j = i;
+    // A `-` starts a number only when a digit follows it. Elsewhere `-` is either part of a
+    // spec word (`is-active`, consumed whole below) or an unrecognised character.
+    const negative = char === '-' && /[0-9]/.test(text[i + 1] ?? '');
+    if (negative || /[0-9]/.test(char)) {
+      let j = negative ? i + 1 : i;
       while (j < text.length && /[0-9]/.test(text[j]!)) j++;
       push('number', i, j); i = j; continue;
     }

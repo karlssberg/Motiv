@@ -65,4 +65,19 @@ describe('tokenize', () => {
       { kind: 'string', value: '"oops', from: 0, to: 5 },
     ]);
   });
+  it('lexes a negative number as one token', () => {
+    expect(tokenize('-1')).toEqual([{ kind: 'number', value: '-1', from: 0, to: 2 }]);
+  });
+
+  it('keeps hyphens inside spec words out of numbers', () => {
+    expect(tokenize('is-active a-1').map((t) => [t.kind, t.value])).toEqual([
+      ['spec', 'is-active'], ['spec', 'a-1'],
+    ]);
+  });
+
+  it('emits an error token for a hyphen not followed by a digit', () => {
+    expect(tokenize('- 1').map((t) => [t.kind, t.value])).toEqual([
+      ['error', '-'], ['number', '1'],
+    ]);
+  });
 });

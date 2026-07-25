@@ -5,11 +5,16 @@ import type { DslError, NodeSpan, ParseResult, Token } from './types.js';
 const ROOT = '$.rule';
 
 /**
- * Strips the delimiters off a quoted token's verbatim text. An unterminated literal runs to
- * end-of-input and so has no closing delimiter to drop.
+ * Strips the delimiters off a consumed string or expression token, reporting a literal that ran
+ * to end-of-input without its closing delimiter. A lone delimiter opens a literal it never
+ * closes, so it is unterminated despite ending in the delimiter.
  */
-function unquote(raw: string, delimiter: string): string {
-  return raw.slice(1, raw.endsWith(delimiter) ? -1 : undefined);
+function literalValue(state: ParserState, token: Token, delimiter: string, code: string): string {
+  const terminated = token.value.length > 1 && token.value.endsWith(delimiter);
+  if (!terminated) {
+    state.error(code, `expected a closing \`${delimiter}\``, token);
+  }
+  return token.value.slice(1, terminated ? -1 : undefined);
 }
 
 /** A parse in progress: the token cursor plus the accumulating spans and errors. */
@@ -59,7 +64,7 @@ function parseAsClause(state: ParserState): string | undefined {
     return undefined;
   }
   state.next();
-  return unquote(nameToken.value, '"');
+  return literalValue(state, nameToken, '"', 'UnterminatedString');
 }
 
 /** DSL quantifier keyword → higher-order node key. Counted forms take an `(n)` argument. */
@@ -84,7 +89,13 @@ function parseCount(state: ParserState): number | string | undefined {
 
   const value = state.peek();
   let count: number | string | undefined;
-  if (value?.kind === 'number') { count = Number(value.value); state.next(); }
+  if (value?.kind === 'number') {
+    const parsed = Number(value.value);
+    // A count must be a whole number of items: the schema's `countable` is `integer, minimum 0`.
+    if (Number.isInteger(parsed) && parsed >= 0) count = parsed;
+    else state.error('ExpectedCount', 'expected a whole number of zero or more', value);
+    state.next();
+  }
   else if (value?.kind === 'paramRef') { count = value.value; state.next(); }
   else state.error('ExpectedCount', 'expected a number or `@parameter`', value);
 
@@ -155,7 +166,7 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
 
   if (token.kind === 'expression') {
     state.next();
-    return { expression: unquote(token.value, '`') };
+    return { expression: literalValue(state, token, '`', 'UnterminatedExpression') };
   }
 
   if (token.kind === 'paren' && token.value === '(') {
@@ -275,7 +286,7 @@ function parseDefault(state: ParserState): number | string | boolean | undefined
   if (!token) { state.error('ExpectedDefault', 'expected a default value'); return undefined; }
   state.next();
   if (token.kind === 'number') return Number(token.value);
-  if (token.kind === 'string') return unquote(token.value, '"');
+  if (token.kind === 'string') return literalValue(state, token, '"', 'UnterminatedString');
   if (token.value === 'true') return true;
   if (token.value === 'false') return false;
   state.error('ExpectedDefault', `\`${token.value}\` is not a valid default`, token);
