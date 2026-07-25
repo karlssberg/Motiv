@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { forceLinting, linter, lintKeymap } from '@codemirror/lint';
+import { lintKeymap, setDiagnostics } from '@codemirror/lint';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, type ViewUpdate } from '@codemirror/view';
 import type { Diagnostic } from '@codemirror/lint';
@@ -108,7 +108,6 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog }) {
           motiv(),
           motivEditorTheme,
           autocompletion({ override: [createMotivCompletion(() => live.current.catalog)] }),
-          linter(() => live.current.diagnostics),
           motivHover(() => live.current.diagnostics),
           keymap.of([...defaultKeymap, ...historyKeymap, ...completionKeymap, ...lintKeymap]),
           EditorView.updateListener.of(onUpdate),
@@ -134,10 +133,14 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog }) {
     applyingHookText.current = false;
   }, [sync.text]);
 
-  // Backend errors arrive without a document change, which would otherwise leave the linter
-  // idle until the next keystroke.
+  // Diagnostics are pushed into the editor rather than polled by a `linter()` source. A lint
+  // source only re-runs after a document change (and `forceLinting` is a no-op unless one is
+  // already pending), so backend errors — which arrive without one — would never be marked.
+  // `setDiagnostics` enables the lint extensions on first use, so no `linter()` is needed.
   useEffect(() => {
-    if (view.current) forceLinting(view.current);
+    const instance = view.current;
+    if (!instance) return;
+    instance.dispatch(setDiagnostics(instance.state, diagnostics));
   }, [diagnostics]);
 
   return (

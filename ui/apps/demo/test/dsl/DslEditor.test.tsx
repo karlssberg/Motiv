@@ -115,6 +115,23 @@ describe('DslEditor', () => {
     expect(editorText(container)).toBe('is-active && is-verified');
   });
 
+  it('underlines a backend error, which arrives without a document change', () => {
+    const { container, store } = renderEditor();
+
+    act(() => store.setErrors([{ path: '$.rule', code: 'UnknownSpec', message: 'no such spec' }]));
+
+    expect(container.querySelector('.cm-lintRange-error')).toBeTruthy();
+  });
+
+  it('clears the underline once the backend errors go away', () => {
+    const { container, store } = renderEditor();
+
+    act(() => store.setErrors([{ path: '$.rule', code: 'UnknownSpec', message: 'no such spec' }]));
+    act(() => store.setErrors([]));
+
+    expect(container.querySelector('.cm-lintRange-error')).toBeNull();
+  });
+
   it('opens the payload popover for the spec node under the caret', () => {
     const { container } = renderEditor();
     const view = editorView(container);
