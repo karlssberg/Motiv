@@ -101,4 +101,8 @@ describe('parse — unterminated literals', () => {
   it('rejects a negative count, which the schema forbids', () => {
     expect(parse('atLeast(-1) in orders { a }').errors[0]).toMatchObject({ code: 'ExpectedCount' });
   });
+
+  it('rejects a fractional count, which the schema forbids', () => {
+    expect(parse('atLeast(2.5) in orders { a }').errors[0]).toMatchObject({ code: 'ExpectedCount' });
+  });
 });

@@ -80,4 +80,24 @@ describe('tokenize', () => {
       ['error', '-'], ['number', '1'],
     ]);
   });
+
+  it('lexes a decimal number as one token', () => {
+    expect(tokenize('2.5')).toEqual([{ kind: 'number', value: '2.5', from: 0, to: 3 }]);
+  });
+
+  it('lexes a negative decimal number as one token', () => {
+    expect(tokenize('-1.5')).toEqual([{ kind: 'number', value: '-1.5', from: 0, to: 4 }]);
+  });
+
+  it('stops a number at a decimal point with no digit after it', () => {
+    expect(tokenize('2.').map((t) => [t.kind, t.value])).toEqual([
+      ['number', '2'], ['error', '.'],
+    ]);
+  });
+
+  it('takes only the first decimal point into a number', () => {
+    expect(tokenize('1.2.3').map((t) => [t.kind, t.value])).toEqual([
+      ['number', '1.2'], ['error', '.'], ['number', '3'],
+    ]);
+  });
 });

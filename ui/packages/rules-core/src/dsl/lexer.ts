@@ -62,6 +62,12 @@ export function tokenize(text: string): Token[] {
     if (negative || /[0-9]/.test(char)) {
       let j = negative ? i + 1 : i;
       while (j < text.length && /[0-9]/.test(text[j]!)) j++;
+      // A single `.` continues the number only when a digit follows, so `2.` lexes as `2`
+      // then an error character rather than a number the parser cannot re-read.
+      if (text[j] === '.' && /[0-9]/.test(text[j + 1] ?? '')) {
+        j++;
+        while (j < text.length && /[0-9]/.test(text[j]!)) j++;
+      }
       push('number', i, j); i = j; continue;
     }
 

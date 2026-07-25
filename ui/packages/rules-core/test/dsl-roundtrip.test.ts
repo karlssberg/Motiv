@@ -108,6 +108,16 @@ const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
     },
   },
   {
+    label: 'fractional parameter defaults',
+    document: {
+      parameters: {
+        ratio: { type: 'number', default: 2.5 },
+        drift: { type: 'number', default: -1.5 },
+      },
+      rule: { spec: 'is-active' },
+    },
+  },
+  {
     label: 'reference composition',
     document: {
       parameters: { minOrders: { type: 'integer', default: 3 } },
