@@ -1,8 +1,8 @@
 import {
-  binaryOperator, higherOrderKey, isBinaryNode, isExpressionNode, isHigherOrderNode,
-  isNotNode, isSpecNode, operandsOf,
-  type BinaryNode, type BinaryOperator, type HigherOrderNode, type ParameterDeclaration,
-  type RuleDocument, type RuleNode,
+  binaryOperator, higherOrderBody, higherOrderKey, isBinaryNode, isExpressionNode,
+  isHigherOrderNode, isNotNode, isSpecNode, operandsOf,
+  type BinaryNode, type BinaryOperator, type HigherOrderKey, type HigherOrderNode,
+  type NotNode, type ParameterDeclaration, type RuleDocument, type RuleNode,
 } from '../document.js';
 
 const INDENT = '    ';
@@ -29,7 +29,7 @@ const CONNECTIVE: Record<BinaryOperator, string> = {
 };
 
 /** Higher-order node key → quantifier keyword. */
-const QUANTIFIER_WORDS: Record<ReturnType<typeof higherOrderKey>, string> = {
+const QUANTIFIER_WORDS: Record<HigherOrderKey, string> = {
   asAllSatisfied: 'all', asAnySatisfied: 'any', asNSatisfied: 'exactly',
   asAtLeastNSatisfied: 'atLeast', asAtMostNSatisfied: 'atMost',
 };
@@ -59,19 +59,19 @@ function isMultiline(node: RuleNode): boolean {
   return false;
 }
 
-/** The single child of a higher-order node. */
-function bodyOf(node: HigherOrderNode): RuleNode {
-  return (node as unknown as Record<string, RuleNode>)[higherOrderKey(node)]!;
-}
-
 /** Quotes a name or string default. The DSL has no escapes, so a `"` cannot be represented. */
 function quote(value: string): string {
   return JSON.stringify(value);
 }
 
-/** Wraps rendered text in parentheses, breaking onto its own indented line when `broken`. */
-function parenthesise(text: string, indent: string, broken: boolean): string {
-  return broken ? `(\n${indent}${INDENT}${text}\n${indent})` : `(${text})`;
+/**
+ * Wraps a group in parentheses. When `broken` the contents move onto their own line, indented
+ * one level; `render` is given the indentation its continuation lines start from.
+ */
+function parenthesise(indent: string, broken: boolean, render: (indent: string) => string): string {
+  if (!broken) return `(${render(indent)})`;
+  const inner = indent + INDENT;
+  return `(\n${inner}${render(inner)}\n${indent})`;
 }
 
 /**
@@ -80,14 +80,20 @@ function parenthesise(text: string, indent: string, broken: boolean): string {
  */
 function printChild(node: RuleNode, indent: string, needsParens: boolean, broken: boolean): string {
   if (!needsParens) return printNode(node, indent);
-  return parenthesise(printNode(node, broken ? indent + INDENT : indent), indent, broken);
+  return parenthesise(indent, broken, (inner) => printNode(node, inner));
 }
 
 function printQuantifier(node: HigherOrderNode, indent: string): string {
+  const inner = indent + INDENT;
   const count = 'n' in node ? `(${String(node.n)})` : '';
-  const body = printNode(bodyOf(node), indent + INDENT);
-  return `${QUANTIFIER_WORDS[higherOrderKey(node)]}${count} in ${node.path} {`
-    + `\n${indent}${INDENT}${body}\n${indent}}`;
+  const head = `${QUANTIFIER_WORDS[higherOrderKey(node)]}${count} in ${node.path}`;
+  return `${head} {\n${inner}${printNode(higherOrderBody(node), inner)}\n${indent}}`;
+}
+
+/** Renders `!operand`, parenthesising an operand that binds looser than the negation. */
+function printNegation(node: NotNode, indent: string): string {
+  const operand = node.not;
+  return `!${printChild(operand, indent, precedenceOf(operand) < ATOM, isMultiline(operand))}`;
 }
 
 /**
@@ -115,10 +121,7 @@ function printBinary(node: BinaryNode, indent: string): string {
 function printBody(node: RuleNode, indent: string): string {
   if (isSpecNode(node)) return node.spec;
   if (isExpressionNode(node)) return `\`${node.expression}\``;
-  if (isNotNode(node)) {
-    const operand = node.not;
-    return `!${printChild(operand, indent, precedenceOf(operand) < ATOM, isMultiline(operand))}`;
-  }
+  if (isNotNode(node)) return printNegation(node, indent);
   if (isHigherOrderNode(node)) return printQuantifier(node, indent);
   return printBinary(node, indent);
 }
@@ -129,9 +132,8 @@ function printNode(node: RuleNode, indent: string): string {
   if (name === undefined) return printBody(node, indent);
   if (!nameNeedsParens(node)) return `${printBody(node, indent)} as ${quote(name)}`;
 
-  const broken = isMultiline(node);
-  const body = printBody(node, broken ? indent + INDENT : indent);
-  return `${parenthesise(body, indent, broken)} as ${quote(name)}`;
+  const group = parenthesise(indent, isMultiline(node), (inner) => printBody(node, inner));
+  return `${group} as ${quote(name)}`;
 }
 
 function printDefault(value: NonNullable<ParameterDeclaration['default']>): string {

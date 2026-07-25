@@ -6,6 +6,7 @@ import {
   isBinaryNode,
   binaryOperator,
   operandsOf,
+  higherOrderBody,
   type RuleNode,
 } from '../src/document.js';
 
@@ -32,8 +33,10 @@ describe('guards', () => {
     expect(isBinaryNode(and)).toBe(true);
     expect(isBinaryNode({ spec: 'a' })).toBe(false);
   });
-  it('exposes the binary operator and operands', () => {
+  it('exposes binary operands and the higher-order body', () => {
     expect(binaryOperator(and)).toBe('and');
     expect(operandsOf(and)).toHaveLength(2);
+    expect(higherOrderBody({ asNSatisfied: { spec: 'a' }, n: 2, path: 'items' }))
+      .toEqual({ spec: 'a' });
   });
 });

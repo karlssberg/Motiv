@@ -54,7 +54,7 @@ const HIGHER_ORDER_KEYS = [
   'asAllSatisfied', 'asAnySatisfied', 'asNSatisfied',
   'asAtLeastNSatisfied', 'asAtMostNSatisfied',
 ] as const;
-type HigherOrderKey = (typeof HIGHER_ORDER_KEYS)[number];
+export type HigherOrderKey = (typeof HIGHER_ORDER_KEYS)[number];
 
 /** The discriminant of a node: which operator or leaf it is. */
 export type NodeKind = 'spec' | 'expression' | 'not' | BinaryOperator | HigherOrderKey;
@@ -100,4 +100,9 @@ export function higherOrderKey(node: HigherOrderNode): HigherOrderKey {
   const key = HIGHER_ORDER_KEYS.find((candidate) => candidate in node);
   if (!key) throw new Error('Node is not a higher-order node.');
   return key;
+}
+
+/** The single child node of a higher-order node. */
+export function higherOrderBody(node: HigherOrderNode): RuleNode {
+  return (node as unknown as Record<HigherOrderKey, RuleNode>)[higherOrderKey(node)];
 }

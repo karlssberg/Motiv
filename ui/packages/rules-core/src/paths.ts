@@ -1,6 +1,6 @@
 import {
-  binaryOperator, higherOrderKey, isBinaryNode, isHigherOrderNode, isNotNode,
-  operandsOf, type RuleDocument, type RuleNode,
+  binaryOperator, higherOrderBody, higherOrderKey, isBinaryNode, isHigherOrderNode,
+  isNotNode, operandsOf, type RuleDocument, type RuleNode,
 } from './document.js';
 
 const ROOT = '$.rule';
@@ -97,8 +97,7 @@ export function listPaths(document: RuleDocument): Array<{ path: string; node: R
       const op = binaryOperator(node);
       operandsOf(node).forEach((child, i) => walk(child, `${path}.${op}[${i}]`));
     } else if (isHigherOrderNode(node)) {
-      const key = higherOrderKey(node);
-      walk((node as unknown as Record<string, RuleNode>)[key]!, `${path}.${key}`);
+      walk(higherOrderBody(node), `${path}.${higherOrderKey(node)}`);
     }
   };
   walk(document.rule, ROOT);
