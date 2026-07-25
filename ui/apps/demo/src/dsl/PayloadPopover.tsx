@@ -1,0 +1,143 @@
+import { useState } from 'react';
+import {
+  getNode,
+  type Catalog, type Decoration, type Payload, type RuleEditorStore,
+} from '@motiv/rules-core';
+
+// The store's Decoration type declares whenTrue/whenFalse as optional Payload fields (no
+// `| undefined` in their type), but exactOptionalPropertyTypes then rejects an object literal that
+// explicitly assigns `undefined` to clear one. The cast below is the escape hatch for that case.
+type DecorationPatch = Partial<Pick<Decoration, 'whenTrue' | 'whenFalse'>>;
+
+/** Metadata types whose payloads are plain text rather than JSON objects. */
+const STRING_METADATA_TYPES = new Set(['String', 'Explanation']);
+
+/** The editable draft of one node's decorations. */
+interface Draft {
+  name: string;
+  whenTrue: string;
+  whenFalse: string;
+}
+
+/** Renders a stored payload for editing: strings verbatim, objects pretty-printed as JSON. */
+function draftOf(payload: Payload | undefined): string {
+  if (payload === undefined) return '';
+  return typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
+}
+
+/** The outcome of reading one payload field back: a value (or a clear), or a parse failure. */
+type FieldResult =
+  | { ok: true; value: Payload | undefined }
+  | { ok: false; message: string };
+
+/** Reads a draft field back into a payload. An emptied field clears the payload. */
+function readPayload(draft: string, objectMode: boolean, label: string): FieldResult {
+  const trimmed = draft.trim();
+  if (trimmed === '') return { ok: true, value: undefined };
+  if (!objectMode) return { ok: true, value: trimmed };
+  try {
+    return { ok: true, value: JSON.parse(trimmed) as Payload };
+  } catch {
+    return { ok: false, message: `${label} is not valid JSON.` };
+  }
+}
+
+/** A labelled multi-line payload field. */
+function PayloadField(props: { label: string; value: string; onChange: (next: string) => void }) {
+  return (
+    <label className="dsl-field">
+      <span>{props.label}</span>
+      <textarea
+        className="control"
+        rows={3}
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value)}
+      />
+    </label>
+  );
+}
+
+/**
+ * Edits the `name` and `whenTrue`/`whenFalse` payloads of one spec node. Payloads are plain
+ * strings when the catalog says the spec carries string metadata, and JSON objects otherwise —
+ * in which case they are validated on save, so a malformed object never reaches the store.
+ */
+export function PayloadPopover(props: {
+  store: RuleEditorStore;
+  catalog: Catalog;
+  path: string;
+  spec: string;
+  onClose: () => void;
+}) {
+  const { store, catalog, path, spec, onClose } = props;
+
+  const entry = catalog.specs.find((candidate) => candidate.name === spec);
+  const objectMode = entry !== undefined && !STRING_METADATA_TYPES.has(entry.metadataType);
+  const properties = Object.keys(
+    (entry && catalog.metadataTypes?.[entry.metadataType]?.properties) ?? {},
+  );
+
+  const [draft, setDraft] = useState<Draft>(() => {
+    const node = getNode(store.getState().document, path);
+    return {
+      name: node?.name ?? '',
+      whenTrue: draftOf(node?.whenTrue),
+      whenFalse: draftOf(node?.whenFalse),
+    };
+  });
+  const [error, setError] = useState<string | null>(null);
+
+  const patch = (change: Partial<Draft>) => setDraft((current) => ({ ...current, ...change }));
+
+  const save = () => {
+    const whenTrue = readPayload(draft.whenTrue, objectMode, 'When true');
+    const whenFalse = readPayload(draft.whenFalse, objectMode, 'When false');
+    if (!whenTrue.ok || !whenFalse.ok) {
+      setError([whenTrue, whenFalse].flatMap((field) => (field.ok ? [] : [field.message])).join(' '));
+      return;
+    }
+
+    store.setName(path, draft.name.trim() || undefined);
+    store.setDecoration(path, { whenTrue: whenTrue.value, whenFalse: whenFalse.value } as DecorationPatch);
+    onClose();
+  };
+
+  return (
+    <div className="dsl-popover" role="dialog" aria-label={`Payload for ${spec}`}>
+      <div className="dsl-popover-head">
+        <span className="dsl-popover-spec">{spec}</span>
+        {entry?.isAsync && <span className="dsl-badge">async</span>}
+        <button type="button" className="dsl-popover-close" aria-label="Close" onClick={onClose}>×</button>
+      </div>
+
+      {entry?.description && <p className="dsl-popover-desc">{entry.description}</p>}
+      {entry && <p className="dsl-popover-meta">{entry.modelType} → {entry.metadataType}</p>}
+
+      <label className="dsl-field">
+        <span>Name</span>
+        <input
+          className="control"
+          type="text"
+          value={draft.name}
+          onChange={(e) => patch({ name: e.target.value })}
+        />
+      </label>
+      <PayloadField label="When true" value={draft.whenTrue} onChange={(whenTrue) => patch({ whenTrue })} />
+      <PayloadField label="When false" value={draft.whenFalse} onChange={(whenFalse) => patch({ whenFalse })} />
+
+      {objectMode && (
+        <p className="dsl-popover-hint">
+          {properties.length > 0
+            ? `JSON object · properties: ${properties.join(', ')}`
+            : 'JSON object'}
+        </p>
+      )}
+      {error && <p className="dsl-popover-error" role="alert">{error}</p>}
+
+      <div className="dsl-popover-actions">
+        <button type="button" onClick={save}>Save</button>
+        <button type="button" onClick={onClose}>Cancel</button>
+      </div>
+    </div>
+  );
+}
