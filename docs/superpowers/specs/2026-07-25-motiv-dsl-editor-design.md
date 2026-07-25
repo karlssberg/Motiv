@@ -210,12 +210,18 @@ and `status ∈ { synced, dirty, error }`.
   `document !== baseDoc` that did not originate from our own commit):
   - buffer clean & `synced` → silently reprint `print(store.document)` into the editor and
     update `baseDoc`.
-  - buffer **dirty / unparseable** → show the **conflict banner**
-    (*"The rule changed in the Builder while your DSL was unsaved."*):
+  - buffer **dirty / unparseable** → **cancel any pending commit**, then show the
+    **conflict banner** (*"The rule changed in the Builder while your DSL was unsaved."*):
     - **Reformat from tree** → `print(store.document)` into the editor, discard local text,
       `status = synced`.
-    - **Keep editing** → dismiss banner; local text remains the pending source; next clean
-      parse re-commits.
+    - **Keep editing** → dismiss banner and re-arm the debounced commit; local text is the
+      chosen source and commits normally.
+
+  Cancelling on entry to the conflict state is load-bearing. A pending commit is a decision
+  already in flight: if the debounce fired while the banner was up, the buffer would
+  overwrite the Builder's change and **Reformat from tree** would merely reprint the user's
+  own text — offering a choice that no longer exists. The two versions must stay held apart
+  until the user picks one.
 
 A guard prevents our own `loadDocument` commits from being seen as "external": the store
 subscription handler, when the `selfCommitting` flag is set, records `baseDoc` from the

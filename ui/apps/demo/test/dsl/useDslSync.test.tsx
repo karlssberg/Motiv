@@ -82,6 +82,45 @@ describe('useDslSync', () => {
     expect(result.current.text).toBe('is-recent');
   });
 
+  it('cancels the pending commit when a conflict is raised, so neither version wins yet', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    const { result } = renderHook(() => useDslSync(store));
+
+    act(() => result.current.setText('is-recent'));
+    act(() => store.replaceNode('$.rule', { spec: 'is-verified' }));
+    act(() => { vi.advanceTimersByTime(300); });
+
+    expect(store.getState().document).toEqual({ rule: { spec: 'is-verified' } });
+    expect(result.current.conflict).toBe(true);
+    expect(result.current.text).toBe('is-recent');
+  });
+
+  it('keep editing re-arms the commit, so the local text lands on the next debounce', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    const { result } = renderHook(() => useDslSync(store));
+
+    act(() => result.current.setText('is-recent'));
+    act(() => store.replaceNode('$.rule', { spec: 'is-verified' }));
+    act(() => result.current.keepEditing());
+    act(() => { vi.advanceTimersByTime(300); });
+
+    expect(store.getState().document).toEqual({ rule: { spec: 'is-recent' } });
+    expect(result.current.status).toBe('synced');
+  });
+
+  it('reformat from tree kills the in-flight commit of the discarded text', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    const { result } = renderHook(() => useDslSync(store));
+
+    act(() => result.current.setText('is-recent'));
+    act(() => store.replaceNode('$.rule', { spec: 'is-verified' }));
+    act(() => result.current.reformatFromTree());
+    act(() => { vi.advanceTimersByTime(300); });
+
+    expect(store.getState().document).toEqual({ rule: { spec: 'is-verified' } });
+    expect(result.current.text).toBe('is-verified');
+  });
+
   it('reformat from tree discards local text and clears the conflict', () => {
     const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
     const { result } = renderHook(() => useDslSync(store));

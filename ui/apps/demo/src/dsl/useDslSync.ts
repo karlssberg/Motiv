@@ -21,7 +21,10 @@ export interface DslSync {
   /** The current buffer contents. */
   text: string;
   status: SyncStatus;
-  /** True when the store changed underneath uncommitted edits and the user must choose. */
+  /**
+   * True when the store changed underneath uncommitted edits. Both versions are then held
+   * apart — the pending commit is cancelled — until the user picks one.
+   */
   conflict: boolean;
   /** The parse of the current buffer, for highlighting, linting and span lookups. */
   parseResult: ParseResult;
@@ -31,7 +34,7 @@ export interface DslSync {
   format: () => void;
   /** Discards the buffer and reprints from the store — the conflict resolution that yields. */
   reformatFromTree: () => void;
-  /** Dismisses the conflict banner, leaving the buffer to win on its pending commit. */
+  /** Dismisses the conflict banner and re-arms the commit — the conflict resolution that wins. */
   keepEditing: () => void;
 }
 
@@ -88,13 +91,18 @@ export function useDslSync(store: RuleEditorStore): DslSync {
     setStatus('synced');
   }, [store]);
 
+  /** Arms the debounced commit of `source`, replacing any commit already in flight. */
+  const scheduleCommit = useCallback((source: string) => {
+    cancelPendingCommit();
+    timer.current = setTimeout(() => commit(source), COMMIT_DEBOUNCE_MS);
+  }, [cancelPendingCommit, commit]);
+
   const setText = useCallback((next: string) => {
     setTextState(next);
     dirty.current = true;
     setStatus('dirty');
-    cancelPendingCommit();
-    timer.current = setTimeout(() => commit(next), COMMIT_DEBOUNCE_MS);
-  }, [cancelPendingCommit, commit]);
+    scheduleCommit(next);
+  }, [scheduleCommit]);
 
   useEffect(() => store.subscribe(() => {
     const current = store.getState().document;
@@ -108,12 +116,17 @@ export function useDslSync(store: RuleEditorStore): DslSync {
 
     baseDocument.current = current;
     if (dirty.current) {
+      // A pending commit is a decision already in flight. The conflict state exists to hold the
+      // two versions apart until the user picks one, so the commit must die here — otherwise it
+      // fires mid-banner, overwrites the change that raised the conflict, and leaves "reformat
+      // from tree" reprinting the user's own text. `keepEditing` re-arms it.
+      cancelPendingCommit();
       setConflict(true);
       return;
     }
     setTextState(print(current));
     setStatus('synced');
-  }), [store]);
+  }), [cancelPendingCommit, store]);
 
   useEffect(() => cancelPendingCommit, [cancelPendingCommit]);
 
@@ -133,7 +146,12 @@ export function useDslSync(store: RuleEditorStore): DslSync {
     setStatus('synced');
   }, [cancelPendingCommit, store]);
 
-  const keepEditing = useCallback(() => setConflict(false), []);
+  const keepEditing = useCallback(() => {
+    setConflict(false);
+    // The user has chosen their local text, so the commit cancelled when the conflict was raised
+    // is armed again — dismissing the banner must not leave the buffer uncommitted forever.
+    if (dirty.current) scheduleCommit(text);
+  }, [scheduleCommit, text]);
 
   return { text, status, conflict, parseResult, setText, format, reformatFromTree, keepEditing };
 }
