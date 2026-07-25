@@ -343,12 +343,14 @@ body {
 }
 
 /* Editor frame: the popover's containing block, so it must stay positioned */
-.dsl-pane {
+.dsl-frame {
   position: relative;
-  padding: 0;
-  gap: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   background: var(--dsl-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .dsl-toolbar {

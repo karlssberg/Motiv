@@ -5,6 +5,7 @@ import { EditorView } from '@codemirror/view';
 import { RuleEditorStore } from '@motiv/rules-core';
 import type { Catalog } from '@motiv/rules-core';
 import { DslEditor } from '../../src/dsl/DslEditor.js';
+import { useDslSync } from '../../src/dsl/useDslSync.js';
 
 const CATALOG: Catalog = {
   specs: [
@@ -14,9 +15,14 @@ const CATALOG: Catalog = {
   collections: [],
 };
 
+/** Stands in for the pane that owns the buffer, which the editor takes as a prop. */
+function Host(props: { store: RuleEditorStore }) {
+  return <DslEditor store={props.store} catalog={CATALOG} sync={useDslSync(props.store)} />;
+}
+
 function renderEditor() {
   const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
-  const { container } = render(<DslEditor store={store} catalog={CATALOG} />);
+  const { container } = render(<Host store={store} />);
   return { store, container };
 }
 

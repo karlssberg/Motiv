@@ -41,6 +41,24 @@ const settleCatalog = () => act(async () => {});
 
 const tab = (name: string) => screen.getByRole('tab', { name });
 
+/** The live CodeMirror view, so tests drive the editor the way a keystroke would. */
+function editorView(container: HTMLElement): EditorView {
+  const view = EditorView.findFromDOM(container);
+  if (!view) throw new Error('No CodeMirror view was mounted.');
+  return view;
+}
+
+/** The editor's visible text. */
+function editorText(container: HTMLElement): string {
+  return container.querySelector('.cm-content')?.textContent ?? '';
+}
+
+/** Types over the whole document, as a user replacing the buffer would. */
+function replaceBuffer(container: HTMLElement, text: string): void {
+  const view = editorView(container);
+  act(() => view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } }));
+}
+
 describe('EditorPane', () => {
   it('shows the Builder surface by default', async () => {
     renderPane();
@@ -64,6 +82,15 @@ describe('EditorPane', () => {
     expect(screen.getByText('text is the source of truth')).toBeDefined();
   });
 
+  it('nests no second region inside the Editor pane', async () => {
+    renderPane();
+    await settleCatalog();
+
+    fireEvent.click(tab('DSL'));
+
+    expect(screen.queryByRole('region', { name: 'DSL' })).toBeNull();
+  });
+
   it('returns to the Builder surface when its tab is clicked again', async () => {
     renderPane();
     await settleCatalog();
@@ -76,6 +103,22 @@ describe('EditorPane', () => {
     expect(screen.getByLabelText('spec at $.rule')).toBeDefined();
   });
 
+  it('keeps an uncommitted DSL edit across a round trip through the Builder', async () => {
+    const { container } = renderPane();
+    await settleCatalog();
+
+    fireEvent.click(tab('DSL'));
+    replaceBuffer(container, 'is-active && is-adult');
+    expect(screen.getByLabelText('sync status').textContent).toBe('unsynced');
+
+    fireEvent.click(tab('Builder'));
+    fireEvent.click(tab('DSL'));
+
+    // The buffer outlives the view, so the pending commit is neither lost nor forced through.
+    expect(editorText(container)).toBe('is-active && is-adult');
+    expect(screen.getByLabelText('sync status').textContent).toBe('unsynced');
+  });
+
   it('hands the loaded catalog to the DSL surface', async () => {
     const { container } = renderPane();
     await settleCatalog();
@@ -85,8 +128,7 @@ describe('EditorPane', () => {
 
     // Putting the caret inside the spec opens the popover, which renders catalog metadata —
     // proof the catalog reached the DSL surface rather than the empty fallback.
-    const view = EditorView.findFromDOM(container);
-    if (!view) throw new Error('No CodeMirror view was mounted.');
+    const view = editorView(container);
     act(() => view.dispatch({ selection: { anchor: 2 } }));
 
     expect(screen.getByText('Whether the customer account is active')).toBeDefined();

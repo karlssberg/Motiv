@@ -13,7 +13,7 @@ import { motivHover } from './hover.js';
 import { motiv } from './motivLanguage.js';
 import { motivEditorTheme } from './theme.js';
 import { PayloadPopover } from './PayloadPopover.js';
-import { useDslSync, type DslSync, type SyncStatus } from './useDslSync.js';
+import type { DslSync, SyncStatus } from './useDslSync.js';
 
 /** The document this demo edits. The DSL is file-shaped, so it is shown with a filename. */
 const FILENAME = 'quota-rule.motiv';
@@ -59,16 +59,19 @@ function popoverTargetAt(live: LiveContext, position: number): PopoverTarget | n
 }
 
 /**
- * The DSL editing surface: a CodeMirror instance over the Motiv language, wired to the rule
- * store through {@link useDslSync}, plus the toolbar, the conflict banner and the payload popover.
+ * The DSL editing surface: a CodeMirror instance over the Motiv language, plus the toolbar, the
+ * conflict banner and the payload popover.
+ *
+ * The buffer it edits is owned by the host, not by this component — `sync` comes in as a prop so
+ * unmounting the surface (switching to another editing surface, say) discards only the view, and
+ * uncommitted text, conflict state and any pending commit survive.
  *
  * The view is built once on mount and never rebuilt: its extensions close over a ref holding the
  * latest render's callbacks, catalog and diagnostics, so none of them can go stale while the
  * editor keeps its own state (history, selection, scroll) across renders.
  */
-export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog }) {
-  const { store, catalog } = props;
-  const sync = useDslSync(store);
+export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; sync: DslSync }) {
+  const { store, catalog, sync } = props;
   const editorState = useRuleEditor(store);
   const [popover, setPopover] = useState<PopoverTarget | null>(null);
 
@@ -144,7 +147,7 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog }) {
   }, [diagnostics]);
 
   return (
-    <section aria-label="DSL" className="pane dsl-pane">
+    <div className="dsl-frame">
       <div className="dsl-toolbar">
         <span className="dsl-filename">{FILENAME}</span>
         <button type="button" onClick={sync.format}>Format</button>
@@ -172,6 +175,6 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog }) {
           onClose={() => setPopover(null)}
         />
       )}
-    </section>
+    </div>
   );
 }
