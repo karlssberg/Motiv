@@ -1,8 +1,16 @@
-import type { RuleDocument, RuleNode } from '../document.js';
+import type { ParameterDeclaration, RuleDocument, RuleNode } from '../document.js';
 import { tokenize } from './lexer.js';
 import type { DslError, NodeSpan, ParseResult, Token } from './types.js';
 
 const ROOT = '$.rule';
+
+/**
+ * Strips the delimiters off a quoted token's verbatim text. An unterminated literal runs to
+ * end-of-input and so has no closing delimiter to drop.
+ */
+function unquote(raw: string, delimiter: string): string {
+  return raw.slice(1, raw.endsWith(delimiter) ? -1 : undefined);
+}
 
 /** A parse in progress: the token cursor plus the accumulating spans and errors. */
 class ParserState {
@@ -51,7 +59,7 @@ function parseAsClause(state: ParserState): string | undefined {
     return undefined;
   }
   state.next();
-  return nameToken.value.slice(1, nameToken.value.endsWith('"') ? -1 : undefined);
+  return unquote(nameToken.value, '"');
 }
 
 /** DSL quantifier keyword → higher-order node key. Counted forms take an `(n)` argument. */
@@ -147,9 +155,7 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
 
   if (token.kind === 'expression') {
     state.next();
-    const raw = token.value;
-    const inner = raw.slice(1, raw.endsWith('`') && raw.length > 1 ? -1 : undefined);
-    return { expression: inner };
+    return { expression: unquote(token.value, '`') };
   }
 
   if (token.kind === 'paren' && token.value === '(') {
@@ -184,6 +190,8 @@ function parsePostfix(state: ParserState, path: string): RuleNode | undefined {
   const node = parsePrimary(state, path);
   if (!node) return undefined;
   const name = parseAsClause(state);
+  // A group produces no wrapper node, so `(a as "x") as "y"` has only one node to name:
+  // the outer name deliberately supersedes the inner one.
   const decorated = name === undefined ? node : { ...node, name };
   state.span(path, start, state.lastEnd);
   return decorated;
@@ -261,15 +269,13 @@ function parseExpression(state: ParserState, path: string): RuleNode | undefined
   return parseBinaryLevel(state, path, 0);
 }
 
-const PARAM_TYPES = new Set(['integer', 'number', 'string', 'boolean']);
-
 /** Reads a parameter default literal: number, quoted string, or boolean. */
 function parseDefault(state: ParserState): number | string | boolean | undefined {
   const token = state.peek();
   if (!token) { state.error('ExpectedDefault', 'expected a default value'); return undefined; }
   state.next();
   if (token.kind === 'number') return Number(token.value);
-  if (token.kind === 'string') return token.value.slice(1, token.value.endsWith('"') ? -1 : undefined);
+  if (token.kind === 'string') return unquote(token.value, '"');
   if (token.value === 'true') return true;
   if (token.value === 'false') return false;
   state.error('ExpectedDefault', `\`${token.value}\` is not a valid default`, token);
@@ -286,25 +292,26 @@ function parseParameters(state: ParserState): RuleDocument['parameters'] {
     const nameToken = state.peek();
     if (!nameToken || nameToken.kind !== 'spec') {
       state.error('ExpectedParameterName', 'expected a parameter name', nameToken);
-      return found ? parameters : undefined;
+      break;
     }
     state.next();
 
     if (state.peek()?.kind !== 'colon') {
       state.error('ExpectedParameterType', 'expected `:` and a type', state.peek());
-      return found ? parameters : undefined;
+      break;
     }
     state.next();
 
+    // The lexer already classifies the four type words as `type` tokens.
     const typeToken = state.peek();
-    if (!typeToken || !PARAM_TYPES.has(typeToken.value)) {
+    if (!typeToken || typeToken.kind !== 'type') {
       state.error('ExpectedParameterType', 'expected integer, number, string or boolean', typeToken);
-      return found ? parameters : undefined;
+      break;
     }
     state.next();
 
-    const declaration: { type: 'integer' | 'number' | 'string' | 'boolean'; default?: number | string | boolean } = {
-      type: typeToken.value as 'integer' | 'number' | 'string' | 'boolean',
+    const declaration: ParameterDeclaration = {
+      type: typeToken.value as ParameterDeclaration['type'],
     };
     if (state.peek()?.kind === 'equals') {
       state.next();
@@ -337,6 +344,8 @@ export function parse(text: string): ParseResult {
     state.error('UnexpectedToken', `unexpected \`${token.value}\``, token);
   }
 
+  // Outermost node first. Two spans sharing a `from` are always ancestor and descendant, and a
+  // descendant's path strictly extends its ancestor's, so path length orders them correctly.
   const spans = [...state.spans].sort((a, b) => a.from - b.from || a.path.length - b.path.length);
   if (!rule || state.errors.length > 0) {
     return { errors: state.errors, spans };
