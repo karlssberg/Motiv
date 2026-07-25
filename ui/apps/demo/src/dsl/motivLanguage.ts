@@ -7,9 +7,16 @@ import {
 import type { StreamParser, StringStream } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 
-const KEYWORDS = new Set(['param', 'in', 'as']);
-const TYPES = new Set(['integer', 'number', 'string', 'boolean']);
-const QUANTIFIERS = new Set(['all', 'any', 'exactly', 'atLeast', 'atMost']);
+/** The DSL's reserved words, in the order they are offered for completion. */
+export const DSL_KEYWORDS = ['param', 'in', 'as'] as const;
+/** The higher-order quantifiers, styled and completed as keywords. */
+export const DSL_QUANTIFIERS = ['all', 'any', 'exactly', 'atLeast', 'atMost'] as const;
+/** The parameter type names. */
+export const DSL_TYPES = ['integer', 'number', 'string', 'boolean'] as const;
+
+const KEYWORDS: ReadonlySet<string> = new Set(DSL_KEYWORDS);
+const TYPES: ReadonlySet<string> = new Set(DSL_TYPES);
+const QUANTIFIERS: ReadonlySet<string> = new Set(DSL_QUANTIFIERS);
 
 /** Word shapes, mirroring the core lexer: a letter or `_`, then letters, digits, `-` or `_`. */
 const WORD_START = /[A-Za-z_]/;
