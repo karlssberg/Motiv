@@ -1,6 +1,10 @@
 /// <reference types="vitest/config" />
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+
+const packageSource = (name: string): string =>
+  fileURLToPath(new URL(`../../packages/${name}/src/index.ts`, import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
@@ -17,5 +21,13 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./test/setup.ts'],
     include: ['test/**/*.test.{ts,tsx}'],
+    // Resolve the workspace packages to their TypeScript sources. Their `main`/`module`
+    // fields point at `dist/`, which is gitignored and built by a separate `pnpm build`,
+    // so tests would otherwise run against a stale artefact — or fail outright on a fresh
+    // clone. Only tests are aliased; `vite build` still consumes the published entry points.
+    alias: {
+      '@motiv/rules-core': packageSource('rules-core'),
+      '@motiv/rules-react': packageSource('rules-react'),
+    },
   },
 });
