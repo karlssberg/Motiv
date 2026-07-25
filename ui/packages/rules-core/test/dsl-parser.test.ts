@@ -108,3 +108,93 @@ describe('parse — binary operators', () => {
     ]);
   });
 });
+
+describe('parse — quantifiers', () => {
+  it('parses all/any into asAllSatisfied/asAnySatisfied with a path', () => {
+    expect(parse('all in orders { is-positive }').document).toEqual({
+      rule: { asAllSatisfied: { spec: 'is-positive' }, path: 'orders' },
+    });
+    expect(parse('any in orders { is-positive }').document).toEqual({
+      rule: { asAnySatisfied: { spec: 'is-positive' }, path: 'orders' },
+    });
+  });
+
+  it('parses counted quantifiers with a literal n', () => {
+    expect(parse('exactly(2) in orders { is-positive }').document).toEqual({
+      rule: { asNSatisfied: { spec: 'is-positive' }, n: 2, path: 'orders' },
+    });
+    expect(parse('atLeast(3) in orders { is-positive }').document).toEqual({
+      rule: { asAtLeastNSatisfied: { spec: 'is-positive' }, n: 3, path: 'orders' },
+    });
+    expect(parse('atMost(1) in orders { is-positive }').document).toEqual({
+      rule: { asAtMostNSatisfied: { spec: 'is-positive' }, n: 1, path: 'orders' },
+    });
+  });
+
+  it('parses a param reference as the countable n, keeping the @ sigil', () => {
+    expect(parse('atLeast(@minOrders) in orders { is-positive }').document).toEqual({
+      rule: { asAtLeastNSatisfied: { spec: 'is-positive' }, n: '@minOrders', path: 'orders' },
+    });
+  });
+
+  it('parses a compound quantifier body', () => {
+    expect(parse('atLeast(2) in orders { is-positive && is-recent }').document).toEqual({
+      rule: {
+        asAtLeastNSatisfied: { andAlso: [{ spec: 'is-positive' }, { spec: 'is-recent' }] },
+        n: 2,
+        path: 'orders',
+      },
+    });
+  });
+
+  it('binds a trailing as-clause to the quantifier node', () => {
+    expect(parse('atLeast(2) in orders { is-positive } as "quota"').document).toEqual({
+      rule: {
+        asAtLeastNSatisfied: { spec: 'is-positive' }, n: 2, path: 'orders', name: 'quota',
+      },
+    });
+  });
+
+  it('paths the quantifier body under its node key', () => {
+    const spans = parse('all in orders { is-positive }').spans;
+    expect(spans.map((s) => s.path)).toEqual(['$.rule', '$.rule.asAllSatisfied']);
+  });
+});
+
+describe('parse — parameters', () => {
+  it('parses a declaration with a default', () => {
+    expect(parse('param minOrders: integer = 3\n\nis-active').document).toEqual({
+      parameters: { minOrders: { type: 'integer', default: 3 } },
+      rule: { spec: 'is-active' },
+    });
+  });
+
+  it('parses a declaration without a default', () => {
+    expect(parse('param label: string\n\nis-active').document).toEqual({
+      parameters: { label: { type: 'string' } },
+      rule: { spec: 'is-active' },
+    });
+  });
+
+  it('parses several declarations', () => {
+    const document = parse('param a: integer = 1\nparam b: boolean = true\n\nis-active').document;
+    expect(document?.parameters).toEqual({
+      a: { type: 'integer', default: 1 },
+      b: { type: 'boolean', default: true },
+    });
+  });
+
+  it('parses string and number defaults', () => {
+    const document = parse('param a: string = "gold"\nparam b: number = 2\n\nis-active').document;
+    expect(document?.parameters).toEqual({
+      a: { type: 'string', default: 'gold' },
+      b: { type: 'number', default: 2 },
+    });
+  });
+
+  it('offsets node spans past the parameter block', () => {
+    expect(parse('param n: integer = 1\n\nis-active').spans).toEqual([
+      { path: '$.rule', from: 22, to: 31 },
+    ]);
+  });
+});

@@ -47,6 +47,84 @@ function parseAsClause(state: ParserState): string | undefined {
   return nameToken.value.slice(1, nameToken.value.endsWith('"') ? -1 : undefined);
 }
 
+/** DSL quantifier keyword → higher-order node key. Counted forms take an `(n)` argument. */
+const QUANTIFIER_KEYS = {
+  all: { key: 'asAllSatisfied', counted: false },
+  any: { key: 'asAnySatisfied', counted: false },
+  exactly: { key: 'asNSatisfied', counted: true },
+  atLeast: { key: 'asAtLeastNSatisfied', counted: true },
+  atMost: { key: 'asAtMostNSatisfied', counted: true },
+} as const;
+
+type QuantifierWord = keyof typeof QUANTIFIER_KEYS;
+
+/** Consumes `( INT | '@' IDENT )` for a counted quantifier, returning the countable. */
+function parseCount(state: ParserState): number | string | undefined {
+  const open = state.peek();
+  if (!open || open.value !== '(') {
+    state.error('ExpectedCount', 'expected `(` and a count', open);
+    return undefined;
+  }
+  state.next();
+
+  const value = state.peek();
+  let count: number | string | undefined;
+  if (value?.kind === 'number') { count = Number(value.value); state.next(); }
+  else if (value?.kind === 'paramRef') { count = value.value; state.next(); }
+  else state.error('ExpectedCount', 'expected a number or `@parameter`', value);
+
+  const close = state.peek();
+  if (!close || close.value !== ')') state.error('ExpectedCount', 'expected `)` after the count', close);
+  else state.next();
+
+  return count;
+}
+
+/** quantifier := ('all'|'any') 'in' PATH '{' expr '}' | counted '(' N ')' 'in' PATH '{' expr '}' */
+function parseQuantifier(state: ParserState, path: string, word: QuantifierWord): RuleNode | undefined {
+  const { key, counted } = QUANTIFIER_KEYS[word];
+  state.next(); // the quantifier keyword
+
+  const count = counted ? parseCount(state) : undefined;
+  if (counted && count === undefined) return undefined;
+
+  const inToken = state.peek();
+  if (!inToken || inToken.value !== 'in') {
+    state.error('ExpectedIn', 'expected `in` and a collection path', inToken);
+    return undefined;
+  }
+  state.next();
+
+  const pathToken = state.peek();
+  if (!pathToken || pathToken.kind !== 'spec') {
+    state.error('ExpectedCollection', 'expected a collection path after `in`', pathToken);
+    return undefined;
+  }
+  state.next();
+
+  const open = state.peek();
+  if (!open || open.value !== '{') {
+    state.error('ExpectedBody', 'expected `{` to open the quantifier body', open);
+    return undefined;
+  }
+  state.next();
+
+  const body = parseExpression(state, `${path}.${key}`);
+  if (!body) return undefined;
+
+  const close = state.peek();
+  if (!close || close.value !== '}') {
+    state.error('UnclosedBody', 'expected `}` to close the quantifier body', open);
+  } else {
+    state.next();
+  }
+
+  const node = counted
+    ? { [key]: body, n: count, path: pathToken.value }
+    : { [key]: body, path: pathToken.value };
+  return node as unknown as RuleNode;
+}
+
 /** primary := SPEC | `expr` | '(' expr ')' | quantifier */
 function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
   const token = state.peek();
@@ -77,6 +155,10 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
       state.next();
     }
     return inner;
+  }
+
+  if (token.kind === 'quantifier') {
+    return parseQuantifier(state, path, token.value as QuantifierWord);
   }
 
   state.error('UnexpectedToken', `unexpected \`${token.value}\``, token);
@@ -167,12 +249,71 @@ function parseExpression(state: ParserState, path: string): RuleNode | undefined
   return parseBinaryLevel(state, path, 0);
 }
 
+const PARAM_TYPES = new Set(['integer', 'number', 'string', 'boolean']);
+
+/** Reads a parameter default literal: number, quoted string, or boolean. */
+function parseDefault(state: ParserState): number | string | boolean | undefined {
+  const token = state.peek();
+  if (!token) { state.error('ExpectedDefault', 'expected a default value'); return undefined; }
+  state.next();
+  if (token.kind === 'number') return Number(token.value);
+  if (token.kind === 'string') return token.value.slice(1, token.value.endsWith('"') ? -1 : undefined);
+  if (token.value === 'true') return true;
+  if (token.value === 'false') return false;
+  state.error('ExpectedDefault', `\`${token.value}\` is not a valid default`, token);
+  return undefined;
+}
+
+/** Consumes the leading run of `param` declarations, if any. */
+function parseParameters(state: ParserState): RuleDocument['parameters'] {
+  const parameters: NonNullable<RuleDocument['parameters']> = {};
+  let found = false;
+
+  while (state.peek()?.value === 'param') {
+    state.next();
+    const nameToken = state.peek();
+    if (!nameToken || nameToken.kind !== 'spec') {
+      state.error('ExpectedParameterName', 'expected a parameter name', nameToken);
+      return found ? parameters : undefined;
+    }
+    state.next();
+
+    if (state.peek()?.kind !== 'colon') {
+      state.error('ExpectedParameterType', 'expected `:` and a type', state.peek());
+      return found ? parameters : undefined;
+    }
+    state.next();
+
+    const typeToken = state.peek();
+    if (!typeToken || !PARAM_TYPES.has(typeToken.value)) {
+      state.error('ExpectedParameterType', 'expected integer, number, string or boolean', typeToken);
+      return found ? parameters : undefined;
+    }
+    state.next();
+
+    const declaration: { type: 'integer' | 'number' | 'string' | 'boolean'; default?: number | string | boolean } = {
+      type: typeToken.value as 'integer' | 'number' | 'string' | 'boolean',
+    };
+    if (state.peek()?.kind === 'equals') {
+      state.next();
+      const value = parseDefault(state);
+      if (value !== undefined) declaration.default = value;
+    }
+
+    parameters[nameToken.value] = declaration;
+    found = true;
+  }
+
+  return found ? parameters : undefined;
+}
+
 /**
  * Parses DSL text into a rule document, along with the source range of every node and
  * any errors found. Never throws; a fatal error leaves `document` undefined.
  */
 export function parse(text: string): ParseResult {
   const state = new ParserState(text);
+  const parameters = parseParameters(state);
   const rule = parseExpression(state, ROOT);
 
   if (!state.atEnd) {
@@ -184,6 +325,6 @@ export function parse(text: string): ParseResult {
   if (!rule || state.errors.length > 0) {
     return { errors: state.errors, spans };
   }
-  const document: RuleDocument = { rule };
+  const document: RuleDocument = parameters ? { parameters, rule } : { rule };
   return { document, errors: state.errors, spans };
 }
