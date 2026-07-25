@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/dsl/parser.js';
+import { listPaths } from '../src/paths.js';
 
 describe('parse — leaves and grouping', () => {
   it('parses a bare spec into a spec node at the root path', () => {
@@ -196,5 +197,62 @@ describe('parse — parameters', () => {
     expect(parse('param n: integer = 1\n\nis-active').spans).toEqual([
       { path: '$.rule', from: 22, to: 31 },
     ]);
+  });
+});
+
+describe('parse — span uniqueness', () => {
+  it('records one span per path, the group superseding the node it wraps', () => {
+    expect(parse('(is-active)').spans).toEqual([{ path: '$.rule', from: 0, to: 11 }]);
+  });
+
+  it('spans a named group over the parens and the as-clause', () => {
+    expect(parse('(a && b) as "pair"').spans).toEqual([
+      { path: '$.rule', from: 0, to: 18 },
+      { path: '$.rule.andAlso[0]', from: 1, to: 2 },
+      { path: '$.rule.andAlso[1]', from: 6, to: 7 },
+    ]);
+  });
+
+  it('collapses redundant nested groups to a single span', () => {
+    expect(parse('((a))').spans).toEqual([{ path: '$.rule', from: 0, to: 5 }]);
+  });
+});
+
+describe('parse — span invariants', () => {
+  const sources = [
+    'a', '!a', '!!a', '(a)', '((a))', 'a && b && c', 'a & b ^ c | d',
+    'a || b && c | d ^ e & !f', '(a && b) || c', '(a && b) as "pair"', 'a && (b | c)',
+    '`n > 0` && a', 'all in orders { is-positive }', 'atLeast(2) in orders { a && b } as "q"',
+    'atLeast(@m) in o { a }', 'any in o { all in p { a || b } } && c', '!(a && b)',
+    'param n: integer = 1\n\na && b',
+  ];
+
+  it.each(sources)('spans %j with exactly one entry per node path', (source) => {
+    const result = parse(source);
+    expect(result.errors).toEqual([]);
+    const nodePaths = listPaths(result.document!).map((entry) => entry.path).sort();
+    expect(result.spans.map((span) => span.path).sort()).toEqual(nodePaths);
+  });
+
+  it.each(sources)('nests every child span inside its parent for %j', (source) => {
+    const byPath = new Map(parse(source).spans.map((span) => [span.path, span]));
+    for (const [path, span] of byPath) {
+      const parent = byPath.get(path.replace(/\.[A-Za-z]+(\[\d+\])?$/, ''));
+      if (!parent || parent === span) continue;
+      expect({ path, from: parent.from <= span.from, to: parent.to >= span.to })
+        .toEqual({ path, from: true, to: true });
+    }
+  });
+});
+
+describe('parse — prototype-unsafe parameter names', () => {
+  it('keeps a `__proto__` parameter as an own property without mutating the prototype', () => {
+    const parameters = parse('param __proto__: integer = 1\n\nis-active').document?.parameters;
+    expect(Object.keys(parameters ?? {})).toEqual(['__proto__']);
+    expect(Object.getOwnPropertyDescriptor(parameters, '__proto__')?.value).toEqual({
+      type: 'integer',
+      default: 1,
+    });
+    expect(Object.getPrototypeOf(parameters ?? {})).toBe(Object.prototype);
   });
 });

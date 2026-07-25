@@ -31,6 +31,13 @@ class ParserState {
   span(path: string, from: number, to: number): void {
     this.spans.push({ path, from, to });
   }
+
+  /** Removes spans recorded at exactly `path` since `mark`, so a wider one can supersede them. */
+  dropSpansAt(path: string, mark: number): void {
+    for (let i = this.spans.length - 1; i >= mark; i--) {
+      if (this.spans[i]!.path === path) this.spans.splice(i, 1);
+    }
+  }
 }
 
 /** Consumes a trailing `as "name"` clause, returning the name when present. */
@@ -147,7 +154,12 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
 
   if (token.kind === 'paren' && token.value === '(') {
     state.next();
+    const mark = state.spans.length;
     const inner = parseExpression(state, path);
+    // The group is not a node of its own, so the inner node keeps `path`. Drop the span the
+    // inner node recorded — `parsePostfix` re-records a wider one covering the parens and any
+    // `as` clause — so each path keeps exactly one span.
+    state.dropSpansAt(path, mark);
     const closing = state.peek();
     if (!closing || closing.value !== ')') {
       state.error('UnclosedGroup', 'expected `)` to close this group', token);
@@ -300,7 +312,11 @@ function parseParameters(state: ParserState): RuleDocument['parameters'] {
       if (value !== undefined) declaration.default = value;
     }
 
-    parameters[nameToken.value] = declaration;
+    // `defineProperty`, not assignment: a parameter named `__proto__` would otherwise hit the
+    // prototype setter, silently dropping the declaration and mutating the object.
+    Object.defineProperty(parameters, nameToken.value, {
+      value: declaration, enumerable: true, writable: true, configurable: true,
+    });
     found = true;
   }
 
