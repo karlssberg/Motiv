@@ -13,7 +13,7 @@ import { motivHover } from './hover.js';
 import { motiv } from './motivLanguage.js';
 import { motivEditorTheme } from './theme.js';
 import { PayloadPopover } from './PayloadPopover.js';
-import { placePopover, type PopoverPlacement } from './popoverPlacement.js';
+import { placePopover, type AnchorBox, type PopoverPlacement } from './popoverPlacement.js';
 import type { DslSync, SyncStatus } from './useDslSync.js';
 
 /** The document this demo edits. The DSL is file-shaped, so it is shown with a filename. */
@@ -61,18 +61,32 @@ function popoverTargetAt(live: LiveContext, position: number): PopoverTarget | n
   return { path: span.path, spec: node.spec, from: span.from };
 }
 
+/** Whether a freshly measured placement is the one already applied to the card. */
+function samePlacement(a: PopoverPlacement | null, b: PopoverPlacement): boolean {
+  return a !== null && a.top === b.top && a.left === b.left && a.maxHeight === b.maxHeight;
+}
+
 /**
  * The token's box on screen, or null when it has none. A position that is not currently drawn
  * has no coordinates, and one past the end of the document throws outright — both of which the
  * caller treats the same way, as "unmeasurable".
  */
-function tokenCoordsAt(view: EditorView, position: number): { top: number; bottom: number; left: number } | null {
+function tokenCoordsAt(view: EditorView, position: number): AnchorBox | null {
   const clamped = Math.max(0, Math.min(position, view.state.doc.length));
   try {
     return view.coordsAtPos(clamped);
   } catch {
     return null;
   }
+}
+
+/**
+ * Where to anchor when the token cannot be measured: the surface's first row, which is where the
+ * clamping would have pulled the card anyway.
+ */
+function surfaceAnchor(surface: HTMLElement): AnchorBox {
+  const { top } = surface.getBoundingClientRect();
+  return { top, bottom: top, left: 0 };
 }
 
 /**
@@ -102,7 +116,7 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
   const live = useRef<LiveContext>({ sync, catalog, diagnostics, store });
   live.current = { sync, catalog, diagnostics, store };
 
-  const frame = useRef<HTMLDivElement | null>(null);
+  const toolbar = useRef<HTMLDivElement | null>(null);
   const host = useRef<HTMLDivElement | null>(null);
   const card = useRef<HTMLDivElement | null>(null);
   const view = useRef<EditorView | null>(null);
@@ -170,36 +184,52 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
   // The popover is anchored to its token, so it can only be placed once both it and the token
   // have been laid out — hence measuring here, after the card is in the DOM but before it is
   // painted. It renders hidden until then, so it is never seen in the wrong place.
+  //
+  // Everything is measured in viewport coordinates because the card is positioned against the
+  // viewport, not the editor: it is a hover-card over the page and may overhang the pane.
+  // Anything that moves the token under it — scrolling the page, scrolling the editor, resizing
+  // the window — has to re-place it, or a fixed card is left pointing at nothing.
   useLayoutEffect(() => {
-    const frameEl = frame.current;
     const surfaceEl = host.current;
+    const toolbarEl = toolbar.current;
     const cardEl = card.current;
-    if (!popover || !frameEl || !surfaceEl || !cardEl) {
+    if (!popover || !surfaceEl || !toolbarEl || !cardEl) {
       setPlacement(null);
       return;
     }
 
-    const frameBox = frameEl.getBoundingClientRect();
-    const cardBox = cardEl.getBoundingClientRect();
-    // The toolbar sits above the editing surface, and the card must not cover it.
-    const minTop = surfaceEl.getBoundingClientRect().top - frameBox.top;
+    const place = () => {
+      const cardBox = cardEl.getBoundingClientRect();
+      const coords = view.current && tokenCoordsAt(view.current, popover.from);
+      const anchor = coords ?? surfaceAnchor(surfaceEl);
 
-    const coords = view.current && tokenCoordsAt(view.current, popover.from);
-    const anchor = coords
-      ? {
-        top: coords.top - frameBox.top,
-        bottom: coords.bottom - frameBox.top,
-        left: coords.left - frameBox.left,
-      }
-      // Nothing to anchor to: fall back to the first row of the surface, which the clamping
-      // below would have pulled it to anyway.
-      : { top: minTop, bottom: minTop, left: 0 };
+      const next = placePopover(
+        anchor,
+        { width: cardBox.width, height: cardBox.height },
+        {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          // The card may float over the rest of the page, but not over the toolbar it belongs to.
+          minTop: toolbarEl.getBoundingClientRect().bottom,
+        },
+      );
+      setPlacement((current) => (samePlacement(current, next) ? current : next));
+    };
 
-    setPlacement(placePopover(
-      anchor,
-      { width: cardBox.width, height: cardBox.height },
-      { width: frameBox.width, height: frameBox.height, minTop },
-    ));
+    place();
+    // Capture, so scrolling any ancestor — the editing surface included — is seen too.
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
+    // The card's own height is an input to its placement, and it grows in use — a rejected
+    // payload adds an error line. Without this it would grow downwards from a position chosen
+    // for the shorter card, and could push its own bottom off the screen.
+    const observer = new ResizeObserver(place);
+    observer.observe(cardEl);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('resize', place);
+    };
   }, [popover]);
 
   const cardStyle: CSSProperties = placement
@@ -207,8 +237,8 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
     : { visibility: 'hidden' };
 
   return (
-    <div className="dsl-frame" ref={frame}>
-      <div className="dsl-toolbar">
+    <div className="dsl-frame">
+      <div className="dsl-toolbar" ref={toolbar}>
         <span className="dsl-filename">{FILENAME}</span>
         <button type="button" onClick={sync.format}>Format</button>
         <span aria-label="sync status" className={`dsl-pill dsl-pill-${sync.status}`}>
@@ -228,6 +258,10 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
 
       {popover && (
         <PayloadPopover
+          // The card holds an unsaved draft of the node it was opened for, seeded once from the
+          // store. Keying it on the path remounts it when the caret moves to a different node,
+          // so a draft can never be saved onto a node other than the one it was typed against.
+          key={popover.path}
           store={store}
           catalog={catalog}
           path={popover.path}

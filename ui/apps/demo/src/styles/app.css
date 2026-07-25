@@ -363,7 +363,7 @@ body {
   gap: var(--space);
 }
 
-/* Editor frame: the popover's containing block, so it must stay positioned */
+/* Editor frame: positioned so CodeMirror's own overlays have a containing block to sit in */
 .dsl-frame {
   position: relative;
   display: flex;
@@ -493,14 +493,17 @@ body {
 }
 
 /*
-  Payload popover: decorations for the spec node under the caret. It is anchored to that node's
-  token, so `top`/`left` are measured and applied inline (see popoverPlacement.ts) — the offsets
-  are deliberately absent here, and it stays hidden for the one frame before they are known.
+  Payload popover: decorations for the spec node under the caret. It is a hover-card anchored to
+  that node's token, so it is positioned against the viewport and free to overhang the pane —
+  the pane is narrower than the card, and confining it there would blanket the very text it
+  annotates. `top`/`left`/`max-height` are measured and applied inline (see popoverPlacement.ts),
+  so the offsets are deliberately absent here and the card stays hidden until they are known.
 */
 .dsl-popover {
-  position: absolute;
+  position: fixed;
   z-index: 10;
-  width: min(320px, calc(100% - var(--space) * 2));
+  width: 320px;
+  max-width: calc(100vw - var(--space) * 2);
   overflow: auto;
   display: flex;
   flex-direction: column;

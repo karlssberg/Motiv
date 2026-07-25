@@ -60,8 +60,8 @@ function PayloadField(props: { label: string; value: string; onChange: (next: st
  * strings when the catalog says the spec carries string metadata, and JSON objects otherwise —
  * in which case they are validated on save, so a malformed object never reaches the store.
  *
- * Where the card sits is the caller's business: it owns the positioned container the card is
- * anchored within, so it passes in the offsets (and the element ref it measured them against).
+ * Where the card sits is the caller's business: it measures the token the card is anchored to and
+ * passes in the resulting offsets (and takes the element ref it measured the card itself against).
  */
 export function PayloadPopover(props: {
   store: RuleEditorStore;
@@ -69,7 +69,7 @@ export function PayloadPopover(props: {
   path: string;
   spec: string;
   onClose: () => void;
-  /** The measured placement within the caller's container. */
+  /** The measured placement, in viewport coordinates. */
   style?: CSSProperties;
   /** Handed the card's root, so the caller can measure it. */
   cardRef?: Ref<HTMLDivElement>;

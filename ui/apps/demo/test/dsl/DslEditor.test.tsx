@@ -131,8 +131,8 @@ describe('DslEditor', () => {
   });
 
   // jsdom has no layout, so `coordsAtPos` and every rect come back null or zero. The popover
-  // must still be placed — degenerately, but inside the frame — rather than throwing or being
-  // left to whatever the stylesheet's default corner is.
+  // must still be placed — degenerately, but on screen — rather than throwing or being left to
+  // whatever the stylesheet's default corner is.
   it('positions the popover explicitly even without layout to measure', () => {
     const { container } = renderEditor();
     const view = editorView(container);
@@ -146,14 +146,40 @@ describe('DslEditor', () => {
     expect(Number.parseFloat(popover.style.left)).toBeGreaterThanOrEqual(0);
   });
 
-  it('anchors the popover rather than pinning it to a corner of the frame', () => {
+  // The popover keeps an unsaved draft of the node it was opened for. Moving the caret to a
+  // different node changes which node a save writes to, so a draft carried across that move is
+  // not a stale field — it is one node's edits landing on another.
+  it('does not carry an unsaved draft from one spec node onto the next', async () => {
+    const user = userEvent.setup();
+    const store = new RuleEditorStore({
+      rule: { andAlso: [{ spec: 'is-active' }, { spec: 'is-verified' }] },
+    });
+    const { container } = render(<Host store={store} />);
+    const view = editorView(container);
+    expect(editorText(container)).toBe('is-active && is-verified');
+
+    // Start naming the first spec, then move the caret into the second without saving.
+    act(() => view.dispatch({ selection: { anchor: 2 } }));
+    await user.type(screen.getByLabelText('Name'), 'activity');
+    act(() => view.dispatch({ selection: { anchor: 16 } }));
+
+    expect(screen.getByLabelText<HTMLInputElement>('Name').value).toBe('');
+
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(store.getState().document).toEqual({
+      rule: { andAlso: [{ spec: 'is-active' }, { spec: 'is-verified' }] },
+    });
+  });
+
+  it('anchors the popover rather than pinning it to a corner', () => {
     const { container } = renderEditor();
     const view = editorView(container);
 
     act(() => view.dispatch({ selection: { anchor: 2 } }));
 
-    // `right`/`bottom` would let the card ride up over the toolbar; it is placed from the
-    // frame's top-left instead, below the editing surface's first row.
+    // A `right`/`bottom` corner pin is what let the card cover the toolbar; it is placed from
+    // the measured token instead, and only `top`/`left` are ever written.
     const popover = screen.getByRole('dialog', { name: 'Payload for is-active' });
     expect(popover.style.right).toBe('');
     expect(popover.style.bottom).toBe('');
