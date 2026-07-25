@@ -120,15 +120,19 @@ Precedence follows C# (which Motiv mirrors), tightest → loosest:
 `!` › `&` › `^` › `|` › `&&` › `||`. Consecutive same-operator operands flatten into a
 single n-ary node (Motiv's `and`/`or`/… arrays require `minItems: 2`).
 
+The precedence-climbing chain is ordered loosest (outermost) → tightest (innermost), so
+that `||` is parsed at the top and `&` binds most tightly of the binary operators — exactly
+the C# ordering above.
+
 ```
 document   := param*  expr
 param      := 'param' IDENT ':' ('integer'|'number'|'string'|'boolean') ('=' literal)?
 expr       := orElse
-orElse     := or      ('||' or)*        # || → orElse
+orElse     := andAlso ('||' andAlso)*   # || → orElse   (loosest)
+andAlso    := or      ('&&' or)*        # && → andAlso
 or         := xor     ('|'  xor)*       # |  → or
-xor        := andAlso ('^'  andAlso)*   # ^  → xor
-andAlso    := and     ('&&' and)*       # && → andAlso
-and        := unary   ('&'  unary)*     # &  → and
+xor        := and     ('^'  and)*       # ^  → xor
+and        := unary   ('&'  unary)*     # &  → and       (tightest binary)
 unary      := '!' unary | postfix       # !  → not
 postfix    := primary ('as' STRING)?    # as "x" → node.name = "x"
 primary    := SPEC                      # is-active → { spec }
@@ -139,6 +143,11 @@ quantifier := ('all'|'any') 'in' PATH '{' expr '}'
             | ('exactly'|'atLeast'|'atMost') '(' N ')' 'in' PATH '{' expr '}'
 N          := INT | '@' IDENT           # countable: literal or @paramRef
 ```
+
+Consequence worth noting: because the single-char logical operators bind tighter than the
+conditional ones, `a & b && c` parses as `(a & b) && c` and `a | b || c` as `(a | b) || c`
+— matching C#. Mixed-operator expressions are rare; the printer parenthesises defensively
+(see below) so round-tripped text never relies on the reader knowing this table.
 
 Mapping to `rule.v1.json` node kinds:
 
