@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { RuleEditorStore, type RulesApiClient } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
-import { BuilderPane } from '../../src/panes/BuilderPane.js';
+import { EditorPane } from '../../src/panes/EditorPane.js';
 
 const catalog = {
   specs: [{ name: 'is-adult', modelType: 'customer', metadataType: 'String', isAsync: false, description: null }],
@@ -10,7 +10,7 @@ const catalog = {
 };
 const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unknown as RulesApiClient;
 const renderWith = (store: RuleEditorStore) =>
-  render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
+  render(<RuleEditorProvider store={store}><EditorPane client={client()} /></RuleEditorProvider>);
 
 describe('extension points', () => {
   it('shows expression and parameters as disabled affordances', async () => {

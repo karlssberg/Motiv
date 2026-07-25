@@ -74,20 +74,12 @@ export function BuilderBody(props: { client: RulesApiClient }) {
   );
 }
 
-/** The builder as a standalone pane, for hosts that show it on its own. */
+/** The builder as a standalone pane, for hosts that show it without the DSL surface. */
 export function BuilderPane(props: { client: RulesApiClient }) {
   return (
     <section className="pane" aria-label="Builder">
       <div className="pane-header">
         <h2>Builder</h2>
-        <button
-          type="button"
-          className="btn ext-point"
-          disabled
-          title="requires backend (coming)"
-        >
-          parameters — coming
-        </button>
       </div>
       <BuilderBody client={props.client} />
     </section>

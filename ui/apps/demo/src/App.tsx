@@ -38,10 +38,11 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
         <RuleHeader client={client} />
         {/*
           Each pane below fetches GET /catalog on mount (EditorPane and EvaluatePane
-          via useCatalog, CheckoutPane directly) — up to three requests for the same
-          static payload. Deduping would mean lifting the catalog here and passing it
-          down, but each pane's self-contained wiring is a deliberate seam this demo
-          exists to show, so the duplicate requests are accepted.
+          via useCatalog, CheckoutPane directly) — and EditorPane's builder surface
+          fetches once more of its own, so up to four requests for the same static
+          payload. Deduping would mean lifting the catalog here and passing it down,
+          but each pane's self-contained wiring is a deliberate seam this demo exists
+          to show, so the duplicate requests are accepted.
         */}
         <EditorPane client={client} />
         <JsonPane />

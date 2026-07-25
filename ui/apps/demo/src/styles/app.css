@@ -335,6 +335,13 @@ body {
   font-style: italic;
 }
 
+/* The panel both tabs swap the contents of */
+.surface-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
 /* Editor frame: the popover's containing block, so it must stay positioned */
 .dsl-pane {
   position: relative;
