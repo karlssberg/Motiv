@@ -49,6 +49,15 @@ function innermostSpanAt(spans: readonly NodeSpan[], position: number): NodeSpan
   return best;
 }
 
+/** The spec node the caret sits inside, or null when it is anywhere else. */
+function popoverTargetAt(live: LiveContext, position: number): PopoverTarget | null {
+  const span = innermostSpanAt(live.sync.parseResult.spans, position);
+  if (!span) return null;
+  const node = getNode(live.store.getState().document, span.path);
+  if (!node || !isSpecNode(node)) return null;
+  return { path: span.path, spec: node.spec };
+}
+
 /**
  * The DSL editing surface: a CodeMirror instance over the Motiv language, wired to the rule
  * store through {@link useDslSync}, plus the toolbar, the conflict banner and the payload popover.
@@ -85,10 +94,7 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog }) {
         live.current.sync.setText(update.state.doc.toString());
       }
       if (update.selectionSet) {
-        const { sync: current, store: currentStore } = live.current;
-        const span = innermostSpanAt(current.parseResult.spans, update.state.selection.main.head);
-        const node = span && getNode(currentStore.getState().document, span.path);
-        setPopover(node && isSpecNode(node) ? { path: span.path, spec: node.spec } : null);
+        setPopover(popoverTargetAt(live.current, update.state.selection.main.head));
       }
     };
 

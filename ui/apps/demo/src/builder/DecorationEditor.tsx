@@ -1,10 +1,6 @@
-import type { Decoration, RuleNode } from '@motiv/rules-core';
+import type { RuleNode } from '@motiv/rules-core';
 import { useRuleEditorStore } from '@motiv/rules-react';
-
-// The store's Decoration type declares whenTrue/whenFalse as optional Payload fields (no `| undefined`
-// in their type), but exactOptionalPropertyTypes then rejects an object literal that explicitly assigns
-// `undefined` to clear one. The cast below is the intentional escape hatch for that clear-to-undefined case.
-type DecorationPatch = Partial<Pick<Decoration, 'whenTrue' | 'whenFalse'>>;
+import type { DecorationPatch } from '../decorationPatch.js';
 
 /** Editable name/whenTrue/whenFalse decoration fields for the node at a path. */
 export function DecorationEditor(props: { path: string; node: RuleNode }) {

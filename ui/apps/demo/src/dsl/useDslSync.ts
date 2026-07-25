@@ -118,11 +118,10 @@ export function useDslSync(store: RuleEditorStore): DslSync {
   useEffect(() => cancelPendingCommit, [cancelPendingCommit]);
 
   const format = useCallback(() => {
-    const parsed = parse(text);
-    if (!parsed.document) return;
-    const printed = print(parsed.document);
+    if (!parseResult.document) return;
+    const printed = print(parseResult.document);
     if (printed !== text) setText(printed);
-  }, [setText, text]);
+  }, [parseResult, setText, text]);
 
   const reformatFromTree = useCallback(() => {
     cancelPendingCommit();

@@ -1,13 +1,9 @@
 import { useState } from 'react';
 import {
   getNode,
-  type Catalog, type Decoration, type Payload, type RuleEditorStore,
+  type Catalog, type Payload, type RuleEditorStore,
 } from '@motiv/rules-core';
-
-// The store's Decoration type declares whenTrue/whenFalse as optional Payload fields (no
-// `| undefined` in their type), but exactOptionalPropertyTypes then rejects an object literal that
-// explicitly assigns `undefined` to clear one. The cast below is the escape hatch for that case.
-type DecorationPatch = Partial<Pick<Decoration, 'whenTrue' | 'whenFalse'>>;
+import type { DecorationPatch } from '../decorationPatch.js';
 
 /** Metadata types whose payloads are plain text rather than JSON objects. */
 const STRING_METADATA_TYPES = new Set(['String', 'Explanation']);
@@ -44,14 +40,16 @@ function readPayload(draft: string, objectMode: boolean, label: string): FieldRe
 
 /** A labelled multi-line payload field. */
 function PayloadField(props: { label: string; value: string; onChange: (next: string) => void }) {
+  const { label, value, onChange } = props;
+
   return (
     <label className="dsl-field">
-      <span>{props.label}</span>
+      <span>{label}</span>
       <textarea
         className="control"
         rows={3}
-        value={props.value}
-        onChange={(e) => props.onChange(e.target.value)}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
       />
     </label>
   );
@@ -87,13 +85,14 @@ export function PayloadPopover(props: {
   });
   const [error, setError] = useState<string | null>(null);
 
-  const patch = (change: Partial<Draft>) => setDraft((current) => ({ ...current, ...change }));
+  const patch = (change: Partial<Draft>): void => setDraft((current) => ({ ...current, ...change }));
 
-  const save = () => {
+  const save = (): void => {
     const whenTrue = readPayload(draft.whenTrue, objectMode, 'When true');
     const whenFalse = readPayload(draft.whenFalse, objectMode, 'When false');
     if (!whenTrue.ok || !whenFalse.ok) {
-      setError([whenTrue, whenFalse].flatMap((field) => (field.ok ? [] : [field.message])).join(' '));
+      const failures = [whenTrue, whenFalse].flatMap((field) => (field.ok ? [] : [field.message]));
+      setError(failures.join(' '));
       return;
     }
 
