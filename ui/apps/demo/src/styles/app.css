@@ -294,3 +294,259 @@ body {
   padding-left: calc(var(--space) * 2.5);
   font-size: 0.9rem;
 }
+
+/* ==========================================================================
+   DSL editor — surface tabs, editor frame, sync pill, conflict banner,
+   hover tooltip and payload popover. Colours come from the --dsl-* tokens.
+   ========================================================================== */
+
+/* Surface tabs: the Builder/DSL switch living in the pane header */
+.surface-tabs {
+  display: flex;
+  gap: calc(var(--space) / 2);
+}
+
+.tab {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  padding: calc(var(--space) / 2) var(--space);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab.active {
+  background: var(--accent-weak);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pane-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Editor frame: the popover's containing block, so it must stay positioned */
+.dsl-pane {
+  position: relative;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  background: var(--dsl-bg);
+}
+
+.dsl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  padding: calc(var(--space) / 2) var(--space);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.dsl-filename {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.dsl-toolbar button,
+.dsl-conflict button,
+.dsl-popover-actions button {
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  padding: calc(var(--space) / 2) var(--space);
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.dsl-toolbar button:hover,
+.dsl-conflict button:hover,
+.dsl-popover-actions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* A definite height, so the CodeMirror view below can fill it and scroll internally */
+.dsl-surface {
+  flex: none;
+  height: 320px;
+  overflow: auto;
+}
+
+.dsl-surface .cm-editor {
+  height: 100%;
+}
+
+/* Sync pill: how the buffer currently relates to the document */
+.dsl-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0 calc(var(--space) * 0.75);
+  font-size: 0.75rem;
+  line-height: 1.8;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.dsl-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.dsl-pill-synced { color: var(--dsl-ok); }
+.dsl-pill-dirty { color: var(--dsl-warn); }
+.dsl-pill-error { color: var(--dsl-err); }
+
+/* Conflict banner: the tree moved under a dirty buffer */
+.dsl-conflict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space);
+  padding: calc(var(--space) / 2) var(--space);
+  background: var(--dsl-banner-bg);
+  border-bottom: 1px solid var(--dsl-banner-bd);
+  color: var(--dsl-banner-fg);
+  font-size: 0.8rem;
+}
+
+.dsl-conflict span {
+  flex: 1;
+}
+
+/* Hover tooltip: the diagnostic under the pointer (chrome is themed in theme.ts) */
+.dsl-hover {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 4);
+  max-width: 320px;
+  padding: calc(var(--space) / 2) var(--space);
+  font-size: 0.8rem;
+}
+
+.dsl-hover-code {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.dsl-hover-message {
+  line-height: 1.4;
+}
+
+.dsl-hover-path {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+/* Payload popover: decorations for the spec node under the caret */
+.dsl-popover {
+  position: absolute;
+  right: var(--space);
+  bottom: var(--space);
+  z-index: 10;
+  width: min(320px, calc(100% - var(--space) * 2));
+  max-height: calc(100% - var(--space) * 2);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 2);
+  padding: var(--space);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 18%);
+}
+
+.dsl-popover-head {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+}
+
+.dsl-popover-spec {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.dsl-popover-close {
+  appearance: none;
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dsl-popover-close:hover {
+  color: var(--text);
+}
+
+.dsl-badge {
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent-weak);
+  color: var(--accent);
+  padding: 0 calc(var(--space) / 2);
+  font-size: 0.7rem;
+}
+
+.dsl-popover-desc {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.dsl-popover-meta,
+.dsl-popover-hint {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.dsl-popover-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+.dsl-field {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 4);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.dsl-popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(var(--space) / 2);
+}
