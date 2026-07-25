@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { lintKeymap, setDiagnostics } from '@codemirror/lint';
@@ -13,6 +13,7 @@ import { motivHover } from './hover.js';
 import { motiv } from './motivLanguage.js';
 import { motivEditorTheme } from './theme.js';
 import { PayloadPopover } from './PayloadPopover.js';
+import { placePopover, type PopoverPlacement } from './popoverPlacement.js';
 import type { DslSync, SyncStatus } from './useDslSync.js';
 
 /** The document this demo edits. The DSL is file-shaped, so it is shown with a filename. */
@@ -25,10 +26,12 @@ const PILL_TEXT: Record<SyncStatus, string> = {
   error: 'parse error',
 };
 
-/** The spec node the popover is open for. */
+/** The spec node the popover is open for, and the token in the text it is anchored to. */
 interface PopoverTarget {
   path: string;
   spec: string;
+  /** Document position of the token's first character. */
+  from: number;
 }
 
 /** The values the (once-built) editor extensions read, always the latest render's. */
@@ -55,7 +58,21 @@ function popoverTargetAt(live: LiveContext, position: number): PopoverTarget | n
   if (!span) return null;
   const node = getNode(live.store.getState().document, span.path);
   if (!node || !isSpecNode(node)) return null;
-  return { path: span.path, spec: node.spec };
+  return { path: span.path, spec: node.spec, from: span.from };
+}
+
+/**
+ * The token's box on screen, or null when it has none. A position that is not currently drawn
+ * has no coordinates, and one past the end of the document throws outright — both of which the
+ * caller treats the same way, as "unmeasurable".
+ */
+function tokenCoordsAt(view: EditorView, position: number): { top: number; bottom: number; left: number } | null {
+  const clamped = Math.max(0, Math.min(position, view.state.doc.length));
+  try {
+    return view.coordsAtPos(clamped);
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -64,7 +81,8 @@ function popoverTargetAt(live: LiveContext, position: number): PopoverTarget | n
  *
  * The buffer it edits is owned by the host, not by this component — `sync` comes in as a prop so
  * unmounting the surface (switching to another editing surface, say) discards only the view, and
- * uncommitted text, conflict state and any pending commit survive.
+ * uncommitted text, conflict state and any pending commit survive. `sync` must be the binding for
+ * the same `store`, since the two are read as one.
  *
  * The view is built once on mount and never rebuilt: its extensions close over a ref holding the
  * latest render's callbacks, catalog and diagnostics, so none of them can go stale while the
@@ -74,6 +92,7 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
   const { store, catalog, sync } = props;
   const editorState = useRuleEditor(store);
   const [popover, setPopover] = useState<PopoverTarget | null>(null);
+  const [placement, setPlacement] = useState<PopoverPlacement | null>(null);
 
   const diagnostics = useMemo(
     () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors),
@@ -83,7 +102,9 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
   const live = useRef<LiveContext>({ sync, catalog, diagnostics, store });
   live.current = { sync, catalog, diagnostics, store };
 
+  const frame = useRef<HTMLDivElement | null>(null);
   const host = useRef<HTMLDivElement | null>(null);
+  const card = useRef<HTMLDivElement | null>(null);
   const view = useRef<EditorView | null>(null);
   /** Set while pushing hook-produced text into the view, so the echo is not read back as an edit. */
   const applyingHookText = useRef(false);
@@ -146,8 +167,47 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
     instance.dispatch(setDiagnostics(instance.state, diagnostics));
   }, [diagnostics]);
 
+  // The popover is anchored to its token, so it can only be placed once both it and the token
+  // have been laid out — hence measuring here, after the card is in the DOM but before it is
+  // painted. It renders hidden until then, so it is never seen in the wrong place.
+  useLayoutEffect(() => {
+    const frameEl = frame.current;
+    const surfaceEl = host.current;
+    const cardEl = card.current;
+    if (!popover || !frameEl || !surfaceEl || !cardEl) {
+      setPlacement(null);
+      return;
+    }
+
+    const frameBox = frameEl.getBoundingClientRect();
+    const cardBox = cardEl.getBoundingClientRect();
+    // The toolbar sits above the editing surface, and the card must not cover it.
+    const minTop = surfaceEl.getBoundingClientRect().top - frameBox.top;
+
+    const coords = view.current && tokenCoordsAt(view.current, popover.from);
+    const anchor = coords
+      ? {
+        top: coords.top - frameBox.top,
+        bottom: coords.bottom - frameBox.top,
+        left: coords.left - frameBox.left,
+      }
+      // Nothing to anchor to: fall back to the first row of the surface, which the clamping
+      // below would have pulled it to anyway.
+      : { top: minTop, bottom: minTop, left: 0 };
+
+    setPlacement(placePopover(
+      anchor,
+      { width: cardBox.width, height: cardBox.height },
+      { width: frameBox.width, height: frameBox.height, minTop },
+    ));
+  }, [popover]);
+
+  const cardStyle: CSSProperties = placement
+    ? { top: `${placement.top}px`, left: `${placement.left}px`, maxHeight: `${placement.maxHeight}px` }
+    : { visibility: 'hidden' };
+
   return (
-    <div className="dsl-frame">
+    <div className="dsl-frame" ref={frame}>
       <div className="dsl-toolbar">
         <span className="dsl-filename">{FILENAME}</span>
         <button type="button" onClick={sync.format}>Format</button>
@@ -173,6 +233,8 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
           path={popover.path}
           spec={popover.spec}
           onClose={() => setPopover(null)}
+          cardRef={card}
+          style={cardStyle}
         />
       )}
     </div>

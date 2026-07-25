@@ -17,6 +17,9 @@ const SURFACES: ReadonlyArray<{ id: Surface; label: string }> = [
 /** Ties both tabs to the one panel they swap the contents of. */
 const SURFACE_PANEL_ID = 'editor-surface';
 
+/** The id of a surface's tab, which is what names the panel while that surface is shown. */
+const tabId = (surface: Surface): string => `editor-tab-${surface}`;
+
 /**
  * The authoring pane: the same rule document edited either through the accordion builder or
  * as DSL text, switched by a tablist in the pane header. Both surfaces are views over the one
@@ -41,6 +44,7 @@ export function EditorPane(props: { client: RulesApiClient }) {
           {SURFACES.map(({ id, label }) => (
             <button
               key={id}
+              id={tabId(id)}
               type="button"
               role="tab"
               aria-selected={surface === id}
@@ -52,7 +56,8 @@ export function EditorPane(props: { client: RulesApiClient }) {
             </button>
           ))}
         </div>
-        {surface === 'dsl' && <span className="pane-hint">text is the source of truth</span>}
+        {/* The header item that yields when the pane is too narrow for all three (see `.truncate`). */}
+        {surface === 'dsl' && <span className="pane-hint truncate">text is the source of truth</span>}
         <button
           type="button"
           className="btn ext-point"
@@ -63,7 +68,12 @@ export function EditorPane(props: { client: RulesApiClient }) {
         </button>
       </div>
 
-      <div role="tabpanel" id={SURFACE_PANEL_ID} className="surface-panel">
+      <div
+        role="tabpanel"
+        id={SURFACE_PANEL_ID}
+        aria-labelledby={tabId(surface)}
+        className="surface-panel"
+      >
         {surface === 'builder'
           ? <BuilderBody client={props.client} />
           : <DslEditor store={store} catalog={catalog} sync={sync} />}

@@ -97,10 +97,22 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: nowrap;
   gap: var(--space);
   margin-bottom: var(--space);
   padding-bottom: var(--space);
   border-bottom: 1px solid var(--border);
+}
+
+/*
+  At the three-column layout each pane is only ~400px wide, which is narrower than the header's
+  contents lay out at their natural widths. The controls keep theirs — a clipped tab or button is
+  an unusable one — so anything that may be shortened must opt in with `.truncate`.
+*/
+.pane-header > .btn,
+.pane-header > h2,
+.pane-header > .surface-tabs {
+  flex: none;
 }
 
 .pane-header h2 {
@@ -335,6 +347,15 @@ body {
   font-style: italic;
 }
 
+/* Opts a flex item into giving up its width: it shortens to an ellipsis instead of wrapping. */
+.truncate {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* The panel both tabs swap the contents of */
 .surface-panel {
   display: flex;
@@ -471,14 +492,15 @@ body {
   opacity: 0.6;
 }
 
-/* Payload popover: decorations for the spec node under the caret */
+/*
+  Payload popover: decorations for the spec node under the caret. It is anchored to that node's
+  token, so `top`/`left` are measured and applied inline (see popoverPlacement.ts) — the offsets
+  are deliberately absent here, and it stays hidden for the one frame before they are known.
+*/
 .dsl-popover {
   position: absolute;
-  right: var(--space);
-  bottom: var(--space);
   z-index: 10;
   width: min(320px, calc(100% - var(--space) * 2));
-  max-height: calc(100% - var(--space) * 2);
   overflow: auto;
   display: flex;
   flex-direction: column;

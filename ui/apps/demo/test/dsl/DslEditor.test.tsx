@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { EditorView } from '@codemirror/view';
 import { RuleEditorStore } from '@motiv/rules-core';
 import type { Catalog } from '@motiv/rules-core';
 import { DslEditor } from '../../src/dsl/DslEditor.js';
 import { useDslSync } from '../../src/dsl/useDslSync.js';
+import { editorText, editorView, replaceBuffer } from '../support/codemirror.js';
 
 const CATALOG: Catalog = {
   specs: [
@@ -17,31 +17,14 @@ const CATALOG: Catalog = {
 
 /** Stands in for the pane that owns the buffer, which the editor takes as a prop. */
 function Host(props: { store: RuleEditorStore }) {
-  return <DslEditor store={props.store} catalog={CATALOG} sync={useDslSync(props.store)} />;
+  const sync = useDslSync(props.store);
+  return <DslEditor store={props.store} catalog={CATALOG} sync={sync} />;
 }
 
 function renderEditor() {
   const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
   const { container } = render(<Host store={store} />);
   return { store, container };
-}
-
-/** The live CodeMirror view, so tests drive the editor the way a keystroke would. */
-function editorView(container: HTMLElement): EditorView {
-  const view = EditorView.findFromDOM(container);
-  if (!view) throw new Error('No CodeMirror view was mounted.');
-  return view;
-}
-
-/** The editor's visible text. */
-function editorText(container: HTMLElement): string {
-  return container.querySelector('.cm-content')?.textContent ?? '';
-}
-
-/** Types over the whole document, as a user replacing the buffer would. */
-function replaceBuffer(container: HTMLElement, text: string): void {
-  const view = editorView(container);
-  act(() => view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } }));
 }
 
 describe('DslEditor', () => {
@@ -145,5 +128,34 @@ describe('DslEditor', () => {
     act(() => view.dispatch({ selection: { anchor: 2 } }));
 
     expect(screen.getByRole('dialog', { name: 'Payload for is-active' })).toBeTruthy();
+  });
+
+  // jsdom has no layout, so `coordsAtPos` and every rect come back null or zero. The popover
+  // must still be placed — degenerately, but inside the frame — rather than throwing or being
+  // left to whatever the stylesheet's default corner is.
+  it('positions the popover explicitly even without layout to measure', () => {
+    const { container } = renderEditor();
+    const view = editorView(container);
+
+    act(() => view.dispatch({ selection: { anchor: 2 } }));
+
+    const popover = screen.getByRole('dialog', { name: 'Payload for is-active' });
+    expect(popover.style.top).toMatch(/^-?\d+(\.\d+)?px$/);
+    expect(popover.style.left).toMatch(/^-?\d+(\.\d+)?px$/);
+    expect(Number.parseFloat(popover.style.top)).toBeGreaterThanOrEqual(0);
+    expect(Number.parseFloat(popover.style.left)).toBeGreaterThanOrEqual(0);
+  });
+
+  it('anchors the popover rather than pinning it to a corner of the frame', () => {
+    const { container } = renderEditor();
+    const view = editorView(container);
+
+    act(() => view.dispatch({ selection: { anchor: 2 } }));
+
+    // `right`/`bottom` would let the card ride up over the toolbar; it is placed from the
+    // frame's top-left instead, below the editing surface's first row.
+    const popover = screen.getByRole('dialog', { name: 'Payload for is-active' });
+    expect(popover.style.right).toBe('');
+    expect(popover.style.bottom).toBe('');
   });
 });

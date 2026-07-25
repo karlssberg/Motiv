@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties, type Ref } from 'react';
 import {
   getNode,
   type Catalog, type Payload, type RuleEditorStore,
@@ -59,6 +59,9 @@ function PayloadField(props: { label: string; value: string; onChange: (next: st
  * Edits the `name` and `whenTrue`/`whenFalse` payloads of one spec node. Payloads are plain
  * strings when the catalog says the spec carries string metadata, and JSON objects otherwise —
  * in which case they are validated on save, so a malformed object never reaches the store.
+ *
+ * Where the card sits is the caller's business: it owns the positioned container the card is
+ * anchored within, so it passes in the offsets (and the element ref it measured them against).
  */
 export function PayloadPopover(props: {
   store: RuleEditorStore;
@@ -66,8 +69,12 @@ export function PayloadPopover(props: {
   path: string;
   spec: string;
   onClose: () => void;
+  /** The measured placement within the caller's container. */
+  style?: CSSProperties;
+  /** Handed the card's root, so the caller can measure it. */
+  cardRef?: Ref<HTMLDivElement>;
 }) {
-  const { store, catalog, path, spec, onClose } = props;
+  const { store, catalog, path, spec, onClose, style, cardRef } = props;
 
   const entry = catalog.specs.find((candidate) => candidate.name === spec);
   const objectMode = entry !== undefined && !STRING_METADATA_TYPES.has(entry.metadataType);
@@ -102,7 +109,13 @@ export function PayloadPopover(props: {
   };
 
   return (
-    <div className="dsl-popover" role="dialog" aria-label={`Payload for ${spec}`}>
+    <div
+      ref={cardRef}
+      className="dsl-popover"
+      role="dialog"
+      aria-label={`Payload for ${spec}`}
+      style={style}
+    >
       <div className="dsl-popover-head">
         <span className="dsl-popover-spec">{spec}</span>
         {entry?.isAsync && <span className="dsl-badge">async</span>}

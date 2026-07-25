@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import { EditorView } from '@codemirror/view';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { RuleEditorStore, type Catalog, type RulesApiClient } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
 import { EditorPane } from '../../src/panes/EditorPane.js';
+import { editorText, editorView, replaceBuffer } from '../support/codemirror.js';
 
 const catalog: Catalog = {
   specs: [
@@ -41,24 +41,6 @@ const settleCatalog = () => act(async () => {});
 
 const tab = (name: string) => screen.getByRole('tab', { name });
 
-/** The live CodeMirror view, so tests drive the editor the way a keystroke would. */
-function editorView(container: HTMLElement): EditorView {
-  const view = EditorView.findFromDOM(container);
-  if (!view) throw new Error('No CodeMirror view was mounted.');
-  return view;
-}
-
-/** The editor's visible text. */
-function editorText(container: HTMLElement): string {
-  return container.querySelector('.cm-content')?.textContent ?? '';
-}
-
-/** Types over the whole document, as a user replacing the buffer would. */
-function replaceBuffer(container: HTMLElement, text: string): void {
-  const view = editorView(container);
-  act(() => view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } }));
-}
-
 describe('EditorPane', () => {
   it('shows the Builder surface by default', async () => {
     renderPane();
@@ -80,6 +62,18 @@ describe('EditorPane', () => {
     expect(tab('Builder').getAttribute('aria-selected')).toBe('false');
     expect(screen.getByLabelText('sync status')).toBeDefined();
     expect(screen.getByText('text is the source of truth')).toBeDefined();
+  });
+
+  // The header is a single row of three items and the pane is narrow, so the hint — the least
+  // important of them — is the one that gives way. Without this the row wraps to two lines and
+  // collides with the editor toolbar below it.
+  it('lets the hint truncate rather than wrap the header', async () => {
+    renderPane();
+    await settleCatalog();
+
+    fireEvent.click(tab('DSL'));
+
+    expect(screen.getByText('text is the source of truth').classList.contains('truncate')).toBe(true);
   });
 
   it('nests no second region inside the Editor pane', async () => {
@@ -114,9 +108,24 @@ describe('EditorPane', () => {
     fireEvent.click(tab('Builder'));
     fireEvent.click(tab('DSL'));
 
-    // The buffer outlives the view, so the pending commit is neither lost nor forced through.
     expect(editorText(container)).toBe('is-active && is-adult');
     expect(screen.getByLabelText('sync status').textContent).toBe('unsynced');
+  });
+
+  it('lands the pending commit even while the DSL surface is unmounted', async () => {
+    const { container, store } = renderPane();
+    await settleCatalog();
+
+    fireEvent.click(tab('DSL'));
+    replaceBuffer(container, 'is-active && is-adult');
+    fireEvent.click(tab('Builder'));
+
+    // The debounced commit was armed by the edit and belongs to the buffer, not the view, so
+    // tearing the view down must not cancel it — a cancelled timer would also leave the text
+    // intact, which is why the store, not the buffer, is what proves the commit survived.
+    await waitFor(() => expect(store.getState().document).toEqual({
+      rule: { andAlso: [{ spec: 'is-active' }, { spec: 'is-adult' }] },
+    }));
   });
 
   it('hands the loaded catalog to the DSL surface', async () => {
