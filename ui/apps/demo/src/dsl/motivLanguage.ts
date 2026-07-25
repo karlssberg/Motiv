@@ -14,9 +14,9 @@ export const DSL_QUANTIFIERS = ['all', 'any', 'exactly', 'atLeast', 'atMost'] as
 /** The parameter type names. */
 export const DSL_TYPES = ['integer', 'number', 'string', 'boolean'] as const;
 
-const KEYWORDS: ReadonlySet<string> = new Set(DSL_KEYWORDS);
+/** Quantifiers are highlighted exactly as keywords, so both share one lookup. */
+const KEYWORD_LIKE: ReadonlySet<string> = new Set([...DSL_KEYWORDS, ...DSL_QUANTIFIERS]);
 const TYPES: ReadonlySet<string> = new Set(DSL_TYPES);
-const QUANTIFIERS: ReadonlySet<string> = new Set(DSL_QUANTIFIERS);
 
 /** Word shapes, mirroring the core lexer: a letter or `_`, then letters, digits, `-` or `_`. */
 const WORD_START = /[A-Za-z_]/;
@@ -32,7 +32,7 @@ function skipDelimited(stream: StringStream, delimiter: string): void {
 
 /** The highlight tag for a completed word token. */
 function wordTag(word: string): string {
-  if (KEYWORDS.has(word) || QUANTIFIERS.has(word)) return 'keyword';
+  if (KEYWORD_LIKE.has(word)) return 'keyword';
   if (TYPES.has(word)) return 'typeName';
   return 'variableName';
 }

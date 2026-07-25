@@ -4,8 +4,13 @@ import type { DslError, NodeSpan, ParseResult, RuleError } from '@motiv/rules-co
 /** Separates a diagnostic's machine-readable code from its human message. */
 const SEPARATOR = ': ';
 
+/** Joins a code and a human message; {@link splitDiagnosticMessage} is the inverse. */
+function joinDiagnosticMessage(code: string, message: string): string {
+  return `${code}${SEPARATOR}${message}`;
+}
+
 /** A half-open source range `[from, to)`. */
-interface Range {
+interface SourceRange {
   from: number;
   to: number;
 }
@@ -20,16 +25,20 @@ function parentPath(path: string): string | null {
  * The span recorded for `path`, or for its nearest ancestor that has one — so a sub-field path
  * like `$.rule.whenTrue` anchors on the node that owns it. Falls back to the whole document.
  */
-function rangeOfPath(path: string, spans: readonly NodeSpan[], text: string): Range {
+function rangeOfPath(
+  path: string,
+  spans: readonly NodeSpan[],
+  documentLength: number,
+): SourceRange {
   for (let current: string | null = path; current !== null; current = parentPath(current)) {
     const span = spans.find((candidate) => candidate.path === current);
     if (span) return { from: span.from, to: span.to };
   }
-  return { from: 0, to: text.length };
+  return { from: 0, to: documentLength };
 }
 
 /** Widens a range so it always covers at least one character, which marks a zero-width error. */
-function nonEmpty({ from, to }: Range): Range {
+function nonEmpty({ from, to }: SourceRange): SourceRange {
   return { from, to: Math.max(to, from + 1) };
 }
 
@@ -38,17 +47,21 @@ function fromParserError(error: DslError): Diagnostic {
   return {
     ...nonEmpty(error),
     severity: 'error',
-    message: `${error.code}${SEPARATOR}${error.message}`,
+    message: joinDiagnosticMessage(error.code, error.message),
   };
 }
 
 /** A backend error is keyed by node path, so it is mapped through the parse's spans. */
-function fromBackendError(error: RuleError, spans: readonly NodeSpan[], text: string): Diagnostic {
+function fromBackendError(
+  error: RuleError,
+  spans: readonly NodeSpan[],
+  documentLength: number,
+): Diagnostic {
   return {
-    ...nonEmpty(rangeOfPath(error.path, spans, text)),
+    ...nonEmpty(rangeOfPath(error.path, spans, documentLength)),
     severity: 'error',
     source: error.path,
-    message: `${error.code}${SEPARATOR}${error.message}`,
+    message: joinDiagnosticMessage(error.code, error.message),
   };
 }
 
@@ -60,7 +73,7 @@ export function diagnosticsFor(
 ): Diagnostic[] {
   return [
     ...result.errors.map(fromParserError),
-    ...errors.map((error) => fromBackendError(error, result.spans, text)),
+    ...errors.map((error) => fromBackendError(error, result.spans, text.length)),
   ];
 }
 

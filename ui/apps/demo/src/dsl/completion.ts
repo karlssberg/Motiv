@@ -33,13 +33,11 @@ function collectionOptions(catalog: Catalog): Completion[] {
 }
 
 /** The fixed vocabulary: quantifiers, keywords and parameter types. */
-function vocabularyOptions(): Completion[] {
-  return [
-    ...DSL_QUANTIFIERS.map((label) => ({ label, type: 'keyword', detail: 'quantifier' })),
-    ...DSL_KEYWORDS.map((label) => ({ label, type: 'keyword', detail: 'keyword' })),
-    ...DSL_TYPES.map((label) => ({ label, type: 'type', detail: 'type' })),
-  ];
-}
+const VOCABULARY_OPTIONS: Completion[] = [
+  ...DSL_QUANTIFIERS.map((label) => ({ label, type: 'keyword', detail: 'quantifier' })),
+  ...DSL_KEYWORDS.map((label) => ({ label, type: 'keyword', detail: 'keyword' })),
+  ...DSL_TYPES.map((label) => ({ label, type: 'type', detail: 'type' })),
+];
 
 /** The `@name` references declared by the document's own `param` statements. */
 function parameterOptions(text: string): Completion[] {
@@ -66,7 +64,7 @@ export function createMotivCompletion(
     const catalog = getCatalog();
     const options = word.text.startsWith('@')
       ? parameterOptions(context.state.doc.toString())
-      : [...specOptions(catalog), ...collectionOptions(catalog), ...vocabularyOptions()];
+      : [...specOptions(catalog), ...collectionOptions(catalog), ...VOCABULARY_OPTIONS];
 
     // CodeMirror filters only at render time, so the returned list is narrowed here to keep
     // the source honest about what it offers for the typed prefix.
