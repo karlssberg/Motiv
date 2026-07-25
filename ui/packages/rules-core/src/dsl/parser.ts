@@ -109,9 +109,62 @@ function parseUnary(state: ParserState, path: string): RuleNode | undefined {
   return parsePostfix(state, path);
 }
 
-/** expr := the full precedence chain. */
+/** Binary levels, loosest first. Each entry maps its DSL operator to the node key it builds. */
+const BINARY_LEVELS = [
+  { operator: '||', key: 'orElse' },
+  { operator: '&&', key: 'andAlso' },
+  { operator: '|', key: 'or' },
+  { operator: '^', key: 'xor' },
+  { operator: '&', key: 'and' },
+] as const;
+
+/** Re-keys spans recorded for the first operand of a run from `oldPath` to `newPath`. */
+function repath(state: ParserState, oldPath: string, newPath: string, from: number, to: number): void {
+  for (const span of state.spans) {
+    if (span.from < from || span.to > to) continue;
+    if (span.path === oldPath) span.path = newPath;
+    else if (span.path.startsWith(`${oldPath}.`)) {
+      span.path = `${newPath}${span.path.slice(oldPath.length)}`;
+    }
+  }
+}
+
+/**
+ * Parses one precedence level: the tighter level, then a run of same-operator operands.
+ * A run flattens into a single n-ary node, so `a && b && c` is one `andAlso` of three.
+ */
+function parseBinaryLevel(state: ParserState, path: string, level: number): RuleNode | undefined {
+  if (level >= BINARY_LEVELS.length) return parseUnary(state, path);
+  const { operator, key } = BINARY_LEVELS[level]!;
+
+  const start = state.peek()?.from ?? state.lastEnd;
+  const first = parseBinaryLevel(state, path, level + 1);
+  if (!first) return undefined;
+
+  const matches = (): boolean => {
+    const token = state.peek();
+    return !!token && token.kind === 'operator' && token.value === operator;
+  };
+  if (!matches()) return first;
+
+  const operands: RuleNode[] = [first];
+  repath(state, path, `${path}.${key}[0]`, start, state.lastEnd);
+
+  while (matches()) {
+    state.next();
+    const operandPath = `${path}.${key}[${operands.length}]`;
+    const operand = parseBinaryLevel(state, operandPath, level + 1);
+    if (!operand) return undefined;
+    operands.push(operand);
+  }
+
+  state.span(path, start, state.lastEnd);
+  return { [key]: operands } as unknown as RuleNode;
+}
+
+/** expr := the full precedence chain, loosest level first. */
 function parseExpression(state: ParserState, path: string): RuleNode | undefined {
-  return parseUnary(state, path);
+  return parseBinaryLevel(state, path, 0);
 }
 
 /**
