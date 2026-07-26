@@ -1,13 +1,17 @@
 import {
-  binaryOperator, isBinaryNode, isExpressionNode, isHigherOrderNode, isNotNode, isSpecNode,
-  type BinaryOperator, type RuleNode,
+  binaryOperator, higherOrderKey, isBinaryNode, isExpressionNode, isHigherOrderNode, isNotNode,
+  isSpecNode,
+  type BinaryOperator, type Countable, type HigherOrderKey, type RuleNode,
 } from '@motiv/rules-core';
-import { quantifierKindOf, type QuantifierKind, type QuantifierLike } from './mutations.js';
 
 /** What a node's badge is: the row renders it as a `.node-badge-{kind}` class, which colours it. */
 export type NodeBadgeKind = 'op' | 'quant' | 'spec';
 
-/** The always-visible one-line summary for a node's accordion row. */
+/**
+ * The one-line summary shown on a parent row while its subtree is expanded. A collapsed parent,
+ * and every leaf, shows the node's DSL text instead — so the leaf branches below are reached
+ * only if a future caller summarises a node the tree renders as text.
+ */
 export interface NodeSummary {
   /** The short colored token, e.g. `AND`, `atLeast(3)`, `is-active`. */
   badge: string;
@@ -21,7 +25,7 @@ const OP_DESCRIPTION: Record<BinaryOperator, string> = {
   and: 'all must hold', or: 'any may hold', xor: 'exactly one must hold',
   andAlso: 'all must hold, short-circuit', orElse: 'any may hold, short-circuit',
 };
-const QUANT_TOKEN: Record<QuantifierKind, (n: unknown) => string> = {
+const QUANT_TOKEN: Record<HigherOrderKey, (n: Countable | undefined) => string> = {
   asAllSatisfied: () => 'all',
   asAnySatisfied: () => 'any',
   asNSatisfied: (n) => `exactly(${n ?? 1})`,
@@ -29,12 +33,12 @@ const QUANT_TOKEN: Record<QuantifierKind, (n: unknown) => string> = {
   asAtMostNSatisfied: (n) => `atMost(${n ?? 1})`,
 };
 
-/** The one-line summary shown on a node's accordion row, regardless of node kind. */
+/** The one-line summary shown on an expanded parent row, regardless of node kind. */
 export function summarize(node: RuleNode): NodeSummary {
   if (isHigherOrderNode(node)) {
-    const quant = node as unknown as QuantifierLike;
-    const kind = quantifierKindOf(quant);
-    return { badge: QUANT_TOKEN[kind](quant.n), description: `in ${quant.path}`, kind: 'quant' };
+    // `'n' in node` is the discriminator the printer uses: only the three N-kinds carry a count.
+    const n = 'n' in node ? node.n : undefined;
+    return { badge: QUANT_TOKEN[higherOrderKey(node)](n), description: `in ${node.path}`, kind: 'quant' };
   }
   if (isNotNode(node)) return { badge: 'NOT', description: 'must not hold', kind: 'op' };
   if (isBinaryNode(node)) {

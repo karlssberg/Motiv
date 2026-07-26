@@ -15,7 +15,6 @@ export interface AccordionState {
   toggleCollapsed: (path: string) => void;
   toggleOpen: (path: string) => void;
   togglePin: (path: string) => void;
-  closeAll: () => void;
   catalog: Catalog;
 }
 
@@ -54,10 +53,10 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
   const collapsed = isCollapsed(model, path);
   const open = isOpen(model, path);
   const pinned = isPinned(model, path);
-  const summary = summarize(node);
   // A leaf's tree form and its text form are the same string, so it has nothing to toggle
-  // between and is always shown as DSL.
+  // between and is always shown as DSL. Only the other case has a summary to render.
   const inDslView = !hasChildren || collapsed;
+  const summary = inDslView ? null : summarize(node);
 
   // A quantifier's single child is scoped to the collection's element model type, not the parent's.
   const childModelType = isHigherOrderNode(node)
@@ -81,7 +80,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
           <span className="node-bullet" aria-hidden="true">•</span>
         )}
         <span className="node-body">
-          {inDslView ? (
+          {summary === null ? (
             <NodeDsl path={path} node={node} modelType={modelType} catalog={catalog} />
           ) : (
             <>

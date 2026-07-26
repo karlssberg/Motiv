@@ -34,9 +34,15 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
   const [error, setError] = useState<string | null>(null);
 
   const host = useRef<HTMLSpanElement | null>(null);
-  /** The latest render's values, for the once-built extensions to read. */
-  const live = useRef({ path, text, catalog, modelType });
-  live.current = { path, text, catalog, modelType };
+
+  /**
+   * The completion scope, read lazily rather than closed over: `useCatalog` resolves
+   * asynchronously, so a row focused before the catalog lands would otherwise offer nothing for
+   * the life of the editor. `path` and `text` need no such treatment — the row is keyed by its
+   * path, so a change remounts it and resets `editing`.
+   */
+  const scope = useRef({ catalog, modelType });
+  scope.current = { catalog, modelType };
 
   /**
    * Cleared before the view is torn down, so the blur that teardown provokes cannot write back.
@@ -44,7 +50,7 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
    * editing surfaces, or a parent re-render dropping this node — leaving `replaceNode` to
    * address a path that no longer exists.
    */
-  const attached = useRef(true);
+  const attached = useRef(false);
 
   const stop = (): void => {
     setEditing(false);
@@ -58,7 +64,7 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
       setError(result.errors[0]?.message ?? 'could not parse this expression');
       return false;
     }
-    store.replaceNode(live.current.path, result.document.rule);
+    store.replaceNode(path, result.document.rule);
     stop();
     return true;
   };
@@ -69,17 +75,19 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
 
     attached.current = true;
 
-    // Completion is scoped to this row's model type, so a quantifier body offers only the
-    // element's specs. The picker this replaced filtered the same way; the DSL pane does not.
+    // Completion offers the specs of this row's own model type — the same filter the spec picker
+    // it replaces applied, and one the DSL pane does not apply at all. One row has one scope, so
+    // a *collapsed* quantifier's body is still offered its parent's specs; expanded, the body is
+    // its own row and gets the element scope.
     const scoped = (): Catalog => ({
-      specs: live.current.catalog.specs.filter((spec) => spec.modelType === live.current.modelType),
-      collections: live.current.catalog.collections,
+      specs: scope.current.catalog.specs.filter((s) => s.modelType === scope.current.modelType),
+      collections: scope.current.catalog.collections,
     });
 
     const view = new EditorView({
       parent,
       state: EditorState.create({
-        doc: live.current.text,
+        doc: text,
         extensions: [
           singleLine,
           history(),

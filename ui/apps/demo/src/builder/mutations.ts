@@ -27,7 +27,7 @@ export function quantifierKindOf(node: QuantifierLike): QuantifierKind {
 }
 
 /** The single child rule node wrapped by a higher-order quantifier node. */
-export function quantifierChild(node: QuantifierLike): RuleNode {
+function quantifierChild(node: QuantifierLike): RuleNode {
   return node[quantifierKindOf(node)] as RuleNode;
 }
 

@@ -48,7 +48,6 @@ export function BuilderBody(props: { client: RulesApiClient }) {
           toggleCollapsed: (path) => setModel((prev) => toggleCollapsed(prev, path)),
           toggleOpen: (path) => setModel((prev) => toggleOpen(prev, path)),
           togglePin: (path) => setModel((prev) => togglePin(prev, path)),
-          closeAll: () => setModel(closeAll),
           catalog,
         }}
       >
