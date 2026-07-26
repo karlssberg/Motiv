@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/dsl/parser.js';
-import { print } from '../src/dsl/printer.js';
+import { print, printInline } from '../src/dsl/printer.js';
 import type { RuleDocument } from '../src/document.js';
 
 /** One document per node kind in rule.v1.json, plus the reference composition. */
@@ -149,6 +149,12 @@ describe('DSL round-trip', () => {
     const once = print(document);
     const twice = print(parse(once).document!);
     expect(twice).toBe(once);
+  });
+
+  it.each(DOCUMENTS)('parse(printInline(rule)) preserves $label', ({ document }) => {
+    const result = parse(printInline(document.rule));
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual(document.rule);
   });
 
   it('every parsed node has a span', () => {
