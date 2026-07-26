@@ -25,5 +25,9 @@ BenchmarkDotNet.Artifacts/
 # Test coverage output
 [Tt]est[Rr]esults/
 
+# Node output landing outside the ui workspace, which ignores its own (see ui/.gitignore).
+# A test run resolving to the repo root leaves a Vitest cache in a node_modules/ of its own.
+node_modules/
+
 .superpowers/
 .memsearch/
