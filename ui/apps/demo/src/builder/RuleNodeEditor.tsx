@@ -1,36 +1,88 @@
-import { createContext, useContext, type CSSProperties } from 'react';
-import { isHigherOrderNode, type Catalog } from '@motiv/rules-core';
+import { createContext, useContext } from 'react';
+import { isBinaryNode, isHigherOrderNode, type Catalog } from '@motiv/rules-core';
 import { useRuleNode } from '@motiv/rules-react';
 import { NodeToolbar } from './NodeToolbar.js';
+import { OperatorPicker } from './OperatorPicker.js';
 import { QuantifierNode } from './QuantifierNode.js';
 import { DecorationEditor } from './DecorationEditor.js';
 import { childPaths } from './childPaths.js';
+import { summarize } from './nodeSummary.js';
+import { NodeDsl } from './NodeDsl.js';
+import { NodeMenu } from './NodeMenu.js';
+import { isCollapsed, isOpen, isPinned, type AccordionModel } from './accordion.js';
 
-/** Single-open accordion state shared by every {@link RuleNodeEditor} in the tree. */
+/** The accordion state and its transitions, shared by every {@link RuleNodeEditor} in the tree. */
 export interface AccordionState {
-  isExpanded: (path: string) => boolean;
-  toggle: (path: string) => void;
+  model: AccordionModel;
+  toggleCollapsed: (path: string) => void;
+  toggleOpen: (path: string) => void;
+  togglePin: (path: string) => void;
+  /**
+   * Which popup in the tree is open, if any, as a {@link popoverKey}. Held centrally so that
+   * opening one closes the last — two at once is otherwise reachable by keyboard alone.
+   */
+  openPopover: string | null;
+  setOpenPopover: (key: string | null) => void;
   catalog: Catalog;
 }
 
+/** The popups a row can open. */
+type PopoverKind = 'menu' | 'operator';
+
+/** Identifies one row's popup, since a row has more than one. */
+const popoverKey = (kind: PopoverKind, path: string): string => `${kind}:${path}`;
+
 export const AccordionContext = createContext<AccordionState | null>(null);
 
-function useAccordion(): AccordionState {
+export function useAccordion(): AccordionState {
   const context = useContext(AccordionContext);
   if (!context) throw new Error('RuleNodeEditor must be used within an AccordionContext provider.');
   return context;
 }
 
-/** Recursively renders a rule node and its children as a single-open accordion. */
-export function RuleNodeEditor(props: { path: string; depth: number; modelType: string }) {
-  const { path, depth, modelType } = props;
+/** The id tying a node's detail toggle to the panel it opens. */
+const panelId = (path: string): string => `detail-${path}`;
+
+/**
+ * Recursively renders a rule node.
+ *
+ * Two view concerns, deliberately independent. Structure folds a subtree into a single line of
+ * DSL and back, and starts expanded. The **detail** panel holds the node's decoration fields and
+ * edit controls, starts closed, and is displaced when another node is opened unless it has been
+ * pinned. A node can be collapsed with its panel open, or the reverse.
+ *
+ * The caret reveals whatever is *inside* a node, so which concern it drives follows from the node
+ * itself: a parent's insides are its children, and a leaf — having none — discloses its metadata
+ * instead. That leaves the caret slot meaningful on every row rather than an inert bullet on
+ * leaves, and spares a leaf the second control it would otherwise need. Only a parent, whose
+ * caret is spoken for, carries the separate `⋯` toggle.
+ *
+ * The row body carries no interactive role of its own. It has to host a text editor once the
+ * subtree is collapsed, and interactive content nested inside a button is invalid HTML that
+ * swallows events — so the detail toggle is a sibling control rather than the row itself.
+ */
+export function RuleNodeEditor(props: { path: string; modelType: string }) {
+  const { path, modelType } = props;
   const { node, errors } = useRuleNode(path);
-  const { isExpanded, toggle, catalog } = useAccordion();
+  const { model, toggleCollapsed, toggleOpen, togglePin, openPopover, setOpenPopover, catalog } = useAccordion();
+
+  /** Binds one of this row's popups to the tree's single open slot. */
+  const popover = (kind: PopoverKind): { open: boolean; setOpen: (next: boolean) => void } => ({
+    open: openPopover === popoverKey(kind, path),
+    setOpen: (next: boolean) => setOpenPopover(next ? popoverKey(kind, path) : null),
+  });
 
   if (!node) return null;
 
-  const expanded = isExpanded(path);
   const kids = childPaths(node, path);
+  const hasChildren = kids.length > 0;
+  const collapsed = isCollapsed(model, path);
+  const open = isOpen(model, path);
+  const pinned = isPinned(model, path);
+  // A leaf's tree form and its text form are the same string, so it has nothing to toggle
+  // between and is always shown as DSL. Only the other case has a summary to render.
+  const inDslView = !hasChildren || collapsed;
+  const summary = inDslView ? null : summarize(node);
 
   // A quantifier's single child is scoped to the collection's element model type, not the parent's.
   const childModelType = isHigherOrderNode(node)
@@ -38,40 +90,82 @@ export function RuleNodeEditor(props: { path: string; depth: number; modelType: 
     : modelType;
 
   return (
-    <div className="node" style={{ '--depth': depth } as CSSProperties}>
-      {isHigherOrderNode(node) ? (
-        <QuantifierNode
+    <div className="node">
+      <div className="node-row">
+        {hasChildren ? (
+          <button
+            type="button"
+            className="node-chev"
+            aria-expanded={!collapsed}
+            aria-label={`${collapsed ? 'expand' : 'collapse'} ${path}`}
+            onClick={() => toggleCollapsed(path)}
+          >
+            {collapsed ? '▸' : '▾'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="node-chev"
+            aria-expanded={open}
+            aria-controls={panelId(path)}
+            aria-label={`details for ${path}`}
+            onClick={() => toggleOpen(path)}
+          >
+            {open ? '▾' : '▸'}
+          </button>
+        )}
+        <span className="node-body">
+          {summary === null ? (
+            <NodeDsl path={path} node={node} modelType={modelType} catalog={catalog} />
+          ) : (
+            <>
+              {isBinaryNode(node) ? (
+                <OperatorPicker path={path} node={node} {...popover('operator')} />
+              ) : (
+                <span className={`node-badge node-badge-${summary.kind}`}>{summary.badge}</span>
+              )}
+              {summary.description && <span className="node-desc">{summary.description}</span>}
+              {node.name && <span className="node-name">as &quot;{node.name}&quot;</span>}
+            </>
+          )}
+        </span>
+        <NodeMenu
           path={path}
-          node={node}
-          catalog={catalog}
-          modelType={modelType}
-          expanded={expanded}
-          onToggleExpand={() => toggle(path)}
+          // Only an operand of an n-ary operator can be removed; a NOT's child or a quantifier's
+          // body is the node's whole content, so removing it would leave the parent malformed.
+          canRemove={path.endsWith(']')}
+          {...popover('menu')}
+          onDetails={() => toggleOpen(path)}
         />
-      ) : (
-        <NodeToolbar
-          path={path}
-          node={node}
-          modelType={modelType}
-          catalog={catalog}
-          expanded={expanded}
-          onToggleExpand={() => toggle(path)}
-        />
-      )}
+        <button
+          type="button"
+          className={pinned ? 'node-pin pinned' : 'node-pin'}
+          aria-pressed={pinned}
+          aria-label={`${pinned ? 'unpin' : 'pin'} ${path}`}
+          onClick={() => togglePin(path)}
+        >
+          📌
+        </button>
+      </div>
       {errors.length > 0 && (
         <span role="alert" className="error">{errors.map((e) => e.message).join('; ')}</span>
       )}
-      {expanded && (
-        <>
-          <DecorationEditor path={path} node={node} />
-          {kids.length > 0 && (
-            <div className="node-kids">
-              {kids.map((childPath) => (
-                <RuleNodeEditor key={childPath} path={childPath} depth={depth + 1} modelType={childModelType} />
-              ))}
-            </div>
+      {open && (
+        <div className="node-detail" id={panelId(path)}>
+          {isHigherOrderNode(node) ? (
+            <QuantifierNode path={path} node={node} catalog={catalog} modelType={modelType} />
+          ) : (
+            <NodeToolbar path={path} node={node} />
           )}
-        </>
+          <DecorationEditor path={path} node={node} />
+        </div>
+      )}
+      {hasChildren && !collapsed && (
+        <div className="node-kids">
+          {kids.map((childPath) => (
+            <RuleNodeEditor key={childPath} path={childPath} modelType={childModelType} />
+          ))}
+        </div>
       )}
     </div>
   );

@@ -1,81 +1,74 @@
 import { useState } from 'react';
-import { listPaths, splitLast, type Catalog, type RuleDocument, type RulesApiClient } from '@motiv/rules-core';
-import { useCatalog, useRuleEditorStore } from '@motiv/rules-react';
+import type { Catalog, RulesApiClient } from '@motiv/rules-core';
+import { useCatalog } from '@motiv/rules-react';
 import { AccordionContext, RuleNodeEditor } from '../builder/RuleNodeEditor.js';
+import {
+  EMPTY_ACCORDION, closeAll, toggleCollapsed, toggleOpen, togglePin,
+  type AccordionModel,
+} from '../builder/accordion.js';
 import { MODEL_TYPE } from '../App.js';
 
 const ROOT = '$.rule';
-const MAX_EXPAND_DEPTH = 5;
-const EMPTY_CATALOG: Catalog = { specs: [], collections: [] };
-
-/** Depth of a node path: the number of dot-segments after the root. */
-function depthOf(path: string): number {
-  if (path === ROOT) return 0;
-  return path.slice(ROOT.length).split('.').filter(Boolean).length;
-}
+/** What a pane renders against until (or unless) the real catalog arrives. */
+export const EMPTY_CATALOG: Catalog = { specs: [], collections: [] };
 
 /**
- * The prefix identifying a node's sibling group: its parent path, or `null` for the root.
- * The root has no siblings, so it never collides with (nor is collapsed by) any real path.
+ * The recursive rule builder over the boolean grammar, without any surrounding pane chrome — so
+ * it can be hosted either by {@link BuilderPane} or as one surface of a pane that toggles between
+ * the builder and the DSL text editor.
+ *
+ * Accordion state is demo-local UI state, not document state, and is held here so that both the
+ * tree and the close-all strip read the one model.
  */
-function parentPrefixOf(path: string): string | null {
-  if (path === ROOT) return null;
-  return splitLast(path).parentPath;
-}
-
-/** Builds the initial expanded-paths set: root down to {@link MAX_EXPAND_DEPTH}. */
-function initialExpanded(document: RuleDocument): Set<string> {
-  const expanded = new Set<string>();
-  for (const { path } of listPaths(document)) {
-    if (depthOf(path) <= MAX_EXPAND_DEPTH) expanded.add(path);
-  }
-  return expanded;
-}
-
-/** The recursive single-open-accordion rule builder over the boolean grammar. */
-export function BuilderPane(props: { client: RulesApiClient }) {
-  const store = useRuleEditorStore();
+export function BuilderBody(props: { client: RulesApiClient }) {
   const catalogState = useCatalog(props.client);
   const catalog = catalogState.status === 'ready' ? catalogState.data : EMPTY_CATALOG;
 
-  const [expanded, setExpanded] = useState<Set<string>>(() => initialExpanded(store.getState().document));
+  const [model, setModel] = useState<AccordionModel>(EMPTY_ACCORDION);
+  /** Which row popup — an actions menu or an operator picker — is open. One at a time, tree-wide. */
+  const [openPopover, setOpenPopover] = useState<string | null>(null);
 
-  const toggle = (path: string): void => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(path)) {
-        next.delete(path);
-        return next;
-      }
-      const prefix = parentPrefixOf(path);
-      if (prefix !== null) {
-        for (const candidate of next) {
-          if (candidate !== path && parentPrefixOf(candidate) === prefix) next.delete(candidate);
-        }
-      }
-      next.add(path);
-      return next;
-    });
-  };
+  return (
+    <>
+      {catalogState.status === 'loading' && <p>Loading catalog…</p>}
+      {catalogState.status === 'error' && <p role="alert">Failed to load catalog.</p>}
+      {/* Height is reserved rather than conditional, so the tree does not jump when the first
+          node is pinned. */}
+      <div className="accordion-strip">
+        {model.pinned.size > 0 && (
+          <>
+            <span className="caption">{model.pinned.size} pinned</span>
+            <button type="button" className="btn" onClick={() => setModel(closeAll)}>
+              close all
+            </button>
+          </>
+        )}
+      </div>
+      <AccordionContext.Provider
+        value={{
+          model,
+          toggleCollapsed: (path) => setModel((prev) => toggleCollapsed(prev, path)),
+          toggleOpen: (path) => setModel((prev) => toggleOpen(prev, path)),
+          togglePin: (path) => setModel((prev) => togglePin(prev, path)),
+          openPopover,
+          setOpenPopover,
+          catalog,
+        }}
+      >
+        <RuleNodeEditor path={ROOT} modelType={MODEL_TYPE} />
+      </AccordionContext.Provider>
+    </>
+  );
+}
 
+/** The builder as a standalone pane, for hosts that show it without the DSL surface. */
+export function BuilderPane(props: { client: RulesApiClient }) {
   return (
     <section className="pane" aria-label="Builder">
       <div className="pane-header">
         <h2>Builder</h2>
-        <button
-          type="button"
-          className="btn ext-point"
-          disabled
-          title="requires backend (coming)"
-        >
-          parameters — coming
-        </button>
       </div>
-      {catalogState.status === 'loading' && <p>Loading catalog…</p>}
-      {catalogState.status === 'error' && <p role="alert">Failed to load catalog.</p>}
-      <AccordionContext.Provider value={{ isExpanded: (path) => expanded.has(path), toggle, catalog }}>
-        <RuleNodeEditor path={ROOT} depth={0} modelType={MODEL_TYPE} />
-      </AccordionContext.Provider>
+      <BuilderBody client={props.client} />
     </section>
   );
 }

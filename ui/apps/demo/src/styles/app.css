@@ -18,67 +18,264 @@ body {
   min-height: 100vh;
 }
 
-/* Shell layout: three panes side by side, collapsing to one column on narrow viewports. */
+/*
+  Shell layout: a fixed app bar (brand + breadcrumb + rule controls) above columns that sit
+  flush against each other — divider borders only, no gaps, no per-column shadow/radius. The
+  previous grid gave every pane its own border + radius + shadow *and* a gap between them,
+  which compounds into the "boxes inside boxes" look; a single shell frame with thin dividers
+  reads much lighter at the same information density. Collapses to stacked full-width
+  sections (divider moves from the right edge to the bottom) on narrow viewports.
+*/
 .app {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: calc(var(--space) * 2);
-  padding: calc(var(--space) * 2);
-  max-width: 1400px;
-  margin: 0 auto;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--sh-canvas);
+}
+
+/*
+  Sized to content rather than stretched to fill the viewport: with a fourth section
+  (CheckoutPane, below) after it, forcing this row to fill all remaining vertical space would
+  push that section down past a large dead gap of empty canvas whenever the columns' own
+  content is shorter than the viewport. Each pane instead caps its own body height and scrolls
+  internally (see `.pane-body`/`.surface-panel`), which is what actually needs to happen when a
+  column's content — the JSON document, say — grows taller than is comfortable.
+*/
+.shell-body {
+  display: flex;
+  align-items: stretch;
 }
 
 @media (max-width: 900px) {
-  .app {
-    grid-template-columns: 1fr;
+  .shell-body {
+    flex-direction: column;
   }
 }
 
-/* Pane card */
-.pane {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: calc(var(--space) * 2);
+/* App bar: brand mark, breadcrumb trail, model-type pill, then the rule picker/save controls */
+.appbar {
   display: flex;
-  flex-direction: column;
-  gap: var(--space);
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 46px;
+  padding: 8px 14px;
+  background: var(--sh-appbar);
+  border-bottom: 1px solid var(--border);
+  flex: none;
 }
 
-.pane h2 {
-  margin: 0 0 var(--space);
-  padding-bottom: var(--space);
+.appbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appbar-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 13px var(--sans);
+  color: #fff;
+  flex: none;
+}
+
+.appbar-wordmark {
+  font: 700 14px var(--sans);
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.breadcrumb-sep {
+  color: var(--faint);
+  font-size: 13px;
+}
+
+.breadcrumb-item {
+  font: 500 13px var(--sans);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.breadcrumb-current {
+  font: 600 13px var(--sans);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.model-pill {
+  margin-left: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 600 11px var(--mono);
+  color: var(--accent);
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.appbar-fill {
+  flex: 1;
+  min-width: 8px;
+}
+
+.appbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.appbar-controls .field {
+  flex-direction: row;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+}
+
+.appbar-controls .control {
+  width: auto;
+  height: 26px;
+  padding: 0 8px;
+  font-size: 0.75rem;
+}
+
+.rule-version {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Conflict banner: another writer saved a newer version */
+.conflict-banner {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  color: var(--danger);
+  font-size: 0.8rem;
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  padding: calc(var(--space) / 4) var(--space);
+}
+
+/* Pane: one divided column of the shell (or a full-width footer section below it) */
+.pane {
+  background: var(--sh-panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.pane:last-child {
+  border-right: none;
+}
+
+@media (max-width: 900px) {
+  .pane {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+/*
+  CheckoutPane sits below the three-column shell body, not beside it (the source design has no
+  fourth column for it — it's this demo's own addition). As a direct child of `.app`'s column
+  flex it must size to its content rather than compete with `.shell-body` for the remaining
+  vertical space, and its divider belongs on top, not the right.
+*/
+.app > .pane {
+  flex: none;
+  max-height: 40vh;
+  overflow: auto;
+  border-right: none;
+  border-top: 1px solid var(--border);
+}
+
+/*
+  Every pane opens with the same fixed-height title bar, which is either a bare `<h2>` or a
+  `.pane-header` row pairing the title with trailing controls (tabs, extension-point affordances).
+*/
+.pane > h2,
+.pane-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  margin: 0;
+  background: var(--sh-panel-head);
   border-bottom: 1px solid var(--border);
-  font-size: 1rem;
+  flex: none;
+}
+
+.pane > h2,
+.pane-header > h2 {
+  margin: 0;
+  font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--text);
 }
 
-/* Pane header row: title plus optional trailing controls (e.g. extension-point affordances) */
-.pane-header {
+/*
+  Scrollable body below a pane's title bar — `.surface-panel` is the EditorPane's own, which
+  additionally hosts the Builder/DSL tabpanel.
+*/
+.pane-body,
+.surface-panel {
+  max-height: 78vh;
+  overflow: auto;
+  padding: 12px 14px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: var(--space);
-  margin-bottom: var(--space);
-  padding-bottom: var(--space);
-  border-bottom: 1px solid var(--border);
 }
 
-.pane-header h2 {
-  margin: 0;
-  padding-bottom: 0;
-  border-bottom: none;
+/* micro label badge beside a pane title, e.g. "read-only · live" */
+.pane-badge {
+  font: 500 10px var(--sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
-/* Field: a label + control stack */
+.pane-header {
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: var(--space);
+}
+
+/*
+  At the three-column layout each pane is only ~400px wide, which is narrower than the header's
+  contents lay out at their natural widths. The controls keep theirs — a clipped tab or button is
+  an unusable one — so anything that may be shortened must opt in with `.truncate`.
+*/
+.pane-header > .btn,
+.pane-header > h2,
+.pane-header > .surface-tabs {
+  flex: none;
+}
+
+/* Field: a label + control stack (also used by the DSL payload popover's own fields) */
 .field {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space) / 2);
-  font-size: 0.875rem;
+  gap: calc(var(--space) / 4);
+  font-size: 0.8rem;
   color: var(--muted);
 }
 
@@ -89,9 +286,9 @@ body {
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: calc(var(--space) * 0.75) var(--space);
+  padding: calc(var(--space) * 0.5) calc(var(--space) * 0.75);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   resize: vertical;
 }
 
@@ -108,9 +305,10 @@ body {
   border-radius: var(--radius);
   background: var(--accent);
   color: var(--bg);
-  padding: calc(var(--space) * 0.75) calc(var(--space) * 1.5);
-  font-size: 0.9rem;
-  font-weight: 500;
+  height: 26px;
+  padding: 0 11px;
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.05s ease;
 }
@@ -148,11 +346,10 @@ body {
 /* Document JSON pane */
 .json {
   font-family: var(--mono);
-  font-size: 0.85rem;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space);
+  font-size: 12.5px;
+  line-height: 1.65;
+  background: transparent;
+  padding: 0;
   overflow-x: auto;
   white-space: pre;
 }
@@ -169,26 +366,203 @@ body {
 
 .error {
   color: var(--danger);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   background: color-mix(in srgb, var(--danger) 12%, transparent);
   border: 1px solid var(--danger);
   border-radius: var(--radius);
   padding: calc(var(--space) / 2) var(--space);
 }
 
-/* Builder: recursive accordion node */
+/*
+  Builder: a rule node's row. Two independent view concerns meet here — the caret folds the
+  subtree (structure, open by default), and the `⋯` toggle opens the detail panel (metadata and
+  edit controls, closed by default, single-open unless pinned). A collapsed node therefore costs
+  exactly one compact row rather than a full bordered card.
+
+  Indentation is structural rather than computed: a level's rows sit inside their parent's
+  `.node-kids`, whose left margin is the one indent step. Multiplying a `--depth` custom property
+  on top of that (as an earlier revision did) double-counts the nesting and fans the tree out
+  further at every level. `--depth` still earns its keep on `.assertion`, which renders the
+  justification tree as a flat list with no nesting to read the level from.
+*/
 .node {
+  display: flex;
+  flex-direction: column;
+}
+
+.node-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+  padding: 6px 9px;
+  background: var(--sh-inset);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space);
-  margin-left: calc(var(--depth, 0) * var(--space));
+  border-radius: 7px;
+}
+
+/* The caret discloses whatever is inside a node — children on a parent, metadata on a leaf — so
+   it is the one control on every row and is sized to read as such. */
+.node-chev {
+  appearance: none;
+  border: none;
+  background: transparent;
+  width: 16px;
+  flex: none;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+/* Colour carries the node's kind: operators accent, quantifiers muted, leaves plain text. */
+.node-badge {
+  font: 600 12.5px var(--mono);
+  white-space: nowrap;
+}
+
+/* A binary node's badge is also the control that changes its operator. It is stripped back to
+   read as the badge it replaces — the affordance is the hover fill and the caret, not a
+   form-control chrome that would shout louder than the expression around it. Its own popup
+   replaces the platform's, so the badge is exactly as wide as the operator it names rather than
+   as wide as the longest one on offer. */
+.node-operator {
+  appearance: none;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  padding: 1px 3px;
+  margin-left: -3px;
+  cursor: pointer;
+}
+
+/* Drawn in the flow rather than as a background, so the badge keeps hugging its label. */
+.node-operator::after {
+  content: '▾';
+  margin-left: 3px;
+  font-size: 11px;
+  vertical-align: 0;
+  opacity: 0.7;
+}
+
+.node-operator:hover,
+.node-operator:focus-visible,
+.node-operator[aria-expanded='true'] {
+  background-color: var(--bg);
+  outline: none;
+}
+
+/* Narrower than the actions menu: the entries are one word each. */
+.node-operator-menu { min-width: 96px; }
+
+.node-menu-item[aria-selected='true'] {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.node-badge-op { color: var(--accent); }
+.node-badge-quant { color: var(--muted); }
+.node-badge-spec { color: var(--text); }
+
+.node-desc {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.node-name {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+/* The badge/gloss/name group, or — once collapsed — the node's DSL text. Never interactive:
+   in DSL view it hosts a text editor, which cannot live inside a button. */
+.node-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Row controls stay quiet until the row is hovered or the control is active, so a resting tree
+   reads as structure rather than as a grid of buttons. Focus must still reveal them, or they
+   become keyboard-inaccessible. */
+.node-menu-trigger,
+.node-pin {
+  appearance: none;
+  border: none;
+  background: transparent;
+  flex: none;
+  padding: 0 4px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.node-row:hover .node-menu-trigger,
+.node-row:hover .node-pin,
+.node-menu-trigger:focus-visible,
+.node-pin:focus-visible,
+.node-menu-trigger.open,
+.node-pin.pinned {
+  opacity: 1;
+}
+
+.node-pin.pinned { color: var(--accent); }
+
+/* The actions menu, positioned in viewport coordinates by `placePopover` — the same flip-and-clamp
+   the DSL pane's payload card uses. Fixed rather than absolute so an ancestor's `overflow` cannot
+   clip it, since rows sit inside a scrolling pane. */
+.node-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 132px;
+  padding: 4px;
+  overflow-y: auto;
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  z-index: 30;
+}
+
+.node-menu-item {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.node-menu-item:hover,
+.node-menu-item:focus-visible {
+  background: var(--bg);
+}
+
+/* The detail panel: the node's edit controls and decoration fields, inset from the row by the
+   same step that indents the level below. */
+.node-detail {
   display: flex;
   flex-direction: column;
   gap: var(--space);
-  background: var(--surface);
+  margin: 0 0 8px 10px;
+  padding: 9px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
-.node-header.toolbar {
+.node-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -198,45 +572,459 @@ body {
 .node-kids {
   display: flex;
   flex-direction: column;
-  gap: var(--space);
+  margin-left: 10px;
+}
+
+/* A node's DSL text. `min-width: 0` is load-bearing: `.node-row` is a flex container, and a flex
+   item's default `min-width: auto` floors it at its content width — without this the ellipsis
+   never engages and a long expression pushes the row controls off the end. */
+.node-dsl {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 12.5px/1.4 var(--mono);
+  color: var(--dsl-fg);
+}
+
+/* Read-state token colours, sharing the custom properties the CodeMirror highlight style binds
+   to, so a row reads identically before and after it is focused for editing. */
+.tok-spec { color: var(--dsl-spec); }
+.tok-paramRef { color: var(--dsl-param); }
+.tok-keyword,
+.tok-quantifier { color: var(--dsl-keyword); }
+.tok-type { color: var(--dsl-type); }
+.tok-operator { color: var(--dsl-operator); }
+.tok-paren,
+.tok-brace { color: var(--dsl-bracket); }
+.tok-colon,
+.tok-equals { color: var(--dsl-punctuation); }
+.tok-string { color: var(--dsl-string); }
+.tok-expression { color: var(--dsl-expression); }
+.tok-number { color: var(--dsl-number); }
+.tok-error { color: var(--danger); }
+
+button.node-dsl {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: text;
+}
+
+/* Stacked, not side by side: an error placed beside the field competes with it for the row's
+   width, and it appears exactly when the expression is half-typed and needs that width most. */
+.node-dsl-editing {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  overflow: visible;
+  white-space: normal;
+}
+
+.node-dsl-host {
+  width: 100%;
+  min-width: 0;
+}
+
+/* The editor sheds the pane chrome: no gutter, no page-height, no vertical padding, so the row
+   keeps the height it had while it was static text. */
+.node-dsl-host .cm-editor { height: auto; background: transparent; }
+.node-dsl-host .cm-content { padding: 0; }
+
+/* One line, truncated — the full text is on the element's `title`. Without `min-width: 0` a flex
+   item is floored at its content width, so a long message would widen the row instead. */
+.node-dsl-error {
+  min-width: 0;
+  padding: 1px 6px;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Reserved-height strip above the tree: it holds the pin count and close-all once anything is
+   pinned, and stays empty (but present) otherwise so the tree never shifts underneath. */
+.accordion-strip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: calc(var(--space) / 2);
+  min-height: 26px;
+  padding: 0 2px;
 }
 
 .decoration {
   display: flex;
   flex-direction: column;
   gap: calc(var(--space) / 2);
-  padding: var(--space);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.btn-icon {
-  appearance: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  padding: calc(var(--space) / 4) calc(var(--space) / 2);
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-.btn-icon:hover {
-  background: var(--bg);
 }
 
 /* Evaluate outcome */
 .outcome {
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
 }
 
 /* Justification tree row, indented by depth */
 .assertion {
-  padding-left: calc(var(--depth, 0) * var(--space) * 2);
-  font-size: 0.9rem;
+  padding-left: calc(var(--depth, 0) * 18px);
+  font-size: 0.8rem;
   display: flex;
   align-items: center;
+  gap: calc(var(--space) / 2);
+}
+
+/* Checkout outcome: Approved/Rejected plus the two rule verdicts */
+.checkout-outcome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+.verdict h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.verdict ul {
+  margin: calc(var(--space) / 2) 0 0;
+  padding-left: calc(var(--space) * 2.5);
+  font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   DSL editor — surface tabs, editor frame, sync pill, conflict banner,
+   hover tooltip and payload popover. Colours come from the --dsl-* tokens.
+   ========================================================================== */
+
+/* Surface tabs: the Builder/DSL switch living in the pane header, as a segmented control */
+.surface-tabs {
+  display: inline-flex;
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.tab {
+  appearance: none;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  height: 24px;
+  padding: 0 11px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab.active {
+  background: var(--sh-panel);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 14%);
+}
+
+.pane-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Opts a flex item into giving up its width: it shortens to an ellipsis instead of wrapping. */
+.truncate {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The panel both tabs swap the contents of */
+.surface-panel {
+  max-height: 78vh;
+  overflow: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+/* Editor frame: positioned so CodeMirror's own overlays have a containing block to sit in */
+.dsl-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--dsl-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.dsl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  padding: calc(var(--space) / 2) var(--space);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.dsl-filename {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.dsl-toolbar button,
+.dsl-conflict button,
+.dsl-popover-actions button {
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  padding: calc(var(--space) / 2) var(--space);
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.dsl-toolbar button:hover,
+.dsl-conflict button:hover,
+.dsl-popover-actions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* A definite height, so the CodeMirror view below can fill it and scroll internally */
+.dsl-surface {
+  flex: none;
+  height: 320px;
+  overflow: auto;
+}
+
+.dsl-surface .cm-editor {
+  height: 100%;
+}
+
+/* Sync pill: how the buffer currently relates to the document */
+.dsl-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0 calc(var(--space) * 0.75);
+  font-size: 0.75rem;
+  line-height: 1.8;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.dsl-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.dsl-pill-synced { color: var(--dsl-ok); }
+.dsl-pill-dirty { color: var(--dsl-warn); }
+.dsl-pill-error { color: var(--dsl-err); }
+
+/* Conflict banner: the tree moved under a dirty buffer */
+.dsl-conflict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space);
+  padding: calc(var(--space) / 2) var(--space);
+  background: var(--dsl-banner-bg);
+  border-bottom: 1px solid var(--dsl-banner-bd);
+  color: var(--dsl-banner-fg);
+  font-size: 0.8rem;
+}
+
+.dsl-conflict span {
+  flex: 1;
+}
+
+/* Hover tooltip: the diagnostic under the pointer (chrome is themed in theme.ts) */
+.dsl-hover {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 4);
+  max-width: 320px;
+  padding: calc(var(--space) / 2) var(--space);
+  font-size: 0.8rem;
+}
+
+.dsl-hover-code {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.dsl-hover-message {
+  line-height: 1.4;
+}
+
+.dsl-hover-path {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+/*
+  Payload chip: the affordance that opens a spec node's decorations, drawn at the end of its
+  token and inside it (see payloadChips.ts). Its glyph is a pseudo-element so the button stays
+  textless — the chip is chrome sitting inside the content, and text in there reads as part of
+  the document.
+
+  A chip is dim until its own spec name is hovered, so a document full of specs is not a document
+  full of buttons — but never invisible, since a chip nobody can find is the caret trigger it
+  replaced with extra steps. The hover target is the name rather than the line: a line holds
+  every chip on it, and lighting them all up says nothing about which one you are reaching for.
+*/
+.dsl-chip {
+  appearance: none;
+  margin-left: 0.15em;
+  padding: 0 0.15em;
+  border: none;
+  border-radius: calc(var(--radius) / 2);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.75em;
+  line-height: 1;
+  vertical-align: baseline;
+  opacity: 0.35;
+  cursor: pointer;
+  transition: opacity 120ms ease, color 120ms ease;
+}
+
+.dsl-chip::before {
+  content: '✎';
+}
+
+.dsl-spec-hit:hover .dsl-chip {
+  opacity: 1;
+}
+
+.dsl-chip:hover {
+  background: var(--accent-weak);
+  color: var(--accent);
+}
+
+.dsl-chip:focus-visible {
+  opacity: 1;
+  background: var(--accent-weak);
+  color: var(--accent);
+}
+
+/*
+  Payload popover: decorations for the spec node whose chip was pressed. It is a card anchored to
+  that node's token, so it is positioned against the viewport and free to overhang the pane —
+  the pane is narrower than the card, and confining it there would blanket the very text it
+  annotates. `top`/`left`/`max-height` are measured and applied inline (see popoverPlacement.ts),
+  so the offsets are deliberately absent here and the card stays hidden until they are known.
+*/
+.dsl-popover {
+  position: fixed;
+  z-index: 10;
+  width: 320px;
+  max-width: calc(100vw - var(--space) * 2);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 2);
+  padding: var(--space);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 18%);
+}
+
+/*
+  The card takes focus when it opens, so the keyboard lands somewhere useful — but it is a
+  container, not a control, and a ring around the whole thing reads as a selected element. Its
+  fields keep their own focus styling.
+*/
+.dsl-popover:focus {
+  outline: none;
+}
+
+.dsl-popover-head {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+}
+
+.dsl-popover-spec {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.dsl-popover-close {
+  appearance: none;
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dsl-popover-close:hover {
+  color: var(--text);
+}
+
+.dsl-badge {
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent-weak);
+  color: var(--accent);
+  padding: 0 calc(var(--space) / 2);
+  font-size: 0.7rem;
+}
+
+.dsl-popover-desc {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.dsl-popover-meta,
+.dsl-popover-hint {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.dsl-popover-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+.dsl-popover-actions {
+  display: flex;
+  justify-content: flex-end;
   gap: calc(var(--space) / 2);
 }

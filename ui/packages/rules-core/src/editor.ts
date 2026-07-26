@@ -102,6 +102,15 @@ export class RuleEditorStore {
     this.#notify();
   }
 
+  /** Replaces the entire document as a fresh baseline: history and errors are cleared. */
+  loadDocument(document: RuleDocument): void {
+    this.#document = structuredClone(document);
+    this.#errors = [];
+    this.#undo = [];
+    this.#redo = [];
+    this.#notify();
+  }
+
   undo(): void {
     const previous = this.#undo.pop();
     if (!previous) return;

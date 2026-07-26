@@ -30,7 +30,11 @@ public sealed class SpecRegistry
     /// <summary>Registers a synchronous spec under the given name.</summary>
     /// <typeparam name="TModel">The model type the spec evaluates against.</typeparam>
     /// <typeparam name="TMetadata">The metadata type the spec yields.</typeparam>
-    /// <param name="name">The stable name that rule documents use to reference the spec.</param>
+    /// <param name="name">
+    /// The stable name that rule documents use to reference the spec. Must start with an ASCII letter
+    /// and contain only ASCII letters, digits, <c>-</c> or <c>_</c>, so it can be referenced safely
+    /// from documents and DSL text.
+    /// </param>
     /// <param name="spec">The spec to register.</param>
     /// <param name="description">An optional human-readable description surfaced in a catalog UI.</param>
     /// <returns>This registry, to allow chained registration.</returns>
@@ -40,7 +44,11 @@ public sealed class SpecRegistry
     /// <summary>Registers an asynchronous spec under the given name.</summary>
     /// <typeparam name="TModel">The model type the spec evaluates against.</typeparam>
     /// <typeparam name="TMetadata">The metadata type the spec yields.</typeparam>
-    /// <param name="name">The stable name that rule documents use to reference the spec.</param>
+    /// <param name="name">
+    /// The stable name that rule documents use to reference the spec. Must start with an ASCII letter
+    /// and contain only ASCII letters, digits, <c>-</c> or <c>_</c>, so it can be referenced safely
+    /// from documents and DSL text.
+    /// </param>
     /// <param name="spec">The spec to register.</param>
     /// <param name="description">An optional human-readable description surfaced in a catalog UI.</param>
     /// <returns>This registry, to allow chained registration.</returns>
@@ -84,6 +92,11 @@ public sealed class SpecRegistry
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("A registered spec name must not be empty or whitespace.", nameof(name));
+        if (!IsIdentifierLike(name))
+            throw new ArgumentException(
+                $"The spec name '{name}' is not a valid identifier: names are referenced from rule " +
+                "documents and DSL text, so they must start with an ASCII letter and contain only " +
+                "ASCII letters, digits, '-' or '_'.", nameof(name));
         if (spec is null)
             throw new ArgumentNullException(nameof(spec));
         if (_entries.ContainsKey(name))
@@ -92,4 +105,22 @@ public sealed class SpecRegistry
         _entries[name] = new SpecRegistryEntry(name, modelType, metadataType, isAsync, spec, description);
         return this;
     }
+
+    /// <summary>An ASCII letter followed by ASCII letters, digits, '-' or '_' — safe to reference from documents and DSL text.</summary>
+    private static bool IsIdentifierLike(string name)
+    {
+        if (!IsAsciiLetter(name[0]))
+            return false;
+
+        foreach (var character in name)
+        {
+            if (!IsAsciiLetter(character) && character is not ((>= '0' and <= '9') or '-' or '_'))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool IsAsciiLetter(char character) =>
+        character is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z');
 }

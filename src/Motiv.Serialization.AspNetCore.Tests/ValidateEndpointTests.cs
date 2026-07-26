@@ -62,6 +62,22 @@ public class ValidateEndpointTests
     }
 
     [Fact]
+    public async Task Should_return_400_for_a_missing_document()
+    {
+        // Arrange
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+
+        // Act — no document property at all
+        var response = await client.PostAsJsonAsync("/api/rules/validate", new { modelType = "number" });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("error").GetString()!.ShouldContain("document");
+    }
+
+    [Fact]
     public async Task Should_return_400_for_an_unknown_model_type()
     {
         // Arrange

@@ -87,6 +87,48 @@ public class EvaluateEndpointTests
     }
 
     [Fact]
+    public async Task Should_return_400_for_a_missing_document()
+    {
+        // Arrange
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+        var request = new
+        {
+            modelType = "number",
+            model = JsonDocument.Parse("5").RootElement
+        };
+
+        // Act — no document property at all
+        var response = await client.PostAsJsonAsync("/api/rules/evaluate", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("error").GetString()!.ShouldContain("document");
+    }
+
+    [Fact]
+    public async Task Should_return_400_for_a_missing_model()
+    {
+        // Arrange
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+        var request = new
+        {
+            modelType = "number",
+            document = JsonDocument.Parse("""{ "rule": { "spec": "is-positive" } }""").RootElement
+        };
+
+        // Act — no model property at all (distinct from an explicit JSON null)
+        var response = await client.PostAsJsonAsync("/api/rules/evaluate", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("error").GetString()!.ShouldContain("model");
+    }
+
+    [Fact]
     public async Task Should_return_400_for_an_unknown_model_type()
     {
         // Arrange

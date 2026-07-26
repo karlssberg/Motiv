@@ -95,3 +95,15 @@ Propositions built from an async predicate via [`Spec.BuildAsync()`](./async/Bui
 ## Observability
 
 Motiv reports every top-level evaluation via OpenTelemetry &mdash; a `motiv.evaluate` span per `Evaluate()`/`EvaluateAsync()` call plus `motiv.evaluations`/`motiv.evaluation.duration` metrics &mdash; but emits nothing unless your application subscribes to the `"Motiv"` activity source and meter. See [Observability](./observability/index.md) for the full tag/metric reference, the `Matches`/`Where()` emission rules, and sensitive-data guidance.
+
+## Live Rules
+
+Live rules (in the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages) wrap serialized rule documents in typed, hot-swappable handles: declare a rule as a sealed class, inject the concrete type wherever the decision is made, and replace the implementation at runtime &mdash; through HTTP endpoints with optimistic concurrency, or directly through a `RuleSet` &mdash; without a restart and without tearing in-flight evaluations. See [Live Rules](./live-rules/index.md) for the four rule flavours, the concurrency model, and the async loading boundary.
+
+| Type / Method                                                            | Description                                                                                       |
+|---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| [Rule Classes](./live-rules/Rules.md)                                     | `Rule`, `PolicyRule`, `AsyncRule`, `AsyncPolicyRule` &mdash; declaring and evaluating live rules. |
+| [RuleSet](./live-rules/RuleSet.md)                                        | Registers rules, binds defaults at startup, and applies `Update()`/`Revert()` with optimistic concurrency. |
+| [RuleDocuments](./live-rules/RuleDocuments.md)                            | `FromJson()` and `Embedded()` &mdash; rule-document sources for rule defaults.                    |
+| [ASP.NET Core Integration](./live-rules/AspNetCore.md)                    | `AddMotivRules()`, `AddRule()`, `MapMotivRules()`, and the `GET`/`PUT`/`DELETE` rule endpoints.   |
+| [DeserializeAsyncSpec()](./live-rules/DeserializeAsyncSpec.md)            | Loads rule documents into the async hierarchy, lifting sync references and enforcing the sync/async boundary. |

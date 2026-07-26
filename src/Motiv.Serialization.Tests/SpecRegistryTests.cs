@@ -105,6 +105,45 @@ public class SpecRegistryTests
         act.ShouldThrow<ArgumentException>();
     }
 
+    [Theory]
+    [InlineData("is-active")]
+    [InlineData("is_active")]
+    [InlineData("isActive2")]
+    [InlineData("a")]
+    public void Should_accept_identifier_like_names(string name)
+    {
+        // Arrange & Act
+        var registry = new SpecRegistry().Register(name, IsPositive);
+
+        // Assert
+        registry.Find(name).ShouldNotBeNull();
+    }
+
+    [Theory]
+    [InlineData("has space")]
+    [InlineData("dotted.name")]
+    [InlineData("slash/name")]
+    [InlineData("2-starts-with-digit")]
+    [InlineData("-starts-with-hyphen")]
+    [InlineData("_starts-with-underscore")]
+    [InlineData("curly{name}")]
+    [InlineData("quoted\"name")]
+    [InlineData("naïve")]
+    public void Should_reject_names_with_characters_outside_the_identifier_set(string name)
+    {
+        // Arrange
+        var registry = new SpecRegistry();
+
+        // Act
+        var act = () => registry.Register(name, IsPositive);
+
+        // Assert — names are referenced from rule documents and DSL text, so the
+        // allowed alphabet is pinned: an ASCII letter followed by ASCII letters, digits, '-' or '_'.
+        var message = act.ShouldThrow<ArgumentException>().Message;
+        message.ShouldContain(name);
+        message.ShouldContain("letter");
+    }
+
     [Fact]
     public void Should_count_registrations()
     {

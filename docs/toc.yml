@@ -18,4 +18,6 @@ items:
     href: async/toc.yml
   - name: Observability
     href: observability/toc.yml
+  - name: Live Rules
+    href: live-rules/toc.yml
 

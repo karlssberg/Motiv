@@ -17,7 +17,7 @@ internal sealed class MetadataRuleBinder<TMetadata>(SpecRegistry registry, RuleS
         return document.Name is null ? root : Spec.Build(root).Create(document.Name);
     }
 
-    private SpecBase<TModel, TMetadata>? BindNode<TModel>(RuleNode node, List<RuleError> errors)
+    internal SpecBase<TModel, TMetadata>? BindNode<TModel>(RuleNode node, List<RuleError> errors)
     {
         if (node.WhenTrueText is not null)
         {

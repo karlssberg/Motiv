@@ -2,7 +2,7 @@ import type { Catalog, HigherOrderNode } from '@motiv/rules-core';
 import { useRuleEditorStore } from '@motiv/rules-react';
 import {
   KINDS, N_KINDS, quantifierKindOf, setQuantifierCollection, setQuantifierKind, setQuantifierN,
-  toggleNot, type QuantifierKind, type QuantifierLike,
+  type QuantifierKind, type QuantifierLike,
 } from './mutations.js';
 
 const KIND_LABELS: Record<QuantifierKind, string> = {
@@ -13,31 +13,22 @@ const KIND_LABELS: Record<QuantifierKind, string> = {
   asAtMostNSatisfied: 'at most N satisfied',
 };
 
-/** A compact collapsed-state summary of a quantifier node, e.g. `≥2 of orders`. */
-function badgeFor(kind: QuantifierKind, path: string, n: unknown): string {
-  switch (kind) {
-    case 'asAllSatisfied': return `all of ${path}`;
-    case 'asAnySatisfied': return `any of ${path}`;
-    case 'asNSatisfied': return `=${n ?? 1} of ${path}`;
-    case 'asAtLeastNSatisfied': return `≥${n ?? 1} of ${path}`;
-    case 'asAtMostNSatisfied': return `≤${n ?? 1} of ${path}`;
-    default: return path;
-  }
-}
-
 /**
- * Header/config row for a higher-order quantifier node: kind, target collection, N (when relevant).
- * The node's single child is rendered by {@link RuleNodeEditor}'s existing `childPaths` recursion.
+ * Config controls for a higher-order quantifier node: kind, target collection, N (when relevant).
+ * They live in the node's detail panel, alongside its decoration fields.
+ *
+ * These configure the quantifier without changing what it is — swapping `all` for `atLeast`
+ * leaves a quantifier row hosting a quantifier panel — which is why they belong here while
+ * composition (negating, wrapping, removing) does not. Its single child is rendered by the
+ * `childPaths` recursion.
  */
 export function QuantifierNode(props: {
   path: string;
   node: HigherOrderNode;
   catalog: Catalog;
   modelType: string;
-  expanded: boolean;
-  onToggleExpand: () => void;
 }) {
-  const { path, node, catalog, modelType, expanded, onToggleExpand } = props;
+  const { path, node, catalog, modelType } = props;
   const store = useRuleEditorStore();
   const quantNode = node as unknown as QuantifierLike;
   const kind = quantifierKindOf(quantNode);
@@ -46,73 +37,47 @@ export function QuantifierNode(props: {
   const availableCollections = catalog.collections.filter((c) => c.parentModelType === modelType);
 
   return (
-    <div className="node-header toolbar">
-      <button
-        type="button"
-        className="btn-icon"
-        aria-label={`${expanded ? 'collapse' : 'expand'} ${path}`}
-        onClick={onToggleExpand}
-      >
-        {expanded ? '▾' : '▸'}
-      </button>
-      {!expanded && <span className="badge">{badgeFor(kind, String(quantNode.path), quantNode.n)}</span>}
-      {expanded && (
-        <>
-          <label className="field">
-            <span hidden>quantifier kind at {path}</span>
-            <select
-              aria-label={`quantifier kind at ${path}`}
-              className="control"
-              value={kind}
-              onChange={(e) => setQuantifierKind(store, path, quantNode, e.target.value as QuantifierKind)}
-            >
-              {KINDS.map((k) => (
-                <option key={k} value={k}>{KIND_LABELS[k]}</option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span hidden>quantifier collection at {path}</span>
-            <select
-              aria-label={`quantifier collection at ${path}`}
-              className="control"
-              value={quantNode.path}
-              onChange={(e) => setQuantifierCollection(store, path, quantNode, e.target.value)}
-            >
-              {availableCollections.map((c) => (
-                <option key={c.path} value={c.path}>{c.path}</option>
-              ))}
-            </select>
-          </label>
-          {isNKind && (
-            <label className="field">
-              <span hidden>quantifier n at {path}</span>
-              <input
-                type="number"
-                min={0}
-                aria-label={`quantifier n at ${path}`}
-                className="control"
-                value={typeof quantNode.n === 'number' ? quantNode.n : 1}
-                onChange={(e) => setQuantifierN(store, path, quantNode, Number(e.target.value))}
-              />
-            </label>
-          )}
-          <span className="caption">for each {collection?.elementModelType ?? '?'}</span>
-          <button
-            type="button"
-            className="btn"
-            aria-label={`toggle NOT at ${path}`}
-            onClick={() => toggleNot(store, path, node)}
-          >
-            NOT
-          </button>
-        </>
+    <div className="node-toolbar">
+      <label className="field">
+        <span hidden>quantifier kind at {path}</span>
+        <select
+          aria-label={`quantifier kind at ${path}`}
+          className="control"
+          value={kind}
+          onChange={(e) => setQuantifierKind(store, path, quantNode, e.target.value as QuantifierKind)}
+        >
+          {KINDS.map((k) => (
+            <option key={k} value={k}>{KIND_LABELS[k]}</option>
+          ))}
+        </select>
+      </label>
+      <label className="field">
+        <span hidden>quantifier collection at {path}</span>
+        <select
+          aria-label={`quantifier collection at ${path}`}
+          className="control"
+          value={quantNode.path}
+          onChange={(e) => setQuantifierCollection(store, path, quantNode, e.target.value)}
+        >
+          {availableCollections.map((c) => (
+            <option key={c.path} value={c.path}>{c.path}</option>
+          ))}
+        </select>
+      </label>
+      {isNKind && (
+        <label className="field">
+          <span hidden>quantifier n at {path}</span>
+          <input
+            type="number"
+            min={0}
+            aria-label={`quantifier n at ${path}`}
+            className="control"
+            value={typeof quantNode.n === 'number' ? quantNode.n : 1}
+            onChange={(e) => setQuantifierN(store, path, quantNode, Number(e.target.value))}
+          />
+        </label>
       )}
-      {path.endsWith(']') && (
-        <button type="button" className="btn-danger" aria-label={`remove ${path}`} onClick={() => store.removeOperand(path)}>
-          Remove
-        </button>
-      )}
+      <span className="caption">for each {collection?.elementModelType ?? '?'}</span>
     </div>
   );
 }

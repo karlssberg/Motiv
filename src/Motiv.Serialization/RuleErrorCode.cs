@@ -40,5 +40,11 @@ public enum RuleErrorCode
     UnknownParameterReference,
 
     /// <summary>A higher-order node references a collection path that is not registered.</summary>
-    UnknownCollection
+    UnknownCollection,
+
+    /// <summary>An async spec was referenced inside a higher-order subtree, which must be fully synchronous.</summary>
+    AsyncSpecInHigherOrder,
+
+    /// <summary>A policy rule was updated with a document whose bound root is not a policy.</summary>
+    PolicyRequired
 }

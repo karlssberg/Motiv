@@ -16,17 +16,45 @@ export interface CatalogCollection {
   elementModelType: string;
 }
 
-/** The full catalog: registered specs and collections. */
+/**
+ * A minimal structural JSON Schema — the subset the backend's
+ * `JsonSchemaExporter` emits for POCO metadata and model types.
+ * Unknown keywords are preserved via the index signature and ignored
+ * by {@link validateAgainstSchema} (permissive-by-default).
+ */
+export interface JsonSchema {
+  /** One JSON type name, or a union (may include `"null"` and `"integer"`). */
+  type?: string | string[];
+  properties?: Record<string, JsonSchema>;
+  required?: string[];
+  items?: JsonSchema;
+  enum?: unknown[];
+  /** ECMAScript regex applied to string values (unanchored, per JSON Schema). */
+  pattern?: string;
+  [keyword: string]: unknown;
+}
+
+/**
+ * The full catalog: registered specs, collections, and type schemas.
+ * The schema maps are optional so existing fixtures and empty-catalog
+ * placeholders remain valid; the backend always sends both.
+ */
 export interface Catalog {
   specs: CatalogEntry[];
   collections: CatalogCollection[];
+  /** JSON Schemas for whenTrue/whenFalse payloads, keyed by the `metadataType` strings entries carry (e.g. `"String"`). */
+  metadataTypes?: Record<string, JsonSchema>;
+  /** JSON Schemas for model JSON, keyed by registered model id (e.g. `"customer"`). */
+  modelTypes?: Record<string, JsonSchema>;
 }
 
-/** Stable machine-readable rule-document error codes. */
+/** Stable machine-readable rule-document error codes (mirrors Motiv.Serialization.RuleErrorCode). */
 export type RuleErrorCode =
   | 'InvalidNode' | 'UnknownSpec' | 'ModelTypeMismatch' | 'MetadataTypeMismatch'
   | 'MixedWhenTrueFalseKinds' | 'ExpressionsNotEnabled' | 'AsyncSpecInSyncLoad'
-  | 'DocumentTooLarge' | 'UnknownCollection';
+  | 'DocumentTooLarge' | 'MissingParameter' | 'SurplusParameter'
+  | 'ParameterTypeMismatch' | 'UnknownParameterReference' | 'UnknownCollection'
+  | 'AsyncSpecInHigherOrder' | 'PolicyRequired';
 
 /** A single validation or load error. */
 export interface RuleError {
@@ -73,3 +101,26 @@ export interface EvaluateRequest {
   document: RuleDocument;
   model: unknown;
 }
+
+/** One live-rule listing from GET /rules. */
+export interface RuleListEntry {
+  name: string;
+  modelType: string;
+  metadataType: string;
+  isAsync: boolean;
+  isPolicy: boolean;
+  version: number;
+  description?: string | null;
+}
+
+/** A rule's current document (null while on a code-defined default) and version. */
+export interface RuleGetResponse {
+  document: RuleDocument | null;
+  version: number;
+}
+
+/** The outcome of a save or revert: updated, a version conflict, or validation errors. */
+export type RuleSaveResult =
+  | { outcome: 'updated'; version: number }
+  | { outcome: 'conflict'; currentVersion: number }
+  | { outcome: 'invalid'; errors: RuleError[] };

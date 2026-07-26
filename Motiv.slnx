@@ -6,6 +6,7 @@
     <Project Path="src/examples/Motiv.EntityFramework.Tests/Motiv.EntityFramework.Tests.csproj" />
     <Project Path="src/examples/Motiv.Poker.Tests/Motiv.Poker.Tests.csproj" />
     <Project Path="src/examples/Motiv.Poker/Motiv.Poker.csproj" />
+    <Project Path="src/examples/Motiv.RulesEngine.Sample.Tests/Motiv.RulesEngine.Sample.Tests.csproj" />
     <Project Path="src/examples/Motiv.RulesEngine.Sample/Motiv.RulesEngine.Sample.csproj" />
     <Project Path="src/examples/Motiv.SmartHome.Tests/Motiv.SmartHome.Tests.csproj" />
     <Project Path="src/examples/Motiv.SmartHome/Motiv.SmartHome.csproj" />

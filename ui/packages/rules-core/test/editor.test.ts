@@ -63,6 +63,32 @@ describe('RuleEditorStore history', () => {
   });
 });
 
+describe('loadDocument', () => {
+  it('replaces the whole document and clears history and errors', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    store.replaceNode('$.rule', { spec: 'b' });
+    store.setErrors([{ path: '$.rule', code: 'UnknownSpec', message: 'x' }]);
+
+    store.loadDocument({ rule: { spec: 'c' } });
+
+    const state = store.getState();
+    expect(state.document).toEqual({ rule: { spec: 'c' } });
+    expect(state.errors).toEqual([]);
+    expect(state.canUndo).toBe(false); // a load is a fresh baseline, not an edit
+    expect(state.canRedo).toBe(false);
+  });
+
+  it('notifies subscribers', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    let notified = 0;
+    store.subscribe(() => { notified += 1; });
+
+    store.loadDocument({ rule: { spec: 'b' } });
+
+    expect(notified).toBe(1);
+  });
+});
+
 describe('errorsForNode', () => {
   const errors: RuleError[] = [
     { path: '$.rule.and[0]', code: 'UnknownSpec', message: 'x' },

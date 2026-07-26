@@ -7,15 +7,17 @@ export function JsonPane() {
 
   return (
     <section aria-label="Document" className="pane">
-      <h2>Document</h2>
-      <pre aria-label="rule document" className="json">{JSON.stringify(state.document, null, 2)}</pre>
-      {state.errors.length > 0 && (
-        <ul aria-label="validation errors" className="errors">
-          {state.errors.map((error, i) => (
-            <li key={`${error.path}-${i}`} role="alert" className="error">{error.code} at {error.path}: {error.message}</li>
-          ))}
-        </ul>
-      )}
+      <h2>Document<span className="pane-badge">read-only · live</span></h2>
+      <div className="pane-body">
+        <pre aria-label="rule document" className="json">{JSON.stringify(state.document, null, 2)}</pre>
+        {state.errors.length > 0 && (
+          <ul aria-label="validation errors" className="errors">
+            {state.errors.map((error, i) => (
+              <li key={`${error.path}-${i}`} role="alert" className="error">{error.code} at {error.path}: {error.message}</li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }

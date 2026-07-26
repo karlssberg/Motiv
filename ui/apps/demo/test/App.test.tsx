@@ -8,13 +8,14 @@ function testClient(): RulesApiClient {
     getCatalog: vi.fn().mockResolvedValue([]),
     validate: vi.fn().mockResolvedValue({ errors: [] }),
     evaluate: vi.fn(),
+    listRules: vi.fn().mockResolvedValue([]),
   } as unknown as RulesApiClient;
 }
 
 describe('App', () => {
   it('renders the three panes', () => {
     render(<App client={testClient()} store={new RuleEditorStore({ rule: { spec: 'is-active' } })} />);
-    expect(screen.getByRole('region', { name: 'Builder' })).toBeDefined();
+    expect(screen.getByRole('region', { name: 'Editor' })).toBeDefined();
     expect(screen.getByRole('region', { name: 'Document' })).toBeDefined();
     expect(screen.getByRole('region', { name: 'Evaluate' })).toBeDefined();
   });

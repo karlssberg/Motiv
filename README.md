@@ -212,6 +212,35 @@ result.Satisfied;  // false
 result.Assertions; // ["2 is not negative", "3 is not negative"]
 ```
 
+### Live Rules
+
+Hot-swap a running application's rules without redeploying. Declare a rule as a
+sealed class — the type is its identity — with a compiled spec (or a JSON rule
+document) as its default implementation:
+
+```csharp
+public sealed class CanCheckoutRule() : Rule<Customer, string>(
+    "can-checkout", CanCheckoutSpec, "Gate for the checkout flow");
+```
+
+Wire the rule up and inject the concrete type wherever the decision is made:
+
+```csharp
+builder.Services.AddMotivRules(registry, options)
+    .AddRule<CanCheckoutRule>();
+
+app.MapMotivRules("/api/rules");
+
+app.MapPost("/api/checkout", (CanCheckoutRule canCheckout, Customer customer) =>
+    Results.Json(canCheckout.Evaluate(customer).Assertions));
+```
+
+`PUT /api/rules/rules/can-checkout` replaces the implementation live — every
+evaluation reads an immutable snapshot, writes are protected by optimistic
+concurrency (`409` on a stale `baseVersion`), and `DELETE` reverts to the
+default. Available via the `Motiv.Serialization` and
+`Motiv.Serialization.AspNetCore` packages.
+
 ## Quick Start
 
 Install the Motiv NuGet package:

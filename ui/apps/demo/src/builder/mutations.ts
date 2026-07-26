@@ -1,9 +1,23 @@
-import { isNotNode, type Catalog, type RuleEditorStore, type RuleNode } from '@motiv/rules-core';
+import {
+  binaryOperator, operandsOf,
+  type BinaryNode, type BinaryOperator, type RuleEditorStore, type RuleNode,
+} from '@motiv/rules-core';
 
-/** Wraps a node in `not`, or unwraps it if it's already negated. */
-export function toggleNot(store: RuleEditorStore, path: string, node: RuleNode): void {
-  if (isNotNode(node)) store.unwrap(path);
-  else store.replaceNode(path, { not: node });
+/** The five binary operators, in the order the picker offers them. */
+export const BINARY_OPERATORS: readonly BinaryOperator[] = ['and', 'or', 'xor', 'andAlso', 'orElse'];
+
+/**
+ * Rebuilds a binary node under a different operator, keeping its operands in order and its
+ * decoration (`name`/`whenTrue`/`whenFalse`). The old operator key is dropped, since the key
+ * *is* the operator — a node carrying two of them would be ambiguous rather than merely wrong.
+ */
+export function setBinaryOperator(
+  store: RuleEditorStore, path: string, node: BinaryNode, operator: BinaryOperator,
+): void {
+  const previous = binaryOperator(node);
+  if (previous === operator) return;
+  const { [previous]: _operands, ...rest } = node as unknown as Record<string, unknown>;
+  store.replaceNode(path, { ...rest, [operator]: operandsOf(node) } as unknown as RuleNode);
 }
 
 /** The five higher-order quantifier keys, in canonical order. */
@@ -27,16 +41,8 @@ export function quantifierKindOf(node: QuantifierLike): QuantifierKind {
 }
 
 /** The single child rule node wrapped by a higher-order quantifier node. */
-export function quantifierChild(node: QuantifierLike): RuleNode {
+function quantifierChild(node: QuantifierLike): RuleNode {
   return node[quantifierKindOf(node)] as RuleNode;
-}
-
-/** Adds a new `asAllSatisfied` quantifier operand over the first collection scoped to `modelType`. */
-export function insertQuantifier(store: RuleEditorStore, operatorPath: string, catalog: Catalog, modelType: string): void {
-  const col = catalog.collections.find((c) => c.parentModelType === modelType);
-  if (!col) return;
-  const childSpec = catalog.specs.find((s) => s.modelType === col.elementModelType)?.name ?? 'spec';
-  store.addOperand(operatorPath, { asAllSatisfied: { spec: childSpec }, path: col.path } as unknown as RuleNode);
 }
 
 /**
