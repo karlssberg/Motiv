@@ -57,6 +57,11 @@ by whole trailing segment, so `"loyalty.json"` never binds `"e-loyalty.json"`. A
   the exception, never at first evaluation.
 - **Reverts re-bind the document.** `DELETE`/`Revert()` restores the document default as a new,
   incremented version.
+- **`Embedded(name)` infers its caller from the stack.** Call it directly from a method in the
+  assembly holding the resource. Called from inside a short lambda that another assembly invokes
+  &mdash; a DI factory, a test assertion wrapper &mdash; the JIT may fold that lambda into its
+  invoker and the lookup will target the wrong assembly. Pass the assembly explicitly with
+  `Embedded(name, assembly)` wherever it can be named.
 - **Documents are the interchange format.** The same JSON shape flows through the
   [HTTP endpoints](AspNetCore.md), so a document authored or exported from a rule-builder UI can be
   embedded verbatim as a rule's default.

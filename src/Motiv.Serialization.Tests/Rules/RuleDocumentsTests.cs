@@ -1,7 +1,17 @@
+using System.Reflection;
+
 namespace Motiv.Serialization.Tests.Rules;
 
 public class RuleDocumentsTests
 {
+    // Embedded(string) infers its caller from the stack. Inside a lambda that Shouldly invokes,
+    // the JIT can fold the lambda into Shouldly's frame, leaving Shouldly as the apparent caller
+    // and the lookup pointed at the wrong assembly. The throw-assertions below therefore name the
+    // assembly, so what they are testing is the message rather than the JIT. Calls made straight
+    // from a test method body are unaffected — xUnit invokes those by reflection — and they are
+    // what covers the inferred-caller path.
+    private static readonly Assembly TestAssembly = typeof(RuleDocumentsTests).Assembly;
+
     [Fact]
     public void Should_wrap_raw_json()
     {
@@ -44,7 +54,7 @@ public class RuleDocumentsTests
     public void Should_throw_a_helpful_error_for_a_missing_resource()
     {
         // Act & Assert
-        Should.Throw<InvalidOperationException>(() => RuleDocuments.Embedded("nope.json"))
+        Should.Throw<InvalidOperationException>(() => RuleDocuments.Embedded("nope.json", TestAssembly))
             .Message.ShouldContain("nope.json");
     }
 
@@ -71,7 +81,9 @@ public class RuleDocumentsTests
         // Arrange — "shared-rule.json" is embedded under both Rules/dup and Rules/other
 
         // Act & Assert
-        var message = Should.Throw<InvalidOperationException>(() => RuleDocuments.Embedded("shared-rule.json")).Message;
+        var message = Should
+            .Throw<InvalidOperationException>(() => RuleDocuments.Embedded("shared-rule.json", TestAssembly))
+            .Message;
         message.ShouldContain("shared-rule.json");
         message.ShouldContain("Multiple");
     }
@@ -79,7 +91,8 @@ public class RuleDocumentsTests
     [Fact]
     public void Should_reject_an_empty_resource_name()
     {
-        // Act & Assert
+        // Act & Assert — left inferring its caller, unlike the throw-assertions above: the name
+        // is rejected before any assembly is consulted, so which one it resolves to cannot matter.
         Should.Throw<ArgumentException>(() => RuleDocuments.Embedded("  "));
     }
 }

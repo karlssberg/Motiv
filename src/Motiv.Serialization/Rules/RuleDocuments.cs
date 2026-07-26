@@ -32,6 +32,14 @@ public static class RuleDocuments
     /// <param name="resourceName">The embedded resource name or trailing path segment.</param>
     /// <returns>A document source for a rule constructor.</returns>
     /// <exception cref="InvalidOperationException">No unique matching resource exists.</exception>
+    /// <remarks>
+    /// The caller is inferred from the stack. When this is invoked from inside a short lambda
+    /// that another assembly calls — a test assertion wrapper, a DI factory — the JIT may fold
+    /// that lambda into its invoker, so the lookup targets the invoker's assembly instead.
+    /// Prefer <see cref="Embedded(string, Assembly)"/> wherever the assembly can be named.
+    /// </remarks>
+    // Without this, the method could fold into its caller and the assembly reported would be the
+    // caller's caller. It cannot protect a caller that is itself inlined.
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static RuleDocumentSource Embedded(string resourceName) =>
         Embedded(resourceName, Assembly.GetCallingAssembly());
