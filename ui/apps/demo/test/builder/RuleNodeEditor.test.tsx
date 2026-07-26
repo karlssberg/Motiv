@@ -89,6 +89,28 @@ describe('BuilderPane accordion (boolean)', () => {
     expect(screen.getByRole('button', { name: 'details for $.rule.and[1]' })).toBeDefined();
   });
 
+  it('no longer offers a spec select — the row is the way to change a spec', async () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    renderWith(store);
+    await openDetail('$.rule');
+    expect(screen.queryByLabelText('spec at $.rule')).toBeNull();
+  });
+
+  it('no longer offers an add-quantifier button', async () => {
+    const store = new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
+    renderWith(store);
+    await openDetail('$.rule');
+    expect(screen.queryByRole('button', { name: 'add quantifier to $.rule' })).toBeNull();
+  });
+
+  it('still wraps, negates and adds operands', async () => {
+    const store = new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
+    renderWith(store);
+    await openDetail('$.rule');
+    fireEvent.click(screen.getByRole('button', { name: 'add operand to $.rule' }));
+    expect((store.getState().document.rule as { and: unknown[] }).and).toHaveLength(3);
+  });
+
   it('offers remove only on operand elements, not on a NOT child', async () => {
     const store = new RuleEditorStore({ rule: { not: { spec: 'is-active' } } });
     renderWith(store);

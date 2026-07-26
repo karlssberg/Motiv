@@ -1,8 +1,9 @@
 import {
-  isBinaryNode, isSpecNode, type BinaryOperator, type Catalog, type RuleNode,
+  binaryOperator, isBinaryNode, isSpecNode, operandsOf,
+  type BinaryOperator, type Catalog, type RuleNode,
 } from '@motiv/rules-core';
 import { useRuleEditorStore } from '@motiv/rules-react';
-import { insertQuantifier, toggleNot } from './mutations.js';
+import { toggleNot } from './mutations.js';
 
 const WRAP_OPTIONS: Array<{ label: string; op: BinaryOperator }> = [
   { label: 'AND', op: 'and' },
@@ -13,10 +14,13 @@ const WRAP_OPTIONS: Array<{ label: string; op: BinaryOperator }> = [
 ];
 
 /**
- * The edit controls for a rule node: spec select, NOT, wrap, add/remove operand. They sit under
- * the node's summary row — which, along with expand/collapse for every node kind, is owned by
- * {@link RuleNodeEditor} — and stay visible whether or not that node is expanded, because a leaf
- * has no chevron of its own to bring them back with once the accordion has collapsed it.
+ * The structural edit controls for a rule node: NOT, wrap, add/remove operand. They live inside
+ * the node's detail panel, which is closed by default.
+ *
+ * There is deliberately no spec picker here. A node's expression is edited as DSL text in its
+ * own row, where completion offers the same catalog specs scoped the same way — so a picker
+ * would be a second, narrower way to do what the row already does. `+ quantifier` is gone for
+ * the same reason: completion offers the five quantifier keywords.
  */
 export function NodeToolbar(props: {
   path: string;
@@ -29,23 +33,25 @@ export function NodeToolbar(props: {
   const specOptions = catalog.specs.filter((s) => s.modelType === modelType);
   const fallbackSpec = specOptions[0]?.name ?? 'spec';
 
+  /**
+   * Adds an operand and hands it the keyboard with its seeded spec selected, so the first
+   * keystroke replaces it. That is what makes `+ operand` read as "type a new expression"
+   * rather than "insert a placeholder you must then hunt down".
+   */
+  const addOperand = (): void => {
+    if (!isBinaryNode(node)) return;
+    const childPath = `${path}.${binaryOperator(node)}[${operandsOf(node).length}]`;
+    store.addOperand(path, { spec: fallbackSpec });
+    // The row mounts on the next render, so the focus waits for it.
+    requestAnimationFrame(() => {
+      document
+        .querySelector<HTMLButtonElement>(`[aria-label="edit expression at ${childPath}"]`)
+        ?.focus();
+    });
+  };
+
   return (
     <div className="node-toolbar">
-      {isSpecNode(node) && (
-        <label className="field">
-          <span hidden>spec at {path}</span>
-          <select
-            aria-label={`spec at ${path}`}
-            className="control"
-            value={node.spec}
-            onChange={(e) => store.replaceNode(path, { spec: e.target.value })}
-          >
-            {specOptions.map((entry) => (
-              <option key={entry.name} value={entry.name}>{entry.name}</option>
-            ))}
-          </select>
-        </label>
-      )}
       {isSpecNode(node) && (
         <button
           type="button"
@@ -75,19 +81,9 @@ export function NodeToolbar(props: {
           type="button"
           className="btn"
           aria-label={`add operand to ${path}`}
-          onClick={() => store.addOperand(path, { spec: fallbackSpec })}
+          onClick={addOperand}
         >
           + operand
-        </button>
-      )}
-      {isBinaryNode(node) && (
-        <button
-          type="button"
-          className="btn"
-          aria-label={`add quantifier to ${path}`}
-          onClick={() => insertQuantifier(store, path, catalog, modelType)}
-        >
-          + quantifier
         </button>
       )}
       {path.endsWith(']') && (

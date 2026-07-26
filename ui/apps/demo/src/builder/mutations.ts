@@ -1,4 +1,4 @@
-import { isNotNode, type Catalog, type RuleEditorStore, type RuleNode } from '@motiv/rules-core';
+import { isNotNode, type RuleEditorStore, type RuleNode } from '@motiv/rules-core';
 
 /** Wraps a node in `not`, or unwraps it if it's already negated. */
 export function toggleNot(store: RuleEditorStore, path: string, node: RuleNode): void {
@@ -29,14 +29,6 @@ export function quantifierKindOf(node: QuantifierLike): QuantifierKind {
 /** The single child rule node wrapped by a higher-order quantifier node. */
 export function quantifierChild(node: QuantifierLike): RuleNode {
   return node[quantifierKindOf(node)] as RuleNode;
-}
-
-/** Adds a new `asAllSatisfied` quantifier operand over the first collection scoped to `modelType`. */
-export function insertQuantifier(store: RuleEditorStore, operatorPath: string, catalog: Catalog, modelType: string): void {
-  const col = catalog.collections.find((c) => c.parentModelType === modelType);
-  if (!col) return;
-  const childSpec = catalog.specs.find((s) => s.modelType === col.elementModelType)?.name ?? 'spec';
-  store.addOperand(operatorPath, { asAllSatisfied: { spec: childSpec }, path: col.path } as unknown as RuleNode);
 }
 
 /**
