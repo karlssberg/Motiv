@@ -21,12 +21,20 @@ const openDetail = async (path: string) => {
 };
 
 describe('QuantifierNode', () => {
-  it('shows the collection name (not the tree path) in the collapsed row', async () => {
+  it('shows the collection name (not the tree path) while expanded', async () => {
+    const store = new RuleEditorStore({ rule: { asAllSatisfied: { spec: 'is-large-order' }, path: 'orders' } });
+    renderWith(store);
+    await screen.findByRole('button', { name: 'collapse $.rule' });
+    expect(screen.getByText('all')).toBeDefined();
+    expect(screen.getByText('in orders')).toBeDefined();
+  });
+
+  it('collapses to the quantifier and its body as one line of DSL', async () => {
     const store = new RuleEditorStore({ rule: { asAllSatisfied: { spec: 'is-large-order' }, path: 'orders' } });
     renderWith(store);
     fireEvent.click(await screen.findByRole('button', { name: 'collapse $.rule' }));
-    expect(screen.getByText('all')).toBeDefined();
-    expect(screen.getByText('in orders')).toBeDefined();
+    expect(screen.getByLabelText('expression at $.rule').textContent)
+      .toBe('all in orders { is-large-order }');
   });
 
   it('inserts an all-satisfied quantifier over a collection with an element-scoped child', async () => {

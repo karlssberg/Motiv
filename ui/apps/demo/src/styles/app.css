@@ -507,6 +507,36 @@ body {
   margin-left: 10px;
 }
 
+/* A node's DSL text. `min-width: 0` is load-bearing: `.node-row` is a flex container, and a flex
+   item's default `min-width: auto` floors it at its content width — without this the ellipsis
+   never engages and a long expression pushes the row controls off the end. */
+.node-dsl {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 12.5px/1.4 var(--mono);
+  color: var(--dsl-fg);
+}
+
+/* Read-state token colours, sharing the custom properties the CodeMirror highlight style binds
+   to, so a row reads identically before and after it is focused for editing. */
+.tok-spec { color: var(--dsl-spec); }
+.tok-paramRef { color: var(--dsl-param); }
+.tok-keyword,
+.tok-quantifier { color: var(--dsl-keyword); }
+.tok-type { color: var(--dsl-type); }
+.tok-operator { color: var(--dsl-operator); }
+.tok-paren,
+.tok-brace { color: var(--dsl-bracket); }
+.tok-colon,
+.tok-equals { color: var(--dsl-punctuation); }
+.tok-string { color: var(--dsl-string); }
+.tok-expression { color: var(--dsl-expression); }
+.tok-number { color: var(--dsl-number); }
+.tok-error { color: var(--danger); }
+
 /* Reserved-height strip above the tree: it holds the pin count and close-all once anything is
    pinned, and stays empty (but present) otherwise so the tree never shifts underneath. */
 .accordion-strip {
