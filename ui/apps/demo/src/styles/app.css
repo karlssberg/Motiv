@@ -575,16 +575,19 @@ button.node-dsl {
   cursor: text;
 }
 
+/* Stacked, not side by side: an error placed beside the field competes with it for the row's
+   width, and it appears exactly when the expression is half-typed and needs that width most. */
 .node-dsl-editing {
   display: flex;
-  align-items: center;
-  gap: calc(var(--space) / 2);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
   overflow: visible;
   white-space: normal;
 }
 
 .node-dsl-host {
-  flex: 1 1 auto;
+  width: 100%;
   min-width: 0;
 }
 
@@ -593,10 +596,15 @@ button.node-dsl {
 .node-dsl-host .cm-editor { height: auto; background: transparent; }
 .node-dsl-host .cm-content { padding: 0; }
 
+/* One line, truncated — the full text is on the element's `title`. Without `min-width: 0` a flex
+   item is floored at its content width, so a long message would widen the row instead. */
 .node-dsl-error {
-  flex: none;
+  min-width: 0;
   padding: 1px 6px;
   font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Reserved-height strip above the tree: it holds the pin count and close-all once anything is

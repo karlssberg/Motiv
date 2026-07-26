@@ -84,6 +84,38 @@ describe('DSL row editing', () => {
     expect(screen.getByRole('alert').textContent).toMatch(/expected|unexpected/i);
   });
 
+  it('clears a refused commit\'s error as soon as you keep typing', async () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    const { container } = renderWith(store);
+    await focusRow('$.rule');
+
+    // Half-typed parenthesis: the commit is refused and the error appears.
+    replaceBuffer(container, '(is-active & is-adult');
+    fireEvent.keyDown(content(container), { key: 'Enter' });
+    expect(screen.getByRole('alert')).toBeDefined();
+
+    // Finishing the expression must not leave the message sitting beside the field, competing
+    // with it for the row's width while you are still typing.
+    replaceBuffer(container, '(is-active & is-adult)');
+    expect(screen.queryByRole('alert')).toBeNull();
+
+    fireEvent.keyDown(content(container), { key: 'Enter' });
+    expect(store.getState().document.rule).toEqual({
+      and: [{ spec: 'is-active' }, { spec: 'is-adult' }],
+    });
+  });
+
+  it('keeps the whole message reachable when the row truncates it', async () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    const { container } = renderWith(store);
+    await focusRow('$.rule');
+    replaceBuffer(container, '(is-active');
+    fireEvent.keyDown(content(container), { key: 'Enter' });
+
+    const alert = screen.getByRole('alert');
+    expect(alert.getAttribute('title')).toBe(alert.textContent);
+  });
+
   it('escape reverts to the node as it stands', async () => {
     const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
     const { container } = renderWith(store);

@@ -96,10 +96,29 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
           autocompletion({ override: [createMotivCompletion(scoped)] }),
           // Ahead of the default bindings, which would otherwise claim Enter for a newline.
           keymap.of([
-            { key: 'Enter', run: (editor) => commit(editor.state.doc.toString()) },
+            {
+              key: 'Enter',
+              run: (editor) => {
+                commit(editor.state.doc.toString());
+                // Consumed either way. Reporting a refused commit as unhandled passes the
+                // keystroke to whatever binds Enter next — the default newline, which the
+                // single-line filter then swallows, so the key appears to do nothing at all.
+                //
+                // Deferring to the completion popup here would be redundant: `autocompletion`
+                // registers its own bindings at the highest precedence, so an open popup has
+                // already claimed Enter before this runs.
+                return true;
+              },
+            },
             { key: 'Escape', run: () => { stop(); return true; } },
           ]),
           keymap.of([...defaultKeymap, ...historyKeymap, ...completionKeymap]),
+          // A refused commit's message describes the buffer as it was when refused, so the next
+          // keystroke retires it. Left standing it would sit beside the field for the whole time
+          // you spend typing the fix — which, for a half-typed group, is the whole expression.
+          EditorView.updateListener.of((update) => {
+            if (update.docChanged) setError(null);
+          }),
           EditorView.domEventHandlers({
             blur: (_event, editor) => { commit(editor.state.doc.toString()); return false; },
           }),
@@ -119,7 +138,12 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
     return (
       <span className="node-dsl node-dsl-editing">
         <span ref={host} className="node-dsl-host" />
-        {error && <span role="alert" className="error node-dsl-error">{error}</span>}
+        {/* Below the field rather than beside it: a message long enough to name what is missing
+            is long enough to crowd out the expression you are typing. Truncated to one line,
+            with the full text on the title so nothing is lost. */}
+        {error && (
+          <span role="alert" className="error node-dsl-error" title={error}>{error}</span>
+        )}
       </span>
     );
   }
