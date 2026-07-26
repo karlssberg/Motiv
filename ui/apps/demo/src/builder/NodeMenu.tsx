@@ -1,15 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { useRuleEditorStore } from '@motiv/rules-react';
-import { placePopover } from '../dsl/popoverPlacement.js';
+import { usePopoverCard } from './usePopoverCard.js';
 
 /** One entry in a node's actions menu. */
 interface MenuAction {
   label: string;
   run: () => void;
 }
-
-/** A card that has yet to be measured is laid out off-screen rather than flashing in the wrong place. */
-const UNMEASURED: CSSProperties = { position: 'fixed', top: 0, left: 0, visibility: 'hidden' };
 
 /**
  * A node's actions, opened from the `⋯` on its summary row.
@@ -34,60 +30,12 @@ export function NodeMenu(props: {
 }) {
   const { path, canRemove, open, onDetails, setOpen } = props;
   const store = useRuleEditorStore();
-
-  const [style, setStyle] = useState<CSSProperties>(UNMEASURED);
-
-  const trigger = useRef<HTMLButtonElement | null>(null);
-  const card = useRef<HTMLDivElement | null>(null);
-
-  /** Closes the menu and returns the keyboard to the control that opened it. */
-  const close = (): void => {
-    setOpen(false);
-    setStyle(UNMEASURED);
-    trigger.current?.focus();
-  };
+  const { trigger, card, style, close } = usePopoverCard(open, setOpen);
 
   const actions: MenuAction[] = [
     { label: 'Details', run: onDetails },
     ...(canRemove ? [{ label: 'Remove', run: () => store.removeOperand(path) }] : []),
   ];
-
-  // Measured after paint, so the card's natural size is known before it is positioned. The
-  // placement math is the DSL pane's, which already handles flipping above a low anchor and
-  // clamping into the viewport.
-  useLayoutEffect(() => {
-    const anchor = trigger.current?.getBoundingClientRect();
-    const box = card.current?.getBoundingClientRect();
-    if (!open || !anchor || !box) return;
-    const placed = placePopover(
-      { top: anchor.top, bottom: anchor.bottom, left: anchor.left },
-      { width: box.width, height: box.height },
-      { width: window.innerWidth, height: window.innerHeight, minTop: 0 },
-    );
-    setStyle({ position: 'fixed', top: placed.top, left: placed.left, maxHeight: placed.maxHeight });
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') close();
-    };
-    // `mousedown`, not `click`: a click that starts outside and ends on the menu would otherwise
-    // dismiss and re-target, and the menu should be gone before anything under it is pressed.
-    const onPointerDown = (event: MouseEvent): void => {
-      const target = event.target as Node;
-      if (card.current?.contains(target) || trigger.current?.contains(target)) return;
-      setOpen(false);
-    };
-
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('mousedown', onPointerDown);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      document.removeEventListener('mousedown', onPointerDown);
-    };
-  }, [open]);
 
   return (
     <>

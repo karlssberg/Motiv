@@ -423,34 +423,42 @@ body {
 }
 
 /* A binary node's badge is also the control that changes its operator. It is stripped back to
-   read as the badge it replaces — the affordance is the hover underline and the caret, not a
-   form-control chrome that would shout louder than the expression around it. */
+   read as the badge it replaces — the affordance is the hover fill and the caret, not a
+   form-control chrome that would shout louder than the expression around it. Its own popup
+   replaces the platform's, so the badge is exactly as wide as the operator it names rather than
+   as wide as the longest one on offer. */
 .node-operator {
   appearance: none;
   border: none;
   border-radius: 4px;
   background: transparent;
-  padding: 1px 14px 1px 3px;
+  padding: 1px 3px;
   margin-left: -3px;
   cursor: pointer;
-  /* Room for the caret drawn just inside the right edge. */
-  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
-                    linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position: right 5px top 55%, right 1px top 55%;
-  background-size: 4px 4px, 4px 4px;
-  background-repeat: no-repeat;
+}
+
+/* Drawn in the flow rather than as a background, so the badge keeps hugging its label. */
+.node-operator::after {
+  content: '▾';
+  margin-left: 3px;
+  font-size: 9px;
+  vertical-align: 1px;
+  opacity: 0.7;
 }
 
 .node-operator:hover,
-.node-operator:focus-visible {
+.node-operator:focus-visible,
+.node-operator[aria-expanded='true'] {
   background-color: var(--bg);
   outline: none;
 }
 
-/* The popup is the platform's, so its options need readable colours of their own. */
-.node-operator option {
-  background: var(--sh-inset);
-  color: var(--text);
+/* Narrower than the actions menu: the entries are one word each. */
+.node-operator-menu { min-width: 96px; }
+
+.node-menu-item[aria-selected='true'] {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .node-badge-op { color: var(--accent); }
