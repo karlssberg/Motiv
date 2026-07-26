@@ -16,13 +16,7 @@ async function buildHigherOrderRule(page: Page): Promise<void> {
   // root row present (catalog loaded)
   await expect(page.getByRole('button', { name: 'edit expression at $.rule' })).toBeVisible();
 
-  await typeExpression(page, '$.rule', 'is-adult');
-
-  // wrap in AND, which seeds a second operand for the quantifier to replace
-  await page.getByRole('button', { name: 'details for $.rule' }).click();
-  await page.getByRole('button', { name: 'wrap $.rule in AND', exact: true }).click();
-
-  await typeExpression(page, '$.rule.and[1]', 'all in orders { is-large-order }');
+  await typeExpression(page, '$.rule', 'is-adult & all in orders { is-large-order }');
 
   // the document reflects the higher-order node over the orders collection
   await expect(page.getByLabel('rule document')).toContainText('asAllSatisfied');

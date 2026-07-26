@@ -2,7 +2,7 @@ import type { Catalog, HigherOrderNode } from '@motiv/rules-core';
 import { useRuleEditorStore } from '@motiv/rules-react';
 import {
   KINDS, N_KINDS, quantifierKindOf, setQuantifierCollection, setQuantifierKind, setQuantifierN,
-  toggleNot, type QuantifierKind, type QuantifierLike,
+  type QuantifierKind, type QuantifierLike,
 } from './mutations.js';
 
 const KIND_LABELS: Record<QuantifierKind, string> = {
@@ -15,9 +15,12 @@ const KIND_LABELS: Record<QuantifierKind, string> = {
 
 /**
  * Config controls for a higher-order quantifier node: kind, target collection, N (when relevant).
- * They sit under the node's summary row — chevron and badge alike live in {@link RuleNodeEditor},
- * which owns expand/collapse for every node kind — and, like {@link NodeToolbar}, stay visible
- * whether or not the node is expanded. Its single child is rendered by the `childPaths` recursion.
+ * They live in the node's detail panel, alongside its decoration fields.
+ *
+ * These configure the quantifier without changing what it is — swapping `all` for `atLeast`
+ * leaves a quantifier row hosting a quantifier panel — which is why they belong here while
+ * composition (negating, wrapping, removing) does not. Its single child is rendered by the
+ * `childPaths` recursion.
  */
 export function QuantifierNode(props: {
   path: string;
@@ -75,19 +78,6 @@ export function QuantifierNode(props: {
         </label>
       )}
       <span className="caption">for each {collection?.elementModelType ?? '?'}</span>
-      <button
-        type="button"
-        className="btn"
-        aria-label={`toggle NOT at ${path}`}
-        onClick={() => toggleNot(store, path, node)}
-      >
-        NOT
-      </button>
-      {path.endsWith(']') && (
-        <button type="button" className="btn-danger" aria-label={`remove ${path}`} onClick={() => store.removeOperand(path)}>
-          Remove
-        </button>
-      )}
     </div>
   );
 }

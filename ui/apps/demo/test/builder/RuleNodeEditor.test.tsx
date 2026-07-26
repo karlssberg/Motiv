@@ -34,23 +34,24 @@ describe('BuilderPane accordion (boolean)', () => {
     expect(await screen.findByRole('button', { name: 'details for $.rule.and[1]' })).toBeDefined();
   });
 
-  it('wraps a leaf in AND and shows two operands', async () => {
-    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
-    renderWith(store);
+  it('holds nothing that can change the node it belongs to', async () => {
+    const store = new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
+    const { container } = renderWith(store);
     await openDetail('$.rule');
-    fireEvent.click(screen.getByRole('button', { name: 'wrap $.rule in AND' }));
-    const rule = store.getState().document.rule as { and?: unknown[] };
-    expect(rule.and).toHaveLength(2);
+
+    // A control here that re-kinded the node would re-render the panel into a different thing —
+    // the reveal invalidating its own trigger. Structure is authored in the row instead.
+    for (const name of ['toggle NOT at $.rule', 'wrap $.rule in AND', 'add operand to $.rule']) {
+      expect(screen.queryByRole('button', { name })).toBeNull();
+    }
+    expect(container.querySelector('.node-detail .decoration')).not.toBeNull();
   });
 
-  it('toggles NOT on a leaf and back', async () => {
-    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+  it('offers no remove, which would delete the panel you opened', async () => {
+    const store = new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
     renderWith(store);
-    await openDetail('$.rule');
-    fireEvent.click(screen.getByRole('button', { name: 'toggle NOT at $.rule' }));
-    expect(store.getState().document.rule).toEqual({ not: { spec: 'is-active' } });
-    fireEvent.click(screen.getByRole('button', { name: 'toggle NOT at $.rule' }));
-    expect(store.getState().document.rule).toEqual({ spec: 'is-active' });
+    await openDetail('$.rule.and[1]');
+    expect(screen.queryByRole('button', { name: 'remove $.rule.and[1]' })).toBeNull();
   });
 
   it('edits whenTrue decoration into the document', async () => {
@@ -103,14 +104,6 @@ describe('BuilderPane accordion (boolean)', () => {
     expect(screen.queryByRole('button', { name: 'add quantifier to $.rule' })).toBeNull();
   });
 
-  it('still wraps, negates and adds operands', async () => {
-    const store = new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
-    renderWith(store);
-    await openDetail('$.rule');
-    fireEvent.click(screen.getByRole('button', { name: 'add operand to $.rule' }));
-    expect((store.getState().document.rule as { and: unknown[] }).and).toHaveLength(3);
-  });
-
   it('opens a leaf\'s metadata from its caret, which is the leaf\'s only disclosure control', async () => {
     const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
     const { container } = renderWith(store);
@@ -139,10 +132,4 @@ describe('BuilderPane accordion (boolean)', () => {
       .toContain('node-detail-toggle');
   });
 
-  it('offers remove only on operand elements, not on a NOT child', async () => {
-    const store = new RuleEditorStore({ rule: { not: { spec: 'is-active' } } });
-    renderWith(store);
-    await openDetail('$.rule.not');
-    expect(screen.queryByRole('button', { name: 'remove $.rule.not' })).toBeNull();
-  });
 });

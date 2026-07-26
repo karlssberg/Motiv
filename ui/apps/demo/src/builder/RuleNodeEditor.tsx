@@ -135,7 +135,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
           {isHigherOrderNode(node) ? (
             <QuantifierNode path={path} node={node} catalog={catalog} modelType={modelType} />
           ) : (
-            <NodeToolbar path={path} node={node} modelType={modelType} catalog={catalog} />
+            <NodeToolbar path={path} node={node} />
           )}
           <DecorationEditor path={path} node={node} />
         </div>

@@ -38,15 +38,12 @@ describe('QuantifierNode', () => {
       .toBe('all in orders { is-large-order }');
   });
 
-  it('authors a quantifier by typing it into an operand row', async () => {
+  it('authors a quantifier by typing it into the row', async () => {
     const store = new RuleEditorStore({ rule: { spec: 'is-adult' } });
     const { container } = renderWith(store);
-    await openDetail('$.rule');
 
-    fireEvent.click(screen.getByRole('button', { name: 'wrap $.rule in AND' })); // AND[is-adult, is-adult]
-
-    fireEvent.focus(screen.getByRole('button', { name: 'edit expression at $.rule.and[1]' }));
-    replaceBuffer(container, 'all in orders { is-large-order }');
+    fireEvent.focus(await screen.findByRole('button', { name: 'edit expression at $.rule' }));
+    replaceBuffer(container, 'is-adult & all in orders { is-large-order }');
     fireEvent.keyDown(container.querySelector('.cm-content')!, { key: 'Enter' });
 
     const q = store.getState().document.rule as unknown as { and: Array<Record<string, unknown>> };
