@@ -39,6 +39,7 @@ material you consult one node at a time.
 | Close all | A strip above the root, shown only while something is pinned |
 | Collapsed subtree | Renders as **one line of editable DSL**, not a static summary |
 | Caret semantics | A **representation toggle**: tree view ⇄ DSL text view |
+| Leaves | Permanently in DSL view — an inert bullet, no caret |
 | Inline editor | One **CodeMirror instance**, mounted only in the focused row |
 | Completion scope | Filtered to the row's **model type** — better-scoped than the DSL pane |
 | Spec picker | **Removed.** Completion replaces it |
@@ -110,6 +111,14 @@ This is the pane-level Builder/DSL toggle applied recursively per node, which
 is also what makes the row editable for free — if a row *is* DSL text, editing
 it is just editing text.
 
+**A leaf is permanently in DSL view.** `printBody` renders a spec node as its
+bare name, so a leaf's tree form and its text form are the same string — there
+is nothing to toggle between, and it gets an inert bullet where a parent gets a
+caret. This is not a special case bolted on; it is what keeps DSL view
+*universal*, which the authoring story depends on. `+ operand` seeds a leaf, so
+if leaves were excluded from DSL view there would be no way to type a new
+expression at all.
+
 ### `printInline` (new, `@motiv/rules-core`)
 
 `print(document)` cannot serve this: it takes a whole document, and
@@ -161,7 +170,8 @@ keyboard traversal.
 ```
 
 - **Caret** — only when the node has children. `aria-expanded`, labelled
-  `collapse {path}` / `expand {path}`. Toggles `collapsed`.
+  `collapse {path}` / `expand {path}`. Toggles `collapsed`. A leaf renders an
+  inert bullet in the same slot, so rows stay aligned down the tree.
 - **Row body** — the badge + gloss + name when expanded, or the DSL text when
   collapsed. Carries `aria-expanded` and `aria-controls` for the detail panel.
 - **Pin** — `aria-pressed`, labelled `pin {path}` / `unpin {path}`. Always
@@ -183,7 +193,7 @@ the source of truth for those classes.
 
 | Event | Behaviour |
 |---|---|
-| Focus / click a collapsed row | Mount the editor with the full untruncated text |
+| Focus / click a row in DSL view (any leaf, or a collapsed parent) | Mount the editor with the full untruncated text |
 | Enter, or blur | Commit |
 | Escape | Revert to the node's current `printInline` and unmount |
 | Commit | `parse(text)` → on success `store.replaceNode(path, document.rule)` |
@@ -233,8 +243,8 @@ The disabled `expression — coming` extension point stays as-is.
 ### Adding an operand
 
 `+ operand` inserts as it does today (seeded with the first in-scope catalog
-spec), then immediately collapses the new row into DSL view, focuses its editor
-and selects the text — so typing replaces it.
+spec). The new node is a leaf, so it is already in DSL view; the builder focuses
+its editor and selects the text, so typing replaces it.
 
 A "draft operand" living outside the document until committed was considered
 and rejected: it buys an empty row instead of a selected one, at the cost of a
