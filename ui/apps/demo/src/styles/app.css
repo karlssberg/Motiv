@@ -374,16 +374,16 @@ body {
 }
 
 /*
-  Builder: recursive accordion node. `.node-row` is the always-visible one-line summary (chevron +
-  operator/spec badge + plain-language description); `.node-detail` holds the decoration fields and
-  child rows, shown only while expanded. A collapsed node therefore costs exactly one compact row
-  rather than a full bordered card — the source design's accordion, not a box inside a box.
+  Builder: a rule node's row. Two independent view concerns meet here — the caret folds the
+  subtree (structure, open by default), and the `⋯` toggle opens the detail panel (metadata and
+  edit controls, closed by default, single-open unless pinned). A collapsed node therefore costs
+  exactly one compact row rather than a full bordered card.
 
   Indentation is structural rather than computed: a level's rows sit inside their parent's
-  `.node-detail`, whose left margin plus padding *is* the one indent step. Multiplying a `--depth`
-  custom property on top of that (as an earlier revision did) double-counts the nesting and fans
-  the tree out further at every level. `--depth` still earns its keep on `.assertion`, which
-  renders the justification tree as a flat list with no nesting to read the level from.
+  `.node-kids`, whose left margin is the one indent step. Multiplying a `--depth` custom property
+  on top of that (as an earlier revision did) double-counts the nesting and fans the tree out
+  further at every level. `--depth` still earns its keep on `.assertion`, which renders the
+  justification tree as a flat list with no nesting to read the level from.
 */
 .node {
   display: flex;
@@ -435,32 +435,76 @@ body {
   white-space: nowrap;
 }
 
-/* The edit controls under a node's row, and — while expanded — its decoration fields and children.
-   Both are inset from the row by the same step, which is what indents the level below. */
-.node-toolbar,
+/* The badge/gloss/name group, or — once collapsed — the node's DSL text. Never interactive:
+   in DSL view it hosts a text editor, which cannot live inside a button. */
+.node-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.node-bullet {
+  width: 14px;
+  flex: none;
+  font-size: 10px;
+  color: var(--faint);
+  text-align: center;
+}
+
+/* Row controls stay quiet until the row is hovered or the control is active, so a resting tree
+   reads as structure rather than as a grid of buttons. Focus must still reveal them, or they
+   become keyboard-inaccessible. */
+.node-detail-toggle,
+.node-pin {
+  appearance: none;
+  border: none;
+  background: transparent;
+  flex: none;
+  padding: 0 4px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.node-row:hover .node-detail-toggle,
+.node-row:hover .node-pin,
+.node-detail-toggle:focus-visible,
+.node-pin:focus-visible,
+.node-detail-toggle.open,
+.node-pin.pinned {
+  opacity: 1;
+}
+
+.node-pin.pinned { color: var(--accent); }
+
+/* The detail panel: the node's edit controls and decoration fields, inset from the row by the
+   same step that indents the level below. */
 .node-detail {
   display: flex;
+  flex-direction: column;
   gap: var(--space);
   margin: 0 0 8px 10px;
-}
-
-.node-toolbar {
-  flex-wrap: wrap;
-  align-items: center;
-  gap: calc(var(--space) / 2);
-}
-
-.node-detail {
-  flex-direction: column;
   padding: 9px 10px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
 
+.node-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+}
+
 .node-kids {
   display: flex;
   flex-direction: column;
+  margin-left: 10px;
 }
 
 .decoration {

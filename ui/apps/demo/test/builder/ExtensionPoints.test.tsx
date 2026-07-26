@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { RuleEditorStore, type RulesApiClient } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
 import { EditorPane } from '../../src/panes/EditorPane.js';
@@ -16,7 +16,8 @@ describe('extension points', () => {
   it('shows expression and parameters as disabled affordances', async () => {
     const store = new RuleEditorStore({ rule: { spec: 'is-adult' } });
     renderWith(store);
-    await screen.findByLabelText('spec at $.rule');
+    // The node's own extension point lives in its detail panel, which starts closed.
+    fireEvent.click(await screen.findByRole('button', { name: 'details for $.rule' }));
 
     const expr = screen.getByRole('button', { name: /expression .*coming/i }) as HTMLButtonElement;
     expect(expr.disabled).toBe(true);

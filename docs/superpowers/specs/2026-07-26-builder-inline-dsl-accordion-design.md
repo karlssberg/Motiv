@@ -173,10 +173,16 @@ keyboard traversal.
   `collapse {path}` / `expand {path}`. Toggles `collapsed`. A leaf renders an
   inert bullet in the same slot, so rows stay aligned down the tree.
 - **Row body** — the badge + gloss + name when expanded, or the DSL text when
-  collapsed. Carries `aria-expanded` and `aria-controls` for the detail panel.
-- **Pin** — `aria-pressed`, labelled `pin {path}` / `unpin {path}`. Always
-  rendered; visually surfaced on hover, focus, or when open or pinned, so the
-  row stays quiet at rest without the control being keyboard-inaccessible.
+  collapsed. **Not interactive.** It hosts a text editor in DSL view, and
+  interactive content nested inside a button is invalid HTML that swallows
+  events, so the detail toggle cannot be the row itself.
+- **Details toggle** — `aria-expanded`, `aria-controls="detail-{path}"`,
+  labelled `details for {path}`. Opens the detail panel.
+- **Pin** — `aria-pressed`, labelled `pin {path}` / `unpin {path}`.
+
+The details toggle and pin are always rendered but surfaced only on row hover,
+on focus, or while open or pinned — so a resting tree reads as structure rather
+than a grid of buttons, without either control becoming keyboard-inaccessible.
 
 ## The Inline Editor
 

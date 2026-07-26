@@ -48,7 +48,7 @@ describe('EditorPane', () => {
 
     expect(tab('Builder').getAttribute('aria-selected')).toBe('true');
     expect(tab('DSL').getAttribute('aria-selected')).toBe('false');
-    expect(screen.getByLabelText('spec at $.rule')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'details for $.rule' })).toBeDefined();
     expect(screen.queryByLabelText('sync status')).toBeNull();
   });
 
@@ -94,7 +94,7 @@ describe('EditorPane', () => {
 
     expect(tab('Builder').getAttribute('aria-selected')).toBe('true');
     expect(screen.queryByLabelText('sync status')).toBeNull();
-    expect(screen.getByLabelText('spec at $.rule')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'details for $.rule' })).toBeDefined();
   });
 
   it('keeps an uncommitted DSL edit across a round trip through the Builder', async () => {

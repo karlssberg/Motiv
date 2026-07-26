@@ -15,6 +15,11 @@ const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unk
 const renderWith = (store: RuleEditorStore) =>
   render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
 
+/** Opens a node's detail panel, where its edit controls live. */
+const openDetail = async (path: string) => {
+  fireEvent.click(await screen.findByRole('button', { name: `details for ${path}` }));
+};
+
 describe('QuantifierNode', () => {
   it('shows the collection name (not the tree path) in the collapsed row', async () => {
     const store = new RuleEditorStore({ rule: { asAllSatisfied: { spec: 'is-large-order' }, path: 'orders' } });
@@ -27,7 +32,7 @@ describe('QuantifierNode', () => {
   it('inserts an all-satisfied quantifier over a collection with an element-scoped child', async () => {
     const store = new RuleEditorStore({ rule: { spec: 'is-adult' } });
     renderWith(store);
-    await screen.findByLabelText('spec at $.rule');
+    await openDetail('$.rule');
 
     fireEvent.click(screen.getByRole('button', { name: 'wrap $.rule in AND' }));       // AND[is-adult, is-adult]
     fireEvent.click(screen.getByRole('button', { name: 'add quantifier to $.rule' })); // AND[..., quantifier]
@@ -42,13 +47,15 @@ describe('QuantifierNode', () => {
       rule: { asAllSatisfied: { spec: 'is-large-order' }, path: 'orders' },
     });
     renderWith(store);
+    await openDetail('$.rule');
 
-    fireEvent.change(await screen.findByLabelText('quantifier kind at $.rule'), { target: { value: 'asAtLeastNSatisfied' } });
+    fireEvent.change(screen.getByLabelText('quantifier kind at $.rule'), { target: { value: 'asAtLeastNSatisfied' } });
     fireEvent.change(screen.getByLabelText('quantifier n at $.rule'), { target: { value: '2' } });
 
     const rule = store.getState().document.rule as unknown as Record<string, unknown>;
     expect(rule).toMatchObject({ asAtLeastNSatisfied: { spec: 'is-large-order' }, n: 2, path: 'orders' });
 
+    await openDetail('$.rule.asAtLeastNSatisfied');
     const childSelect = screen.getByLabelText('spec at $.rule.asAtLeastNSatisfied') as HTMLSelectElement;
     const options = Array.from(childSelect.options).map((o) => o.value);
     expect(options).toEqual(['is-large-order']);
@@ -57,7 +64,8 @@ describe('QuantifierNode', () => {
   it('preserves decoration when the quantifier kind changes', async () => {
     const store = new RuleEditorStore({ rule: { asAllSatisfied: { spec: 'is-large-order' }, path: 'orders', name: 'big spender' } });
     renderWith(store);
-    fireEvent.change(await screen.findByLabelText('quantifier kind at $.rule'), { target: { value: 'asAnySatisfied' } });
+    await openDetail('$.rule');
+    fireEvent.change(screen.getByLabelText('quantifier kind at $.rule'), { target: { value: 'asAnySatisfied' } });
     const rule = store.getState().document.rule as unknown as Record<string, unknown>;
     expect(rule).toMatchObject({ asAnySatisfied: { spec: 'is-large-order' }, path: 'orders', name: 'big spender' });
     expect('asAllSatisfied' in rule).toBe(false);
@@ -80,8 +88,9 @@ describe('QuantifierNode', () => {
     const store = new RuleEditorStore({ rule: { asAllSatisfied: { spec: 'is-large-order' }, path: 'orders' } });
     render(<RuleEditorProvider store={store}><BuilderPane client={multiClient()} /></RuleEditorProvider>);
 
+    await openDetail('$.rule');
     // the root quantifier is in customer space → only the customer-parented collection is offered
-    const collSelect = await screen.findByLabelText('quantifier collection at $.rule') as HTMLSelectElement;
+    const collSelect = screen.getByLabelText('quantifier collection at $.rule') as HTMLSelectElement;
     expect(Array.from(collSelect.options).map((o) => o.value)).toEqual(['orders']);
   });
 
@@ -101,7 +110,7 @@ describe('QuantifierNode', () => {
     const multiClient = () => ({ getCatalog: vi.fn().mockResolvedValue(multi) }) as unknown as RulesApiClient;
     const store = new RuleEditorStore({ rule: { spec: 'is-adult' } });
     render(<RuleEditorProvider store={store}><BuilderPane client={multiClient()} /></RuleEditorProvider>);
-    await screen.findByLabelText('spec at $.rule');
+    await openDetail('$.rule');
 
     fireEvent.click(screen.getByRole('button', { name: 'wrap $.rule in AND' }));       // AND[is-adult, is-adult]
     fireEvent.click(screen.getByRole('button', { name: 'add quantifier to $.rule' })); // AND[..., quantifier]
