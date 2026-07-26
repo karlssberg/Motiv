@@ -16,11 +16,12 @@ const renderWith = (store: RuleEditorStore) =>
   render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
 
 describe('QuantifierNode', () => {
-  it('shows the collection name (not the tree path) in the collapsed badge', async () => {
+  it('shows the collection name (not the tree path) in the collapsed row', async () => {
     const store = new RuleEditorStore({ rule: { asAllSatisfied: { spec: 'is-large-order' }, path: 'orders' } });
     renderWith(store);
     fireEvent.click(await screen.findByRole('button', { name: 'collapse $.rule' }));
-    expect(screen.getByText('all of orders')).toBeDefined();
+    expect(screen.getByText('all')).toBeDefined();
+    expect(screen.getByText('in orders')).toBeDefined();
   });
 
   it('inserts an all-satisfied quantifier over a collection with an element-scoped child', async () => {

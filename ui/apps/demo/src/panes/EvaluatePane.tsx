@@ -38,43 +38,45 @@ export function EvaluatePane(props: { client: RulesApiClient }) {
   return (
     <section aria-label="Evaluate" className="pane">
       <h2>Evaluate</h2>
-      <label className="field">
-        <span>Sample model</span>
-        <textarea
-          aria-label="sample model"
-          className="control"
-          value={modelText}
-          onChange={(e) => setModelText(e.target.value)}
-          rows={5}
-        />
-      </label>
-      <button type="button" className="btn" onClick={run}>Evaluate</button>
-      {parseError && <p role="alert">{parseError}</p>}
-      {violations.length > 0 && (
-        <ul aria-label="schema violations" className="errors">
-          {violations.map((violation, i) => (
-            <li key={`${violation.path}-${i}`} role="alert" className="error">
-              {violation.path}: {violation.message}
-            </li>
-          ))}
-        </ul>
-      )}
-      {evaluation.status === 'error' && <p role="alert">Evaluation failed.</p>}
-      {evaluation.status === 'ready' && (
-        <>
-          <p aria-label="outcome" className="outcome">{evaluation.result.satisfied ? 'Satisfied' : 'Not satisfied'}</p>
-          <JustificationTree explanation={evaluation.result.explanation}>
-            {({ row, toggle }) => (
-              <div className="assertion" style={{ '--depth': row.depth } as CSSProperties}>
-                {row.hasChildren && (
-                  <button type="button" onClick={() => toggle(row.id)}>{row.collapsed ? '▸' : '▾'}</button>
-                )}
-                <span>{row.assertions.join(', ')}</span>
-              </div>
-            )}
-          </JustificationTree>
-        </>
-      )}
+      <div className="pane-body">
+        <label className="field">
+          <span>Sample model</span>
+          <textarea
+            aria-label="sample model"
+            className="control"
+            value={modelText}
+            onChange={(e) => setModelText(e.target.value)}
+            rows={5}
+          />
+        </label>
+        <button type="button" className="btn" onClick={run}>Evaluate</button>
+        {parseError && <p role="alert">{parseError}</p>}
+        {violations.length > 0 && (
+          <ul aria-label="schema violations" className="errors">
+            {violations.map((violation, i) => (
+              <li key={`${violation.path}-${i}`} role="alert" className="error">
+                {violation.path}: {violation.message}
+              </li>
+            ))}
+          </ul>
+        )}
+        {evaluation.status === 'error' && <p role="alert">Evaluation failed.</p>}
+        {evaluation.status === 'ready' && (
+          <>
+            <p aria-label="outcome" className="outcome">{evaluation.result.satisfied ? 'Satisfied' : 'Not satisfied'}</p>
+            <JustificationTree explanation={evaluation.result.explanation}>
+              {({ row, toggle }) => (
+                <div className="assertion" style={{ '--depth': row.depth } as CSSProperties}>
+                  {row.hasChildren && (
+                    <button type="button" onClick={() => toggle(row.id)}>{row.collapsed ? '▸' : '▾'}</button>
+                  )}
+                  <span>{row.assertions.join(', ')}</span>
+                </div>
+              )}
+            </JustificationTree>
+          </>
+        )}
+      </div>
     </section>
   );
 }

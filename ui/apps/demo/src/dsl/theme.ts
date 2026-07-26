@@ -14,6 +14,11 @@ export const motivEditorTheme = EditorView.theme({
   '.cm-content': {
     fontFamily: 'var(--mono)',
     padding: '10px 0',
+    // CodeMirror paints the caret from whichever of its two base themes is active, and that is
+    // fixed when the theme is built — while this one follows the page's colour scheme at runtime.
+    // Left to the base theme the caret is black, which is invisible on a dark editor, so it is
+    // bound to the same token as the text it sits in.
+    caretColor: 'var(--dsl-fg)',
   },
   '.cm-gutters': {
     backgroundColor: 'var(--dsl-gutter-bg)',

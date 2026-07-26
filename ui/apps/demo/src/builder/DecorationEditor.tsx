@@ -6,7 +6,6 @@ import type { DecorationPatch } from '../decorationPatch.js';
 export function DecorationEditor(props: { path: string; node: RuleNode }) {
   const { path, node } = props;
   const store = useRuleEditorStore();
-  const decorated = node as RuleNode & { name?: string; whenTrue?: unknown; whenFalse?: unknown };
 
   return (
     <div className="decoration">
@@ -16,7 +15,7 @@ export function DecorationEditor(props: { path: string; node: RuleNode }) {
           aria-label={`name at ${path}`}
           className="control"
           type="text"
-          value={typeof decorated.name === 'string' ? decorated.name : ''}
+          value={node.name ?? ''}
           onChange={(e) => store.setName(path, e.target.value || undefined)}
         />
       </label>
@@ -26,7 +25,7 @@ export function DecorationEditor(props: { path: string; node: RuleNode }) {
           aria-label={`whenTrue at ${path}`}
           className="control"
           type="text"
-          value={typeof decorated.whenTrue === 'string' ? decorated.whenTrue : ''}
+          value={typeof node.whenTrue === 'string' ? node.whenTrue : ''}
           onChange={(e) => store.setDecoration(path, { whenTrue: e.target.value || undefined } as DecorationPatch)}
         />
       </label>
@@ -36,7 +35,7 @@ export function DecorationEditor(props: { path: string; node: RuleNode }) {
           aria-label={`whenFalse at ${path}`}
           className="control"
           type="text"
-          value={typeof decorated.whenFalse === 'string' ? decorated.whenFalse : ''}
+          value={typeof node.whenFalse === 'string' ? node.whenFalse : ''}
           onChange={(e) => store.setDecoration(path, { whenFalse: e.target.value || undefined } as DecorationPatch)}
         />
       </label>

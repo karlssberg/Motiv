@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { RuleEditorStore, type Catalog, type RulesApiClient } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
 import { EditorPane } from '../../src/panes/EditorPane.js';
-import { editorText, editorView, replaceBuffer } from '../support/codemirror.js';
+import { editorText, replaceBuffer } from '../support/codemirror.js';
 
 const catalog: Catalog = {
   specs: [
@@ -129,16 +129,15 @@ describe('EditorPane', () => {
   });
 
   it('hands the loaded catalog to the DSL surface', async () => {
-    const { container } = renderPane();
+    renderPane();
     await settleCatalog();
 
     fireEvent.click(tab('DSL'));
     expect(screen.queryByRole('alert')).toBeNull();
 
-    // Putting the caret inside the spec opens the popover, which renders catalog metadata —
-    // proof the catalog reached the DSL surface rather than the empty fallback.
-    const view = editorView(container);
-    act(() => view.dispatch({ selection: { anchor: 2 } }));
+    // Opening a spec's payload card renders catalog metadata — proof the catalog reached the DSL
+    // surface rather than the empty fallback.
+    fireEvent.click(screen.getByRole('button', { name: 'Edit is-active payload' }));
 
     expect(screen.getByText('Whether the customer account is active')).toBeDefined();
   });

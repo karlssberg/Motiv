@@ -1,11 +1,14 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { lintKeymap, setDiagnostics } from '@codemirror/lint';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, type ViewUpdate } from '@codemirror/view';
 import type { Diagnostic } from '@codemirror/lint';
-import { getNode, isSpecNode, type Catalog, type NodeSpan, type RuleEditorStore } from '@motiv/rules-core';
+import {
+  getNode, isSpecNode,
+  type Catalog, type NodeSpan, type RuleDocument, type RuleEditorStore,
+} from '@motiv/rules-core';
 import { useRuleEditor } from '@motiv/rules-react';
 import { createMotivCompletion } from './completion.js';
 import { diagnosticsFor } from './lint.js';
@@ -13,8 +16,12 @@ import { motivHover } from './hover.js';
 import { motiv } from './motivLanguage.js';
 import { motivEditorTheme } from './theme.js';
 import { PayloadPopover } from './PayloadPopover.js';
-import { placePopover, type AnchorBox, type PopoverPlacement } from './popoverPlacement.js';
+import { payloadChips, setPayloadTargets, type PayloadTarget } from './payloadChips.js';
+import { useAnchoredCard } from './useAnchoredCard.js';
 import type { DslSync, SyncStatus } from './useDslSync.js';
+
+/** The keystroke that opens the payload card for the spec node under the caret. */
+const OPEN_PAYLOAD_KEY = 'Mod-.';
 
 /** The document this demo edits. The DSL is file-shaped, so it is shown with a filename. */
 const FILENAME = 'quota-rule.motiv';
@@ -25,14 +32,6 @@ const PILL_TEXT: Record<SyncStatus, string> = {
   dirty: 'unsynced',
   error: 'parse error',
 };
-
-/** The spec node the popover is open for, and the token in the text it is anchored to. */
-interface PopoverTarget {
-  path: string;
-  spec: string;
-  /** Document position of the token's first character. */
-  from: number;
-}
 
 /** The values the (once-built) editor extensions read, always the latest render's. */
 interface LiveContext {
@@ -52,41 +51,27 @@ function innermostSpanAt(spans: readonly NodeSpan[], position: number): NodeSpan
   return best;
 }
 
-/** The spec node the caret sits inside, or null when it is anywhere else. */
-function popoverTargetAt(live: LiveContext, position: number): PopoverTarget | null {
-  const span = innermostSpanAt(live.sync.parseResult.spans, position);
+/**
+ * The spec node `span` covers, or null when it covers something else.
+ *
+ * The span comes from the parse of the buffer, but the node behind it is read from `document` —
+ * the store's, which the buffer only commits to after a pause. The two therefore disagree for as
+ * long as an edit is uncommitted. That is deliberate: the card edits the node the store holds, so
+ * a target that named anything else would open a card onto decorations no one can save.
+ */
+function targetForSpan(document: RuleDocument, span: NodeSpan | undefined): PayloadTarget | null {
   if (!span) return null;
-  const node = getNode(live.store.getState().document, span.path);
+  const node = getNode(document, span.path);
   if (!node || !isSpecNode(node)) return null;
-  return { path: span.path, spec: node.spec, from: span.from };
+  return { path: span.path, spec: node.spec, from: span.from, to: span.to };
 }
 
-/** Whether a freshly measured placement is the one already applied to the card. */
-function samePlacement(a: PopoverPlacement | null, b: PopoverPlacement): boolean {
-  return a !== null && a.top === b.top && a.left === b.left && a.maxHeight === b.maxHeight;
-}
-
-/**
- * The token's box on screen, or null when it has none. A position that is not currently drawn
- * has no coordinates, and one past the end of the document throws outright — both of which the
- * caller treats the same way, as "unmeasurable".
- */
-function tokenCoordsAt(view: EditorView, position: number): AnchorBox | null {
-  const clamped = Math.max(0, Math.min(position, view.state.doc.length));
-  try {
-    return view.coordsAtPos(clamped);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Where to anchor when the token cannot be measured: the surface's first row, which is where the
- * clamping would have pulled the card anyway.
- */
-function surfaceAnchor(surface: HTMLElement): AnchorBox {
-  const { top } = surface.getBoundingClientRect();
-  return { top, bottom: top, left: 0 };
+/** The spec node the caret sits inside, or null when it is anywhere else. */
+function targetAtCaret(live: LiveContext, position: number): PayloadTarget | null {
+  return targetForSpan(
+    live.store.getState().document,
+    innermostSpanAt(live.sync.parseResult.spans, position),
+  );
 }
 
 /**
@@ -98,6 +83,10 @@ function surfaceAnchor(surface: HTMLElement): AnchorBox {
  * uncommitted text, conflict state and any pending commit survive. `sync` must be the binding for
  * the same `store`, since the two are read as one.
  *
+ * The payload card is opened deliberately — from a spec node's chip, or with `Mod-.` on the node
+ * under the caret — and never by moving the caret itself. Clicking text is how you say where you
+ * want to type, so it summons nothing over the text you were aiming at.
+ *
  * The view is built once on mount and never rebuilt: its extensions close over a ref holding the
  * latest render's callbacks, catalog and diagnostics, so none of them can go stale while the
  * editor keeps its own state (history, selection, scroll) across renders.
@@ -105,8 +94,7 @@ function surfaceAnchor(surface: HTMLElement): AnchorBox {
 export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; sync: DslSync }) {
   const { store, catalog, sync } = props;
   const editorState = useRuleEditor(store);
-  const [popover, setPopover] = useState<PopoverTarget | null>(null);
-  const [placement, setPlacement] = useState<PopoverPlacement | null>(null);
+  const [popover, setPopover] = useState<PayloadTarget | null>(null);
 
   const diagnostics = useMemo(
     () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors),
@@ -118,22 +106,44 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
 
   const toolbar = useRef<HTMLDivElement | null>(null);
   const host = useRef<HTMLDivElement | null>(null);
-  const card = useRef<HTMLDivElement | null>(null);
   const view = useRef<EditorView | null>(null);
   /** Set while pushing hook-produced text into the view, so the echo is not read back as an edit. */
   const applyingHookText = useRef(false);
+
+  const card = useAnchoredCard({
+    anchor: popover?.from ?? null,
+    surface: host,
+    // The card may float over the rest of the page, but not over the toolbar it belongs to.
+    clearOf: toolbar,
+    view,
+  });
+
+  /** Which node the card is open for, for the once-built extensions to read. */
+  const openPath = useRef<string | null>(null);
+  openPath.current = popover?.path ?? null;
+
+  /** Returns the caret to the text once the card it was taken from is gone. */
+  const closePopover = (): void => {
+    setPopover(null);
+    view.current?.focus();
+  };
+
+  /** A chip opens its node's card, and puts it away again when pressed a second time. */
+  const toggleCard = (target: PayloadTarget): void => {
+    if (openPath.current === target.path) closePopover();
+    else setPopover(target);
+  };
 
   useEffect(() => {
     const parent = host.current;
     if (!parent) return;
 
     const onUpdate = (update: ViewUpdate) => {
-      if (update.docChanged && !applyingHookText.current) {
-        live.current.sync.setText(update.state.doc.toString());
-      }
-      if (update.selectionSet) {
-        setPopover(popoverTargetAt(live.current, update.state.selection.main.head));
-      }
+      if (!update.docChanged) return;
+      if (!applyingHookText.current) live.current.sync.setText(update.state.doc.toString());
+      // The card is anchored to a token and edits the node behind it — an edit can move the one
+      // and delete the other, so it does not outlive the text it was opened against.
+      setPopover(null);
     };
 
     const instance = new EditorView({
@@ -147,6 +157,20 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
           motivEditorTheme,
           autocompletion({ override: [createMotivCompletion(() => live.current.catalog)] }),
           motivHover(() => live.current.diagnostics),
+          // Reads `openPath` rather than closing over `popover`, since the extensions are built
+          // once and would otherwise go on toggling against the state of the first render.
+          payloadChips((target) => toggleCard(target)),
+          // Ahead of the default bindings: nothing there claims this key today, and a future
+          // default that did would otherwise shadow it silently.
+          keymap.of([{
+            key: OPEN_PAYLOAD_KEY,
+            run: (editor) => {
+              const target = targetAtCaret(live.current, editor.state.selection.main.head);
+              if (!target) return false;
+              setPopover(target);
+              return true;
+            },
+          }]),
           keymap.of([...defaultKeymap, ...historyKeymap, ...completionKeymap, ...lintKeymap]),
           EditorView.updateListener.of(onUpdate),
         ],
@@ -181,60 +205,24 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
     instance.dispatch(setDiagnostics(instance.state, diagnostics));
   }, [diagnostics]);
 
-  // The popover is anchored to its token, so it can only be placed once both it and the token
-  // have been laid out — hence measuring here, after the card is in the DOM but before it is
-  // painted. It renders hidden until then, so it is never seen in the wrong place.
-  //
-  // Everything is measured in viewport coordinates because the card is positioned against the
-  // viewport, not the editor: it is a hover-card over the page and may overhang the pane.
-  // Anything that moves the token under it — scrolling the page, scrolling the editor, resizing
-  // the window — has to re-place it, or a fixed card is left pointing at nothing.
-  useLayoutEffect(() => {
-    const surfaceEl = host.current;
-    const toolbarEl = toolbar.current;
-    const cardEl = card.current;
-    if (!popover || !surfaceEl || !toolbarEl || !cardEl) {
-      setPlacement(null);
-      return;
-    }
+  // Chips are pushed in for the same reason diagnostics are: the spans they sit on come from the
+  // host's parse, which lands a render after the edit that provoked it, so the editor cannot
+  // derive them for itself without parsing the text a second time.
+  const targets = useMemo(
+    () => sync.parseResult.spans.flatMap((span) => targetForSpan(editorState.document, span) ?? []),
+    [sync.parseResult, editorState.document],
+  );
+  useEffect(() => {
+    const instance = view.current;
+    if (!instance) return;
+    instance.dispatch({ effects: setPayloadTargets.of(targets) });
+  }, [targets]);
 
-    const place = () => {
-      const cardBox = cardEl.getBoundingClientRect();
-      const coords = view.current && tokenCoordsAt(view.current, popover.from);
-      const anchor = coords ?? surfaceAnchor(surfaceEl);
-
-      const next = placePopover(
-        anchor,
-        { width: cardBox.width, height: cardBox.height },
-        {
-          width: window.innerWidth,
-          height: window.innerHeight,
-          // The card may float over the rest of the page, but not over the toolbar it belongs to.
-          minTop: toolbarEl.getBoundingClientRect().bottom,
-        },
-      );
-      setPlacement((current) => (samePlacement(current, next) ? current : next));
-    };
-
-    place();
-    // Capture, so scrolling any ancestor — the editing surface included — is seen too.
-    window.addEventListener('scroll', place, true);
-    window.addEventListener('resize', place);
-    // The card's own height is an input to its placement, and it grows in use — a rejected
-    // payload adds an error line. Without this it would grow downwards from a position chosen
-    // for the shorter card, and could push its own bottom off the screen.
-    const observer = new ResizeObserver(place);
-    observer.observe(cardEl);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('scroll', place, true);
-      window.removeEventListener('resize', place);
-    };
-  }, [popover]);
-
-  const cardStyle: CSSProperties = placement
-    ? { top: `${placement.top}px`, left: `${placement.left}px`, maxHeight: `${placement.maxHeight}px` }
-    : { visibility: 'hidden' };
+  // The card renders hidden until it has been measured, and a hidden element cannot take focus —
+  // so the keyboard is handed to it once it is placed rather than when it mounts.
+  useEffect(() => {
+    if (popover && card.placed) card.cardRef.current?.focus();
+  }, [popover, card.placed]);
 
   return (
     <div className="dsl-frame">
@@ -259,16 +247,16 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
       {popover && (
         <PayloadPopover
           // The card holds an unsaved draft of the node it was opened for, seeded once from the
-          // store. Keying it on the path remounts it when the caret moves to a different node,
-          // so a draft can never be saved onto a node other than the one it was typed against.
+          // store. Keying it on the path remounts it when another node is opened, so a draft can
+          // never be saved onto a node other than the one it was typed against.
           key={popover.path}
           store={store}
           catalog={catalog}
           path={popover.path}
           spec={popover.spec}
-          onClose={() => setPopover(null)}
-          cardRef={card}
-          style={cardStyle}
+          onClose={closePopover}
+          cardRef={card.cardRef}
+          style={card.style}
         />
       )}
     </div>

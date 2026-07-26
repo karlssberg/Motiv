@@ -68,7 +68,7 @@ export function BuilderBody(props: { client: RulesApiClient }) {
       {catalogState.status === 'loading' && <p>Loading catalog…</p>}
       {catalogState.status === 'error' && <p role="alert">Failed to load catalog.</p>}
       <AccordionContext.Provider value={{ isExpanded: (path) => expanded.has(path), toggle, catalog }}>
-        <RuleNodeEditor path={ROOT} depth={0} modelType={MODEL_TYPE} />
+        <RuleNodeEditor path={ROOT} modelType={MODEL_TYPE} />
       </AccordionContext.Provider>
     </>
   );

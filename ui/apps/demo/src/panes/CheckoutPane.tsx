@@ -82,36 +82,38 @@ export function CheckoutPane(props: { client?: RulesApiClient }) {
   return (
     <section aria-label="Checkout" className="pane">
       <h2>Checkout (live rules)</h2>
-      <label className="field">
-        <span>Customer</span>
-        <textarea
-          aria-label="customer"
-          className="control"
-          value={customerJson}
-          onChange={(e) => setCustomerJson(e.target.value)}
-          rows={6}
-        />
-      </label>
-      <button type="button" className="btn" onClick={() => void tryCheckout()}>
-        Try checkout
-      </button>
-      {error && <p role="alert">{error}</p>}
-      {violations.length > 0 && (
-        <ul aria-label="schema violations" className="errors">
-          {violations.map((violation, i) => (
-            <li key={`${violation.path}-${i}`} role="alert" className="error">
-              {violation.path}: {violation.message}
-            </li>
-          ))}
-        </ul>
-      )}
-      {outcome && (
-        <div className="checkout-outcome">
-          <strong className="outcome">{outcome.approved ? 'Approved' : 'Rejected'}</strong>
-          <Verdict title="Eligibility (sync rule)" result={outcome.eligibility} />
-          <Verdict title="Screening (async rule)" result={outcome.screening} />
-        </div>
-      )}
+      <div className="pane-body">
+        <label className="field">
+          <span>Customer</span>
+          <textarea
+            aria-label="customer"
+            className="control"
+            value={customerJson}
+            onChange={(e) => setCustomerJson(e.target.value)}
+            rows={6}
+          />
+        </label>
+        <button type="button" className="btn" onClick={() => void tryCheckout()}>
+          Try checkout
+        </button>
+        {error && <p role="alert">{error}</p>}
+        {violations.length > 0 && (
+          <ul aria-label="schema violations" className="errors">
+            {violations.map((violation, i) => (
+              <li key={`${violation.path}-${i}`} role="alert" className="error">
+                {violation.path}: {violation.message}
+              </li>
+            ))}
+          </ul>
+        )}
+        {outcome && (
+          <div className="checkout-outcome">
+            <strong className="outcome">{outcome.approved ? 'Approved' : 'Rejected'}</strong>
+            <Verdict title="Eligibility (sync rule)" result={outcome.eligibility} />
+            <Verdict title="Screening (async rule)" result={outcome.screening} />
+          </div>
+        )}
+      </div>
     </section>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { RuleListEntry, RulesApiClient } from '@motiv/rules-core';
 import { useRuleEditor, useRuleEditorStore } from '@motiv/rules-react';
+import { MODEL_TYPE } from '../App.js';
 
 /** The picked rule's server identity: what Save must send back to avoid clobbering. */
 interface LoadedRule {
@@ -62,29 +63,43 @@ export function RuleHeader(props: { client: RulesApiClient }) {
   };
 
   return (
-    <header className="pane rule-header">
-      <label className="field">
-        <span>Rule</span>
-        <select
-          className="control"
-          value={loaded?.name ?? ''}
-          onChange={(e) => void load(e.target.value)}
-        >
-          <option value="">— local draft —</option>
-          {rules.map((rule) => (
-            <option key={rule.name} value={rule.name}>{rule.name}</option>
-          ))}
-        </select>
-      </label>
-      {loaded && (
-        <span className="rule-version">
-          v{loaded.version}
-          {loaded.isCodeDefault && <em> — code-defined default (builder starts fresh)</em>}
-        </span>
-      )}
-      <button type="button" className="btn" disabled={!loaded || saving} onClick={() => void save()}>
-        Save
-      </button>
+    <header className="appbar">
+      <div className="appbar-brand">
+        <span className="appbar-mark" aria-hidden="true">M</span>
+        <span className="appbar-wordmark">Motiv</span>
+      </div>
+      <span className="breadcrumb-sep">/</span>
+      <span className="breadcrumb-item">Eligibility rules</span>
+      <span className="breadcrumb-sep">/</span>
+      <span className="breadcrumb-current">{loaded?.name ?? 'local draft'}</span>
+      <span className="model-pill" title="Model type the rule is validated and evaluated against">
+        {MODEL_TYPE}
+      </span>
+      <div className="appbar-fill" />
+      <div className="appbar-controls">
+        <label className="field">
+          <span>Rule</span>
+          <select
+            className="control"
+            value={loaded?.name ?? ''}
+            onChange={(e) => void load(e.target.value)}
+          >
+            <option value="">— local draft —</option>
+            {rules.map((rule) => (
+              <option key={rule.name} value={rule.name}>{rule.name}</option>
+            ))}
+          </select>
+        </label>
+        {loaded && (
+          <span className="rule-version">
+            v{loaded.version}
+            {loaded.isCodeDefault && <em> — code-defined default (builder starts fresh)</em>}
+          </span>
+        )}
+        <button type="button" className="btn" disabled={!loaded || saving} onClick={() => void save()}>
+          Save
+        </button>
+      </div>
       {conflict !== null && loaded && (
         <div role="alert" className="conflict-banner">
           Someone else saved version {conflict} of “{loaded.name}”.

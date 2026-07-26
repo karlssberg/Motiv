@@ -3,7 +3,6 @@ import {
 } from '@motiv/rules-core';
 import { useRuleEditorStore } from '@motiv/rules-react';
 import { insertQuantifier, toggleNot } from './mutations.js';
-import { childPaths } from './childPaths.js';
 
 const WRAP_OPTIONS: Array<{ label: string; op: BinaryOperator }> = [
   { label: 'AND', op: 'and' },
@@ -13,33 +12,25 @@ const WRAP_OPTIONS: Array<{ label: string; op: BinaryOperator }> = [
   { label: 'OrElse', op: 'orElse' },
 ];
 
-/** The header controls for a rule node: expand/collapse, spec select, NOT, wrap, add/remove operand. */
+/**
+ * The edit controls for a rule node: spec select, NOT, wrap, add/remove operand. They sit under
+ * the node's summary row — which, along with expand/collapse for every node kind, is owned by
+ * {@link RuleNodeEditor} — and stay visible whether or not that node is expanded, because a leaf
+ * has no chevron of its own to bring them back with once the accordion has collapsed it.
+ */
 export function NodeToolbar(props: {
   path: string;
   node: RuleNode;
   modelType: string;
   catalog: Catalog;
-  expanded: boolean;
-  onToggleExpand: () => void;
 }) {
-  const { path, node, modelType, catalog, expanded, onToggleExpand } = props;
+  const { path, node, modelType, catalog } = props;
   const store = useRuleEditorStore();
-  const hasChildren = childPaths(node, path).length > 0;
   const specOptions = catalog.specs.filter((s) => s.modelType === modelType);
   const fallbackSpec = specOptions[0]?.name ?? 'spec';
 
   return (
-    <div className="node-header toolbar">
-      {hasChildren && (
-        <button
-          type="button"
-          className="btn-icon"
-          aria-label={`${expanded ? 'collapse' : 'expand'} ${path}`}
-          onClick={onToggleExpand}
-        >
-          {expanded ? '▾' : '▸'}
-        </button>
-      )}
+    <div className="node-toolbar">
       {isSpecNode(node) && (
         <label className="field">
           <span hidden>spec at {path}</span>

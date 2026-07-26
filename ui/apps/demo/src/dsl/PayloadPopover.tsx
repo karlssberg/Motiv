@@ -43,7 +43,7 @@ function PayloadField(props: { label: string; value: string; onChange: (next: st
   const { label, value, onChange } = props;
 
   return (
-    <label className="dsl-field">
+    <label className="field">
       <span>{label}</span>
       <textarea
         className="control"
@@ -115,6 +115,12 @@ export function PayloadPopover(props: {
       role="dialog"
       aria-label={`Payload for ${spec}`}
       style={style}
+      // The card is opened deliberately and dismissed the same way, so it takes focus — and
+      // Escape gives it back, from wherever inside the card the caret has got to.
+      tabIndex={-1}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onClose();
+      }}
     >
       <div className="dsl-popover-head">
         <span className="dsl-popover-spec">{spec}</span>
@@ -125,7 +131,7 @@ export function PayloadPopover(props: {
       {entry?.description && <p className="dsl-popover-desc">{entry.description}</p>}
       {entry && <p className="dsl-popover-meta">{entry.modelType} → {entry.metadataType}</p>}
 
-      <label className="dsl-field">
+      <label className="field">
         <span>Name</span>
         <input
           className="control"

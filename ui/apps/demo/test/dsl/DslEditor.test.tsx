@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RuleEditorStore } from '@motiv/rules-core';
-import type { Catalog } from '@motiv/rules-core';
+import type { Catalog, RuleNode } from '@motiv/rules-core';
 import { DslEditor } from '../../src/dsl/DslEditor.js';
 import { useDslSync } from '../../src/dsl/useDslSync.js';
 import { editorText, editorView, replaceBuffer } from '../support/codemirror.js';
@@ -21,10 +21,17 @@ function Host(props: { store: RuleEditorStore }) {
   return <DslEditor store={props.store} catalog={CATALOG} sync={sync} />;
 }
 
-function renderEditor() {
-  const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+const BOTH_SPECS = { andAlso: [{ spec: 'is-active' }, { spec: 'is-verified' }] };
+
+function renderEditor(rule: RuleNode = { spec: 'is-active' }) {
+  const store = new RuleEditorStore({ rule });
   const { container } = render(<Host store={store} />);
   return { store, container };
+}
+
+/** The chip a spec node is edited from, which is the only way the card is opened by pointer. */
+function payloadChip(spec: string): HTMLElement {
+  return screen.getByRole('button', { name: `Edit ${spec} payload` });
 }
 
 describe('DslEditor', () => {
@@ -121,23 +128,106 @@ describe('DslEditor', () => {
     expect(container.querySelector('.cm-lintRange-error')).toBeNull();
   });
 
-  it('opens the payload popover for the spec node under the caret', () => {
+  // Moving the caret is how you start typing, so it must not summon a card over the text. The
+  // card is opened deliberately instead — from a spec node's chip, or from the keyboard.
+  it('leaves the payload popover closed when the caret moves onto a spec node', () => {
     const { container } = renderEditor();
     const view = editorView(container);
 
     act(() => view.dispatch({ selection: { anchor: 2 } }));
 
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('marks every spec node with a payload chip', () => {
+    renderEditor(BOTH_SPECS);
+
+    expect(payloadChip('is-active')).toBeTruthy();
+    expect(payloadChip('is-verified')).toBeTruthy();
+  });
+
+  // The chip is chrome drawn into the document, not document text — it must not leak into the
+  // buffer that is parsed and committed.
+  it('keeps the chips out of the editor text', () => {
+    const { container } = renderEditor();
+
+    expect(payloadChip('is-active')).toBeTruthy();
+    expect(editorText(container)).toBe('is-active');
+  });
+
+  it('opens the payload popover from a spec node chip', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    await user.click(payloadChip('is-active'));
+
     expect(screen.getByRole('dialog', { name: 'Payload for is-active' })).toBeTruthy();
+  });
+
+  // The chip is a toggle: the press that opened the card puts it away again, so a misfired click
+  // is undone by repeating it rather than by hunting for Cancel.
+  it('closes the payload popover when its own chip is pressed again', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    await user.click(payloadChip('is-active'));
+    await user.click(payloadChip('is-active'));
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('switches to the other node when a second chip is pressed', async () => {
+    const user = userEvent.setup();
+    renderEditor(BOTH_SPECS);
+
+    await user.click(payloadChip('is-active'));
+    await user.click(payloadChip('is-verified'));
+
+    expect(screen.getByRole('dialog', { name: 'Payload for is-verified' })).toBeTruthy();
+  });
+
+  it('opens the payload popover for the node under the caret from the keyboard', async () => {
+    const user = userEvent.setup();
+    const { container } = renderEditor();
+    const view = editorView(container);
+
+    act(() => view.dispatch({ selection: { anchor: 2 } }));
+    view.focus();
+    await user.keyboard('{Control>}.{/Control}');
+
+    expect(screen.getByRole('dialog', { name: 'Payload for is-active' })).toBeTruthy();
+  });
+
+  // The card is anchored to a token in the text. Editing that text moves it out from under the
+  // card — and may delete the node the draft would be saved onto — so the card goes with it.
+  it('closes the payload popover when the text is edited', async () => {
+    const user = userEvent.setup();
+    const { container } = renderEditor();
+
+    await user.click(payloadChip('is-active'));
+    replaceBuffer(container, 'is-verified');
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('closes the payload popover on Escape', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    await user.click(payloadChip('is-active'));
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   // jsdom has no layout, so `coordsAtPos` and every rect come back null or zero. The popover
   // must still be placed — degenerately, but on screen — rather than throwing or being left to
   // whatever the stylesheet's default corner is.
-  it('positions the popover explicitly even without layout to measure', () => {
-    const { container } = renderEditor();
-    const view = editorView(container);
+  it('positions the popover explicitly even without layout to measure', async () => {
+    const user = userEvent.setup();
+    renderEditor();
 
-    act(() => view.dispatch({ selection: { anchor: 2 } }));
+    await user.click(payloadChip('is-active'));
 
     const popover = screen.getByRole('dialog', { name: 'Payload for is-active' });
     expect(popover.style.top).toMatch(/^-?\d+(\.\d+)?px$/);
@@ -146,37 +236,31 @@ describe('DslEditor', () => {
     expect(Number.parseFloat(popover.style.left)).toBeGreaterThanOrEqual(0);
   });
 
-  // The popover keeps an unsaved draft of the node it was opened for. Moving the caret to a
-  // different node changes which node a save writes to, so a draft carried across that move is
-  // not a stale field — it is one node's edits landing on another.
+  // The popover keeps an unsaved draft of the node it was opened for. Opening it on a different
+  // node changes which node a save writes to, so a draft carried across that move is not a stale
+  // field — it is one node's edits landing on another.
   it('does not carry an unsaved draft from one spec node onto the next', async () => {
     const user = userEvent.setup();
-    const store = new RuleEditorStore({
-      rule: { andAlso: [{ spec: 'is-active' }, { spec: 'is-verified' }] },
-    });
-    const { container } = render(<Host store={store} />);
-    const view = editorView(container);
+    const { container, store } = renderEditor(BOTH_SPECS);
     expect(editorText(container)).toBe('is-active && is-verified');
 
-    // Start naming the first spec, then move the caret into the second without saving.
-    act(() => view.dispatch({ selection: { anchor: 2 } }));
+    // Start naming the first spec, then open the second without saving.
+    await user.click(payloadChip('is-active'));
     await user.type(screen.getByLabelText('Name'), 'activity');
-    act(() => view.dispatch({ selection: { anchor: 16 } }));
+    await user.click(payloadChip('is-verified'));
 
     expect(screen.getByLabelText<HTMLInputElement>('Name').value).toBe('');
 
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(store.getState().document).toEqual({
-      rule: { andAlso: [{ spec: 'is-active' }, { spec: 'is-verified' }] },
-    });
+    expect(store.getState().document).toEqual({ rule: BOTH_SPECS });
   });
 
-  it('anchors the popover rather than pinning it to a corner', () => {
-    const { container } = renderEditor();
-    const view = editorView(container);
+  it('anchors the popover rather than pinning it to a corner', async () => {
+    const user = userEvent.setup();
+    renderEditor();
 
-    act(() => view.dispatch({ selection: { anchor: 2 } }));
+    await user.click(payloadChip('is-active'));
 
     // A `right`/`bottom` corner pin is what let the card cover the toolbar; it is placed from
     // the measured token instead, and only `top`/`left` are ever written.

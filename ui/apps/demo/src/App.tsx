@@ -44,9 +44,11 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
           but each pane's self-contained wiring is a deliberate seam this demo exists
           to show, so the duplicate requests are accepted.
         */}
-        <EditorPane client={client} />
-        <JsonPane />
-        <EvaluatePane client={client} />
+        <div className="shell-body">
+          <EditorPane client={client} />
+          <JsonPane />
+          <EvaluatePane client={client} />
+        </div>
         <CheckoutPane client={client} />
       </main>
     </RuleEditorProvider>
