@@ -16,8 +16,10 @@ const renderWith = (store: RuleEditorStore) =>
   render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
 
 describe('BuilderPane accordion (boolean)', () => {
+  /** Via the actions menu, which offers Details on every node kind. */
   const openDetail = async (path: string) => {
-    fireEvent.click(await screen.findByRole('button', { name: `details for ${path}` }));
+    fireEvent.click(await screen.findByRole('button', { name: `actions for ${path}` }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Details' }));
   };
 
   it('starts with every detail panel closed', async () => {
@@ -104,16 +106,15 @@ describe('BuilderPane accordion (boolean)', () => {
     expect(screen.queryByRole('button', { name: 'add quantifier to $.rule' })).toBeNull();
   });
 
-  it('opens a leaf\'s metadata from its caret, which is the leaf\'s only disclosure control', async () => {
+  it('opens a leaf\'s metadata from its caret', async () => {
     const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
-    const { container } = renderWith(store);
+    renderWith(store);
     const caret = await screen.findByRole('button', { name: 'details for $.rule' });
 
-    // The caret slot is the disclosure — a leaf has nothing else to reveal, so it carries no
-    // separate `⋯` toggle.
+    // A leaf has no subtree to fold, so its caret discloses metadata instead — a shortcut to
+    // what the actions menu also offers, in the slot a bullet would otherwise waste.
     expect(caret.className).toContain('node-chev');
     expect(caret.textContent).toBe('▸');
-    expect(container.querySelector('.node-detail-toggle')).toBeNull();
 
     fireEvent.click(caret);
     expect(caret.textContent).toBe('▾');
@@ -121,15 +122,15 @@ describe('BuilderPane accordion (boolean)', () => {
     expect(screen.getByLabelText('name at $.rule')).toBeDefined();
   });
 
-  it('keeps the caret structural on a parent, which discloses metadata separately', async () => {
+  it('keeps the caret structural on a parent, which reaches metadata through its menu', async () => {
     const store = new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
-    const { container } = renderWith(store);
+    renderWith(store);
     await screen.findByRole('button', { name: 'collapse $.rule' });
 
-    // A parent's caret is taken by its subtree, so it keeps a `⋯` of its own.
-    expect(container.querySelector('.node-detail-toggle')).not.toBeNull();
-    expect(screen.getByRole('button', { name: 'details for $.rule' }).className)
-      .toContain('node-detail-toggle');
+    // A parent's caret is taken by its subtree, so it has no `details for` shortcut of its own.
+    expect(screen.queryByRole('button', { name: 'details for $.rule' })).toBeNull();
+    await openDetail('$.rule');
+    expect(screen.getByLabelText('name at $.rule')).toBeDefined();
   });
 
 });

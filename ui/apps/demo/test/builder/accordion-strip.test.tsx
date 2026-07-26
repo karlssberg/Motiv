@@ -17,7 +17,7 @@ describe('close-all strip', () => {
 
   it('stays hidden while nothing is pinned', async () => {
     renderWith(new RuleEditorStore(doc));
-    await screen.findByRole('button', { name: 'details for $.rule' });
+    await screen.findByRole('button', { name: 'actions for $.rule' });
     expect(screen.queryByRole('button', { name: 'close all' })).toBeNull();
   });
 

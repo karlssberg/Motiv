@@ -7,6 +7,7 @@ import { DecorationEditor } from './DecorationEditor.js';
 import { childPaths } from './childPaths.js';
 import { summarize } from './nodeSummary.js';
 import { NodeDsl } from './NodeDsl.js';
+import { NodeMenu } from './NodeMenu.js';
 import { isCollapsed, isOpen, isPinned, type AccordionModel } from './accordion.js';
 
 /** The accordion state and its transitions, shared by every {@link RuleNodeEditor} in the tree. */
@@ -15,6 +16,9 @@ export interface AccordionState {
   toggleCollapsed: (path: string) => void;
   toggleOpen: (path: string) => void;
   togglePin: (path: string) => void;
+  /** The node whose actions menu is open, held centrally so only one can be. */
+  menuPath: string | null;
+  setMenuPath: (path: string | null) => void;
   catalog: Catalog;
 }
 
@@ -50,7 +54,7 @@ const panelId = (path: string): string => `detail-${path}`;
 export function RuleNodeEditor(props: { path: string; modelType: string }) {
   const { path, modelType } = props;
   const { node, errors } = useRuleNode(path);
-  const { model, toggleCollapsed, toggleOpen, togglePin, catalog } = useAccordion();
+  const { model, toggleCollapsed, toggleOpen, togglePin, menuPath, setMenuPath, catalog } = useAccordion();
 
   if (!node) return null;
 
@@ -105,18 +109,15 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             </>
           )}
         </span>
-        {hasChildren && (
-          <button
-            type="button"
-            className={open ? 'node-detail-toggle open' : 'node-detail-toggle'}
-            aria-expanded={open}
-            aria-controls={panelId(path)}
-            aria-label={`details for ${path}`}
-            onClick={() => toggleOpen(path)}
-          >
-            ⋯
-          </button>
-        )}
+        <NodeMenu
+          path={path}
+          // Only an operand of an n-ary operator can be removed; a NOT's child or a quantifier's
+          // body is the node's whole content, so removing it would leave the parent malformed.
+          canRemove={path.endsWith(']')}
+          open={menuPath === path}
+          setOpen={(next) => setMenuPath(next ? path : null)}
+          onDetails={() => toggleOpen(path)}
+        />
         <button
           type="button"
           className={pinned ? 'node-pin pinned' : 'node-pin'}

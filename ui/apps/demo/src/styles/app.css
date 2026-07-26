@@ -451,7 +451,7 @@ body {
 /* Row controls stay quiet until the row is hovered or the control is active, so a resting tree
    reads as structure rather than as a grid of buttons. Focus must still reveal them, or they
    become keyboard-inaccessible. */
-.node-detail-toggle,
+.node-menu-trigger,
 .node-pin {
   appearance: none;
   border: none;
@@ -465,16 +465,50 @@ body {
   opacity: 0;
 }
 
-.node-row:hover .node-detail-toggle,
+.node-row:hover .node-menu-trigger,
 .node-row:hover .node-pin,
-.node-detail-toggle:focus-visible,
+.node-menu-trigger:focus-visible,
 .node-pin:focus-visible,
-.node-detail-toggle.open,
+.node-menu-trigger.open,
 .node-pin.pinned {
   opacity: 1;
 }
 
 .node-pin.pinned { color: var(--accent); }
+
+/* The actions menu, positioned in viewport coordinates by `placePopover` — the same flip-and-clamp
+   the DSL pane's payload card uses. Fixed rather than absolute so an ancestor's `overflow` cannot
+   clip it, since rows sit inside a scrolling pane. */
+.node-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 132px;
+  padding: 4px;
+  overflow-y: auto;
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  z-index: 30;
+}
+
+.node-menu-item {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.node-menu-item:hover,
+.node-menu-item:focus-visible {
+  background: var(--bg);
+}
 
 /* The detail panel: the node's edit controls and decoration fields, inset from the row by the
    same step that indents the level below. */

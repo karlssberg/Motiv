@@ -25,6 +25,8 @@ export function BuilderBody(props: { client: RulesApiClient }) {
   const catalog = catalogState.status === 'ready' ? catalogState.data : EMPTY_CATALOG;
 
   const [model, setModel] = useState<AccordionModel>(EMPTY_ACCORDION);
+  /** Which node's actions menu is open. Held here so opening one closes any other. */
+  const [menuPath, setMenuPath] = useState<string | null>(null);
 
   return (
     <>
@@ -48,6 +50,8 @@ export function BuilderBody(props: { client: RulesApiClient }) {
           toggleCollapsed: (path) => setModel((prev) => toggleCollapsed(prev, path)),
           toggleOpen: (path) => setModel((prev) => toggleOpen(prev, path)),
           togglePin: (path) => setModel((prev) => togglePin(prev, path)),
+          menuPath,
+          setMenuPath,
           catalog,
         }}
       >

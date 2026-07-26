@@ -16,9 +16,10 @@ const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unk
 const renderWith = (store: RuleEditorStore) =>
   render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
 
-/** Opens a node's detail panel, where its edit controls live. */
+/** Opens a node's detail panel via its actions menu, where Details lives for every node kind. */
 const openDetail = async (path: string) => {
-  fireEvent.click(await screen.findByRole('button', { name: `details for ${path}` }));
+  fireEvent.click(await screen.findByRole('button', { name: `actions for ${path}` }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Details' }));
 };
 
 describe('QuantifierNode', () => {
