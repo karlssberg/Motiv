@@ -111,6 +111,34 @@ describe('BuilderPane accordion (boolean)', () => {
     expect((store.getState().document.rule as { and: unknown[] }).and).toHaveLength(3);
   });
 
+  it('opens a leaf\'s metadata from its caret, which is the leaf\'s only disclosure control', async () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    const { container } = renderWith(store);
+    const caret = await screen.findByRole('button', { name: 'details for $.rule' });
+
+    // The caret slot is the disclosure — a leaf has nothing else to reveal, so it carries no
+    // separate `⋯` toggle.
+    expect(caret.className).toContain('node-chev');
+    expect(caret.textContent).toBe('▸');
+    expect(container.querySelector('.node-detail-toggle')).toBeNull();
+
+    fireEvent.click(caret);
+    expect(caret.textContent).toBe('▾');
+    expect(caret.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByLabelText('name at $.rule')).toBeDefined();
+  });
+
+  it('keeps the caret structural on a parent, which discloses metadata separately', async () => {
+    const store = new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
+    const { container } = renderWith(store);
+    await screen.findByRole('button', { name: 'collapse $.rule' });
+
+    // A parent's caret is taken by its subtree, so it keeps a `⋯` of its own.
+    expect(container.querySelector('.node-detail-toggle')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'details for $.rule' }).className)
+      .toContain('node-detail-toggle');
+  });
+
   it('offers remove only on operand elements, not on a NOT child', async () => {
     const store = new RuleEditorStore({ rule: { not: { spec: 'is-active' } } });
     renderWith(store);

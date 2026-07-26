@@ -32,10 +32,16 @@ const panelId = (path: string): string => `detail-${path}`;
 /**
  * Recursively renders a rule node.
  *
- * Two view concerns, deliberately independent. The **caret** is structural: it folds a subtree
- * into a single line of DSL and back, and starts expanded. The **detail** panel holds the node's
- * decoration fields and edit controls, starts closed, and is displaced when another node is
- * opened unless it has been pinned. A node can be collapsed with its panel open, or the reverse.
+ * Two view concerns, deliberately independent. Structure folds a subtree into a single line of
+ * DSL and back, and starts expanded. The **detail** panel holds the node's decoration fields and
+ * edit controls, starts closed, and is displaced when another node is opened unless it has been
+ * pinned. A node can be collapsed with its panel open, or the reverse.
+ *
+ * The caret reveals whatever is *inside* a node, so which concern it drives follows from the node
+ * itself: a parent's insides are its children, and a leaf — having none — discloses its metadata
+ * instead. That leaves the caret slot meaningful on every row rather than an inert bullet on
+ * leaves, and spares a leaf the second control it would otherwise need. Only a parent, whose
+ * caret is spoken for, carries the separate `⋯` toggle.
  *
  * The row body carries no interactive role of its own. It has to host a text editor once the
  * subtree is collapsed, and interactive content nested inside a button is invalid HTML that
@@ -77,7 +83,16 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             {collapsed ? '▸' : '▾'}
           </button>
         ) : (
-          <span className="node-bullet" aria-hidden="true">•</span>
+          <button
+            type="button"
+            className="node-chev"
+            aria-expanded={open}
+            aria-controls={panelId(path)}
+            aria-label={`details for ${path}`}
+            onClick={() => toggleOpen(path)}
+          >
+            {open ? '▾' : '▸'}
+          </button>
         )}
         <span className="node-body">
           {summary === null ? (
@@ -90,16 +105,18 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             </>
           )}
         </span>
-        <button
-          type="button"
-          className={open ? 'node-detail-toggle open' : 'node-detail-toggle'}
-          aria-expanded={open}
-          aria-controls={panelId(path)}
-          aria-label={`details for ${path}`}
-          onClick={() => toggleOpen(path)}
-        >
-          ⋯
-        </button>
+        {hasChildren && (
+          <button
+            type="button"
+            className={open ? 'node-detail-toggle open' : 'node-detail-toggle'}
+            aria-expanded={open}
+            aria-controls={panelId(path)}
+            aria-label={`details for ${path}`}
+            onClick={() => toggleOpen(path)}
+          >
+            ⋯
+          </button>
+        )}
         <button
           type="button"
           className={pinned ? 'node-pin pinned' : 'node-pin'}
