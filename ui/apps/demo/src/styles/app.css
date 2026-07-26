@@ -537,6 +537,39 @@ body {
 .tok-number { color: var(--dsl-number); }
 .tok-error { color: var(--danger); }
 
+button.node-dsl {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: text;
+}
+
+.node-dsl-editing {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+  overflow: visible;
+  white-space: normal;
+}
+
+.node-dsl-host {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The editor sheds the pane chrome: no gutter, no page-height, no vertical padding, so the row
+   keeps the height it had while it was static text. */
+.node-dsl-host .cm-editor { height: auto; background: transparent; }
+.node-dsl-host .cm-content { padding: 0; }
+
+.node-dsl-error {
+  flex: none;
+  padding: 1px 6px;
+  font-size: 11px;
+}
+
 /* Reserved-height strip above the tree: it holds the pin count and close-all once anything is
    pinned, and stays empty (but present) otherwise so the tree never shifts underneath. */
 .accordion-strip {
