@@ -30,6 +30,18 @@ export function BuilderBody(props: { client: RulesApiClient }) {
     <>
       {catalogState.status === 'loading' && <p>Loading catalog…</p>}
       {catalogState.status === 'error' && <p role="alert">Failed to load catalog.</p>}
+      {/* Height is reserved rather than conditional, so the tree does not jump when the first
+          node is pinned. */}
+      <div className="accordion-strip">
+        {model.pinned.size > 0 && (
+          <>
+            <span className="caption">{model.pinned.size} pinned</span>
+            <button type="button" className="btn" onClick={() => setModel(closeAll)}>
+              close all
+            </button>
+          </>
+        )}
+      </div>
       <AccordionContext.Provider
         value={{
           model,

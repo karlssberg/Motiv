@@ -507,6 +507,17 @@ body {
   margin-left: 10px;
 }
 
+/* Reserved-height strip above the tree: it holds the pin count and close-all once anything is
+   pinned, and stays empty (but present) otherwise so the tree never shifts underneath. */
+.accordion-strip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: calc(var(--space) / 2);
+  min-height: 26px;
+  padding: 0 2px;
+}
+
 .decoration {
   display: flex;
   flex-direction: column;
