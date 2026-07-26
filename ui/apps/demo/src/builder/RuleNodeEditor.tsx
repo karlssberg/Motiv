@@ -1,6 +1,11 @@
 import { createContext, useContext } from 'react';
-import { isHigherOrderNode, type Catalog } from '@motiv/rules-core';
-import { useRuleNode } from '@motiv/rules-react';
+import {
+  binaryOperator, isBinaryNode, isHigherOrderNode,
+  type BinaryOperator, type Catalog,
+} from '@motiv/rules-core';
+import { useRuleEditorStore, useRuleNode } from '@motiv/rules-react';
+import { BINARY_OPERATORS, setBinaryOperator } from './mutations.js';
+import { OPERATOR_LABELS } from './nodeSummary.js';
 import { NodeToolbar } from './NodeToolbar.js';
 import { QuantifierNode } from './QuantifierNode.js';
 import { DecorationEditor } from './DecorationEditor.js';
@@ -54,6 +59,7 @@ const panelId = (path: string): string => `detail-${path}`;
 export function RuleNodeEditor(props: { path: string; modelType: string }) {
   const { path, modelType } = props;
   const { node, errors } = useRuleNode(path);
+  const store = useRuleEditorStore();
   const { model, toggleCollapsed, toggleOpen, togglePin, menuPath, setMenuPath, catalog } = useAccordion();
 
   if (!node) return null;
@@ -103,7 +109,23 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             <NodeDsl path={path} node={node} modelType={modelType} catalog={catalog} />
           ) : (
             <>
-              <span className={`node-badge node-badge-${summary.kind}`}>{summary.badge}</span>
+              {isBinaryNode(node) ? (
+                // The badge doubles as the control that changes the operator. It is safe to make
+                // it interactive only here: in DSL view this same slot hosts the text editor, and
+                // a control nested in one would fight it for events.
+                <select
+                  aria-label={`operator at ${path}`}
+                  className={`node-badge node-badge-${summary.kind} node-operator`}
+                  value={binaryOperator(node)}
+                  onChange={(e) => setBinaryOperator(store, path, node, e.target.value as BinaryOperator)}
+                >
+                  {BINARY_OPERATORS.map((op) => (
+                    <option key={op} value={op}>{OPERATOR_LABELS[op]}</option>
+                  ))}
+                </select>
+              ) : (
+                <span className={`node-badge node-badge-${summary.kind}`}>{summary.badge}</span>
+              )}
               {summary.description && <span className="node-desc">{summary.description}</span>}
               {node.name && <span className="node-name">as &quot;{node.name}&quot;</span>}
             </>

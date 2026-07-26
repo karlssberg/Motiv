@@ -20,7 +20,10 @@ export interface NodeSummary {
   kind: NodeBadgeKind;
 }
 
-const OP_LABEL: Record<BinaryOperator, string> = { and: 'AND', or: 'OR', xor: 'XOR', andAlso: 'AndAlso', orElse: 'OrElse' };
+/** What each binary operator is called on a row — the badge's text, and the picker's options. */
+export const OPERATOR_LABELS: Record<BinaryOperator, string> = {
+  and: 'AND', or: 'OR', xor: 'XOR', andAlso: 'AndAlso', orElse: 'OrElse',
+};
 const OP_DESCRIPTION: Record<BinaryOperator, string> = {
   and: 'all must hold', or: 'any may hold', xor: 'exactly one must hold',
   andAlso: 'all must hold, short-circuit', orElse: 'any may hold, short-circuit',
@@ -43,7 +46,7 @@ export function summarize(node: RuleNode): NodeSummary {
   if (isNotNode(node)) return { badge: 'NOT', description: 'must not hold', kind: 'op' };
   if (isBinaryNode(node)) {
     const op = binaryOperator(node);
-    return { badge: OP_LABEL[op], description: OP_DESCRIPTION[op], kind: 'op' };
+    return { badge: OPERATOR_LABELS[op], description: OP_DESCRIPTION[op], kind: 'op' };
   }
   if (isExpressionNode(node)) return { badge: node.expression, description: '', kind: 'spec' };
   if (isSpecNode(node)) return { badge: node.spec, description: '', kind: 'spec' };

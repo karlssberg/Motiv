@@ -1,4 +1,24 @@
-import type { RuleEditorStore, RuleNode } from '@motiv/rules-core';
+import {
+  binaryOperator, operandsOf,
+  type BinaryNode, type BinaryOperator, type RuleEditorStore, type RuleNode,
+} from '@motiv/rules-core';
+
+/** The five binary operators, in the order the picker offers them. */
+export const BINARY_OPERATORS: readonly BinaryOperator[] = ['and', 'or', 'xor', 'andAlso', 'orElse'];
+
+/**
+ * Rebuilds a binary node under a different operator, keeping its operands in order and its
+ * decoration (`name`/`whenTrue`/`whenFalse`). The old operator key is dropped, since the key
+ * *is* the operator — a node carrying two of them would be ambiguous rather than merely wrong.
+ */
+export function setBinaryOperator(
+  store: RuleEditorStore, path: string, node: BinaryNode, operator: BinaryOperator,
+): void {
+  const previous = binaryOperator(node);
+  if (previous === operator) return;
+  const { [previous]: _operands, ...rest } = node as unknown as Record<string, unknown>;
+  store.replaceNode(path, { ...rest, [operator]: operandsOf(node) } as unknown as RuleNode);
+}
 
 /** The five higher-order quantifier keys, in canonical order. */
 export const KINDS = [
