@@ -2,8 +2,8 @@ import { test, expect, type Locator, type Page } from '@playwright/test';
 
 /** Switches the editor pane to its DSL surface, returning the CodeMirror text element. */
 async function openDsl(page: Page): Promise<Locator> {
-  // The builder's root leaf proves the live catalog loaded before the surface is switched.
-  await expect(page.getByLabel('spec at $.rule')).toBeVisible();
+  // The builder's root row proves the live catalog loaded before the surface is switched.
+  await expect(page.getByRole('button', { name: 'edit expression at $.rule' })).toBeVisible();
   await page.getByRole('tab', { name: 'DSL' }).click();
 
   const content = page.locator('.cm-content');

@@ -116,6 +116,8 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
     );
   }
 
+  // One label, on one element. An inner labelled span would give the same row two accessible
+  // names differing only by prefix, which any substring-matching query reads as ambiguous.
   return (
     <button
       type="button"
@@ -124,11 +126,9 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
       onFocus={() => setEditing(true)}
       onClick={() => setEditing(true)}
     >
-      <span aria-label={`expression at ${path}`}>
-        {tokenSpans(text).map((span) => (
-          <span key={span.key} className={`tok-${span.kind}`}>{span.value}</span>
-        ))}
-      </span>
+      {tokenSpans(text).map((span) => (
+        <span key={span.key} className={`tok-${span.kind}`}>{span.value}</span>
+      ))}
     </button>
   );
 }

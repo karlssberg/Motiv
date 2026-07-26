@@ -19,7 +19,7 @@ const renderWith = (store: RuleEditorStore) =>
 describe('DSL rows', () => {
   it('renders a leaf as its bare spec name', async () => {
     renderWith(new RuleEditorStore({ rule: { spec: 'is-active' } }));
-    const row = await screen.findByLabelText('expression at $.rule');
+    const row = await screen.findByRole('button', { name: 'edit expression at $.rule' });
     expect(row.textContent).toBe('is-active');
   });
 
@@ -29,7 +29,7 @@ describe('DSL rows', () => {
     });
     renderWith(store);
     fireEvent.click(await screen.findByRole('button', { name: 'collapse $.rule' }));
-    expect(screen.getByLabelText('expression at $.rule').textContent).toBe('is-active | !is-adult');
+    expect(screen.getByRole('button', { name: 'edit expression at $.rule' }).textContent).toBe('is-active | !is-adult');
   });
 
   it('renders a collapsed quantifier body on the same line', async () => {
@@ -38,7 +38,7 @@ describe('DSL rows', () => {
     });
     renderWith(store);
     fireEvent.click(await screen.findByRole('button', { name: 'collapse $.rule' }));
-    expect(screen.getByLabelText('expression at $.rule').textContent)
+    expect(screen.getByRole('button', { name: 'edit expression at $.rule' }).textContent)
       .toBe('atLeast(2) in orders { is-active }');
   });
 
@@ -46,13 +46,13 @@ describe('DSL rows', () => {
     const store = new RuleEditorStore({ rule: { or: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
     renderWith(store);
     await screen.findByRole('button', { name: 'collapse $.rule' });
-    expect(screen.queryByLabelText('expression at $.rule')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'edit expression at $.rule' })).toBeNull();
     expect(screen.getByText('any may hold')).toBeDefined();
   });
 
   it('classifies tokens so they can be coloured', async () => {
     renderWith(new RuleEditorStore({ rule: { not: { spec: 'is-active' } } }));
-    const row = await screen.findByLabelText('expression at $.rule.not');
+    const row = await screen.findByRole('button', { name: 'edit expression at $.rule.not' });
     expect(row.querySelector('.tok-spec')).not.toBeNull();
   });
 });
@@ -91,7 +91,7 @@ describe('DSL row editing', () => {
     replaceBuffer(container, 'is-adult');
     fireEvent.keyDown(content(container), { key: 'Escape' });
     expect(store.getState().document.rule).toEqual({ spec: 'is-active' });
-    expect(screen.getByLabelText('expression at $.rule').textContent).toBe('is-active');
+    expect(screen.getByRole('button', { name: 'edit expression at $.rule' }).textContent).toBe('is-active');
   });
 
   it('round-trips a focus-and-blur with no edit', async () => {

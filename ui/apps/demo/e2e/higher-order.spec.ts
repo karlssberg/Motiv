@@ -1,19 +1,36 @@
 import { test, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
-test('builds and evaluates a higher-order rule end to end', async ({ page }) => {
+/** Replaces a row's expression by typing DSL into it, the way authoring now works. */
+async function typeExpression(page: Page, path: string, dsl: string): Promise<void> {
+  await page.getByRole('button', { name: `edit expression at ${path}` }).click();
+  await page.keyboard.press('ControlOrMeta+a');
+  await page.keyboard.type(dsl);
+  await page.keyboard.press('Enter');
+}
+
+/** Builds `is-adult & all in orders { is-large-order }` through the builder's rows. */
+async function buildHigherOrderRule(page: Page): Promise<void> {
   await page.goto('/');
 
-  // root leaf present (catalog loaded)
-  await expect(page.getByLabel('spec at $.rule')).toBeVisible();
+  // root row present (catalog loaded)
+  await expect(page.getByRole('button', { name: 'edit expression at $.rule' })).toBeVisible();
 
-  // is-adult AND (is-active) AND (all orders are large)
-  await page.getByLabel('spec at $.rule').selectOption('is-adult');
+  await typeExpression(page, '$.rule', 'is-adult');
+
+  // wrap in AND, which seeds a second operand for the quantifier to replace
+  await page.getByRole('button', { name: 'details for $.rule' }).click();
   await page.getByRole('button', { name: 'wrap $.rule in AND', exact: true }).click();
-  await page.getByRole('button', { name: 'add quantifier to $.rule' }).click();
+
+  await typeExpression(page, '$.rule.and[1]', 'all in orders { is-large-order }');
 
   // the document reflects the higher-order node over the orders collection
   await expect(page.getByLabel('rule document')).toContainText('asAllSatisfied');
   await expect(page.getByLabel('rule document')).toContainText('"path": "orders"');
+}
+
+test('builds and evaluates a higher-order rule end to end', async ({ page }) => {
+  await buildHigherOrderRule(page);
 
   // a model whose orders are all large → asAllSatisfied is true → whole AND satisfied
   await page.getByLabel('sample model').fill(
@@ -25,12 +42,7 @@ test('builds and evaluates a higher-order rule end to end', async ({ page }) => 
 });
 
 test('a mixed order set makes the quantifier — and the rule — not satisfied', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.getByLabel('spec at $.rule')).toBeVisible();
-
-  await page.getByLabel('spec at $.rule').selectOption('is-adult');
-  await page.getByRole('button', { name: 'wrap $.rule in AND', exact: true }).click();
-  await page.getByRole('button', { name: 'add quantifier to $.rule' }).click();
+  await buildHigherOrderRule(page);
 
   await page.getByLabel('sample model').fill(
     '{ "age": 30, "isActive": true, "orderCount": 2, "orders": [ { "total": 150 }, { "total": 40 } ] }',

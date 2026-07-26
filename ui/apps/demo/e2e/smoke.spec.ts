@@ -3,11 +3,12 @@ import { test, expect } from '@playwright/test';
 test('build a rule, then evaluate it end to end', async ({ page }) => {
   await page.goto('/');
 
-  // Builder loaded from the live catalog: the root leaf select is present.
-  const rootSelect = page.getByLabel('spec at $.rule');
-  await expect(rootSelect).toBeVisible();
+  // Builder loaded from the live catalog: the root row renders its expression.
+  await expect(page.getByRole('button', { name: 'edit expression at $.rule' })).toBeVisible();
 
-  // Build a composite: wrap the root in AND (adds a second operand).
+  // Build a composite: wrap the root in AND (adds a second operand). The structural controls
+  // live in the node's detail panel, which starts closed.
+  await page.getByRole('button', { name: 'details for $.rule' }).click();
   await page.getByRole('button', { name: 'wrap $.rule in AND', exact: true }).click();
 
   // The JSON pane reflects the composite document.

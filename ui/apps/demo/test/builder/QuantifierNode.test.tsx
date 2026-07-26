@@ -34,7 +34,7 @@ describe('QuantifierNode', () => {
     const store = new RuleEditorStore({ rule: { asAllSatisfied: { spec: 'is-large-order' }, path: 'orders' } });
     renderWith(store);
     fireEvent.click(await screen.findByRole('button', { name: 'collapse $.rule' }));
-    expect(screen.getByLabelText('expression at $.rule').textContent)
+    expect(screen.getByRole('button', { name: 'edit expression at $.rule' }).textContent)
       .toBe('all in orders { is-large-order }');
   });
 
@@ -66,7 +66,7 @@ describe('QuantifierNode', () => {
     const rule = store.getState().document.rule as unknown as Record<string, unknown>;
     expect(rule).toMatchObject({ asAtLeastNSatisfied: { spec: 'is-large-order' }, n: 2, path: 'orders' });
 
-    expect(screen.getByLabelText('expression at $.rule.asAtLeastNSatisfied').textContent)
+    expect(screen.getByRole('button', { name: 'edit expression at $.rule.asAtLeastNSatisfied' }).textContent)
       .toBe('is-large-order');
   });
 

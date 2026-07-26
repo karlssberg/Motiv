@@ -44,7 +44,9 @@ test('editing and saving a rule changes the next checkout, and stale saves confl
   await page.getByRole('button', { name: 'Try checkout' }).click();
   await expect(page.getByText('Approved', { exact: true })).toBeVisible();
 
-  // Make the rule impossible for the sample customer: NOT(is-active) via the node toolbar.
+  // Make the rule impossible for the sample customer: NOT(is-active) via the node toolbar,
+  // which lives in the node's detail panel.
+  await page.getByRole('button', { name: 'details for $.rule' }).click();
   await page.getByRole('button', { name: 'toggle NOT at $.rule' }).click();
   await expect(page.getByLabel('rule document')).toContainText('"not"');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
