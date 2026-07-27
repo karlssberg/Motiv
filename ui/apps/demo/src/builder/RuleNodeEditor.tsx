@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
-import { isBinaryNode, isHigherOrderNode, type Catalog } from '@motiv/rules-core';
-import { useRuleNode } from '@motiv/rules-react';
+import { isBinaryNode, isHigherOrderNode, insertTargetForRow, planInsert, type Catalog } from '@motiv/rules-core';
+import { useRuleEditorStore, useRuleNode } from '@motiv/rules-react';
 import { NodeToolbar } from './NodeToolbar.js';
 import { OperatorPicker } from './OperatorPicker.js';
 import { QuantifierNode } from './QuantifierNode.js';
@@ -9,6 +9,8 @@ import { childPaths } from './childPaths.js';
 import { summarize } from './nodeSummary.js';
 import { NodeDsl } from './NodeDsl.js';
 import { NodeMenu } from './NodeMenu.js';
+import { NodeInsertButton } from './NodeInsertButton.js';
+import { PendingSlot } from './PendingSlot.js';
 import { isCollapsed, isOpen, isPinned, type AccordionModel } from './accordion.js';
 import { type HighlightModel } from './highlight.js';
 
@@ -29,6 +31,9 @@ export interface AccordionState {
   highlight: HighlightModel;
   setHovered: (path: string | null) => void;
   setSelected: (path: string | null) => void;
+  /** The open insertion slot, if any: a row path plus which of that row's two positions. */
+  pending: { path: string; where: 'after' | 'first' } | null;
+  setPending: (pending: { path: string; where: 'after' | 'first' } | null) => void;
 }
 
 /** The popups a row can open. */
@@ -71,8 +76,9 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
   const { node, errors } = useRuleNode(path);
   const {
     model, toggleCollapsed, toggleOpen, togglePin, openPopover, setOpenPopover, catalog,
-    highlight, setHovered, setSelected,
+    highlight, setHovered, setSelected, pending, setPending,
   } = useAccordion();
+  const store = useRuleEditorStore();
 
   /** Binds one of this row's popups to the tree's single open slot. */
   const popover = (kind: PopoverKind): { open: boolean; setOpen: (next: boolean) => void } => ({
@@ -155,6 +161,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
         >
           ◈
         </button>
+        <NodeInsertButton path={path} onOpen={() => setPending({ path, where: 'after' })} />
         <NodeMenu
           path={path}
           // Only an operand of an n-ary operator can be removed; a NOT's child or a quantifier's
@@ -175,6 +182,18 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
       </div>
       {errors.length > 0 && (
         <span role="alert" className="error">{errors.map((e) => e.message).join('; ')}</span>
+      )}
+      {pending?.path === path && pending.where === 'after' && (
+        <PendingSlot
+          modelType={modelType}
+          catalog={catalog}
+          onCommit={(inserted) => {
+            const target = insertTargetForRow(path);
+            store.applyPlan(planInsert(store.getState().document, target, inserted));
+            setPending(null);
+          }}
+          onCancel={() => setPending(null)}
+        />
       )}
       {open && (
         <div className="node-detail" id={panelId(path)}>

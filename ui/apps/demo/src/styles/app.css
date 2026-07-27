@@ -1112,3 +1112,18 @@ button.node-dsl {
   border-style: dashed;
   border-color: var(--accent);
 }
+
+.node-insert {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  padding: 0 2px;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--faint);
+  opacity: 0;
+}
+.node-row:hover .node-insert,
+.node-insert:focus-visible { opacity: 1; }
+.node-insert:hover { color: var(--accent); }

@@ -30,6 +30,8 @@ export function BuilderBody(props: { client: RulesApiClient }) {
   /** Which row popup — an actions menu or an operator picker — is open. One at a time, tree-wide. */
   const [openPopover, setOpenPopover] = useState<string | null>(null);
   const [highlight, setHighlight] = useState<HighlightModel>(EMPTY_HIGHLIGHT);
+  /** The open insertion slot, if any: a row path plus which of that row's two positions. */
+  const [pending, setPending] = useState<{ path: string; where: 'after' | 'first' } | null>(null);
   const editorState = useRuleEditor(useRuleEditorStore());
 
   return (
@@ -61,6 +63,8 @@ export function BuilderBody(props: { client: RulesApiClient }) {
           highlight,
           setHovered: (path) => setHighlight((prev) => setHovered(prev, path)),
           setSelected: (path) => setHighlight((prev) => setSelected(prev, path)),
+          pending,
+          setPending,
         }}
       >
         <RuleNodeEditor path={ROOT} modelType={MODEL_TYPE} />
