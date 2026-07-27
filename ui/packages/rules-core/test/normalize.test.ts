@@ -58,9 +58,20 @@ describe('normalizeAt', () => {
     expect(result.rule).toEqual({ andAlso: [{ spec: 'a' }, { spec: 'b' }, { spec: 'c' }] });
   });
 
-  it('descends through not and quantifier bodies', () => {
+  it('descends through a not body', () => {
     const result = normalizeAt(doc({ not: { and: [{ and: [{ spec: 'a' }, { spec: 'b' }] }, { spec: 'c' }] } }), '$.rule');
     expect(result.rule).toEqual({ not: { and: [{ spec: 'a' }, { spec: 'b' }, { spec: 'c' }] } });
+  });
+
+  it('descends through a higher-order quantifier body', () => {
+    const result = normalizeAt(
+      doc({ asAllSatisfied: { and: [{ and: [{ spec: 'a' }, { spec: 'b' }] }, { spec: 'c' }] }, path: '$.orders' }),
+      '$.rule',
+    );
+    expect(result.rule).toEqual({
+      asAllSatisfied: { and: [{ spec: 'a' }, { spec: 'b' }, { spec: 'c' }] },
+      path: '$.orders',
+    });
   });
 
   it('normalizes only the subtree at the given path, leaving siblings untouched', () => {
@@ -84,5 +95,10 @@ describe('normalizeAt', () => {
 
   it('leaves a leaf untouched', () => {
     expect(normalizeAt(doc({ spec: 'a' }), '$.rule').rule).toEqual({ spec: 'a' });
+  });
+
+  it('returns the document unchanged for a path that does not resolve', () => {
+    const document = doc({ spec: 'a' });
+    expect(normalizeAt(document, '$.rule.and[3]').rule).toEqual({ spec: 'a' });
   });
 });
