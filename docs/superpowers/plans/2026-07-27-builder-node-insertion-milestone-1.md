@@ -1421,6 +1421,8 @@ This task changes no behaviour. The existing `NodeDsl` tests are the regression 
     onCancel: () => void;
     /** Fired on every document change, so a caller holding error state can retire it. */
     onChange?: () => void;
+    /** Accessible name for the editable region. Applied to `.cm-content`, not the host. */
+    ariaLabel?: string;
   }): { host: MutableRefObject<HTMLSpanElement | null> }
   ```
   `onCommit` returns `true` when the buffer was accepted; `false` leaves the editor open with the text as typed.
@@ -1661,7 +1663,21 @@ Append to `app.css`:
 }
 ```
 
-**On the `aria-label`:** keep it on the host span — it is the editor's accessible name, which the slot needs since it has no row text of its own. The tests do not query by it; they address `.cm-content` and drive the view through `test/support/codemirror.ts`, the way `NodeDsl.test.tsx` already does.
+**On the `aria-label` — do not put it on the host span.** An earlier draft of this plan said to, and that was wrong. CodeMirror appends its editor tree *inside* the host and sets `role="textbox"` on the nested `.cm-content`; ARIA does not propagate an ancestor's `aria-label` to a descendant carrying its own role, so a label on the host names nothing and the textbox a screen reader lands on is anonymous.
+
+The label has to reach `.cm-content` itself, which is what CodeMirror's `EditorView.contentAttributes` facet is for. Since both consumers of `useInlineDslEditor` need it, the hook takes an optional `ariaLabel` and applies it:
+
+```ts
+  ...(options.ariaLabel ? [EditorView.contentAttributes.of({ 'aria-label': options.ariaLabel })] : []),
+```
+
+`PendingSlot` passes `ariaLabel: 'new expression'`. The property is worth asserting, since nothing else would catch its regression:
+
+```tsx
+    expect(screen.getByRole('textbox', { name: 'new expression' })).toBeDefined();
+```
+
+`NodeDsl` deliberately does **not** pass one in this milestone. Its editing-state textbox is likewise unnamed, but that predates this work, and giving it the same name its read-state button already carries would make `getByRole('button', { name: 'edit expression at …' })` ambiguous against a same-named textbox and break existing tests. Left for a separate accessibility pass.
 
 - [ ] **Step 4: Run the test to verify it passes**
 
