@@ -53,7 +53,7 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
       return true;
     },
     onCancel: stop,
-    onEdit: () => setError(null),
+    onChange: () => setError(null),
   });
 
   if (editing) {

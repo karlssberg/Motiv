@@ -30,15 +30,15 @@ export function useInlineDslEditor(options: {
    * error itself — this lets the caller retire a refused commit's message on the next
    * keystroke, the way it always has.
    */
-  onEdit?: () => void;
+  onChange?: () => void;
 }): { host: MutableRefObject<HTMLSpanElement | null> } {
   const host = useRef<HTMLSpanElement | null>(null);
 
   /**
    * Cleared before the view is torn down, so the blur that teardown provokes cannot write back.
    * Destroying a focused CodeMirror fires `blur`, and by then the row may be gone — switching
-   * editing surfaces, or a parent re-render dropping this node — leaving `replaceNode` to
-   * address a path that no longer exists.
+   * editing surfaces, or a parent re-render dropping this node — leaving the caller's commit to
+   * address state that no longer exists.
    */
   const attached = useRef(false);
 
@@ -98,7 +98,7 @@ export function useInlineDslEditor(options: {
           // keystroke retires it. Left standing it would sit beside the field for the whole time
           // you spend typing the fix — which, for a half-typed group, is the whole expression.
           EditorView.updateListener.of((update) => {
-            if (update.docChanged) options.onEdit?.();
+            if (update.docChanged) options.onChange?.();
           }),
           EditorView.domEventHandlers({
             blur: (_event, editor) => { commit(editor.state.doc.toString()); return false; },
