@@ -21,7 +21,8 @@ function segmentize(
   const cuts = new Set<number>([0, text.length]);
   for (const range of [hover, selected]) {
     if (!range) continue;
-    // Clamp: a stale path can resolve past the end of a freshly reprinted expression.
+    // Clamp: keeps this function total against any range, in bounds or not, rather than relying
+    // on every caller to have already validated one.
     cuts.add(Math.max(0, Math.min(range.from, text.length)));
     cuts.add(Math.max(0, Math.min(range.to, text.length)));
   }
@@ -34,7 +35,7 @@ function segmentize(
   for (let i = 0; i < bounds.length - 1; i += 1) {
     const from = bounds[i]!;
     const to = bounds[i + 1]!;
-    if (from === to) continue;
+    // No emptiness check needed: bounds comes from a sorted Set, so consecutive values strictly increase.
     segments.push({
       key: `seg-${from}`,
       value: text.slice(from, to),
@@ -81,22 +82,26 @@ export function RuleDslStrip(props: { rule: RuleNode; highlight: HighlightModel 
   }, [focus, text]);
 
   const focusIsHover = highlight.focus === 'hover';
+  // The focused mark can span several segments: a selected descendant splits its hovered
+  // ancestor's range into three, all carrying the hover flag. One ref object assigned to
+  // several elements leaves whichever React commits last in `.current`, which is arbitrary —
+  // so the ref goes on the first segment of the mark, deliberately.
+  const scrollIndex = segments.findIndex((segment) => (focusIsHover ? segment.hover : segment.selected));
 
   return (
     <div className="dsl-strip">
       <span className="dsl-strip-label">rule</span>
       <span className="dsl-strip-text" aria-label="rule expression">
-        {segments.map((segment) => {
+        {segments.map((segment, index) => {
           const marks = [
             segment.selected ? 'dsl-strip-selected' : null,
             segment.hover ? 'dsl-strip-hover' : null,
           ].filter(Boolean).join(' ');
-          const isTarget = focusIsHover ? segment.hover : segment.selected;
           return (
             <span
               key={segment.key}
               className={marks || undefined}
-              ref={isTarget ? scrollTarget : undefined}
+              ref={index === scrollIndex ? scrollTarget : undefined}
             >
               {segment.value}
             </span>

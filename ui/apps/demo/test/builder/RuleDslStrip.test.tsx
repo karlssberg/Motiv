@@ -46,4 +46,18 @@ describe('RuleDslStrip', () => {
     render(<RuleDslStrip rule={rule} highlight={highlight} />);
     expect(screen.getByLabelText('rule expression').textContent).toBe('a & (b | c)');
   });
+
+  it('marks a selected descendant nested inside its hovered ancestor', () => {
+    // The mirror of the case above: here the hover is the wider range, so the selection
+    // splits it into three segments. Covers the rendering; the scroll ref landing on
+    // exactly one of those segments is a code property, not an observable one.
+    const highlight = setHovered(setSelected(EMPTY_HIGHLIGHT, '$.rule.and[1].or[0]'), '$.rule.and[1]');
+    const { container } = render(<RuleDslStrip rule={rule} highlight={highlight} />);
+
+    expect([...container.querySelectorAll('.dsl-strip-hover')].map((el) => el.textContent).join(''))
+      .toBe('(b | c)');
+    expect([...container.querySelectorAll('.dsl-strip-selected')].map((el) => el.textContent).join(''))
+      .toBe('b');
+    expect(screen.getByLabelText('rule expression').textContent).toBe('a & (b | c)');
+  });
 });
