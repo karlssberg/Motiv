@@ -60,4 +60,56 @@ describe('RuleDslStrip', () => {
       .toBe('b');
     expect(screen.getByLabelText('rule expression').textContent).toBe('a & (b | c)');
   });
+  /**
+   * A highlight path outlives the node it names: nothing reconciles the hover/selection model
+   * against a document edit. These pin that a path with no span of its own marks *nothing*,
+   * rather than resolving through `rangeOfPath`'s ancestor fallback — which is correct for the
+   * linter it was written for (anchoring a `$.rule.whenTrue` diagnostic on its owning node) and
+   * exactly wrong here, where a missing span means the node has ceased to exist.
+   */
+  describe('a path that no longer resolves', () => {
+    it('marks nothing when the selected operand has been removed', () => {
+      const shrunk = { and: [{ spec: 'a' }, { spec: 'b' }] };
+      const highlight = setSelected(EMPTY_HIGHLIGHT, '$.rule.and[2]');
+
+      const { container } = render(<RuleDslStrip rule={shrunk} highlight={highlight} />);
+
+      expect(container.querySelectorAll('.dsl-strip-selected')).toHaveLength(0);
+      expect(screen.getByLabelText('rule expression').textContent).toBe('a & b');
+    });
+
+    it('marks nothing when removal collapsed the parent to its survivor', () => {
+      const collapsed = { spec: 'a' };
+      const highlight = setHovered(EMPTY_HIGHLIGHT, '$.rule.and[1]');
+
+      const { container } = render(<RuleDslStrip rule={collapsed} highlight={highlight} />);
+
+      expect(container.querySelectorAll('.dsl-strip-hover')).toHaveLength(0);
+      expect(screen.getByLabelText('rule expression').textContent).toBe('a');
+    });
+  });
+
+  /**
+   * The strip prints the rule and reparses it for spans, which rests on the printer's round-trip
+   * guarantee. That guarantee has a documented hole: the DSL has no string escapes, so a name
+   * carrying a double quote prints text the parser cannot read back. The spans that come out are
+   * damaged rather than absent, so trusting them silently mis-marks.
+   */
+  describe('a rule the printer cannot round-trip', () => {
+    const unquotable = { and: [{ spec: 'a', name: 'x"y' }, { spec: 'b' }] };
+
+    it('marks nothing rather than trusting spans from a failed parse', () => {
+      const highlight = setHovered(EMPTY_HIGHLIGHT, '$.rule.and[0]');
+
+      const { container } = render(<RuleDslStrip rule={unquotable} highlight={highlight} />);
+
+      expect(container.querySelectorAll('.dsl-strip-hover')).toHaveLength(0);
+    });
+
+    it('still renders the whole expression, so the strip degrades rather than blanking', () => {
+      render(<RuleDslStrip rule={unquotable} highlight={EMPTY_HIGHLIGHT} />);
+
+      expect(screen.getByLabelText('rule expression').textContent).toBe('a as "x\\"y" & b');
+    });
+  });
 });
