@@ -31,6 +31,10 @@ export function useInlineDslEditor(options: {
    * keystroke, the way it always has.
    */
   onChange?: () => void;
+  /** Accessible name for the editable region. Applied to `.cm-content`, not the host — CodeMirror
+   *  puts `role="textbox"` there, and ARIA does not inherit a name from an ancestor that has its
+   *  own role, so a label on the host would name nothing. */
+  ariaLabel?: string;
 }): { host: MutableRefObject<HTMLSpanElement | null> } {
   const host = useRef<HTMLSpanElement | null>(null);
 
@@ -75,6 +79,7 @@ export function useInlineDslEditor(options: {
           motiv(),
           motivEditorTheme,
           autocompletion({ override: [createMotivCompletion(scoped)] }),
+          ...(options.ariaLabel ? [EditorView.contentAttributes.of({ 'aria-label': options.ariaLabel })] : []),
           // Ahead of the default bindings, which would otherwise claim Enter for a newline.
           keymap.of([
             {

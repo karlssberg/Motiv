@@ -49,6 +49,7 @@ export function PendingSlot(props: {
     // beside the field for the whole time you spend typing the fix. The hook owns no error
     // state — that is why this is a callback rather than something it does itself.
     onChange: () => setError(null),
+    ariaLabel: 'new expression',
   });
 
   return (
@@ -56,7 +57,7 @@ export function PendingSlot(props: {
       <div className="node-row node-row-pending">
         <span className="node-chev">＋</span>
         <span className="node-dsl node-dsl-editing">
-          <span ref={host} className="node-dsl-host" aria-label="new expression" />
+          <span ref={host} className="node-dsl-host" />
           {error && <span role="alert" className="error node-dsl-error" title={error}>{error}</span>}
         </span>
       </div>

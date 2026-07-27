@@ -72,4 +72,11 @@ describe('PendingSlot', () => {
 
     expect(screen.queryByRole('alert')).toBeNull();
   });
+
+  it('names the editable region for assistive technology', () => {
+    renderSlot();
+    // The name must land on the element carrying role="textbox" — CodeMirror's `.cm-content` —
+    // not on the host span, which is why the hook applies it via contentAttributes.
+    expect(screen.getByRole('textbox', { name: 'new expression' })).toBeDefined();
+  });
 });
