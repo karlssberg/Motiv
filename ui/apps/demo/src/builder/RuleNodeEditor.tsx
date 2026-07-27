@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useRef, type MouseEvent } from 'react';
 import {
   isBinaryNode, isHigherOrderNode, firstOperandTarget, insertTargetForRow, planInsert, type Catalog,
 } from '@motiv/rules-core';
@@ -45,6 +45,9 @@ export interface BuilderTreeState {
 /** The popups a row can open. */
 type PopoverKind = 'menu' | 'operator';
 
+/** The two controls the caret is, which follows from whether its node has children. */
+type CaretKind = 'children' | 'detail';
+
 /** Identifies one row's popup, since a row has more than one. */
 const popoverKey = (kind: PopoverKind, path: string): string => `${kind}:${path}`;
 
@@ -86,6 +89,14 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
   } = useBuilderTree();
   const store = useRuleEditorStore();
 
+  /**
+   * Which of the caret's two roles was under the pointer when it was pressed — see
+   * {@link releaseMatchesPress}. Declared up here with the other hooks rather than beside the two
+   * closures that use it, which sit below the `!node` guard: a hook called after an early return
+   * is a hook this component sometimes skips.
+   */
+  const pressedKind = useRef<CaretKind | null>(null);
+
   /** Binds one of this row's popups to the tree's single open slot. */
   const popover = (kind: PopoverKind): { open: boolean; setOpen: (next: boolean) => void } => ({
     open: openPopover === popoverKey(kind, path),
@@ -112,6 +123,44 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
   // between and is always shown as DSL. Only the other case has a summary to render.
   const inDslView = !hasChildren || collapsed;
   const summary = inDslView ? null : summarize(node);
+
+  /** Which of its two roles the caret is playing on this row, as one name rather than three. */
+  const caretKind: CaretKind = hasChildren ? 'children' : 'detail';
+
+  const pressCaret = (event: MouseEvent): void => {
+    // Secondary buttons keep their usual meaning, as they do on the row's DSL text. Recording one
+    // would also strand the kind, since no click follows to consume it.
+    if (event.button !== 0) return;
+    pressedKind.current = caretKind;
+  };
+
+  /**
+   * Whether the click now arriving belongs to the press that began it, on the control it began on.
+   *
+   * The caret is two controls sharing one slot — a parent's subtree collapse, a leaf's metadata
+   * disclosure — and a row can change from one to the other *while a gesture is in flight*.
+   * Pressing a leaf's caret blurs an open editor, and that commit-on-blur can give the row children
+   * before the press has become a click. The click then ran a control the user never aimed at,
+   * collapsing a subtree the same gesture had only just created: the tree flashed open and shut,
+   * and only ever on the first click, since a committed row's caret no longer re-kinds under the
+   * pointer.
+   *
+   * So the press settles which control was meant, and a release that finds a different one does
+   * nothing. Letting React's reconciliation drop the click instead — by keying the two buttons
+   * apart so the swap becomes a remount — was tried and rejected: whether the click survives then
+   * depends on how long the button is held, because a slow release finds the replacement sitting
+   * in the same place and the browser retargets onto it. This does not depend on timing.
+   */
+  const releaseMatchesPress = (event: MouseEvent): boolean => {
+    const pressed = pressedKind.current;
+    pressedKind.current = null;
+    // Keyboard activation is identified by what it *is*, not by the absence of a press: Enter and
+    // Space report no click count, where every pointer click reports at least one. Testing for
+    // absence instead would wave through any click that reached us without a press of its own —
+    // including one retargeted onto a row that mounted mid-gesture, which is the very hazard this
+    // guard exists for.
+    return event.detail === 0 || pressed === caretKind;
+  };
 
   // A quantifier's single child is scoped to the collection's element model type, not the parent's.
   const childModelType = isHigherOrderNode(node)
@@ -141,13 +190,14 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
         onMouseEnter={() => setHovered(path)}
         onMouseLeave={() => setHovered(null)}
       >
-        {hasChildren ? (
+        {caretKind === 'children' ? (
           <button
             type="button"
             className="node-chev"
             aria-expanded={!collapsed}
             aria-label={`${collapsed ? 'expand' : 'collapse'} ${path}`}
-            onClick={() => toggleCollapsed(path)}
+            onMouseDown={pressCaret}
+            onClick={(event) => { if (releaseMatchesPress(event)) toggleCollapsed(path); }}
           >
             {collapsed ? '▸' : '▾'}
           </button>
@@ -158,7 +208,8 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             aria-expanded={open}
             aria-controls={panelId(path)}
             aria-label={`details for ${path}`}
-            onClick={() => toggleOpen(path)}
+            onMouseDown={pressCaret}
+            onClick={(event) => { if (releaseMatchesPress(event)) toggleOpen(path); }}
           >
             {open ? '▾' : '▸'}
           </button>

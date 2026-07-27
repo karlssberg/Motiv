@@ -82,6 +82,43 @@ test('clicking a row places the caret where you clicked', async ({ page }) => {
 });
 
 /**
+ * The caret is two controls sharing one slot — a leaf's detail toggle, a parent's subtree collapse
+ * — and committing the row can turn the first into the second *between the press and the release*.
+ *
+ * Clicking the caret while an uncommitted buffer is open blurs the editor, which commits it; if
+ * that commit gives the row children, the tree renders expanded and the caret becomes the collapse
+ * toggle. React reused the same DOM node, so the click that followed ran the collapse it had never
+ * been aimed at: the subtree appeared and vanished within one gesture, about 5ms apart. Only ever
+ * on the first click, since a committed row's caret no longer changes meaning under the pointer.
+ */
+test('committing by clicking the caret leaves the new subtree revealed', async ({ page }) => {
+  const row = await rootRow(page);
+  await row.click();
+  await page.keyboard.press('ControlOrMeta+a');
+  // `insertText`, not `type`: a paste lands atomically and raises no completion popup, which is
+  // both how this was reported and what keeps the caret click below the first commit of the row.
+  await page.keyboard.insertText('is-active & (is-active | is-adult)');
+
+  // Named by its accessible name rather than by class, which also asserts the premise: at the
+  // moment of the press this row is still a leaf, so the caret is its detail toggle.
+  await page.getByRole('button', { name: 'details for $.rule' }).hover();
+
+  // Press and release as separate steps, with the commit awaited in between. A plain `click()` is
+  // fast enough to release before React has re-rendered, so the click lands on the old caret and
+  // is dropped for reasons that have nothing to do with this fix. Holding the button down until
+  // the row has actually re-kinded is what makes the release land on the control the gesture was
+  // never aimed at, every time.
+  await page.mouse.down();
+  await expect(page.getByLabel('rule document')).toContainText('"and"');
+  await page.mouse.up();
+  // The root, its two operands, and the nested or's two — the whole subtree, still on screen.
+  await expect(page.locator('.node-row')).toHaveCount(5);
+  // `exact`, or the name also matches the nested `collapse $.rule.and[1]` as a substring.
+  await expect(page.getByRole('button', { name: 'collapse $.rule', exact: true }))
+    .toHaveAttribute('aria-expanded', 'true');
+});
+
+/**
  * The keyboard has no point to aim at, so Tab keeps the select-all that makes the next keystroke
  * replace the expression. The two entry paths are tested together because the click fix is only
  * correct if it left this one alone.
