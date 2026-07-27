@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { summarize } from '../src/builder/nodeSummary.js';
+import { summarize } from '../../src/builder/nodeSummary.js';
 
 describe('summarize', () => {
   it('describes a two-operand xor as exactly one', () => {
