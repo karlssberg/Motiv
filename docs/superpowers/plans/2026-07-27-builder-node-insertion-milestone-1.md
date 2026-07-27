@@ -1419,9 +1419,19 @@ This task changes no behaviour. The existing `NodeDsl` tests are the regression 
     scope: () => { catalog: Catalog; modelType: string };
     onCommit: (text: string) => boolean;
     onCancel: () => void;
-  }): { host: RefObject<HTMLSpanElement | null> }
+    /** Fired on every document change, so a caller holding error state can retire it. */
+    onChange?: () => void;
+  }): { host: MutableRefObject<HTMLSpanElement | null> }
   ```
   `onCommit` returns `true` when the buffer was accepted; `false` leaves the editor open with the text as typed.
+
+  Two corrections to an earlier draft of this signature, both established during Task 9 and verified:
+  **`MutableRefObject`, not `RefObject`** — with the installed `@types/react@18.3.31`, a
+  `RefObject<HTMLSpanElement | null>` will not assign to a JSX `ref` prop (`TS2322`, `null` not
+  assignable to `HTMLSpanElement`), and `MutableRefObject` is what `useRef<HTMLSpanElement | null>(null)`
+  already produced before the extraction. And **`onChange` is required, not optional garnish**: the hook
+  owns no error state, but the original `updateListener` retired the error message on the next keystroke,
+  so that behaviour can only survive as a callback the hook fires and the caller interprets.
 
 - [ ] **Step 1: Confirm the current tests pass, so a regression is attributable**
 
