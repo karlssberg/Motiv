@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import type { Catalog, RulesApiClient } from '@motiv/rules-core';
-import { useCatalog } from '@motiv/rules-react';
+import { useCatalog, useRuleEditor, useRuleEditorStore } from '@motiv/rules-react';
 import { AccordionContext, RuleNodeEditor } from '../builder/RuleNodeEditor.js';
 import {
   EMPTY_ACCORDION, closeAll, toggleCollapsed, toggleOpen, togglePin,
   type AccordionModel,
 } from '../builder/accordion.js';
+import { RuleDslStrip } from '../builder/RuleDslStrip.js';
+import { EMPTY_HIGHLIGHT, setHovered, setSelected, type HighlightModel } from '../builder/highlight.js';
 import { MODEL_TYPE } from '../App.js';
 
 const ROOT = '$.rule';
@@ -17,8 +19,8 @@ export const EMPTY_CATALOG: Catalog = { specs: [], collections: [] };
  * it can be hosted either by {@link BuilderPane} or as one surface of a pane that toggles between
  * the builder and the DSL text editor.
  *
- * Accordion state is demo-local UI state, not document state, and is held here so that both the
- * tree and the close-all strip read the one model.
+ * Accordion and highlight state are demo-local UI state, not document state, and are held here so
+ * that the tree and the strips above it read the one model rather than each keeping their own.
  */
 export function BuilderBody(props: { client: RulesApiClient }) {
   const catalogState = useCatalog(props.client);
@@ -27,11 +29,14 @@ export function BuilderBody(props: { client: RulesApiClient }) {
   const [model, setModel] = useState<AccordionModel>(EMPTY_ACCORDION);
   /** Which row popup — an actions menu or an operator picker — is open. One at a time, tree-wide. */
   const [openPopover, setOpenPopover] = useState<string | null>(null);
+  const [highlight, setHighlight] = useState<HighlightModel>(EMPTY_HIGHLIGHT);
+  const editorState = useRuleEditor(useRuleEditorStore());
 
   return (
     <>
       {catalogState.status === 'loading' && <p>Loading catalog…</p>}
       {catalogState.status === 'error' && <p role="alert">Failed to load catalog.</p>}
+      <RuleDslStrip rule={editorState.document.rule} highlight={highlight} />
       {/* Height is reserved rather than conditional, so the tree does not jump when the first
           node is pinned. */}
       <div className="accordion-strip">
@@ -53,6 +58,9 @@ export function BuilderBody(props: { client: RulesApiClient }) {
           openPopover,
           setOpenPopover,
           catalog,
+          highlight,
+          setHovered: (path) => setHighlight((prev) => setHovered(prev, path)),
+          setSelected: (path) => setHighlight((prev) => setSelected(prev, path)),
         }}
       >
         <RuleNodeEditor path={ROOT} modelType={MODEL_TYPE} />

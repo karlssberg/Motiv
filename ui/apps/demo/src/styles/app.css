@@ -1081,3 +1081,27 @@ button.node-dsl {
   border-bottom: 2px solid var(--accent);
   padding-bottom: 1px;
 }
+
+/* The selected row. A left accent bar rather than a fill: the row already carries a DSL editor
+   whose own background must stay readable, and a bar reads at a glance down a column of rows. */
+.node-row.selected {
+  border-color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.node-select {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  padding: 0 2px;
+  cursor: pointer;
+  font-size: 10px;
+  color: var(--faint);
+  opacity: 0;
+}
+.node-row:hover .node-select,
+.node-select:focus-visible,
+.node-select[aria-pressed='true'] {
+  opacity: 1;
+}
+.node-select[aria-pressed='true'] { color: var(--accent); }

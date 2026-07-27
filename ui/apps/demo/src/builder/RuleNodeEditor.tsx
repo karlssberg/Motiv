@@ -10,6 +10,7 @@ import { summarize } from './nodeSummary.js';
 import { NodeDsl } from './NodeDsl.js';
 import { NodeMenu } from './NodeMenu.js';
 import { isCollapsed, isOpen, isPinned, type AccordionModel } from './accordion.js';
+import { type HighlightModel } from './highlight.js';
 
 /** The accordion state and its transitions, shared by every {@link RuleNodeEditor} in the tree. */
 export interface AccordionState {
@@ -24,6 +25,10 @@ export interface AccordionState {
   openPopover: string | null;
   setOpenPopover: (key: string | null) => void;
   catalog: Catalog;
+  /** Which node the DSL strip marks, and which mark it scrolls to. */
+  highlight: HighlightModel;
+  setHovered: (path: string | null) => void;
+  setSelected: (path: string | null) => void;
 }
 
 /** The popups a row can open. */
@@ -64,7 +69,10 @@ const panelId = (path: string): string => `detail-${path}`;
 export function RuleNodeEditor(props: { path: string; modelType: string }) {
   const { path, modelType } = props;
   const { node, errors } = useRuleNode(path);
-  const { model, toggleCollapsed, toggleOpen, togglePin, openPopover, setOpenPopover, catalog } = useAccordion();
+  const {
+    model, toggleCollapsed, toggleOpen, togglePin, openPopover, setOpenPopover, catalog,
+    highlight, setHovered, setSelected,
+  } = useAccordion();
 
   /** Binds one of this row's popups to the tree's single open slot. */
   const popover = (kind: PopoverKind): { open: boolean; setOpen: (next: boolean) => void } => ({
@@ -79,6 +87,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
   const collapsed = isCollapsed(model, path);
   const open = isOpen(model, path);
   const pinned = isPinned(model, path);
+  const selected = highlight.selectedPath === path;
   // A leaf's tree form and its text form are the same string, so it has nothing to toggle
   // between and is always shown as DSL. Only the other case has a summary to render.
   const inDslView = !hasChildren || collapsed;
@@ -91,7 +100,11 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
 
   return (
     <div className="node">
-      <div className="node-row">
+      <div
+        className={selected ? 'node-row selected' : 'node-row'}
+        onMouseEnter={() => setHovered(path)}
+        onMouseLeave={() => setHovered(null)}
+      >
         {hasChildren ? (
           <button
             type="button"
@@ -129,6 +142,19 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             </>
           )}
         </span>
+        {/* Selection is its own control rather than a click on the row: the row body is a DSL
+            editor that takes focus, and `.node-dsl` already claims click to start editing. A
+            separate button also gives selection a tab stop and an accessible name, which is what
+            the armed-move in Milestone 2 will need. */}
+        <button
+          type="button"
+          className="node-select"
+          aria-pressed={selected}
+          aria-label={`select ${path}`}
+          onClick={() => setSelected(selected ? null : path)}
+        >
+          ◈
+        </button>
         <NodeMenu
           path={path}
           // Only an operand of an n-ary operator can be removed; a NOT's child or a quantifier's
