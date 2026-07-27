@@ -48,6 +48,45 @@ describe('planInsert into a slot', () => {
     expect(() => planInsert(doc({ spec: 'a' }), { kind: 'slot', parentPath: '$.rule', index: 0 }, NEW))
       .toThrow(/not an operator node/);
   });
+
+  // `Array.splice` would otherwise clamp an out-of-range index silently, misplacing the
+  // insertion rather than failing loudly — a hazard once indices are computed after a removal.
+  it('throws when the slot index is negative', () => {
+    expect(() => planInsert(doc({ and: [{ spec: 'a' }, { spec: 'b' }] }), { kind: 'slot', parentPath: '$.rule', index: -1 }, NEW))
+      .toThrow(/out of range/);
+  });
+
+  it('throws when the slot index exceeds the operand count', () => {
+    expect(() => planInsert(doc({ and: [{ spec: 'a' }, { spec: 'b' }] }), { kind: 'slot', parentPath: '$.rule', index: 3 }, NEW))
+      .toThrow(/out of range/);
+  });
+});
+
+describe('planInsert into a xor', () => {
+  // Pins the design decision in `docs/superpowers/specs/2026-07-27-builder-node-insertion-design.md`
+  // ("`xor` is never flattened, but the builder can still grow one"): the builder never *merges* a
+  // nested `xor` into its parent, but inserting an operand into an existing `xor` via the ordinary
+  // slot mechanism is intended, not refused. The result is an honest n-ary `xor` — labelled as
+  // parity by the row that renders it, not silently reinterpreted or blocked.
+  it('yields an n-ary xor with operands in order, without merging', () => {
+    const result = planInsert(
+      doc({ xor: [{ spec: 'a' }, { spec: 'b' }] }),
+      { kind: 'slot', parentPath: '$.rule', index: 1 },
+      NEW,
+    );
+    expect(result.rule).toEqual({ xor: [{ spec: 'a' }, NEW, { spec: 'b' }] });
+  });
+
+  it('does not merge a nested xor into its parent xor when the insertion touches the parent', () => {
+    const result = planInsert(
+      doc({ xor: [{ xor: [{ spec: 'a' }, { spec: 'b' }] }, { spec: 'c' }] }),
+      { kind: 'slot', parentPath: '$.rule', index: 2 },
+      NEW,
+    );
+    expect(result.rule).toEqual({
+      xor: [{ xor: [{ spec: 'a' }, { spec: 'b' }] }, { spec: 'c' }, NEW],
+    });
+  });
 });
 
 describe('planInsert wrapping', () => {

@@ -56,6 +56,12 @@ export class RuleEditorStore {
    * insertion or move is an edit like any other and must be undoable. Distinct from `replaceNode`
    * because a plan is not addressed to a node — normalization may have rewritten a parent, or
    * collapsed one, above the point of change.
+   *
+   * Unlike `loadDocument`, this stores `next` **by reference**, not a `structuredClone` of it.
+   * Safe today because every caller passes a document a planner function just produced and
+   * retains no reference to — but it is an asymmetry worth knowing about: a caller that mutates
+   * `next` after passing it here, or that reuses the same object across two calls, would corrupt
+   * history entries that are supposed to be immutable snapshots.
    */
   applyPlan(next: RuleDocument): void {
     this.#commit(next);

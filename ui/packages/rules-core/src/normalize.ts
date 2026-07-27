@@ -53,9 +53,17 @@ function flatten(node: RuleNode): RuleNode {
 }
 
 /**
- * Returns a new document with residual same-operator nesting removed from the subtree at `path`.
+ * Returns a new document with residual same-operator nesting removed from the *entire* subtree
+ * rooted at `path` — every descendant, not only the nodes near whatever a caller's mutation
+ * actually changed. `flatten` recurses unconditionally, so a sibling operand's subtree that the
+ * triggering gesture never touched is flattened too, as a side effect of sharing an ancestor with
+ * the node that did change.
+ *
  * Scoped rather than document-wide on purpose: a hand-authored document, or one round-tripped
- * through the DSL, is displayed as authored, and a mutation only ever tidies what it touched.
+ * through the DSL, is displayed as authored, and calling this at the document root would rewrite
+ * all of it on any single edit. But scoping is only as narrow as the `path` a caller passes — pass
+ * the narrowest path that could plausibly have gained nesting from the mutation, not a wider
+ * ancestor "to be safe", or you flatten more than the mutation touched.
  */
 export function normalizeAt(document: RuleDocument, path: string): RuleDocument {
   const node = getNode(document, path);

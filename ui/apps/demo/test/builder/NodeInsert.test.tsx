@@ -17,12 +17,20 @@ function renderBuilder(rule: unknown) {
 }
 
 const slot = (container: HTMLElement) => container.querySelector('.node-row-pending .cm-content');
+
+/**
+ * Opens the slot after `path` and types `text` into it, leaving it *uncommitted* and returning its
+ * editable element — so each test dispatches the dismissal gesture it is about (Enter, blur) itself.
+ */
+const typeIntoSlotAfter = async (container: HTMLElement, path: string, text: string) => {
+  fireEvent.click(await screen.findByRole('button', { name: `insert after ${path}` }));
+  replaceBuffer(container.querySelector('.node-row-pending') as HTMLElement, text);
+  return slot(container)!;
+};
+
 /** Opens the slot after `path` and types `text` into it, committing with Enter. */
 const insertAfter = async (container: HTMLElement, path: string, text: string) => {
-  fireEvent.click(await screen.findByRole('button', { name: `insert after ${path}` }));
-  const pending = container.querySelector('.node-row-pending') as HTMLElement;
-  replaceBuffer(pending, text);
-  fireEvent.keyDown(slot(container)!, { key: 'Enter' });
+  fireEvent.keyDown(await typeIntoSlotAfter(container, path, text), { key: 'Enter' });
 };
 
 describe('row + insertion', () => {
@@ -73,17 +81,31 @@ describe('row + insertion', () => {
     expect(container.querySelectorAll('.node-row-pending')).toHaveLength(1);
   });
 
-  it('discards an abandoned slot rather than committing its text', async () => {
+  it('commits a slot abandoned by clicking elsewhere, since a real blur commits a parseable buffer', async () => {
+    // `fireEvent.click` in jsdom moves no focus and dispatches no `blur` — clicking another row's
+    // `+` here leaves the pending editor untouched as far as jsdom is concerned. In a browser,
+    // mousedown on the new target blurs the still-focused editor first, and that blur commits a
+    // parseable buffer (see the design spec's edge case: "the edit commits first"). So this test
+    // drives the blur directly with `fireEvent.blur` to exercise the real contract, rather than
+    // relying on a click to produce it.
+    const { store, container } = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
+
+    fireEvent.blur(await typeIntoSlotAfter(container, '$.rule.and[0]', 'c'));
+
+    expect(store.getState().document.rule)
+      .toEqual({ and: [{ spec: 'a' }, { spec: 'c' }, { spec: 'b' }] });
+    expect(container.querySelectorAll('.node-row-pending')).toHaveLength(0);
+  });
+
+  it('discards an abandoned slot whose buffer does not parse, rather than leaving it stuck', async () => {
     const { store, container } = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
     const before = store.getState().document;
 
-    fireEvent.click(await screen.findByRole('button', { name: 'insert after $.rule.and[0]' }));
-    replaceBuffer(container.querySelector('.node-row-pending') as HTMLElement, 'abandoned');
-    fireEvent.click(await screen.findByRole('button', { name: 'insert after $.rule.and[1]' }));
+    fireEvent.blur(await typeIntoSlotAfter(container, '$.rule.and[0]', 'abandoned &'));
 
     expect(store.getState().document).toEqual(before);
     expect(store.getState().canUndo).toBe(false);
-    expect(container.querySelectorAll('.node-row-pending')).toHaveLength(1);
+    expect(container.querySelectorAll('.node-row-pending')).toHaveLength(0);
   });
 });
 

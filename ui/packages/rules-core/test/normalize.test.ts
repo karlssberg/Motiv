@@ -101,4 +101,25 @@ describe('normalizeAt', () => {
     const document = doc({ spec: 'a' });
     expect(normalizeAt(document, '$.rule.and[3]').rule).toEqual({ spec: 'a' });
   });
+
+  // Pinned deliberately, not as an oversight: `normalizeAt` flattens the *whole* subtree rooted
+  // at `path`, including branches a caller's own mutation never touched, because a sibling
+  // operand shares the same ancestor as whatever did change. `planInsert` calls this with the
+  // mutation's immediate parent path, so a `+` on any root-level row normalizes the entire
+  // document, not just the vicinity of the insertion — see the "When it runs" section of
+  // `docs/superpowers/specs/2026-07-27-builder-node-insertion-design.md`. This is accepted
+  // (flattening is semantics-preserving, and the strip previews it before commit) rather than
+  // narrowed. Narrowing `normalizeAt` to only the touched region is a future decision, not an
+  // accident this test should let slip through unnoticed — if this test starts failing because
+  // scope narrowed, that is the signal to update the design doc alongside it.
+  it('flattens an untouched sibling subtree too, because scope is the whole subtree at path, not just what changed', () => {
+    const untouchedButFlattened = { and: [{ and: [{ spec: 'x' }, { spec: 'y' }] }, { spec: 'z' }] };
+    const result = normalizeAt(
+      doc({ or: [{ spec: 'changed' }, untouchedButFlattened] }),
+      '$.rule',
+    );
+    expect(result.rule).toEqual({
+      or: [{ spec: 'changed' }, { and: [{ spec: 'x' }, { spec: 'y' }, { spec: 'z' }] }],
+    });
+  });
 });

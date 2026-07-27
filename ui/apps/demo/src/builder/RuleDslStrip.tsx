@@ -91,7 +91,12 @@ export function RuleDslStrip(props: { rule: RuleNode; highlight: HighlightModel 
   return (
     <div className="dsl-strip">
       <span className="dsl-strip-label">rule</span>
-      <span className="dsl-strip-text" aria-label="rule expression">
+      {/* A bare `<span>` has no implicit ARIA role — it computes to `generic`, and `generic` is
+          one of the roles ARIA prohibits from having an accessible name, so `aria-label` on a
+          roleless span is silently dropped from the accessibility tree rather than exposed.
+          `role="group"` gives the element a role that does support naming, so the label the
+          existing `getByLabelText('rule expression')` queries actually resolves. */}
+      <span className="dsl-strip-text" role="group" aria-label="rule expression">
         {segments.map((segment, index) => {
           const marks = [
             segment.selected ? 'dsl-strip-selected' : null,

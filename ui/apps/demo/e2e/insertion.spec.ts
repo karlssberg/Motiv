@@ -110,6 +110,40 @@ test('inserting an operand round-trips into the DSL pane', async ({ page }) => {
  * the one under test. Confirmed deterministic (unaffected by the completion dismissal) by running
  * this exact sequence repeatedly against both the buggy and fixed code during development.
  */
+/**
+ * Blur is the most common real dismissal — clicking anywhere else while the phantom editor is
+ * focused — and jsdom cannot exercise it: it does not reliably fire a synchronous native `blur`
+ * when a focused element loses focus by other means, which is exactly why the unit suite drives
+ * `fireEvent.blur` directly rather than relying on a click to produce it (see
+ * `apps/demo/test/builder/NodeInsert.test.tsx`). It is also the path that produced the duplicate-
+ * insertion bug the previous test guards. Only a real browser proves a click-away commits exactly
+ * once — not twice, and not zero times.
+ */
+test('blurring a parseable slot by clicking elsewhere commits it exactly once', async ({ page }) => {
+  await page.goto('/');
+  await buildRootExpression(page, 'is-active & is-adult');
+  await expect(page.getByLabel('rule document')).toContainText('"and"');
+
+  await page.getByRole('button', { name: 'insert after $.rule.and[0]', exact: true }).click();
+  await expect(pendingContent(page)).toBeFocused();
+  await page.keyboard.type('has-orders');
+
+  // A neutral area of the page — the DSL strip's inert "rule" caption — to blur the editor
+  // without triggering any other row's own insertion or edit affordance.
+  await page.locator('.dsl-strip-label').click();
+
+  await expect(page.locator('.node-row-pending')).toHaveCount(0);
+  const document = page.getByLabel('rule document');
+  await expect(document).toContainText('has-orders');
+  // Exactly one insertion: not the pre-fix double-commit, and not a silently dropped one. A
+  // `text=` locator would only prove the substring appears *somewhere* in the one `<pre>`
+  // element, not how many times — so count occurrences in the raw text instead.
+  await expect.poll(async () => {
+    const text = await document.textContent();
+    return (text?.match(/"has-orders"/g) ?? []).length;
+  }).toBe(1);
+});
+
 test('cancelling with Escape does not insert the cancelled buffer', async ({ page }) => {
   await page.goto('/');
   await buildRootExpression(page, 'is-active & is-adult');

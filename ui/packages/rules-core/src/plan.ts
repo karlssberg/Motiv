@@ -45,6 +45,16 @@ export function firstOperandTarget(operatorPath: string): InsertTarget {
 }
 
 /**
+ * Puts `replacement` at `path`, then normalizes the whole subtree rooted there (see
+ * `normalizeAt`'s doc comment for how wide that reaches). Both insertion shapes end this way, and
+ * the two paths must agree: normalizing at anywhere but where the change landed would either miss
+ * the nesting it created, or normalize a wholly unrelated part of the document.
+ */
+function replaceAndNormalize(document: RuleDocument, path: string, replacement: RuleNode): RuleDocument {
+  return normalizeAt(setNode(document, path, replacement), path);
+}
+
+/**
  * A new document with `node` inserted at `target`, then normalized at the point of change.
  *
  * Pure: this is the same function the preview prints and the commit applies, so a preview cannot
@@ -55,14 +65,22 @@ export function planInsert(document: RuleDocument, target: InsertTarget, node: R
     const existing = getNode(document, target.path);
     if (!existing) throw new Error(`No node at ${target.path}.`);
     const wrapped = { [WRAP_OPERATOR]: [existing, node] } as unknown as RuleNode;
-    return normalizeAt(setNode(document, target.path, wrapped), target.path);
+    return replaceAndNormalize(document, target.path, wrapped);
   }
 
   const parent = getNode(document, target.parentPath);
   if (!parent || !isBinaryNode(parent)) throw new Error(`${target.parentPath} is not an operator node.`);
-  const operator = binaryOperator(parent);
   const operands = [...operandsOf(parent)];
+  // `Array.splice` silently clamps an out-of-range index rather than erroring, which would
+  // misplace the insertion instead of failing loudly. Unreachable from today's two callers
+  // (`insertTargetForRow`/`firstOperandTarget` only ever produce in-range indices), but a
+  // silent-misplacement hazard once Milestone 2 computes indices after a removal shifts them.
+  if (target.index < 0 || target.index > operands.length) {
+    throw new Error(
+      `Slot index ${target.index} is out of range for ${target.parentPath} (0..${operands.length}).`,
+    );
+  }
   operands.splice(target.index, 0, node);
-  const next = { ...parent, [operator]: operands } as unknown as RuleNode;
-  return normalizeAt(setNode(document, target.parentPath, next), target.parentPath);
+  const next = { ...parent, [binaryOperator(parent)]: operands } as unknown as RuleNode;
+  return replaceAndNormalize(document, target.parentPath, next);
 }
