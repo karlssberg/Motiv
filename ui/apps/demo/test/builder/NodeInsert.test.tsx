@@ -72,4 +72,55 @@ describe('row + insertion', () => {
 
     expect(container.querySelectorAll('.node-row-pending')).toHaveLength(1);
   });
+
+  it('discards an abandoned slot rather than committing its text', async () => {
+    const { store, container } = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
+    const before = store.getState().document;
+
+    fireEvent.click(await screen.findByRole('button', { name: 'insert after $.rule.and[0]' }));
+    replaceBuffer(container.querySelector('.node-row-pending') as HTMLElement, 'abandoned');
+    fireEvent.click(await screen.findByRole('button', { name: 'insert after $.rule.and[1]' }));
+
+    expect(store.getState().document).toEqual(before);
+    expect(store.getState().canUndo).toBe(false);
+    expect(container.querySelectorAll('.node-row-pending')).toHaveLength(1);
+  });
+});
+
+/** Opens the first-operand slot on `path` via its menu and commits `text`. */
+const insertFirst = async (container: HTMLElement, path: string, text: string) => {
+  fireEvent.click(await screen.findByRole('button', { name: `actions for ${path}` }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Insert first operand' }));
+  const pending = container.querySelector('.node-row-pending') as HTMLElement;
+  replaceBuffer(pending, text);
+  fireEvent.keyDown(pending.querySelector('.cm-content')!, { key: 'Enter' });
+};
+
+describe('insert first operand', () => {
+  it('inserts before the first child of an operator row', async () => {
+    const { store, container } = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
+
+    await insertFirst(container, '$.rule', 'z');
+
+    expect(store.getState().document.rule)
+      .toEqual({ and: [{ spec: 'z' }, { spec: 'a' }, { spec: 'b' }] });
+  });
+
+  it('reaches the slot before a nested group first child', async () => {
+    const { store, container } = renderBuilder({ and: [{ spec: 'a' }, { or: [{ spec: 'b' }, { spec: 'c' }] }] });
+
+    await insertFirst(container, '$.rule.and[1]', 'z');
+
+    expect(store.getState().document.rule).toEqual({
+      and: [{ spec: 'a' }, { or: [{ spec: 'z' }, { spec: 'b' }, { spec: 'c' }] }],
+    });
+  });
+
+  it('is not offered on a leaf row, which has no operand list', async () => {
+    renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'actions for $.rule.and[0]' }));
+
+    expect(screen.queryByRole('menuitem', { name: 'Insert first operand' })).toBeNull();
+  });
 });

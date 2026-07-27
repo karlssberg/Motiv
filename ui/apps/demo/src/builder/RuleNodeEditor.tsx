@@ -1,5 +1,7 @@
 import { createContext, useContext } from 'react';
-import { isBinaryNode, isHigherOrderNode, insertTargetForRow, planInsert, type Catalog } from '@motiv/rules-core';
+import {
+  isBinaryNode, isHigherOrderNode, firstOperandTarget, insertTargetForRow, planInsert, type Catalog,
+} from '@motiv/rules-core';
 import { useRuleEditorStore, useRuleNode } from '@motiv/rules-react';
 import { NodeToolbar } from './NodeToolbar.js';
 import { OperatorPicker } from './OperatorPicker.js';
@@ -104,6 +106,22 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
     ? (catalog.collections.find((c) => c.path === node.path)?.elementModelType ?? modelType)
     : modelType;
 
+  // Renders the slot for `where`, targeting the position it names. A 'first' slot is scoped to
+  // this row's children, since it becomes one of them; an 'after' slot is scoped to this row's
+  // own siblings.
+  const slotFor = (where: 'after' | 'first') => (
+    <PendingSlot
+      modelType={where === 'first' ? childModelType : modelType}
+      catalog={catalog}
+      onCommit={(inserted) => {
+        const target = where === 'first' ? firstOperandTarget(path) : insertTargetForRow(path);
+        store.applyPlan(planInsert(store.getState().document, target, inserted));
+        setPending(null);
+      }}
+      onCancel={() => setPending(null)}
+    />
+  );
+
   return (
     <div className="node">
       <div
@@ -169,6 +187,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
           canRemove={path.endsWith(']')}
           {...popover('menu')}
           onDetails={() => toggleOpen(path)}
+          {...(isBinaryNode(node) ? { onInsertFirst: () => setPending({ path, where: 'first' }) } : {})}
         />
         <button
           type="button"
@@ -183,18 +202,10 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
       {errors.length > 0 && (
         <span role="alert" className="error">{errors.map((e) => e.message).join('; ')}</span>
       )}
-      {pending?.path === path && pending.where === 'after' && (
-        <PendingSlot
-          modelType={modelType}
-          catalog={catalog}
-          onCommit={(inserted) => {
-            const target = insertTargetForRow(path);
-            store.applyPlan(planInsert(store.getState().document, target, inserted));
-            setPending(null);
-          }}
-          onCancel={() => setPending(null)}
-        />
-      )}
+      {pending?.path === path && pending.where === 'after' && slotFor('after')}
+      {/* A collapsed parent has no mounted `.node-kids` for the 'first' slot to join, so it
+          renders here instead — the same fallback spot the 'after' slot always uses. */}
+      {pending?.path === path && pending.where === 'first' && collapsed && slotFor('first')}
       {open && (
         <div className="node-detail" id={panelId(path)}>
           {isHigherOrderNode(node) ? (
@@ -207,6 +218,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
       )}
       {hasChildren && !collapsed && (
         <div className="node-kids">
+          {pending?.path === path && pending.where === 'first' && slotFor('first')}
           {kids.map((childPath) => (
             <RuleNodeEditor key={childPath} path={childPath} modelType={childModelType} />
           ))}
