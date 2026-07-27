@@ -6,6 +6,12 @@
       "runtimeExecutable": "dotnet",
       "runtimeArgs": ["run", "--project", "src/examples/Motiv.RulesEngine.Sample", "--urls", "http://localhost:5100"],
       "port": 5100
+    },
+    {
+      "name": "rules-demo-ui",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "ui/apps/demo", "dev", "--port", "5173", "--strictPort"],
+      "port": 5173
     }
   ]
 }
