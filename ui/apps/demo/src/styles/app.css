@@ -628,10 +628,31 @@ button.node-dsl {
   min-width: 0;
 }
 
-/* The editor sheds the pane chrome: no gutter, no page-height, no vertical padding, so the row
-   keeps the height it had while it was static text. */
-.node-dsl-host .cm-editor { height: auto; background: transparent; }
-.node-dsl-host .cm-content { padding: 0; }
+/* The editor sheds the pane chrome — no page-height, no padding of its own — and adopts the row's
+   typography instead of the DSL pane's, so the expression occupies exactly the pixels it did while
+   it was static text.
+
+   A row edits *in place*, which makes this stricter than it looks: anything CodeMirror brings with
+   it moves the very characters the user is aiming at, between the moment they aim and the moment
+   they land. Two things did. `motivEditorTheme` sizes text for a full-height editor (13.5px) where
+   the row's static text is 12.5px, and CodeMirror's base theme indents every line by 6px
+   (`.cm-line { padding: 0 2px 0 6px }`) — so the expression grew and jumped right the instant it
+   was clicked. Both are overridden here rather than in the theme, which the DSL pane shares and
+   wants as it is.
+
+   Each override has to sit on the element CodeMirror declares it on, not merely on an ancestor
+   that would pass it down: an own declaration beats an inherited value however specific the
+   ancestor's rule is. Hence `line-height` on `.cm-scroller`, where the base theme puts its 1.4 —
+   set on `.cm-editor` it is silently inert, and the row stays aligned only for as long as the two
+   ratios coincide. */
+.node-dsl-host .cm-editor {
+  height: auto;
+  background: transparent;
+  font-size: inherit;
+}
+.node-dsl-host .cm-scroller { line-height: inherit; }
+.node-dsl-host .cm-content,
+.node-dsl-host .cm-line { padding: 0; }
 
 /* One line, truncated — the full text is on the element's `title`. Without `min-width: 0` a flex
    item is floored at its content width, so a long message would widen the row instead. */
