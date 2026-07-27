@@ -1,5 +1,12 @@
 import type { Diagnostic } from '@codemirror/lint';
-import type { DslError, NodeSpan, ParseResult, RuleError } from '@motiv/rules-core';
+import {
+  rangeOfPath,
+  type DslError,
+  type NodeSpan,
+  type ParseResult,
+  type RuleError,
+  type SourceRange,
+} from '@motiv/rules-core';
 
 /** Separates a diagnostic's machine-readable code from its human message. */
 const SEPARATOR = ': ';
@@ -7,34 +14,6 @@ const SEPARATOR = ': ';
 /** Joins a code and a human message; {@link splitDiagnosticMessage} is the inverse. */
 function joinDiagnosticMessage(code: string, message: string): string {
   return `${code}${SEPARATOR}${message}`;
-}
-
-/** A half-open source range `[from, to)`. */
-interface SourceRange {
-  from: number;
-  to: number;
-}
-
-/** The path one level up, or null once the root is reached. */
-function parentPath(path: string): string | null {
-  const index = path.lastIndexOf('.');
-  return index <= 0 ? null : path.slice(0, index);
-}
-
-/**
- * The span recorded for `path`, or for its nearest ancestor that has one — so a sub-field path
- * like `$.rule.whenTrue` anchors on the node that owns it. Falls back to the whole document.
- */
-function rangeOfPath(
-  path: string,
-  spans: readonly NodeSpan[],
-  documentLength: number,
-): SourceRange {
-  for (let current: string | null = path; current !== null; current = parentPath(current)) {
-    const span = spans.find((candidate) => candidate.path === current);
-    if (span) return { from: span.from, to: span.to };
-  }
-  return { from: 0, to: documentLength };
 }
 
 /** Widens a range so it always covers at least one character, which marks a zero-width error. */
