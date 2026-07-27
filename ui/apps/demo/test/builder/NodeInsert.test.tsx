@@ -131,6 +131,10 @@ describe('insert first operand', () => {
     const { store, container } = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
 
     fireEvent.click(await screen.findByRole('button', { name: 'collapse $.rule' }));
+    // Prove the row actually collapsed before relying on it. The pending row renders the same
+    // `.node-row-pending` markup at both sites, so without this the test would pass unchanged
+    // against an expanded row — exercising the very branch it exists to avoid.
+    expect(await screen.findByRole('button', { name: 'expand $.rule' })).toBeDefined();
     fireEvent.click(await screen.findByRole('button', { name: 'actions for $.rule' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Insert first operand' }));
 
