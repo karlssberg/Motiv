@@ -75,4 +75,42 @@ describe('planInsert wrapping', () => {
     );
     expect(result.rule).toEqual({ asAllSatisfied: { and: [{ spec: 'a' }, NEW] }, path: '$.orders' });
   });
+
+  it('throws when a wrap target path does not resolve', () => {
+    expect(() => planInsert(doc({ spec: 'a' }), { kind: 'wrap', path: '$.rule.and[3]' }, NEW))
+      .toThrow(/No node at/);
+  });
+});
+
+describe('planInsert purity', () => {
+  it('leaves the input document untouched when inserting into a slot', () => {
+    const document = doc({ and: [{ spec: 'a' }, { spec: 'b' }] });
+    const before = structuredClone(document);
+
+    planInsert(document, { kind: 'slot', parentPath: '$.rule', index: 1 }, NEW);
+
+    expect(document).toEqual(before);
+  });
+
+  it('leaves the input document untouched when wrapping', () => {
+    const document = doc({ and: [{ spec: 'a' }, { spec: 'b' }] });
+    const before = structuredClone(document);
+
+    planInsert(document, { kind: 'wrap', path: '$.rule' }, NEW);
+
+    expect(document).toEqual(before);
+  });
+
+  // The inserted node is embedded by reference, matching `RuleEditorStore.wrapInOperator`:
+  // `setNode` clones the document it is handed but not the replacement written into it. Pinned
+  // here so that changing it is a decision rather than an accident. Harmless in practice — the
+  // only caller parses a fresh node immediately before inserting it and never retains it — and
+  // deep-cloning here would diverge from every other mutation in this package.
+  it('embeds the inserted node by reference, as the package idiom does', () => {
+    const inserted = { spec: 'new' };
+
+    const result = planInsert(doc({ and: [{ spec: 'a' }, { spec: 'b' }] }), { kind: 'slot', parentPath: '$.rule', index: 0 }, inserted);
+
+    expect((result.rule as { and: unknown[] }).and[0]).toBe(inserted);
+  });
 });
