@@ -124,8 +124,13 @@ highlight is what makes the pair whole.
 **Where it goes.** `.accordion-strip` already reserves `min-height: 26px`
 unconditionally ([`app.css:651`](../../../ui/apps/demo/src/styles/app.css)) —
 `BuilderPane` documents the reservation as deliberate, so the tree does not jump
-when the first node is pinned. The DSL line shares that reserved band, so the
-strip costs no new vertical space and introduces no layout shift.
+when the first node is pinned. The DSL line renders as its own row *above*
+`.accordion-strip`, which keeps its own reservation regardless — so the strip is
+additional vertical space, one more constant-height row, not space reused from an
+existing band. What it does inherit from that neighboring reservation is only the
+*absence of shift*: because `.accordion-strip` still reserves its own height
+independently, pinning the first node does not move the strip, even though the
+strip itself is new space the layout did not have before.
 
 **How it gets spans.** The builder holds a document, not text, and spans are a
 parse product. So the strip computes `parse(printInline(document.rule))` and keeps
@@ -324,24 +329,54 @@ scope of the `as` clause, load-bearing rather than noise. `precedenceOf` returns
 primary or is parenthesised by its own `as` clause"*
 ([`printer.ts:44`](../../../ui/packages/rules-core/src/dsl/printer.ts)).
 
-**When it runs.** At plan time, on the touched subtree only — never on
-`loadDocument`, never document-wide. A hand-authored JSON or a DSL round-trip is
-displayed as authored rather than quietly rewritten, and the change stays scoped
-to what the user's own gesture created. Because the strip previews the planner's
-output, normalization is **visible and consented-to before commit** rather than
-silent.
+**When it runs.** At plan time, never on `loadDocument`, never document-wide. A
+hand-authored JSON or a DSL round-trip is displayed as authored rather than
+quietly rewritten.
 
-### `xor` is never flattened
+The actual scope is wider than "what the gesture touched", though. `planInsert`
+calls `normalizeAt(document, parentPath)`, and `normalizeAt` flattens the whole
+subtree rooted at that path — every descendant, including sibling operands the
+insertion never came near — not just the vicinity of the change. A `+` on any
+root-level row can therefore normalize the entire document.
+
+That is accepted rather than fixed here, for two reasons. First, flattening is
+provably semantics-preserving: the backend's left fold means flat `[a,b,c]` and
+left-nested `[[a,b],c]` bind to the identical spec tree, so a wider flatten changes
+nothing the user could observe as behavior, only how the JSON happens to be
+bracketed. Second, narrowing `normalizeAt` to the actual touched region is a real
+rewrite of a well-tested core function, and doing that at the tail end of a
+milestone is the riskier of the two options. Because the strip previews the
+planner's output, whatever scope normalization does run at is **visible and
+consented-to before commit** rather than silent — so the wider scope is a
+readability quirk, not a correctness or consent problem.
+
+Narrowing is deferred to Milestone 2, where it stops being merely wide and starts
+compounding: `planMove` normalizes at two points (the source parent and the
+destination parent) in the same plan, so the wide scope from each point can
+overlap and re-flatten subtrees the other point already touched.
+
+### `xor` is never flattened, but the builder can still grow one
 
 The left fold makes n-ary `xor` mean `a.XOr(b).XOr(c)` — **parity**, true when an
-odd number of operands are satisfied. It does not mean "exactly one". A flat
-three-child `XOR` row invites exactly that misreading, so the builder never
-creates one.
+odd number of operands are satisfied. It does not mean "exactly one". The decision
+this design makes is narrower than it first sounds: `normalizeAt` never *merges* a
+nested `xor` into its parent `xor` (`FLATTENABLE` in `normalize.ts` omits `xor`
+deliberately), because that merge is exactly what would relabel "exactly one of
+these two groups" as plain parity.
 
-It must still *render* one, because `parser.ts` already flattens `a ^ b ^ c` from
-the DSL and such documents exist today. Mitigation: a `xor` node with more than
-two operands is **labelled as parity** rather than as a bare `XOR`, so the flat
-display does not lie about what it computes.
+That is not the same as refusing to let a `xor` grow. The row `+` and `Insert
+first operand` both work on a `xor` operator row the same as on any other — adding
+a third operand via the builder's own insertion UI is intended, not an oversight
+to close off. Refusing it would be a strange, arbitrary restriction: the builder
+lets you extend an `and` or an `or` past two operands freely, and a `xor` has no
+special reason to be less editable than its siblings.
+
+It must still *render* an n-ary `xor` regardless of how it got there, because
+`parser.ts` already flattens `a ^ b ^ c` from the DSL and such documents exist
+today. Mitigation: a `xor` node with more than two operands is **labelled as
+parity** rather than as a bare `XOR`, so the flat display honestly reads "an odd
+number must hold" instead of implying "exactly one" — the row's own gloss carries
+the correction, rather than the builder pretending the state can't arise.
 
 ## Architecture
 
@@ -373,9 +408,15 @@ pure function rather than in a component:
 - **Indices shift.** Removing `and[1]` and inserting at `and[3]` must resolve
   against a defined one of the two orderings.
 
-`RuleEditorStore` gains one thin method that applies a planner result and commits
-it to history. The existing `wrapInOperator`/`addOperand` stay; `wrapInOperator`
-stops being dead code, called by the `Wrap` path.
+`RuleEditorStore` gains one thin method (`applyPlan`) that applies a planner
+result and commits it to history. The existing `wrapInOperator`/`addOperand`
+stay — but as implemented, `planInsert` does its own wrapping and its own
+operand-list splicing internally, rather than calling either method, so neither
+gained a call site from this milestone. `wrapInOperator` and `addOperand` remain
+dead code outside their own unit tests. Milestone 2 should not go looking for a
+caller on the assumption one was added here; whether to give them one, or to
+remove them, is a separate decision about a published package's public API and is
+out of scope for this correction.
 
 ### New, in the demo builder
 

@@ -1036,8 +1036,11 @@ button.node-dsl {
   gap: calc(var(--space) / 2);
 }
 
-/* The permanent DSL line above the builder tree. It shares the band `.accordion-strip` already
-   reserves, so adding it costs no vertical space and shifts nothing when a node is first pinned.
+/* The permanent DSL line above the builder tree. It renders as its own row, above
+   `.accordion-strip` rather than sharing its reserved band — `.accordion-strip` keeps its own
+   `min-height` regardless, so this strip is additional vertical space, not free space reused. It
+   still shifts nothing when a node is first pinned, since `.accordion-strip`'s own reservation is
+   what prevents that jump; this strip is simply a constant-height row above it.
 
    Scrolls horizontally rather than wrapping: a rule of any size stays one line, and the strip
    scrolls whichever marked span the user just moved to into view. The mask fades both edges so
