@@ -39,7 +39,8 @@ public sealed record CatalogResponse(
 /// <summary>A request to validate a rule document against a registered model type.</summary>
 /// <param name="ModelType">A model-type id registered on the server.</param>
 /// <param name="Document">A rule document (see rule.v1.json).</param>
-public sealed record ValidateRequest(string ModelType, JsonElement Document);
+/// <param name="IsAsync">Validate for an asynchronous load, so documents may reference async specs.</param>
+public sealed record ValidateRequest(string ModelType, JsonElement Document, bool IsAsync = false);
 
 /// <summary>A request to evaluate a rule document against a sample model.</summary>
 /// <param name="ModelType">A model-type id registered on the server.</param>

@@ -30,6 +30,26 @@ describe('createValidationController', () => {
     dispose();
   });
 
+  it('passes isAsync to validate when the option is set', async () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    const client = fakeClient({ errors: [] });
+    const dispose = createValidationController(store, client, {
+      modelType: 'customer',
+      debounceMs: 100,
+      isAsync: true,
+    });
+
+    store.replaceNode('$.rule', { spec: 'passes-credit-check' });
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(client.validate).toHaveBeenCalledWith({
+      modelType: 'customer',
+      document: store.getState().document,
+      isAsync: true,
+    });
+    dispose();
+  });
+
   it('stops validating after dispose', async () => {
     const store = new RuleEditorStore({ rule: { spec: 'a' } });
     const client = fakeClient({ errors: [] });

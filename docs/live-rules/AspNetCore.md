@@ -51,7 +51,14 @@ app.MapPost("/api/checkout", async (
 
 `MapMotivRules(basePath)` maps the document endpoints (`GET {basePath}/catalog`,
 `POST {basePath}/validate`, `POST {basePath}/evaluate`) plus the rule-management endpoints under
-`{basePath}/rules`:
+`{basePath}/rules`.
+
+`POST {basePath}/validate` takes `{ modelType, document, isAsync? }`. Set `isAsync: true` to
+validate for an asynchronous load — the document may then reference async specs, mirroring
+[`DeserializeAsyncSpec`](DeserializeAsyncSpec.md); without it, an async spec reference is
+reported as `AsyncSpecInSyncLoad`.
+
+The rule-management endpoints:
 
 | Method & path                        | Request                          | Responses                                                                    |
 |----------------------------------------|-------------------------------------|--------------------------------------------------------------------------------|

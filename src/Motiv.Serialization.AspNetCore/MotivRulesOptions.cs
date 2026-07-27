@@ -48,6 +48,22 @@ public sealed class MotivRulesOptions
                     return ex.Errors;
                 }
             },
+            ValidateAsyncSpec = static (serializer, documentJson) =>
+            {
+                var structural = serializer.Validate(documentJson);
+                if (structural.Count > 0) return structural;
+                try
+                {
+                    // Deserializing (rather than ValidateAsyncSpec) also reports
+                    // parameter-supply errors, matching the sync path above.
+                    serializer.DeserializeAsyncSpec<TModel>(documentJson);
+                    return Array.Empty<RuleError>();
+                }
+                catch (RuleSerializationException ex)
+                {
+                    return ex.Errors;
+                }
+            },
             Evaluate = static (serializer, resultSerializer, jsonOptions, documentJson, modelElement) =>
             {
                 var spec = serializer.Deserialize<TModel>(documentJson);
