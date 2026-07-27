@@ -32,14 +32,30 @@ describe('PendingSlot', () => {
     expect(onCommit).toHaveBeenCalledWith({ spec: 'is-active' });
   });
 
-  it('refuses an unparseable buffer and reports it without committing', () => {
-    const { onCommit, container } = renderSlot();
+  it('refuses an unparseable buffer on Enter and reports it without committing', () => {
+    const { onCommit, onCancel, container } = renderSlot();
 
     replaceBuffer(container, 'a &');
     fireEvent.keyDown(content(container), { key: 'Enter' });
 
     expect(onCommit).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toBeDefined();
+    // The Escape test already asserts the converse (onCommit stays silent on cancel); this is
+    // the other half — a refusal must not also cancel the slot out from under the user.
+    expect(onCancel).not.toHaveBeenCalled();
+  });
+
+  it('evaporates the slot on blur with an unparseable buffer, rather than leaving it stuck', () => {
+    const { onCommit, onCancel, container } = renderSlot();
+
+    replaceBuffer(container, 'a &');
+    fireEvent.blur(content(container));
+
+    // Unlike Enter, a blur means the user has already clicked away — refusing here would leave
+    // an unfocused, unreachable dashed row with a stuck error message, dismissable only by
+    // clicking back in and pressing Escape. So blur treats an unparseable buffer as abandonment.
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(onCancel).toHaveBeenCalled();
   });
 
   it('cancels on Escape without committing', () => {

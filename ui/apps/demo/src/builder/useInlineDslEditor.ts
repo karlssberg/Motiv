@@ -11,6 +11,9 @@ import { motivEditorTheme } from '../dsl/theme.js';
 /** Keeps a row to one line: a pasted newline would silently grow the row out of the tree. */
 const singleLine = EditorState.transactionFilter.of((tr) => (tr.newDoc.lines > 1 ? [] : tr));
 
+/** Which of the two commit paths fired. */
+export type CommitTrigger = 'enter' | 'blur';
+
 /**
  * Mounts and tears down a one-line CodeMirror editor for a DSL expression: single-line
  * filter, the `motiv()` language, model-scoped completion, Enter to commit, Escape to cancel,
@@ -23,7 +26,16 @@ export function useInlineDslEditor(options: {
   active: boolean;
   initialText: string;
   scope: () => { catalog: Catalog; modelType: string };
-  onCommit: (text: string) => boolean;
+  /**
+   * `trigger` names which of the two commit paths fired — Enter or a blur. The hook itself
+   * treats them identically (both route through the same guarded `commit`), but a caller often
+   * cannot: refusing an unparseable buffer on Enter leaves the editor open for the user to fix,
+   * who is still mid-edit and would be poorly served by having their typing discarded. The same
+   * refusal on blur instead leaves an unfocused, unreachable row behind — the user has already
+   * moved on, so a caller that models "nothing here yet" (like `PendingSlot`) may prefer to treat
+   * an unparseable blur as abandonment rather than a refusal.
+   */
+  onCommit: (text: string, trigger: CommitTrigger) => boolean;
   onCancel: () => void;
   /**
    * Fired on every doc change. The hook owns no error state, so it cannot clear a caller's
@@ -52,7 +64,7 @@ export function useInlineDslEditor(options: {
 
     attached.current = true;
 
-    const commit = (buffer: string): boolean => {
+    const commit = (buffer: string, trigger: CommitTrigger): boolean => {
       if (!attached.current) return false;
       // Disarm before delegating, not after. A successful commit makes the caller unmount this
       // editor, and the blur that DOM removal provokes would otherwise re-enter here and commit
@@ -60,7 +72,7 @@ export function useInlineDslEditor(options: {
       // so it runs after the removal — hence after the blur. Disarming up front is also
       // independent of whether React flushes the caller's state update synchronously.
       attached.current = false;
-      const accepted = options.onCommit(buffer);
+      const accepted = options.onCommit(buffer, trigger);
       // A refused buffer leaves the editor open and still usable, so re-arm for the next attempt.
       if (!accepted) attached.current = true;
       return accepted;
@@ -105,7 +117,7 @@ export function useInlineDslEditor(options: {
             {
               key: 'Enter',
               run: (editor) => {
-                commit(editor.state.doc.toString());
+                commit(editor.state.doc.toString(), 'enter');
                 // Consumed either way. Reporting a refused commit as unhandled passes the
                 // keystroke to whatever binds Enter next — the default newline, which the
                 // single-line filter then swallows, so the key appears to do nothing at all.
@@ -130,7 +142,7 @@ export function useInlineDslEditor(options: {
             if (update.docChanged) options.onChange?.();
           }),
           EditorView.domEventHandlers({
-            blur: (_event, editor) => { commit(editor.state.doc.toString()); return false; },
+            blur: (_event, editor) => { commit(editor.state.doc.toString(), 'blur'); return false; },
           }),
         ],
       }),

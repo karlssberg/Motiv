@@ -42,6 +42,10 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
     active: editing,
     initialText: text,
     scope: () => scope.current,
+    // The hook's `trigger` argument is dropped deliberately, not overlooked. Unlike `PendingSlot`,
+    // this row edits an existing node rather than an empty slot, so a refused buffer leaves the
+    // editor open over text the document already has — there is no phantom row here that a stuck
+    // blur could strand, and both triggers refuse alike.
     onCommit: (buffer) => {
       const result = parse(buffer);
       if (!result.document || result.errors.length > 0) {

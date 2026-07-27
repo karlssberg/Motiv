@@ -31,13 +31,22 @@ export function PendingSlot(props: {
     active: true,
     initialText: '',
     scope: () => scope.current,
-    onCommit: (buffer) => {
+    onCommit: (buffer, trigger) => {
       if (buffer.trim() === '') {
         onCancel();
         return true;
       }
       const result = parse(buffer);
       if (!result.document || result.errors.length > 0) {
+        // Enter refuses and re-arms: the user is still mid-edit, and discarding what they typed
+        // would be hostile. A blur means they have already clicked away — refusing there would
+        // leave an unfocused, unreachable dashed row with a stuck error message parked in the
+        // tree, dismissable only by clicking back in and pressing Escape. So a blur with an
+        // unparseable buffer is treated as abandonment: cancel, and let the slot evaporate.
+        if (trigger === 'blur') {
+          onCancel();
+          return true;
+        }
         setError(result.errors[0]?.message ?? 'could not parse this expression');
         return false;
       }
