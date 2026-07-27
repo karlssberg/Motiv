@@ -1054,11 +1054,21 @@ button.node-dsl {
 
    `scroll-padding-inline` extends the same idea to the scrolled case: without it, scrolling a
    marked span into view can park it flush against the edge and therefore under the fade — the one
-   span the user is trying to read. */
+   span the user is trying to read.
+
+   `flex: 0 0 auto` is load-bearing, and its necessity is a side effect of the line above it.
+   This strip is a flex item of a column panel, and a column item's automatic minimum size —
+   the thing that normally stops a flex parent crushing it below its own content — applies only
+   while its overflow is `visible`. `overflow-y: hidden` is here to suppress a vertical scrollbar
+   alongside the horizontal one, and it also drops that automatic minimum to zero. So in a short
+   viewport the panel was free to squeeze the strip to a few pixels and clip the text inside it.
+   Refusing to shrink is the fix: this is fixed-height chrome, and the overflow belongs to the
+   panel below, which scrolls. */
 .dsl-strip {
   --strip-fade: 10px;
   --strip-inset: calc(var(--strip-fade) + 4px);
 
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: calc(var(--space) - 2px);
