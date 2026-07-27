@@ -1028,3 +1028,56 @@ button.node-dsl {
   justify-content: flex-end;
   gap: calc(var(--space) / 2);
 }
+
+/* The permanent DSL line above the builder tree. It shares the band `.accordion-strip` already
+   reserves, so adding it costs no vertical space and shifts nothing when a node is first pinned.
+
+   Scrolls horizontally rather than wrapping: a rule of any size stays one line, and the strip
+   scrolls whichever marked span the user just moved to into view. The mask fades both edges so
+   off-screen content is visible as such without spending width on an ellipsis. */
+.dsl-strip {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) - 2px);
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  padding: 3px 6px;
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  mask-image: linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
+}
+.dsl-strip::-webkit-scrollbar { display: none; }
+
+.dsl-strip-label {
+  flex: 0 0 auto;
+  font: 9px var(--sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.dsl-strip-text {
+  font: 11.5px/1.5 var(--mono);
+  white-space: nowrap;
+  color: var(--dsl-fg);
+}
+
+/* Two marks on two axes: a fill behind the hover, a rule beneath the selection. Same-axis marks
+   would nest as a box inside a box, which at this size is two rectangles to pull apart — and
+   hovering a child of the selected node is the common case, not a rare one.
+
+   Selection is the quieter of the two on purpose. The selected *row* already carries a strong
+   accent bar, so this is a confirmation; hover has no other indicator anywhere, so its fill is the
+   only evidence it exists. Weight follows necessity, not deliberateness. */
+.dsl-strip-hover {
+  background: var(--accent-weak);
+  border-radius: 2px;
+}
+
+.dsl-strip-selected {
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 1px;
+}
