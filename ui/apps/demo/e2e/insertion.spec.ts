@@ -62,30 +62,21 @@ test('the strip scrolls the hovered mark into view', async ({ page }) => {
  * Proves the planner's output is expressible DSL, and that normalization reached the JSON the DSL
  * pane renders from — a round trip through the builder's insertion UI and back out as text.
  *
- * This currently fails in a real browser. Pressing Enter to commit runs `useInlineDslEditor`'s
- * `onCommit` (apps/demo/src/builder/useInlineDslEditor.ts) twice, not once: the Enter keymap
- * handler commits and, synchronously in the same event, React removes the phantom row's DOM —
- * which fires a genuine native `blur` on the still-focused CodeMirror content element before the
- * paint. `EditorView.domEventHandlers.blur` also commits, and its guard (`attached.current`,
- * meant to make a post-teardown commit a no-op) is only cleared inside the mount effect's
- * *cleanup*, which — because the effect is a plain `useEffect`, not a `useLayoutEffect` — runs as
- * a deferred passive effect, later than this synchronous blur. So the guard is still `true` when
- * the second commit lands.
- *
- * This double-commit is not specific to `PendingSlot`: the same two-`onCommit` sequence fires from
- * `NodeDsl` (apps/demo/src/builder/NodeDsl.tsx) on every row edit — confirmed by instrumenting it
- * directly. It is invisible there because `store.replaceNode(path, sameResult)` twice is a no-op;
- * `PendingSlot`'s `store.applyPlan(planInsert(...))` (apps/demo/src/builder/RuleNodeEditor.tsx,
- * `slotFor`'s `onCommit`) is not idempotent, so committing an insertion inserts the node twice.
- * None of the 242 jsdom tests catch it because jsdom does not reliably fire a synchronous native
- * `blur` when a focused element is removed from the document — precisely the class of bug this
- * milestone's e2e suite exists to catch. `test.fail()` documents it as a known, reproducible
- * defect rather than papering over it — this spec should start passing, unprompted, the day the
- * guard is fixed (e.g. by clearing `attached.current` synchronously, such as from the commit
- * itself, rather than relying on the passive effect cleanup).
+ * This test is also the regression guard for a bug it found: committing via Enter used to run
+ * `useInlineDslEditor`'s `onCommit` (apps/demo/src/builder/useInlineDslEditor.ts) twice. The Enter
+ * keymap handler committed and, synchronously in the same event, React removed the phantom row's
+ * DOM — which fires a genuine native `blur` on the still-focused CodeMirror content element before
+ * paint. `EditorView.domEventHandlers.blur` also committed, and its guard (`attached.current`,
+ * meant to make a post-teardown commit a no-op) used to be cleared only inside the mount effect's
+ * *cleanup*, which — because the effect is a plain `useEffect`, not a `useLayoutEffect` — runs as a
+ * deferred passive effect, later than this synchronous blur. So the guard was still `true` when the
+ * second commit landed, inserting the node twice (`is-active & has-orders & has-orders & is-adult`).
+ * `commit` now disarms the guard itself, before delegating, rather than relying on effect-cleanup
+ * timing — see `useInlineDslEditor.ts` for the fix. No jsdom test caught the original bug because
+ * jsdom does not reliably fire a synchronous native `blur` when a focused element is removed from
+ * the document — precisely the class of bug this milestone's e2e suite exists to catch.
  */
 test('inserting an operand round-trips into the DSL pane', async ({ page }) => {
-  test.fail(true, 'useInlineDslEditor double-commits on Enter — see comment above');
   await page.goto('/');
   await buildRootExpression(page, 'is-active & is-adult');
   await expect(page.getByLabel('rule document')).toContainText('"and"');
@@ -102,4 +93,37 @@ test('inserting an operand round-trips into the DSL pane', async ({ page }) => {
   await page.getByRole('tab', { name: 'DSL' }).click();
   const content = page.locator('.cm-content');
   await expect(content).toHaveText('is-active & has-orders & is-adult');
+});
+
+/**
+ * The sibling regression guard: cancelling must not commit either. Before the fix, Escape called
+ * `options.onCancel` directly, bypassing the guard entirely — so the same teardown-blur mechanism
+ * described above re-entered `commit` with the guard still armed and the typed (but never
+ * committed) buffer still sitting in the doc, silently inserting the very node the user just
+ * cancelled. `cancel()` in `useInlineDslEditor.ts` now shares the same guard as `commit()`.
+ *
+ * Escape is pressed twice: a fully-typed spec name like `has-orders` is also a live completion
+ * match, and CodeMirror's own autocomplete extension claims the first Escape to dismiss that
+ * completion state (no visible popup renders in that same tick, so nothing else in this suite
+ * observes it) — a pre-existing, unrelated characteristic of the shared editor hook, not something
+ * introduced by either bug. The second Escape reaches this editor's own cancel binding, which is
+ * the one under test. Confirmed deterministic (unaffected by the completion dismissal) by running
+ * this exact sequence repeatedly against both the buggy and fixed code during development.
+ */
+test('cancelling with Escape does not insert the cancelled buffer', async ({ page }) => {
+  await page.goto('/');
+  await buildRootExpression(page, 'is-active & is-adult');
+  await expect(page.getByLabel('rule document')).toContainText('"and"');
+
+  await page.getByRole('button', { name: 'insert after $.rule.and[0]', exact: true }).click();
+  await expect(pendingContent(page)).toBeFocused();
+  await page.keyboard.type('has-orders');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+
+  await expect(page.locator('.node-row-pending')).toHaveCount(0);
+  const document = page.getByLabel('rule document');
+  await expect(document).not.toContainText('has-orders');
+  await expect(document).toContainText('"is-active"');
+  await expect(document).toContainText('"is-adult"');
 });
