@@ -2003,7 +2003,7 @@ and extend `actions`:
   ];
 ```
 
-**In `RuleNodeEditor.tsx`**, pass it only for binary rows, and distinguish which slot is open. Two slots can now be requested for the same row — "after me" and "first operand" — so `pending` becomes a pair:
+**In `RuleNodeEditor.tsx`**, pass it only for binary rows, and distinguish which slot is open. `pending` is **already** the pair `{ path, where }` — Task 11 typed it that way deliberately so this task adds a value rather than a rewrite. For reference, it is:
 
 ```ts
   /** The open insertion slot, if any: a row path plus which of its two positions. */
@@ -2036,7 +2036,7 @@ The slot's commit picks its target from `where`, and a `first` slot renders insi
 
 Render `pending?.path === path && pending.where === 'after' && slotFor('after')` after the row, and `pending?.path === path && pending.where === 'first' && slotFor('first')` as the first child inside `.node-kids`. A `first` slot on a *collapsed* parent still needs somewhere to render — show it after the row in that case, since `.node-kids` is not mounted.
 
-Update `BuilderPane.tsx`'s `useState` to the pair type.
+`BuilderPane.tsx`'s `useState` already carries the pair type from Task 11 and needs no change.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
