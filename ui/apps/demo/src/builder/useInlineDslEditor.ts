@@ -116,6 +116,10 @@ export function useInlineDslEditor(options: {
                 return true;
               },
             },
+            // A fully-typed buffer that also matches a live completion can take two presses to
+            // cancel: `autocompletion()` installs its own higher-precedence keymap, so an open
+            // completion popup claims the first Escape to dismiss itself, and only the second
+            // reaches this binding.
             { key: 'Escape', run: () => { cancel(); return true; } },
           ]),
           keymap.of([...defaultKeymap, ...historyKeymap, ...completionKeymap]),
@@ -138,6 +142,11 @@ export function useInlineDslEditor(options: {
       attached.current = false;
       view.destroy();
     };
+    // Rebuilds only on a non-editing → editing transition, not on every render. While `active`
+    // stays `true` the closures above stay pinned to the options captured when it became `true` —
+    // safe because `PendingSlot` holds `active` constant for its whole life, and `NodeDsl`'s rows
+    // are keyed by path, so a meaningful change (a different row, a different pending slot) remounts
+    // this hook entirely rather than re-running this effect with stale props.
   }, [options.active]);
 
   return { host };

@@ -491,7 +491,9 @@ body {
    reads as structure rather than as a grid of buttons. Focus must still reveal them, or they
    become keyboard-inaccessible. */
 .node-menu-trigger,
-.node-pin {
+.node-pin,
+.node-select,
+.node-insert {
   appearance: none;
   border: none;
   background: transparent;
@@ -506,10 +508,15 @@ body {
 
 .node-row:hover .node-menu-trigger,
 .node-row:hover .node-pin,
+.node-row:hover .node-select,
+.node-row:hover .node-insert,
 .node-menu-trigger:focus-visible,
 .node-pin:focus-visible,
+.node-select:focus-visible,
+.node-insert:focus-visible,
 .node-menu-trigger.open,
-.node-pin.pinned {
+.node-pin.pinned,
+.node-select[aria-pressed='true'] {
   opacity: 1;
 }
 
@@ -1090,19 +1097,9 @@ button.node-dsl {
 }
 
 .node-select {
-  flex: 0 0 auto;
-  background: none;
-  border: none;
   padding: 0 2px;
-  cursor: pointer;
   font-size: 10px;
   color: var(--faint);
-  opacity: 0;
-}
-.node-row:hover .node-select,
-.node-select:focus-visible,
-.node-select[aria-pressed='true'] {
-  opacity: 1;
 }
 .node-select[aria-pressed='true'] { color: var(--accent); }
 
@@ -1114,16 +1111,7 @@ button.node-dsl {
 }
 
 .node-insert {
-  flex: 0 0 auto;
-  background: none;
-  border: none;
   padding: 0 2px;
-  cursor: pointer;
-  font-size: 11px;
-  line-height: 1;
   color: var(--faint);
-  opacity: 0;
 }
-.node-row:hover .node-insert,
-.node-insert:focus-visible { opacity: 1; }
 .node-insert:hover { color: var(--accent); }

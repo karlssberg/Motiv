@@ -16,8 +16,12 @@ import { PendingSlot } from './PendingSlot.js';
 import { isCollapsed, isOpen, isPinned, type AccordionModel } from './accordion.js';
 import { type HighlightModel } from './highlight.js';
 
-/** The accordion state and its transitions, shared by every {@link RuleNodeEditor} in the tree. */
-export interface AccordionState {
+/**
+ * The tree-wide state shared by every {@link RuleNodeEditor} in the tree: accordion state (its
+ * original scope) plus the catalog, hover/selection highlight, popover slot, and pending
+ * insertion slot that have since joined it.
+ */
+export interface BuilderTreeState {
   model: AccordionModel;
   toggleCollapsed: (path: string) => void;
   toggleOpen: (path: string) => void;
@@ -44,11 +48,11 @@ type PopoverKind = 'menu' | 'operator';
 /** Identifies one row's popup, since a row has more than one. */
 const popoverKey = (kind: PopoverKind, path: string): string => `${kind}:${path}`;
 
-export const AccordionContext = createContext<AccordionState | null>(null);
+export const BuilderTreeContext = createContext<BuilderTreeState | null>(null);
 
-export function useAccordion(): AccordionState {
-  const context = useContext(AccordionContext);
-  if (!context) throw new Error('RuleNodeEditor must be used within an AccordionContext provider.');
+export function useBuilderTree(): BuilderTreeState {
+  const context = useContext(BuilderTreeContext);
+  if (!context) throw new Error('RuleNodeEditor must be used within a BuilderTreeContext provider.');
   return context;
 }
 
@@ -79,7 +83,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
   const {
     model, toggleCollapsed, toggleOpen, togglePin, openPopover, setOpenPopover, catalog,
     highlight, setHovered, setSelected, pending, setPending,
-  } = useAccordion();
+  } = useBuilderTree();
   const store = useRuleEditorStore();
 
   /** Binds one of this row's popups to the tree's single open slot. */
@@ -93,6 +97,14 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
   const kids = childPaths(node, path);
   const hasChildren = kids.length > 0;
   const collapsed = isCollapsed(model, path);
+  /**
+   * Whether this row's children are on screen — and so whether `.node-kids` exists to render into.
+   * Named because the two sites that need it would otherwise spell it differently (`collapsed` in
+   * one, `hasChildren && !collapsed` in the other) and be equivalent only via an invariant the
+   * reader has to reconstruct: only a binary node can host a `'first'` slot, and a binary node
+   * always has at least two operands.
+   */
+  const kidsMounted = hasChildren && !collapsed;
   const open = isOpen(model, path);
   const pinned = isPinned(model, path);
   const selected = highlight.selectedPath === path;
@@ -205,7 +217,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
       {pending?.path === path && pending.where === 'after' && slotFor('after')}
       {/* A collapsed parent has no mounted `.node-kids` for the 'first' slot to join, so it
           renders here instead — the same fallback spot the 'after' slot always uses. */}
-      {pending?.path === path && pending.where === 'first' && collapsed && slotFor('first')}
+      {pending?.path === path && pending.where === 'first' && !kidsMounted && slotFor('first')}
       {open && (
         <div className="node-detail" id={panelId(path)}>
           {isHigherOrderNode(node) ? (
@@ -216,7 +228,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
           <DecorationEditor path={path} node={node} />
         </div>
       )}
-      {hasChildren && !collapsed && (
+      {kidsMounted && (
         <div className="node-kids">
           {pending?.path === path && pending.where === 'first' && slotFor('first')}
           {kids.map((childPath) => (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Catalog, RulesApiClient } from '@motiv/rules-core';
 import { useCatalog, useRuleEditor, useRuleEditorStore } from '@motiv/rules-react';
-import { AccordionContext, RuleNodeEditor } from '../builder/RuleNodeEditor.js';
+import { BuilderTreeContext, RuleNodeEditor } from '../builder/RuleNodeEditor.js';
 import {
   EMPTY_ACCORDION, closeAll, toggleCollapsed, toggleOpen, togglePin,
   type AccordionModel,
@@ -51,7 +51,7 @@ export function BuilderBody(props: { client: RulesApiClient }) {
           </>
         )}
       </div>
-      <AccordionContext.Provider
+      <BuilderTreeContext.Provider
         value={{
           model,
           toggleCollapsed: (path) => setModel((prev) => toggleCollapsed(prev, path)),
@@ -68,7 +68,7 @@ export function BuilderBody(props: { client: RulesApiClient }) {
         }}
       >
         <RuleNodeEditor path={ROOT} modelType={MODEL_TYPE} />
-      </AccordionContext.Provider>
+      </BuilderTreeContext.Provider>
     </>
   );
 }
