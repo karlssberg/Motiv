@@ -1044,8 +1044,21 @@ button.node-dsl {
 
    Scrolls horizontally rather than wrapping: a rule of any size stays one line, and the strip
    scrolls whichever marked span the user just moved to into view. The mask fades both edges so
-   off-screen content is visible as such without spending width on an ellipsis. */
+   off-screen content is visible as such without spending width on an ellipsis.
+
+   The fade width and the horizontal padding are two views of one measurement, so they are one
+   custom property. Written independently they drift, and the failure is quiet: padding narrower
+   than the fade leaves the label and the first glyphs permanently half-transparent, which reads
+   as a rendering fault rather than as the "there is more this way" hint the fade is for. Padding
+   clears the fade with a little room to spare so text sits in fully opaque space at rest.
+
+   `scroll-padding-inline` extends the same idea to the scrolled case: without it, scrolling a
+   marked span into view can park it flush against the edge and therefore under the fade — the one
+   span the user is trying to read. */
 .dsl-strip {
+  --strip-fade: 10px;
+  --strip-inset: calc(var(--strip-fade) + 4px);
+
   display: flex;
   align-items: center;
   gap: calc(var(--space) - 2px);
@@ -1053,11 +1066,18 @@ button.node-dsl {
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
-  padding: 3px 6px;
+  scroll-padding-inline: var(--strip-inset);
+  padding: 3px var(--strip-inset);
   background: var(--sh-inset);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  mask-image: linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--strip-fade),
+    #000 calc(100% - var(--strip-fade)),
+    transparent 100%
+  );
 }
 .dsl-strip::-webkit-scrollbar { display: none; }
 
