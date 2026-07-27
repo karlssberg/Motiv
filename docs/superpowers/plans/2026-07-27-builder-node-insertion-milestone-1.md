@@ -1630,6 +1630,10 @@ export function PendingSlot(props: {
       return true;
     },
     onCancel,
+    // Retires a refused commit's message on the next keystroke. Left standing it would sit
+    // beside the field for the whole time you spend typing the fix. The hook owns no error
+    // state — that is why this is a callback rather than something it does itself.
+    onChange: () => setError(null),
   });
 
   return (
