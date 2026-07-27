@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { RuleEditorStore, type RulesApiClient } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
 import { BuilderPane } from '../../src/panes/BuilderPane.js';
-import { replaceBuffer } from '../support/codemirror.js';
+import { editorView, replaceBuffer } from '../support/codemirror.js';
 
 const catalog = {
   specs: [
@@ -62,6 +62,33 @@ describe('DSL row editing', () => {
     fireEvent.focus(await screen.findByRole('button', { name: `edit expression at ${path}` }));
   };
   const content = (container: HTMLElement) => container.querySelector('.cm-content')!;
+
+  /**
+   * The two ways into a row want opposite selections, so they are tested as a pair.
+   *
+   * A keyboard entry has no point to aim at — Tab lands on the row as a whole, and selecting the
+   * buffer makes the obvious next keystroke replace it. A click *does* carry a point, and honouring
+   * it is the difference between editing a word and retyping the line. Where that point lands is a
+   * question of layout, so the mapping itself is proved in `e2e/inline-edit.spec.ts`; jsdom has no
+   * layout, and can only prove that a click is not treated as a keyboard entry.
+   */
+  it('selects the whole expression when the row is reached by keyboard', async () => {
+    const { container } = renderWith(new RuleEditorStore({ rule: { spec: 'is-active' } }));
+    await focusRow('$.rule');
+    const { from, to } = editorView(container).state.selection.main;
+    expect([from, to]).toEqual([0, 'is-active'.length]);
+  });
+
+  // Deliberately not titled "places a caret where you clicked": with no layout, `posAtCoords` has
+  // nothing to resolve against, so this reaches the same end-of-buffer fallback a mapping-free
+  // implementation would. What it does prove is that a click is not routed to the keyboard's
+  // select-all — the mapping itself is `e2e/inline-edit.spec.ts`'s to prove.
+  it('does not select the whole expression when the row is clicked', async () => {
+    const { container } = renderWith(new RuleEditorStore({ rule: { spec: 'is-active' } }));
+    const row = await screen.findByRole('button', { name: 'edit expression at $.rule' });
+    fireEvent.mouseDown(row, { clientX: 20, clientY: 5 });
+    expect(editorView(container).state.selection.main.empty).toBe(true);
+  });
 
   it('commits a valid edit into the document', async () => {
     const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
