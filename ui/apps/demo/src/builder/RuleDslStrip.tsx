@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { parse, printInline, rangeOfPath, type RuleNode, type SourceRange } from '@motiv/rules-core';
+import { parse, printInline, type RuleNode, type SourceRange } from '@motiv/rules-core';
 import { focusedPath, type HighlightModel } from './highlight.js';
 
 /** One run of text that carries the same set of marks throughout. */
@@ -65,11 +65,32 @@ export function RuleDslStrip(props: { rule: RuleNode; highlight: HighlightModel 
 
   const { text, spans } = useMemo(() => {
     const printed = printInline(rule);
-    return { text: printed, spans: parse(printed).spans };
+    const result = parse(printed);
+    // The round-trip that licenses this reparse has a documented hole: the DSL has no string
+    // escapes, so a `name` carrying a double quote prints text the parser cannot read back
+    // (`printer.ts`). What comes out then is not *no* spans but *damaged* ones — for
+    // `{and: [{spec: 'a', name: 'x"y'}, {spec: 'b'}]}` the two operand spans vanish and only a
+    // truncated `$.rule` survives, so both operands would resolve to the same wrong range.
+    // Dropping the lot degrades honestly: the expression still renders, nothing is marked.
+    return { text: printed, spans: result.errors.length > 0 ? [] : result.spans };
   }, [rule]);
 
-  const range = (path: string | null): SourceRange | null =>
-    (path === null ? null : rangeOfPath(path, spans, text.length));
+  /**
+   * The span recorded for exactly this path, or `null`.
+   *
+   * Deliberately not `rangeOfPath`. Its ancestor fallback is right for the linter it was written
+   * for — a diagnostic on `$.rule.whenTrue` should anchor on the node that owns it — and exactly
+   * wrong here, because the two callers mean opposite things by a missing span. Nothing reconciles
+   * the highlight model against a document edit, so a selection can outlive the node it names:
+   * select the last operand of an `and`, remove it, and `$.rule.and[2]` no longer exists. Walking
+   * up to `$.rule` would then underline the *entire rule* as selected, while no row shows as
+   * selected — the strip claiming something the tree contradicts.
+   */
+  const range = (path: string | null): SourceRange | null => {
+    if (path === null) return null;
+    const span = spans.find((candidate) => candidate.path === path);
+    return span ? { from: span.from, to: span.to } : null;
+  };
 
   const segments = segmentize(text, range(highlight.hoveredPath), range(highlight.selectedPath));
 
