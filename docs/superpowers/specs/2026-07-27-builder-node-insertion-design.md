@@ -54,8 +54,8 @@ reachable, and nothing collapses it.
 |---|---|
 | What a gap inserts | An **empty phantom slot** with a focused DSL editor. Never enters the document |
 | Resting affordance | A **row-anchored `+`**, joining the existing hover-revealed `⋯`/`📌` cluster |
-| `+` on an operator row | Inserts at **index 0**, so every slot is reachable by button alone |
-| `+` on any other row | Inserts **immediately after** that row, in that row's own parent |
+| `+` on **any** row | Inserts a sibling **immediately after that row** — one rule, no per-kind cases |
+| The one slot `+` cannot reach | `⋯ → Insert first operand`, offered on operator rows only |
 | Single-child parents | The `+` **wraps in `and`**, unconditionally; retype via the existing `OperatorPicker` |
 | Drag affordance | Labelled **drop strips**, materialised only during a drag or an armed move |
 | Drop targets | Strips (position) **+ onto a leaf** (wrap in `and`) **+ onto an operator row** (append) |
@@ -152,23 +152,35 @@ Every row gains a `+` alongside `⋯` and `📌`. The cluster already exists and
 already hover-revealed ([`app.css:507`](../../../ui/apps/demo/src/styles/app.css)),
 so a third member inherits the reveal behaviour, spacing and tab order.
 
-Its meaning depends on the row, and the split is chosen so that **every operand
-slot is reachable without a drag**:
+It means one thing on every row: **insert a sibling immediately after me.**
 
-- On an **operator row**, insert at index 0 of that operator's own list.
-- On any **other row**, insert immediately after that row in the row's parent.
+An earlier draft split this by row kind — index 0 on operator rows, after-me
+elsewhere — on the theory that the split made every operand slot reachable by
+button. It does not, and the reason is arithmetic rather than detail. In
+`and: [a, {or: [b, c]}, d]` the `and` has four slots and the `or` has three, so
+seven slots are served by six rows. **One button per row can never cover them**,
+under any assignment: each row participates in two lists, its parent's and its own
+children's, and a single button must pick one. The split bought nothing and cost a
+second rule to learn.
 
-Reading the operator row's `+` as "prepend" rather than "append" is what closes
-the set: the operator row covers *before the first child*, each child's `+`
-covers *after child i*, and the last child's `+` covers *append*. It also matches
-what the position reads as — the `+` sits on the operator row, which is drawn
-above all its children.
+So the `+` is uniform, and the resolution of the position it *cannot* reach —
+before an operator's first child — is `⋯ → Insert first operand`, offered on
+operator rows only. That belongs in the menu anyway: the menu is already where
+this builder puts structural actions, and the item is self-labelling in a way a
+second glyph on the row would not be.
 
-When the row's parent holds exactly one node — the root rule, a `not`'s child, a
-quantifier's body — there is no list to insert into, so the `+` **wraps in `and`**,
-producing `and: [existing, new]`. Always `and`, never inferred: the new parent's
+When the row has no parent list — the root rule, a `not`'s child, a quantifier's
+body — "a sibling after me" is expressed by **wrapping in `and`**, producing
+`and: [existing, new]`. Always `and`, never inferred: the new parent's
 `OperatorPicker` badge renders one click away on the row that just appeared, so
 changing it is cheap and uses a control the user already knows.
+
+The uniform rule composes with normalization in a way the split rule did not. A
+root that is already `and: [a, b]` wraps to `and: [{and: [a, b]}, new]`, which
+normalization — the nested `and` being undecorated — immediately flattens to
+`and: [a, b, new]`. So "wrap in `and`" *becomes* "append to my own list" exactly
+when that is the sensible reading, and stays a genuine wrap when the inner node
+carries a `name` worth preserving.
 
 ### The phantom slot
 
