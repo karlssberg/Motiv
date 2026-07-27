@@ -19,6 +19,24 @@
 - **`xor` is never flattened or merged.** `and`/`andAlso` and `or`/`orElse` are distinct keys and never merge with each other.
 - **A node carrying `name`, `whenTrue`, or `whenFalse` is never dissolved by normalization** — the payload would be destroyed.
 - **New test files must use LF line endings.**
+- **Demo test files mirror `src/`.** A test for `apps/demo/src/builder/X.ts` goes at `apps/demo/test/builder/X.test.ts(x)` and imports it as `../../src/builder/X.js`. The tree already has `test/builder/`, `test/dsl/`, `test/panes/`, and `test/support/`. Never put a new demo test at the flat `test/` root.
+- **Drive CodeMirror through `test/support/codemirror.ts`, never `userEvent.type`.** Typing into a `contenteditable` does not work reliably in jsdom. The established pattern, from `test/builder/NodeDsl.test.tsx`:
+  ```tsx
+  import { render, screen, fireEvent } from '@testing-library/react';
+  import { replaceBuffer } from '../support/codemirror.js';
+
+  const content = (container: HTMLElement) => container.querySelector('.cm-content')!;
+  // …
+  replaceBuffer(container, 'is-adult & is-active');
+  fireEvent.keyDown(content(container), { key: 'Enter' });   // or { key: 'Escape' }
+  ```
+  The helper also exports `editorView` and `editorText`.
+- **The catalog resolves asynchronously**, so a test that renders the builder must `await screen.findBy…` for its first query rather than `getBy…`. Querying synchronously lets `useCatalog`'s promise resolve outside `act(...)`, and the resulting warning is itself a review finding. Existing builder tests mock only `getCatalog`:
+  ```tsx
+  const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unknown as RulesApiClient;
+  const renderWith = (store: RuleEditorStore) =>
+    render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
+  ```
 - **Do not add dependencies.** Everything needed is already in `apps/demo/package.json`.
 - **`RuleNodeEditor.tsx` is at 172 lines with five concerns.** Compose new row controls in as components; do not inline them.
 - Full .NET suite (needed only at Task 13) runs as `DOTNET_ROOT=~/.dotnet PATH=~/.dotnet:$PATH dotnet test Motiv.slnx` from the repo root. `net472` targets do not run on this machine; that is expected, not a failure.
@@ -65,7 +83,7 @@
 
 **Files:**
 - Modify: `ui/apps/demo/src/builder/nodeSummary.ts:29-31` (`OP_DESCRIPTION`) and `summarize`
-- Test: `ui/apps/demo/test/nodeSummary.test.ts` (create)
+- Test: `ui/apps/demo/test/builder/nodeSummary.test.ts` (create)
 
 **Interfaces:**
 - Consumes: nothing from earlier tasks
@@ -75,7 +93,7 @@
 
 ```ts
 import { describe, it, expect } from 'vitest';
-import { summarize } from '../src/builder/nodeSummary.js';
+import { summarize } from '../../src/builder/nodeSummary.js';
 
 describe('summarize', () => {
   it('describes a two-operand xor as exactly one', () => {
@@ -98,7 +116,7 @@ describe('summarize', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-pnpm --filter @motiv/rules-demo exec vitest run test/nodeSummary.test.ts
+pnpm --filter @motiv/rules-demo exec vitest run test/builder/nodeSummary.test.ts
 ```
 
 Expected: the three-operand case FAILS — received `'exactly one must hold'`, expected `'an odd number must hold'`. The other two PASS.
@@ -135,7 +153,7 @@ Add `operandsOf` to the existing `@motiv/rules-core` import list at the top of t
 - [ ] **Step 4: Run the test to verify it passes**
 
 ```bash
-pnpm --filter @motiv/rules-demo exec vitest run test/nodeSummary.test.ts
+pnpm --filter @motiv/rules-demo exec vitest run test/builder/nodeSummary.test.ts
 ```
 
 Expected: 3 passed.
@@ -143,7 +161,7 @@ Expected: 3 passed.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add ui/apps/demo/src/builder/nodeSummary.ts ui/apps/demo/test/nodeSummary.test.ts
+git add ui/apps/demo/src/builder/nodeSummary.ts ui/apps/demo/test/builder/nodeSummary.test.ts
 git commit -m "fix: describe n-ary xor as parity rather than exactly-one"
 ```
 
@@ -779,7 +797,7 @@ Hover and selection both mark the strip, and the strip auto-scrolls to whichever
 
 **Files:**
 - Create: `ui/apps/demo/src/builder/highlight.ts`
-- Test: `ui/apps/demo/test/highlight.test.ts` (create)
+- Test: `ui/apps/demo/test/builder/highlight.test.ts` (create)
 
 **Interfaces:**
 - Consumes: nothing
@@ -796,7 +814,7 @@ Hover and selection both mark the strip, and the strip auto-scrolls to whichever
 import { describe, it, expect } from 'vitest';
 import {
   EMPTY_HIGHLIGHT, focusedPath, setHovered, setSelected,
-} from '../src/builder/highlight.js';
+} from '../../src/builder/highlight.js';
 
 describe('highlight model', () => {
   it('starts with nothing marked', () => {
@@ -843,7 +861,7 @@ describe('highlight model', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-pnpm --filter @motiv/rules-demo exec vitest run test/highlight.test.ts
+pnpm --filter @motiv/rules-demo exec vitest run test/builder/highlight.test.ts
 ```
 
 Expected: FAIL — cannot resolve `../src/builder/highlight.js`.
@@ -895,7 +913,7 @@ export function focusedPath(model: HighlightModel): string | null {
 - [ ] **Step 4: Run the test to verify it passes**
 
 ```bash
-pnpm --filter @motiv/rules-demo exec vitest run test/highlight.test.ts
+pnpm --filter @motiv/rules-demo exec vitest run test/builder/highlight.test.ts
 ```
 
 Expected: 7 passed.
@@ -903,7 +921,7 @@ Expected: 7 passed.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add ui/apps/demo/src/builder/highlight.ts ui/apps/demo/test/highlight.test.ts
+git add ui/apps/demo/src/builder/highlight.ts ui/apps/demo/test/builder/highlight.test.ts
 git commit -m "feat(builder): pure hover/selection highlight model"
 ```
 
@@ -914,7 +932,7 @@ git commit -m "feat(builder): pure hover/selection highlight model"
 **Files:**
 - Create: `ui/apps/demo/src/builder/RuleDslStrip.tsx`
 - Modify: `ui/apps/demo/src/styles/app.css` (append)
-- Test: `ui/apps/demo/test/RuleDslStrip.test.tsx` (create)
+- Test: `ui/apps/demo/test/builder/RuleDslStrip.test.tsx` (create)
 
 **Interfaces:**
 - Consumes: `rangeOfPath`, `SourceRange` (Task 5); `HighlightModel`, `focusedPath` (Task 6); `parse`, `printInline` from `@motiv/rules-core`
@@ -925,8 +943,8 @@ git commit -m "feat(builder): pure hover/selection highlight model"
 ```tsx
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { EMPTY_HIGHLIGHT, setHovered, setSelected } from '../src/builder/highlight.js';
-import { RuleDslStrip } from '../src/builder/RuleDslStrip.js';
+import { EMPTY_HIGHLIGHT, setHovered, setSelected } from '../../src/builder/highlight.js';
+import { RuleDslStrip } from '../../src/builder/RuleDslStrip.js';
 
 const rule = { and: [{ spec: 'a' }, { or: [{ spec: 'b' }, { spec: 'c' }] }] };
 
@@ -977,7 +995,7 @@ describe('RuleDslStrip', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-pnpm --filter @motiv/rules-demo exec vitest run test/RuleDslStrip.test.tsx
+pnpm --filter @motiv/rules-demo exec vitest run test/builder/RuleDslStrip.test.tsx
 ```
 
 Expected: FAIL — cannot resolve `../src/builder/RuleDslStrip.js`.
@@ -1157,7 +1175,7 @@ Append to `ui/apps/demo/src/styles/app.css`:
 - [ ] **Step 4: Run the test to verify it passes**
 
 ```bash
-pnpm --filter @motiv/rules-demo exec vitest run test/RuleDslStrip.test.tsx
+pnpm --filter @motiv/rules-demo exec vitest run test/builder/RuleDslStrip.test.tsx
 pnpm --filter @motiv/rules-demo typecheck
 ```
 
@@ -1166,7 +1184,7 @@ Expected: 6 passed; typecheck clean. If typecheck reports `rangeOfPath`/`SourceR
 - [ ] **Step 5: Commit**
 
 ```bash
-git add ui/apps/demo/src/builder/RuleDslStrip.tsx ui/apps/demo/src/styles/app.css ui/apps/demo/test/RuleDslStrip.test.tsx
+git add ui/apps/demo/src/builder/RuleDslStrip.tsx ui/apps/demo/src/styles/app.css ui/apps/demo/test/builder/RuleDslStrip.test.tsx
 git commit -m "feat(builder): permanent DSL strip marking hovered and selected spans"
 ```
 
@@ -1176,7 +1194,7 @@ git commit -m "feat(builder): permanent DSL strip marking hovered and selected s
 
 **Files:**
 - Modify: `ui/apps/demo/src/panes/BuilderPane.tsx` (state + render strip); `ui/apps/demo/src/builder/RuleNodeEditor.tsx` (context type, row handlers); `ui/apps/demo/src/styles/app.css` (selected row)
-- Test: `ui/apps/demo/test/BuilderHighlight.test.tsx` (create)
+- Test: `ui/apps/demo/test/builder/BuilderHighlight.test.tsx` (create)
 
 **Interfaces:**
 - Consumes: `RuleDslStrip` (Task 7); `HighlightModel`, `EMPTY_HIGHLIGHT`, `setHovered`, `setSelected` (Task 6)
@@ -1186,75 +1204,77 @@ git commit -m "feat(builder): permanent DSL strip marking hovered and selected s
 
 ```tsx
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { RuleEditorStore, type RulesApiClient } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
-import { BuilderBody } from '../src/panes/BuilderPane.js';
+import { BuilderPane } from '../../src/panes/BuilderPane.js';
 
-function testClient(): RulesApiClient {
-  return {
-    getCatalog: vi.fn().mockResolvedValue({ specs: [], collections: [] }),
-    validate: vi.fn().mockResolvedValue({ errors: [] }),
-    evaluate: vi.fn(),
-    listRules: vi.fn().mockResolvedValue([]),
-  } as unknown as RulesApiClient;
-}
+const catalog = { specs: [], collections: [] };
+const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unknown as RulesApiClient;
+const renderWith = (store: RuleEditorStore) =>
+  render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
 
-function renderBuilder() {
-  const store = new RuleEditorStore({ rule: { and: [{ spec: 'a' }, { spec: 'b' }] } });
-  const result = render(
-    <RuleEditorProvider store={store}>
-      <BuilderBody client={testClient()} />
-    </RuleEditorProvider>,
-  );
-  return { store, ...result };
-}
+const twoOperands = () => new RuleEditorStore({ rule: { and: [{ spec: 'a' }, { spec: 'b' }] } });
+/** The `.node-row` owning a given path, found via the row's own DSL button. */
+const rowFor = async (path: string): Promise<HTMLElement> => {
+  const dsl = await screen.findByRole('button', { name: `edit expression at ${path}` });
+  return dsl.closest('.node-row') as HTMLElement;
+};
+const marked = (container: HTMLElement, cls: string): string =>
+  [...container.querySelectorAll(cls)].map((el) => el.textContent).join('');
 
 describe('builder highlight wiring', () => {
-  it('renders the DSL strip for the whole rule', () => {
-    renderBuilder();
+  it('renders the DSL strip for the whole rule', async () => {
+    renderWith(twoOperands());
+    await rowFor('$.rule.and[0]');
     expect(screen.getByLabelText('rule expression').textContent).toBe('a & b');
   });
 
   it('marks the hovered row span in the strip', async () => {
-    const user = userEvent.setup();
-    const { container } = renderBuilder();
+    const { container } = renderWith(twoOperands());
 
-    await user.hover(screen.getByLabelText('edit expression at $.rule.and[1]'));
+    fireEvent.mouseOver(await rowFor('$.rule.and[1]'));
 
-    expect([...container.querySelectorAll('.dsl-strip-hover')].map((el) => el.textContent).join(''))
-      .toBe('b');
+    expect(marked(container, '.dsl-strip-hover')).toBe('b');
   });
 
   it('clears the hover mark on leaving the row', async () => {
-    const user = userEvent.setup();
-    const { container } = renderBuilder();
-    const row = screen.getByLabelText('edit expression at $.rule.and[1]');
+    const { container } = renderWith(twoOperands());
+    const row = await rowFor('$.rule.and[1]');
 
-    await user.hover(row);
-    await user.unhover(row);
+    fireEvent.mouseOver(row);
+    fireEvent.mouseOut(row);
 
     expect(container.querySelectorAll('.dsl-strip-hover')).toHaveLength(0);
   });
 
   it('selecting a row underlines its span and marks the row', async () => {
-    const user = userEvent.setup();
-    const { container } = renderBuilder();
+    const { container } = renderWith(twoOperands());
 
-    await user.click(screen.getByLabelText('select $.rule.and[0]'));
+    fireEvent.click(await screen.findByRole('button', { name: 'select $.rule.and[0]' }));
 
-    expect([...container.querySelectorAll('.dsl-strip-selected')].map((el) => el.textContent).join(''))
-      .toBe('a');
+    expect(marked(container, '.dsl-strip-selected')).toBe('a');
     expect(container.querySelector('.node-row.selected')).not.toBeNull();
+  });
+
+  it('keeps the selection mark while hovering a different row', async () => {
+    const { container } = renderWith(twoOperands());
+
+    fireEvent.click(await screen.findByRole('button', { name: 'select $.rule.and[0]' }));
+    fireEvent.mouseOver(await rowFor('$.rule.and[1]'));
+
+    expect(marked(container, '.dsl-strip-selected')).toBe('a');
+    expect(marked(container, '.dsl-strip-hover')).toBe('b');
   });
 });
 ```
 
+**Hover uses mouse events, not pointer events.** React's `onPointerEnter`/`onPointerLeave` are synthesised from the native `pointerover`/`pointerout` pair, so `fireEvent.pointerEnter` — which does not bubble — never reaches the handler, and the test would pass or fail for reasons unrelated to the feature. Hover is also a mouse-only concept by nature: the design notes that touch has no hover at all. Pointer Events are reserved for Milestone 2's drag, where they are required precisely because touch *does* deliver them.
+
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-pnpm --filter @motiv/rules-demo exec vitest run test/BuilderHighlight.test.tsx
+pnpm --filter @motiv/rules-demo exec vitest run test/builder/BuilderHighlight.test.tsx
 ```
 
 Expected: FAIL — no element labelled `rule expression`.
@@ -1277,8 +1297,8 @@ Inside `RuleNodeEditor`, pull the three from `useAccordion()`, and give `.node-r
 ```tsx
       <div
         className={highlight.selectedPath === path ? 'node-row selected' : 'node-row'}
-        onPointerEnter={() => setHovered(path)}
-        onPointerLeave={() => setHovered(null)}
+        onMouseEnter={() => setHovered(path)}
+        onMouseLeave={() => setHovered(null)}
       >
 ```
 
@@ -1372,7 +1392,7 @@ Expected: the new file's 4 tests pass and **every pre-existing demo test still p
 - [ ] **Step 5: Commit**
 
 ```bash
-git add ui/apps/demo/src/panes/BuilderPane.tsx ui/apps/demo/src/builder/RuleNodeEditor.tsx ui/apps/demo/src/styles/app.css ui/apps/demo/test/BuilderHighlight.test.tsx
+git add ui/apps/demo/src/panes/BuilderPane.tsx ui/apps/demo/src/builder/RuleNodeEditor.tsx ui/apps/demo/src/styles/app.css ui/apps/demo/test/builder/BuilderHighlight.test.tsx
 git commit -m "feat(builder): wire hover and selection to the DSL strip"
 ```
 
@@ -1446,7 +1466,7 @@ The phantom row. It must never write a blank node to the store — `schemas/rule
 **Files:**
 - Create: `ui/apps/demo/src/builder/PendingSlot.tsx`
 - Modify: `ui/apps/demo/src/styles/app.css` (append)
-- Test: `ui/apps/demo/test/PendingSlot.test.tsx` (create)
+- Test: `ui/apps/demo/test/builder/PendingSlot.test.tsx` (create)
 
 **Interfaces:**
 - Consumes: `useInlineDslEditor` (Task 9); `parse`, `type Catalog`, `type RuleNode` from `@motiv/rules-core`
@@ -1464,57 +1484,78 @@ The phantom row. It must never write a blank node to the store — `schemas/rule
 
 ```tsx
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { PendingSlot } from '../src/builder/PendingSlot.js';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { PendingSlot } from '../../src/builder/PendingSlot.js';
+import { replaceBuffer } from '../support/codemirror.js';
 
 const catalog = { specs: [], collections: [] };
+const content = (container: HTMLElement) => container.querySelector('.cm-content')!;
+
+/** Renders the slot with spy callbacks, returning both so a test can assert on either. */
+function renderSlot() {
+  const onCommit = vi.fn();
+  const onCancel = vi.fn();
+  const view = render(
+    <PendingSlot modelType="customer" catalog={catalog} onCommit={onCommit} onCancel={onCancel} />,
+  );
+  return { onCommit, onCancel, ...view };
+}
 
 describe('PendingSlot', () => {
-  it('renders an editable phantom row', () => {
-    render(<PendingSlot modelType="customer" catalog={catalog} onCommit={vi.fn()} onCancel={vi.fn()} />);
-    expect(screen.getByLabelText('new expression')).toBeDefined();
+  it('mounts a CodeMirror editor on the phantom row', () => {
+    const { container } = renderSlot();
+    expect(container.querySelector('.node-row-pending')).not.toBeNull();
+    expect(content(container)).not.toBeNull();
   });
 
-  it('commits a parsed node', async () => {
-    const onCommit = vi.fn();
-    render(<PendingSlot modelType="customer" catalog={catalog} onCommit={onCommit} onCancel={vi.fn()} />);
+  it('commits a parsed node', () => {
+    const { onCommit, container } = renderSlot();
 
-    await userEvent.type(screen.getByLabelText('new expression'), 'is-active{Enter}');
+    replaceBuffer(container, 'is-active');
+    fireEvent.keyDown(content(container), { key: 'Enter' });
 
     expect(onCommit).toHaveBeenCalledWith({ spec: 'is-active' });
   });
 
-  it('refuses an unparseable buffer and reports it without committing', async () => {
-    const onCommit = vi.fn();
-    render(<PendingSlot modelType="customer" catalog={catalog} onCommit={onCommit} onCancel={vi.fn()} />);
+  it('refuses an unparseable buffer and reports it without committing', () => {
+    const { onCommit, container } = renderSlot();
 
-    await userEvent.type(screen.getByLabelText('new expression'), 'a &{Enter}');
+    replaceBuffer(container, 'a &');
+    fireEvent.keyDown(content(container), { key: 'Enter' });
 
     expect(onCommit).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toBeDefined();
   });
 
-  it('cancels on Escape without committing', async () => {
-    const onCommit = vi.fn();
-    const onCancel = vi.fn();
-    render(<PendingSlot modelType="customer" catalog={catalog} onCommit={onCommit} onCancel={onCancel} />);
+  it('cancels on Escape without committing', () => {
+    const { onCommit, onCancel, container } = renderSlot();
 
-    await userEvent.type(screen.getByLabelText('new expression'), '{Escape}');
+    replaceBuffer(container, 'is-active');
+    fireEvent.keyDown(content(container), { key: 'Escape' });
 
     expect(onCancel).toHaveBeenCalled();
     expect(onCommit).not.toHaveBeenCalled();
   });
 
-  it('cancels rather than committing when the buffer is empty', async () => {
-    const onCommit = vi.fn();
-    const onCancel = vi.fn();
-    render(<PendingSlot modelType="customer" catalog={catalog} onCommit={onCommit} onCancel={onCancel} />);
+  it('cancels rather than committing when the buffer is empty', () => {
+    const { onCommit, onCancel, container } = renderSlot();
 
-    await userEvent.type(screen.getByLabelText('new expression'), '{Enter}');
+    fireEvent.keyDown(content(container), { key: 'Enter' });
 
     expect(onCommit).not.toHaveBeenCalled();
     expect(onCancel).toHaveBeenCalled();
+  });
+
+  it('retires the error message on the next keystroke', () => {
+    const { container } = renderSlot();
+
+    replaceBuffer(container, 'a &');
+    fireEvent.keyDown(content(container), { key: 'Enter' });
+    expect(screen.getByRole('alert')).toBeDefined();
+
+    replaceBuffer(container, 'a & b');
+
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });
 ```
@@ -1522,7 +1563,7 @@ describe('PendingSlot', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-pnpm --filter @motiv/rules-demo exec vitest run test/PendingSlot.test.tsx
+pnpm --filter @motiv/rules-demo exec vitest run test/builder/PendingSlot.test.tsx
 ```
 
 Expected: FAIL — cannot resolve `../src/builder/PendingSlot.js`.
@@ -1606,12 +1647,12 @@ Append to `app.css`:
 }
 ```
 
-**On the `aria-label`:** the label goes on the host span so the test can find the editor. If `userEvent.type` cannot address it (CodeMirror renders its own `contenteditable` inside), target the `.cm-content` element the view creates instead, and keep the label for the accessible name. Adjust the test's query to match what the DOM actually exposes — run it and look, rather than guessing.
+**On the `aria-label`:** keep it on the host span — it is the editor's accessible name, which the slot needs since it has no row text of its own. The tests do not query by it; they address `.cm-content` and drive the view through `test/support/codemirror.ts`, the way `NodeDsl.test.tsx` already does.
 
 - [ ] **Step 4: Run the test to verify it passes**
 
 ```bash
-pnpm --filter @motiv/rules-demo exec vitest run test/PendingSlot.test.tsx
+pnpm --filter @motiv/rules-demo exec vitest run test/builder/PendingSlot.test.tsx
 ```
 
 Expected: 5 passed.
@@ -1619,7 +1660,7 @@ Expected: 5 passed.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add ui/apps/demo/src/builder/PendingSlot.tsx ui/apps/demo/src/styles/app.css ui/apps/demo/test/PendingSlot.test.tsx
+git add ui/apps/demo/src/builder/PendingSlot.tsx ui/apps/demo/src/styles/app.css ui/apps/demo/test/builder/PendingSlot.test.tsx
 git commit -m "feat(builder): phantom insertion slot that never enters the document"
 ```
 
@@ -1630,7 +1671,7 @@ git commit -m "feat(builder): phantom insertion slot that never enters the docum
 **Files:**
 - Create: `ui/apps/demo/src/builder/NodeInsertButton.tsx`
 - Modify: `ui/apps/demo/src/builder/RuleNodeEditor.tsx`; `ui/apps/demo/src/panes/BuilderPane.tsx`; `ui/apps/demo/src/styles/app.css`
-- Test: `ui/apps/demo/test/NodeInsert.test.tsx` (create)
+- Test: `ui/apps/demo/test/builder/NodeInsert.test.tsx` (create)
 
 **Interfaces:**
 - Consumes: `insertTargetForRow`, `planInsert`, `type InsertTarget` (Task 3); `applyPlan` (Task 4); `PendingSlot` (Task 10)
@@ -1648,80 +1689,78 @@ git commit -m "feat(builder): phantom insertion slot that never enters the docum
 
 ```tsx
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { RuleEditorStore, type RulesApiClient } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
-import { BuilderBody } from '../src/panes/BuilderPane.js';
+import { BuilderPane } from '../../src/panes/BuilderPane.js';
+import { replaceBuffer } from '../support/codemirror.js';
 
-function testClient(): RulesApiClient {
-  return {
-    getCatalog: vi.fn().mockResolvedValue({ specs: [], collections: [] }),
-    validate: vi.fn().mockResolvedValue({ errors: [] }),
-    evaluate: vi.fn(),
-    listRules: vi.fn().mockResolvedValue([]),
-  } as unknown as RulesApiClient;
-}
+const catalog = { specs: [], collections: [] };
+const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unknown as RulesApiClient;
 
 function renderBuilder(rule: unknown) {
   const store = new RuleEditorStore({ rule } as never);
-  render(
-    <RuleEditorProvider store={store}>
-      <BuilderBody client={testClient()} />
-    </RuleEditorProvider>,
+  const view = render(
+    <RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>,
   );
-  return store;
+  return { store, ...view };
 }
+
+const slot = (container: HTMLElement) => container.querySelector('.node-row-pending .cm-content');
+/** Opens the slot after `path` and types `text` into it, committing with Enter. */
+const insertAfter = async (container: HTMLElement, path: string, text: string) => {
+  fireEvent.click(await screen.findByRole('button', { name: `insert after ${path}` }));
+  const pending = container.querySelector('.node-row-pending') as HTMLElement;
+  replaceBuffer(pending, text);
+  fireEvent.keyDown(slot(container)!, { key: 'Enter' });
+};
 
 describe('row + insertion', () => {
   it('inserts a sibling immediately after an operand row', async () => {
-    const store = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
+    const { store, container } = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
 
-    await userEvent.click(screen.getByLabelText('insert after $.rule.and[0]'));
-    await userEvent.type(screen.getByLabelText('new expression'), 'c{Enter}');
+    await insertAfter(container, '$.rule.and[0]', 'c');
 
     expect(store.getState().document.rule)
       .toEqual({ and: [{ spec: 'a' }, { spec: 'c' }, { spec: 'b' }] });
   });
 
   it('wraps a lone root spec in and', async () => {
-    const store = renderBuilder({ spec: 'a' });
+    const { store, container } = renderBuilder({ spec: 'a' });
 
-    await userEvent.click(screen.getByLabelText('insert after $.rule'));
-    await userEvent.type(screen.getByLabelText('new expression'), 'b{Enter}');
+    await insertAfter(container, '$.rule', 'b');
 
     expect(store.getState().document.rule).toEqual({ and: [{ spec: 'a' }, { spec: 'b' }] });
   });
 
   it('appends to the root operator rather than nesting it, since the wrap normalizes away', async () => {
-    const store = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
+    const { store, container } = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
 
-    await userEvent.click(screen.getByLabelText('insert after $.rule'));
-    await userEvent.type(screen.getByLabelText('new expression'), 'c{Enter}');
+    await insertAfter(container, '$.rule', 'c');
 
     expect(store.getState().document.rule)
       .toEqual({ and: [{ spec: 'a' }, { spec: 'b' }, { spec: 'c' }] });
   });
 
   it('leaves the document untouched when the slot is cancelled', async () => {
-    const store = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
+    const { store, container } = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
     const before = store.getState().document;
 
-    await userEvent.click(screen.getByLabelText('insert after $.rule.and[0]'));
-    await userEvent.type(screen.getByLabelText('new expression'), '{Escape}');
+    fireEvent.click(await screen.findByRole('button', { name: 'insert after $.rule.and[0]' }));
+    fireEvent.keyDown(slot(container)!, { key: 'Escape' });
 
     expect(store.getState().document).toEqual(before);
     expect(store.getState().canUndo).toBe(false);
-    expect(screen.queryByLabelText('new expression')).toBeNull();
+    expect(slot(container)).toBeNull();
   });
 
   it('opens at most one slot at a time', async () => {
-    renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
+    const { container } = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
 
-    await userEvent.click(screen.getByLabelText('insert after $.rule.and[0]'));
-    await userEvent.click(screen.getByLabelText('insert after $.rule.and[1]'));
+    fireEvent.click(await screen.findByRole('button', { name: 'insert after $.rule.and[0]' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'insert after $.rule.and[1]' }));
 
-    expect(screen.getAllByLabelText('new expression')).toHaveLength(1);
+    expect(container.querySelectorAll('.node-row-pending')).toHaveLength(1);
   });
 });
 ```
@@ -1729,7 +1768,7 @@ describe('row + insertion', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-pnpm --filter @motiv/rules-demo exec vitest run test/NodeInsert.test.tsx
+pnpm --filter @motiv/rules-demo exec vitest run test/builder/NodeInsert.test.tsx
 ```
 
 Expected: FAIL — no element labelled `insert after $.rule.and[0]`.
@@ -1839,7 +1878,7 @@ Expected: the new file's 5 tests pass and the whole demo suite is green.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add ui/apps/demo/src/builder/NodeInsertButton.tsx ui/apps/demo/src/builder/RuleNodeEditor.tsx ui/apps/demo/src/panes/BuilderPane.tsx ui/apps/demo/src/styles/app.css ui/apps/demo/test/NodeInsert.test.tsx
+git add ui/apps/demo/src/builder/NodeInsertButton.tsx ui/apps/demo/src/builder/RuleNodeEditor.tsx ui/apps/demo/src/panes/BuilderPane.tsx ui/apps/demo/src/styles/app.css ui/apps/demo/test/builder/NodeInsert.test.tsx
 git commit -m "feat(builder): row + inserts a sibling after any row"
 ```
 
@@ -1851,7 +1890,7 @@ The one slot the uniform `+` cannot reach.
 
 **Files:**
 - Modify: `ui/apps/demo/src/builder/NodeMenu.tsx`; `ui/apps/demo/src/builder/RuleNodeEditor.tsx`
-- Test: `ui/apps/demo/test/NodeInsert.test.tsx` (add a `describe`)
+- Test: `ui/apps/demo/test/builder/NodeInsert.test.tsx` (add a `describe`)
 
 **Interfaces:**
 - Consumes: `firstOperandTarget`, `planInsert` (Task 3); `pending`/`setPending` (Task 11)
@@ -1862,24 +1901,29 @@ The one slot the uniform `+` cannot reach.
 Append to `test/NodeInsert.test.tsx`:
 
 ```tsx
+/** Opens the first-operand slot on `path` via its menu and commits `text`. */
+const insertFirst = async (container: HTMLElement, path: string, text: string) => {
+  fireEvent.click(await screen.findByRole('button', { name: `actions for ${path}` }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Insert first operand' }));
+  const pending = container.querySelector('.node-row-pending') as HTMLElement;
+  replaceBuffer(pending, text);
+  fireEvent.keyDown(pending.querySelector('.cm-content')!, { key: 'Enter' });
+};
+
 describe('insert first operand', () => {
   it('inserts before the first child of an operator row', async () => {
-    const store = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
+    const { store, container } = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
 
-    await userEvent.click(screen.getByLabelText('actions for $.rule'));
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Insert first operand' }));
-    await userEvent.type(screen.getByLabelText('new expression'), 'z{Enter}');
+    await insertFirst(container, '$.rule', 'z');
 
     expect(store.getState().document.rule)
       .toEqual({ and: [{ spec: 'z' }, { spec: 'a' }, { spec: 'b' }] });
   });
 
   it('reaches the slot before a nested group first child', async () => {
-    const store = renderBuilder({ and: [{ spec: 'a' }, { or: [{ spec: 'b' }, { spec: 'c' }] }] });
+    const { store, container } = renderBuilder({ and: [{ spec: 'a' }, { or: [{ spec: 'b' }, { spec: 'c' }] }] });
 
-    await userEvent.click(screen.getByLabelText('actions for $.rule.and[1]'));
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Insert first operand' }));
-    await userEvent.type(screen.getByLabelText('new expression'), 'z{Enter}');
+    await insertFirst(container, '$.rule.and[1]', 'z');
 
     expect(store.getState().document.rule).toEqual({
       and: [{ spec: 'a' }, { or: [{ spec: 'z' }, { spec: 'b' }, { spec: 'c' }] }],
@@ -1889,7 +1933,7 @@ describe('insert first operand', () => {
   it('is not offered on a leaf row, which has no operand list', async () => {
     renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
 
-    await userEvent.click(screen.getByLabelText('actions for $.rule.and[0]'));
+    fireEvent.click(await screen.findByRole('button', { name: 'actions for $.rule.and[0]' }));
 
     expect(screen.queryByRole('menuitem', { name: 'Insert first operand' })).toBeNull();
   });
@@ -1899,7 +1943,7 @@ describe('insert first operand', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-pnpm --filter @motiv/rules-demo exec vitest run test/NodeInsert.test.tsx
+pnpm --filter @motiv/rules-demo exec vitest run test/builder/NodeInsert.test.tsx
 ```
 
 Expected: FAIL — no menuitem named `Insert first operand`.
@@ -1976,7 +2020,7 @@ Expected: whole demo suite green, including Task 11's five tests, which the `pen
 - [ ] **Step 5: Commit**
 
 ```bash
-git add ui/apps/demo/src/builder/NodeMenu.tsx ui/apps/demo/src/builder/RuleNodeEditor.tsx ui/apps/demo/src/panes/BuilderPane.tsx ui/apps/demo/test/NodeInsert.test.tsx
+git add ui/apps/demo/src/builder/NodeMenu.tsx ui/apps/demo/src/builder/RuleNodeEditor.tsx ui/apps/demo/src/panes/BuilderPane.tsx ui/apps/demo/test/builder/NodeInsert.test.tsx
 git commit -m "feat(builder): Insert first operand reaches the slot + cannot"
 ```
 
