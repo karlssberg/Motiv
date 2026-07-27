@@ -1105,3 +1105,10 @@ button.node-dsl {
   opacity: 1;
 }
 .node-select[aria-pressed='true'] { color: var(--accent); }
+
+/* The phantom row. Dashed, because it is a position rather than a node — it has no path, is in no
+   document, and will either become a row or vanish. */
+.node-row-pending {
+  border-style: dashed;
+  border-color: var(--accent);
+}
