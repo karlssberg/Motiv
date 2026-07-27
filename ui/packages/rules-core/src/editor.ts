@@ -49,6 +49,18 @@ export class RuleEditorStore {
     this.#commit(setNode(this.#document, path, node));
   }
 
+  /**
+   * Commits a document produced by the planner, as one undoable edit.
+   *
+   * Distinct from `loadDocument`, which installs a fresh baseline and clears history: a planned
+   * insertion or move is an edit like any other and must be undoable. Distinct from `replaceNode`
+   * because a plan is not addressed to a node — normalization may have rewritten a parent, or
+   * collapsed one, above the point of change.
+   */
+  applyPlan(next: RuleDocument): void {
+    this.#commit(next);
+  }
+
   wrapInOperator(path: string, operator: BinaryOperator, sibling: RuleNode): void {
     const existing = getNode(this.#document, path);
     if (!existing) throw new Error(`No node at ${path}.`);
