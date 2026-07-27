@@ -54,7 +54,27 @@ export function useInlineDslEditor(options: {
 
     const commit = (buffer: string): boolean => {
       if (!attached.current) return false;
-      return options.onCommit(buffer);
+      // Disarm before delegating, not after. A successful commit makes the caller unmount this
+      // editor, and the blur that DOM removal provokes would otherwise re-enter here and commit
+      // the same buffer a second time. Effect cleanup cannot close this window: it is passive,
+      // so it runs after the removal — hence after the blur. Disarming up front is also
+      // independent of whether React flushes the caller's state update synchronously.
+      attached.current = false;
+      const accepted = options.onCommit(buffer);
+      // A refused buffer leaves the editor open and still usable, so re-arm for the next attempt.
+      if (!accepted) attached.current = true;
+      return accepted;
+    };
+
+    // Escape bypassed `commit` entirely, calling `options.onCancel` directly — which never
+    // touched the guard. Cancelling also unmounts this editor (the same as a successful commit
+    // does), so the same teardown blur can re-enter `commit` with the guard still armed and the
+    // typed buffer still sitting in the doc, silently inserting what the user just cancelled.
+    // Routing cancellation through this guard closes that window the same way `commit` does.
+    const cancel = (): void => {
+      if (!attached.current) return;
+      attached.current = false;
+      options.onCancel();
     };
 
     // Completion offers the specs of this row's own model type — the same filter the spec picker
@@ -96,7 +116,7 @@ export function useInlineDslEditor(options: {
                 return true;
               },
             },
-            { key: 'Escape', run: () => { options.onCancel(); return true; } },
+            { key: 'Escape', run: () => { cancel(); return true; } },
           ]),
           keymap.of([...defaultKeymap, ...historyKeymap, ...completionKeymap]),
           // A refused commit's message describes the buffer as it was when refused, so the next
