@@ -53,6 +53,18 @@ var options = new MotivRulesOptions()
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Bind to $PORT when the environment supplies one and nothing more specific was asked for.
+// ASP.NET Core reads ASPNETCORE_URLS and --urls but not PORT, whereas container platforms and
+// local dev harnesses conventionally inject PORT and expect the app to follow — so without this
+// the app quietly keeps its default port and the caller's assignment is ignored. Explicit
+// configuration still wins: `builder.Configuration["urls"]` already reflects both --urls and
+// ASPNETCORE_URLS at this point, so this only fills a gap rather than overriding an intent.
+var assignedPort = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(assignedPort) && string.IsNullOrWhiteSpace(builder.Configuration["urls"]))
+{
+    builder.WebHost.UseUrls($"http://localhost:{assignedPort}");
+}
+
 // Seam: live rules. Each AddRule enrolls a sealed rule class as a DI singleton and in the
 // RuleSet behind GET/PUT/DELETE /api/rules/rules — the app executes the same instances the
 // UI hot-swaps, with optimistic-concurrency protection on writes.
