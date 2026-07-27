@@ -19,7 +19,7 @@ body {
 }
 
 /*
-  Shell layout: a fixed app bar (brand + breadcrumb + rule controls) above columns that sit
+  Shell layout: a fixed app bar (brand + breadcrumb + save) above columns that sit
   flush against each other — divider borders only, no gaps, no per-column shadow/radius. The
   previous grid gave every pane its own border + radius + shadow *and* a gap between them,
   which compounds into the "boxes inside boxes" look; a single shell frame with thin dividers
@@ -52,7 +52,8 @@ body {
   }
 }
 
-/* App bar: brand mark, breadcrumb trail, model-type pill, then the rule picker/save controls */
+/* App bar: brand mark, breadcrumb trail (whose leaf picks the rule), model-type pill, then the
+   loaded rule's version and Save */
 .appbar {
   display: flex;
   align-items: center;
@@ -107,6 +108,9 @@ body {
   white-space: nowrap;
 }
 
+/* Wider than the operator list: the entries are rule names, not single words. */
+.breadcrumb-menu { min-width: 168px; }
+
 .model-pill {
   margin-left: 2px;
   display: inline-flex;
@@ -131,19 +135,6 @@ body {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.appbar-controls .field {
-  flex-direction: row;
-  align-items: center;
-  gap: calc(var(--space) / 2);
-}
-
-.appbar-controls .control {
-  width: auto;
-  height: 26px;
-  padding: 0 8px;
-  font-size: 0.75rem;
 }
 
 .rule-version {
@@ -422,37 +413,6 @@ body {
   white-space: nowrap;
 }
 
-/* A binary node's badge is also the control that changes its operator. It is stripped back to
-   read as the badge it replaces — the affordance is the hover fill and the caret, not a
-   form-control chrome that would shout louder than the expression around it. Its own popup
-   replaces the platform's, so the badge is exactly as wide as the operator it names rather than
-   as wide as the longest one on offer. */
-.node-operator {
-  appearance: none;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  padding: 1px 3px;
-  margin-left: -3px;
-  cursor: pointer;
-}
-
-/* Drawn in the flow rather than as a background, so the badge keeps hugging its label. */
-.node-operator::after {
-  content: '▾';
-  margin-left: 3px;
-  font-size: 11px;
-  vertical-align: 0;
-  opacity: 0.7;
-}
-
-.node-operator:hover,
-.node-operator:focus-visible,
-.node-operator[aria-expanded='true'] {
-  background-color: var(--bg);
-  outline: none;
-}
-
 /* Narrower than the actions menu: the entries are one word each. */
 .node-operator-menu { min-width: 96px; }
 
@@ -522,9 +482,40 @@ body {
 
 .node-pin.pinned { color: var(--accent); }
 
-/* The actions menu, positioned in viewport coordinates by `placePopover` — the same flip-and-clamp
+/* A value that is also the control that changes it: the operator badge in the tree, the rule at the
+   end of the breadcrumb trail. Stripped back to read as the text it replaces — the affordance is
+   the hover fill and the caret, not form-control chrome that would shout louder than the line it
+   sits in. The caller supplies only the typography. Its own popup replaces the platform's, so the
+   trigger is as wide as the value it names rather than as wide as the longest one on offer. */
+.picker-trigger {
+  appearance: none;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  padding: 1px 3px;
+  margin-left: -3px;
+  cursor: pointer;
+}
+
+/* Drawn in the flow rather than as a background, so the trigger keeps hugging its label. */
+.picker-trigger::after {
+  content: '▾';
+  margin-left: 3px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.picker-trigger:hover,
+.picker-trigger:focus-visible,
+.picker-trigger[aria-expanded='true'] {
+  background-color: var(--bg);
+  outline: none;
+}
+
+/* A popup card, positioned in viewport coordinates by `placePopover` — the same flip-and-clamp
    the DSL pane's payload card uses. Fixed rather than absolute so an ancestor's `overflow` cannot
-   clip it, since rows sit inside a scrolling pane. */
+   clip it, since rows sit inside a scrolling pane. Worn by both the row actions menu and the
+   value pickers. */
 .node-menu {
   display: flex;
   flex-direction: column;

@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { RuleListEntry, RulesApiClient } from '@motiv/rules-core';
 import { useRuleEditor, useRuleEditorStore } from '@motiv/rules-react';
+import { ListboxPicker } from '../builder/ListboxPicker.js';
 import { MODEL_TYPE } from '../App.js';
+
+/**
+ * The picker's first entry: nothing loaded from the server, so nothing to save back to it. The
+ * empty name is what `load` reads as "unload" — the document in the editor is left alone, since
+ * it is the draft either way.
+ */
+const LOCAL_DRAFT = { value: '', label: 'local draft' };
 
 /** The picked rule's server identity: what Save must send back to avoid clobbering. */
 interface LoadedRule {
@@ -22,6 +30,8 @@ export function RuleHeader(props: { client: RulesApiClient }) {
   const [loaded, setLoaded] = useState<LoadedRule | null>(null);
   const [conflict, setConflict] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const options = [LOCAL_DRAFT, ...rules.map((rule) => ({ value: rule.name, label: rule.name }))];
 
   useEffect(() => {
     let cancelled = false;
@@ -71,25 +81,24 @@ export function RuleHeader(props: { client: RulesApiClient }) {
       <span className="breadcrumb-sep">/</span>
       <span className="breadcrumb-item">Eligibility rules</span>
       <span className="breadcrumb-sep">/</span>
-      <span className="breadcrumb-current">{loaded?.name ?? 'local draft'}</span>
+      {/* The trail's leaf is the rule picker: the crumb already names the rule in force, so a
+          separate control alongside it would be the same fact stated twice. */}
+      <ListboxPicker
+        options={options}
+        value={loaded?.name ?? LOCAL_DRAFT.value}
+        onChoose={(name) => void load(name)}
+        open={picking}
+        setOpen={setPicking}
+        triggerName="rule"
+        listLabel="rules"
+        triggerClassName="breadcrumb-current"
+        listClassName="breadcrumb-menu"
+      />
       <span className="model-pill" title="Model type the rule is validated and evaluated against">
         {MODEL_TYPE}
       </span>
       <div className="appbar-fill" />
       <div className="appbar-controls">
-        <label className="field">
-          <span>Rule</span>
-          <select
-            className="control"
-            value={loaded?.name ?? ''}
-            onChange={(e) => void load(e.target.value)}
-          >
-            <option value="">— local draft —</option>
-            {rules.map((rule) => (
-              <option key={rule.name} value={rule.name}>{rule.name}</option>
-            ))}
-          </select>
-        </label>
         {loaded && (
           <span className="rule-version">
             v{loaded.version}
