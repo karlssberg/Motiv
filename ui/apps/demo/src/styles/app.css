@@ -491,7 +491,9 @@ body {
    reads as structure rather than as a grid of buttons. Focus must still reveal them, or they
    become keyboard-inaccessible. */
 .node-menu-trigger,
-.node-pin {
+.node-pin,
+.node-select,
+.node-insert {
   appearance: none;
   border: none;
   background: transparent;
@@ -506,10 +508,15 @@ body {
 
 .node-row:hover .node-menu-trigger,
 .node-row:hover .node-pin,
+.node-row:hover .node-select,
+.node-row:hover .node-insert,
 .node-menu-trigger:focus-visible,
 .node-pin:focus-visible,
+.node-select:focus-visible,
+.node-insert:focus-visible,
 .node-menu-trigger.open,
-.node-pin.pinned {
+.node-pin.pinned,
+.node-select[aria-pressed='true'] {
   opacity: 1;
 }
 
@@ -1028,3 +1035,116 @@ button.node-dsl {
   justify-content: flex-end;
   gap: calc(var(--space) / 2);
 }
+
+/* The permanent DSL line above the builder tree. It renders as its own row, above
+   `.accordion-strip` rather than sharing its reserved band — `.accordion-strip` keeps its own
+   `min-height` regardless, so this strip is additional vertical space, not free space reused. It
+   still shifts nothing when a node is first pinned, since `.accordion-strip`'s own reservation is
+   what prevents that jump; this strip is simply a constant-height row above it.
+
+   Scrolls horizontally rather than wrapping: a rule of any size stays one line, and the strip
+   scrolls whichever marked span the user just moved to into view. The mask fades both edges so
+   off-screen content is visible as such without spending width on an ellipsis.
+
+   The fade width and the horizontal padding are two views of one measurement, so they are one
+   custom property. Written independently they drift, and the failure is quiet: padding narrower
+   than the fade leaves the label and the first glyphs permanently half-transparent, which reads
+   as a rendering fault rather than as the "there is more this way" hint the fade is for. Padding
+   clears the fade with a little room to spare so text sits in fully opaque space at rest.
+
+   `scroll-padding-inline` extends the same idea to the scrolled case: without it, scrolling a
+   marked span into view can park it flush against the edge and therefore under the fade — the one
+   span the user is trying to read.
+
+   `flex: 0 0 auto` is load-bearing, and its necessity is a side effect of the line above it.
+   This strip is a flex item of a column panel, and a column item's automatic minimum size —
+   the thing that normally stops a flex parent crushing it below its own content — applies only
+   while its overflow is `visible`. `overflow-y: hidden` is here to suppress a vertical scrollbar
+   alongside the horizontal one, and it also drops that automatic minimum to zero. So in a short
+   viewport the panel was free to squeeze the strip to a few pixels and clip the text inside it.
+   Refusing to shrink is the fix: this is fixed-height chrome, and the overflow belongs to the
+   panel below, which scrolls. */
+.dsl-strip {
+  --strip-fade: 0.625rem;
+  --strip-inset: calc(var(--strip-fade) + 0.25rem);
+
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  scroll-padding-inline: var(--strip-inset);
+  padding: 0.1875rem var(--strip-inset);
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--strip-fade),
+    #000 calc(100% - var(--strip-fade)),
+    transparent 100%
+  );
+}
+.dsl-strip::-webkit-scrollbar { display: none; }
+
+.dsl-strip-label {
+  flex: 0 0 auto;
+  font: 0.5625rem var(--sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.dsl-strip-text {
+  font: 0.72rem/1.5 var(--mono);
+  white-space: nowrap;
+  color: var(--dsl-fg);
+}
+
+/* Two marks on two axes: a fill behind the hover, a rule beneath the selection. Same-axis marks
+   would nest as a box inside a box, which at this size is two rectangles to pull apart — and
+   hovering a child of the selected node is the common case, not a rare one.
+
+   Selection is the quieter of the two on purpose. The selected *row* already carries a strong
+   accent bar, so this is a confirmation; hover has no other indicator anywhere, so its fill is the
+   only evidence it exists. Weight follows necessity, not deliberateness. */
+.dsl-strip-hover {
+  background: var(--accent-weak);
+  border-radius: 2px;
+}
+
+.dsl-strip-selected {
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 1px;
+}
+
+/* The selected row. A left accent bar rather than a fill: the row already carries a DSL editor
+   whose own background must stay readable, and a bar reads at a glance down a column of rows. */
+.node-row.selected {
+  border-color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.node-select {
+  padding: 0 2px;
+  font-size: 10px;
+  color: var(--faint);
+}
+.node-select[aria-pressed='true'] { color: var(--accent); }
+
+/* The phantom row. Dashed, because it is a position rather than a node — it has no path, is in no
+   document, and will either become a row or vanish. */
+.node-row-pending {
+  border-style: dashed;
+  border-color: var(--accent);
+}
+
+.node-insert {
+  padding: 0 2px;
+  color: var(--faint);
+}
+.node-insert:hover { color: var(--accent); }

@@ -12,4 +12,10 @@ if (!('ResizeObserver' in globalThis)) {
   } as unknown as typeof ResizeObserver;
 }
 
+// jsdom implements no layout, and with it no scrollIntoView. Components that scroll a mark into
+// view on focus change still need to call something; this stub is deliberately inert.
+if (typeof Element.prototype.scrollIntoView !== 'function') {
+  Element.prototype.scrollIntoView = function scrollIntoView(): void {};
+}
+
 afterEach(() => cleanup());

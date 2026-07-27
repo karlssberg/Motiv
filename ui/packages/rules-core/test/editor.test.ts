@@ -46,6 +46,21 @@ describe('RuleEditorStore edits', () => {
     store.setName('$.rule', 'my check');
     expect(store.getState().document.rule).toEqual({ spec: 'a', whenTrue: 'yes', whenFalse: 'no', name: 'my check' });
   });
+
+  it('applies a planned document and keeps it undoable', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.applyPlan({ rule: { and: [{ spec: 'a' }, { spec: 'b' }] } });
+
+    expect(store.getState().document.rule).toEqual({ and: [{ spec: 'a' }, { spec: 'b' }] });
+    expect(store.getState().canUndo).toBe(true);
+    expect(listener).toHaveBeenCalledOnce();
+
+    store.undo();
+    expect(store.getState().document.rule).toEqual({ spec: 'a' });
+  });
 });
 
 describe('RuleEditorStore history', () => {

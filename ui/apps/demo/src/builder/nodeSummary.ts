@@ -1,6 +1,6 @@
 import {
   binaryOperator, higherOrderKey, isBinaryNode, isExpressionNode, isHigherOrderNode, isNotNode,
-  isSpecNode,
+  isSpecNode, operandsOf,
   type BinaryOperator, type Countable, type HigherOrderKey, type RuleNode,
 } from '@motiv/rules-core';
 
@@ -28,6 +28,14 @@ const OP_DESCRIPTION: Record<BinaryOperator, string> = {
   and: 'all must hold', or: 'any may hold', xor: 'exactly one must hold',
   andAlso: 'all must hold, short-circuit', orElse: 'any may hold, short-circuit',
 };
+/**
+ * A three-or-more-operand `xor` is not "exactly one". The binders fold operands pairwise
+ * (`children.Aggregate((left, right) => left.XOr(right))` in RuleBinder.cs), so an n-ary xor
+ * is parity: satisfied when an odd number of operands are. Two operands are the case where
+ * parity and "exactly one" coincide, which is why the shared description reads correctly there
+ * and only there.
+ */
+const XOR_PARITY_DESCRIPTION = 'an odd number must hold';
 const QUANT_TOKEN: Record<HigherOrderKey, (n: Countable | undefined) => string> = {
   asAllSatisfied: () => 'all',
   asAnySatisfied: () => 'any',
@@ -46,7 +54,10 @@ export function summarize(node: RuleNode): NodeSummary {
   if (isNotNode(node)) return { badge: 'NOT', description: 'must not hold', kind: 'op' };
   if (isBinaryNode(node)) {
     const op = binaryOperator(node);
-    return { badge: OPERATOR_LABELS[op], description: OP_DESCRIPTION[op], kind: 'op' };
+    const description = op === 'xor' && operandsOf(node).length > 2
+      ? XOR_PARITY_DESCRIPTION
+      : OP_DESCRIPTION[op];
+    return { badge: OPERATOR_LABELS[op], description, kind: 'op' };
   }
   if (isExpressionNode(node)) return { badge: node.expression, description: '', kind: 'spec' };
   if (isSpecNode(node)) return { badge: node.spec, description: '', kind: 'spec' };

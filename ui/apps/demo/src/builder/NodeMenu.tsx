@@ -27,13 +27,22 @@ export function NodeMenu(props: {
   onDetails: () => void;
   /** Opens this menu, or closes whichever is open. Held by the host so only one is ever open. */
   setOpen: (open: boolean) => void;
+  /**
+   * Opens an insertion slot at index 0 of this node's operand list. Absent on rows with no list.
+   *
+   * Here rather than beside the row's `+` because a single button per row cannot address both the
+   * list a row belongs to and the list it owns — and because the menu is already where this builder
+   * puts structural actions, so the item is self-labelling where a second glyph would not be.
+   */
+  onInsertFirst?: () => void;
 }) {
-  const { path, canRemove, open, onDetails, setOpen } = props;
+  const { path, canRemove, open, onDetails, setOpen, onInsertFirst } = props;
   const store = useRuleEditorStore();
   const { trigger, card, style, close } = usePopoverCard(open, setOpen);
 
   const actions: MenuAction[] = [
     { label: 'Details', run: onDetails },
+    ...(onInsertFirst ? [{ label: 'Insert first operand', run: onInsertFirst }] : []),
     ...(canRemove ? [{ label: 'Remove', run: () => store.removeOperand(path) }] : []),
   ];
 

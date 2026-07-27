@@ -1,6 +1,8 @@
 import { createContext, useContext } from 'react';
-import { isBinaryNode, isHigherOrderNode, type Catalog } from '@motiv/rules-core';
-import { useRuleNode } from '@motiv/rules-react';
+import {
+  isBinaryNode, isHigherOrderNode, firstOperandTarget, insertTargetForRow, planInsert, type Catalog,
+} from '@motiv/rules-core';
+import { useRuleEditorStore, useRuleNode } from '@motiv/rules-react';
 import { NodeToolbar } from './NodeToolbar.js';
 import { OperatorPicker } from './OperatorPicker.js';
 import { QuantifierNode } from './QuantifierNode.js';
@@ -9,10 +11,17 @@ import { childPaths } from './childPaths.js';
 import { summarize } from './nodeSummary.js';
 import { NodeDsl } from './NodeDsl.js';
 import { NodeMenu } from './NodeMenu.js';
+import { NodeInsertButton } from './NodeInsertButton.js';
+import { PendingSlot } from './PendingSlot.js';
 import { isCollapsed, isOpen, isPinned, type AccordionModel } from './accordion.js';
+import { type HighlightModel } from './highlight.js';
 
-/** The accordion state and its transitions, shared by every {@link RuleNodeEditor} in the tree. */
-export interface AccordionState {
+/**
+ * The tree-wide state shared by every {@link RuleNodeEditor} in the tree: accordion state (its
+ * original scope) plus the catalog, hover/selection highlight, popover slot, and pending
+ * insertion slot that have since joined it.
+ */
+export interface BuilderTreeState {
   model: AccordionModel;
   toggleCollapsed: (path: string) => void;
   toggleOpen: (path: string) => void;
@@ -24,6 +33,13 @@ export interface AccordionState {
   openPopover: string | null;
   setOpenPopover: (key: string | null) => void;
   catalog: Catalog;
+  /** Which node the DSL strip marks, and which mark it scrolls to. */
+  highlight: HighlightModel;
+  setHovered: (path: string | null) => void;
+  setSelected: (path: string | null) => void;
+  /** The open insertion slot, if any: a row path plus which of that row's two positions. */
+  pending: { path: string; where: 'after' | 'first' } | null;
+  setPending: (pending: { path: string; where: 'after' | 'first' } | null) => void;
 }
 
 /** The popups a row can open. */
@@ -32,11 +48,11 @@ type PopoverKind = 'menu' | 'operator';
 /** Identifies one row's popup, since a row has more than one. */
 const popoverKey = (kind: PopoverKind, path: string): string => `${kind}:${path}`;
 
-export const AccordionContext = createContext<AccordionState | null>(null);
+export const BuilderTreeContext = createContext<BuilderTreeState | null>(null);
 
-export function useAccordion(): AccordionState {
-  const context = useContext(AccordionContext);
-  if (!context) throw new Error('RuleNodeEditor must be used within an AccordionContext provider.');
+export function useBuilderTree(): BuilderTreeState {
+  const context = useContext(BuilderTreeContext);
+  if (!context) throw new Error('RuleNodeEditor must be used within a BuilderTreeContext provider.');
   return context;
 }
 
@@ -64,7 +80,11 @@ const panelId = (path: string): string => `detail-${path}`;
 export function RuleNodeEditor(props: { path: string; modelType: string }) {
   const { path, modelType } = props;
   const { node, errors } = useRuleNode(path);
-  const { model, toggleCollapsed, toggleOpen, togglePin, openPopover, setOpenPopover, catalog } = useAccordion();
+  const {
+    model, toggleCollapsed, toggleOpen, togglePin, openPopover, setOpenPopover, catalog,
+    highlight, setHovered, setSelected, pending, setPending,
+  } = useBuilderTree();
+  const store = useRuleEditorStore();
 
   /** Binds one of this row's popups to the tree's single open slot. */
   const popover = (kind: PopoverKind): { open: boolean; setOpen: (next: boolean) => void } => ({
@@ -77,8 +97,17 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
   const kids = childPaths(node, path);
   const hasChildren = kids.length > 0;
   const collapsed = isCollapsed(model, path);
+  /**
+   * Whether this row's children are on screen — and so whether `.node-kids` exists to render into.
+   * Named because the two sites that need it would otherwise spell it differently (`collapsed` in
+   * one, `hasChildren && !collapsed` in the other) and be equivalent only via an invariant the
+   * reader has to reconstruct: only a binary node can host a `'first'` slot, and a binary node
+   * always has at least two operands.
+   */
+  const kidsMounted = hasChildren && !collapsed;
   const open = isOpen(model, path);
   const pinned = isPinned(model, path);
+  const selected = highlight.selectedPath === path;
   // A leaf's tree form and its text form are the same string, so it has nothing to toggle
   // between and is always shown as DSL. Only the other case has a summary to render.
   const inDslView = !hasChildren || collapsed;
@@ -89,9 +118,29 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
     ? (catalog.collections.find((c) => c.path === node.path)?.elementModelType ?? modelType)
     : modelType;
 
+  // Renders the slot for `where`, targeting the position it names. A 'first' slot is scoped to
+  // this row's children, since it becomes one of them; an 'after' slot is scoped to this row's
+  // own siblings.
+  const slotFor = (where: 'after' | 'first') => (
+    <PendingSlot
+      modelType={where === 'first' ? childModelType : modelType}
+      catalog={catalog}
+      onCommit={(inserted) => {
+        const target = where === 'first' ? firstOperandTarget(path) : insertTargetForRow(path);
+        store.applyPlan(planInsert(store.getState().document, target, inserted));
+        setPending(null);
+      }}
+      onCancel={() => setPending(null)}
+    />
+  );
+
   return (
     <div className="node">
-      <div className="node-row">
+      <div
+        className={selected ? 'node-row selected' : 'node-row'}
+        onMouseEnter={() => setHovered(path)}
+        onMouseLeave={() => setHovered(null)}
+      >
         {hasChildren ? (
           <button
             type="button"
@@ -129,6 +178,20 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             </>
           )}
         </span>
+        {/* Selection is its own control rather than a click on the row: the row body is a DSL
+            editor that takes focus, and `.node-dsl` already claims click to start editing. A
+            separate button also gives selection a tab stop and an accessible name, which is what
+            the armed-move in Milestone 2 will need. */}
+        <button
+          type="button"
+          className="node-select"
+          aria-pressed={selected}
+          aria-label={`select ${path}`}
+          onClick={() => setSelected(selected ? null : path)}
+        >
+          ◈
+        </button>
+        <NodeInsertButton path={path} onOpen={() => setPending({ path, where: 'after' })} />
         <NodeMenu
           path={path}
           // Only an operand of an n-ary operator can be removed; a NOT's child or a quantifier's
@@ -136,6 +199,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
           canRemove={path.endsWith(']')}
           {...popover('menu')}
           onDetails={() => toggleOpen(path)}
+          {...(isBinaryNode(node) ? { onInsertFirst: () => setPending({ path, where: 'first' }) } : {})}
         />
         <button
           type="button"
@@ -150,6 +214,10 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
       {errors.length > 0 && (
         <span role="alert" className="error">{errors.map((e) => e.message).join('; ')}</span>
       )}
+      {pending?.path === path && pending.where === 'after' && slotFor('after')}
+      {/* A collapsed parent has no mounted `.node-kids` for the 'first' slot to join, so it
+          renders here instead — the same fallback spot the 'after' slot always uses. */}
+      {pending?.path === path && pending.where === 'first' && !kidsMounted && slotFor('first')}
       {open && (
         <div className="node-detail" id={panelId(path)}>
           {isHigherOrderNode(node) ? (
@@ -160,8 +228,9 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
           <DecorationEditor path={path} node={node} />
         </div>
       )}
-      {hasChildren && !collapsed && (
+      {kidsMounted && (
         <div className="node-kids">
+          {pending?.path === path && pending.where === 'first' && slotFor('first')}
           {kids.map((childPath) => (
             <RuleNodeEditor key={childPath} path={childPath} modelType={childModelType} />
           ))}
