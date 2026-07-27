@@ -121,6 +121,25 @@ describe('insert first operand', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'actions for $.rule.and[0]' }));
 
+    // Assert the menu is genuinely open before asserting what it lacks: without this,
+    // a menu that failed to open at all would satisfy the absence check too.
+    expect(screen.getByRole('menuitem', { name: 'Details' })).toBeDefined();
     expect(screen.queryByRole('menuitem', { name: 'Insert first operand' })).toBeNull();
+  });
+
+  it('offers the first-operand slot on a collapsed parent, where .node-kids is not mounted', async () => {
+    const { store, container } = renderBuilder({ and: [{ spec: 'a' }, { spec: 'b' }] });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'collapse $.rule' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'actions for $.rule' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Insert first operand' }));
+
+    const pending = container.querySelector('.node-row-pending') as HTMLElement;
+    expect(pending).not.toBeNull();
+    replaceBuffer(pending, 'z');
+    fireEvent.keyDown(pending.querySelector('.cm-content')!, { key: 'Enter' });
+
+    expect(store.getState().document.rule)
+      .toEqual({ and: [{ spec: 'z' }, { spec: 'a' }, { spec: 'b' }] });
   });
 });
