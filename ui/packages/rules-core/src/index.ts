@@ -7,4 +7,5 @@ export * from './normalize.js';
 export * from './editor.js';
 export * from './validation.js';
 export * from './explanation.js';
+export * from './plan.js';
 export * from './dsl/index.js';
