@@ -4,8 +4,9 @@
     {
       "name": "rules-demo",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "src/examples/Motiv.RulesEngine.Sample", "--urls", "http://localhost:5100"],
-      "port": 5100
+      "runtimeArgs": ["run", "--project", "src/examples/Motiv.RulesEngine.Sample"],
+      "port": 5100,
+      "autoPort": true
     }
   ]
 }
