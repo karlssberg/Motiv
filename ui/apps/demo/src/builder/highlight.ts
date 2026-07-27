@@ -10,9 +10,9 @@
  * instead of reconstructed by comparing previous props during a render.
  */
 export interface HighlightModel {
-  hoveredPath: string | null;
-  selectedPath: string | null;
-  focus: 'hover' | 'selection' | null;
+  readonly hoveredPath: string | null;
+  readonly selectedPath: string | null;
+  readonly focus: 'hover' | 'selection' | null;
 }
 
 export const EMPTY_HIGHLIGHT: HighlightModel = {
@@ -28,6 +28,8 @@ export function setHovered(model: HighlightModel, path: string | null): Highligh
 
 /** Records the selected row, or `null` on deselecting. */
 export function setSelected(model: HighlightModel, path: string | null): HighlightModel {
+  // Deselecting hands focus back to the hover rather than leaving a dangling 'selection' focus
+  // pointing at nothing.
   return { ...model, selectedPath: path, focus: path === null ? 'hover' : 'selection' };
 }
 

@@ -28,14 +28,29 @@ describe('highlight model', () => {
     expect(focusedPath(model)).toBe('$.rule.and[0]');
   });
 
-  it('leaving the tree hands focus back to the selection', () => {
-    const model = setHovered(setSelected(EMPTY_HIGHLIGHT, '$.rule.and[1]'), null);
-    expect(model.hoveredPath).toBeNull();
-    expect(focusedPath(model)).toBe('$.rule.and[1]');
+  it('leaving the tree hands focus back to the selection, after a real hover', () => {
+    // Builds the transition the name describes: focus must be 'hover' at the moment of
+    // leaving, so that handing it back to the selection is an observable change rather
+    // than a no-op. Without the second setHovered, focus is already 'selection' and a
+    // setHovered that ignored the null branch entirely would still pass.
+    const hovered = setHovered(setSelected(setHovered(EMPTY_HIGHLIGHT, '$.rule.and[0]'), '$.rule.and[1]'), '$.rule.and[0]');
+    expect(focusedPath(hovered)).toBe('$.rule.and[0]');
+
+    const left = setHovered(hovered, null);
+
+    expect(left.hoveredPath).toBeNull();
+    expect(left.selectedPath).toBe('$.rule.and[1]');
+    expect(left.focus).toBe('selection');
+    expect(focusedPath(left)).toBe('$.rule.and[1]');
   });
 
-  it('leaving the tree with nothing selected leaves nothing focused', () => {
-    expect(focusedPath(setHovered(setHovered(EMPTY_HIGHLIGHT, '$.rule'), null))).toBeNull();
+  it('leaving with nothing selected leaves nothing focused', () => {
+    const left = setHovered(setHovered(EMPTY_HIGHLIGHT, '$.rule'), null);
+
+    // `focus` is asserted directly: with both paths null, focusedPath returns null
+    // whichever side focus names, so it cannot discriminate the branch on its own.
+    expect(left.focus).toBe('selection');
+    expect(focusedPath(left)).toBeNull();
   });
 
   it('deselecting hands focus to the hover when there is one', () => {
