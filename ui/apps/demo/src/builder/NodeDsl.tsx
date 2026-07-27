@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { parse, printInline, type Catalog, type RuleNode } from '@motiv/rules-core';
 import { useRuleEditorStore } from '@motiv/rules-react';
 import { tokenSpans } from './dslTokens.js';
-import { useInlineDslEditor } from './useInlineDslEditor.js';
+import { useInlineDslEditor, type OpeningPoint } from './useInlineDslEditor.js';
 
 /**
  * A node rendered as one line of DSL — what a leaf always shows, and what a parent shows once
@@ -33,6 +33,23 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
   const scope = useRef({ catalog, modelType });
   scope.current = { catalog, modelType };
 
+  /**
+   * Where the pointer that opened this row landed. A ref rather than state because nothing renders
+   * from it — it exists only to carry a coordinate from the handler that has one to the editor
+   * that can use it.
+   */
+  const openedAt = useRef<OpeningPoint | null>(null);
+
+  /**
+   * The two ways in differ only in whether they have a point to report, so they share everything
+   * else. `null` is not merely "no point" but an erasure: a row opened by Tab would otherwise
+   * inherit wherever it was last clicked.
+   */
+  const start = (at: OpeningPoint | null): void => {
+    openedAt.current = at;
+    setEditing(true);
+  };
+
   const stop = (): void => {
     setEditing(false);
     setError(null);
@@ -41,6 +58,7 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
   const { host } = useInlineDslEditor({
     active: editing,
     initialText: text,
+    opening: () => openedAt.current,
     scope: () => scope.current,
     // The hook's `trigger` argument is dropped deliberately, not overlooked. Unlike `PendingSlot`,
     // this row edits an existing node rather than an empty slot, so a refused buffer leaves the
@@ -76,13 +94,26 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
 
   // One label, on one element. An inner labelled span would give the same row two accessible
   // names differing only by prefix, which any substring-matching query reads as ambiguous.
+  //
+  // The two handlers are the two ways in, and they are deliberately exclusive rather than
+  // redundant. `mousedown` — not `click` — because focusing the button is `mousedown`'s default
+  // action, so a click already opened the row through `onFocus` long before any `click` could
+  // fire; suppressing that default is what lets the pointer path keep the coordinates `onFocus`
+  // never had. The editor takes focus itself once mounted, so nothing is lost by not focusing the
+  // button we are about to replace.
   return (
     <button
       type="button"
       className="node-dsl"
       aria-label={`edit expression at ${path}`}
-      onFocus={() => setEditing(true)}
-      onClick={() => setEditing(true)}
+      onMouseDown={(event) => {
+        // Secondary buttons keep their usual meaning — a right-click here should open a context
+        // menu, not an editor, and certainly not have its default suppressed.
+        if (event.button !== 0) return;
+        event.preventDefault();
+        start({ x: event.clientX, y: event.clientY });
+      }}
+      onFocus={() => start(null)}
     >
       {tokenSpans(text).map((span) => (
         <span key={span.key} className={`tok-${span.kind}`}>{span.value}</span>

@@ -14,6 +14,28 @@ const singleLine = EditorState.transactionFilter.of((tr) => (tr.newDoc.lines > 1
 /** Which of the two commit paths fired. */
 export type CommitTrigger = 'enter' | 'blur';
 
+/** Viewport coordinates a pointer landed on, to be resolved against the mounted editor. */
+export type OpeningPoint = { x: number; y: number };
+
+/**
+ * What the editor selects when it opens, which follows from how it was opened.
+ *
+ * A pointer names a character, so the caret goes under it — the same thing every other text field
+ * does, and the difference between correcting one spec name and retyping the whole line. Every
+ * other way in (a Tab, a slot that opens itself) names only the row, so the buffer is selected and
+ * the next keystroke replaces it: the only useful default when the user cannot have meant a
+ * particular character.
+ */
+function openingSelection(view: EditorView, at: OpeningPoint | null): { anchor: number; head: number } {
+  if (!at) return { anchor: 0, head: view.state.doc.length };
+  // `posAtCoords` reports `null` only for coordinates outside the editor's own box, and a click
+  // that opened this editor is inside it by construction — the fallback covers the degenerate
+  // case (a row measured mid-layout) by landing at the end rather than reinstating a select-all,
+  // which is the behaviour the caller asked not to have.
+  const position = view.posAtCoords(at) ?? view.state.doc.length;
+  return { anchor: position, head: position };
+}
+
 /**
  * Mounts and tears down a one-line CodeMirror editor for a DSL expression: single-line
  * filter, the `motiv()` language, model-scoped completion, Enter to commit, Escape to cancel,
@@ -37,6 +59,16 @@ export function useInlineDslEditor(options: {
    */
   onCommit: (text: string, trigger: CommitTrigger) => boolean;
   onCancel: () => void;
+  /**
+   * Where the pointer that opened this editor landed, or `null` when it was opened some other way.
+   * Omitted entirely by a caller that has no pointer to report.
+   *
+   * A getter for the same reason `scope` is one, though for the opposite reason it needs to be
+   * read late rather than early: an opening is an event, not a state, so this is read exactly once
+   * — at the moment `active` turns true. Reading the caller's ref *here* keeps that guarantee in
+   * this file, rather than making it contingent on which render the caller happened to sample it in.
+   */
+  opening?: () => OpeningPoint | null;
   /**
    * Fired on every doc change. The hook owns no error state, so it cannot clear a caller's
    * error itself — this lets the caller retire a refused commit's message on the next
@@ -148,7 +180,7 @@ export function useInlineDslEditor(options: {
       }),
     });
     view.focus();
-    view.dispatch({ selection: { anchor: 0, head: view.state.doc.length } });
+    view.dispatch({ selection: openingSelection(view, options.opening?.() ?? null) });
 
     return () => {
       attached.current = false;
