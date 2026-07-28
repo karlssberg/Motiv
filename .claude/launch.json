@@ -7,6 +7,12 @@
       "runtimeArgs": ["run", "--project", "src/examples/Motiv.RulesEngine.Sample"],
       "port": 5100,
       "autoPort": true
+    },
+    {
+      "name": "rules-demo-ui",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "ui/apps/demo", "dev", "--port", "5173", "--strictPort"],
+      "port": 5173
     }
   ]
 }
