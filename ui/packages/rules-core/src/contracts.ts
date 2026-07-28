@@ -93,6 +93,8 @@ export interface EvaluationResult {
 export interface ValidateRequest {
   modelType: string;
   document: RuleDocument;
+  /** Validate for an asynchronous load, so the document may reference async specs. */
+  isAsync?: boolean;
 }
 
 /** Request body for the evaluate endpoint. */

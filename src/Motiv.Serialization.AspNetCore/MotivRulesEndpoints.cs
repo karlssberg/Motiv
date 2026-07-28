@@ -81,7 +81,10 @@ public static class MotivRulesEndpoints
             if (!options.TryGetBinding(request.ModelType, out var binding))
                 return UnknownModelType(request.ModelType, json);
 
-            var errors = binding.Validate(serializer, request.Document.GetRawText());
+            var documentJson = request.Document.GetRawText();
+            var errors = request.IsAsync
+                ? binding.ValidateAsyncSpec(serializer, documentJson)
+                : binding.Validate(serializer, documentJson);
             return Results.Json(new ValidationResponse(errors), json);
         });
 

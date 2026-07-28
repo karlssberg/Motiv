@@ -21,9 +21,13 @@ interface LoadedRule {
 /**
  * Seam: dynamic replacement. Picks a live server rule, loads its document into the shared
  * editor store, and saves it back with the loaded version — a stale version surfaces as a
- * conflict banner (open two tabs to watch the race protection work).
+ * conflict banner (open two tabs to watch the race protection work). Reports the picked
+ * rule's catalog entry via onLoaded so the shell can adapt (e.g. async validation).
  */
-export function RuleHeader(props: { client: RulesApiClient }) {
+export function RuleHeader(props: {
+  client: RulesApiClient;
+  onLoaded?: (entry: RuleListEntry | null) => void;
+}) {
   const store = useRuleEditorStore();
   const state = useRuleEditor(store);
   const [rules, setRules] = useState<RuleListEntry[]>([]);
@@ -47,11 +51,13 @@ export function RuleHeader(props: { client: RulesApiClient }) {
     if (!name) {
       setLoaded(null);
       setConflict(null);
+      props.onLoaded?.(null);
       return;
     }
     const response = await props.client.getRule(name);
     setConflict(null);
     setLoaded({ name, version: response.version, isCodeDefault: response.document === null });
+    props.onLoaded?.(rules.find((rule) => rule.name === name) ?? null);
     if (response.document) store.loadDocument(response.document);
   };
 
@@ -65,8 +71,11 @@ export function RuleHeader(props: { client: RulesApiClient }) {
         setLoaded({ ...loaded, version: result.version, isCodeDefault: false });
       } else if (result.outcome === 'conflict') {
         setConflict(result.currentVersion);
+      } else {
+        // Flavour-specific rejections (e.g. PolicyRequired) are invisible to live
+        // validation — surface them in the shared error list.
+        store.setErrors(result.errors);
       }
-      // 'invalid' outcomes surface through the store's live validation errors already.
     } finally {
       setSaving(false);
     }

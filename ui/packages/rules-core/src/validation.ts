@@ -7,6 +7,8 @@ export interface ValidationControllerOptions {
   modelType: string;
   /** Idle delay before validating after the last edit. Defaults to 300ms. */
   debounceMs?: number;
+  /** Validate for an asynchronous load, so the document may reference async specs. */
+  isAsync?: boolean;
 }
 
 /**
@@ -26,7 +28,11 @@ export function createValidationController(
   const run = (): void => {
     const { document } = store.getState();
     void client
-      .validate({ modelType: options.modelType, document })
+      .validate({
+        modelType: options.modelType,
+        document,
+        ...(options.isAsync ? { isAsync: true } : {}),
+      })
       .then((response) => store.setErrors(response.errors))
       .catch(() => { /* transport failures leave prior errors in place */ });
   };

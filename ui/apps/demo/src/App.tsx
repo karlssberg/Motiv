@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { RuleEditorStore, RulesApiClient, createValidationController } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
 import { RuleHeader } from './panes/RuleHeader.js';
@@ -24,10 +24,12 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
   );
 
   // Seam: live validation. Debounces edits to the store and pushes the document to
-  // /validate, writing errors back onto the store for the panes to render.
+  // /validate, writing errors back onto the store for the panes to render. When the
+  // loaded rule is async, validation allows async spec references too.
+  const [isAsync, setIsAsync] = useState(false);
   useEffect(
-    () => createValidationController(store, client, { modelType: MODEL_TYPE, debounceMs: 300 }),
-    [store, client],
+    () => createValidationController(store, client, { modelType: MODEL_TYPE, debounceMs: 300, isAsync }),
+    [store, client, isAsync],
   );
 
   return (
@@ -35,7 +37,7 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
     // to every builder component (useRuleEditorStore / useRuleNode) below it.
     <RuleEditorProvider store={store}>
       <main className="app">
-        <RuleHeader client={client} />
+        <RuleHeader client={client} onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)} />
         {/*
           Each pane below fetches GET /catalog on mount (EditorPane and EvaluatePane
           via useCatalog, CheckoutPane directly) — and EditorPane's builder surface

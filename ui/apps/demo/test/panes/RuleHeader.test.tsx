@@ -15,6 +15,15 @@ const entries: RuleListEntry[] = [
     version: 1,
     description: 'Gate',
   },
+  {
+    name: 'fraud-screening',
+    modelType: 'customer',
+    metadataType: 'String',
+    isAsync: true,
+    isPolicy: false,
+    version: 1,
+    description: 'Screening',
+  },
 ];
 
 function makeClient(overrides: Partial<Record<string, unknown>> = {}): RulesApiClient {
@@ -26,10 +35,14 @@ function makeClient(overrides: Partial<Record<string, unknown>> = {}): RulesApiC
   } as unknown as RulesApiClient;
 }
 
-function renderHeader(client: RulesApiClient, store = new RuleEditorStore({ rule: { spec: 'is-active' } })) {
+function renderHeader(
+  client: RulesApiClient,
+  store = new RuleEditorStore({ rule: { spec: 'is-active' } }),
+  onLoaded?: (entry: RuleListEntry | null) => void,
+) {
   render(
     <RuleEditorProvider store={store}>
-      <RuleHeader client={client} />
+      <RuleHeader client={client} {...(onLoaded ? { onLoaded } : {})} />
     </RuleEditorProvider>,
   );
   return store;
@@ -60,7 +73,7 @@ describe('RuleHeader', () => {
     fireEvent.click(await findLeaf());
 
     const options = screen.getAllByRole('option');
-    expect(options.map((o) => o.textContent)).toEqual(['local draft', 'can-checkout']);
+    expect(options.map((o) => o.textContent)).toEqual(['local draft', 'can-checkout', 'fraud-screening']);
     expect(options.filter((o) => o.getAttribute('aria-selected') === 'true').map((o) => o.textContent))
       .toEqual(['local draft']);
   });
@@ -114,6 +127,33 @@ describe('RuleHeader', () => {
     await waitFor(() =>
       expect(client.putRule).toHaveBeenCalledWith('can-checkout', { rule: { spec: 'is-active' } }, 3));
     expect(await screen.findByText(/v4/)).toBeDefined();
+  });
+
+  it('reports the loaded rule entry via onLoaded, and null when cleared', async () => {
+    const onLoaded = vi.fn();
+    const client = makeClient();
+    renderHeader(client, undefined, onLoaded);
+
+    await pick('fraud-screening');
+    await waitFor(() =>
+      expect(onLoaded).toHaveBeenCalledWith(expect.objectContaining({ name: 'fraud-screening', isAsync: true })));
+
+    await pick('local draft');
+    await waitFor(() => expect(onLoaded).toHaveBeenLastCalledWith(null));
+  });
+
+  it('pushes validation errors from an invalid save into the store', async () => {
+    const errors = [{ path: '$.rule', code: 'PolicyRequired', message: 'the rule must be a policy' }];
+    const client = makeClient({
+      putRule: vi.fn().mockResolvedValue({ outcome: 'invalid', errors }),
+    });
+    const store = renderHeader(client);
+    await pick('can-checkout');
+    await screen.findByText(/v3/);
+
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+
+    await waitFor(() => expect(store.getState().errors).toEqual(errors));
   });
 
   it('shows a conflict banner with a reload action on version conflicts', async () => {

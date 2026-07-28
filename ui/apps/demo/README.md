@@ -10,7 +10,10 @@ the live rules the server executes — without a restart.
   loads its document and version into the editor, and saves it back with a
   versioned `PUT`. A stale save surfaces as a conflict banner with a
   "Reload latest" escape hatch (open two tabs to watch the race protection
-  work). Rules on a compiled default show a "code-defined default" note.
+  work); a save the server rejects as invalid lists its errors in the JSON
+  pane. Rules on a compiled default show a "code-defined default" note.
+  Loading an async rule (e.g. `fraud-screening`) switches live validation to
+  the async path, so documents may reference async specs without red herrings.
 - **Builder** (`src/panes/BuilderPane.tsx`) — the accordion editor over the
   rule document.
 - **JSON** (`src/panes/JsonPane.tsx`) — the live document with validation
