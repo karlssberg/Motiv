@@ -35,8 +35,9 @@ test('editing and saving a rule changes the next checkout, and stale saves confl
 
   await page.goto('/');
 
-  // Load the live rule into the header: version + code-default note appear.
-  await page.getByRole('combobox', { name: 'Rule', exact: true }).selectOption('can-checkout');
+  // Load the live rule from the breadcrumb's leaf: version + code-default note appear.
+  await page.getByRole('combobox', { name: /^rule,/ }).click();
+  await page.getByRole('option', { name: 'can-checkout' }).click();
   await expect(versionBadge(page, loadedVersion)).toBeVisible();
   await expect(page.getByText(/code-defined default/)).toBeVisible();
 
