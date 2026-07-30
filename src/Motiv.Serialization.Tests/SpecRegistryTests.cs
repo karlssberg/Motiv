@@ -121,7 +121,6 @@ public class SpecRegistryTests
 
     [Theory]
     [InlineData("has space")]
-    [InlineData("dotted.name")]
     [InlineData("slash/name")]
     [InlineData("2-starts-with-digit")]
     [InlineData("-starts-with-hyphen")]
@@ -239,5 +238,57 @@ public class SpecRegistryTests
         entry.ParentType.ShouldBe(typeof(Cart));
         entry.Path.ShouldBe("orders");
         entry.ElementType.ShouldBe(typeof(Order));
+    }
+
+    [Theory]
+    [InlineData("is-active")]
+    [InlineData("customer.is-active")]
+    [InlineData("customer.eligibility.is-active")]
+    [InlineData("a.b.c.d.e")]
+    [InlineData("customer.order_total")]
+    public void Should_accept_a_dotted_name(string name)
+    {
+        // Arrange
+        var registry = new SpecRegistry();
+
+        // Act
+        registry.Register(name, IsPositive);
+
+        // Assert
+        registry.Find(name).ShouldNotBeNull();
+    }
+
+    [Theory]
+    [InlineData(".is-active")]
+    [InlineData("is-active.")]
+    [InlineData("customer..is-active")]
+    [InlineData("customer.1st-order")]
+    [InlineData("customer.-leading-hyphen")]
+    [InlineData(".")]
+    public void Should_reject_a_malformed_dotted_name(string name)
+    {
+        // Arrange
+        var registry = new SpecRegistry();
+
+        // Act
+        var register = () => registry.Register(name, IsPositive);
+
+        // Assert
+        register.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void Should_keep_dotted_names_distinct_from_their_namespace()
+    {
+        // Arrange
+        var registry = new SpecRegistry()
+            .Register("customer.is-active", IsPositive)
+            .Register("order.is-active", IsPositive);
+
+        // Act & Assert — a namespace is not itself a name
+        registry.Find("customer.is-active").ShouldNotBeNull();
+        registry.Find("order.is-active").ShouldNotBeNull();
+        registry.Find("customer").ShouldBeNull();
+        registry.Find("is-active").ShouldBeNull();
     }
 }

@@ -46,5 +46,11 @@ public enum RuleErrorCode
     AsyncSpecInHigherOrder,
 
     /// <summary>A policy rule was updated with a document whose bound root is not a policy.</summary>
-    PolicyRequired
+    PolicyRequired,
+
+    /// <summary>A proposition name violates the dot-separated identifier grammar.</summary>
+    InvalidSpecName,
+
+    /// <summary>Publishing the document would create a reference cycle.</summary>
+    CycleDetected
 }
