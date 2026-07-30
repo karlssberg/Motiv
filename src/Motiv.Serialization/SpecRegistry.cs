@@ -10,7 +10,7 @@ namespace Motiv.Serialization;
 /// concurrent <see cref="Find"/> calls) once population has finished, but <see cref="Register{TModel,TMetadata}(string,SpecBase{TModel,TMetadata})"/>
 /// and its overload must not run concurrently with reads or with other registrations.
 /// </remarks>
-public sealed class SpecRegistry
+public sealed class SpecRegistry : ISpecSource
 {
     private readonly Dictionary<string, SpecRegistryEntry> _entries = new(StringComparer.Ordinal);
     private readonly Dictionary<(Type Parent, string Path), object> _collections = new();
@@ -97,6 +97,13 @@ public sealed class SpecRegistry
         _collections.TryGetValue((typeof(TParent), path), out var binding)
             ? (CollectionBinding<TParent>)binding
             : null;
+
+    /// <summary>
+    /// Explicit implementation forwarding to the internal <see cref="FindCollection{TParent}"/>: an
+    /// internal interface member cannot be satisfied implicitly by a non-public method, but the
+    /// internal method must remain directly callable on <see cref="SpecRegistry"/> for existing callers.
+    /// </summary>
+    CollectionBinding<TParent>? ISpecSource.FindCollection<TParent>(string path) => FindCollection<TParent>(path);
 
     private SpecRegistry Add(string name, object? spec, Type modelType, Type metadataType, bool isAsync, string? description)
     {

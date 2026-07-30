@@ -4,10 +4,10 @@ internal static class AsyncRuleBinder
 {
     public static AsyncSpecBase<TModel, string>? Bind<TModel>(
         RuleDocument document,
-        SpecRegistry registry,
+        ISpecSource source,
         List<RuleError> errors)
     {
-        var root = BindNode<TModel>(document.Root!, registry, errors);
+        var root = BindNode<TModel>(document.Root!, source, errors);
         if (root is null)
             return null;
 
@@ -16,7 +16,7 @@ internal static class AsyncRuleBinder
 
     public static AsyncSpecBase<TModel, string>? BindNode<TModel>(
         RuleNode node,
-        SpecRegistry registry,
+        ISpecSource source,
         List<RuleError> errors)
     {
         // Higher-order subtrees bind (and decorate) entirely through the sync binder, then lift.
@@ -24,9 +24,9 @@ internal static class AsyncRuleBinder
         // collapses the duplicate, so this is an allocation/cleanliness invariant, not a behavioral
         // one, and is intentionally not test-enforced.
         if (node.Operator.IsHigherOrder())
-            return BindHigherOrder<TModel>(node, registry, errors);
+            return BindHigherOrder<TModel>(node, source, errors);
 
-        var spec = BindOperator<TModel>(node, registry, errors);
+        var spec = BindOperator<TModel>(node, source, errors);
 
         // Reported independently of leaf/composition success, mirroring the parser's approach
         // of surfacing payload errors even when the operator subtree fails.
@@ -40,15 +40,15 @@ internal static class AsyncRuleBinder
 
     public static AsyncSpecBase<TModel, string>? BindOperator<TModel>(
         RuleNode node,
-        SpecRegistry registry,
+        ISpecSource source,
         List<RuleError> errors) =>
         node.Operator switch
         {
-            RuleOperator.Spec => BindSpecLeaf<TModel>(node, registry, errors),
+            RuleOperator.Spec => BindSpecLeaf<TModel>(node, source, errors),
             RuleOperator.Expression => BindExpressionLeaf<TModel>(node, errors),
-            RuleOperator.Not => BindNode<TModel>(node.Children[0], registry, errors)?.Not(),
-            _ when node.Operator.IsHigherOrder() => BindHigherOrder<TModel>(node, registry, errors),
-            _ => BindComposition<TModel>(node, registry, errors)
+            RuleOperator.Not => BindNode<TModel>(node.Children[0], source, errors)?.Not(),
+            _ when node.Operator.IsHigherOrder() => BindHigherOrder<TModel>(node, source, errors),
+            _ => BindComposition<TModel>(node, source, errors)
         };
 
     private static bool ReportObjectPayloadError(RuleNode node, List<RuleError> errors)
@@ -64,10 +64,10 @@ internal static class AsyncRuleBinder
 
     private static AsyncSpecBase<TModel, string>? BindSpecLeaf<TModel>(
         RuleNode node,
-        SpecRegistry registry,
+        ISpecSource source,
         List<RuleError> errors)
     {
-        var entry = registry.Find(node.SpecName!);
+        var entry = source.Find(node.SpecName!);
         if (entry is null)
         {
             errors.Add(new RuleError(node.Path, RuleErrorCode.UnknownSpec,
@@ -126,11 +126,11 @@ internal static class AsyncRuleBinder
 
     private static AsyncSpecBase<TModel, string>? BindComposition<TModel>(
         RuleNode node,
-        SpecRegistry registry,
+        ISpecSource source,
         List<RuleError> errors)
     {
         var children = node.Children
-            .Select(child => BindNode<TModel>(child, registry, errors))
+            .Select(child => BindNode<TModel>(child, source, errors))
             .ToArray();
 
         if (children.Any(child => child is null))
@@ -147,12 +147,12 @@ internal static class AsyncRuleBinder
     }
 
     private static AsyncSpecBase<TModel, string>? BindHigherOrder<TModel>(
-        RuleNode node, SpecRegistry registry, List<RuleError> errors)
+        RuleNode node, ISpecSource source, List<RuleError> errors)
     {
         // Core has no async quantifiers: the whole higher-order subtree binds synchronously
         // and lifts. An async leaf inside it is therefore a distinct, actionable error.
         var errorCountBefore = errors.Count;
-        var spec = RuleBinder.BindNode<TModel>(node, registry, errors);
+        var spec = RuleBinder.BindNode<TModel>(node, source, errors);
 
         for (var i = errorCountBefore; i < errors.Count; i++)
         {

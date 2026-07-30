@@ -10,7 +10,7 @@ internal abstract class CollectionBinding<TParent>
     public abstract Type ElementType { get; }
 
     public abstract SpecBase<TParent, string>? BindHigherOrder(
-        RuleNode node, SpecRegistry registry, List<RuleError> errors);
+        RuleNode node, ISpecSource source, List<RuleError> errors);
 }
 
 /// <summary>Non-generic view of a registered collection, for enumeration.</summary>
@@ -29,9 +29,9 @@ internal sealed class CollectionBinding<TParent, TElement>(Func<TParent, IEnumer
     Type ICollectionBindingInfo.ElementType => typeof(TElement);
 
     public override SpecBase<TParent, string>? BindHigherOrder(
-        RuleNode node, SpecRegistry registry, List<RuleError> errors)
+        RuleNode node, ISpecSource source, List<RuleError> errors)
     {
-        var child = RuleBinder.BindElement<TElement>(node.Children[0], registry, errors);
+        var child = RuleBinder.BindElement<TElement>(node.Children[0], source, errors);
         if (child is null)
             return null;
 
