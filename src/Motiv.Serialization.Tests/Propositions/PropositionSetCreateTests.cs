@@ -231,9 +231,12 @@ public class PropositionSetCreateTests
         listed.Count.ShouldBe(3);
         listed["customer.is-active"].Origin.ShouldBe(PropositionOrigin.Compiled);
         listed["customer.is-active"].Version.ShouldBe(0);
+        listed["customer.is-active"].ModelType.ShouldBe("customer");
         listed["customer.passes-check"].Origin.ShouldBe(PropositionOrigin.Compiled);
+        listed["customer.passes-check"].ModelType.ShouldBe("customer");
         listed["customer.is-eligible"].Origin.ShouldBe(PropositionOrigin.Authored);
         listed["customer.is-eligible"].Version.ShouldBe(1);
+        listed["customer.is-eligible"].ModelType.ShouldBe("customer");
     }
 
     [Fact]
@@ -248,5 +251,32 @@ public class PropositionSetCreateTests
         set.DocumentJsonOf("customer.is-active").ShouldBeNull();
     }
 
+    [Fact]
+    public void Should_publish_nothing_when_the_store_refuses_to_persist()
+    {
+        // Arrange
+        var registry = new SpecRegistry().Register("customer.is-active", IsActive);
+        var scope = new BindingScope(registry);
+        var set = new PropositionSet(scope, new ThrowingStore()).AddModel<Customer>("customer");
+
+        // Act
+        var create = () => set.Create(
+            "customer.derived", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+
+        // Assert — the failure surfaces, and nothing is left live behind it
+        create.ShouldThrow<IOException>();
+        set.Find("customer.derived").ShouldBeNull();
+        scope.Source.Find("customer.derived").ShouldBeNull();
+        scope.Graph.Referrers("customer.is-active").ShouldBeEmpty();
+    }
+
     private sealed record Customer(bool IsActive);
+
+    /// <summary>A store that refuses to persist, standing in for a full disk or a database outage.</summary>
+    private sealed class ThrowingStore : IPropositionStore
+    {
+        public IReadOnlyList<StoredProposition> Load() => [];
+        public void Save(StoredProposition proposition) => throw new IOException("store unavailable");
+        public void Delete(string name) { }
+    }
 }

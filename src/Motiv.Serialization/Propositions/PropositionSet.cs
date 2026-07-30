@@ -28,30 +28,31 @@ public sealed class PropositionSet
     /// <typeparam name="TModel">The CLR model type.</typeparam>
     /// <param name="modelTypeId">The stable id clients pass as <c>modelType</c>.</param>
     /// <returns>This set, to allow chained registration.</returns>
-    public PropositionSet AddModel<TModel>(string modelTypeId)
-    {
-        _models[modelTypeId] = new PropositionModelBinding
+    public PropositionSet AddModel<TModel>(string modelTypeId) =>
+        _scope.Locked(() =>
         {
-            Id = modelTypeId,
-            ModelType = typeof(TModel),
-            Bind = (source, name, description, document, isAsync, errors) =>
+            _models[modelTypeId] = new PropositionModelBinding
             {
-                if (isAsync)
+                Id = modelTypeId,
+                ModelType = typeof(TModel),
+                Bind = (source, name, description, document, isAsync, errors) =>
                 {
-                    var asyncSpec = AsyncRuleBinder.Bind<TModel>(document, source, errors);
-                    return asyncSpec is null
-                        ? null
-                        : new SpecRegistryEntry(name, typeof(TModel), typeof(string), true, asyncSpec, description);
-                }
+                    if (isAsync)
+                    {
+                        var asyncSpec = AsyncRuleBinder.Bind<TModel>(document, source, errors);
+                        return asyncSpec is null
+                            ? null
+                            : new SpecRegistryEntry(name, typeof(TModel), typeof(string), true, asyncSpec, description);
+                    }
 
-                var spec = RuleBinder.Bind<TModel>(document, source, errors);
-                return spec is null
-                    ? null
-                    : new SpecRegistryEntry(name, typeof(TModel), typeof(string), false, spec, description);
-            }
-        };
-        return this;
-    }
+                    var spec = RuleBinder.Bind<TModel>(document, source, errors);
+                    return spec is null
+                        ? null
+                        : new SpecRegistryEntry(name, typeof(TModel), typeof(string), false, spec, description);
+                }
+            };
+            return this;
+        });
 
     /// <summary>
     /// Every proposition in scope — compiled, overridden and authored — as one effective listing.
@@ -111,14 +112,14 @@ public sealed class PropositionSet
                 return PropositionUpdateResult.Invalid([nameError]);
 
             var prepared = Prepare(name, modelTypeId, documentJson, description);
-            if (prepared.Errors.Count > 0)
+            if (prepared.Entry is not { } entry)
                 return PropositionUpdateResult.Invalid(prepared.Errors);
 
             // A brand-new name has no referrers, so the closure is empty and there is nothing to
             // cascade to — but the document may still reference the name being created.
             Publish(new Authored(this, name, modelTypeId, documentJson, version: 1, description)
             {
-                Bound = prepared.Entry,
+                Bound = entry,
                 References = prepared.References
             });
 
@@ -149,6 +150,10 @@ public sealed class PropositionSet
             $"model type '{modelTypeId}' is not registered for propositions"));
         return null;
     }
+
+    /// <summary>The registered id for a CLR model type, or its type name when no id is registered.</summary>
+    private string ResolveModelId(Type modelType) =>
+        _models.Values.FirstOrDefault(model => model.ModelType == modelType)?.Id ?? modelType.Name;
 
     /// <summary>
     /// Whether a document referencing these names has to bind asynchronously. Asyncness is derived:
@@ -185,15 +190,20 @@ public sealed class PropositionSet
         return new Prepared(entry, references, errors);
     }
 
-    /// <summary>Publishes an authored proposition: overlay, graph, participant, store.</summary>
+    /// <summary>
+    /// Publishes an authored proposition: store first, then overlay, graph and participant. The
+    /// store runs first and is the only step that can fail — none of the in-memory mutations can —
+    /// so a store failure leaves nothing live behind it, keeping "all of it, or none" true even
+    /// though there is no explicit rollback.
+    /// </summary>
     private void Publish(Authored authored)
     {
+        _store.Save(new StoredProposition(
+            authored.Name, authored.ModelTypeId, authored.DocumentJson, authored.Version, authored.Description));
         _authored[authored.Name] = authored;
         _scope.Overlay.Set(authored.Bound!);
         _scope.Graph.Set(authored.Node, authored.References);
         _scope.Enrol(authored);
-        _store.Save(new StoredProposition(
-            authored.Name, authored.ModelTypeId, authored.DocumentJson, authored.Version, authored.Description));
     }
 
     private PropositionEntry ToEntry(Authored authored)
@@ -207,7 +217,7 @@ public sealed class PropositionSet
 
         return new PropositionEntry(
             authored.Name,
-            effective?.ModelType.Name ?? authored.ModelTypeId,
+            authored.ModelTypeId,
             effective?.MetadataType.Name ?? nameof(String),
             effective?.IsAsync ?? false,
             origin,
@@ -219,8 +229,8 @@ public sealed class PropositionSet
     /// <summary>
     /// A compiled spec with nothing authored over it: no authored version, nothing quarantined.
     /// </summary>
-    private static PropositionEntry ToEntry(SpecRegistryEntry entry) =>
-        new(entry.Name, entry.ModelType.Name, entry.MetadataType.Name, entry.IsAsync,
+    private PropositionEntry ToEntry(SpecRegistryEntry entry) =>
+        new(entry.Name, ResolveModelId(entry.ModelType), entry.MetadataType.Name, entry.IsAsync,
             PropositionOrigin.Compiled, Version: 0, entry.Description, []);
 
     /// <summary>The outcome of a prepare: the bound entry, its edges, and any errors.</summary>
