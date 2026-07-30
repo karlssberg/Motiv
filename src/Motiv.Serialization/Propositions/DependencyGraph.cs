@@ -41,7 +41,7 @@ internal sealed class DependencyGraph
     /// Every node transitively affected by republishing the named proposition, ordered so a node
     /// always follows the nodes it depends on. Excludes the named proposition itself.
     /// </summary>
-    public IList<NodeId> DependentClosure(string propositionName)
+    public IReadOnlyList<NodeId> DependentClosure(string propositionName)
     {
         // Reachable set first, by walking the reverse index breadth-first.
         var affected = new HashSet<NodeId>();

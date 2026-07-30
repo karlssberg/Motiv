@@ -70,17 +70,19 @@ public class DependencyGraphTests
     [Fact]
     public void Should_order_the_closure_dependencies_before_dependents()
     {
-        // Arrange — a <- b <- c <- d, deliberately registered in reverse so insertion order cannot pass by luck
+        // Arrange — a <- b <- c, and a shortcut d <- [a, c], so a naive breadth-first order (which
+        // would discover d alongside b, at depth 1) is no longer accidentally correct
         var graph = new DependencyGraph();
-        graph.Set(NodeId.Proposition("d"), ["c"]);
-        graph.Set(NodeId.Proposition("c"), ["b"]);
         graph.Set(NodeId.Proposition("b"), ["a"]);
+        graph.Set(NodeId.Proposition("c"), ["b"]);
+        graph.Set(NodeId.Proposition("d"), ["a", "c"]);
 
         // Act
         var closure = graph.DependentClosure("a");
 
         // Assert
-        closure.ShouldBe([NodeId.Proposition("b"), NodeId.Proposition("c"), NodeId.Proposition("d")]);
+        closure.Count.ShouldBe(3);
+        ShouldBeOrderedByDependency(closure, ("b", "c"), ("c", "d"));
     }
 
     [Fact]
@@ -97,9 +99,7 @@ public class DependencyGraphTests
 
         // Assert — the join must come last; the order of b and c relative to each other is free
         closure.Count.ShouldBe(3);
-        closure[2].ShouldBe(NodeId.Proposition("d"));
-        closure.ShouldContain(NodeId.Proposition("b"));
-        closure.ShouldContain(NodeId.Proposition("c"));
+        ShouldBeOrderedByDependency(closure, ("b", "d"), ("c", "d"));
     }
 
     /// <summary>
@@ -121,10 +121,45 @@ public class DependencyGraphTests
         var closure = graph.DependentClosure("a");
 
         // Assert — 'd' depends on 'c', so it must follow it despite also referencing 'a' directly
-        closure.IndexOf(NodeId.Proposition("c"))
-            .ShouldBeLessThan(closure.IndexOf(NodeId.Proposition("d")));
-        closure.IndexOf(NodeId.Proposition("b"))
-            .ShouldBeLessThan(closure.IndexOf(NodeId.Proposition("c")));
+        ShouldBeOrderedByDependency(closure, ("c", "d"), ("b", "c"));
+    }
+
+    /// <summary>
+    /// Asserts the ordering guarantee itself: every node appears after every node it depends on that
+    /// is also in the closure. Order-agnostic, so it holds for any valid topological order rather than
+    /// pinning one arbitrary sequence — which is what let a plain reachability walk pass before.
+    /// </summary>
+    private static void ShouldBeOrderedByDependency(
+        IReadOnlyList<NodeId> closure, params (string Dependency, string Dependent)[] edges)
+    {
+        var positions = closure
+            .Select((node, index) => (node, index))
+            .ToDictionary(entry => entry.node, entry => entry.index);
+
+        foreach (var (dependency, dependent) in edges)
+        {
+            var dependencyNode = NodeId.Proposition(dependency);
+            var dependentNode = NodeId.Proposition(dependent);
+            positions.ShouldContainKey(dependencyNode);
+            positions.ShouldContainKey(dependentNode);
+            positions[dependencyNode].ShouldBeLessThan(positions[dependentNode]);
+        }
+    }
+
+    [Fact]
+    public void Should_not_walk_past_a_rule_when_collecting_the_closure()
+    {
+        // Arrange — a <- rule 'mid' <- proposition 'q'. Documents reference specs, never rules, so 'q'
+        // cannot really depend on a rule; the guard is what stops the walk treating it as if it could.
+        var graph = new DependencyGraph();
+        graph.Set(NodeId.Rule("mid"), ["a"]);
+        graph.Set(NodeId.Proposition("q"), ["mid"]);
+
+        // Act
+        var closure = graph.DependentClosure("a");
+
+        // Assert — the rule is rebound; 'q' is not dragged in behind it
+        closure.ShouldBe([NodeId.Rule("mid")]);
     }
 
     [Fact]
