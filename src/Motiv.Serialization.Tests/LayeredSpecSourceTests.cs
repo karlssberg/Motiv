@@ -13,7 +13,8 @@ public class LayeredSpecSourceTests
         public SpecRegistryEntry? Find(string name) =>
             entries.FirstOrDefault(entry => entry.Name == name);
 
-        public CollectionBinding<TParent>? FindCollection<TParent>(string path) => null;
+        public CollectionBinding<TParent>? FindCollection<TParent>(string path) =>
+            throw new InvalidOperationException("Overlay must never be consulted for collections.");
     }
 
     private static SpecRegistryEntry Entry(string name, SpecBase<int, string> spec) =>
