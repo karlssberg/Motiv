@@ -15,10 +15,15 @@ public class BindingScopeTests
         public NodeId Node { get; } = node;
         public bool Committed { get; private set; }
         public int PrepareCount { get; private set; }
-        public List<string> ObservedOrder { get; } = [];
 
         /// <summary>Set by the test to record the global commit order.</summary>
         public List<string>? OrderLog { get; init; }
+
+        /// <summary>A name this participant resolves from the prospective source when preparing.</summary>
+        public string? Resolves { get; init; }
+
+        /// <summary>What <see cref="Resolves"/> resolved to on the last prepare, if anything.</summary>
+        public SpecRegistryEntry? Resolved { get; private set; }
 
         public SpecRegistryEntry? OverlayEntry =>
             Node.Kind == NodeKind.Proposition ? Entry(Node.Name) : null;
@@ -27,6 +32,8 @@ public class BindingScopeTests
         {
             PrepareCount++;
             OrderLog?.Add(Node.Name);
+            if (Resolves is { } name)
+                Resolved = prospective.Find(name);
             if (succeeds)
                 return this;
             errors.Add(new RuleError("$", RuleErrorCode.UnknownSpec, $"{Node.Name} cannot bind"));
@@ -103,6 +110,45 @@ public class BindingScopeTests
 
         // Assert
         prospective.Find("b").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Should_let_a_later_closure_member_resolve_an_earlier_members_fresh_binding()
+    {
+        // Arrange — a <- b <- c. 'c' prepares after 'b', so it must see the entry 'b' just contributed,
+        // not whatever the live overlay holds. This is the whole reason the closure is ordered.
+        var scope = new BindingScope(new SpecRegistry());
+        var c = new StubParticipant(NodeId.Proposition("c"), succeeds: true) { Resolves = "b" };
+        scope.Enrol(new StubParticipant(NodeId.Proposition("b"), succeeds: true));
+        scope.Enrol(c);
+        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
+        scope.Graph.Set(NodeId.Proposition("c"), ["b"]);
+
+        // Act
+        scope.PrepareClosure("a", new PropositionOverlay(), []);
+
+        // Assert
+        c.Resolved.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Should_only_prepare_nodes_in_the_dependent_closure()
+    {
+        // Arrange — 'x' is enrolled but not reachable from 'a'; the walk must be driven by the graph
+        // closure, not by iterating every enrolled participant.
+        var scope = new BindingScope(new SpecRegistry());
+        var b = new StubParticipant(NodeId.Proposition("b"), succeeds: true);
+        var x = new StubParticipant(NodeId.Proposition("x"), succeeds: true);
+        scope.Enrol(b);
+        scope.Enrol(x);
+        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
+
+        // Act
+        scope.PrepareClosure("a", new PropositionOverlay(), []);
+
+        // Assert
+        b.PrepareCount.ShouldBe(1);
+        x.PrepareCount.ShouldBe(0);
     }
 
     [Fact]

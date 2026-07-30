@@ -36,10 +36,18 @@ internal sealed class BindingScope
     public ISpecSource Source { get; }
 
     /// <summary>Registers a node as rebindable. Replaces any participant already under that id.</summary>
-    public void Enrol(IRebindable participant) => _participants[participant.Node] = participant;
+    public void Enrol(IRebindable participant)
+    {
+        lock (_gate)
+            _participants[participant.Node] = participant;
+    }
 
     /// <summary>Unregisters a node, so it is no longer rebound.</summary>
-    public void Withdraw(NodeId node) => _participants.Remove(node);
+    public void Withdraw(NodeId node)
+    {
+        lock (_gate)
+            _participants.Remove(node);
+    }
 
     /// <summary>Runs an action holding the write lock, so a publish sees a still graph.</summary>
     public T Locked<T>(Func<T> action)
@@ -55,7 +63,10 @@ internal sealed class BindingScope
     /// </summary>
     /// <returns>
     /// The dependents that would stop binding — empty when the whole closure prepared, in which case
-    /// <paramref name="commits"/> holds every prepared rebind in the order it should be committed.
+    /// <paramref name="commits"/> holds every prepared rebind in the order it should be committed. On
+    /// failure, both <paramref name="prospective"/> and <paramref name="commits"/> are left partially
+    /// populated with whatever prepared successfully before the break was found, and the caller must
+    /// discard both rather than act on either.
     /// </returns>
     public IReadOnlyList<BrokenDependent> PrepareClosure(
         string propositionName, PropositionOverlay prospective, List<IRebindCommit> commits)
